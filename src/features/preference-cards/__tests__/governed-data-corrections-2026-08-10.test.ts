@@ -10,6 +10,7 @@ import {
 } from '../__fixtures__/release-bundle-fixtures'
 import {
   defaultBuildInput,
+  getLiveRecipeVersions,
   getReleaseDefinitionSources,
   recipeForRecipeVersionId,
 } from '../data/demo-context.server'
@@ -830,6 +831,32 @@ describe('P91-C3 — authored modifier-effect changes are reported, not just a s
     // revises the set — the PR #92 F-09 shape the fixture above mirrors.
     for (const report of getReleaseImpactReports()) {
       expect(report.modifierEffectChanges).toEqual([])
+    }
+  })
+})
+
+describe('P91-C4b — no governed expansion carries a blank dependency rule', () => {
+  it('every live recipe, expanded with every offered module, yields only meaningful rules', () => {
+    // The schema-level proof is the throw at every boundary; this is the data-level proof
+    // over the committed governed content itself: a conditional requirement whose condition
+    // is whitespace can neither be authored (the loaders refuse it) nor already exist here.
+    const live = getLiveRecipeVersions()
+    expect(live.size).toBeGreaterThan(0)
+    for (const recipe of live.values()) {
+      const sources = getReleaseDefinitionSources(recipe.id, CONTRACT)
+      expect(sources).not.toBeNull()
+      const { slots } = expandRecipeComposition({
+        recipe: sources!.recipe,
+        modules: sources!.modules,
+        selectedModuleVersionIds: sources!.modules.map((moduleVersion) => moduleVersion.id),
+        startSequence: 1,
+      })
+      expect(slots.length).toBeGreaterThan(0)
+      for (const slot of slots) {
+        if (slot.dependencyRule !== null) {
+          expect(slot.dependencyRule.trim()).not.toBe('')
+        }
+      }
     }
   })
 })

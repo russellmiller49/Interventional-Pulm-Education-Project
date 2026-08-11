@@ -1,3 +1,4 @@
+import { BLANK_AUTHORED_STRING_CASES } from '../../src/features/preference-cards/__fixtures__/blank-authored-strings'
 import generatedCompositionsJson from '../../data/ip-preference-cards/generated/procedure-compositions.json'
 import generatedModulesJson from '../../data/ip-preference-cards/generated/recipe-modules.json'
 import generatedReportJson from '../../data/ip-preference-cards/generated/recipe-composition-report.json'
@@ -95,6 +96,53 @@ describe('recipe composition build', () => {
     action.payload = { value: 'definitely_not_a_zone' }
 
     expect(() => buildRecipeCompositions(input)).toThrow(/Invalid set_setup_zone payload/)
+  })
+
+  it.each([...BLANK_AUTHORED_STRING_CASES])(
+    'rejects a set_requiredness action whose dependency rule is $name (P91-C4b)',
+    ({ value }) => {
+      // The Codex reproduction through the generator input path: `.min(1)` let
+      // { value: "conditional", dependencyRule: "   " } build straight into the generated
+      // composition. A supplied rule must say something, at this boundary like the others.
+      const input = baseInput()
+      const compositionFile = input.compositionFile as unknown as {
+        compositions: {
+          compositionActions: { actionType: string; payload: Record<string, unknown> }[]
+        }[]
+      }
+      const action = compositionFile.compositions
+        .flatMap((composition) => composition.compositionActions)
+        .find((candidate) => candidate.actionType === 'set_requiredness')!
+      action.payload = { value: 'conditional', dependencyRule: value }
+
+      expect(() => buildRecipeCompositions(input)).toThrow(
+        /Invalid set_requiredness payload on composition action .*: dependencyRule: Authored text must contain at least one non-whitespace character\./,
+      )
+    },
+  )
+
+  it('preserves a padded but meaningful dependency rule byte-for-byte (P91-C4b)', () => {
+    // The counterpart guard: authored text that says something passes untransformed —
+    // validation must never edit reviewed content on its way into the generated artifact.
+    const input = baseInput()
+    const compositionFile = input.compositionFile as unknown as {
+      compositions: {
+        compositionActions: { id: string; actionType: string; payload: Record<string, unknown> }[]
+      }[]
+    }
+    const action = compositionFile.compositions
+      .flatMap((composition) => composition.compositionActions)
+      .find((candidate) => candidate.actionType === 'set_requiredness')!
+    action.payload = { value: 'conditional', dependencyRule: '  Rigid system in use  ' }
+
+    const result = buildRecipeCompositions(input)
+    const built = result.compositions
+      .flatMap((composition) => composition.compositionActions)
+      .find((candidate) => candidate.id === action.id)
+    expect(built?.payload).toEqual({
+      value: 'conditional',
+      dependencyRule: '  Rigid system in use  ',
+    })
   })
 
   it('rejects two requirements claiming the same imported slot', () => {

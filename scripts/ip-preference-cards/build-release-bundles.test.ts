@@ -111,8 +111,11 @@ describe('release bundle build', () => {
   })
 
   it('fails the whole build rather than summarizing an unknown modifier action type (P91-C5)', () => {
-    // Impact is computed inside buildReleaseBundles, before main() writes anything, so this
-    // throw is what keeps a malformed release-impact report out of the generated data. The
+    // Impact is computed inside buildReleaseBundles, and the command writes nothing until
+    // every validation has passed — a guarantee that had to be built, not assumed: the CLI
+    // used to write catalog-release.json and resolver-release.json before this ran
+    // (P91-C5b, proven against the real command in build-release-bundles.atomicity.test.ts).
+    // This throw is what keeps a malformed release-impact report out of the generated data. The
     // poisoned action rides the *next* side of the med-thoracoscopy v1-1 → v1-2
     // supersession, on a modifier that recipe actually offers — everything else about the
     // build is the committed baseline.

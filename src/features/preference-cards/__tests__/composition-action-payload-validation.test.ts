@@ -1,3 +1,4 @@
+import { BLANK_AUTHORED_STRING_CASES } from '../__fixtures__/blank-authored-strings'
 import { expandRecipeComposition } from '../domain/expand-recipe-composition'
 import {
   parseProcedureCompositionActionPayload,
@@ -65,13 +66,27 @@ const PAYLOAD_MATRIX: PayloadMatrixRow[] = [
         payload: { value: 'conditional', dependencyRule: 'Rigid system in use' },
       },
       {
+        // Padded but not whitespace-only: valid, and preserved byte-for-byte (proven below).
+        name: 'a dependency rule with deliberate spacing',
+        payload: { value: 'conditional', dependencyRule: '  Rigid system in use  ' },
+      },
+      {
         name: 'required clearing the rule with null',
         payload: { value: 'required', dependencyRule: null },
       },
     ],
     invalid: [
       { name: 'an invented requiredness', payload: { value: 'mandatory' } },
-      { name: 'an empty dependency rule', payload: { value: 'conditional', dependencyRule: '' } },
+      // The whole whitespace corpus, not one literal — `.min(1)` passed everything here
+      // except the empty string (P91-C4b).
+      ...BLANK_AUTHORED_STRING_CASES.map(({ name, value }) => ({
+        name: `a dependency rule of ${name}`,
+        payload: { value: 'conditional', dependencyRule: value },
+      })),
+      {
+        name: 'a non-string dependency rule',
+        payload: { value: 'conditional', dependencyRule: 42 },
+      },
       { name: 'a missing value', payload: {} },
       { name: 'a misspelled extra field', payload: { value: 'required', dependancyRule: 'typo' } },
     ],
@@ -139,8 +154,10 @@ const PAYLOAD_MATRIX: PayloadMatrixRow[] = [
       { name: 'a note with deliberate spacing', payload: { note: '  padded  note  ' } },
     ],
     invalid: [
-      { name: 'an empty note', payload: { note: '' } },
-      { name: 'a whitespace-only note', payload: { note: '   ' } },
+      ...BLANK_AUTHORED_STRING_CASES.map(({ name, value }) => ({
+        name: `a note of ${name}`,
+        payload: { note: value },
+      })),
       { name: 'a missing note', payload: {} },
       { name: 'a non-string note', payload: { note: 42 } },
       { name: 'an extra key beside a valid note', payload: { note: 'x', reason: 'y' } },
@@ -197,6 +214,37 @@ describe('the canonical payload dispatch covers every composition action type', 
       PARSE_CONTEXT,
     )
     expect(parsed).toEqual({ actionType: 'append_note', note: '  padded  note  ' })
+  })
+
+  it('preserves an authored dependency rule verbatim rather than trimming it (P91-C4b)', () => {
+    // Meaningful-string validation refuses meaningless text; it never edits meaningful text.
+    const parsed = parseProcedureCompositionActionPayload(
+      action('set_requiredness', {
+        value: 'conditional',
+        dependencyRule: '  Rigid system in use  ',
+      }),
+      PARSE_CONTEXT,
+    )
+    expect(parsed).toEqual({
+      actionType: 'set_requiredness',
+      value: 'conditional',
+      dependencyRule: '  Rigid system in use  ',
+    })
+  })
+
+  it('rejects the P91-C4b Codex reproduction with the field and the contract named', () => {
+    // { value: "conditional", dependencyRule: "   " } passed `.min(1)`, generated, and
+    // expanded — a conditional requirement whose condition nobody can read.
+    expect(() =>
+      parseProcedureCompositionActionPayload(
+        action('set_requiredness', { value: 'conditional', dependencyRule: '   ' }),
+        PARSE_CONTEXT,
+      ),
+    ).toThrow(
+      'Invalid set_requiredness payload on composition action "matrix-set_requiredness" ' +
+        'while exercising the payload contract: dependencyRule: Authored text must contain ' +
+        'at least one non-whitespace character.',
+    )
   })
 
   it('throws descriptively on an action type the union has never heard of', () => {
@@ -344,6 +392,17 @@ describe('the evaluator applies exactly the validated values', () => {
     expect(cleared.dependencyRule).toBeNull()
   })
 
+  it('set_requiredness applies a padded dependency rule byte-for-byte (P91-C4b)', () => {
+    const slot = onlySlot([
+      action('set_requiredness', {
+        value: 'conditional',
+        dependencyRule: '  Rigid system in use  ',
+      }),
+    ])
+    expect(slot.requiredness).toBe('conditional')
+    expect(slot.dependencyRule).toBe('  Rigid system in use  ')
+  })
+
   it('set_quantity replaces the expression with the validated literal', () => {
     const slot = onlySlot([action('set_quantity', { expression: { op: 'literal', value: 4 } })])
     expect(slot.quantityExpression).toEqual({ op: 'literal', value: 4 })
@@ -394,13 +453,28 @@ describe('the evaluator applies exactly the validated values', () => {
       )
     })
 
-    it('an empty and a whitespace-only note throw instead of silently skipping', () => {
-      for (const note of ['', '   ']) {
-        expect(() => expand([action('append_note', { note })])).toThrow(
+    it.each([...BLANK_AUTHORED_STRING_CASES])(
+      'a note of $name throws instead of silently skipping',
+      ({ value }) => {
+        expect(() => expand([action('append_note', { note: value })])).toThrow(
           /Invalid append_note payload/,
         )
-      }
-    })
+      },
+    )
+
+    it.each([...BLANK_AUTHORED_STRING_CASES])(
+      'a dependency rule of $name never reaches an expanded slot (P91-C4b)',
+      ({ value }) => {
+        // The Codex reproduction ran exactly this in-memory cast through
+        // `expandRecipeComposition` and the expanded requirement kept the blank condition.
+        // The evaluator boundary must refuse it even for an action no loader ever saw.
+        expect(() =>
+          expand([action('set_requiredness', { value: 'conditional', dependencyRule: value })]),
+        ).toThrow(
+          /Invalid set_requiredness payload on composition action "matrix-set_requiredness" while expanding the Matrix recipe composition \(recipe-matrix-v1-0\): dependencyRule: Authored text must contain at least one non-whitespace character\./,
+        )
+      },
+    )
 
     it('a payload authored on remove_slot throws instead of being silently ignored', () => {
       expect(() => expand([action('remove_slot', { value: 'anything' })])).toThrow(
@@ -453,10 +527,14 @@ describe('the governed custom-composition seed refuses a doctored action at modu
    * Load `demo-context.server` in an isolated registry with a doctored copy of the real
    * governed seed. The doctored action targets a real slot (`SLOT-1AF4BEFE3B`) with an
    * action type it does not already carry, so every other load-time check would pass — the
-   * failure has to come from the contract under test.
+   * failure has to come from the contract under test. On a successful load the module is
+   * returned too, so an acceptance test can inspect what actually loaded.
    */
-  async function loadWithDoctoredSeed(doctorAction: Record<string, unknown>): Promise<unknown> {
+  async function loadWithDoctoredSeed(
+    doctorAction: Record<string, unknown>,
+  ): Promise<{ caught: unknown; loaded: typeof import('../data/demo-context.server') | null }> {
     let caught: unknown = null
+    let loaded: typeof import('../data/demo-context.server') | null = null
     await jest.isolateModulesAsync(async () => {
       const actual = jest.requireActual(SEED_PATH) as {
         compositionActions: Array<Record<string, unknown>>
@@ -472,17 +550,17 @@ describe('the governed custom-composition seed refuses a doctored action at modu
       })
       jest.doMock(SEED_PATH, () => doctored)
       try {
-        await import('../data/demo-context.server')
+        loaded = await import('../data/demo-context.server')
       } catch (error) {
         caught = error
       }
     })
     jest.dontMock(SEED_PATH)
-    return caught
+    return { caught, loaded }
   }
 
   it('refuses the Codex reproduction: an invented open/hold status value', async () => {
-    const caught = await loadWithDoctoredSeed({
+    const { caught } = await loadWithDoctoredSeed({
       actionType: 'set_open_hold_status',
       payload: { value: 'definitely_not_a_status' },
     })
@@ -493,7 +571,7 @@ describe('the governed custom-composition seed refuses a doctored action at modu
   })
 
   it('refuses an action type the schema does not know', async () => {
-    const caught = await loadWithDoctoredSeed({
+    const { caught } = await loadWithDoctoredSeed({
       actionType: 'future_unknown_action',
       payload: {},
     })
@@ -502,16 +580,49 @@ describe('the governed custom-composition seed refuses a doctored action at modu
   })
 
   it('refuses an empty note and a payload on remove_slot', async () => {
-    const emptyNote = await loadWithDoctoredSeed({
+    const { caught: emptyNote } = await loadWithDoctoredSeed({
       actionType: 'append_note',
       payload: { note: '   ' },
     })
     expect((emptyNote as Error).message).toMatch(/Invalid append_note payload/)
 
-    const removeWithPayload = await loadWithDoctoredSeed({
+    const { caught: removeWithPayload } = await loadWithDoctoredSeed({
       actionType: 'remove_slot',
       payload: { value: 'anything' },
     })
     expect((removeWithPayload as Error).message).toMatch(/Invalid remove_slot payload/)
+  })
+
+  it.each([...BLANK_AUTHORED_STRING_CASES])(
+    'refuses a dependency rule of $name at the real seed-load boundary (P91-C4b)',
+    async (blankCase) => {
+      // The Codex reproduction, run against the same governed load path a real seed edit
+      // would take: { value: "conditional", dependencyRule: "   " } and every other
+      // whitespace class must refuse to load, not surface later on someone's card.
+      const { caught } = await loadWithDoctoredSeed({
+        actionType: 'set_requiredness',
+        payload: { value: 'conditional', dependencyRule: blankCase.value },
+      })
+      expect(caught).toBeInstanceOf(Error)
+      expect((caught as Error).message).toMatch(
+        /Invalid set_requiredness payload on composition action "doctored-action" while validating seed\/custom-composition\.json for recipe-custom-composition-v1-2: dependencyRule: Authored text must contain at least one non-whitespace character\./,
+      )
+    },
+  )
+
+  it('accepts a padded but meaningful dependency rule and preserves it byte-for-byte', async () => {
+    // The counterpart guard: the loader must not start refusing — or trimming — authored
+    // text that says something just because it carries deliberate spacing.
+    const { caught, loaded } = await loadWithDoctoredSeed({
+      actionType: 'set_requiredness',
+      payload: { value: 'conditional', dependencyRule: '  Rigid system in use  ' },
+    })
+    expect(caught).toBeNull()
+    const recipe = loaded!.getLiveRecipeVersions().get('recipe-custom-composition-v1-2')
+    const doctored = recipe?.compositionActions.find((entry) => entry.id === 'doctored-action')
+    expect(doctored?.payload).toEqual({
+      value: 'conditional',
+      dependencyRule: '  Rigid system in use  ',
+    })
   })
 })

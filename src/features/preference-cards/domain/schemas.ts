@@ -125,14 +125,29 @@ export const procedureCompositionActionSchema = z.object({
 export const removeSlotPayloadSchema = z.object({}).strict()
 
 /**
+ * Authored clinical text that must say something: at least one non-whitespace character.
+ *
+ * `.min(1)` is not that contract — it accepted `"   "`, and a conditional requirement whose
+ * condition is three spaces is invalid authored clinical data, not a display quirk
+ * (P91-C4b). A refinement rather than `.trim().min(1)`, deliberately: valid authored text
+ * is reviewed content and passes through byte-for-byte — validation refuses meaningless
+ * text, it never edits meaningful text.
+ */
+export const nonBlankAuthoredStringSchema = z.string().refine((value) => value.trim().length > 0, {
+  message: 'Authored text must contain at least one non-whitespace character.',
+})
+
+/**
  * `set_requiredness` carries the dependency rule with it. Requiredness and the condition
  * text a reader needs to act on it are one clinical statement; splitting them across two
- * action types is how a card ends up conditional with nothing saying on what.
+ * action types is how a card ends up conditional with nothing saying on what. A supplied
+ * rule must therefore say something — null and absent stay valid (not every requiredness
+ * has a condition), but a blank string is a condition nobody can act on.
  */
 export const setRequirednessPayloadSchema = z
   .object({
     value: z.enum(requirednessValues),
-    dependencyRule: z.string().min(1).nullable().optional(),
+    dependencyRule: nonBlankAuthoredStringSchema.nullable().optional(),
   })
   .strict()
 
@@ -168,14 +183,13 @@ export const setOpenHoldStatusPayloadSchema = z
   .strict()
 
 /**
- * The note must say something — empty and whitespace-only notes are refused — but a valid
- * note is appended verbatim, never trimmed: the authored text is reviewed content.
+ * The note must say something — the same meaningful-string contract the dependency rule
+ * carries — but a valid note is appended verbatim, never trimmed: the authored text is
+ * reviewed content.
  */
 export const appendNotePayloadSchema = z
   .object({
-    note: z.string().refine((note) => note.trim().length > 0, {
-      message: 'append_note requires a note that is not empty or whitespace-only.',
-    }),
+    note: nonBlankAuthoredStringSchema,
   })
   .strict()
 

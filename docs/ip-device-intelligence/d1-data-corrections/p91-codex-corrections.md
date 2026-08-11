@@ -8,15 +8,20 @@ untouched except where a regression now protects them.
 
 The targeted Codex verification of this pass (range `8880d453…`) closed P91-C1, P91-C2, and
 P91-C3 and surfaced two residual MEDIUM findings — P91-C4 and P91-C5 — corrected in the
-[final residual section](#final-residual-corrections-p91-c4-p91-c5) below.
+[final residual section](#final-residual-corrections-p91-c4-p91-c5) below. The verification
+of _that_ correction (head `6a8aa696`) passed P91-C4 and P91-C5 as reproduced and surfaced
+two final residual MEDIUM findings — P91-C4b and P91-C5b — corrected in the
+[second residual section](#final-residual-corrections-second-round-p91-c4b-p91-c5b) below.
 
-| #      | Severity | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                            | Disposition |
-| ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| P91-C1 | HIGH     | F-04 remained wrong in **current custom cards**: server-side save resolution through `release-custom-composition-v1-1` with the EBUS-specific and therapeutic-specific modules selected still placed all six owner-named sampling instruments at specimen_station / specimen_handling. The v1-1 release notes carried this as an accepted limitation; the correction pass rejects that framing — custom-card creation is a real authoring surface. | **FIXED**   |
-| P91-C2 | HIGH     | The F-05 section-level `Drainage` re-phase over-reached on MED_THORACOSCOPY: two **insertable devices** that share the section — `SLOT-57CA4B1298` ("Post-procedure chest tube") and `SLOT-9A1C0491F9` (IPC insertion kit, "IPC placement planned") — moved to pre_induction_or_sedation alongside the actual drainage-preparation hardware.                                                                                                       | **FIXED**   |
-| P91-C3 | MEDIUM   | The canonical release-impact report (`generated/release-impact-report.json`) omitted all six F-04 semantic changes: `diffReleaseBundles` indexed **raw module slots** and never applied composition actions, so an action-borne change was invisible at exactly the boundary the release review reads.                                                                                                                                             | **FIXED**   |
-| P91-C4 | MEDIUM   | Custom-composition payload validation was incomplete: the loader validated payload **values** for only four of the seven action types, and the evaluator cast unvalidated strings — `{ actionType: "set_open_hold_status", payload: { value: "definitely_not_a_status" } }` loaded and propagated the invalid value onto expanded slots.                                                                                                           | **FIXED**   |
-| P91-C5 | MEDIUM   | `modifierActionEffectSummary`'s exhaustiveness was compile-time only: at runtime, an unknown modifier action type **returned** the unknown string instead of throwing, so a poisoned definition set produced malformed release-impact data rather than failing the generator.                                                                                                                                                                      | **FIXED**   |
+| #       | Severity | Finding                                                                                                                                                                                                                                                                                                                                                                                                                                            | Disposition |
+| ------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| P91-C1  | HIGH     | F-04 remained wrong in **current custom cards**: server-side save resolution through `release-custom-composition-v1-1` with the EBUS-specific and therapeutic-specific modules selected still placed all six owner-named sampling instruments at specimen_station / specimen_handling. The v1-1 release notes carried this as an accepted limitation; the correction pass rejects that framing — custom-card creation is a real authoring surface. | **FIXED**   |
+| P91-C2  | HIGH     | The F-05 section-level `Drainage` re-phase over-reached on MED_THORACOSCOPY: two **insertable devices** that share the section — `SLOT-57CA4B1298` ("Post-procedure chest tube") and `SLOT-9A1C0491F9` (IPC insertion kit, "IPC placement planned") — moved to pre_induction_or_sedation alongside the actual drainage-preparation hardware.                                                                                                       | **FIXED**   |
+| P91-C3  | MEDIUM   | The canonical release-impact report (`generated/release-impact-report.json`) omitted all six F-04 semantic changes: `diffReleaseBundles` indexed **raw module slots** and never applied composition actions, so an action-borne change was invisible at exactly the boundary the release review reads.                                                                                                                                             | **FIXED**   |
+| P91-C4  | MEDIUM   | Custom-composition payload validation was incomplete: the loader validated payload **values** for only four of the seven action types, and the evaluator cast unvalidated strings — `{ actionType: "set_open_hold_status", payload: { value: "definitely_not_a_status" } }` loaded and propagated the invalid value onto expanded slots.                                                                                                           | **FIXED**   |
+| P91-C5  | MEDIUM   | `modifierActionEffectSummary`'s exhaustiveness was compile-time only: at runtime, an unknown modifier action type **returned** the unknown string instead of throwing, so a poisoned definition set produced malformed release-impact data rather than failing the generator.                                                                                                                                                                      | **FIXED**   |
+| P91-C4b | MEDIUM   | The canonical `set_requiredness` payload schema used `.min(1)` for `dependencyRule`, which rejects only the empty string: `{ value: "conditional", dependencyRule: "   " }` passed canonical parsing, governed generation, and `expandRecipeComposition`, leaving an expanded conditional requirement whose condition is whitespace.                                                                                                               | **FIXED**   |
+| P91-C5b | MEDIUM   | The release CLI wrote `catalog-release.json` and `resolver-release.json` **before** `buildReleaseBundles` validated release-impact data: a poisoned run exited nonzero with `release-bundles.json` untouched but `resolver-release.json` already overwritten — the orchestration was not fail-before-write.                                                                                                                                        | **FIXED**   |
 
 ## P91-C1 — the custom composition gains a governed action channel
 
@@ -189,7 +194,8 @@ entirely. Empty payload values were silently skipped rather than refused.
 
 The payload contracts: `remove_slot` — exactly `{}` (an authored payload is a typo, refused
 rather than ignored); `set_requiredness` — the five requiredness values plus an optional
-non-empty-or-null `dependencyRule`; `set_quantity` — `{ expression }` as a literal quantity
+null-or-meaningful `dependencyRule` (as first shipped this was `.min(1)`, which admits
+whitespace-only strings — closed by P91-C4b below); `set_quantity` — `{ expression }` as a literal quantity
 expression; `set_setup_zone` / `set_procedural_phase` / `set_open_hold_status` — `{ value }`
 over the canonical zone/phase/status vocabularies; `append_note` — `{ note }` non-empty and
 non-whitespace-only, applied verbatim (never trimmed). Every payload schema rejects unknown
@@ -204,7 +210,8 @@ schema boundary, the dispatch, and the evaluator's own switch default (which pre
 satisfied the compiler with a `never` binding and then **returned** the unknown value at
 runtime).
 
-**Regression suite.** `composition-action-payload-validation.test.ts` (114 tests):
+**Regression suite.** `composition-action-payload-validation.test.ts` (114 tests as of this
+pass; extended to 146 by P91-C4b below):
 a fail-closed matrix enumerating every `ProcedureCompositionActionType` — every canonical
 value accepted, invented values / malformed shapes / stray keys / empty-and-whitespace
 notes / payloads on `remove_slot` rejected — proven at the dispatch, at the evaluator with
@@ -229,9 +236,11 @@ never been authored.
 release-impact evidence for modifier "<code>".` (release impact) and
 `… while applying modifier "<code>" to the effective requirement set.` (card resolution).
 `diffReleaseBundles` therefore aborts rather than returning any `modifierEffectChanges`
-row, and the release generator — which computes every impact report inside
-`buildReleaseBundles` before `main()` writes a single file — exits nonzero with nothing
-written. At the source boundary, the generated `modifier-definitions.json` merge in
+row, and the release generator exits nonzero. _[Corrected by P91-C5b: as first shipped this
+paragraph claimed impact was computed "before `main()` writes a single file" — it was not;
+`main()` wrote `catalog-release.json` and `resolver-release.json` before `buildReleaseBundles`
+ran. The command is now build-first/write-last, and the claim is true — see below.]_ At the
+source boundary, the generated `modifier-definitions.json` merge in
 `demo-context.server.ts` now refuses to load any generated modifier action whose type is
 outside the canonical `modifierActionTypes` (the generated modifiers are informational
 today — zero actions — but they arrive by cast, and the acting modifiers in
@@ -245,6 +254,113 @@ every current `ModifierActionType` routes through the summary and none reaches t
 `buildReleaseBundles` fed a poisoned loader for the med-thoracoscopy supersession fails the
 whole build on the same message; and the effective-slot oracle pins the card-resolution
 throw. Every committed release-impact artifact is byte-identical for valid source data.
+
+## Final residual corrections, second round (P91-C4b, P91-C5b)
+
+The targeted Codex verification of the P91-C4/P91-C5 pass (head `6a8aa696`) reproduced both
+original findings as fixed and surfaced two residual MEDIUM findings in the same
+infrastructure. This bounded pass corrects exactly those two — schema/orchestration
+contracts and regressions only. **No clinical action, placement, membership, release id,
+release hash, pointer, ledger entry, or previously published definition changed**, and no
+generated artifact moved at all: neither `schemas.ts` nor the release CLI is resolver
+source, so even `resolver-release.json` is byte-identical.
+
+### P91-C4b — whitespace-only dependency-rule validation
+
+**Codex reproduction.** `{ value: "conditional", dependencyRule: "   " }` passed canonical
+payload parsing (`parseProcedureCompositionActionPayload`), governed composition
+generation, and `expandRecipeComposition` — the expanded requirement retained the
+whitespace-only condition. The canonical schema used `.min(1)`, which rejects only the
+empty string; `"   "`, `"\t"`, and `"\n   \t"` all passed. Not display-only: a conditional
+requirement whose condition string is meaningless is invalid authored clinical data. (The
+P91-C4 matrix claimed non-empty meaningful strings while pinning only the empty string for
+`dependencyRule` — which is exactly how the three-space form survived it.)
+
+**Corrected contract.** One canonical exported schema for meaningful authored text —
+`nonBlankAuthoredStringSchema` (`domain/schemas.ts`): a **non-transforming** refinement,
+`value.trim().length > 0`, message `Authored text must contain at least one non-whitespace
+character.` A supplied `dependencyRule` may be null, absent, or contain at least one
+non-whitespace character; `""` and every whitespace-only class are refused. Valid authored
+text passes byte-for-byte — deliberately not `.trim().min(1)`, because validation must
+refuse meaningless text, never edit meaningful text (`"  Rigid system in use  "` stays
+`"  Rigid system in use  "`). The same schema now carries `append_note.note`, replacing its
+equivalent inline refinement. Deliberately **not** introduced: `conditional ⇒ dependencyRule
+present` (no such repository invariant exists — this finding is about a supplied string
+being meaningful, not about optionality), and no other `z.string().min(1)` was touched
+(identifiers and machine values have different contracts). Failures name the action id,
+action type, payload field, and operation, e.g. `Invalid set_requiredness payload on
+composition action "<id>" while validating seed/custom-composition.json for
+recipe-custom-composition-v1-2: dependencyRule: Authored text must contain at least one
+non-whitespace character.`
+
+**Regression suite.** A named whitespace corpus —
+`__fixtures__/blank-authored-strings.ts`: `""`, `" "`, `"   "` (the Codex reproduction),
+`"\t"`, `"\n"`, `" \t\n "` — consumed by every boundary test so no boundary can pass a
+class another rejects. `composition-action-payload-validation.test.ts` (now 146 tests) runs
+the corpus for `dependencyRule` and `note` at the parse dispatch, at the evaluator with
+in-memory objects that bypass every loader (the Codex reproduction verbatim — no expanded
+slot can carry a blank rule, the throw is the proof), and at the real
+`seed/custom-composition.json` load via the doctored-seed harness; plus byte-preservation
+of padded rules at all three (parse result, expanded slot, loaded seed action) and the
+append-note verbatim guard, unchanged. `build-recipe-compositions.test.ts` runs the corpus
+through the real generator input path and proves a padded rule builds byte-identically.
+`governed-data-corrections-2026-08-10.test.ts` adds the data-level invariant: every live
+recipe expanded with every offered module yields no blank `dependencyRule`.
+
+### P91-C5b — validation-before-write release generation
+
+**Codex reproduction.** In an isolated repository copy: sentinel content planted in
+`resolver-release.json`; a modifier poisoned with `future_unknown_action`; the real release
+generator run. The command exited nonzero and left `release-bundles.json` and
+`release-impact-report.json` unchanged — but `resolver-release.json` had already been
+overwritten. The runtime unknown-action failure (P91-C5) worked; the CLI orchestration was
+not fail-before-write: `main()` wrote `catalog-release.json` and `resolver-release.json`
+before calling `buildReleaseBundles`.
+
+**Corrected contract.** The command (`build-release-bundles.ts`) is now two explicit
+phases. **Phase A** builds and validates everything in memory — catalog release, resolver
+release, seed read, `buildReleaseBundles` (hashes, pins, release-impact construction,
+unknown-action handling), module ledger, composition ledger, catalog retention, product
+families, and every validation those produce — with zero writes. **Phase B**, entered only
+when every validation passed, writes the complete target set through one function,
+`writeReleaseArtifacts(artifacts, generatedDirectory)`, over an explicit
+`BuiltReleaseArtifacts` object. The full write inventory (exported as
+`RELEASE_GENERATION_TARGET_FILENAMES`, one entry per file the command writes):
+`catalog-release.json`, `resolver-release.json`, `catalog-rows.json`,
+`catalog-release-manifests.json`, `product-family-versions.json`, `module-ledger.json`,
+`composition-ledger.json`, `release-bundles.json`, `release-impact-report.json`. `main()`
+is argv parsing around the exported orchestration (`runBuildReleaseBundles`), so the tested
+path is the shipped path. Moving the two early writes is behavior-neutral for the build
+itself: `getReleaseDefinitionSources` reads the catalog release id from the static module
+import, never from the file mid-run.
+
+**The precise guarantee.** A validation failure of any kind — thrown build error or
+blocking validation message — causes **zero target-file writes**; the command creates no
+temporary files, so a failing run leaves nothing to clean up. This is
+validation-before-write, not a transactional multi-file commit: an operating-system failure
+_between_ the final writes can still leave the target set partially updated, and rerunning
+the command is the recovery. Nothing stronger is claimed, in code or here.
+
+**Regression suite.** `build-release-bundles.atomicity.test.ts` — isolated copies of the
+authoritative `generated/`/`seed/`/`reviewed/` directories, distinct sentinel bytes planted
+in **every** file in the write inventory:
+
+- the Codex poison (`future_unknown_action` riding a modifier the med-thoracoscopy recipe
+  offers) through the real orchestration → rejects naming the unknown action, all nine
+  sentinels byte-identical (SHA-256), directory listing unchanged;
+- an independent second failure mode — a mutated frozen `definitionHash`, a blocking
+  validation message rather than a thrown impact error — through the **literal CLI** (`npx
+tsx …` subprocess, the same invocation as `npm run ip-cards:releases`) → exit code 1,
+  stderr names `release_definition_mutated`, all nine sentinels byte-identical, no partial
+  or temporary output;
+- the literal CLI with valid inputs after deleting the five write-only targets → exit 0,
+  every artifact recreated and equal to the canonical committed generation as JSON
+  documents (the writer's own no-change contract; the committed `release-bundles.json`
+  carries a legacy `—` escape a fresh write serializes literally), and a second run is
+  byte-identical.
+
+Both failure probes were additionally run by hand with per-file SHA-256 capture over all
+nine targets: byte-identical before/after in both, no new files in either.
 
 ## Superseded statements
 
