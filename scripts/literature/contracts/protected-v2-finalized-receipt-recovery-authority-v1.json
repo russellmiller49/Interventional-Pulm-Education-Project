@@ -1,0 +1,9 @@
+{
+  "authority": {
+    "amendmentIdentitySha256": "dd163ed5157fe1d8381936e108adc2a69198e5c27e8a45bc221069a6e8b1d4dd",
+    "originalIntentSha256": "deeedb1e93921d0e0e8a01009a6a1ed5c67114f53f94ea5cac277d99f113d8f4",
+    "recoveryToolBundleSha256": "8c0dc30e007a0f93a9a8feed473be60902a3bcf17a4d856cdeee393d67c56861"
+  },
+  "authorityIdentitySha256": "c48f4c31aff5294ce615996bc0375f31d784a5cb68252734f5eee41741a5263d",
+  "schemaVersion": "gold-import-compensation-v2-finalized-recovery-receipt-authority/1.0.0"
+}
