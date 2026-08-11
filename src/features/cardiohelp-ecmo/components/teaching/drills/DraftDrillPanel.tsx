@@ -1,4 +1,5 @@
 import { evidenceById } from '../../../content/evidence'
+import { cardiohelpScenarioById } from '../../../content/scenarios'
 import type { EcmoSimulationState, FaultId, SupportMode } from '../../../engine/types'
 import { TextEquivalent, VaConfigurationLabel, styles } from '../shared'
 import {
@@ -76,6 +77,16 @@ export function faultState(
   state: EcmoSimulationState,
   fault: FaultId,
 ): 'active' | 'corrected' | 'not active' {
+  // The arterial-bubble workflow intentionally preserves the active-fault entry while the source
+  // is corrected but the console latch remains set. Only that workflow lets the corrected record
+  // take precedence. Any other fault present in both arrays has been reactivated and is active.
+  if (
+    fault === 'arterial-bubble' &&
+    state.scenario.correctedFaults.includes(fault) &&
+    !state.circuit.arterialBubbleDetected
+  ) {
+    return 'corrected'
+  }
   if (state.scenario.activeFaults.includes(fault)) return 'active'
   if (state.scenario.correctedFaults.includes(fault)) return 'corrected'
   return 'not active'
@@ -132,6 +143,26 @@ function SourceSupport({ items }: { readonly items: readonly DraftPanelSourceSup
   )
 }
 
+function CorrectedStateNotice() {
+  return (
+    <aside className="rounded-2xl border px-4 py-3 text-sm" data-corrected-state-note role="note">
+      <p className="font-semibold">Current live status: authored cause marked corrected</p>
+      <p className="mt-1 text-muted-foreground">
+        The signal tables show the current state. The mechanism below describes the earlier
+        active-fault pattern, while the fitting response describes the full intended workflow. Use
+        the current state and event history to determine which steps are complete and which remain;
+        do not assume that correcting the cause completed every response step.
+      </p>
+    </aside>
+  )
+}
+
+const correctedClinicalQuestion =
+  'The authored cause has been marked corrected. Which current device, circuit or gas-path, and patient findings show what has changed, and which response or reassessment steps still remain?'
+
+const preEventClinicalQuestion =
+  'The authored cause is not active in the current state. Which baseline device, circuit or gas-path, and patient findings should be established before the scenario changes?'
+
 /**
  * One deliberately constrained renderer for the fourteen B6 draft panels.
  *
@@ -149,13 +180,24 @@ export function DraftDrillPanel({
 }) {
   const signalRows = config.signalRows(state)
   const boundaries = config.boundaries.map((boundary) => liveText(boundary, state))
+  const scenario = cardiohelpScenarioById.get(config.scenarioId)
+  if (!scenario) throw new Error(`No authored scenario for draft panel ${config.scenarioId}`)
+  const causeStatus = faultState(state, scenario.expectation.correctiveFault)
+  const isCorrected = causeStatus === 'corrected'
+  const committed = state.scenario.prediction.committed
 
   return (
     <DrillPanelFrame
       scenarioId={config.scenarioId}
       supportMode={config.supportMode}
-      clinicalQuestion={liveText(config.clinicalQuestion, state)}
-      boundaries={boundaries}
+      clinicalQuestion={
+        isCorrected
+          ? correctedClinicalQuestion
+          : causeStatus === 'not active'
+            ? preEventClinicalQuestion
+            : liveText(config.clinicalQuestion, state)
+      }
+      boundaries={committed ? boundaries : []}
       reviewStatus="draft"
       creditEligible={false}
     >
@@ -168,6 +210,7 @@ export function DraftDrillPanel({
       />
       <Discriminators items={config.discriminators} />
       <AfterCommitment state={state}>
+        {isCorrected ? <CorrectedStateNotice /> : null}
         <Mechanism>{liveText(config.mechanism, state)}</Mechanism>
         <CompetingExplanations items={config.competingExplanations} />
         <FittingResponse>{liveText(config.fittingResponse, state)}</FittingResponse>
@@ -181,7 +224,11 @@ export function DraftDrillPanel({
           {liveText(config.harmfulReflex.explanation, state)}
         </HarmfulReflex>
         <SourceSupport items={config.sourceSupport} />
-        <TextEquivalent>{liveText(config.textEquivalent, state)}</TextEquivalent>
+        <TextEquivalent>
+          {isCorrected
+            ? `Current live status: the authored cause is marked corrected. The signal register earlier in this panel is current. The mechanism describes the earlier active-fault state, while the fitting response describes the full intended workflow; the current state and event history determine which steps remain. ${liveText(config.textEquivalent, state)}`
+            : liveText(config.textEquivalent, state)}
+        </TextEquivalent>
       </AfterCommitment>
     </DrillPanelFrame>
   )

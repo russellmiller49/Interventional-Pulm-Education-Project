@@ -34,8 +34,8 @@ import { ModelBoundary, TextEquivalent, styles } from '../shared'
  *
  * The first three mirror `EcmoReadoutStatus` exactly, because a panel that re-derived them would be
  * a second opinion about a question A1 already settled. The last three exist because a panel shows
- * quantities this console never displays at all: a value measured somewhere else entirely, a model
- * estimate, and a value this case simply asserts.
+ * quantities this console never displays at all: a configured setpoint, a value measured somewhere
+ * else entirely, a model estimate, and a value this case simply asserts.
  *
  * `off-console` is load-bearing rather than a nicety. A bedside oximeter, an arterial blood gas, the
  * blender settings and an echocardiographic estimate are the other three of the four domains this
@@ -46,6 +46,7 @@ export type DrillSignalKind =
   | 'valid'
   | 'device-unavailable'
   | 'simulation-unmodeled'
+  | 'configured'
   | 'off-console'
   | 'estimated'
   | 'derived'
@@ -71,6 +72,7 @@ const SIGNAL_KIND_LABEL: Readonly<Record<DrillSignalKind, string>> = {
   valid: 'On the console',
   'device-unavailable': 'Unavailable on this console',
   'simulation-unmodeled': 'Not modeled here',
+  configured: 'Configured setting',
   'off-console': 'Measured off the console',
   estimated: 'Model estimate',
   derived: 'Derived in this simulation',
@@ -84,6 +86,8 @@ const SIGNAL_KIND_LEGEND: Readonly<Record<DrillSignalKind, string>> = {
     'the console would not show a number here — the sensor is not reporting, or the value is outside the range it displays',
   'simulation-unmodeled':
     'this simulation has no value to offer for this state, which is not a claim about what the device would show',
+  configured:
+    'set by an operator on the device or external gas path named in the measured-at column; it is not a patient or circuit measurement',
   'off-console':
     'measured on the patient or on another device. This console neither produces nor displays it',
   estimated: 'derived by the model rather than measured by anything',
@@ -193,8 +197,8 @@ export function SignalRegister({
         <table className="w-full text-sm" data-signal-register>
           <caption className="sr-only">
             Every signal this drill turns on, where it is measured, and whether it is valid,
-            unavailable, unmodeled, estimated, derived, off the console, at the bedside, or
-            authored.
+            unavailable, unmodeled, configured, estimated, derived, off the console, at the bedside,
+            or authored.
           </caption>
           <thead>
             <tr className="text-left">
@@ -568,15 +572,17 @@ export function DrillPanelFrame({
         </p>
       </section>
       {children}
-      <section className={styles.section} aria-labelledby="drill-boundary-heading">
-        <h3 id="drill-boundary-heading" className={styles.heading}>
-          What this simulation cannot show you
-        </h3>
-        {boundaries.map((boundary, index) => (
-          // Authored prose in a fixed list; there is no other stable key and the list never reorders.
-          <ModelBoundary key={index}>{boundary}</ModelBoundary>
-        ))}
-      </section>
+      {boundaries.length > 0 ? (
+        <section className={styles.section} aria-labelledby="drill-boundary-heading">
+          <h3 id="drill-boundary-heading" className={styles.heading}>
+            What this simulation cannot show you
+          </h3>
+          {boundaries.map((boundary, index) => (
+            // Authored prose in a fixed list; there is no other stable key and the list never reorders.
+            <ModelBoundary key={index}>{boundary}</ModelBoundary>
+          ))}
+        </section>
+      ) : null}
     </div>
   )
 }

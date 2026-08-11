@@ -10,6 +10,7 @@ import {
   ecmoFrozenPilotPanelScenarioIds,
   validateEcmoDrillPanelRegistry,
 } from '../components/teaching/EcmoDrillTeachingPanel'
+import { faultState } from '../components/teaching/drills/DraftDrillPanel'
 import { remainingVaDrillPanelConfigs } from '../components/teaching/drills/RemainingVaDrillPanels'
 import { remainingVvDrillPanelConfigs } from '../components/teaching/drills/RemainingVvDrillPanels'
 import { DRILL_SIGNAL_KINDS } from '../components/teaching/drills/drillPanelPrimitives'
@@ -95,6 +96,8 @@ const forbiddenPrecommitSemantics: Readonly<Record<keyof typeof draftConfigs, re
       /oxygenator resistance/i,
       /membrane dysfunction/i,
       /exchange (?:the )?(?:membrane|oxygenator)/i,
+      /oxygenator-failure findings/i,
+      /component exchange/i,
     ],
     'acute-hypercapnia': [/acute hypercapnia/i, /increase (?:the )?sweep/i, /insufficient co2/i],
     'compensated-hypercapnia': [
@@ -102,7 +105,13 @@ const forbiddenPrecommitSemantics: Readonly<Record<keyof typeof draftConfigs, re
       /hold (?:the )?sweep/i,
       /preserve (?:the )?compensat/i,
     ],
-    'transport-power-loss': [/ac (?:mains )?(?:power )?loss/i, /restore (?:verified )?ac/i],
+    'transport-power-loss': [
+      /ac (?:mains )?(?:power )?loss/i,
+      /restore (?:verified )?ac/i,
+      /remaining runtime/i,
+      /safe (?:remaining )?(?:time|interval)/i,
+      /backup readiness/i,
+    ],
     'va-startup-sensor-orientation': [/complete (?:the )?startup/i, /tip-to-tip/i],
     'va-preload-drainage-collapse': [
       /preload-limited/i,
@@ -125,13 +134,26 @@ const forbiddenPrecommitSemantics: Readonly<Record<keyof typeof draftConfigs, re
       /gas-source interruption/i,
       /source interrupted/i,
       /restore (?:the )?(?:verified )?(?:gas )?source/i,
+      /source, blender, and line/i,
+      /physically continuous and delivering/i,
     ],
     'va-arterial-bubble-stop': [
       /(?:arterial|return-side) bubble/i,
       /air indication present/i,
       /isolate (?:the )?patient/i,
+      /physical isolation/i,
+      /separated from both circuit limbs/i,
+      /check both limbs/i,
+      /fully isolated/i,
     ],
-    'va-transport-power-loss': [/ac (?:mains )?(?:power )?loss/i, /restore (?:verified )?ac/i],
+    'va-transport-power-loss': [
+      /ac (?:mains )?(?:power )?loss/i,
+      /restore (?:verified )?ac/i,
+      /verified alternate source/i,
+      /immediately usable backup/i,
+      /backup system .*ready/i,
+      /remaining runtime/i,
+    ],
   }
 
 const rawRuntimeIdentifiers = [
@@ -205,6 +227,7 @@ describe('B6 draft-panel precommit and postcommit contracts', () => {
     expect(container.querySelector('[data-withheld-until-commitment]')).not.toBeNull()
     expect(container.querySelector('[data-after-commitment]')).toBeNull()
     expect(container.querySelector('[data-panel-source-support]')).toBeNull()
+    expect(container.querySelector('[data-model-boundary]')).toBeNull()
     for (const selector of [
       '[data-drill-mechanism]',
       '[data-drill-competing]',
@@ -276,6 +299,23 @@ describe('B6 draft-panel provenance, number, and copy contracts', () => {
     }
   })
 
+  it.each(DRAFT_IDS)(
+    '%s labels configured setpoints as settings rather than measurements',
+    (id) => {
+      const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
+      const configuredLabels =
+        /^(?:Pump speed|External sweep-gas flow(?: setting)?|Sweep-gas oxygen fraction)$/i
+      for (const row of container.querySelectorAll('[data-signal]')) {
+        const label = row.getAttribute('data-signal') ?? ''
+        if (configuredLabels.test(label)) {
+          expect({ id, label, kind: row.getAttribute('data-signal-kind') }).toMatchObject({
+            kind: 'configured',
+          })
+        }
+      }
+    },
+  )
+
   it.each(DRAFT_IDS)('%s never calls an off-console or bedside site a console reading', (id) => {
     const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
     const offConsoleSites =
@@ -321,6 +361,21 @@ describe('B6 draft-panel provenance, number, and copy contracts', () => {
 })
 
 describe('B6 draft panels render live active, corrected, and unavailable states', () => {
+  it.each(DRAFT_IDS)('%s uses a truthful neutral question before its cause is active', (id) => {
+    const initial = createInitialSimulationState(id, 'guided')
+    const scenario = cardiohelpScenarioById.get(id)
+    if (!scenario) throw new Error(`No scenario ${id}`)
+    if (faultState(initial, scenario.expectation.correctiveFault) !== 'not active') return
+
+    const { container } = render(<EcmoDrillTeachingPanel state={initial} />)
+    expect(container.querySelector('[data-clinical-question]')?.textContent).toMatch(
+      /authored cause is not active in the current state/i,
+    )
+    expect(container.querySelector('[data-clinical-question]')?.textContent).toMatch(
+      /which baseline .* findings should be established/i,
+    )
+  })
+
   it.each(DRAFT_IDS)('%s renders all required state classes without invalid output', (id) => {
     const active = settled(id)
     const variants = [active, afterCorrection(active), unavailablePressureState(active)]
@@ -340,6 +395,82 @@ describe('B6 draft panels render live active, corrected, and unavailable states'
       expect(row.querySelector('[data-signal-value]')?.textContent).toContain('--')
       expect(row.textContent).toMatch(/intentionally unavailable/i)
     }
+
+    const corrected = render(<EcmoDrillTeachingPanel state={afterCorrection(active)} />)
+    const correctedNote = corrected.container.querySelector('[data-corrected-state-note]')
+    expect(correctedNote).not.toBeNull()
+    expect(correctedNote?.textContent).toMatch(/signal tables show the current state/i)
+    expect(correctedNote?.textContent).toMatch(/full intended workflow/i)
+    expect(correctedNote?.textContent).toMatch(/do not assume .* completed every response step/i)
+    expect(corrected.container.querySelector('[data-clinical-question]')?.textContent).toMatch(
+      /authored cause has been marked corrected/i,
+    )
+    expect(corrected.container.querySelector('[data-clinical-question]')?.textContent).toMatch(
+      /which response or reassessment steps still remain/i,
+    )
+  })
+
+  it('treats a reactivated non-bubble cause as active while preserving the corrected bubble-latch state', () => {
+    const preload = settled('va-preload-drainage-collapse')
+    const reactivatedPreload: EcmoSimulationState = {
+      ...preload,
+      scenario: {
+        ...preload.scenario,
+        activeFaults: ['preload-limited'],
+        correctedFaults: ['preload-limited'],
+      },
+    }
+    expect(faultState(reactivatedPreload, 'preload-limited')).toBe('active')
+
+    const bubble = settled('va-arterial-bubble-stop')
+    const correctedWithLatch: EcmoSimulationState = {
+      ...bubble,
+      circuit: {
+        ...bubble.circuit,
+        arterialBubbleDetected: false,
+        bubbleResetRequired: true,
+      },
+      scenario: {
+        ...bubble.scenario,
+        activeFaults: ['arterial-bubble'],
+        correctedFaults: ['arterial-bubble'],
+      },
+    }
+    expect(faultState(correctedWithLatch, 'arterial-bubble')).toBe('corrected')
+
+    const reinjectedBubble: EcmoSimulationState = {
+      ...correctedWithLatch,
+      circuit: {
+        ...correctedWithLatch.circuit,
+        arterialBubbleDetected: true,
+        bubbleResetRequired: true,
+      },
+    }
+    expect(faultState(reinjectedBubble, 'arterial-bubble')).toBe('active')
+  })
+
+  it.each([
+    ['va-startup-sensor-orientation', /recording required right-arm and lower-body oxygenation/i],
+    ['va-preload-drainage-collapse', /immediate volume treatment from console data alone/i],
+    [
+      'va-afterload-arterial-return-obstruction',
+      /briefly raise displayed flow and MAP while pInt and pArt rise/i,
+    ],
+    ['va-afterload-oxygenator-resistance', /higher RPM can briefly raise displayed flow and MAP/i],
+    ['va-lv-loading', /work of breathing does not change in this VA response/i],
+    ['va-lv-loading', /increasing pump speed .* is the harmful reflex/i],
+    ['va-acute-hypercapnia', /vasopressor support, pump speed, or sweep-gas oxygen fraction/i],
+    ['va-acute-hypercapnia', /work of breathing does not change in this VA response/i],
+    ['va-arterial-bubble-stop', /same-timestamp movement is not physiological evidence/i],
+    ['va-arterial-bubble-stop', /does not establish the engine's clamp order/i],
+    ['va-transport-power-loss', /reducing pump speed .* is the harmful reflex/i],
+    ['va-transport-power-loss', /backup readiness is not a represented state/i],
+  ] as const)('%s carries revised safety content in its text equivalents', (id, pattern) => {
+    const { container } = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
+    const equivalents = Array.from(container.querySelectorAll('[data-text-equivalent]'))
+      .map((element) => element.textContent ?? '')
+      .join(' ')
+    expect(equivalents).toMatch(pattern)
   })
 
   it.each(DRAFT_IDS)('%s best commitment matches the scenario expectation', (id) => {
@@ -353,5 +484,48 @@ describe('B6 draft panels render live active, corrected, and unavailable states'
       control: scenario.expectation.control,
       direction: scenario.expectation.direction,
     })
+  })
+
+  it('renders the live post-oxygenator signal in the VV membrane-resistance panel', () => {
+    const { container } = render(
+      <EcmoDrillTeachingPanel state={settled('afterload-oxygenator-resistance')} />,
+    )
+    expect(container.querySelector('[data-signal="Post-oxygenator saturation"]')).not.toBeNull()
+  })
+
+  it.each([
+    'afterload-return-obstruction',
+    'afterload-oxygenator-resistance',
+    'va-afterload-arterial-return-obstruction',
+    'va-afterload-oxygenator-resistance',
+  ] as const)('%s explains the apparent RPM benefit without calling it correction', (id) => {
+    const { container } = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
+    expect(container.textContent).toMatch(/(?:short-term rise|briefly raise).*displayed flow/is)
+    expect(container.textContent).toMatch(/(?:not resolution|does not correct)/i)
+  })
+
+  it('discloses compensated-state drift after the authored hold', () => {
+    const { container } = render(
+      <EcmoDrillTeachingPanel state={afterCommitment(settled('compensated-hypercapnia'))} />,
+    )
+    expect(container.textContent).toMatch(/drift despite unchanged settings/i)
+    expect(container.textContent).toMatch(/known model limitation/i)
+  })
+
+  it.each(['va-lv-loading', 'va-acute-hypercapnia'] as const)(
+    '%s discloses that VA breathing effort is not a responsive validation signal',
+    (id) => {
+      const { container } = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
+      expect(container.textContent).toMatch(/work of breathing .*does not change/i)
+      expect(container.textContent).toMatch(/not a responsive signal/i)
+    },
+  )
+
+  it('discloses the same-timestamp patient-motion limit in the VA air-event draft', () => {
+    const { container } = render(
+      <EcmoDrillTeachingPanel state={afterCommitment(settled('va-arterial-bubble-stop'))} />,
+    )
+    expect(container.textContent).toMatch(/without elapsed model time/i)
+    expect(container.textContent).toMatch(/same-timestamp patient movement/i)
   })
 })

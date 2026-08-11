@@ -155,18 +155,20 @@ function gasSignalRows(
       'The same blood-gas value can carry a different question in a different phase.',
       'authored',
     ),
-    offConsoleSignalRow(
+    valueSignalRow(
       'External sweep-gas flow',
       'External blender or flowmeter feeding the membrane lung',
       liveNumber(state.gas.sweepLpm, 'L/min', 1),
       'A gas-path setting outside the CARDIOHELP touchscreen.',
+      'configured',
       'sweepGasFlow',
     ),
-    offConsoleSignalRow(
+    valueSignalRow(
       'Sweep-gas oxygen fraction',
       'External gas blender',
       livePercent(state.gas.fio2 * 100),
       'A separate gas-path setting; it is not the sweep-flow value.',
+      'configured',
       'sweepGasOxygenFraction',
     ),
     valueSignalRow(
@@ -299,7 +301,7 @@ const afterloadReturnObstruction = {
   harmfulReflex: {
     action: 'Repeatedly increasing pump speed to chase the lower displayed flow.',
     explanation:
-      'A centrifugal pump cannot remove a downstream limitation by being asked to push harder. The request can raise circuit pressure while leaving delivered flow constrained and delays localization of the cause.',
+      'A centrifugal pump cannot remove a downstream limitation by being asked to push harder. This bounded model may show a short-term rise in displayed flow and patient saturation as speed rises, but the post-pump pressure cost also rises, the obstruction remains, and the action earns no corrective credit. That apparent benefit is not resolution.',
   },
   boundaries: [
     'The pressure and flow magnitudes are bounded teaching values. No displayed number is a universal limit, target, or intervention threshold.',
@@ -332,10 +334,26 @@ const afterloadOxygenatorResistance = {
   supportMode: 'vv',
   clinicalQuestion:
     'Which explanation remains most consistent after the displayed gradient is compared with its two component pressures and blood flow?',
-  signalRows: afterloadSignalRows,
+  signalRows: (state) => [
+    ...afterloadSignalRows(state),
+    offConsoleSignalRow(
+      'Post-oxygenator saturation',
+      'Sample after the membrane on the return limb',
+      livePercent(state.circuit.postOxygenatorSaturation, 1),
+      'A modeled off-console sample to reconcile with the pressure pattern and gas path; it is not a standalone exchange instruction.',
+      'postOxygenatorSaturation',
+    ),
+  ],
   signalSummary: (state) =>
-    `Circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}; pVen ${displayedPressure(state.circuit.readouts.pVen)}, pInt ${displayedPressure(state.circuit.readouts.pInt)}, pArt ${displayedPressure(state.circuit.readouts.pArt)}, and across-membrane difference ${displayedPressure(state.circuit.readouts.deltaP)}. Patient arterial saturation ${livePercent(state.patient.spo2, 1)}.`,
-  patternRows: afterloadPatternRows,
+    `Circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}; pVen ${displayedPressure(state.circuit.readouts.pVen)}, pInt ${displayedPressure(state.circuit.readouts.pInt)}, pArt ${displayedPressure(state.circuit.readouts.pArt)}, and across-membrane difference ${displayedPressure(state.circuit.readouts.deltaP)}. Post-oxygenator saturation ${livePercent(state.circuit.postOxygenatorSaturation, 1)} and patient arterial saturation ${livePercent(state.patient.spo2, 1)}.`,
+  patternRows: (state) => [
+    ...afterloadPatternRows(state),
+    {
+      label: 'Independent membrane-output sample',
+      reading: `Post-oxygenator saturation ${livePercent(state.circuit.postOxygenatorSaturation, 1)}`,
+      movement: 'Reconcile with the pressure relationship, gas path, and patient observations.',
+    },
+  ],
   patternSummary:
     'Read the gradient only after its two pressure sites and concurrent blood flow are visible. The table describes the state without assigning a cause.',
   discriminators: [
@@ -350,6 +368,11 @@ const afterloadOxygenatorResistance = {
     {
       question: 'Are both component channels reporting plausibly enough to trust the subtraction?',
       whereToLook: 'Readout availability, sensor sites, and bedside circuit inspection.',
+    },
+    {
+      question: 'Does an independent membrane-output sample support the same concern?',
+      whereToLook:
+        'Post-oxygenator saturation, gas delivery, repeat sampling, and the concurrent pressure-flow pattern.',
     },
   ],
   mechanism: (state) =>
@@ -390,10 +413,11 @@ const afterloadOxygenatorResistance = {
   boundaries: [
     'This model supplies a deliberately simplified pressure-flow trend. It does not encode a universal across-membrane alarm priority, resistance cutoff, or exchange threshold.',
     'The simulation cannot reproduce clot distribution, blood properties, gas analyser performance, sensor calibration, or the full set of oxygenator-failure findings.',
+    'Higher pump speed may briefly raise displayed flow and saturation in this bounded model while pInt and the pressure difference worsen. That visible partial gain does not correct the represented membrane problem and earns no corrective credit.',
     'This panel teaches recognition and escalation only; component exchange and circuit intervention remain governed by the current device instructions and approved local protocol.',
   ],
   textEquivalent: (state) =>
-    `Membrane-segment drill. Live signals: circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}, pVen ${displayedPressure(state.circuit.readouts.pVen)}, pInt ${displayedPressure(state.circuit.readouts.pInt)}, pArt ${displayedPressure(state.circuit.readouts.pArt)}, across-membrane difference ${displayedPressure(state.circuit.readouts.deltaP)}, and patient arterial saturation ${livePercent(state.patient.spo2, 1)}. After commitment, the modeled explanation is increased resistance across the membrane segment, with a return-path limitation and channel error retained as competitors. The fitting response is full-pattern and gas-transfer assessment, local escalation, and device, circuit, and patient reassessment. A single gradient used as an automatic exchange instruction is the harmful reflex. The values and trend are bounded; no universal cutoff, alarm priority, exchange trigger, or hands-on procedure is encoded. Source claims are limited to pressure-zone monitoring, trending without a fixed priority claim, circuit-safety context, and this model’s deterministic relationship.`,
+    `Membrane-segment drill. Live signals: circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}, pVen ${displayedPressure(state.circuit.readouts.pVen)}, pInt ${displayedPressure(state.circuit.readouts.pInt)}, pArt ${displayedPressure(state.circuit.readouts.pArt)}, across-membrane difference ${displayedPressure(state.circuit.readouts.deltaP)}, post-oxygenator saturation ${livePercent(state.circuit.postOxygenatorSaturation, 1)}, and patient arterial saturation ${livePercent(state.patient.spo2, 1)}. After commitment, the modeled explanation is increased resistance across the membrane segment, with a return-path limitation and channel error retained as competitors. The fitting response is full-pattern and gas-transfer assessment, local escalation, and device, circuit, and patient reassessment. A single gradient used as an automatic exchange instruction is the harmful reflex. The values and trend are bounded; no universal cutoff, alarm priority, exchange trigger, or hands-on procedure is encoded. Source claims are limited to pressure-zone monitoring, gas-transfer context, trending without a fixed priority claim, circuit-safety context, and this model’s deterministic relationship.`,
   sourceSupport: [
     {
       evidenceId: 'ifu-anomaly-boundary',
@@ -404,6 +428,11 @@ const afterloadOxygenatorResistance = {
       evidenceId: 'ecmo-book-ch9',
       claim:
         'Supports circuit pressure zones, sensor orientation, inspection, and centrifugal-pump afterload sensitivity as general concepts.',
+    },
+    {
+      evidenceId: 'ecmo-book-ch18',
+      claim:
+        'Supports interpreting gas-transfer observations alongside the membrane and gas path; it does not supply a component-exchange threshold.',
     },
     {
       evidenceId: 'elso-circuit-2022',
@@ -548,6 +577,11 @@ const compensatedHypercapnia = {
     )}`,
   competingExplanations: [
     {
+      candidate: 'A concurrent metabolic alkalosis',
+      standing:
+        'A fully normal pH with bicarbonate this high can reflect more than respiratory compensation alone. The metabolic history and repeat sample remain necessary; that possibility is not a reason for rapid carbon-dioxide removal.',
+    },
+    {
       candidate: 'A newly worsening acid-base disturbance',
       standing:
         'It remains important if pH, bicarbonate, symptoms, effort, or trajectory change. A carbon-dioxide value alone cannot distinguish it from an already compensated state.',
@@ -559,7 +593,7 @@ const compensatedHypercapnia = {
     },
   ],
   fittingResponse:
-    'Preserve the current compensation unless a patient-centered goal justifies a bounded change. Verify the gas path, review symptoms and work of breathing, and reassess the blood gas and trajectory instead of using a generic reference interval as the treatment endpoint.',
+    'For this authored maintenance state, preserve the current compensation unless a patient-centered goal justifies a bounded change. Verify the gas path, review the metabolic history, symptoms, and work of breathing, and reassess the blood gas and trajectory instead of using a generic reference interval as the treatment endpoint.',
   responseByDomain: {
     device:
       'Do not use pump speed to normalize an isolated carbon-dioxide value. Recheck blood flow and console state while the patient-centered plan is reviewed.',
@@ -578,11 +612,17 @@ const compensatedHypercapnia = {
   boundaries: [
     'This case does not define a universal permissive-hypercapnia, carbon-dioxide, pH, bicarbonate, or sweep-flow target.',
     'The model simplifies renal compensation, mixed acid-base disorders, ventilation, carbon-dioxide production, symptoms, and the time course of response.',
+    'After the authored hold is recorded, this engine releases its compensated target and the blood gas may drift despite unchanged settings. That drift is a known model limitation, not a physiologic effect of holding sweep, and this panel remains on hold pending an owner decision.',
     'The displayed response is a bounded teaching curve. Its exact size and timing are not a patient forecast or dosing instruction.',
   ],
   textEquivalent: (state) =>
     `Maintenance acid-base drill. Live signals: sweep flow ${liveNumber(state.gas.sweepLpm, 'L/min', 1)}, sweep-gas oxygen fraction ${livePercent(state.gas.fio2 * 100)}, circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}, arterial carbon dioxide ${liveNumber(state.patient.paCO2, 'mmHg')}, pH ${state.patient.pH.toFixed(2)}, bicarbonate ${liveNumber(state.patient.bicarbonate, 'mmol/L')}, and ${workOfBreathingLabel(state.patient.workOfBreathing).toLowerCase()}. After commitment, the modeled explanation is a compensated carbon-dioxide state that cannot be interpreted from carbon dioxide alone; a newly worsening disturbance or a specifically named patient goal remains a competitor. The fitting response is to preserve compensation unless a patient-centered goal supports a bounded change, while reassessing device, gas path, and patient. Rapid goal-free normalization is the harmful reflex. No universal permissive target is taught, and renal, metabolic, respiratory, symptom, and response timing are simplified. Sources support phase-aware sweep reasoning and the bounded model only.`,
   sourceSupport: [
+    {
+      evidenceId: 'ecmo-book-ch16',
+      claim:
+        'Supports defining the patient-centered support goal and interpreting the wider clinical context before changing support.',
+    },
     {
       evidenceId: 'ecmo-book-ch18',
       claim:
@@ -613,7 +653,7 @@ const transportPowerLoss = {
       'Console battery indication',
       'Transport status display on the console',
       livePercent(state.device.batteryPercent, 1),
-      'A live reserve indication to trend. It is not a prediction of remaining minutes.',
+      'A live device reserve indication to read beside the current source, pump, flow, and patient state.',
       'valid',
       'batteryReserve',
     ),
@@ -641,7 +681,7 @@ const transportPowerLoss = {
     ),
   ],
   signalSummary: (state) =>
-    `Power source ${powerSourceLabel(state)}; battery indication ${livePercent(state.device.batteryPercent, 1)}; ${pumpStateLabel(state).toLowerCase()}; circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}; patient arterial saturation ${livePercent(state.patient.spo2, 1)}. The battery percentage does not encode remaining runtime.`,
+    `Power source ${powerSourceLabel(state)}; battery indication ${livePercent(state.device.batteryPercent, 1)}; ${pumpStateLabel(state).toLowerCase()}; circuit flow ${liveNumber(state.circuit.bloodFlow, 'L/min', 2)}; patient arterial saturation ${livePercent(state.patient.spo2, 1)}.`,
   patternRows: (state) => [
     {
       label: 'Power path',
@@ -665,7 +705,7 @@ const transportPowerLoss = {
     },
   ],
   patternSummary:
-    'Power source, battery reserve, pump state, measured blood flow, and patient state answer different questions. The percentage is not translated into time.',
+    'Power source, battery reserve, pump state, measured blood flow, and patient state answer different questions and must be read as one transport snapshot.',
   discriminators: [
     {
       question: 'Which display establishes the source currently carrying the console?',
@@ -676,8 +716,9 @@ const transportPowerLoss = {
       whereToLook: 'The circuit blood-flow row, checked against pump state and patient assessment.',
     },
     {
-      question: 'Can the displayed percentage alone establish remaining runtime?',
-      whereToLook: 'The reserve row and its model boundary; no duration is supplied.',
+      question: 'Which facts needed for a transport decision are not supplied by the reserve row?',
+      whereToLook:
+        'Compare source, pump, flow, physical transport setup, and independent patient assessment without treating one display as the whole state.',
     },
   ],
   mechanism: (state) =>
@@ -711,9 +752,9 @@ const transportPowerLoss = {
       'Reassess oxygenation, perfusion, and the wider bedside state during the source transition and again after power is restored.',
   },
   harmfulReflex: {
-    action: 'Treating the battery percentage as a promise of safe remaining runtime.',
+    action: 'Reducing pump speed or treating the battery percentage as permission to wait.',
     explanation:
-      'The number is a status indication, not a transport clock. Waiting on an inferred duration can consume the margin needed to verify alternate power and backup readiness.',
+      'Reducing support does not stop this model’s battery decline and visibly reduces flow and patient saturation. The percentage is a status indication, not a transport clock; neither action restores a verified source or establishes backup readiness.',
   },
   boundaries: [
     'The battery discharge curve is deliberately accelerated and authored for this exercise. A displayed percentage cannot be converted into remaining minutes or a safe transport interval.',

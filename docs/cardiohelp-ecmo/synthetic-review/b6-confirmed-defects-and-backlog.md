@@ -91,7 +91,7 @@ Priority scale: **P0** active safety or causal contradiction; **P1** answer leak
 ### B6-009 — Answer position and length provide nonclinical shortcuts (P1)
 
 - **Failure class:** assessment construction/cueing.
-- **Location and reproduction:** the best choice is first in all 20 Learn items, all 20 foundation prediction/recheck sets examined, and all 48 Practice reassessments examined. It is uniquely longest in 15/20 Learn items and 16/20 foundation items.
+- **Location and reproduction:** the best choice is first in all 20 Learn items, all 20 foundation prediction/transfer items, and all 42 Practice reassessment questions. It is uniquely longest in 15/20 Learn items, 17/20 foundation items, and 34/42 Practice reassessments.
 - **Second review:** Zeno’s circuit inventory and Lagrange’s assessment review independently computed the patterns; source arrays preserve authored order at render.
 - **Educational harm:** a learner can use “first” or “most detailed” when causal reasoning is uncertain, inflating apparent task success.
 - **Proposed test:** deterministic, accessible answer-order balancing or shuffling with stable choice IDs; add length-distribution review without forcing artificial equality.
@@ -108,15 +108,15 @@ Priority scale: **P0** active safety or causal contradiction; **P1** answer leak
 - **Scope and owner:** protected curriculum/Practice routing is frozen; owner decision required.
 - **Human-testing question:** what mechanism does the learner expect to practise after selecting the CTA, and is the actual case understood as related?
 
-### B6-011 — Hub entry and capstone prerequisites do not match the stated curriculum (P1)
+### B6-011 — Hub entry and counts do not match the stated curriculum (P2)
 
-- **Failure class:** pathway/completion contract mismatch.
-- **Location and reproduction:** “Start curriculum” enters the drill sequence rather than the ten foundation sections. Hub counts describe a different pathway shape from the visible 17 sections. Capstone prerequisites name clinical drill IDs while normal Practice completion records Practice scenario IDs, so ordinary completion cannot satisfy the stated prerequisite contract even though the hub exposes capstone access.
-- **Second review:** nurse-education audit identified the entry/count/prerequisite mismatch; the integration lead traced the arrays and progress IDs. Curriculum tests do not exercise a full ordinary path from foundations through capstone unlock.
-- **Educational harm:** prerequisites can be bypassed at entry and impossible to satisfy through the route that claims to record them.
-- **Proposed test:** end-to-end pathway test from the hub through foundations and Practice using the actual stored IDs; displayed counts derive from registry data.
-- **Scope and owner:** route/progress/persistent contracts are frozen; owner must define the intended runway before implementation.
-- **Human-testing question:** where does a learner expect “Start curriculum” to begin, and can they explain what remains before capstone?
+- **Failure class:** pathway sequencing/count mismatch.
+- **Location and reproduction:** `CardiohelpHub.tsx` labels its primary recommendation “Start the curriculum,” but a fresh learner is sent to `startup-sensor-orientation` while both 17-section pathways begin with six foundation/physiology sections and the Learn landing page says to start with physiology. Hub copy says “Ten lessons per track,” which is ambiguous beside the 17 visible sections.
+- **Second review:** nurse-education audit identified the entry/count mismatch; independent curriculum cross-examination traced `curriculum.ts`, `learningPathways.ts`, and the hub/landing copy. Existing tests explicitly ratify the startup-drill recommendation but do not test consistency with the pathway narrative.
+- **Educational harm:** the primary entry bypasses the prerequisites presented first by the pathway, and unexplained counts obscure the intended sequence and workload.
+- **Proposed test:** define whether a fresh Start CTA resolves to the first foundation or the first drill, then assert matching hub/landing copy and registry-derived counts such as “17 sections: 7 foundations/integration + 10 drills.”
+- **Scope and owner:** routes and persistent contracts are frozen; owner must define the intended runway and terminology before implementation.
+- **Human-testing question:** where does a learner expect “Start curriculum” to begin, and what do they understand “Ten lessons” to include?
 
 ### B6-012 — Bubble controls move patient physiology without elapsed time (P2)
 
@@ -178,15 +178,15 @@ Priority scale: **P0** active safety or causal contradiction; **P1** answer leak
 - **Scope and owner:** Practice/foundation copy surfaces are outside B6; B6 panels resolve source titles and keep IDs nonvisual.
 - **Human-testing question:** when an identifier appears, is it interpreted as a code to remember, an alarm, or a broken label?
 
-### B6-018 — Tab-list keyboard contract is incomplete (P3)
+### B6-018 — Foundation compact tab-list keyboard contract is incomplete (P1)
 
 - **Failure class:** accessibility/keyboard semantics.
-- **Location and reproduction:** foundation compact tabs and simulator bedside/pressure tabs use roving `tabIndex`, but do not implement Arrow, Home, or End behavior expected for a tab list. Browser automation’s Tab/Shift+Tab did not demonstrate selection movement; source confirms no key handler.
-- **Second review:** accessibility audit identified both implementations; independent curriculum/accessibility cross-examination and integration source inspection confirm the missing handlers.
-- **Educational harm:** keyboard-only navigation can reach the selected tab but cannot operate the group with the announced interaction model.
+- **Location and reproduction:** `ResizableTeachingWorkspace.tsx` gives foundation compact tabs a roving `tabIndex` and click handlers but no Arrow, Home, or End handler. Because nonselected tabs are removed from sequential tab order, keyboard-only navigation cannot select another foundation panel through the announced tab interaction model.
+- **Second review:** accessibility audit identified the implementation; independent curriculum/accessibility cross-examination reproduced the source contract. The simulator tabs were checked separately and do implement the standard keys.
+- **Educational harm:** a keyboard-only learner can be trapped on the initially selected foundation panel at compact widths.
 - **Proposed test:** keyboard tests for ArrowLeft/Right (or orientation-appropriate keys), Home, End, focus/selection synchronization, and no pointer rescue.
 - **Scope and owner:** shared existing UI is outside the B6 panel-authoring surface; owner may address separately.
-- **Human-testing question:** can a keyboard-only learner discover, change, and understand both view selectors without pointer assistance?
+- **Human-testing question:** after correction, can a keyboard-only learner discover, change, and understand the foundation compact tabs without pointer assistance?
 
 ### B6-019 — Several horizontal data surfaces lack a named focusable scroller (P3)
 
@@ -218,6 +218,8 @@ Priority scale: **P0** active safety or causal contradiction; **P1** answer leak
 | The VA limb Practice workflow falsely claims to perform a catheter procedure        | **Refuted as stated.** The case requires bilateral assessment, blocks rescue before assessment, uses a generic specialist action, and explicitly disclaims catheter-manipulation instruction. | Static opening values differ slightly from initial live state; label as prior sample or align them. Add end-to-end prerequisite/final-state coverage.                                                                      |
 | Copy count proves excessive cognitive load                                          | **Refuted as proof.** Word counts are objective; burden and skipping remain synthetic hypotheses requiring human observation.                                                                 | Preserve counts and test which sections are read, skipped, or used as reference rather than assuming harm.                                                                                                                 |
 | The gas-interruption panel is inherently indefensible because it shows source state | **Unresolved design disagreement.** One audit treats visible source state as necessary signal reading; another treats `Interrupted` as the answer itself.                                     | Frozen pilot remains unchanged; test what evidence a human learner uses before choosing.                                                                                                                                   |
+| The capstone is inaccessible because its prerequisite IDs cannot be satisfied       | **Refuted.** Hub and Assess copy intentionally expose the capstone as an open challenge; completion helpers provide recommendation/context state rather than access gating.                   | `prerequisite`, `unlock`, and `capstone-unlocked` nomenclature may still imply gating or readiness. Preserve persistent IDs and resolve the product meaning with the owner.                                                |
+| Simulator bedside/pressure tabs lack Arrow, Home, and End support                   | **Refuted.** `EcmoLearnWorkspace.tsx` implements ArrowLeft/Right/Up/Down, Home, End, focus, and selection synchronization; focused tests cover wrapping and endpoints.                        | The foundation compact tabs are a separate confirmed defect and still require remediation/testing.                                                                                                                         |
 
 ## Backlog admission boundary
 
