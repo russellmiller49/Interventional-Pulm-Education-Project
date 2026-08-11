@@ -824,6 +824,12 @@ function protectedV2SqlValues(values: readonly string[]): string {
   return values.map((value) => `('${value.replaceAll("'", "''")}')`).join(', ')
 }
 
+const PROTECTED_V2_FUNCTIONS_WITHOUT_SERVICE_ROLE_EXECUTE = [
+  'enforce_literature_gold_operation_contract_v2',
+  'enforce_literature_gold_review_contract_v2',
+  'get_literature_gold_review_item_v1',
+] as const
+
 /**
  * Project the complete protected catalog between the two fixed supported owner
  * profiles. This is used only inside the owned disposable database and is
@@ -832,13 +838,23 @@ function protectedV2SqlValues(values: readonly string[]): string {
 export function protectedV2CompleteCatalogOwnerProjectionSql(
   owner: 'postgres' | 'supabase_admin',
 ): string {
-  const removeTransferredPostgresTableAcl =
+  const restorePostgresTableAcl =
     owner === 'supabase_admin'
-      ? "\n    execute pg_catalog.format('revoke all privileges on table public.%I from postgres', target.table_name);"
+      ? "\n    execute pg_catalog.format('revoke all privileges on table public.%I from postgres', target.table_name);\n    execute pg_catalog.format('grant all privileges on table public.%I to postgres', target.table_name);"
       : ''
-  const removeTransferredPostgresFunctionAcl =
+  const restorePostgresFunctionAcl =
     owner === 'supabase_admin'
-      ? "\n    execute pg_catalog.format('revoke all privileges on function %s from postgres', target.function_identity);"
+      ? `
+    execute pg_catalog.format('revoke all privileges on function %s from postgres', target.function_identity);
+    execute pg_catalog.format('revoke all privileges on function %s from service_role', target.function_identity);
+    execute pg_catalog.format('grant execute on function %s to postgres', target.function_identity);
+    if target.function_name not in (
+      select function_name from (values ${protectedV2SqlValues(
+        PROTECTED_V2_FUNCTIONS_WITHOUT_SERVICE_ROLE_EXECUTE,
+      )}) as functions(function_name)
+    ) then
+      execute pg_catalog.format('grant execute on function %s to service_role', target.function_identity);
+    end if;`
       : ''
   return `do $protected_v2_transition_owner_projection$
 declare target record;
@@ -849,10 +865,12 @@ begin
     )}) as tables(table_name)
   loop
     execute pg_catalog.format('alter table public.%I owner to ${owner}', target.table_name);
-    ${removeTransferredPostgresTableAcl.trimStart()}
+    ${restorePostgresTableAcl.trimStart()}
   end loop;
   for target in
-    select proc.oid::pg_catalog.regprocedure as function_identity
+    select
+      proc.oid::pg_catalog.regprocedure as function_identity,
+      proc.proname as function_name
     from pg_catalog.pg_proc as proc
     join pg_catalog.pg_namespace as namespace on namespace.oid = proc.pronamespace
     where namespace.nspname = 'public'
@@ -863,7 +881,7 @@ begin
       )
   loop
     execute pg_catalog.format('alter function %s owner to ${owner}', target.function_identity);
-    ${removeTransferredPostgresFunctionAcl.trimStart()}
+    ${restorePostgresFunctionAcl.trimStart()}
   end loop;
 end;
 $protected_v2_transition_owner_projection$;`

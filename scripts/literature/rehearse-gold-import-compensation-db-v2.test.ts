@@ -485,6 +485,17 @@ describe('V2 disposable database rehearsal runner', () => {
     expect(restored).toContain(
       "pg_catalog.format('revoke all privileges on function %s from postgres'",
     )
+    expect(restored).toContain(
+      "pg_catalog.format('grant all privileges on table public.%I to postgres'",
+    )
+    expect(restored).toContain("pg_catalog.format('grant execute on function %s to postgres'")
+    expect(restored).toContain(
+      "pg_catalog.format('revoke all privileges on function %s from service_role'",
+    )
+    expect(restored).toContain("pg_catalog.format('grant execute on function %s to service_role'")
+    expect(restored).toContain("('enforce_literature_gold_operation_contract_v2')")
+    expect(restored).toContain("('enforce_literature_gold_review_contract_v2')")
+    expect(restored).toContain("('get_literature_gold_review_item_v1')")
     expect(local).not.toContain('revoke all privileges')
     expect(local).toContain("('literature_gold_review_operations')")
     expect(local).toContain("('literature_gold_physical_state_hash_v2')")
