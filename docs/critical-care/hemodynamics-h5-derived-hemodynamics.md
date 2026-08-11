@@ -91,6 +91,36 @@ committed implementation, proven caught, and reverted with
 After restoration: 23 suites / 325 tests green, audit reports no numeric or
 provenance problems.
 
+## Rendered review (2026-08-10)
+
+Reviewed in the running app at `/en/icu-hemodynamics/learn?activity=derived-hemodynamics`
+at 1600×900, 1440×900, 1280×720, and 1024×768, plus `/en/critical-care`,
+`/en/icu-hemodynamics`, and the two neighbouring stations.
+
+All eight episodes, both flow-method result sets, the withheld and
+caution states, the perturbation table, and the threshold-context blocks
+render as authored. Status is carried in words on every result
+(`AVAILABLE` / `AVAILABLE WITH CAUTION` / `WITHHELD`, plus
+`NOT MATHEMATICALLY CALCULABLE` and `NOT CLINICALLY INTERPRETABLE`), so no
+judgment depends on color. No H5 surface overflows the document at any
+reviewed width; below 1300px the lab shell swaps to its existing
+space-saving one-panel-at-a-time view and the station renders full-width
+there. Keyboard focus is visible (`:focus-visible`, amber ring), there are
+no duplicate ids, and the provenance chips measure 7.0–8.2:1 contrast.
+
+One defect was found and fixed: a dependency that accepts more than one
+provenance rendered its chips with no gap, so "Measured" and "Sampled"
+abutted on screen and concatenated to `MEASUREDSAMPLED` in the text the
+panel exposes. The chip cell is now a wrapping flex row.
+
+Two pre-existing conditions are not H5 defects and were left alone. This
+worktree has no `.env.local`, so `src/proxy.ts` throws when it builds a
+Supabase client; that makes non-public routes 500 and `POST /api/analytics`
+fail. The H5 routes are public-unlisted and return before that line, so they
+serve normally. Separately, `scripts/literature/protected-gold-import-contract-v2-recovery-bundle.test.ts`
+(a file this branch does not touch, added by `main`) exceeds its own 15 s
+cap under full-suite parallelism; it passes in isolation.
+
 ## Boundaries
 
 This is an educational simulation pending SME review. It teaches measurement

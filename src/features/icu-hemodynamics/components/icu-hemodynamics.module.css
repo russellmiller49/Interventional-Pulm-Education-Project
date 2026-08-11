@@ -6347,7 +6347,16 @@
   grid-area: label;
 }
 
+/*
+ * A dependency can accept more than one provenance — a wedge pressure is legitimate whether it was
+ * read off the trace or drawn from a stored sample. Those chips are two separate facts, so they need
+ * a gap: abutting inline chips read as one word ("MeasuredSampled") both on screen and in the text
+ * the panel exposes to assistive technology.
+ */
 .methodProvenanceTable > div > dd:first-of-type {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   grid-area: chip;
 }
 
