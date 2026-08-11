@@ -241,10 +241,14 @@ export interface ProtectedV2FinalizedReceiptRecovery {
   resultSha256: string
 }
 
-export interface ProtectedV2FinalizedRecoveryReceiptAuthority {
+export interface ProtectedV2FinalizedRecoveryReceiptReference {
   amendmentIdentitySha256: string
   originalIntentSha256: string
   recoveryToolBundleSha256: string
+}
+
+export interface ProtectedV2FinalizedRecoveryReceiptAuthority extends ProtectedV2FinalizedRecoveryReceiptReference {
+  amendment: ProtectedV2ReceiptRecoveryAmendment
 }
 
 export interface ProtectedV2ReceiptRecoveryOutcome extends ProtectedV2FinalizedReceiptRecovery {
@@ -980,13 +984,83 @@ export function assertProtectedV2FinalizedRecoveryReceiptGate(
   const reparsed = parseProtectedV2ReceiptRecoveryResult(
     canonicalProtectedV2ReceiptRecoveryJson(result),
   )
+  const { amendmentIdentitySha256: suppliedAmendmentIdentity, ...amendmentContent } =
+    authority.amendment
+  const amendment = buildProtectedV2ReceiptRecoveryAmendment(amendmentContent)
+  const expectedCatalog = {
+    auditIdentitySha256: amendment.expectedCatalog.fullAuditIdentitySha256,
+    bindingSha256: amendment.expectedCatalog.bindingSha256,
+    fullAuditIdentitySha256: amendment.expectedCatalog.fullAuditIdentitySha256,
+  }
+  const expectedMigration = {
+    migrationApplied: true,
+    migrationApplicationCallCount: 0,
+    migrationReexecuted: false,
+    migrationStagingCallCount: 0,
+    v1MigrationSha256: amendment.pinnedSources.v1MigrationSha256,
+    v1Occurrence: 1,
+    v2MigrationSha256: amendment.pinnedSources.v2MigrationSha256,
+    v2Occurrence: 1,
+    v2VerifierSha256: amendment.pinnedSources.v2VerifierSha256,
+  }
+  const expectedOriginalIntent = {
+    authorizationContentSha256: amendment.historicalIncident.authorizationContentSha256,
+    intentManifestSha256: amendment.historicalIncident.intentManifestSha256,
+    intentSha256: amendment.historicalIncident.intentSha256,
+    outputDirectory: amendment.historicalIncident.intentOutputDirectory,
+    repositoryHead: amendment.historicalIncident.repositoryHead,
+  }
+  const expectedMutationEvidence = {
+    actionMutationCount: 0,
+    compensationCallCount: 0,
+    compensationMutationCount: 0,
+    importCallCount: 0,
+    importMutationCount: 0,
+    operationMutationCount: 0,
+    pointerMutationCount: 0,
+    reviewMutationCount: 0,
+    revealMutationCount: 0,
+  }
+  const expectedSafety = {
+    compensationAuthorized: false,
+    heldOutIdentitiesAccessed: false,
+    importAuthorized: false,
+    originalIntentRewritten: false,
+    remoteDatabaseAccessed: false,
+  }
   if (
+    amendment.amendmentIdentitySha256 !== suppliedAmendmentIdentity ||
+    amendment.amendmentIdentitySha256 !== authority.amendmentIdentitySha256 ||
+    amendment.historicalIncident.intentSha256 !== authority.originalIntentSha256 ||
+    amendment.correctedRecoveryToolBundle.aggregateSha256 !== authority.recoveryToolBundleSha256 ||
     reparsed.receiptReconciled !== true ||
     reparsed.safety.importAuthorized !== false ||
     reparsed.safety.compensationAuthorized !== false ||
     reparsed.recoveryAmendmentIdentitySha256 !== authority.amendmentIdentitySha256 ||
     reparsed.originalIntent.intentSha256 !== authority.originalIntentSha256 ||
-    reparsed.currentRecoveryToolBundle.aggregateSha256 !== authority.recoveryToolBundleSha256
+    reparsed.currentRecoveryToolBundle.aggregateSha256 !== authority.recoveryToolBundleSha256 ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.currentRecoveryToolBundle) !==
+      canonicalProtectedV2ReceiptRecoveryJson(amendment.correctedRecoveryToolBundle) ||
+    reparsed.defectIdentifier !== amendment.defectIdentifier ||
+    reparsed.defectReason !== amendment.permittedReason ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.expectedCatalog) !==
+      canonicalProtectedV2ReceiptRecoveryJson(expectedCatalog) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.historicalOperatorBundle) !==
+      canonicalProtectedV2ReceiptRecoveryJson(amendment.historicalOperatorBundle) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.migration) !==
+      canonicalProtectedV2ReceiptRecoveryJson(expectedMigration) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.mutationEvidence) !==
+      canonicalProtectedV2ReceiptRecoveryJson(expectedMutationEvidence) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.originalIntent) !==
+      canonicalProtectedV2ReceiptRecoveryJson(expectedOriginalIntent) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.prohibitedCapabilities) !==
+      canonicalProtectedV2ReceiptRecoveryJson(amendment.prohibitedCapabilities) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.safety) !==
+      canonicalProtectedV2ReceiptRecoveryJson(expectedSafety) ||
+    canonicalProtectedV2ReceiptRecoveryJson(reparsed.stateIdentities) !==
+      canonicalProtectedV2ReceiptRecoveryJson(amendment.stateAuthority) ||
+    !COMMIT_PATTERN.test(reparsed.recoveryRepositoryHead) ||
+    !SHA256_PATTERN.test(reparsed.sharedTransitionProofIdentitySha256)
   ) {
     throw new Error('Historical recovery is not a complete, non-authorizing migration receipt.')
   }
@@ -1127,6 +1201,7 @@ function finalizedAuthority(
   amendment: ProtectedV2ReceiptRecoveryAmendment,
 ): ProtectedV2FinalizedRecoveryReceiptAuthority {
   return {
+    amendment,
     amendmentIdentitySha256: amendment.amendmentIdentitySha256,
     originalIntentSha256: amendment.historicalIncident.intentSha256,
     recoveryToolBundleSha256: amendment.correctedRecoveryToolBundle.aggregateSha256,

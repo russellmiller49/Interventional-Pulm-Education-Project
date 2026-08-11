@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
@@ -35,8 +35,10 @@ import {
   type ProtectedV2ExpectedCatalogBinding,
 } from './protected-gold-import-contract-v2-bindings'
 import {
+  loadCommittedProtectedV2RecoveryReceiptAuthority,
+  loadGoldImportCompensationV2LocalMigrationReceiptGate,
   migrationReceiptGateArtifactSha256,
-  validateGoldImportCompensationV2MigrationReceiptGateForAudit,
+  requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit,
   type GoldImportCompensationV2MigrationReceiptGate,
 } from './gold-import-compensation-v2-migration-receipt-gate'
 import { LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY } from './literature-gold-v2-schema-only-transition'
@@ -485,9 +487,10 @@ export function validateReadyGoldImportCompensationV2Audit(
 export interface V2MigrationFirstRuntimeDependencies<TSources, TValidated, TClient> {
   createDatabaseClient: () => Promise<TClient> | TClient
   expectedMigrationReceiptGateSha256: string
-  loadFinalizedMigrationReceiptGate: (
+  loadDisposableMigrationReceiptGate?: (
     audit: GoldImportCompensationV2ReadyAudit,
   ) => Promise<unknown> | unknown
+  migrationReceiptOutputDirectory?: string
   readMigrationProbe: () => Promise<unknown> | unknown
   readSourceArtifacts: () => Promise<TSources> | TSources
   validateSourceAuthorization: (
@@ -518,8 +521,37 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
   const audit = (
     dependencies.validateReadyAuditForTest ?? validateReadyGoldImportCompensationV2Audit
   )(probe)
-  const migrationReceiptGate = validateGoldImportCompensationV2MigrationReceiptGateForAudit(
-    await dependencies.loadFinalizedMigrationReceiptGate(audit),
+  const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+  let loadedMigrationReceiptGate: unknown
+  if (audit.target === 'local') {
+    if (
+      dependencies.loadDisposableMigrationReceiptGate ||
+      !dependencies.migrationReceiptOutputDirectory
+    ) {
+      throw new Error(
+        'Local V2 execution requires the fixed live finalized-receipt filesystem loader.',
+      )
+    }
+    loadedMigrationReceiptGate = await loadGoldImportCompensationV2LocalMigrationReceiptGate({
+      audit,
+      loadRecoveryAuthority: () => loadCommittedProtectedV2RecoveryReceiptAuthority(repositoryRoot),
+      outputDirectory: dependencies.migrationReceiptOutputDirectory,
+      receiptRoot: resolve(
+        repositoryRoot,
+        'local-data/literature/protected-v2-application-receipts',
+      ),
+    })
+  } else {
+    if (
+      dependencies.migrationReceiptOutputDirectory ||
+      !dependencies.loadDisposableMigrationReceiptGate
+    ) {
+      throw new Error('Disposable V2 execution requires its internal non-production proof loader.')
+    }
+    loadedMigrationReceiptGate = await dependencies.loadDisposableMigrationReceiptGate(audit)
+  }
+  const migrationReceiptGate = requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(
+    loadedMigrationReceiptGate,
     audit,
   )
   if (

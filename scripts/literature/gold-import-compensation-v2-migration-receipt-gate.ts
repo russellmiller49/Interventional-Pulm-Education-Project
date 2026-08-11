@@ -18,7 +18,15 @@ import {
 import {
   loadProtectedV2FinalizedReceiptRecovery,
   type ProtectedV2FinalizedRecoveryReceiptAuthority,
+  type ProtectedV2FinalizedRecoveryReceiptReference,
 } from './protected-gold-import-contract-v2-receipt-recovery-core'
+import { LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256 } from './literature-gold-v2-schema-only-transition'
+import {
+  PROTECTED_V2_RECEIPT_RECOVERY_COMMITTED_AMENDMENT_PATH,
+  PROTECTED_V2_RECEIPT_RECOVERY_INCIDENT_AUTHORITY_PATH,
+  parseProtectedV2ReceiptRecoveryCommittedAmendment,
+} from './protected-gold-import-contract-v2-receipt-recovery-authority'
+import { buildCurrentProtectedV2ReceiptRecoveryToolBundle } from './protected-gold-import-contract-v2-receipt-recovery-tool-bundle'
 
 export const GOLD_IMPORT_COMPENSATION_V2_MIGRATION_RECEIPT_GATE_SCHEMA_VERSION =
   'gold-import-compensation-v2-finalized-migration-receipt-gate/1.0.0' as const
@@ -30,6 +38,7 @@ export const PROTECTED_V2_FINALIZED_RECOVERY_RECEIPT_AUTHORITY_PATH =
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const sha256Schema = z.string().regex(SHA256_PATTERN)
 const uuidSchema = z.string().uuid()
+const issuedMigrationReceiptGates = new WeakSet<object>()
 
 const migrationSchema = z
   .object({
@@ -155,7 +164,7 @@ export interface GoldImportCompensationV2MigrationReceiptAuditBinding {
 }
 
 export interface GoldImportCompensationV2CommittedRecoveryReceiptAuthority {
-  authority: ProtectedV2FinalizedRecoveryReceiptAuthority
+  authority: ProtectedV2FinalizedRecoveryReceiptReference
   authorityIdentitySha256: string
   schemaVersion: typeof GOLD_IMPORT_COMPENSATION_V2_RECOVERY_RECEIPT_AUTHORITY_SCHEMA_VERSION
 }
@@ -190,20 +199,26 @@ function gateContent(
 export function validateGoldImportCompensationV2MigrationReceiptGate(
   input: unknown,
 ): GoldImportCompensationV2MigrationReceiptGate {
+  const issued =
+    typeof input === 'object' && input !== null && issuedMigrationReceiptGates.has(input)
   const gate = goldImportCompensationV2MigrationReceiptGateSchema.parse(input)
   if (gate.gateIdentitySha256 !== sha256Canonical(gateContent(gate))) {
     throw new Error('V2 migration receipt gate identity is invalid.')
   }
-  return canonicalFrozenClone(gate)
+  const validated = canonicalFrozenClone(gate)
+  if (issued) issuedMigrationReceiptGates.add(validated)
+  return validated
 }
 
 function buildGate<
   T extends Omit<GoldImportCompensationV2MigrationReceiptGate, 'gateIdentitySha256'>,
 >(content: T): GoldImportCompensationV2MigrationReceiptGate {
-  return validateGoldImportCompensationV2MigrationReceiptGate({
+  const gate = validateGoldImportCompensationV2MigrationReceiptGate({
     ...content,
     gateIdentitySha256: sha256Canonical(content),
   })
+  issuedMigrationReceiptGates.add(gate)
+  return gate
 }
 
 export function migrationReceiptGateArtifactBytes(
@@ -270,6 +285,37 @@ export function validateGoldImportCompensationV2MigrationReceiptGateForAudit(
     input,
     migrationReceiptAuditBindingFromReadyAudit(audit),
   )
+}
+
+/**
+ * Generation and execution boundaries require provenance issued by this module's strict
+ * filesystem loader (local) or its private disposable builder. A canonical self-hash remains
+ * useful for package verification, but it is deliberately not an issuance capability.
+ */
+export function requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(
+  input: unknown,
+  audit: GoldImportCompensationV2ReadyAudit,
+): GoldImportCompensationV2MigrationReceiptGate {
+  const gate = validateGoldImportCompensationV2MigrationReceiptGateForAudit(input, audit)
+  if (!issuedMigrationReceiptGates.has(gate)) {
+    throw new Error(
+      'V2 migration receipt gate was not issued by a strict finalized-receipt loader.',
+    )
+  }
+  return gate
+}
+
+export function requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(
+  input: unknown,
+  binding: GoldImportCompensationV2MigrationReceiptAuditBinding,
+): GoldImportCompensationV2MigrationReceiptGate {
+  const gate = validateGoldImportCompensationV2MigrationReceiptGateForBinding(input, binding)
+  if (!issuedMigrationReceiptGates.has(gate)) {
+    throw new Error(
+      'V2 migration receipt gate was not issued by a strict finalized-receipt loader.',
+    )
+  }
+  return gate
 }
 
 export function buildInternalDisposableMigrationReceiptGate(
@@ -765,5 +811,32 @@ export async function loadCommittedProtectedV2RecoveryReceiptAuthority(
   if (!isWithin(root, path))
     throw new Error('Recovery receipt authority path escaped the repository.')
   await assertRegularNonSymlink(path, 'Committed protected V2 recovery receipt authority')
-  return parseCommittedProtectedV2RecoveryReceiptAuthority(await readFile(path, 'utf8')).authority
+  const reference = parseCommittedProtectedV2RecoveryReceiptAuthority(
+    await readFile(path, 'utf8'),
+  ).authority
+  const incidentAuthorityPath = resolve(root, PROTECTED_V2_RECEIPT_RECOVERY_INCIDENT_AUTHORITY_PATH)
+  const amendmentPath = resolve(root, PROTECTED_V2_RECEIPT_RECOVERY_COMMITTED_AMENDMENT_PATH)
+  await assertRegularNonSymlink(
+    incidentAuthorityPath,
+    'Committed protected V2 recovery incident authority',
+  )
+  await assertRegularNonSymlink(amendmentPath, 'Committed protected V2 recovery amendment')
+  const currentRecoveryToolBundle = await buildCurrentProtectedV2ReceiptRecoveryToolBundle({
+    cwd: root,
+  })
+  const amendment = parseProtectedV2ReceiptRecoveryCommittedAmendment({
+    amendmentBytes: await readFile(amendmentPath, 'utf8'),
+    authorityBytes: await readFile(incidentAuthorityPath, 'utf8'),
+    correctedRecoveryToolBundle: currentRecoveryToolBundle,
+    correctedTransitionPolicyIdentitySha256:
+      LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
+  })
+  if (
+    reference.amendmentIdentitySha256 !== amendment.amendmentIdentitySha256 ||
+    reference.originalIntentSha256 !== amendment.historicalIncident.intentSha256 ||
+    reference.recoveryToolBundleSha256 !== amendment.correctedRecoveryToolBundle.aggregateSha256
+  ) {
+    throw new Error('Committed recovery receipt authority does not match the full amendment.')
+  }
+  return { ...reference, amendment }
 }

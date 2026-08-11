@@ -275,7 +275,7 @@ describe('V2 authenticated planning-state evidence', () => {
     )
     expect(generatorSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
     expect(generatorSource).toContain(
-      'validateGoldImportCompensationV2MigrationReceiptGateForAudit(',
+      'requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(',
     )
     expect(generatorSource).toContain("'finalized-migration-receipt-gate-v2.json'")
     expect(generatorFileSource).toContain("'finalized-migration-receipt-gate-v2.json',")
@@ -667,7 +667,7 @@ describe('migration-first and source-authorization-before-client ordering', () =
           return {}
         },
         expectedMigrationReceiptGateSha256: SHA_A,
-        loadFinalizedMigrationReceiptGate: () => {
+        loadDisposableMigrationReceiptGate: () => {
           throw new Error('receipt loader must remain unreachable')
         },
         readMigrationProbe: () => migrationProbe(0),
@@ -698,7 +698,7 @@ describe('migration-first and source-authorization-before-client ordering', () =
         },
         expectedMigrationReceiptGateSha256:
           migrationReceiptGateArtifactSha256(migrationReceiptGate),
-        loadFinalizedMigrationReceiptGate: () => migrationReceiptGate,
+        loadDisposableMigrationReceiptGate: () => migrationReceiptGate,
         readMigrationProbe: readyAudit,
         readSourceArtifacts: () => {
           calls.source += 1
@@ -726,7 +726,7 @@ describe('migration-first and source-authorization-before-client ordering', () =
           return {}
         },
         expectedMigrationReceiptGateSha256: SHA_A,
-        loadFinalizedMigrationReceiptGate: () => {
+        loadDisposableMigrationReceiptGate: () => {
           calls.receipt += 1
           throw new Error('finalized receipt unavailable')
         },
@@ -740,6 +740,34 @@ describe('migration-first and source-authorization-before-client ordering', () =
       }),
     ).rejects.toThrow('finalized receipt unavailable')
     expect(calls).toEqual({ client: 0, receipt: 1, source: 0 })
+  })
+
+  it('does not permit an injectable or cached gate at the local execution boundary', async () => {
+    const calls = { client: 0, receipt: 0, source: 0 }
+    const localAudit = validateReadyGoldImportCompensationV2Audit(
+      exactReadyAudit('local_supabase_postgres_owner_v1', 'local'),
+    )
+    await expect(
+      prepareGoldImportCompensationV2Runtime({
+        createDatabaseClient: () => {
+          calls.client += 1
+          return {}
+        },
+        expectedMigrationReceiptGateSha256: SHA_A,
+        loadDisposableMigrationReceiptGate: () => {
+          calls.receipt += 1
+          return {}
+        },
+        readMigrationProbe: readyAudit,
+        readSourceArtifacts: () => {
+          calls.source += 1
+          return {}
+        },
+        validateReadyAuditForTest: () => localAudit,
+        validateSourceAuthorization: () => ({}),
+      }),
+    ).rejects.toThrow('fixed live finalized-receipt filesystem loader')
+    expect(calls).toEqual({ client: 0, receipt: 0, source: 0 })
   })
 })
 

@@ -138,7 +138,7 @@ describe('protected V2 receipt recovery integration boundary', () => {
       localDockerEndpoint: true as const,
       remoteDatabaseAccessed: false as const,
       transactionBatches: [
-        'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SELECT 1; WITH exact AS (SELECT 2) SELECT * FROM exact; ROLLBACK;',
+        "BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY; SET LOCAL statement_timeout = '120s'; SELECT 1; WITH exact AS (SELECT 2) SELECT * FROM exact; ROLLBACK;",
       ],
     }
     expect(() => assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit(safe)).not.toThrow()

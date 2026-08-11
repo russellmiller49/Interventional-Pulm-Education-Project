@@ -382,11 +382,18 @@ export function assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit(
     const parsed = statements(batch)
     if (
       parsed.length < 3 ||
-      !/^begin\s+isolation\s+level\s+repeatable\s+read\s+read\s+only$/iu.test(parsed[0]!) ||
+      !/^begin(?:\s+transaction)?\s+isolation\s+level\s+repeatable\s+read\s+read\s+only$/iu.test(
+        parsed[0]!,
+      ) ||
       !/^rollback$/iu.test(parsed.at(-1)!) ||
       parsed
         .slice(1, -1)
-        .some((statement) => !/^(?:select|with)\b/iu.test(statement) || forbidden.test(statement))
+        .some(
+          (statement) =>
+            (!/^(?:select|with)\b/iu.test(statement) &&
+              !/^set\s+local\s+statement_timeout\s*=\s*'120s'$/iu.test(statement)) ||
+            forbidden.test(statement),
+        )
     ) {
       throw new Error(
         'Receipt recovery SQL must be bracketed by repeatable-read/read-only BEGIN and ROLLBACK and contain only nonlocking SELECT/CTE statements.',

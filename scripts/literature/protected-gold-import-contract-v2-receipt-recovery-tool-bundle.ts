@@ -70,8 +70,12 @@ function trackedEntries(bytes: string): ReadonlyMap<string, TrackedEntry> {
     const match = raw.match(/^([0-9]{6}) [a-f0-9]{40,64} ([0-3])\t([\s\S]+)$/u)
     if (!match) throw new Error('Recovery-tool bundle received malformed Git inventory.')
     const entry = { gitMode: match[1]!, path: match[3]!, stage: match[2]! }
-    if (!SAFE_PATH.test(entry.path) || entries.has(entry.path)) {
-      throw new Error(`Recovery-tool bundle received an unsafe or duplicate path: ${entry.path}`)
+    // The repository inventory may contain unrelated, valid Git paths (for example asset
+    // directories with spaces). Apply the narrow SAFE_PATH policy only after selecting the
+    // recovery closure; rejecting unrelated tracked names would make the reviewed bundle
+    // impossible to build without expanding its authority surface.
+    if (entries.has(entry.path)) {
+      throw new Error(`Recovery-tool bundle received a duplicate path: ${entry.path}`)
     }
     if (entry.stage !== '0') {
       throw new Error(`Recovery-tool bundle rejects an unmerged path: ${entry.path}`)

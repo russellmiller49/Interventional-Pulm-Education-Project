@@ -130,7 +130,7 @@ describe('exact V2 package rehearsal entrypoint', () => {
     expect(bootstrap).toContain('referenceMigrationReceiptGate')
     expect(bootstrap).toContain('migrationReceiptGate: privatePackage.migrationReceiptGate')
     const gateIndex = direct.indexOf(
-      'validateGoldImportCompensationV2MigrationReceiptGateForBinding(',
+      'requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(',
     )
     const firstQueryIndex = direct.indexOf('context.queryJson(')
     const firstRpcIndex = direct.indexOf('bindDisposableImportAuthorization(plan)')

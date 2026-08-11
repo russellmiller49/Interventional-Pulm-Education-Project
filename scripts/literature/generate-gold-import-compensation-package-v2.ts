@@ -69,7 +69,7 @@ import {
   loadGoldImportCompensationV2LocalMigrationReceiptGate,
   migrationReceiptGateArtifactBytes,
   migrationReceiptGateArtifactSha256,
-  validateGoldImportCompensationV2MigrationReceiptGateForAudit,
+  requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit,
   validateGoldImportCompensationV2MigrationReceiptGateForBinding,
   type GoldImportCompensationV2MigrationReceiptGate,
 } from './gold-import-compensation-v2-migration-receipt-gate'
@@ -802,7 +802,7 @@ export function generateGoldImportCompensationPackageV2(
   input: GenerateGoldImportCompensationPackageV2Input,
 ): GeneratedGoldImportCompensationPackageV2 {
   const audit = validateReadyGoldImportCompensationV2Audit(input.audit)
-  const migrationReceiptGate = validateGoldImportCompensationV2MigrationReceiptGateForAudit(
+  const migrationReceiptGate = requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(
     input.migrationReceiptGate,
     audit,
   )

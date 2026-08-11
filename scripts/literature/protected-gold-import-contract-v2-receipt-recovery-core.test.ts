@@ -197,7 +197,7 @@ async function fixture(): Promise<Fixture> {
     trackedFileInventorySha256: sha('old inventory'),
   }
   const catalog = {
-    auditIdentitySha256: sha('catalog audit evidence'),
+    auditIdentitySha256: sha('full audit'),
     bindingSha256: sha('catalog binding'),
     fullAuditIdentitySha256: sha('full audit'),
   }
@@ -509,6 +509,7 @@ describe('protected V2 historical receipt recovery core', () => {
     })
     expect(
       assertProtectedV2FinalizedRecoveryReceiptGate(outcome.result, {
+        amendment: built.input.amendment,
         amendmentIdentitySha256: built.input.amendment.amendmentIdentitySha256,
         originalIntentSha256: built.input.amendment.historicalIncident.intentSha256,
         recoveryToolBundleSha256: built.input.amendment.correctedRecoveryToolBundle.aggregateSha256,
@@ -742,6 +743,7 @@ describe('protected V2 historical receipt recovery core', () => {
     })
     const loaded = await loadProtectedV2FinalizedReceiptRecovery({
       authority: {
+        amendment: built.input.amendment,
         amendmentIdentitySha256: built.input.amendment.amendmentIdentitySha256,
         originalIntentSha256: built.input.amendment.historicalIncident.intentSha256,
         recoveryToolBundleSha256: built.input.amendment.correctedRecoveryToolBundle.aggregateSha256,
@@ -750,6 +752,7 @@ describe('protected V2 historical receipt recovery core', () => {
     })
     expect(
       assertProtectedV2FinalizedRecoveryReceiptGate(loaded.result, {
+        amendment: built.input.amendment,
         amendmentIdentitySha256: built.input.amendment.amendmentIdentitySha256,
         originalIntentSha256: built.input.amendment.historicalIncident.intentSha256,
         recoveryToolBundleSha256: built.input.amendment.correctedRecoveryToolBundle.aggregateSha256,
@@ -769,11 +772,56 @@ describe('protected V2 historical receipt recovery core', () => {
     )
     expect(() =>
       assertProtectedV2FinalizedRecoveryReceiptGate(loaded.result, {
+        amendment: built.input.amendment,
         amendmentIdentitySha256: sha('arbitrary amendment'),
         originalIntentSha256: built.input.amendment.historicalIncident.intentSha256,
         recoveryToolBundleSha256: built.input.amendment.correctedRecoveryToolBundle.aggregateSha256,
       }),
     ).toThrow('non-authorizing migration receipt')
+  })
+
+  it('rejects a fully rehashed finalized package with attacker-chosen nested evidence', async () => {
+    const built = await setup()
+    await recoverProtectedV2HistoricalReceipt(built.input, {
+      validateSchemaOnlyTransition: () => built.proof,
+    })
+    const finalized = resolve(built.input.applicationOutputDirectory, 'finalized')
+    const resultPath = resolve(finalized, 'application-result.json')
+    const markdownPath = resolve(finalized, 'application-result.md')
+    const manifestPath = resolve(finalized, 'checksum-manifest.sha256')
+    const executionPath = resolve(finalized, 'execution-receipt.json')
+    const result = JSON.parse(await readFile(resultPath, 'utf8')) as Record<string, unknown>
+    result.expectedCatalog = { attackerChosen: true }
+    const { contentSha256: ignoredResultSha256, ...resultContent } = result
+    void ignoredResultSha256
+    result.contentSha256 = sha(canonicalProtectedV2ReceiptRecoveryJson(resultContent))
+    const resultBytes = canonicalProtectedV2ReceiptRecoveryJson(result)
+    const markdownBytes = await readFile(markdownPath, 'utf8')
+    const manifestBytes = `${sha(resultBytes)}  application-result.json\n${sha(markdownBytes)}  application-result.md\n`
+    const execution = JSON.parse(await readFile(executionPath, 'utf8')) as Record<string, unknown>
+    execution.resultSha256 = sha(resultBytes)
+    execution.canonicalManifestSha256 = sha(manifestBytes)
+    const { contentSha256: ignoredExecutionSha256, ...executionContent } = execution
+    void ignoredExecutionSha256
+    execution.contentSha256 = sha(canonicalProtectedV2ReceiptRecoveryJson(executionContent))
+    await Promise.all([
+      writeFile(resultPath, resultBytes),
+      writeFile(manifestPath, manifestBytes),
+      writeFile(executionPath, canonicalProtectedV2ReceiptRecoveryJson(execution)),
+    ])
+
+    await expect(
+      loadProtectedV2FinalizedReceiptRecovery({
+        authority: {
+          amendment: built.input.amendment,
+          amendmentIdentitySha256: built.input.amendment.amendmentIdentitySha256,
+          originalIntentSha256: built.input.amendment.historicalIncident.intentSha256,
+          recoveryToolBundleSha256:
+            built.input.amendment.correctedRecoveryToolBundle.aggregateSha256,
+        },
+        outputDirectory: built.input.applicationOutputDirectory,
+      }),
+    ).rejects.toThrow('non-authorizing migration receipt')
   })
 
   it('rejects extra fields in capture, result, and execution receipt schemas', async () => {

@@ -61,6 +61,12 @@ export const PROTECTED_V2_PACKAGE_SCRIPT_DECLARATIONS = [
   },
   {
     arguments: [],
+    entryPoint: 'scripts/literature/recover-protected-gold-import-contract-v2-receipt.ts',
+    name: 'literature:recover-protected-gold-import-contract-v2-receipt',
+    requiresPrimaryCheckout: true,
+  },
+  {
+    arguments: [],
     entryPoint: 'scripts/literature/audit-gold-import-compensation-v2.ts',
     name: 'literature:audit-gold-import-compensation-v2',
     requiresPrimaryCheckout: false,
@@ -84,6 +90,7 @@ export const PROTECTED_V2_RUNTIME_ENTRY_POINTS = [
   'scripts/literature/audit-gold-import-compensation-v2.ts',
   'scripts/literature/create-gold-import-contract-v2-forward-repair-backup.ts',
   'scripts/literature/local-supabase.ts',
+  'scripts/literature/recover-protected-gold-import-contract-v2-receipt.ts',
   'scripts/require-primary-checkout.mjs',
 ] as const
 
@@ -813,6 +820,208 @@ export const PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS = [
     sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db.ts',
   }),
   ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'c14b0a3aad0ff70077e4aafed0bc3509179298b48ded6495198fb3bfcee57f55',
+      'b1d918fc78c4f820985492bf4a81150f82120c316a3d6c16d7cdf5679243adc9',
+      '4fc70f26692e8dc0c3d2c99b91f7c5444fa0884f0dd9c9ad9737934cabde8a8a',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '58b3be36b71fe6242447adc7ba571c097b2d876b7fc9dad71d113463136ed2d3',
+      '927051b379a5be4dd35da49e8aac73ecc80e5cb51eb57ef34fcacb3fedd55ca4',
+      '50fa697aa522e1c24df3b5266b428fb4c0e0de201cb6e9e3cd37907042325634',
+      '7b8b27ec4431d4ffe2a6e3a3e23c1a0748f82bed75c2b0c87dde2d95eadbebef',
+      '1c4e6c4426e42f8d00b904e604c2026de0e697dbe4f95fc77b14156b3f1544ca',
+      '02642c82bb800784e092e5534e4814ceef6256f214c68887cfa390f1b02b6824',
+      'c9659458c4c35ce2ea76c20dc34911c612e89f5926b8a01b122b10b82bdbd23e',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['f08d3aa18ae0181412c1c4ac5f5c28c18ec55e1a7df57503ee791201ef9d7d6a'],
+    repositoryInputs: [
+      'scripts/literature/contracts/protected-v2-finalized-receipt-recovery-authority-v1.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['406f5d7a1cc14fb95c5ea56246717a41feb83d5fc899de53b01f2baab6adebff'],
+    repositoryInputs: [
+      'scripts/literature/contracts/protected-v2-receipt-recovery-amendment-v1.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['b11584c6044808eaaf4ae3d569a65d30d486dcdb119335df7d311896235843d6'],
+    repositoryInputs: [
+      'scripts/literature/contracts/protected-v2-receipt-recovery-incident-authority-v1.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readdir',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '2cad52b03f10f695a20092cb28e7a4967d15daad69ae90852b8b6c2c44f48945',
+      '9aea1ca38bd0767200b5f45eaffad78f54e70185f59f6cb28064f38fd224759f',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '76f917d0f0b00d2b953f4165a405b9d5c9786c8833a8ff705ce5d6c9f85b577e',
+      '1e78636fd147a883ecd7fea54e4809da8358e24aae3ecaa7d2d461f3d1e8ec75',
+      '506471ffd208a341abc4607a0f895c5fcc71a912cb4530cac6b0785404d39409',
+      '271b39b4e99ffeb67dacf3847f32558ba45c168d04f6c29e5767e74fb71b5237',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'f514a57764b62f637b0df86c592ee8909b6e1cf53447bae706226fb2edd9a145',
+      'ea501c30ce2c4f9b83c979cb17cadead1cc20be861abacf3f4925ab32a96b7d9',
+      '229f893ed6b7b227239d61310b490d429b7e366d6e7200afb91bf05fda17ae41',
+      '26018b6ee69a129ace4f23c5d5385c143689c4068d00f5c66a3261c7ca204942',
+    ],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-core.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'ce685e03f07518d42ee44b030020f495db3460fa4a519450229851c24bd0777d',
+      '31bbc302f86bc900306885ad6ad5a1dcc78a6918c0d9b109047723059b8b3538',
+      '48c85b85661176a929cc2e4a6ae93722cefe9993c0a288df1e8d6ef10d26af2a',
+      'a5b955edd7cf29238de5b130336b6e05d5cf6229d4256088b1414d5c820e4d40',
+      '74ddae26c1d147b7a38fee0a0cb41fb805b5df816ddbe2dcaf30673aed0f191e',
+      'ba7adf2f7ddcdd29b274791de6339047d0a2ac92997411df051d1e3f04805652',
+      '5edaef9b23d853bfe033e3732e06b88aa468b02bd7debde1845d8bfa3b0db9b5',
+    ],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-core.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readdir',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '2b955e6fb56691a4f12f81e505b5d9be759b97f5ea54813ec8fd7ed8c13d681f',
+      '4086147cb28b4915917e0eec076289f6332f2ac658e8dd18660df840b46ab608',
+    ],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-core.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'operator_evidence',
+    fingerprints: ['2d4b3fe69bd7eec725147516f9bbc3ab0a499cd63767e6431b995b0edd80f021'],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-core.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.execFile',
+    disposition: 'system_executable',
+    executables: ['git'],
+    fingerprints: ['b56b8a4ec1c83484174829274bcf9af3979ed4fe7cbd672b538db2ab3055444f'],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-runtime.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'aedf649665f6e83f89391a4c19abd4dcdbe8c2909c5f6347dc99942c6f741118',
+      '60874339f3ddb2bcfb911497032f93cca90caa358c47e3879899fdec5e976196',
+      'dc3d9cf73f583df1aa4996e09eb039fc20a9282647d0555e114a79a4a0212154',
+    ],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-runtime.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: ['ef820747259550b75a0b285971f88bc6e68b723d4bfed1f2ad19f2b88653b84c'],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-runtime.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readdir',
+    disposition: 'operator_evidence',
+    fingerprints: ['64ba93dbb4a62c9b3e1d05ecd10fb832a954921d283a0000236d76587decd4fc'],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-runtime.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '539b50434a106fe8d96e414898c463b8fff6de4dadc53fec5c4a0fd87f0165d5',
+      '5690400a65c75e57a69362de15feabe68560b987972af76ae9a0bd1378276bc9',
+      'e28f16fa289222625d5511600d63730a99960761b7a08959af88b6884c1df480',
+      '43ba4ddd04c5b21a48f2fcdfe786bacb87f8279a7f56343c0019d0806cb8596b',
+      'b58c5e608fe3faf6e4131f00b49d6e426514ff9ad09348be844321b175c829b9',
+    ],
+    sourcePath: 'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-runtime.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.execFile',
+    disposition: 'system_executable',
+    executables: ['git'],
+    fingerprints: ['6d11a038532ab8a2ad9cad0a2b6fd964f3f9731c62fc77b82da5ea458239fefe'],
+    sourcePath:
+      'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-tool-bundle.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'tracked_repository_inventory',
+    fingerprints: ['addfd090de4557f3e600b49a7911d3b86caa60283a86413c30662868b071b183'],
+    sourcePath:
+      'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-tool-bundle.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'tracked_repository_inventory',
+    fingerprints: [
+      '4971c6dd197ac03095d0ab4db40c99c442c76bcf5ce82d51f07254624a4ebe05',
+      '663271a5e6aeb8daa05e87807e0d544cf5c46dc5b821f246e9cd670ae4080e8c',
+    ],
+    sourcePath:
+      'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-tool-bundle.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['0716ab8c52c51278964ad50a844819ad836ed965c7af81a4ce50fed7606a1976'],
+    repositoryInputs: ['package.json'],
+    sourcePath:
+      'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-tool-bundle.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'tracked_repository_inventory',
+    fingerprints: ['12bdd5280dbb321c501a63e262a733454ede1402804e8002ce2fcc2918beabb6'],
+    sourcePath:
+      'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-tool-bundle.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'repository_metadata',
+    fingerprints: [
+      '7d091827d3d0e0ade9045cbe5ad684e19ffeccf066e37196fe1d6c2fa539eb90',
+      'd7607582bc075982607b97c0367d8dad20c4b24badc1ef9ebf0fd97d0b44a399',
+    ],
+    sourcePath:
+      'scripts/literature/protected-gold-import-contract-v2-receipt-recovery-tool-bundle.ts',
+  }),
+  ...declareRuntimeCallSites({
     api: 'child_process.execSync',
     disposition: 'system_executable',
     executables: ['git'],
@@ -833,6 +1042,7 @@ export const PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS = [
     repositoryInputs: [
       'scripts/literature/apply-protected-gold-import-contract-v2.ts',
       'scripts/literature/local-supabase.ts',
+      'scripts/literature/recover-protected-gold-import-contract-v2-receipt.ts',
     ],
     sourcePath: 'scripts/require-primary-checkout.mjs',
   }),

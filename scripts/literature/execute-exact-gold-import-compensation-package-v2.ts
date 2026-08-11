@@ -33,7 +33,7 @@ import {
 } from './gold-import-note-disposition-gate-v2'
 import {
   buildInternalDisposableMigrationReceiptGate,
-  validateGoldImportCompensationV2MigrationReceiptGateForBinding,
+  requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding,
 } from './gold-import-compensation-v2-migration-receipt-gate'
 import {
   GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
@@ -1136,7 +1136,7 @@ export function createExactPackageDatabaseExecutorV2(
     async execute(context): Promise<V2ExactPackageDatabaseEvidence> {
       const sourceAuthorization = privatePackage.sourceAuthorizationSet
       const liveMigrationReceiptGate =
-        validateGoldImportCompensationV2MigrationReceiptGateForBinding(
+        requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(
           context.migrationReceiptGate,
           {
             auditTarget: sourceAuthorization.auditTarget,

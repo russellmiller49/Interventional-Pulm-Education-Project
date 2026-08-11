@@ -13,6 +13,7 @@ import {
   buildInternalDisposableMigrationReceiptGate,
   migrationReceiptGateArtifactBytes,
   parseCommittedProtectedV2RecoveryReceiptAuthority,
+  requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit,
   validateGoldImportCompensationV2MigrationReceiptGate,
   validateGoldImportCompensationV2MigrationReceiptGateForAudit,
 } from './gold-import-compensation-v2-migration-receipt-gate'
@@ -106,6 +107,27 @@ describe('target-discriminated finalized migration receipt gate', () => {
         gateIdentitySha256: SHA_F,
       }),
     ).toThrow('identity is invalid')
+  })
+
+  it('does not treat a publicly reproducible self-hash as loader-issued provenance', () => {
+    const readyAudit = audit()
+    const issued = buildInternalDisposableMigrationReceiptGate(readyAudit)
+    const forgedCanonicalClone = JSON.parse(JSON.stringify(issued)) as unknown
+    expect(
+      validateGoldImportCompensationV2MigrationReceiptGateForAudit(
+        forgedCanonicalClone,
+        readyAudit,
+      ),
+    ).toEqual(issued)
+    expect(() =>
+      requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(
+        forgedCanonicalClone,
+        readyAudit,
+      ),
+    ).toThrow('not issued by a strict finalized-receipt loader')
+    expect(
+      requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(issued, readyAudit),
+    ).toEqual(issued)
   })
 
   it('parses only a canonical committed three-hash recovery authority', () => {
