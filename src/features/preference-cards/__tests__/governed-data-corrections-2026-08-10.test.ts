@@ -331,18 +331,55 @@ describe('P91-C1 — F-04 reaches current custom cards through the real save pat
     if (!context.ok) return
     expect(context.context.recipe.id).toBe(PRIOR_CUSTOM_RECIPE)
 
-    // Duplicating a v1-1-pinned card copies its stored inputs verbatim — the duplicate stays
-    // pinned to the prior release rather than being silently re-pinned to the new one.
-    const saved = await saveUserCard(
-      customCardRequest({
+    // A NEW card cannot be created against the superseded release at all — the retention
+    // ledger keeps v1-1 resolvable for the cards already pinned to it, and the create-path
+    // currency guard is what keeps that resolvability from becoming a creation loophole.
+    const priorRequest = customCardRequest({
+      releaseBundleId: PRIOR_CUSTOM_RELEASE,
+      recipeVersionId: PRIOR_CUSTOM_RECIPE,
+      selectedModuleVersionIds: [EBUS_SPECIFIC_MODULE],
+      title: 'Prior-release custom card',
+    })
+    const refused = await saveUserCard(priorRequest)
+    expect(refused.ok).toBe(false)
+    expect((refused as { error: string }).error).toContain(CURRENT_CUSTOM_RELEASE)
+
+    // A v1-1-pinned card therefore exists only because it was saved while v1-1 was current.
+    // Persist exactly the row `saveUserCard` wrote then — the same resolution, the same
+    // stored shape — and prove duplicating it copies the stored inputs verbatim: the
+    // duplicate stays pinned to the prior release rather than being silently re-pinned.
+    const resolved = resolveForSave(priorRequest, '2026-08-10T00:00:00.000Z')
+    expect(resolved.ok).toBe(true)
+    if (!resolved.ok) return
+    tables.cards.push({
+      id: 'card-prior-release',
+      user_id: 'user-owner',
+      title: priorRequest.title,
+      physician_name: null,
+      procedure_code: resolved.rebuilt.scenario.sourceProcedureCode,
+      scenario_id: priorRequest.scenarioId,
+      status: priorRequest.status,
+      builder_inputs: {
+        schemaVersion: priorRequest.schemaVersion,
         releaseBundleId: PRIOR_CUSTOM_RELEASE,
-        recipeVersionId: PRIOR_CUSTOM_RECIPE,
-        selectedModuleVersionIds: [EBUS_SPECIFIC_MODULE],
-        title: 'Prior-release custom card',
-      }),
-    )
-    expect(saved.ok).toBe(true)
-    const duplicated = await duplicateUserCard(saved.data as string, 'Copy of prior-release card')
+        scenarioId: priorRequest.scenarioId,
+        input: priorRequest.input,
+        catalogPicks: priorRequest.catalogPicks,
+        familyPicks: priorRequest.familyPicks,
+        customItems: priorRequest.customItems,
+        equipmentSets: priorRequest.equipmentSets,
+      },
+      card_snapshot: resolved.card,
+      snapshot_hash: resolved.card.snapshotHash,
+      engine_version: resolved.card.engineVersion,
+      catalog_import_id: resolved.card.catalogImportId,
+      share_enabled: false,
+      share_token: 'token-prior-release',
+      rebuild_provenance: null,
+      created_at: '2026-08-10T00:00:00.000Z',
+      updated_at: '2026-08-10T00:00:00.000Z',
+    })
+    const duplicated = await duplicateUserCard('card-prior-release', 'Copy of prior-release card')
     expect(duplicated.ok).toBe(true)
     const copy = await loadUserCard(duplicated.data as string)
     expect(copy).not.toBeNull()
@@ -825,12 +862,34 @@ describe('P91-C3 — authored modifier-effect changes are reported, not just a s
     expect(report.modifierEffectChanges).toEqual([])
   })
 
-  it('carries an empty modifier layer on every committed report today, because the sets are identical', () => {
-    // The current data has one modifier set shared by every release, so any non-empty entry
-    // here would be an invented change. The layer becomes populated when a release genuinely
-    // revises the set — the PR #92 F-09 shape the fixture above mirrors.
+  it('carries a modifier layer on exactly the two F-09 releases, and an empty one everywhere else', () => {
+    // When this suite first shipped, one modifier set was shared by every release and the
+    // layer was empty everywhere — fixture-proven, live nowhere. Definition-set retention
+    // made it live: the two F-09 forward releases pin the revised set, and their committed
+    // reports carry the exact authored effect the fixture above mirrors. Any other release
+    // reporting a modifier effect would be an invented change.
+    const F09_RELEASES = ['release-rigid-bronch-v1-1', 'release-therapeutic-bronch-v1-2']
     for (const report of getReleaseImpactReports()) {
-      expect(report.modifierEffectChanges).toEqual([])
+      if (!F09_RELEASES.includes(report.nextReleaseBundleId)) {
+        expect(report.modifierEffectChanges).toEqual([])
+        continue
+      }
+      expect(report.modifierEffectChanges).toHaveLength(1)
+      const effect = report.modifierEffectChanges[0]
+      expect(effect).toMatchObject({
+        sourceKind: 'modifier',
+        modifierCode: 'APC',
+        actionId: 'apc-232',
+        actionType: 'add_slot',
+        kind: 'changed',
+        requirementKey: 'OPS-APC-RIGID',
+      })
+      expect([...effect.changedFields].sort()).toEqual(['dependencyRule', 'requiredness'])
+      expect(effect.before).toMatchObject({ requiredness: 'required', dependencyRule: null })
+      expect(effect.after).toMatchObject({
+        requiredness: 'conditional',
+        dependencyRule: 'Rigid system in use',
+      })
     }
   })
 })
@@ -938,7 +997,11 @@ describe('P91-C5 — an unknown modifier action type fails release impact loudly
 })
 
 describe('publication integrity of the correction pass', () => {
-  it('advances exactly the two intended pointers and no other', () => {
+  it('advances exactly the intended pointers and no other', () => {
+    // The full map, pinned so any unintended pointer move fails loudly. The P91 correction
+    // pass advanced CUSTOM_COMPOSITION and MED_THORACOSCOPY; the F-09 definition-set pass
+    // advanced RIGID_BRONCH and THERAPEUTIC_BRONCH. Every other procedure stays where its
+    // last governed review left it.
     expect(getReleasePointers()).toEqual({
       BRONCH_ABLATION: 'release-bronch-ablation-v1-0',
       CHEST_TUBE: 'release-chest-tube-v1-1',
@@ -951,9 +1014,9 @@ describe('publication integrity of the correction pass', () => {
       MED_THORACOSCOPY: 'release-med-thoracoscopy-v1-2',
       PERC_TRACH: 'release-perc-trach-v1-0',
       PHOTODYNAMIC_THERAPY: 'release-photodynamic-therapy-v1-0',
-      RIGID_BRONCH: 'release-rigid-bronch-v1-0',
+      RIGID_BRONCH: 'release-rigid-bronch-v1-1',
       TB_RULEOUT: 'release-tb-ruleout-v1-0',
-      THERAPEUTIC_BRONCH: 'release-therapeutic-bronch-v1-1',
+      THERAPEUTIC_BRONCH: 'release-therapeutic-bronch-v1-2',
       THORACENTESIS: 'release-thoracentesis-v1-1',
       WLL: 'release-wll-v1-0',
     })

@@ -177,8 +177,8 @@ describe('release bundle build', () => {
     // poisoned action rides the *next* side of the med-thoracoscopy v1-1 → v1-2
     // supersession, on a modifier that recipe actually offers — everything else about the
     // build is the committed baseline.
-    const poisonedLoad = (recipeVersionId: string) => {
-      const sources = loadSources(recipeVersionId)
+    const poisonedLoad = (recipeVersionId: string, setPins?: ReleaseDefinitionSetPins) => {
+      const sources = loadSources(recipeVersionId, setPins)
       if (!sources || recipeVersionId !== 'recipe-med-thoracoscopy-v0-3') return sources
       const offeredCode = sources.recipe.allowedModifierCodes[0]
       expect(offeredCode).toBeDefined()
