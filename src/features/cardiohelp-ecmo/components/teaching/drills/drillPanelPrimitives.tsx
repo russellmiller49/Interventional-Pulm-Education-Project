@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
 import type { EcmoChannelReadout, EcmoSimulationState, SupportMode } from '../../../engine/types'
 import {
   predictionControls,
@@ -47,6 +48,7 @@ export type DrillSignalKind =
   | 'simulation-unmodeled'
   | 'off-console'
   | 'estimated'
+  | 'derived'
   | 'authored'
   /**
    * A physical state of the circuit that exists at the bedside and has no console channel at all —
@@ -71,6 +73,7 @@ const SIGNAL_KIND_LABEL: Readonly<Record<DrillSignalKind, string>> = {
   'simulation-unmodeled': 'Not modeled here',
   'off-console': 'Measured off the console',
   estimated: 'Model estimate',
+  derived: 'Derived in this simulation',
   authored: 'Authored by this case',
   bedside: 'At the bedside, not on the console',
 }
@@ -84,6 +87,8 @@ const SIGNAL_KIND_LEGEND: Readonly<Record<DrillSignalKind, string>> = {
   'off-console':
     'measured on the patient or on another device. This console neither produces nor displays it',
   estimated: 'derived by the model rather than measured by anything',
+  derived:
+    'calculated from other live or authored values in this simulation rather than measured by a sensor',
   authored: 'set by this case rather than measured',
   bedside:
     'a physical state of the circuit at the bedside. This console has no sensor for it and never displays it',
@@ -98,6 +103,8 @@ export interface DrillSignalRow {
   readonly measuredAt: string
   readonly value: string
   readonly kind: DrillSignalKind
+  /** Registered guide for a number the panel interprets. Non-numeric state labels omit it. */
+  readonly valueGuideKey?: keyof typeof ecmoDerivedValueGuides
   /** What this signal can, and cannot, be asked. */
   readonly note: string
 }
@@ -110,6 +117,7 @@ export function channelSignalRow(
   unit: string,
   note: string,
   precision = 0,
+  valueGuideKey?: keyof typeof ecmoDerivedValueGuides,
 ): DrillSignalRow {
   const formatted = formatChannelReadout(label, readout, unit, precision)
   return {
@@ -117,6 +125,7 @@ export function channelSignalRow(
     measuredAt,
     value: formatted.displayText,
     kind: readout.status,
+    valueGuideKey,
     note: formatted.available ? note : `${note} ${readout.reason}`.trim(),
   }
 }
@@ -127,8 +136,9 @@ export function offConsoleSignalRow(
   measuredAt: string,
   value: string,
   note: string,
+  valueGuideKey?: keyof typeof ecmoDerivedValueGuides,
 ): DrillSignalRow {
-  return { label, measuredAt, value, kind: 'off-console', note }
+  return { label, measuredAt, value, kind: 'off-console', note, valueGuideKey }
 }
 
 export function valueSignalRow(
@@ -137,8 +147,9 @@ export function valueSignalRow(
   value: string,
   note: string,
   kind: DrillSignalKind = 'valid',
+  valueGuideKey?: keyof typeof ecmoDerivedValueGuides,
 ): DrillSignalRow {
-  return { label, measuredAt, value, kind, note }
+  return { label, measuredAt, value, kind, note, valueGuideKey }
 }
 
 /**
@@ -182,7 +193,8 @@ export function SignalRegister({
         <table className="w-full text-sm" data-signal-register>
           <caption className="sr-only">
             Every signal this drill turns on, where it is measured, and whether it is valid,
-            unavailable, unmodeled, estimated, off the console, at the bedside, or authored.
+            unavailable, unmodeled, estimated, derived, off the console, at the bedside, or
+            authored.
           </caption>
           <thead>
             <tr className="text-left">
@@ -202,7 +214,14 @@ export function SignalRegister({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.label} data-signal={row.label} data-signal-kind={row.kind}>
+              <tr
+                key={row.label}
+                data-signal={row.label}
+                data-signal-kind={row.kind}
+                data-value-guide-id={
+                  row.valueGuideKey ? ecmoDerivedValueGuides[row.valueGuideKey].id : undefined
+                }
+              >
                 <th scope="row" className="pr-3 pt-3 align-top font-semibold">
                   {row.label}
                 </th>
@@ -517,6 +536,8 @@ export function DrillPanelFrame({
   supportMode,
   clinicalQuestion,
   boundaries,
+  reviewStatus,
+  creditEligible,
   children,
 }: {
   readonly scenarioId: string
@@ -524,6 +545,9 @@ export function DrillPanelFrame({
   readonly clinicalQuestion: ReactNode
   /** Question 10. At least one, always, and always phrased about this simulation. */
   readonly boundaries: readonly ReactNode[]
+  /** B6 metadata. Omitted on frozen pilot files so their learner-facing copy stays untouched. */
+  readonly reviewStatus?: 'draft' | 'frozen-pilot'
+  readonly creditEligible?: boolean
   readonly children: ReactNode
 }) {
   return (
@@ -532,6 +556,8 @@ export function DrillPanelFrame({
       data-teaching-panel={scenarioId}
       data-drill-panel={scenarioId}
       data-drill-support-mode={supportMode}
+      data-panel-review-status={reviewStatus}
+      data-panel-credit-eligible={creditEligible === undefined ? undefined : String(creditEligible)}
     >
       <section className={styles.section} aria-labelledby="drill-question-heading">
         <h3 id="drill-question-heading" className={styles.heading}>
