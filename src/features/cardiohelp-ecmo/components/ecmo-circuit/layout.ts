@@ -77,19 +77,29 @@ const vec = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
 
 // Patient-local access anchors. The right groin carries the return access:
 // vein for VV, artery (lateral to the vein, per NAVL) for VA.
-const GROIN_VEIN_LEFT = patientWorldPoint(-0.135, 0.265, 0.09)
-const GROIN_VEIN_RIGHT = patientWorldPoint(0.135, 0.265, 0.09)
-const GROIN_ARTERY_RIGHT = patientWorldPoint(0.175, 0.262, 0.055)
-const DPC_ENTRY = patientWorldPoint(0.185, 0.258, 0.115)
+//
+// The y values are raycast-measured skin-surface heights of the B7 mannequin
+// (build_fidelity_assets.py prints them) plus ~4 mm so the runtime dressing
+// film sits proud of the skin. The previous anchors (y 0.258–0.265) were
+// authored to the old drape-window height, 0.16 m above even the old skin —
+// which is why cannula tips, dressing rings and the DPC visibly floated.
+const GROIN_VEIN_LEFT = patientWorldPoint(-0.135, 0.102, 0.09)
+const GROIN_VEIN_RIGHT = patientWorldPoint(0.135, 0.103, 0.09)
+const GROIN_ARTERY_RIGHT = patientWorldPoint(0.175, 0.068, 0.055)
+const DPC_ENTRY = patientWorldPoint(0.165, 0.075, 0.125)
 
 // Line hubs where cannulas meet circuit tubing, on the near bed edge.
 const DRAINAGE_HUB = vec(-0.73, -0.08, 0.08)
 const RETURN_HUB = vec(-0.71, -0.1, -0.13)
 
 // Integrated HLS module (pump head under oxygenator) on the console holder.
-const HLS_MODULE = vec(0.9, -0.05, 0.3)
-const PUMP_INLET = vec(0.9, -0.3, 0.32)
-const OXYGENATOR_OUTLET = vec(0.76, 0.1, 0.2)
+// Positioned within holder-arm reach of the console's module-facing side
+// (the B7 console's holder plate faces −X/−Z under its −0.35 yaw); the old
+// (0.9, −0.05, 0.3) sat 0.65 m from the console body, so the disposable read
+// as floating on a pedestal in mid-air rather than carried by the console.
+const HLS_MODULE = vec(0.98, -0.02, 0.36)
+const PUMP_INLET = vec(0.98, -0.27, 0.4)
+const OXYGENATOR_OUTLET = vec(0.84, 0.13, 0.26)
 /*
  * Where the sweep-gas line enters the scene, on the floor in front of the console.
  *
@@ -98,7 +108,7 @@ const OXYGENATOR_OUTLET = vec(0.76, 0.1, 0.2)
  * source and put the "Sweep gas" pill on top of it. The label names the connection, not a device.
  */
 const SWEEP_SOURCE = vec(1.46, -0.66, 1.17)
-const SWEEP_CAP = vec(0.94, 0.24, 0.4)
+const SWEEP_CAP = vec(1.01, 0.27, 0.47)
 
 function curve(points: THREE.Vector3[]): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5)
@@ -148,15 +158,19 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     SWEEP_CAP,
   ])
 
+  // DPC path lies ON the drape over the thigh: each y is the measured skin
+  // surface plus the drape's ~25 mm and the catheter's ~12 mm clearance.
+  // Hugging bare skin would slide the line UNDER the drape sheet, which
+  // renders as the catheter piercing the cloth at the window rim.
   const dpc =
     supportMode === 'va'
       ? curve([
           DPC_ENTRY,
-          patientWorldPoint(0.2, 0.25, 0.24),
-          patientWorldPoint(0.185, 0.235, 0.36),
-          patientWorldPoint(0.16, 0.245, 0.44),
-          patientWorldPoint(0.185, 0.255, 0.47),
-          patientWorldPoint(0.205, 0.24, 0.44),
+          patientWorldPoint(0.155, 0.133, 0.22),
+          patientWorldPoint(0.14, 0.119, 0.34),
+          patientWorldPoint(0.132, 0.107, 0.43),
+          patientWorldPoint(0.15, 0.099, 0.46),
+          patientWorldPoint(0.165, 0.092, 0.43),
         ])
       : null
 
@@ -164,11 +178,17 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
   const sensorPosition = returnLine.getPointAt(sensorU)
   const sensorTangent = returnLine.getTangentAt(sensorU).normalize()
 
+  // Label anchors fan out around the objects they name. At the default camera
+  // the old offsets stacked five pills over the groin and two over the HLS
+  // module (owner screenshots, B7); each label now takes its own quadrant —
+  // sites toward the feet-left / head-right, clamps split head/feet side,
+  // module and sensor vertically separated — while staying adjacent to its
+  // object after modest orbiting.
   const labels: CircuitLabel[] = [
     {
       id: 'drainage-site',
       text: 'Femoral vein — drainage',
-      position: drainageInsertion.clone().add(vec(-0.08, 0.2, 0.16)),
+      position: drainageInsertion.clone().add(vec(-0.42, -0.06, 0.52)),
     },
     {
       id: 'return-site',
@@ -176,14 +196,14 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
         supportMode === 'va'
           ? 'Femoral artery — return'
           : 'Femoral vein — return · tip toward right atrium',
-      position: returnInsertion.clone().add(vec(0.14, 0.2, 0.12)),
+      position: returnInsertion.clone().add(vec(0.16, -0.26, -0.72)),
     },
     ...(supportMode === 'va'
       ? [
           {
             id: 'dpc',
             text: 'Distal perfusion catheter',
-            position: DPC_ENTRY.clone().add(vec(0.2, 0.12, 0.3)),
+            position: DPC_ENTRY.clone().add(vec(0.24, 0.0, 0.42)),
           },
         ]
       : []),
@@ -193,7 +213,7 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       position: drainageLine
         .getPointAt(DRAINAGE_CLAMP_U)
         .clone()
-        .add(vec(0, 0.22, 0)),
+        .add(vec(0.05, 0.34, 0.3)),
     },
     {
       id: 'return-clamp',
@@ -201,17 +221,17 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       position: returnLine
         .getPointAt(RETURN_CLAMP_U)
         .clone()
-        .add(vec(0, 0.22, 0)),
+        .add(vec(-0.1, 0.62, -0.35)),
     },
     {
       id: 'hls-module',
       text: 'HLS module — pump + oxygenator',
-      position: HLS_MODULE.clone().add(vec(0.05, 0.55, 0.05)),
+      position: HLS_MODULE.clone().add(vec(-0.1, 0.72, 0.05)),
     },
     {
       id: 'sensor',
       text: 'Flow / bubble sensor',
-      position: sensorPosition.clone().add(vec(0.05, 0.2, -0.05)),
+      position: sensorPosition.clone().add(vec(-0.85, -0.42, -0.7)),
     },
     {
       /*
