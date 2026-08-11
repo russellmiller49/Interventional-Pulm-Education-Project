@@ -798,10 +798,14 @@ export function getReleaseDefinitionSources(
     if (!resolvedModifiers || !resolvedRescue || !resolvedCompatibility || !resolvedTaxonomy) {
       return null
     }
-    // Alias application stays live under the permanent-alias contract, so a retained
-    // taxonomy is only servable while the live table still agrees with everything it
-    // retained. A contradiction fails the bundle rather than applying either table.
-    // See definition-set-retention.md §3.6.
+    // Alias application uses the resolved snapshot itself — the context built from these
+    // sources carries `resolvedTaxonomy.roleCodeAliases`, so a live alias added after
+    // publication never reaches a pinned release's canonicalization (P92-C1). This check is
+    // therefore not what keeps application safe; it is the governance tripwire for the
+    // permanent-alias contract: a live table that *contradicts* what a published release
+    // retained (a retargeted or removed alias, a dropped category, a changed override) is a
+    // rewrite of a permanent table, and the release surfaces it as a typed failure rather
+    // than resolving as if nothing happened. See definition-set-retention.md §3.6.
     if (!liveTaxonomyExtendsRetained(liveDefinitionSets.roleTaxonomy, resolvedTaxonomy)) {
       return null
     }
@@ -882,14 +886,20 @@ export function buildContextForRecipe(
    * release's pins. Absent for the demo/authoring paths, which are current by design. A
    * release context passes the sets from its resolved `ReleaseDefinitionSources`, so the
    * content a card resolves against is the content the bundle's pins were verified over —
-   * never the live globals those pins may no longer describe.
+   * never the live globals those pins may no longer describe. The role taxonomy is one of
+   * them: the context's alias table is the resolved snapshot's, so a live alias added after
+   * publication cannot reinterpret a role inside this release (P92-C1).
    */
-  pinnedSets?: Pick<ReleaseDefinitionSources, 'modifiers' | 'rescueModules' | 'compatibilityRules'>,
+  pinnedSets?: Pick<
+    ReleaseDefinitionSources,
+    'modifiers' | 'rescueModules' | 'compatibilityRules' | 'roleTaxonomy'
+  >,
 ): BuildContext {
   const contextModifierSet = pinnedSets?.modifiers ?? liveDefinitionSets.modifiers
   const contextRescueModules = pinnedSets?.rescueModules ?? liveDefinitionSets.rescueModules
   const contextCompatibilityRules =
     pinnedSets?.compatibilityRules ?? liveDefinitionSets.compatibilityRules
+  const contextRoleTaxonomy = pinnedSets?.roleTaxonomy ?? liveDefinitionSets.roleTaxonomy
   return {
     organizationName: 'Demo IP Program',
     siteName: 'Demo Hospital',
@@ -925,6 +935,7 @@ export function buildContextForRecipe(
       ...rule,
       modifierCodes: [...rule.modifierCodes],
     })),
+    roleCodeAliases: contextRoleTaxonomy.roleCodeAliases,
     preferenceOverlays: [],
   }
 }

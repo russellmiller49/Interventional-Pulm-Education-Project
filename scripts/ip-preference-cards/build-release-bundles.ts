@@ -14,7 +14,9 @@ import {
   type CompositionLedger,
 } from '../../src/features/preference-cards/domain/composition-ledger'
 import {
+  comparePublicationOrder,
   emptyDefinitionSetLedger,
+  validateDefinitionSetAttribution,
   validateDefinitionSetLedger,
   withPublishedDefinitionSets,
   COMPATIBILITY_RULE_SET_DEFINITION_ID as COMPAT_SET_ID,
@@ -23,6 +25,7 @@ import {
   ROLE_TAXONOMY_DEFINITION_ID as TAXONOMY_SET_ID,
   type DefinitionSetContent,
   type DefinitionSetLedger,
+  type PublishedSetPinRecord,
 } from '../../src/features/preference-cards/domain/definition-set-ledger'
 import {
   computeReleaseBundle,
@@ -600,10 +603,14 @@ export async function runBuildReleaseBundles(input: {
   }> = []
   const pinnedRecipeVersionIds = new Set<string>()
   // Every whole set a published release pins, retained the same way — see
-  // `definition-set-ledger.ts` for why the sets need a ledger of their own.
+  // `definition-set-ledger.ts` for why the sets need a ledger of their own. Collected with
+  // each bundle's publication facts so the fold below can run in canonical publication
+  // order: the release that becomes a new entry's `firstPublishedByReleaseBundleId` must be
+  // the publication-order-first one, which id-ordered iteration does not guarantee (P92-C2).
   const publishedDefinitionSets: Array<{
     content: DefinitionSetContent
     releaseBundleId: string
+    publishedAt: string | null
   }> = []
   const pinnedSetHashes = new Map<string, Set<string>>()
   for (const bundle of result.bundles) {
@@ -620,18 +627,22 @@ export async function runBuildReleaseBundles(input: {
         {
           content: { definitionSetId: MODIFIER_SET_ID, definition: sources.modifiers },
           releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
         },
         {
           content: { definitionSetId: RESCUE_SET_ID, definition: sources.rescueModules },
           releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
         },
         {
           content: { definitionSetId: COMPAT_SET_ID, definition: sources.compatibilityRules },
           releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
         },
         {
           content: { definitionSetId: TAXONOMY_SET_ID, definition: sources.roleTaxonomy },
           releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
         },
       )
     }
@@ -653,15 +664,86 @@ export async function runBuildReleaseBundles(input: {
     'definition-set-ledger.json',
     emptyDefinitionSetLedger(),
   )
+  // Wrong-shape retained history is refused the same way release-bundles.json is: an
+  // `entries` that is not an array would otherwise surface as a raw TypeError three calls
+  // deep instead of naming the corruption.
+  if (!Array.isArray(definitionSetLedgerBefore.entries)) {
+    throw new Error(
+      `${path.join(generatedDirectory, 'definition-set-ledger.json')} parsed but does not carry an entries array — the retained definition sets are unreadable. Restore the file; published releases must resolve the sets they recorded.`,
+    )
+  }
+  // Duplicate keys are refused on the raw on-disk ledger, before the fold: the fold indexes
+  // by (set, hash) and would otherwise collapse a duplicate last-wins — silently normalizing
+  // corrupt retained history, and silently choosing between two conflicting attribution
+  // claims, where the contract requires a refusal (P92-C2).
+  const rawLedgerDuplicates: ReturnType<typeof validateDefinitionSetLedger> = []
+  {
+    const seenRawKeys = new Set<string>()
+    for (const entry of definitionSetLedgerBefore.entries) {
+      const key = `${entry.definitionSetId}@${entry.definitionHash}`
+      if (seenRawKeys.has(key)) {
+        rawLedgerDuplicates.push({
+          code: 'definition_set_ledger_duplicate_entry',
+          definitionSetId: entry.definitionSetId,
+          definitionHash: entry.definitionHash,
+          message: `The on-disk definition-set ledger records ${key} more than once (one of them attributed to "${entry.firstPublishedByReleaseBundleId}"). A (set, hash) pair must identify exactly one frozen definition set; regenerating would silently keep one of the copies, which is a rewrite of retained history, not a repair.`,
+        })
+      }
+      seenRawKeys.add(key)
+    }
+  }
   const definitionSetLedger = withPublishedDefinitionSets(
     definitionSetLedgerBefore,
-    publishedDefinitionSets,
+    // Publication order, not id order: the first release naming a new (set, hash) pair in
+    // this list becomes the entry's first publisher, and the attribution validation below
+    // holds the whole ledger — new entries and retained ones alike — to exactly that.
+    [...publishedDefinitionSets].sort(comparePublicationOrder),
   )
-  const definitionSetLedgerProblems = validateDefinitionSetLedger({
-    ledger: definitionSetLedger,
-    pinnedSetHashes,
-    live: getLiveDefinitionSets(),
-  })
+  const frozenReleaseRecords: PublishedSetPinRecord[] = result.bundles
+    .filter((bundle) => bundle.releaseState !== 'draft')
+    .map((bundle) => ({
+      releaseBundleId: bundle.id,
+      releaseState: bundle.releaseState,
+      publishedAt: bundle.publishedAt,
+      pins: [
+        {
+          definitionSetId: bundle.modifierSetPin.id,
+          definitionHash: bundle.modifierSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.rescueModuleSetPin.id,
+          definitionHash: bundle.rescueModuleSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.compatibilityRuleSetPin.id,
+          definitionHash: bundle.compatibilityRuleSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.roleTaxonomyPin.id,
+          definitionHash: bundle.roleTaxonomyPin.definitionHash,
+        },
+      ],
+    }))
+  const definitionSetLedgerProblems = [
+    ...rawLedgerDuplicates,
+    ...validateDefinitionSetLedger({
+      ledger: definitionSetLedger,
+      pinnedSetHashes,
+      live: getLiveDefinitionSets(),
+    }),
+    // The generator certifies attribution itself, before any write — it must not trust the
+    // ledger's own firstPublishedByReleaseBundleId field, and it must not rely on the
+    // separately-run publication-baseline command to catch a rewrite (P92-C2).
+    ...validateDefinitionSetAttribution({
+      ledger: definitionSetLedger,
+      frozenReleases: frozenReleaseRecords,
+      draftReleaseIds: new Set(
+        result.bundles
+          .filter((bundle) => bundle.releaseState === 'draft')
+          .map((bundle) => bundle.id),
+      ),
+    }),
+  ]
 
   const compositionLedgerBefore = await readJsonOrDefault<CompositionLedger>(
     generatedDirectory,

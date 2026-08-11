@@ -23,6 +23,7 @@ import {
   resolveHistoricalCatalogPick,
   validateRetainedCatalog,
 } from '../data/historical-catalog.server'
+import { roleCanonicalizerFor } from '../domain/role-taxonomy'
 import { getRetainedReleaseBundles } from '../data/release-bundles.server'
 import type { CatalogProductRecord, ProductRoleRecord, RoleRecord } from '../server/catalog-store'
 
@@ -313,6 +314,7 @@ describe('reconstructing a saved selection after the current catalog moves', () 
       'PRD-FIXTUREAA',
       'FIXTURE_ROLE',
       () => false,
+      roleCanonicalizerFor({}),
     )
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -344,6 +346,7 @@ describe('reconstructing a saved selection after the current catalog moves', () 
       'PRD-FIXTUREAA',
       'UNKNOWN_ROLE',
       () => false,
+      roleCanonicalizerFor({}),
     )
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.code).toBe('unknown_role')
@@ -361,6 +364,7 @@ describe('reconstructing a saved selection after the current catalog moves', () 
       'PRD-FIXTUREAA',
       'FIXTURE_ROLE',
       (productId) => productId === 'PRD-FIXTUREAA',
+      roleCanonicalizerFor({}),
     )
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.code).toBe('product_not_slottable')

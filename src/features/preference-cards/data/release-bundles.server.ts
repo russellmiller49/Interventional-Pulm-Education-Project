@@ -240,6 +240,7 @@ export function buildReleaseContext(
         modifiers: sources.modifiers,
         rescueModules: sources.rescueModules,
         compatibilityRules: sources.compatibilityRules,
+        roleTaxonomy: sources.roleTaxonomy,
       },
     ),
   }

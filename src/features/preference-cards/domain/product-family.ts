@@ -1,4 +1,4 @@
-import { canonicalRoleCode } from './role-taxonomy'
+import type { RoleCodeCanonicalizer } from './role-taxonomy'
 import { stableSnapshotHash } from './stable-hash'
 
 /**
@@ -376,6 +376,11 @@ export type ProductFamilyResolutionResult =
 export function resolveReviewedProductFamily(
   pin: ReviewedProductFamilyPin,
   versionsById: ReadonlyMap<string, ReviewedProductFamilyVersion>,
+  /**
+   * The alias table of the release this pin is being reconstructed under — required so a live
+   * alias added after the family was reviewed cannot re-aim which requirement it serves (P92-C1).
+   */
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): ProductFamilyResolutionResult {
   const version = versionsById.get(pin.productFamilyVersionId)
   if (!version) {

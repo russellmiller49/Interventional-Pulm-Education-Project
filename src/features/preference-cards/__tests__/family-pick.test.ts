@@ -15,6 +15,7 @@ import {
 } from '../data/product-families.server'
 import { searchProductFamiliesForRole } from '../server/catalog'
 import { getHistoricalCatalog, historicalFamilyPick } from '../data/historical-catalog.server'
+import { canonicalRoleCode } from '../domain/role-taxonomy'
 
 const STENT_ROLE = 'AIRWAY_STENT_SILICONE_STRAIGHT'
 
@@ -255,7 +256,7 @@ describe('server-side family search and rebuild', () => {
     expect(historical.ok).toBe(true)
     if (!historical.ok) return
 
-    const rebuilt = historicalFamilyPick(historical, version, STENT_ROLE)
+    const rebuilt = historicalFamilyPick(historical, version, STENT_ROLE, canonicalRoleCode)
     expect(rebuilt.ok).toBe(true)
     if (!rebuilt.ok) return
     expect(rebuilt.pick.productFamilyVersionId).toBe(version.productFamilyVersionId)

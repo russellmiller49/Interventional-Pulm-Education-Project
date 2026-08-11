@@ -151,9 +151,36 @@ export const DEPRECATED_ROLE_CODES: ReadonlySet<string> = new Set(Object.keys(RO
 /**
  * The role code a caller means. Untrusted input — a saved card, a URL, a picker payload —
  * goes through this before any catalog lookup.
+ *
+ * This is the **live** table, and it is only for current-data surfaces: the catalog browse
+ * pages, the pickers, the client-side equipment-set library. Anything resolving through a
+ * release pin canonicalizes with that release's own resolved taxonomy via
+ * `roleCanonicalizerFor` instead — a role's meaning inside a published release is part of
+ * what the release froze, and a live alias added later must never reinterpret it (P92-C1).
  */
 export function canonicalRoleCode(roleCode: string): string {
-  return ROLE_CODE_ALIASES[roleCode] ?? roleCode
+  // Own-property lookup: a client-supplied code like "constructor" must canonicalize to
+  // itself, not to an inherited Object.prototype member.
+  return Object.hasOwn(ROLE_CODE_ALIASES, roleCode) ? ROLE_CODE_ALIASES[roleCode] : roleCode
+}
+
+/** A role-code canonicalizer bound to one exact alias table. */
+export type RoleCodeCanonicalizer = (roleCode: string) => string
+
+/**
+ * Canonicalization under an exact alias table — the one a release resolved by its
+ * `roleTaxonomyPin`, not whatever the live table says today.
+ *
+ * Single-hop by construction, exactly like `canonicalRoleCode`: every alias maps an old code
+ * directly onto its canonical replacement, so a chain would be an authoring error rather than
+ * something to follow. Applying the pinned table single-hop is what makes a historical
+ * release's canonicalization byte-stable under any future live edit — including a future
+ * alias whose source is a role code this release actively uses.
+ */
+export function roleCanonicalizerFor(
+  aliases: Readonly<Record<string, string>>,
+): RoleCodeCanonicalizer {
+  return (roleCode: string) => (Object.hasOwn(aliases, roleCode) ? aliases[roleCode] : roleCode)
 }
 
 export function isDeprecatedRoleCode(roleCode: string): boolean {

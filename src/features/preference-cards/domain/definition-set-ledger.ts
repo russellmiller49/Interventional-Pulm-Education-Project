@@ -139,6 +139,11 @@ export type DefinitionSetLedgerValidationCode =
   | 'definition_set_ledger_unknown_set'
   | 'definition_set_ledger_entry_missing'
   | 'definition_set_ledger_unknown_format'
+  | 'definition_set_attribution_unknown_release'
+  | 'definition_set_attribution_unpublished_release'
+  | 'definition_set_attribution_release_does_not_pin'
+  | 'definition_set_attribution_not_first_publisher'
+  | 'definition_set_attribution_unorderable_release'
 
 export const DEFINITION_SET_LEDGER_FORMAT_VERSION = '1.0'
 
@@ -240,12 +245,154 @@ export function validateDefinitionSetLedger(input: {
 }
 
 /**
+ * A frozen release's lifecycle facts and whole-set pins, as the attribution validator and
+ * the deterministic first-publisher derivation consume them.
+ */
+export interface PublishedSetPinRecord {
+  releaseBundleId: string
+  /** `published` or `retired` — a retired release stays published history. Never `draft`. */
+  releaseState: string
+  publishedAt: string | null
+  pins: ReadonlyArray<{ definitionSetId: string; definitionHash: string }>
+}
+
+/**
+ * The repository's canonical publication ordering, in one place.
+ *
+ * `publishedAt` ascending — ISO-8601 strings, so lexicographic comparison is chronological —
+ * with the release id as the deterministic tiebreak for the same instant (the foundation
+ * freeze published fifteen releases at one timestamp). Nothing here reads ledger entry
+ * order, seed array order, or supersession chains: the ordering is a pure function of the
+ * lifecycle facts every frozen release is already required to record.
+ */
+export function comparePublicationOrder(
+  left: { releaseBundleId: string; publishedAt: string | null },
+  right: { releaseBundleId: string; publishedAt: string | null },
+): number {
+  return (
+    (left.publishedAt ?? '').localeCompare(right.publishedAt ?? '') ||
+    left.releaseBundleId.localeCompare(right.releaseBundleId)
+  )
+}
+
+/**
+ * Every ledger entry's `firstPublishedByReleaseBundleId`, validated against the complete
+ * published release universe (P92-C2).
+ *
+ * The ledger's own attribution field is a *claim*; this derives the fact. For each entry the
+ * expected publisher is the publication-order-first frozen release whose pins name the exact
+ * (set id, definition hash) pair, and the recorded attribution must be that release — not
+ * merely a release that exists, not merely one that pins the pair, and never one derived
+ * from the ledger's own entry ordering. Each failure names the set, the hash, the recorded
+ * publisher, and the expected publisher or the reason the recorded one is invalid.
+ *
+ * Runs inside the release generator's phase A, before any target is written, so the real
+ * `ip-cards:releases` command certifies attribution itself. `check-publication-baseline`
+ * remains the independent second layer comparing against the protected base.
+ */
+export function validateDefinitionSetAttribution(input: {
+  ledger: DefinitionSetLedger
+  /** Every frozen (published or retired) release with its four whole-set pins. */
+  frozenReleases: ReadonlyArray<PublishedSetPinRecord>
+  /** Ids of releases that exist but are drafts, to tell "unpublished" from "unknown". */
+  draftReleaseIds?: ReadonlySet<string>
+}): DefinitionSetLedgerValidationMessage[] {
+  const messages: DefinitionSetLedgerValidationMessage[] = []
+
+  const frozenById = new Map(input.frozenReleases.map((record) => [record.releaseBundleId, record]))
+  for (const record of input.frozenReleases) {
+    if (!record.publishedAt) {
+      messages.push({
+        code: 'definition_set_attribution_unorderable_release',
+        definitionSetId: '(release)',
+        definitionHash: null,
+        message: `Release ${record.releaseBundleId} is ${record.releaseState} but records no publishedAt, so its position in the publication order — and every first-publisher derivation involving it — is undefined. Attribution fails closed rather than guessing.`,
+      })
+    }
+  }
+
+  // Publication-order-first frozen release per exact (set id, hash) pair.
+  const firstPublisherByKey = new Map<string, PublishedSetPinRecord>()
+  for (const record of input.frozenReleases) {
+    for (const pin of record.pins) {
+      const key = `${pin.definitionSetId}@${pin.definitionHash}`
+      const incumbent = firstPublisherByKey.get(key)
+      if (!incumbent || comparePublicationOrder(record, incumbent) < 0) {
+        firstPublisherByKey.set(key, record)
+      }
+    }
+  }
+
+  const seenEntryKeys = new Set<string>()
+  for (const entry of input.ledger.entries) {
+    const key = `${entry.definitionSetId}@${entry.definitionHash}`
+    // Duplicate keys are already a hard failure in `validateDefinitionSetLedger`; attribution
+    // is checked on the first entry only — the one the resolver would serve.
+    if (seenEntryKeys.has(key)) continue
+    seenEntryKeys.add(key)
+
+    const recorded = entry.firstPublishedByReleaseBundleId
+    const expected = firstPublisherByKey.get(key) ?? null
+    const attributed = recorded ? (frozenById.get(recorded) ?? null) : null
+
+    if (!recorded || (!attributed && !(input.draftReleaseIds?.has(recorded) ?? false))) {
+      messages.push({
+        code: 'definition_set_attribution_unknown_release',
+        definitionSetId: entry.definitionSetId,
+        definitionHash: entry.definitionHash,
+        message: `Ledger entry ${key} records firstPublishedByReleaseBundleId "${recorded}", which is not a retained release. Expected publisher: ${expected ? expected.releaseBundleId : 'none — no published release pins this pair, so the entry itself has no publication to stand on'}.`,
+      })
+      continue
+    }
+    if (!attributed) {
+      messages.push({
+        code: 'definition_set_attribution_unpublished_release',
+        definitionSetId: entry.definitionSetId,
+        definitionHash: entry.definitionHash,
+        message: `Ledger entry ${key} records firstPublishedByReleaseBundleId "${recorded}", which is a draft. A draft has published nothing, so it cannot be the publication that carried this set into the ledger. Expected publisher: ${expected ? expected.releaseBundleId : 'none — no published release pins this pair'}.`,
+      })
+      continue
+    }
+    const attributedPinsPair = attributed.pins.some(
+      (pin) =>
+        pin.definitionSetId === entry.definitionSetId &&
+        pin.definitionHash === entry.definitionHash,
+    )
+    if (!attributedPinsPair) {
+      messages.push({
+        code: 'definition_set_attribution_release_does_not_pin',
+        definitionSetId: entry.definitionSetId,
+        definitionHash: entry.definitionHash,
+        message: `Ledger entry ${key} records firstPublishedByReleaseBundleId "${recorded}", but that release does not pin ${entry.definitionSetId} at ${entry.definitionHash}. Expected publisher: ${expected ? expected.releaseBundleId : 'none — no published release pins this pair'}.`,
+      })
+      continue
+    }
+    if (expected && expected.releaseBundleId !== recorded) {
+      messages.push({
+        code: 'definition_set_attribution_not_first_publisher',
+        definitionSetId: entry.definitionSetId,
+        definitionHash: entry.definitionHash,
+        message: `Ledger entry ${key} records firstPublishedByReleaseBundleId "${recorded}" (published ${attributed.publishedAt ?? 'undated'}), but the publication-order-first release pinning this pair is ${expected.releaseBundleId} (published ${expected.publishedAt ?? 'undated'}). Attribution names the first publisher, never a later one.`,
+      })
+    }
+  }
+
+  return messages
+}
+
+/**
  * Fold newly published definition sets into the ledger without disturbing what is already
  * there.
  *
  * Append-only by construction: an existing (set, hash) entry is returned untouched, so this
  * function can never be the thing that rewrites history. Entries are sorted by (set id,
  * hash) so a second generation over the same inputs is byte-identical.
+ *
+ * Callers supply `published` in canonical publication order (`comparePublicationOrder`):
+ * the first release naming a new (set, hash) pair in that order becomes the entry's
+ * `firstPublishedByReleaseBundleId`, which is exactly what `validateDefinitionSetAttribution`
+ * later requires of it. Feeding this an id-ordered list would record an attribution the
+ * validator refuses — the generator sorts before folding.
  */
 export function withPublishedDefinitionSets(
   ledger: DefinitionSetLedger,
@@ -353,17 +500,16 @@ export function createDefinitionSetResolver(
 /**
  * Whether the live role taxonomy is a conservative extension of a retained snapshot.
  *
- * Alias *application* deliberately stays on the live table even for release-pinned cards:
- * permanent role aliases are a forward-acting contract — a card stored under a role code
- * that is renamed later must still resolve, which is the entire point of the alias table
- * being permanent and append-only. Pinning application would break exactly the historical
- * cards retention exists to protect. See `definition-set-retention.md` §3.6.
- *
- * What keeps that from being a silent fallback is this check: the live table may only
- * *extend* what the pinned snapshot retained. Every retained alias must map to the same
- * target, every retained category must still exist, every retained legacy mapping and
- * override must be unchanged. A live table that contradicts the retained one fails the
- * bundle's resolution typed rather than applying either table.
+ * This is the governance tripwire for the permanent-table contract, not an application
+ * guard: since P92-C1, alias *application* inside release-pinned paths uses the release's
+ * own resolved snapshot (`BuildContext.roleCodeAliases`), so nothing here decides which
+ * table canonicalizes a historical card. What this check refuses is a live table that
+ * *rewrites* what a published release retained — a retargeted or removed alias, a dropped
+ * category, a changed legacy mapping or override. Aliases are permanent and append-only;
+ * a contradiction is a rewrite of published history, and every release that retained the
+ * contradicted content fails resolution typed rather than resolving as if nothing
+ * happened. Pure extensions pass, and in neither case does the live table reach a
+ * historical card's semantics. See `definition-set-retention.md` §3.6.
  */
 export function liveTaxonomyExtendsRetained(
   live: RoleTaxonomySnapshot,

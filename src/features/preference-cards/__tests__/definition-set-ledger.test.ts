@@ -10,15 +10,18 @@ import {
   type RoleTaxonomySnapshot,
 } from '../domain/release-bundle'
 import {
+  comparePublicationOrder,
   createDefinitionSetResolver,
   definitionSetContentHash,
   emptyDefinitionSetLedger,
   liveTaxonomyExtendsRetained,
+  validateDefinitionSetAttribution,
   validateDefinitionSetLedger,
   withPublishedDefinitionSets,
   type DefinitionSetLedger,
   type DefinitionSetLedgerEntry,
   type LiveDefinitionSets,
+  type PublishedSetPinRecord,
 } from '../domain/definition-set-ledger'
 import {
   buildPublicationBaselineSnapshot,
@@ -514,5 +517,229 @@ describe('publication-baseline protection for the definition-set ledger', () => 
     expect(comparison.violations.map((violation) => violation.code)).toEqual([
       'publication_lifecycle_field_rewritten',
     ])
+  })
+})
+
+describe('validateDefinitionSetAttribution (P92-C2)', () => {
+  /**
+   * The generator-side attribution contract: `firstPublishedByReleaseBundleId` is derived
+   * from the published release universe under the canonical publication ordering
+   * (publishedAt ascending, release id as the deterministic tiebreak), never trusted from
+   * the ledger's own field, and never read off entry order.
+   */
+  function frozenRelease(
+    releaseBundleId: string,
+    publishedAt: string | null,
+    pins: PublishedSetPinRecord['pins'],
+    releaseState = 'published',
+  ): PublishedSetPinRecord {
+    return { releaseBundleId, releaseState, publishedAt, pins }
+  }
+
+  const modifierPinV1 = {
+    definitionSetId: MODIFIER_SET_DEFINITION_ID,
+    definitionHash: v1.modifiers,
+  }
+  const modifierPinV2 = {
+    definitionSetId: MODIFIER_SET_DEFINITION_ID,
+    definitionHash: v2.modifiers,
+  }
+
+  function modifierEntryAttributedTo(releaseBundleId: string): DefinitionSetLedger {
+    const ledger = withPublishedDefinitionSets(emptyDefinitionSetLedger(), [
+      {
+        content: { definitionSetId: MODIFIER_SET_DEFINITION_ID, definition: setsV1.modifiers },
+        releaseBundleId,
+      },
+    ])
+    return ledger
+  }
+
+  it('accepts the publication-order-first publisher, including a retired one', () => {
+    const releases = [
+      frozenRelease('release-fixture-b-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+      frozenRelease(
+        'release-fixture-a-v1-0',
+        '2026-07-01T00:00:00.000Z',
+        [modifierPinV1],
+        'retired',
+      ),
+    ]
+    expect(
+      validateDefinitionSetAttribution({
+        ledger: modifierEntryAttributedTo('release-fixture-a-v1-0'),
+        frozenReleases: releases,
+      }),
+    ).toEqual([])
+  })
+
+  it('breaks a same-instant tie by release id, deterministically', () => {
+    const sameInstant = [
+      frozenRelease('release-fixture-b-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+      frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+    ]
+    expect(
+      validateDefinitionSetAttribution({
+        ledger: modifierEntryAttributedTo('release-fixture-a-v1-0'),
+        frozenReleases: sameInstant,
+      }),
+    ).toEqual([])
+    const wrong = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-b-v1-0'),
+      frozenReleases: sameInstant,
+    })
+    expect(wrong.map((message) => message.code)).toEqual([
+      'definition_set_attribution_not_first_publisher',
+    ])
+    expect(wrong[0].message).toContain('release-fixture-a-v1-0')
+    // And the ordering itself is a total, deterministic comparison.
+    expect([...sameInstant].sort(comparePublicationOrder)[0].releaseBundleId).toBe(
+      'release-fixture-a-v1-0',
+    )
+  })
+
+  it('rejects a non-existent publisher, naming the expected one', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-never-existed'),
+      frozenReleases: [
+        frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+      ],
+    })
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_unknown_release',
+    ])
+    expect(messages[0].definitionSetId).toBe(MODIFIER_SET_DEFINITION_ID)
+    expect(messages[0].definitionHash).toBe(v1.modifiers)
+    expect(messages[0].message).toContain('release-fixture-never-existed')
+    expect(messages[0].message).toContain('release-fixture-a-v1-0')
+  })
+
+  it('rejects empty attribution', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo(''),
+      frozenReleases: [
+        frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+      ],
+    })
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_unknown_release',
+    ])
+  })
+
+  it('rejects a draft as publisher with its own code', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-draft-v2-0'),
+      frozenReleases: [
+        frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+      ],
+      draftReleaseIds: new Set(['release-fixture-draft-v2-0']),
+    })
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_unpublished_release',
+    ])
+  })
+
+  it('rejects a real published release that does not pin the entry', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-other-v1-0'),
+      frozenReleases: [
+        frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+        frozenRelease('release-fixture-other-v1-0', '2026-07-01T00:00:00.000Z', [modifierPinV2]),
+      ],
+    })
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_release_does_not_pin',
+    ])
+    expect(messages[0].message).toContain('release-fixture-a-v1-0')
+  })
+
+  it('rejects a later valid publisher — a forged hand-off to a newer release', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-b-v1-1'),
+      frozenReleases: [
+        frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV1]),
+        frozenRelease('release-fixture-b-v1-1', '2026-08-09T00:00:00.000Z', [modifierPinV1]),
+      ],
+    })
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_not_first_publisher',
+    ])
+    expect(messages[0].message).toContain('release-fixture-a-v1-0')
+    expect(messages[0].message).toContain('release-fixture-b-v1-1')
+  })
+
+  it('rejects an entry no published release pins at all — a forged orphan', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-a-v1-0'),
+      frozenReleases: [
+        frozenRelease('release-fixture-a-v1-0', '2026-07-31T00:00:00.000Z', [modifierPinV2]),
+      ],
+    })
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_release_does_not_pin',
+    ])
+    expect(messages[0].message).toContain('none — no published release pins this pair')
+  })
+
+  it('fails closed on a frozen release with no publishedAt: the order is undefined', () => {
+    const messages = validateDefinitionSetAttribution({
+      ledger: modifierEntryAttributedTo('release-fixture-a-v1-0'),
+      frozenReleases: [frozenRelease('release-fixture-a-v1-0', null, [modifierPinV1])],
+    })
+    expect(messages.map((message) => message.code)).toContain(
+      'definition_set_attribution_unorderable_release',
+    )
+  })
+
+  it('holds over the real committed ledger and the real published releases', () => {
+    const file = releaseBundlesJson as unknown as {
+      bundles: Array<{
+        id: string
+        releaseState: string
+        publishedAt: string | null
+        modifierSetPin: { id: string; definitionHash: string }
+        rescueModuleSetPin: { id: string; definitionHash: string }
+        compatibilityRuleSetPin: { id: string; definitionHash: string }
+        roleTaxonomyPin: { id: string; definitionHash: string }
+      }>
+    }
+    const frozen = file.bundles
+      .filter((bundle) => bundle.releaseState !== 'draft')
+      .map((bundle) =>
+        frozenRelease(
+          bundle.id,
+          bundle.publishedAt,
+          [
+            {
+              definitionSetId: bundle.modifierSetPin.id,
+              definitionHash: bundle.modifierSetPin.definitionHash,
+            },
+            {
+              definitionSetId: bundle.rescueModuleSetPin.id,
+              definitionHash: bundle.rescueModuleSetPin.definitionHash,
+            },
+            {
+              definitionSetId: bundle.compatibilityRuleSetPin.id,
+              definitionHash: bundle.compatibilityRuleSetPin.definitionHash,
+            },
+            {
+              definitionSetId: bundle.roleTaxonomyPin.id,
+              definitionHash: bundle.roleTaxonomyPin.definitionHash,
+            },
+          ],
+          bundle.releaseState,
+        ),
+      )
+    expect(
+      validateDefinitionSetAttribution({
+        ledger: definitionSetLedgerJson as unknown as DefinitionSetLedger,
+        frozenReleases: frozen,
+        draftReleaseIds: new Set(
+          file.bundles
+            .filter((bundle) => bundle.releaseState === 'draft')
+            .map((bundle) => bundle.id),
+        ),
+      }),
+    ).toEqual([])
   })
 })

@@ -129,6 +129,7 @@ function context(overrides: Partial<BuildContext> & Pick<BuildContext, 'recipe'>
     hospitalItems: [],
     hospitalRoleOptions: [],
     compatibilityRules: [],
+    roleCodeAliases: {},
     preferenceOverlays: [],
     ...overrides,
   }

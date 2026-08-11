@@ -122,6 +122,7 @@ function preparation(): CardRebuildPreparationResult {
           scenarioId: 'fixture-procedure',
           recipeVersionId: 'recipe-fixture-procedure-v1-1',
           sourceProcedureCode: 'FIXTURE_PROCEDURE',
+          roleCodeAliases: {},
         },
         comparisons: { operationalHash: '2'.repeat(64), releaseDiffHash: '3'.repeat(64) },
         targetResolution: {

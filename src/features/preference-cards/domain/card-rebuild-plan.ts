@@ -2,7 +2,7 @@ import { REQUIREMENT_COMPARED_FIELDS } from './release-bundle'
 import { isCatalogPickItemId, productIdFromCatalogPickItemId } from './catalog-pick'
 import { customIdFromItemId, isCustomItemId } from './custom-item'
 import { equipmentSetIdFromItemId, isEquipmentSetItemId } from './equipment-set'
-import { canonicalRoleCode } from './role-taxonomy'
+import { roleCanonicalizerFor, type RoleCodeCanonicalizer } from './role-taxonomy'
 import { familyPickId } from './size-at-procedure'
 import { stableSnapshotHash, stableStringify } from './stable-hash'
 import type { PreferenceCardReleaseBundle } from './release-bundle'
@@ -374,6 +374,13 @@ export interface CardRebuildPlan {
     scenarioId: string
     recipeVersionId: string
     sourceProcedureCode: string
+    /**
+     * The alias table of the target release's resolved role taxonomy — the one vocabulary every
+     * role comparison in this plan was made in. Inside the hashed plan so that applying answers
+     * later canonicalizes with exactly the table the review was computed under, not whatever the
+     * live table says by then (P92-C1).
+     */
+    roleCodeAliases: Readonly<Record<string, string>>
   }
   /**
    * The two read-only comparisons this review was taken against, by hash.
@@ -486,6 +493,16 @@ export interface RebuildPlanInput {
     /** The target composition, expanded under the module selection this plan proposes. */
     slots: RecipeSlot[]
     releaseBundle: PreferenceCardReleaseBundle
+    /**
+     * The alias table of the target release's *resolved* role taxonomy.
+     *
+     * Every role comparison in the plan — source picks against target slots, covered-role sets,
+     * drop keys — canonicalizes with this one table. The target's taxonomy is the right common
+     * vocabulary for a cross-release mapping because permanent aliases are append-only: it
+     * contains every alias the source's era had. What it must never be is the module-level live
+     * table, which a future edit could extend past what either release means (P92-C1).
+     */
+    roleCodeAliases: Readonly<Record<string, string>>
     /** Every module the target recipe offers, with the behaviour it offers them at. */
     offeredModules: Array<{
       moduleVersionId: string
@@ -571,6 +588,7 @@ function moduleVersionsByCode(
 function readSelection(
   item: Pick<ResolvedCardItem, 'selectedHospitalItemId' | 'roleCode'>,
   inputs: ReleasePinnedBuilderInputs,
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): RebuildSelection {
   const hospitalItemId = item.selectedHospitalItemId
   if (!hospitalItemId) return { kind: 'none' }
@@ -612,7 +630,7 @@ function readSelection(
       hospitalItemId,
       setId,
       selectedRoleCode: canonicalRoleCode(set.selectedRoleCode),
-      coveredRoles: storedSetCoveredRoles(set),
+      coveredRoles: storedSetCoveredRoles(set, canonicalRoleCode),
     }
   }
 
@@ -651,7 +669,10 @@ function readSelection(
  * inventing the catalog fields a rebuilt member has. Role aliases are permanent, so both sides are
  * canonicalized or a pre-rename set would stop covering the requirement it was chosen for.
  */
-function storedSetCoveredRoles(set: EquipmentSetRef): string[] {
+function storedSetCoveredRoles(
+  set: EquipmentSetRef,
+  canonicalRoleCode: RoleCodeCanonicalizer,
+): string[] {
   const roles = new Set<string>()
   for (const member of set.members) roles.add(canonicalRoleCode(member.roleCode))
   for (const role of set.additionalCoveredRoles) roles.add(canonicalRoleCode(role))
@@ -735,6 +756,7 @@ function carrySelection(
   selection: RebuildSelection,
   target: RecipeSlot,
   probe: RebuildProbe,
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): SelectionVerdict {
   const targetRole = canonicalRoleCode(target.roleCode)
 
@@ -1102,6 +1124,7 @@ function computeAllowedOutcomes(
   proposedInputs: BuilderInputs,
   baseline: RebuildTargetResolution,
   probe: RebuildProbe,
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): RebuildAllowedOutcome[] {
   const canonicalProposed = stableStringify(proposedInputs)
   const outcomes: RebuildAllowedOutcome[] = []
@@ -1109,7 +1132,12 @@ function computeAllowedOutcomes(
   for (const decision of decisions) {
     if (!decision.requiresExplicitConfirmation) continue
     for (const answer of allowedAcknowledgements(decision)) {
-      const inputs = applyAnswersToInputs(decisions, proposedInputs, { [decision.key]: answer })
+      const inputs = applyAnswersToInputs(
+        decisions,
+        proposedInputs,
+        { [decision.key]: answer },
+        canonicalRoleCode,
+      )
       const delta =
         stableStringify(inputs) === canonicalProposed
           ? EMPTY_DELTA
@@ -1132,6 +1160,10 @@ function computeAllowedOutcomes(
  */
 export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
   const { source, target, probe, selection, comparisons } = input
+  // One vocabulary for the whole plan: the target release's resolved alias table, supplied by
+  // the caller rather than read from the live module — which is what keeps this function the
+  // pure one its hash claims it is.
+  const canonicalRoleCode = roleCanonicalizerFor(target.roleCodeAliases)
 
   const decisions: RebuildDecision[] = []
   const sourceItems = sourceRequirementIndex(source.card)
@@ -1178,7 +1210,7 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
               roleCode: sourceEntry.item.roleCode,
               label: sourceEntry.item.label,
               presence: sourceEntry.presence,
-              selection: readSelection(sourceEntry.item, source.inputs),
+              selection: readSelection(sourceEntry.item, source.inputs, canonicalRoleCode),
               conditionalState: sourceEntry.item.conditionalState,
             }
           : null,
@@ -1216,7 +1248,7 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
               roleCode: sourceEntry.item.roleCode,
               label: sourceEntry.item.label,
               presence: sourceEntry.presence,
-              selection: readSelection(sourceEntry.item, source.inputs),
+              selection: readSelection(sourceEntry.item, source.inputs, canonicalRoleCode),
               conditionalState: sourceEntry.item.conditionalState,
             }
           : null,
@@ -1265,8 +1297,8 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
 
     const definitionFields = sourceSlot ? changedDefinitionFields(sourceSlot, targetSlot) : []
     const definitionChanged = definitionFields.length > 0
-    const sourceSelection = readSelection(sourceEntry.item, source.inputs)
-    const verdict = carrySelection(sourceSelection, targetSlot, probe)
+    const sourceSelection = readSelection(sourceEntry.item, source.inputs, canonicalRoleCode)
+    const verdict = carrySelection(sourceSelection, targetSlot, probe, canonicalRoleCode)
 
     // A requirement that moved between modules without changing any compared field is the same
     // requirement in a different place. Saying so explicitly matters: without it, a release that
@@ -1566,7 +1598,13 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
   const annotated = annotateWithTargetResolution(decisions, targetResolution)
   // Measured against the annotated decisions, because promotion by the final-resolution pass is
   // what decides whether a decision is asked about at all — and only asked decisions have answers.
-  const allowedOutcomes = computeAllowedOutcomes(annotated, proposedInputs, targetResolution, probe)
+  const allowedOutcomes = computeAllowedOutcomes(
+    annotated,
+    proposedInputs,
+    targetResolution,
+    probe,
+    canonicalRoleCode,
+  )
 
   return {
     version: CARD_REBUILD_PLAN_VERSION,
@@ -1589,6 +1627,7 @@ export function planCardRebuild(input: RebuildPlanInput): CardRebuildPlan {
       scenarioId: target.releaseBundle.scenarioId,
       recipeVersionId: target.releaseBundle.recipeVersionId,
       sourceProcedureCode: target.releaseBundle.sourceProcedureCode,
+      roleCodeAliases: target.roleCodeAliases,
     },
     comparisons,
     targetResolution,
@@ -2012,7 +2051,14 @@ export function applyRebuildAcknowledgements(
   plan: CardRebuildPlan,
   acknowledgements: RebuildAcknowledgements,
 ): BuilderInputs {
-  return applyAnswersToInputs(plan.decisions, plan.proposedInputs, acknowledgements)
+  // The plan carries the alias table it was computed under, so applying answers speaks the same
+  // vocabulary the review did — even if the live table has moved between the two requests.
+  return applyAnswersToInputs(
+    plan.decisions,
+    plan.proposedInputs,
+    acknowledgements,
+    roleCanonicalizerFor(plan.target.roleCodeAliases),
+  )
 }
 
 /**
@@ -2027,6 +2073,7 @@ function applyAnswersToInputs(
   decisions: RebuildDecision[],
   proposedInputs: BuilderInputs,
   acknowledgements: RebuildAcknowledgements,
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): BuilderInputs {
   const inputs = proposedInputs
   const selectedHospitalItemIds = { ...(inputs.input.selectedHospitalItemIds ?? {}) }

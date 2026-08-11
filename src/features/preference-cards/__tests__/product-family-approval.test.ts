@@ -44,10 +44,14 @@ jest.mock('../data/product-families.server', () => {
       const canonical = taxonomy.canonicalRoleCode(roleCode)
       return approved.filter((version) => version.roleCodes.includes(canonical))
     },
-    resolveProductFamilyPin: (pin: { roleCode: string }) =>
+    resolveProductFamilyPin: (
+      pin: { roleCode: string },
+      canonicalize: (roleCode: string) => string = taxonomy.canonicalRoleCode,
+    ) =>
       domain.resolveReviewedProductFamily(
-        { ...pin, roleCode: taxonomy.canonicalRoleCode(pin.roleCode) },
+        { ...pin, roleCode: canonicalize(pin.roleCode) },
         byId,
+        canonicalize,
       ),
   }
 })

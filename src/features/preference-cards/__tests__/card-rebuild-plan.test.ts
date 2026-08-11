@@ -222,6 +222,7 @@ function plan(
     target: {
       slots: targetSlots,
       releaseBundle: bravo,
+      roleCodeAliases: {},
       offeredModules: [
         {
           moduleVersionId: FIXTURE_MODULE_V1_1,
@@ -349,6 +350,7 @@ describe('matching is by reviewed requirement identity and nothing else', () => 
       target: {
         slots: movedSlots,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},
@@ -495,6 +497,7 @@ describe('a selection crosses only by exact stable identity', () => {
       target: {
         slots: customAllowed,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},
@@ -538,6 +541,7 @@ describe('a selection crosses only by exact stable identity', () => {
       target: {
         slots: noCustomSlots,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},
@@ -662,6 +666,7 @@ describe('conditional state survives only an unchanged rule', () => {
       target: {
         slots: changedRule,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},
@@ -718,6 +723,7 @@ describe('modifiers carry on an exact definition hash', () => {
       target: {
         slots: targetSlots,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},
@@ -788,6 +794,7 @@ describe('the proposed composition', () => {
       target: {
         slots: targetSlots,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [
           {
             moduleVersionId: FIXTURE_MODULE_V1_1,
@@ -813,6 +820,7 @@ describe('the proposed composition', () => {
       target: {
         slots: targetSlots,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [
           {
             moduleVersionId: 'module-new-v1-0',
@@ -1096,6 +1104,7 @@ describe('an ambiguous requirement key blocks rather than choosing', () => {
       target: {
         slots: ambiguousTargetSlots(),
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},
@@ -1159,6 +1168,7 @@ describe('an ambiguous requirement key blocks rather than choosing', () => {
       target: {
         slots: duplicated,
         releaseBundle: bravo,
+        roleCodeAliases: {},
         offeredModules: [],
         allowedModifierCodes: [],
         modifierDefinitionHashes: {},

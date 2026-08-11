@@ -353,6 +353,164 @@ describe('release generation writes nothing when validation fails', () => {
   })
 })
 
+describe('definition-set attribution is generator-validated before any write (P92-C2)', () => {
+  /**
+   * The generator must not trust the ledger's own `firstPublishedByReleaseBundleId`: a forged
+   * attribution used to regenerate cleanly and exit zero, leaving the false provenance
+   * certified in the written ledger, with only the separately-run publication-baseline
+   * command positioned to notice. Every probe here rewrites the attribution in an isolated
+   * fixture, arms all ten targets, runs the literal CLI, and requires a nonzero exit with the
+   * set id, the hash, the recorded publisher, and the expected publisher (or the reason the
+   * recorded one is invalid) in the failure — and every target byte-identical.
+   *
+   * The valid-attribution counterpart is the canonical-generation test below: the untouched
+   * fixture writes all ten artifacts and a second run changes nothing.
+   */
+  interface LedgerFile {
+    entries: Array<{
+      definitionSetId: string
+      definitionHash: string
+      firstPublishedByReleaseBundleId: string
+    }>
+  }
+
+  function forgeAttribution(
+    fixture: Fixture,
+    match: { definitionSetId: string; hashPrefix: string },
+    forgedPublisher: string,
+  ) {
+    const ledgerFile = path.join(fixture.generated, 'definition-set-ledger.json')
+    const ledger = JSON.parse(readFileSync(ledgerFile, 'utf8')) as LedgerFile
+    const entry = ledger.entries.find(
+      (candidate) =>
+        candidate.definitionSetId === match.definitionSetId &&
+        candidate.definitionHash.startsWith(match.hashPrefix),
+    )
+    expect(entry).toBeDefined()
+    entry!.firstPublishedByReleaseBundleId = forgedPublisher
+    writeFileSync(ledgerFile, JSON.stringify(ledger))
+    return entry!
+  }
+
+  function expectAttributionFailure(
+    fixture: Fixture,
+    expectedCode: string,
+    expectedFragments: string[],
+  ) {
+    const armed = armTargets(fixture.generated)
+    const before = listing(fixture.root)
+    const run = spawnCli(fixture)
+    expect(run.status).toBe(1)
+    expect(run.stderr).toContain(expectedCode)
+    for (const fragment of expectedFragments) expect(run.stderr).toContain(fragment)
+    expectTargetsUntouched(fixture.generated, armed)
+    expect(listing(fixture.root)).toEqual(before)
+  }
+
+  it('a non-existent publisher fails the literal CLI before any write', () => {
+    const fixture = makeFixture()
+    const entry = forgeAttribution(
+      fixture,
+      { definitionSetId: 'definition-set-modifiers', hashPrefix: 'e3335096' },
+      'release-fabricated-v9-9',
+    )
+    expectAttributionFailure(fixture, 'definition_set_attribution_unknown_release', [
+      entry.definitionSetId,
+      entry.definitionHash,
+      'release-fabricated-v9-9',
+      'release-bronch-ablation-v1-0',
+    ])
+  })
+
+  it('a real release that does not pin the entry fails before any write', () => {
+    const fixture = makeFixture()
+    // The F-09 modifier set is pinned only by the two forward releases; chest-tube-v1-1 is
+    // published but still pins the superseded set.
+    const entry = forgeAttribution(
+      fixture,
+      { definitionSetId: 'definition-set-modifiers', hashPrefix: 'a9758b0b' },
+      'release-chest-tube-v1-1',
+    )
+    expectAttributionFailure(fixture, 'definition_set_attribution_release_does_not_pin', [
+      entry.definitionHash,
+      'release-chest-tube-v1-1',
+      'release-rigid-bronch-v1-1',
+    ])
+  })
+
+  it('a later release that does pin the same entry fails before any write', () => {
+    const fixture = makeFixture()
+    // Every published release pins the one rescue-module set; ebus-tbna-v1-1 (2026-08-09) is
+    // a genuine pinner, published after the foundation freeze (2026-07-31).
+    const entry = forgeAttribution(
+      fixture,
+      { definitionSetId: 'definition-set-rescue-modules', hashPrefix: '6e928845' },
+      'release-ebus-tbna-v1-1',
+    )
+    expectAttributionFailure(fixture, 'definition_set_attribution_not_first_publisher', [
+      entry.definitionHash,
+      'release-ebus-tbna-v1-1',
+      'release-bronch-ablation-v1-0',
+    ])
+  })
+
+  it('attribution moved from the true first publisher to an F-09 forward release fails', () => {
+    const fixture = makeFixture()
+    // The forged history this validation exists for: the branch that introduced the ledger
+    // claiming its own new release first published the role taxonomy every earlier release
+    // already pinned.
+    const entry = forgeAttribution(
+      fixture,
+      { definitionSetId: 'definition-set-role-taxonomy', hashPrefix: 'e1eeb4e3' },
+      'release-rigid-bronch-v1-1',
+    )
+    expectAttributionFailure(fixture, 'definition_set_attribution_not_first_publisher', [
+      entry.definitionHash,
+      'release-rigid-bronch-v1-1',
+      'release-bronch-ablation-v1-0',
+    ])
+  })
+
+  it('empty attribution fails before any write', () => {
+    const fixture = makeFixture()
+    forgeAttribution(
+      fixture,
+      { definitionSetId: 'definition-set-compatibility-rules', hashPrefix: 'cb817cde' },
+      '',
+    )
+    expectAttributionFailure(fixture, 'definition_set_attribution_unknown_release', [
+      'definition-set-compatibility-rules',
+    ])
+  })
+
+  it('duplicate entries with conflicting attribution fail before any write', () => {
+    const fixture = makeFixture()
+    const ledgerFile = path.join(fixture.generated, 'definition-set-ledger.json')
+    const ledger = JSON.parse(readFileSync(ledgerFile, 'utf8')) as LedgerFile
+    const entry = ledger.entries.find(
+      (candidate) =>
+        candidate.definitionSetId === 'definition-set-modifiers' &&
+        candidate.definitionHash.startsWith('a9758b0b'),
+    )
+    expect(entry).toBeDefined()
+    ledger.entries.push({
+      ...(entry as LedgerFile['entries'][number]),
+      firstPublishedByReleaseBundleId: 'release-therapeutic-bronch-v1-2',
+    })
+    writeFileSync(ledgerFile, JSON.stringify(ledger))
+
+    const armed = armTargets(fixture.generated)
+    const before = listing(fixture.root)
+    const run = spawnCli(fixture)
+    expect(run.status).toBe(1)
+    // A (set, hash) pair naming two publishers is first a duplicate-key violation; the
+    // attribution of the entry the resolver would serve is validated on top of it.
+    expect(run.stderr).toContain('definition_set_ledger_duplicate_entry')
+    expectTargetsUntouched(fixture.generated, armed)
+    expect(listing(fixture.root)).toEqual(before)
+  })
+})
+
 describe('release generation with valid inputs still writes everything', () => {
   it('the literal CLI recreates every artifact canonically and a second run changes nothing', () => {
     const fixture = makeFixture()

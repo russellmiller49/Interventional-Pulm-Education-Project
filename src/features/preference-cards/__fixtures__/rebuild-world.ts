@@ -326,6 +326,7 @@ export function createRebuildFixtureWorld(): RebuildFixtureWorld {
       hospitalItems,
       hospitalRoleOptions,
       compatibilityRules: sources.compatibilityRules,
+      roleCodeAliases: sources.roleTaxonomy.roleCodeAliases,
       preferenceOverlays: [],
     }
   }
