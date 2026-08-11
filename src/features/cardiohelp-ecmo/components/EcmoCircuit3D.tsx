@@ -163,7 +163,15 @@ export function EcmoCircuit3D({
 
   return (
     <div className={styles.circuit3dShell}>
-      <div ref={viewportRef} className={styles.circuit3dViewport} aria-hidden="true">
+      {/* Decorative only while the canvas is live (text equivalents live in the
+          HUD-adjacent DOM); when WebGL is missing or the context is lost the
+          viewport holds real text and a focusable reload button, and hiding a
+          focusable control inside aria-hidden is a WCAG failure. */}
+      <div
+        ref={viewportRef}
+        className={styles.circuit3dViewport}
+        aria-hidden={webglReady && !contextLost ? true : undefined}
+      >
         {webglReady && contextLost ? (
           <div className={styles.circuit3dFallback}>
             The 3D view paused after a graphics interruption. The clamp controls below remain fully

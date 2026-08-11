@@ -152,7 +152,9 @@ export function BedsideScene({
   return (
     <>
       <color attach="background" args={[PALETTE.background]} />
-      <fog attach="fog" args={[PALETTE.background, 5.8, 9]} />
+      {/* Fog opens at 6.6 so the patient (≈6.3 m from the default camera) sits
+          in front of the band instead of dimmed inside it. */}
+      <fog attach="fog" args={[PALETTE.background, 6.6, 10]} />
       <ambientLight intensity={0.25} />
       <hemisphereLight args={['#b5e6e8', '#0c191c', 0.45]} />
       <directionalLight
