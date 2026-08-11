@@ -48,6 +48,11 @@ import {
   type LoadedPreMigrationBackup,
 } from './gold-import-compensation-migration-operations'
 import {
+  assertDevelopmentSeedScope,
+  developmentDatabaseSeedSchema,
+  type DevelopmentDatabaseSeed,
+} from './gold-import-compensation-development-seed'
+import {
   validateGoldImportSourceAuthorizationSet,
   validateGoldImportSourceAuthorizationSetForImport,
 } from './gold-import-compensation-compatibility'
@@ -76,8 +81,11 @@ export const DISPOSABLE_ATTESTATION_SCHEMA_VERSION =
   'gold-import-compensation-disposable-attestation/v1' as const
 export const EXACT_PACKAGE_EVIDENCE_SCHEMA_VERSION =
   'gold-import-compensation-exact-package-evidence/v1' as const
-export const DEVELOPMENT_DATABASE_SEED_SCHEMA_VERSION =
-  'gold-import-compensation-development-seed/v1' as const
+export {
+  DEVELOPMENT_DATABASE_SEED_SCHEMA_VERSION,
+  developmentDatabaseSeedSchema,
+  type DevelopmentDatabaseSeed,
+} from './gold-import-compensation-development-seed'
 
 export const DISPOSABLE_POSTGRES_IMAGE =
   'public.ecr.aws/supabase/postgres:17.6.1.104@sha256:5deba92e50cd17bfacf8603834d317cdf3bfc1c016ec8293991997fa3b55fa3d' as const
@@ -318,27 +326,6 @@ export const disposableDatabaseAttestationSchema = z
   })
   .strict()
 export type DisposableDatabaseAttestation = z.infer<typeof disposableDatabaseAttestationSchema>
-
-const databaseSeedRowSchema = z.record(z.string(), z.unknown())
-export const developmentDatabaseSeedSchema = z
-  .object({
-    batchId: uuidSchema,
-    datasetSplit: z.literal('development'),
-    heldOutIdentitiesIncluded: z.literal(false),
-    schemaVersion: z.literal(DEVELOPMENT_DATABASE_SEED_SCHEMA_VERSION),
-    tables: z
-      .object({
-        literature_articles: z.array(databaseSeedRowSchema),
-        literature_gold_set_batches: z.array(databaseSeedRowSchema),
-        literature_gold_set_events: z.array(databaseSeedRowSchema),
-        literature_gold_set_items: z.array(databaseSeedRowSchema),
-        literature_gold_set_review_drafts: z.array(databaseSeedRowSchema),
-        literature_gold_set_reviews: z.array(databaseSeedRowSchema),
-      })
-      .strict(),
-  })
-  .strict()
-export type DevelopmentDatabaseSeed = z.infer<typeof developmentDatabaseSeedSchema>
 
 const exactEvidenceScenarioSchema = z
   .object({
@@ -622,203 +609,6 @@ function manifestEntries(bytes: Buffer): Map<string, string> {
   return entries
 }
 
-function requiredSeedString(row: Record<string, unknown>, field: string): string {
-  const value = row[field]
-  if (typeof value !== 'string' || !value) {
-    throw new Error(`Development backup has an invalid required ${field} field.`)
-  }
-  return value
-}
-
-function assertAllowedKeys(
-  value: unknown,
-  allowedKeys: readonly string[],
-  label: string,
-): asserts value is Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error(`${label} must be an object.`)
-  }
-  const unexpected = Object.keys(value).filter((key) => !allowedKeys.includes(key))
-  if (unexpected.length > 0) {
-    throw new Error(`${label} contains non-allowlisted fields: ${unexpected.join(', ')}.`)
-  }
-}
-
-function assertSafeBatchPayload(batch: Record<string, unknown>): void {
-  assertAllowedKeys(
-    batch,
-    [
-      'created_at',
-      'created_by_email',
-      'created_by_user_id',
-      'frozen_at',
-      'id',
-      'kind',
-      'label_schema_version',
-      'name',
-      'relevance_definition_version',
-      'requested_size',
-      'sampling_algorithm_version',
-      'sampling_report',
-      'sampling_seed',
-      'status',
-      'taxonomy_version',
-      'test_percent',
-      'test_unlock_reason',
-      'test_unlocked_at',
-      'test_unlocked_by_email',
-      'test_unlocked_by_user_id',
-      'updated_at',
-    ],
-    'Development backup batch row',
-  )
-  if (batch.sampling_report !== undefined) {
-    assertAllowedKeys(
-      batch.sampling_report,
-      [
-        'broadTopicsRepresented',
-        'broadTopicsUnavailable',
-        'candidateCount',
-        'countsByAbstractAvailability',
-        'countsByDeterministicBand',
-        'countsByJournal',
-        'countsBySourceTier',
-        'countsByStratum',
-        'countsByYearBand',
-        'developmentCount',
-        'excludedCandidateCount',
-        'exclusionSources',
-        'kind',
-        'name',
-        'originalCandidateCount',
-        'reportVersion',
-        'requestedSize',
-        'samplingAlgorithmVersion',
-        'samplingSeed',
-        'selectedCount',
-        'testCount',
-        'warnings',
-      ],
-      'Development backup aggregate sampling report',
-    )
-    const exclusionSources = batch.sampling_report.exclusionSources
-    if (!Array.isArray(exclusionSources)) {
-      throw new Error('Development backup aggregate exclusionSources must be an array.')
-    }
-    for (const [index, source] of exclusionSources.entries()) {
-      assertAllowedKeys(
-        source,
-        [
-          'batchNames',
-          'corpusPresentCount',
-          'eligibleCount',
-          'excludedCount',
-          'path',
-          'sha256',
-          'sourceType',
-          'suppliedCount',
-        ],
-        `Development backup exclusionSources[${index}]`,
-      )
-    }
-  }
-}
-
-function assertSafeBatchLevelEvent(event: Record<string, unknown>): void {
-  assertAllowedKeys(
-    event,
-    [
-      'actor_email',
-      'actor_user_id',
-      'after_value',
-      'batch_id',
-      'before_value',
-      'created_at',
-      'event_type',
-      'id',
-      'item_id',
-    ],
-    'Development backup batch-level event',
-  )
-  if (event.event_type !== 'batch_created' || event.before_value !== null) {
-    throw new Error('Development backup contains an unapproved batch-level event.')
-  }
-  assertAllowedKeys(
-    event.after_value,
-    ['kind', 'name', 'requested_size', 'sampling_seed'],
-    'Development backup batch_created after_value',
-  )
-}
-
-function assertSafeItemLevelEvent(event: Record<string, unknown>): void {
-  assertAllowedKeys(
-    event,
-    [
-      'actor_email',
-      'actor_user_id',
-      'after_value',
-      'batch_id',
-      'before_value',
-      'created_at',
-      'event_type',
-      'id',
-      'item_id',
-    ],
-    'Development backup item-level event',
-  )
-  if (event.event_type === 'draft_saved') {
-    if (event.before_value !== null) {
-      throw new Error('Development backup draft_saved before_value must be null.')
-    }
-    assertAllowedKeys(
-      event.after_value,
-      ['review_seconds'],
-      'Development backup draft_saved after_value',
-    )
-    return
-  }
-  if (event.event_type === 'review_completed' || event.event_type === 'review_revised') {
-    if (event.event_type === 'review_completed') {
-      if (event.before_value !== null) {
-        throw new Error('Development backup review_completed before_value must be null.')
-      }
-    } else {
-      assertAllowedKeys(
-        event.before_value,
-        ['review_id'],
-        'Development backup review_revised before_value',
-      )
-    }
-    assertAllowedKeys(
-      event.after_value,
-      ['is_blinded', 'relevance_label', 'review_id', 'revision'],
-      'Development backup completed-review after_value',
-    )
-    return
-  }
-  if (
-    [
-      'automated_signals_revealed',
-      'returned_later',
-      'review_resumed',
-      'supplemental_metadata_revealed',
-    ].includes(String(event.event_type))
-  ) {
-    assertAllowedKeys(
-      event.before_value,
-      ['review_status'],
-      'Development backup item-state before_value',
-    )
-    assertAllowedKeys(
-      event.after_value,
-      ['review_status'],
-      'Development backup item-state after_value',
-    )
-    return
-  }
-  throw new Error(`Development backup item-level event type ${String(event.event_type)} is unsafe.`)
-}
-
 function seedJsonLiteral(value: unknown): string {
   const json = canonicalJson(value)
   const tag = `$seed_${sha256Bytes(json).slice(0, 16)}$`
@@ -846,92 +636,6 @@ export function renderDevelopmentDatabaseSeedSql(seed: DevelopmentDatabaseSeed):
     'commit;',
     '',
   ].join('\n')
-}
-
-function assertDevelopmentSeedScope(seed: DevelopmentDatabaseSeed): void {
-  const batches = seed.tables.literature_gold_set_batches
-  const items = seed.tables.literature_gold_set_items
-  const articles = seed.tables.literature_articles
-  const reviews = seed.tables.literature_gold_set_reviews
-  const drafts = seed.tables.literature_gold_set_review_drafts
-  const events = seed.tables.literature_gold_set_events
-  if (
-    batches.length !== 1 ||
-    requiredSeedString(batches[0], 'id') !== seed.batchId ||
-    items.length === 0
-  ) {
-    throw new Error('Development backup must contain one batch and a nonempty item set.')
-  }
-  assertSafeBatchPayload(batches[0])
-  const itemIds = new Set<string>()
-  const pmids = new Set<string>()
-  for (const item of items) {
-    if (
-      item.dataset_split !== 'development' ||
-      requiredSeedString(item, 'batch_id') !== seed.batchId
-    ) {
-      throw new Error('Held-out or cross-batch item entered the development backup.')
-    }
-    itemIds.add(requiredSeedString(item, 'id'))
-    pmids.add(requiredSeedString(item, 'pmid'))
-  }
-  if (
-    itemIds.size !== items.length ||
-    pmids.size !== items.length ||
-    articles.length !== items.length
-  ) {
-    throw new Error('Development backup item/article identities are incomplete or duplicated.')
-  }
-  const articlePmids = new Set(articles.map((article) => requiredSeedString(article, 'pmid')))
-  if (articlePmids.size !== pmids.size || [...articlePmids].some((pmid) => !pmids.has(pmid))) {
-    throw new Error('An article outside exact development membership entered the backup.')
-  }
-  const reviewIds = new Set<string>()
-  const reviewItemById = new Map<string, string>()
-  for (const review of reviews) {
-    const itemId = requiredSeedString(review, 'item_id')
-    const reviewId = requiredSeedString(review, 'id')
-    if (!itemIds.has(itemId) || reviewIds.has(reviewId)) {
-      throw new Error('Development backup review history is cross-scope or duplicated.')
-    }
-    reviewIds.add(reviewId)
-    reviewItemById.set(reviewId, itemId)
-  }
-  for (const review of reviews) {
-    const supersedes = review.supersedes_review_id
-    if (
-      supersedes !== null &&
-      (typeof supersedes !== 'string' ||
-        reviewItemById.get(supersedes) !== requiredSeedString(review, 'item_id'))
-    ) {
-      throw new Error('Development backup contains a cross-item review chain.')
-    }
-  }
-  for (const item of items) {
-    const current = item.current_review_id
-    if (
-      current !== null &&
-      (typeof current !== 'string' ||
-        reviewItemById.get(current) !== requiredSeedString(item, 'id'))
-    ) {
-      throw new Error('Development backup current-review pointer is not in its review history.')
-    }
-  }
-  if (
-    drafts.some((draft) => !itemIds.has(requiredSeedString(draft, 'item_id'))) ||
-    events.some((event) => {
-      if (requiredSeedString(event, 'batch_id') !== seed.batchId) return true
-      if (event.item_id === null) {
-        assertSafeBatchLevelEvent(event)
-        return false
-      }
-      if (typeof event.item_id !== 'string' || !itemIds.has(event.item_id)) return true
-      assertSafeItemLevelEvent(event)
-      return false
-    })
-  ) {
-    throw new Error('Held-out identity or cross-batch row entered the development backup.')
-  }
 }
 
 export function verifyDevelopmentDatabaseBackupFixtureForTest(
