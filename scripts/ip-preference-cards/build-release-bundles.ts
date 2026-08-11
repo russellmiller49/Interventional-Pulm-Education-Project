@@ -18,6 +18,7 @@ import {
   emptyDefinitionSetLedger,
   validateDefinitionSetAttribution,
   validateDefinitionSetLedger,
+  validateReleasePublicationInstants,
   withPublishedDefinitionSets,
   COMPATIBILITY_RULE_SET_DEFINITION_ID as COMPAT_SET_ID,
   MODIFIER_SET_DEFINITION_ID as MODIFIER_SET_ID,
@@ -584,6 +585,52 @@ export async function runBuildReleaseBundles(input: {
     recordedSetPinsByReleaseId,
   })
 
+  // Every frozen release's lifecycle facts and whole-set pins, as attribution consumes them.
+  // Built before anything orders by publication, because the very first thing to check is
+  // whether a publication order exists at all.
+  const frozenReleaseRecords: PublishedSetPinRecord[] = result.bundles
+    .filter((bundle) => bundle.releaseState !== 'draft')
+    .map((bundle) => ({
+      releaseBundleId: bundle.id,
+      releaseState: bundle.releaseState,
+      publishedAt: bundle.publishedAt,
+      pins: [
+        {
+          definitionSetId: bundle.modifierSetPin.id,
+          definitionHash: bundle.modifierSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.rescueModuleSetPin.id,
+          definitionHash: bundle.rescueModuleSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.compatibilityRuleSetPin.id,
+          definitionHash: bundle.compatibilityRuleSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.roleTaxonomyPin.id,
+          definitionHash: bundle.roleTaxonomyPin.definitionHash,
+        },
+      ],
+    }))
+
+  // P92-C2b — publication instants are validated before anything sorts or attributes by
+  // them. A frozen release whose publishedAt does not parse under the canonical contract
+  // (`parsePublishedReleaseInstant`) makes the whole publication order undefined; the run
+  // refuses it here, before the first-publisher fold below and long before phase B, rather
+  // than writing the malformed value into the generated bundle file the way the raw-string
+  // ordering used to.
+  const publicationInstantProblems = validateReleasePublicationInstants(frozenReleaseRecords)
+  if (publicationInstantProblems.length > 0) {
+    console.log('')
+    console.error(`${publicationInstantProblems.length} publication-instant problem(s):`)
+    for (const problem of publicationInstantProblems) {
+      console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    }
+    // Nothing has been written — phase B never runs.
+    return false
+  }
+
   // Every module version a published release pins is copied into the retention ledger, once,
   // verbatim. That is what lets the composition build stop producing a version without taking
   // the cards pinned to it down — see `module-ledger.ts`.
@@ -699,31 +746,6 @@ export async function runBuildReleaseBundles(input: {
     // holds the whole ledger — new entries and retained ones alike — to exactly that.
     [...publishedDefinitionSets].sort(comparePublicationOrder),
   )
-  const frozenReleaseRecords: PublishedSetPinRecord[] = result.bundles
-    .filter((bundle) => bundle.releaseState !== 'draft')
-    .map((bundle) => ({
-      releaseBundleId: bundle.id,
-      releaseState: bundle.releaseState,
-      publishedAt: bundle.publishedAt,
-      pins: [
-        {
-          definitionSetId: bundle.modifierSetPin.id,
-          definitionHash: bundle.modifierSetPin.definitionHash,
-        },
-        {
-          definitionSetId: bundle.rescueModuleSetPin.id,
-          definitionHash: bundle.rescueModuleSetPin.definitionHash,
-        },
-        {
-          definitionSetId: bundle.compatibilityRuleSetPin.id,
-          definitionHash: bundle.compatibilityRuleSetPin.definitionHash,
-        },
-        {
-          definitionSetId: bundle.roleTaxonomyPin.id,
-          definitionHash: bundle.roleTaxonomyPin.definitionHash,
-        },
-      ],
-    }))
   const definitionSetLedgerProblems = [
     ...rawLedgerDuplicates,
     ...validateDefinitionSetLedger({

@@ -1,3 +1,4 @@
+import { parsePublishedReleaseInstant } from './published-instant'
 import {
   COMPATIBILITY_RULE_SET_DEFINITION_ID,
   MODIFIER_SET_DEFINITION_ID,
@@ -259,20 +260,71 @@ export interface PublishedSetPinRecord {
 /**
  * The repository's canonical publication ordering, in one place.
  *
- * `publishedAt` ascending — ISO-8601 strings, so lexicographic comparison is chronological —
- * with the release id as the deterministic tiebreak for the same instant (the foundation
- * freeze published fifteen releases at one timestamp). Nothing here reads ledger entry
- * order, seed array order, or supersession chains: the ordering is a pure function of the
- * lifecycle facts every frozen release is already required to record.
+ * Parsed chronological instant ascending, with the release id as the deterministic tiebreak
+ * for the same instant (the foundation freeze published fifteen releases at one timestamp).
+ * Nothing here reads ledger entry order, seed array order, or supersession chains: the
+ * ordering is a pure function of the lifecycle facts every frozen release is already
+ * required to record.
+ *
+ * The comparison is over `parsePublishedReleaseInstant`'s numeric instant, never the raw
+ * string (P92-C2b): raw-string comparison ordered whatever text the seed carried, so a
+ * malformed value participated instead of failing. A record whose `publishedAt` does not
+ * parse has no position in the publication order at all, so this throws rather than
+ * inventing one — callers validate first (`validateReleasePublicationInstants`), and the
+ * throw is the backstop that keeps any future path from quietly sorting unvalidated text.
  */
 export function comparePublicationOrder(
   left: { releaseBundleId: string; publishedAt: string | null },
   right: { releaseBundleId: string; publishedAt: string | null },
 ): number {
   return (
-    (left.publishedAt ?? '').localeCompare(right.publishedAt ?? '') ||
+    publicationInstantOf(left) - publicationInstantOf(right) ||
     left.releaseBundleId.localeCompare(right.releaseBundleId)
   )
+}
+
+function publicationInstantOf(record: {
+  releaseBundleId: string
+  publishedAt: string | null
+}): number {
+  const parsed = parsePublishedReleaseInstant(record.publishedAt)
+  if (!parsed.ok) {
+    throw new Error(
+      `Release ${record.releaseBundleId} cannot be placed in publication order: its publishedAt ${parsed.reason}. Validate publication instants (validateReleasePublicationInstants) before ordering releases.`,
+    )
+  }
+  return parsed.epochMilliseconds
+}
+
+/**
+ * Every frozen release's `publishedAt`, held to the canonical publication-instant contract
+ * (P92-C2b).
+ *
+ * This is the check that runs *before* anything sorts or derives first publishers: the
+ * release generator's phase A refuses the whole run on the first message here, and
+ * `validateDefinitionSetAttribution` refuses to derive attribution over a universe it cannot
+ * order. One failure per release, not per pinned set — the release is the thing that is
+ * unorderable — and each failure names the release, the raw value, and why it cannot
+ * establish publication order.
+ */
+export function validateReleasePublicationInstants(
+  frozenReleases: ReadonlyArray<
+    Pick<PublishedSetPinRecord, 'releaseBundleId' | 'releaseState' | 'publishedAt'>
+  >,
+): DefinitionSetLedgerValidationMessage[] {
+  const messages: DefinitionSetLedgerValidationMessage[] = []
+  for (const record of frozenReleases) {
+    const parsed = parsePublishedReleaseInstant(record.publishedAt)
+    if (!parsed.ok) {
+      messages.push({
+        code: 'definition_set_attribution_unorderable_release',
+        definitionSetId: '(release)',
+        definitionHash: null,
+        message: `Release ${record.releaseBundleId} is ${record.releaseState} but its publishedAt ${parsed.reason}, so its position in the publication order — and every first-publisher derivation involving it — is undefined. Attribution fails closed rather than guessing.`,
+      })
+    }
+  }
+  return messages
 }
 
 /**
@@ -297,19 +349,16 @@ export function validateDefinitionSetAttribution(input: {
   /** Ids of releases that exist but are drafts, to tell "unpublished" from "unknown". */
   draftReleaseIds?: ReadonlySet<string>
 }): DefinitionSetLedgerValidationMessage[] {
+  // The strict instant contract, not a null check (P92-C2b): a non-null malformed value is
+  // as unorderable as a missing one. With any release unorderable the publication order —
+  // and therefore every first-publisher conclusion below — is undefined, so this returns the
+  // root cause alone rather than deriving attribution over an order that does not exist.
+  const unorderable = validateReleasePublicationInstants(input.frozenReleases)
+  if (unorderable.length > 0) return unorderable
+
   const messages: DefinitionSetLedgerValidationMessage[] = []
 
   const frozenById = new Map(input.frozenReleases.map((record) => [record.releaseBundleId, record]))
-  for (const record of input.frozenReleases) {
-    if (!record.publishedAt) {
-      messages.push({
-        code: 'definition_set_attribution_unorderable_release',
-        definitionSetId: '(release)',
-        definitionHash: null,
-        message: `Release ${record.releaseBundleId} is ${record.releaseState} but records no publishedAt, so its position in the publication order — and every first-publisher derivation involving it — is undefined. Attribution fails closed rather than guessing.`,
-      })
-    }
-  }
 
   // Publication-order-first frozen release per exact (set id, hash) pair.
   const firstPublisherByKey = new Map<string, PublishedSetPinRecord>()

@@ -511,6 +511,75 @@ describe('definition-set attribution is generator-validated before any write (P9
   })
 })
 
+describe('publication instants are generator-validated before any write (P92-C2b)', () => {
+  /**
+   * The Codex reproduction this block exists to pin: `release-ebus-tbna-v1-1`'s valid
+   * publishedAt replaced with `zzzz-not-a-date`, the literal CLI invoked — and, before the
+   * canonical instant contract, the run exited zero, retained all 27 bundles, and wrote the
+   * malformed timestamp into `release-bundles.json` while raw-string ordering placed it in
+   * the first-publisher derivation. The contract now refuses the run in phase A: nonzero
+   * exit, the typed `definition_set_attribution_unorderable_release` code naming the release
+   * and the raw value, every one of the ten targets byte-identical, and no partial or
+   * temporary output. Each probe below is one invalid-timestamp class through the identical
+   * seed mutation; the accept-side counterpart is the canonical-generation test at the end
+   * of this file, which proves the untouched fixture still writes all ten artifacts and that
+   * a second run changes nothing.
+   */
+  function setSeedPublishedAt(fixture: Fixture, releaseId: string, value: unknown) {
+    const seedFile = path.join(fixture.seed, 'release-bundles.json')
+    const seed = JSON.parse(readFileSync(seedFile, 'utf8')) as {
+      releases: Array<{ id: string; publishedAt: string | null }>
+    }
+    const release = seed.releases.find((candidate) => candidate.id === releaseId)
+    expect(release).toBeDefined()
+    release!.publishedAt = value as string | null
+    writeFileSync(seedFile, JSON.stringify(seed))
+  }
+
+  function expectUnorderableFailure(fixture: Fixture, expectedFragments: string[]) {
+    const armed = armTargets(fixture.generated)
+    const before = listing(fixture.root)
+    const run = spawnCli(fixture)
+    expect(run.status).toBe(1)
+    expect(run.stderr).toContain('definition_set_attribution_unorderable_release')
+    expect(run.stderr).toContain('release-ebus-tbna-v1-1')
+    for (const fragment of expectedFragments) expect(run.stderr).toContain(fragment)
+    expectTargetsUntouched(fixture.generated, armed)
+    expect(listing(fixture.root)).toEqual(before)
+  }
+
+  it('the exact Codex reproduction — zzzz-not-a-date — fails the literal CLI with zero writes', () => {
+    const fixture = makeFixture()
+    setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', 'zzzz-not-a-date')
+    expectUnorderableFailure(fixture, ['zzzz-not-a-date'])
+  })
+
+  it('an impossible but ISO-looking date fails the literal CLI before any write', () => {
+    const fixture = makeFixture()
+    // 2026 is not a leap year; the string is shaped exactly like every committed timestamp.
+    setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', '2026-02-29T00:00:00.000Z')
+    expectUnorderableFailure(fixture, ['2026-02-29T00:00:00.000Z'])
+  })
+
+  it('a timezone-less datetime fails the literal CLI before any write', () => {
+    const fixture = makeFixture()
+    setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', '2026-08-09T00:00:00')
+    expectUnorderableFailure(fixture, ['2026-08-09T00:00:00'])
+  })
+
+  it('an invalid offset fails the literal CLI before any write', () => {
+    const fixture = makeFixture()
+    setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', '2026-08-09T00:00:00.000+99:99')
+    expectUnorderableFailure(fixture, ['+99:99'])
+  })
+
+  it('a null publishedAt on a published release fails the literal CLI before any write', () => {
+    const fixture = makeFixture()
+    setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', null)
+    expectUnorderableFailure(fixture, ['records no publication instant'])
+  })
+})
+
 describe('release generation with valid inputs still writes everything', () => {
   it('the literal CLI recreates every artifact canonically and a second run changes nothing', () => {
     const fixture = makeFixture()
