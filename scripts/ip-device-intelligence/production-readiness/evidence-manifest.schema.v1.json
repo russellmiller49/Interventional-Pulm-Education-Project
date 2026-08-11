@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interventionalpulm.com/schemas/ip-device-intelligence/evidence-manifest/1.0.0",
+  "title": "Device Intelligence non-governed evidence manifest v1",
+  "description": "Research candidates only. This schema has no governed-data or runtime adoption semantics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "artifactClass", "warnings", "researchCutoffDate", "candidates"],
+  "properties": {
+    "schemaVersion": {
+      "const": "ip-device-intelligence-evidence-manifest/1.0.0"
+    },
+    "artifactClass": {
+      "const": "NON_GOVERNED_RESEARCH_CANDIDATES"
+    },
+    "warnings": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        { "const": "NON-GOVERNED RESEARCH CANDIDATES" },
+        { "const": "NOT CONSUMED BY RUNTIME" },
+        { "const": "PHYSICIAN REVIEW REQUIRED BEFORE ADOPTION" }
+      ],
+      "items": false
+    },
+    "researchCutoffDate": { "$ref": "#/$defs/date" },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/candidate" }
+    }
+  },
+  "$defs": {
+    "nonBlankString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "nullableNonBlankString": {
+      "anyOf": [{ "$ref": "#/$defs/nonBlankString" }, { "type": "null" }]
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "nullableDate": {
+      "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }]
+    },
+    "claimType": {
+      "type": "string",
+      "enum": [
+        "INTENDED_USE",
+        "DEVICE_ROLE",
+        "DIMENSION",
+        "WORKING_CHANNEL_REQUIREMENT",
+        "ACCESSORY_COMPATIBILITY",
+        "PLATFORM_COMPATIBILITY",
+        "DEVICE_COMPATIBILITY",
+        "REUSABLE_SINGLE_USE_STATUS",
+        "REPROCESSING_BOUNDARY",
+        "STERILE_STATUS",
+        "PACKAGING",
+        "WARNING",
+        "CONTRAINDICATION",
+        "IFU_VERIFICATION_REQUIREMENT",
+        "SOURCE_FRESHNESS"
+      ]
+    },
+    "productIdentity": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": [
+        "repositoryProductId",
+        "manufacturer",
+        "model",
+        "family",
+        "configuration",
+        "displayName"
+      ],
+      "properties": {
+        "repositoryProductId": { "$ref": "#/$defs/nullableNonBlankString" },
+        "manufacturer": { "$ref": "#/$defs/nonBlankString" },
+        "model": { "$ref": "#/$defs/nullableNonBlankString" },
+        "family": { "$ref": "#/$defs/nullableNonBlankString" },
+        "configuration": { "$ref": "#/$defs/nullableNonBlankString" },
+        "displayName": { "$ref": "#/$defs/nonBlankString" }
+      }
+    },
+    "roleIdentity": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["roleCode", "displayName"],
+      "properties": {
+        "roleCode": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+        },
+        "displayName": { "$ref": "#/$defs/nullableNonBlankString" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "url",
+        "publisher",
+        "sourceType",
+        "documentIdentifier",
+        "documentRevision",
+        "documentDate",
+        "accessDate",
+        "locator",
+        "jurisdiction",
+        "evidenceTier",
+        "evidenceBasis",
+        "accessStatus",
+        "scopeLevel",
+        "exactModelOrOrderCodes",
+        "explicitCompatibilitySupport"
+      ],
+      "properties": {
+        "title": { "$ref": "#/$defs/nonBlankString" },
+        "url": { "$ref": "#/$defs/nonBlankString" },
+        "publisher": { "$ref": "#/$defs/nonBlankString" },
+        "sourceType": {
+          "type": "string",
+          "enum": [
+            "MANUFACTURER_IFU",
+            "OPERATOR_MANUAL",
+            "SERVICE_TECHNICAL_MANUAL",
+            "OFFICIAL_LABELING",
+            "OFFICIAL_TECHNICAL_SPECIFICATION",
+            "OFFICIAL_COMPATIBILITY_GUIDE",
+            "FDA_LABELING",
+            "REGULATORY_LABELING",
+            "REGULATORY_DATABASE",
+            "MANUFACTURER_PRODUCT_PAGE",
+            "MANUFACTURER_ORDERING_INFORMATION",
+            "MANUFACTURER_TECHNICAL_BROCHURE",
+            "PEER_REVIEWED_RESEARCH",
+            "PROFESSIONAL_SOCIETY_GUIDANCE",
+            "CONSENSUS_STATEMENT",
+            "CLINICAL_GUIDELINE",
+            "PRIMARY_SOURCE_SEARCH_RECORD"
+          ]
+        },
+        "documentIdentifier": { "$ref": "#/$defs/nullableNonBlankString" },
+        "documentRevision": { "$ref": "#/$defs/nullableNonBlankString" },
+        "documentDate": { "$ref": "#/$defs/nullableDate" },
+        "accessDate": { "$ref": "#/$defs/date" },
+        "locator": { "$ref": "#/$defs/nonBlankString" },
+        "jurisdiction": { "$ref": "#/$defs/nonBlankString" },
+        "evidenceTier": {
+          "type": "string",
+          "enum": ["TIER_A", "TIER_B", "TIER_C", "TIER_D", "UNRESOLVED"]
+        },
+        "evidenceBasis": {
+          "type": "string",
+          "enum": [
+            "PRIMARY_OFFICIAL",
+            "REGULATORY_OFFICIAL",
+            "MANUFACTURER_WEB",
+            "CONTEXTUAL",
+            "UNRESOLVED"
+          ]
+        },
+        "accessStatus": {
+          "type": "string",
+          "enum": ["ACCESSIBLE", "PARTIALLY_ACCESSIBLE", "INACCESSIBLE"]
+        },
+        "scopeLevel": {
+          "type": "string",
+          "enum": ["MODEL", "CONFIGURATION", "FAMILY", "ROLE", "PROCEDURE", "GENERAL"]
+        },
+        "exactModelOrOrderCodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonBlankString" }
+        },
+        "explicitCompatibilitySupport": { "type": "boolean" }
+      }
+    },
+    "physicianAdjudication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionId",
+        "status",
+        "question",
+        "currentRepositoryState",
+        "proposedState",
+        "evidenceSummary",
+        "strongestPrimarySourceUrl",
+        "conflictingEvidence",
+        "researcherRecommendation",
+        "uncertainty",
+        "consequenceOfYes",
+        "consequenceOfNo",
+        "launchBlocking",
+        "postLaunchAcceptable",
+        "implementationClassification",
+        "reviewedBy",
+        "decisionDate"
+      ],
+      "properties": {
+        "decisionId": { "$ref": "#/$defs/stableId" },
+        "status": {
+          "type": "string",
+          "enum": ["NOT_READY", "READY_FOR_REVIEW", "PENDING", "APPROVED", "REJECTED", "DEFERRED"]
+        },
+        "question": { "$ref": "#/$defs/nonBlankString" },
+        "currentRepositoryState": { "$ref": "#/$defs/nonBlankString" },
+        "proposedState": { "$ref": "#/$defs/nonBlankString" },
+        "evidenceSummary": { "$ref": "#/$defs/nonBlankString" },
+        "strongestPrimarySourceUrl": { "$ref": "#/$defs/nullableNonBlankString" },
+        "conflictingEvidence": { "$ref": "#/$defs/nonBlankString" },
+        "researcherRecommendation": { "$ref": "#/$defs/nonBlankString" },
+        "uncertainty": { "$ref": "#/$defs/nonBlankString" },
+        "consequenceOfYes": { "$ref": "#/$defs/nonBlankString" },
+        "consequenceOfNo": { "$ref": "#/$defs/nonBlankString" },
+        "launchBlocking": { "type": "boolean" },
+        "postLaunchAcceptable": { "type": "boolean" },
+        "implementationClassification": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E"]
+        },
+        "reviewedBy": { "$ref": "#/$defs/nullableNonBlankString" },
+        "decisionDate": { "$ref": "#/$defs/nullableDate" }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "rationale",
+        "affectedRouteOrSurface",
+        "frozenMainAffected",
+        "activePrContext",
+        "activePrResolution",
+        "ownerActionRequired",
+        "implementationActionRequired"
+      ],
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": ["BLOCKER", "HIGH", "MEDIUM", "LOW", "NONE"]
+        },
+        "rationale": { "$ref": "#/$defs/nonBlankString" },
+        "affectedRouteOrSurface": { "$ref": "#/$defs/nonBlankString" },
+        "frozenMainAffected": { "type": "boolean" },
+        "activePrContext": {
+          "type": "string",
+          "enum": ["NONE", "PR_91", "PR_92", "PR_91_AND_92"]
+        },
+        "activePrResolution": {
+          "type": "string",
+          "enum": [
+            "NOT_APPLICABLE",
+            "NOT_REVIEWED",
+            "NOT_ADDRESSED",
+            "RESOLVED_VERIFY_AFTER_MERGE",
+            "PARTIALLY_ADDRESSED_POST_MERGE_VERIFICATION_REQUIRED"
+          ]
+        },
+        "ownerActionRequired": { "$ref": "#/$defs/nonBlankString" },
+        "implementationActionRequired": { "$ref": "#/$defs/nonBlankString" }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateId",
+        "claimKey",
+        "coverageTargetId",
+        "requiredClaimTypes",
+        "productIdentity",
+        "roleIdentity",
+        "procedureCodes",
+        "researchTier",
+        "ownerSuppliedProductId",
+        "repositoryStatus",
+        "claimType",
+        "claimClassification",
+        "claimScope",
+        "claimOutcome",
+        "proposedClaim",
+        "source",
+        "evidenceStatus",
+        "conflictStatus",
+        "conflictingCandidateIds",
+        "physicianAdjudication",
+        "candidateState",
+        "readiness",
+        "researcherNotes"
+      ],
+      "properties": {
+        "candidateId": { "$ref": "#/$defs/stableId" },
+        "claimKey": { "$ref": "#/$defs/stableId" },
+        "coverageTargetId": { "$ref": "#/$defs/stableId" },
+        "requiredClaimTypes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimType" }
+        },
+        "productIdentity": { "$ref": "#/$defs/productIdentity" },
+        "roleIdentity": { "$ref": "#/$defs/roleIdentity" },
+        "procedureCodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+          }
+        },
+        "researchTier": {
+          "type": "string",
+          "enum": ["TIER_0", "TIER_1", "TIER_2", "TIER_3"]
+        },
+        "ownerSuppliedProductId": { "$ref": "#/$defs/nullableNonBlankString" },
+        "repositoryStatus": {
+          "type": ["string", "null"],
+          "enum": [
+            "EXACT_PRODUCT_PRESENT_ADEQUATELY_SOURCED",
+            "EXACT_PRODUCT_PRESENT_INCOMPLETE",
+            "UNREVIEWED_PROPOSAL_ONLY",
+            "FAMILY_PRESENT_EXACT_PRODUCT_ABSENT",
+            "LIKELY_DUPLICATE_OR_ALIAS",
+            "WHOLLY_ABSENT_CANDIDATE",
+            "INSUFFICIENT_EVIDENCE",
+            null
+          ]
+        },
+        "claimType": { "$ref": "#/$defs/claimType" },
+        "claimClassification": {
+          "type": "string",
+          "enum": [
+            "PRODUCT_LABEL_FACT",
+            "CLINICAL_PRACTICE_CONTEXT",
+            "EDUCATIONAL_WORKFLOW_SUGGESTION",
+            "RESEARCHER_INFERENCE",
+            "PHYSICIAN_DECISION_REQUIRED"
+          ]
+        },
+        "claimScope": {
+          "type": "string",
+          "enum": ["MODEL", "CONFIGURATION", "FAMILY", "ROLE", "PROCEDURE", "GENERAL"]
+        },
+        "claimOutcome": {
+          "type": "string",
+          "enum": ["AFFIRMED", "REFUTED", "UNRESOLVED"]
+        },
+        "proposedClaim": { "$ref": "#/$defs/nonBlankString" },
+        "source": { "$ref": "#/$defs/source" },
+        "evidenceStatus": {
+          "type": "string",
+          "enum": [
+            "SUPPORTED",
+            "PARTIALLY_SUPPORTED",
+            "CONFLICTING",
+            "PRIMARY_SOURCE_NOT_LOCATED",
+            "UNSUPPORTED",
+            "INACCESSIBLE"
+          ]
+        },
+        "conflictStatus": {
+          "type": "string",
+          "enum": ["NONE", "POTENTIAL", "CONFIRMED", "UNRESOLVED"]
+        },
+        "conflictingCandidateIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableId" }
+        },
+        "physicianAdjudication": { "$ref": "#/$defs/physicianAdjudication" },
+        "candidateState": {
+          "type": "string",
+          "enum": [
+            "DRAFT",
+            "RESEARCH_COMPLETE",
+            "READY_FOR_PHYSICIAN_REVIEW",
+            "FINAL_ACCEPTED",
+            "FINAL_REJECTED",
+            "DEFERRED"
+          ]
+        },
+        "readiness": { "$ref": "#/$defs/readiness" },
+        "researcherNotes": { "$ref": "#/$defs/nonBlankString" }
+      }
+    }
+  }
+}
