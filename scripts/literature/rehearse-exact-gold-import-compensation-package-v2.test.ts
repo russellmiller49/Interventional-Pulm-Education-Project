@@ -129,7 +129,10 @@ describe('exact V2 package rehearsal entrypoint', () => {
     expect(direct).toContain('bindDisposableCompensation(privatePackage, imported)')
     expect(direct).toContain('verifyCompensationPayloadCopies(context, privatePackage)')
     expect(bootstrap).toContain('referenceMigrationReceiptGate')
-    expect(bootstrap).toContain('migrationReceiptGate: privatePackage.migrationReceiptGate')
+    expect(bootstrap).toContain('migrationReceiptGate: referenceMigrationReceiptGate')
+    expect(bootstrap).toContain('referenceMigrationReceiptGate ??= generated.migrationReceiptGate')
+    expect(bootstrap).toContain('migrationReceiptGate: generated.migrationReceiptGate')
+    expect(bootstrap).not.toContain('migrationReceiptGate: privatePackage.migrationReceiptGate')
     const gateIndex = direct.indexOf(
       'requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(',
     )

@@ -34,6 +34,7 @@ import {
 import {
   buildInternalDisposableMigrationReceiptGate,
   requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding,
+  type GoldImportCompensationV2MigrationReceiptGate,
 } from './gold-import-compensation-v2-migration-receipt-gate'
 import {
   GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
@@ -229,11 +230,13 @@ export function assertMigrationEquivalentPostV2SeedIdentity(
 
 async function buildDisposableReadyAuditAndPackage(input: {
   context: V2DisposableDatabaseContext
+  migrationReceiptGate?: GoldImportCompensationV2MigrationReceiptGate
   sources: V2ExactPackageBootstrapSources
   state: z.infer<typeof bootstrapStateSchema>
 }): Promise<{
   audit: GoldImportCompensationV2ReadyAudit
   completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   package: GeneratedGoldImportCompensationPackageV2
 }> {
   const { context, sources, state } = input
@@ -424,10 +427,12 @@ async function buildDisposableReadyAuditAndPackage(input: {
       physicalStateSha256: state.physicalStateSha256,
     },
   })
+  const migrationReceiptGate =
+    input.migrationReceiptGate ?? buildInternalDisposableMigrationReceiptGate(audit)
   const generateInput = {
     audit,
     developmentPlanningState: sources.developmentPlanningState,
-    migrationReceiptGate: buildInternalDisposableMigrationReceiptGate(audit),
+    migrationReceiptGate,
     sources: sources.sources,
   }
   const independentlyDerivedPackage = verifyGeneratedGoldImportCompensationPackageV2(
@@ -459,7 +464,7 @@ async function buildDisposableReadyAuditAndPackage(input: {
     signedProtocolAuthorization: sources.sources.signedProtocolAuthorizationBytes,
     sourceAuthorizationSet: sourceAuthorizationSetBytes,
   })
-  return { audit, completeCatalogAudit, package: package_ }
+  return { audit, completeCatalogAudit, migrationReceiptGate, package: package_ }
 }
 
 export interface BootstrappedExactPackageExecutorV2 {
@@ -486,9 +491,7 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
 }): BootstrappedExactPackageExecutorV2 {
   let referenceAudit: GoldImportCompensationV2ReadyAudit | undefined
   let referenceCompleteCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity | undefined
-  let referenceMigrationReceiptGate:
-    | GeneratedGoldImportCompensationPackageV2['migrationReceiptGate']
-    | undefined
+  let referenceMigrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate | undefined
   let referencePackage: GeneratedGoldImportCompensationPackageV2 | undefined
   let referencePostV2SeedIdentity: unknown
   let generatedPackageCount = 0
@@ -513,7 +516,12 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         referencePostV2SeedIdentity ??= postV2SeedIdentity
         // This callback is intentionally after the V2 occurrence/state probe.
         const sources = await input.readSources()
-        const generated = await buildDisposableReadyAuditAndPackage({ context, sources, state })
+        const generated = await buildDisposableReadyAuditAndPackage({
+          context,
+          migrationReceiptGate: referenceMigrationReceiptGate,
+          sources,
+          state,
+        })
         const privateAudit = canonicalDetachedClone(generated.audit)
         const privateCompleteCatalogAudit = canonicalDetachedClone(generated.completeCatalogAudit)
         const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(generated.package)
@@ -533,13 +541,13 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         if (
           referenceMigrationReceiptGate &&
           canonicalJson(referenceMigrationReceiptGate) !==
-            canonicalJson(privatePackage.migrationReceiptGate)
+            canonicalJson(generated.migrationReceiptGate)
         ) {
           throw new Error('Repeated disposable paths produced different migration receipt proofs.')
         }
         referenceAudit ??= privateAudit
         referenceCompleteCatalogAudit ??= privateCompleteCatalogAudit
-        referenceMigrationReceiptGate ??= privatePackage.migrationReceiptGate
+        referenceMigrationReceiptGate ??= generated.migrationReceiptGate
         referencePackage ??= privatePackage
         generatedPackageCount += 1
         await input.onGenerated?.({
@@ -550,7 +558,7 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         })
         return createExactPackageDatabaseExecutorV2(privatePackage).execute({
           ...context,
-          migrationReceiptGate: privatePackage.migrationReceiptGate,
+          migrationReceiptGate: generated.migrationReceiptGate,
         })
       },
     },
