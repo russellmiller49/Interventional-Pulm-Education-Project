@@ -9,7 +9,7 @@ authorize migration staging or application, import, compensation, or clinical-st
 The defect identifier is
 `protected_v2_schema_sensitive_physical_equality_finalization_defect_v1`. The only permitted
 transition reason is `schema_derived_v1_physical_projection_transition` under shared transition
-policy identity `a9ae3ef19b305a529df08c6acd8e07d9126fc2c3a34d2414c1b8473a248624f5`.
+policy identity `896e0d7d5f1d0161661b453ff1c5af1cebe34167483ce1e93ae734d64577fc31`.
 
 ## Authority split
 
