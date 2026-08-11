@@ -479,6 +479,13 @@ describe('V2 disposable database rehearsal runner', () => {
     expect(local).toContain("pg_catalog.format('alter function %s owner to postgres'")
     expect(restored).toContain("pg_catalog.format('alter table public.%I owner to supabase_admin'")
     expect(restored).toContain("pg_catalog.format('alter function %s owner to supabase_admin'")
+    expect(restored).toContain(
+      "pg_catalog.format('revoke all privileges on table public.%I from postgres'",
+    )
+    expect(restored).toContain(
+      "pg_catalog.format('revoke all privileges on function %s from postgres'",
+    )
+    expect(local).not.toContain('revoke all privileges')
     expect(local).toContain("('literature_gold_review_operations')")
     expect(local).toContain("('literature_gold_physical_state_hash_v2')")
     expect(local).toMatch(/^do \$protected_v2_transition_owner_projection\$/u)

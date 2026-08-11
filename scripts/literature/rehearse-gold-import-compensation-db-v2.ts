@@ -832,6 +832,14 @@ function protectedV2SqlValues(values: readonly string[]): string {
 export function protectedV2CompleteCatalogOwnerProjectionSql(
   owner: 'postgres' | 'supabase_admin',
 ): string {
+  const removeTransferredPostgresTableAcl =
+    owner === 'supabase_admin'
+      ? "\n    execute pg_catalog.format('revoke all privileges on table public.%I from postgres', target.table_name);"
+      : ''
+  const removeTransferredPostgresFunctionAcl =
+    owner === 'supabase_admin'
+      ? "\n    execute pg_catalog.format('revoke all privileges on function %s from postgres', target.function_identity);"
+      : ''
   return `do $protected_v2_transition_owner_projection$
 declare target record;
 begin
@@ -841,6 +849,7 @@ begin
     )}) as tables(table_name)
   loop
     execute pg_catalog.format('alter table public.%I owner to ${owner}', target.table_name);
+    ${removeTransferredPostgresTableAcl.trimStart()}
   end loop;
   for target in
     select proc.oid::pg_catalog.regprocedure as function_identity
@@ -854,6 +863,7 @@ begin
       )
   loop
     execute pg_catalog.format('alter function %s owner to ${owner}', target.function_identity);
+    ${removeTransferredPostgresFunctionAcl.trimStart()}
   end loop;
 end;
 $protected_v2_transition_owner_projection$;`
