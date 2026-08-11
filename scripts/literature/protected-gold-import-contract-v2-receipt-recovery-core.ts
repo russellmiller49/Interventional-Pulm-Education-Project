@@ -11,6 +11,11 @@ import {
 import { basename, dirname, resolve } from 'node:path'
 
 import {
+  LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
+  LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_PROOF_VERSION,
+  type LiteratureGoldV2SchemaOnlyTransitionProof,
+} from './literature-gold-v2-schema-only-transition'
+import {
   PROTECTED_V2_RECEIPT_RECOVERY_DEFECT,
   PROTECTED_V2_RECEIPT_RECOVERY_PROHIBITED_CAPABILITIES,
   PROTECTED_V2_RECEIPT_RECOVERY_REASON,
@@ -65,36 +70,7 @@ export interface ProtectedV2ReceiptRecoveryCapturePackage {
   files: Readonly<Record<CaptureFileName, string>>
 }
 
-export interface ProtectedV2ReceiptRecoveryTransitionProof {
-  accepted: true
-  batchId: string
-  migration: {
-    v1MigrationSha256: string
-    v1OccurrenceAfter: 1
-    v1OccurrenceBefore: 1
-    v2MigrationSha256: string
-    v2OccurrenceAfter: 1
-    v2OccurrenceBefore: 0
-    v2VerifierSha256: string
-  }
-  post: {
-    catalogAuditIdentitySha256: string
-    effectiveStateSha256V2: string
-    expectedSchemaDerivedPhysicalStateSha256V1: string
-    physicalStateSha256V1: string
-    physicalStateSha256V2: string
-    schemaNeutralHistorySha256: string
-  }
-  pre: {
-    physicalStateSha256V1: string
-    schemaNeutralHistorySha256: string
-  }
-  reasonCode: string
-  schemaVersion: string
-  sourceAuthorizationSha256: string
-  transitionPolicyIdentitySha256: string
-  zeroMutationEvidence: unknown
-}
+export type ProtectedV2ReceiptRecoveryTransitionProof = LiteratureGoldV2SchemaOnlyTransitionProof
 
 export type ProtectedV2ReceiptRecoveryTransitionValidator = (
   input: unknown,
@@ -658,6 +634,62 @@ function authenticateRepositoryAndPostEvidence(
   input: ProtectedV2ReceiptRecoveryInput,
   finalizedExists: boolean,
 ): void {
+  exactKeys(
+    record(input.recoveryRepository, 'Recovery repository evidence'),
+    [
+      'branch',
+      'head',
+      'intentCommitIsAncestor',
+      'originMain',
+      'primaryCheckout',
+      'statusCleanIncludingUntracked',
+    ],
+    'Recovery repository evidence',
+  )
+  exactKeys(
+    record(input.postEvidence, 'Post-application recovery evidence'),
+    ['catalog', 'ledger', 'mutationEvidence', 'safety', 'state'],
+    'Post-application recovery evidence',
+  )
+  exactKeys(
+    record(input.postEvidence.catalog, 'Post-application catalog evidence'),
+    ['auditIdentitySha256', 'bindingSha256', 'fullAuditIdentitySha256'],
+    'Post-application catalog evidence',
+  )
+  exactKeys(
+    record(input.postEvidence.ledger, 'Post-application migration ledger'),
+    ['v1MigrationSha256', 'v1Occurrence', 'v2MigrationSha256', 'v2Occurrence', 'v2VerifierSha256'],
+    'Post-application migration ledger',
+  )
+  exactKeys(
+    record(input.postEvidence.mutationEvidence, 'Post-application mutation evidence'),
+    [
+      'actionMutationCount',
+      'compensationCallCount',
+      'compensationMutationCount',
+      'importCallCount',
+      'importMutationCount',
+      'operationMutationCount',
+      'pointerMutationCount',
+      'reviewMutationCount',
+      'revealMutationCount',
+    ],
+    'Post-application mutation evidence',
+  )
+  exactKeys(
+    record(input.postEvidence.safety, 'Post-application safety evidence'),
+    [
+      'contradictoryPartialFinalization',
+      'finalizedAbsentAtEvidenceCollection',
+      'heldOutIdentitiesAccessed',
+      'originalCapturesModified',
+      'originalIntentModified',
+      'readOnly',
+      'remoteDatabaseAccessed',
+      'repeatableRead',
+    ],
+    'Post-application safety evidence',
+  )
   const repository = input.recoveryRepository
   const post = input.postEvidence
   const authority = input.amendment
@@ -681,6 +713,7 @@ function authenticateRepositoryAndPostEvidence(
     post.ledger.v2VerifierSha256 !== authority.pinnedSources.v2VerifierSha256 ||
     post.catalog.bindingSha256 !== authority.expectedCatalog.bindingSha256 ||
     post.catalog.fullAuditIdentitySha256 !== authority.expectedCatalog.fullAuditIdentitySha256 ||
+    post.catalog.auditIdentitySha256 !== authority.expectedCatalog.fullAuditIdentitySha256 ||
     canonicalProtectedV2ReceiptRecoveryJson(post.state) !==
       canonicalProtectedV2ReceiptRecoveryJson(authority.stateAuthority.post) ||
     Object.values(post.mutationEvidence).some((count) => count !== 0) ||
@@ -697,36 +730,66 @@ function authenticateRepositoryAndPostEvidence(
   }
 }
 
+function expectedTransitionProof(
+  amendment: ProtectedV2ReceiptRecoveryAmendment,
+): ProtectedV2ReceiptRecoveryTransitionProof {
+  if (
+    amendment.correctedTransitionPolicyIdentitySha256 !==
+    LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256
+  ) {
+    throw new Error('Recovery amendment does not bind the live shared transition policy.')
+  }
+  return {
+    accepted: true,
+    batchId: amendment.stateAuthority.batchId,
+    migration: {
+      v1MigrationSha256: amendment.pinnedSources.v1MigrationSha256,
+      v1OccurrenceAfter: 1,
+      v1OccurrenceBefore: 1,
+      v2MigrationSha256: amendment.pinnedSources.v2MigrationSha256,
+      v2OccurrenceAfter: 1,
+      v2OccurrenceBefore: 0,
+      v2VerifierSha256: amendment.pinnedSources.v2VerifierSha256,
+    },
+    physicalTransitionChanged: true,
+    post: {
+      catalogAuditIdentitySha256: amendment.expectedCatalog.fullAuditIdentitySha256,
+      effectiveStateSha256V2: amendment.stateAuthority.post.effectiveV2Sha256,
+      expectedSchemaDerivedPhysicalStateSha256V1: amendment.stateAuthority.post.physicalV1Sha256,
+      physicalStateSha256V1: amendment.stateAuthority.post.physicalV1Sha256,
+      physicalStateSha256V2: amendment.stateAuthority.post.physicalV2Sha256,
+      schemaNeutralHistorySha256: amendment.stateAuthority.post.schemaNeutralHistorySha256,
+    },
+    pre: {
+      physicalStateSha256V1: amendment.stateAuthority.pre.physicalV1Sha256,
+      schemaNeutralHistorySha256: amendment.stateAuthority.pre.schemaNeutralHistorySha256,
+    },
+    reasonCode: amendment.permittedReason,
+    schemaVersion: LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_PROOF_VERSION,
+    sourceAuthorizationSha256: amendment.historicalIncident.authorizationContentSha256,
+    transitionPolicyIdentitySha256:
+      LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
+    zeroMutationEvidence: {
+      actions: 0,
+      events: 0,
+      pointers: 0,
+      reveals: 0,
+      reviews: 0,
+    },
+  }
+}
+
 function authenticateTransitionProof(input: {
   amendment: ProtectedV2ReceiptRecoveryAmendment
   postEvidence: ProtectedV2ReceiptRecoveryPostEvidence
   proof: ProtectedV2ReceiptRecoveryTransitionProof
 }): string {
   const { amendment, postEvidence, proof } = input
+  const expected = expectedTransitionProof(amendment)
   if (
-    proof.accepted !== true ||
-    proof.transitionPolicyIdentitySha256 !== amendment.correctedTransitionPolicyIdentitySha256 ||
-    proof.reasonCode !== amendment.permittedReason ||
-    proof.batchId !== amendment.stateAuthority.batchId ||
-    proof.sourceAuthorizationSha256 !== amendment.historicalIncident.authorizationContentSha256 ||
-    proof.pre.physicalStateSha256V1 !== amendment.stateAuthority.pre.physicalV1Sha256 ||
-    proof.pre.schemaNeutralHistorySha256 !==
-      amendment.stateAuthority.pre.schemaNeutralHistorySha256 ||
-    proof.post.physicalStateSha256V1 !== amendment.stateAuthority.post.physicalV1Sha256 ||
-    proof.post.expectedSchemaDerivedPhysicalStateSha256V1 !==
-      amendment.stateAuthority.post.physicalV1Sha256 ||
-    proof.post.effectiveStateSha256V2 !== amendment.stateAuthority.post.effectiveV2Sha256 ||
-    proof.post.physicalStateSha256V2 !== amendment.stateAuthority.post.physicalV2Sha256 ||
-    proof.post.schemaNeutralHistorySha256 !==
-      amendment.stateAuthority.post.schemaNeutralHistorySha256 ||
     proof.post.catalogAuditIdentitySha256 !== postEvidence.catalog.auditIdentitySha256 ||
-    proof.migration.v1OccurrenceBefore !== 1 ||
-    proof.migration.v1OccurrenceAfter !== 1 ||
-    proof.migration.v2OccurrenceBefore !== 0 ||
-    proof.migration.v2OccurrenceAfter !== 1 ||
-    proof.migration.v1MigrationSha256 !== amendment.pinnedSources.v1MigrationSha256 ||
-    proof.migration.v2MigrationSha256 !== amendment.pinnedSources.v2MigrationSha256 ||
-    proof.migration.v2VerifierSha256 !== amendment.pinnedSources.v2VerifierSha256
+    canonicalProtectedV2ReceiptRecoveryJson(proof) !==
+      canonicalProtectedV2ReceiptRecoveryJson(expected)
   ) {
     throw new Error('Shared schema-only transition proof does not authorize this incident.')
   }
@@ -743,7 +806,11 @@ function buildResult(input: {
     currentRecoveryToolBundle: input.amendment.correctedRecoveryToolBundle,
     defectIdentifier: PROTECTED_V2_RECEIPT_RECOVERY_DEFECT,
     defectReason: PROTECTED_V2_RECEIPT_RECOVERY_REASON,
-    expectedCatalog: input.postEvidence.catalog,
+    expectedCatalog: {
+      auditIdentitySha256: input.amendment.expectedCatalog.fullAuditIdentitySha256,
+      bindingSha256: input.amendment.expectedCatalog.bindingSha256,
+      fullAuditIdentitySha256: input.amendment.expectedCatalog.fullAuditIdentitySha256,
+    },
     historicalOperatorBundle: input.amendment.historicalOperatorBundle,
     migration: {
       migrationApplied: true,
@@ -756,7 +823,17 @@ function buildResult(input: {
       v2Occurrence: 1,
       v2VerifierSha256: input.amendment.pinnedSources.v2VerifierSha256,
     },
-    mutationEvidence: input.postEvidence.mutationEvidence,
+    mutationEvidence: {
+      actionMutationCount: 0,
+      compensationCallCount: 0,
+      compensationMutationCount: 0,
+      importCallCount: 0,
+      importMutationCount: 0,
+      operationMutationCount: 0,
+      pointerMutationCount: 0,
+      reviewMutationCount: 0,
+      revealMutationCount: 0,
+    },
     originalIntent: {
       authorizationContentSha256: input.amendment.historicalIncident.authorizationContentSha256,
       intentManifestSha256: input.amendment.historicalIncident.intentManifestSha256,
@@ -1060,7 +1137,10 @@ export function assertProtectedV2FinalizedRecoveryReceiptGate(
     canonicalProtectedV2ReceiptRecoveryJson(reparsed.stateIdentities) !==
       canonicalProtectedV2ReceiptRecoveryJson(amendment.stateAuthority) ||
     !COMMIT_PATTERN.test(reparsed.recoveryRepositoryHead) ||
-    !SHA256_PATTERN.test(reparsed.sharedTransitionProofIdentitySha256)
+    reparsed.sharedTransitionProofIdentitySha256 !==
+      protectedV2ReceiptRecoverySha256(
+        canonicalProtectedV2ReceiptRecoveryJson(expectedTransitionProof(amendment)),
+      )
   ) {
     throw new Error('Historical recovery is not a complete, non-authorizing migration receipt.')
   }

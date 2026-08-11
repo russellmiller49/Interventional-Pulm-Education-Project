@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 
+import { LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_PROOF_VERSION } from './literature-gold-v2-schema-only-transition'
 import {
   PROTECTED_V2_RECEIPT_RECOVERY_AMENDMENT_SCHEMA_VERSION,
   PROTECTED_V2_RECEIPT_RECOVERY_DEFECT,
@@ -172,7 +173,7 @@ async function fixture(): Promise<Fixture> {
   await mkdir(outputDirectory)
   const batchId = '11111111-1111-4111-8111-111111111111'
   const repositoryHead = '1234567890abcdef1234567890abcdef12345678'
-  const policyIdentity = sha('shared transition policy')
+  const policyIdentity = PROTECTED_V2_RECEIPT_RECOVERY_TRANSITION_POLICY_IDENTITY_SHA256
   const currentRecoveryToolBundle = buildProtectedV2ReceiptRecoveryBundle([
     {
       gitMode: '100644',
@@ -348,6 +349,7 @@ async function fixture(): Promise<Fixture> {
       v2OccurrenceBefore: 0,
       v2VerifierSha256: sourceIdentities.v2VerifierSha256,
     },
+    physicalTransitionChanged: true,
     post: {
       catalogAuditIdentitySha256: catalog.auditIdentitySha256,
       effectiveStateSha256V2: postState.effectiveV2Sha256,
@@ -361,10 +363,16 @@ async function fixture(): Promise<Fixture> {
       schemaNeutralHistorySha256: preState.schemaNeutralHistorySha256,
     },
     reasonCode: PROTECTED_V2_RECEIPT_RECOVERY_REASON,
-    schemaVersion: 'fixture-shared-transition-proof/1.0.0',
+    schemaVersion: LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_PROOF_VERSION,
     sourceAuthorizationSha256: authorization.contentSha256,
     transitionPolicyIdentitySha256: policyIdentity,
-    zeroMutationEvidence: mutationEvidence,
+    zeroMutationEvidence: {
+      actions: 0,
+      events: 0,
+      pointers: 0,
+      reveals: 0,
+      reviews: 0,
+    },
   }
   const input: ProtectedV2ReceiptRecoveryInput = {
     amendment,
@@ -592,6 +600,11 @@ describe('protected V2 historical receipt recovery core', () => {
         (input.postEvidence.catalog.fullAuditIdentitySha256 = sha('changed audit')),
     ],
     [
+      'extra post catalog key',
+      (input: ProtectedV2ReceiptRecoveryInput) =>
+        Object.assign(input.postEvidence.catalog, { attackerChosen: sha('extra catalog value') }),
+    ],
+    [
       'changed schema-neutral history',
       (input: ProtectedV2ReceiptRecoveryInput) =>
         (input.postEvidence.state.schemaNeutralHistorySha256 = sha('changed history')),
@@ -605,6 +618,11 @@ describe('protected V2 historical receipt recovery core', () => {
       'review mutation',
       (input: ProtectedV2ReceiptRecoveryInput) =>
         (input.postEvidence.mutationEvidence.reviewMutationCount = 1),
+    ],
+    [
+      'extra zero mutation key',
+      (input: ProtectedV2ReceiptRecoveryInput) =>
+        Object.assign(input.postEvidence.mutationEvidence, { attackerChosenMutationCount: 0 }),
     ],
   ])('fails closed for %s', async (_label, mutate) => {
     const built = await setup()
@@ -792,6 +810,50 @@ describe('protected V2 historical receipt recovery core', () => {
     const executionPath = resolve(finalized, 'execution-receipt.json')
     const result = JSON.parse(await readFile(resultPath, 'utf8')) as Record<string, unknown>
     result.expectedCatalog = { attackerChosen: true }
+    const { contentSha256: ignoredResultSha256, ...resultContent } = result
+    void ignoredResultSha256
+    result.contentSha256 = sha(canonicalProtectedV2ReceiptRecoveryJson(resultContent))
+    const resultBytes = canonicalProtectedV2ReceiptRecoveryJson(result)
+    const markdownBytes = await readFile(markdownPath, 'utf8')
+    const manifestBytes = `${sha(resultBytes)}  application-result.json\n${sha(markdownBytes)}  application-result.md\n`
+    const execution = JSON.parse(await readFile(executionPath, 'utf8')) as Record<string, unknown>
+    execution.resultSha256 = sha(resultBytes)
+    execution.canonicalManifestSha256 = sha(manifestBytes)
+    const { contentSha256: ignoredExecutionSha256, ...executionContent } = execution
+    void ignoredExecutionSha256
+    execution.contentSha256 = sha(canonicalProtectedV2ReceiptRecoveryJson(executionContent))
+    await Promise.all([
+      writeFile(resultPath, resultBytes),
+      writeFile(manifestPath, manifestBytes),
+      writeFile(executionPath, canonicalProtectedV2ReceiptRecoveryJson(execution)),
+    ])
+
+    await expect(
+      loadProtectedV2FinalizedReceiptRecovery({
+        authority: {
+          amendment: built.input.amendment,
+          amendmentIdentitySha256: built.input.amendment.amendmentIdentitySha256,
+          originalIntentSha256: built.input.amendment.historicalIncident.intentSha256,
+          recoveryToolBundleSha256:
+            built.input.amendment.correctedRecoveryToolBundle.aggregateSha256,
+        },
+        outputDirectory: built.input.applicationOutputDirectory,
+      }),
+    ).rejects.toThrow('non-authorizing migration receipt')
+  })
+
+  it('rejects a fully rehashed finalized package with a substituted transition proof hash', async () => {
+    const built = await setup()
+    await recoverProtectedV2HistoricalReceipt(built.input, {
+      validateSchemaOnlyTransition: () => built.proof,
+    })
+    const finalized = resolve(built.input.applicationOutputDirectory, 'finalized')
+    const resultPath = resolve(finalized, 'application-result.json')
+    const markdownPath = resolve(finalized, 'application-result.md')
+    const manifestPath = resolve(finalized, 'checksum-manifest.sha256')
+    const executionPath = resolve(finalized, 'execution-receipt.json')
+    const result = JSON.parse(await readFile(resultPath, 'utf8')) as Record<string, unknown>
+    result.sharedTransitionProofIdentitySha256 = sha('attacker-chosen transition proof')
     const { contentSha256: ignoredResultSha256, ...resultContent } = result
     void ignoredResultSha256
     result.contentSha256 = sha(canonicalProtectedV2ReceiptRecoveryJson(resultContent))
