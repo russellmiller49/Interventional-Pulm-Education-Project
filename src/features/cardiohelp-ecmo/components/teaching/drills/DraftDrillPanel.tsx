@@ -102,7 +102,7 @@ function DraftStatusNotice() {
       <p className="font-semibold">Synthetic-review draft · non-credit</p>
       <p className="mt-1 text-muted-foreground">
         This teaching panel is outside the frozen six-panel human-test build. It does not award
-        credit and does not change Practice, Assess, mastery, or publication status.
+        credit, record progress, or change Practice, Assess, or publication status.
       </p>
     </aside>
   )
