@@ -20,8 +20,10 @@ import {
   V2_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256,
   assertDeterministicV2RehearsalRuns,
   buildV2MigrationPathPlan,
+  collectProjectedFreshProtectedV2BeforeEvidence,
   parseV2MigrationPath,
   postgresOwnerProjectionSql,
+  protectedV2CompleteCatalogOwnerProjectionSql,
   renderPostV2CompatibleDevelopmentSeedSqlV2,
   resolveV2LocalDockerEndpoint,
   executeV2DisposablePath,
@@ -30,6 +32,12 @@ import {
   validateV2SemanticFunctionMetadata,
   type V2DisposablePathResult,
 } from './rehearse-gold-import-compensation-db-v2'
+import { LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY } from './literature-gold-v2-schema-only-transition'
+import { PROTECTED_V2_TRANSITION_SNAPSHOT_SCHEMA_VERSION } from './protected-gold-import-contract-v2-transition-evidence'
+import {
+  PROTECTED_GOLD_IMPORT_CONTRACT_V1,
+  PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+} from './protected-gold-import-contract-v2-source-identities'
 import {
   V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS,
   V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256,
@@ -66,6 +74,7 @@ function pathResult(bytes = Buffer.from('{"passed":true}\n')): V2DisposablePathR
     migrationPath: 'fresh',
     migrationSha256: 'b'.repeat(64),
     rawReceipt: {},
+    schemaOnlyTransition: {} as V2DisposablePathResult['schemaOnlyTransition'],
   }
 }
 
@@ -176,6 +185,74 @@ function preV1SeedFixture(): DevelopmentDatabaseSeed {
         { id: reviewId, item_id: itemId, revision: 1, supersedes_review_id: null },
       ],
     },
+  }
+}
+
+function postV2TransitionSnapshotFixture(): Record<string, unknown> {
+  const batchId = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.batchId
+  const itemId = '00000000-0000-4000-8000-000000000002'
+  const reviewId = '00000000-0000-4000-8000-000000000003'
+  return {
+    actionCount: 0,
+    batchId,
+    compensationCount: 0,
+    developmentMembershipSha256: '1'.repeat(64),
+    effectiveStateSha256V1: '2'.repeat(64),
+    effectiveStateSha256V2: '3'.repeat(64),
+    historyRows: {
+      actions: [],
+      batchId,
+      batches: [{ id: batchId, name: 'gold-set-v1' }],
+      datasetSplit: 'development',
+      drafts: [],
+      events: [],
+      items: [
+        {
+          automated_signals_revealed_at: null,
+          batch_id: batchId,
+          completed_at: null,
+          current_review_id: reviewId,
+          dataset_split: 'development',
+          display_order: 1,
+          id: itemId,
+          pmid: '1',
+          review_status: 'completed',
+          started_at: null,
+          supplemental_metadata_revealed_at: null,
+        },
+      ],
+      operations: [],
+      reviews: [
+        {
+          effective_source_review_id: null,
+          full_text_used: null,
+          id: reviewId,
+          item_id: itemId,
+          lifecycle_state: 'effective',
+          operation_contract_version: null,
+          operation_contract_version_code: 1,
+          revision: 1,
+          revision_kind: 'standard',
+        },
+      ],
+    },
+    importCount: 0,
+    ledgerEntries: [
+      {
+        name: PROTECTED_GOLD_IMPORT_CONTRACT_V1.migrationName,
+        version: PROTECTED_GOLD_IMPORT_CONTRACT_V1.version,
+      },
+      {
+        name: PROTECTED_GOLD_IMPORT_CONTRACT_V2.migrationName,
+        version: PROTECTED_GOLD_IMPORT_CONTRACT_V2.version,
+      },
+    ],
+    operationCount: 0,
+    phase: 'after_v2',
+    physicalStateSha256V1: '4'.repeat(64),
+    physicalStateSha256V2: '5'.repeat(64),
+    readOnlyTransaction: true,
+    schemaVersion: PROTECTED_V2_TRANSITION_SNAPSHOT_SCHEMA_VERSION,
   }
 }
 
@@ -393,6 +470,62 @@ describe('V2 disposable database rehearsal runner', () => {
     expect(() =>
       postgresOwnerProjectionSql('alter function public.forbidden() owner to postgres;'),
     ).toThrow('fixed read-only introspection')
+  })
+
+  test('projects and exactly restores every complete-catalog owner in the disposable database', () => {
+    const local = protectedV2CompleteCatalogOwnerProjectionSql('postgres')
+    const restored = protectedV2CompleteCatalogOwnerProjectionSql('supabase_admin')
+    expect(local).toContain("pg_catalog.format('alter table public.%I owner to postgres'")
+    expect(local).toContain("pg_catalog.format('alter function %s owner to postgres'")
+    expect(restored).toContain("pg_catalog.format('alter table public.%I owner to supabase_admin'")
+    expect(restored).toContain("pg_catalog.format('alter function %s owner to supabase_admin'")
+    expect(local).toContain("('literature_gold_review_operations')")
+    expect(local).toContain("('literature_gold_physical_state_hash_v2')")
+    expect(local).toMatch(/^do \$protected_v2_transition_owner_projection\$/u)
+    expect(restored).toMatch(/\$protected_v2_transition_owner_projection\$;$/u)
+  })
+
+  test('rebuilds a full pre-V2 fresh-path capture from two identical read-only raw snapshots', async () => {
+    const snapshot = postV2TransitionSnapshotFixture()
+    const queryJson = jest.fn().mockResolvedValue(snapshot)
+    const evidence = await collectProjectedFreshProtectedV2BeforeEvidence(queryJson)
+
+    expect(queryJson).toHaveBeenCalledTimes(2)
+    expect(evidence).toMatchObject({
+      batchId: LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.batchId,
+      completeCatalogAudit: null,
+      effectiveStateSha256V2: null,
+      physicalStateSha256V2: null,
+      readOnlyBracketMatches: true,
+      v1Occurrence: 1,
+      v2Occurrence: 0,
+    })
+    expect(evidence.history.phase).toBe('before_v2')
+    expect(evidence.history.schemaDerivedFields.operationRowCount).toBe(0)
+    expect(evidence.history.schemaDerivedFields.reviewRowCount).toBe(1)
+    expect(evidence.physicalStateSha256).toBe(evidence.history.physicalStateSha256V1)
+
+    const drifted = { ...snapshot, actionCount: 1 }
+    const driftQuery = jest.fn().mockResolvedValueOnce(snapshot).mockResolvedValueOnce(drifted)
+    await expect(collectProjectedFreshProtectedV2BeforeEvidence(driftQuery)).rejects.toThrow(
+      'changed across its read-only bracket',
+    )
+  })
+
+  test('routes both canonical paths through one shared full-evidence transition validator', async () => {
+    const source = await readFile(
+      'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+      'utf8',
+    )
+    expect(source.match(/validateProtectedV2SchemaOnlyDatabaseTransition\(\{/gu)).toHaveLength(1)
+    expect(source).toContain("phase: 'before_v2'")
+    expect(source).toContain('collectProjectedFreshProtectedV2BeforeEvidence(queryJson)')
+    expect(source).toContain("profile: 'local'")
+    expect(source).toContain('beforeCaptures: protectedBeforeCaptures')
+    expect(source).toContain('schemaOnlyTransition: protectedSchemaOnlyTransition')
+    expect(source.indexOf('validateProtectedV2SchemaOnlyDatabaseTransition({')).toBeLessThan(
+      source.indexOf('const packageEvidence = await input.exactPackageExecutor.execute({'),
+    )
   })
 
   test('requires byte-identical canonical evidence from repeated disposable runs', () => {

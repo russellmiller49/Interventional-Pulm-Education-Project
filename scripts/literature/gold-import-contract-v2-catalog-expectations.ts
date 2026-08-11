@@ -3,7 +3,7 @@ import { deflateRawSync, inflateRawSync } from 'node:zlib'
 
 import localSupabasePostgresOwnerV1Json from './contracts/protected-v2-complete-catalog/local_supabase_postgres_owner_v1.json'
 import supabaseAdminOwnerV1Json from './contracts/protected-v2-complete-catalog/supabase_admin_owner_v1.json'
-import { canonicalJson } from './gold-import-compensation-migration-operations'
+import { protectedV2CapabilityFreeCanonicalJson as canonicalJson } from './protected-gold-import-contract-v2-capability-free-canonical'
 import {
   buildContractInvariantIdentity,
   reconciliationIdentitySha256,

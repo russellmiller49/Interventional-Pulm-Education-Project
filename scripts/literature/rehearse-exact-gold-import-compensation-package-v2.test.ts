@@ -63,6 +63,7 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
     migrationPath: path,
     migrationSha256: 'b'.repeat(64),
     rawReceipt: {},
+    schemaOnlyTransition: {} as V2DisposablePathResult['schemaOnlyTransition'],
   }
 }
 

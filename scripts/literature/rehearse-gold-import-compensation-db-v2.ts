@@ -13,6 +13,8 @@ import {
   developmentPlanningStateSha256,
   type RawDatabaseSnapshot,
 } from './gold-import-compensation-migration-operations'
+import { CONTRACT_DIAGNOSTICS_MARKER } from './gold-import-compensation-contract-diagnostics'
+import { trustedLocalRoleInventoryProjection } from './gold-import-compensation-contract-expectations'
 import {
   assertLocalDockerEndpoint,
   buildCanonicalScenarioEvidence,
@@ -39,6 +41,31 @@ import {
   type V2MigrationPath,
   type V2SchemaOnlySnapshot,
 } from './gold-import-compensation-rehearsal-evidence-v2'
+import {
+  PROTECTED_V2_CATALOG_TABLES,
+  PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
+  collectProtectedV2CompleteCatalogAudit,
+  type ProtectedV2CatalogAuditQueryContext,
+} from './gold-import-contract-v2-catalog-audit'
+import {
+  LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY,
+  type LiteratureGoldV2SchemaOnlyTransitionProof,
+} from './literature-gold-v2-schema-only-transition'
+import {
+  LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
+  LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS,
+  buildLiteratureGoldV2SchemaNeutralHistoryEvidence,
+} from './literature-gold-v2-schema-neutral-history'
+import {
+  buildProtectedV2DatabaseEvidenceFromSnapshot,
+  buildProtectedV2TransitionSnapshotSql,
+  collectProtectedV2ReadOnlyTransitionEvidence,
+  parseProtectedV2TransitionSnapshot,
+  validateProtectedV2SchemaOnlyDatabaseTransition,
+  type ProtectedV2DatabaseEvidence,
+  type ProtectedV2TransitionSnapshot,
+} from './protected-gold-import-contract-v2-transition-evidence'
+import { PROTECTED_GOLD_IMPORT_CONTRACT_V2 } from './protected-gold-import-contract-v2-source-identities'
 import {
   DISPOSABLE_POSTGRES_IMAGE,
   cleanupDisposableContainer,
@@ -119,6 +146,12 @@ export interface V2DisposableDatabaseContext {
   schemaOnlyUpgrade: { after: unknown; before: unknown } | null
 }
 
+export interface V2ProtectedSchemaOnlyTransitionEvidence {
+  after: ProtectedV2DatabaseEvidence
+  beforeCaptures: readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
+  proof: LiteratureGoldV2SchemaOnlyTransitionProof
+}
+
 export interface V2ExactPackageDatabaseEvidence {
   operationScenarios: unknown
   productionCohort: unknown
@@ -161,10 +194,12 @@ interface V2DisposablePathResultBase {
 export interface V2DisposablePathResult extends V2DisposablePathResultBase {
   canonicalArtifacts: ReadonlyMap<string, Buffer>
   evidenceAuthority: 'canonical_delivery_evidence'
+  schemaOnlyTransition: V2ProtectedSchemaOnlyTransitionEvidence
 }
 
 export interface V2DisposableCatalogProbeResult extends V2DisposablePathResultBase {
   evidenceAuthority: 'transient_catalog_probe_not_delivery_evidence'
+  schemaOnlyTransition: null
 }
 
 export interface V2DisposableCatalogExpectationProposalResult {
@@ -785,6 +820,167 @@ export function postgresOwnerProjectionSql(introspectionSql: string): string {
   return `begin;\n${POSTGRES_OWNER_PROJECTION_ALTERS.join('\n')}\n${trimmed};\nrollback;`
 }
 
+function protectedV2SqlValues(values: readonly string[]): string {
+  return values.map((value) => `('${value.replaceAll("'", "''")}')`).join(', ')
+}
+
+/**
+ * Project the complete protected catalog between the two fixed supported owner
+ * profiles. This is used only inside the owned disposable database and is
+ * always paired with the exact inverse projection before package execution.
+ */
+export function protectedV2CompleteCatalogOwnerProjectionSql(
+  owner: 'postgres' | 'supabase_admin',
+): string {
+  return `do $protected_v2_transition_owner_projection$
+declare target record;
+begin
+  for target in
+    select table_name from (values ${protectedV2SqlValues(
+      PROTECTED_V2_CATALOG_TABLES,
+    )}) as tables(table_name)
+  loop
+    execute pg_catalog.format('alter table public.%I owner to ${owner}', target.table_name);
+  end loop;
+  for target in
+    select proc.oid::pg_catalog.regprocedure as function_identity
+    from pg_catalog.pg_proc as proc
+    join pg_catalog.pg_namespace as namespace on namespace.oid = proc.pronamespace
+    where namespace.nspname = 'public'
+      and proc.proname in (
+        select function_name from (values ${protectedV2SqlValues(
+          PROTECTED_V2_COMPLETE_CATALOG_FUNCTION_NAMES,
+        )}) as functions(function_name)
+      )
+  loop
+    execute pg_catalog.format('alter function %s owner to ${owner}', target.function_identity);
+  end loop;
+end;
+$protected_v2_transition_owner_projection$;`
+}
+
+function withTrustedLocalRoleInventoryForDisposableTransition(
+  context: ProtectedV2CatalogAuditQueryContext,
+): ProtectedV2CatalogAuditQueryContext {
+  return {
+    psql: async (sql) => {
+      const result = await context.psql(sql)
+      const markerLines = result.stdout
+        .split(/\r?\n/u)
+        .filter((line) => line.startsWith(CONTRACT_DIAGNOSTICS_MARKER))
+      if (markerLines.length !== 1) {
+        throw new Error(
+          'Disposable transition local-role projection requires one diagnostics marker.',
+        )
+      }
+      const payload = JSON.parse(
+        markerLines[0]!.slice(CONTRACT_DIAGNOSTICS_MARKER.length),
+      ) as Record<string, unknown>
+      payload.roles = trustedLocalRoleInventoryProjection()
+      return {
+        ...result,
+        stdout: `${CONTRACT_DIAGNOSTICS_MARKER}${JSON.stringify(payload)}\n`,
+      }
+    },
+    queryJson: context.queryJson,
+  }
+}
+
+async function withProtectedV2DisposableLocalCatalogProjection<T>(
+  context: ProtectedV2CatalogAuditQueryContext,
+  collect: (localContext: ProtectedV2CatalogAuditQueryContext) => Promise<T>,
+): Promise<T> {
+  await context.psql(protectedV2CompleteCatalogOwnerProjectionSql('postgres'))
+  let primaryError: unknown
+  let value: T | undefined
+  try {
+    value = await collect(withTrustedLocalRoleInventoryForDisposableTransition(context))
+  } catch (error) {
+    primaryError = error
+  }
+  try {
+    await context.psql(protectedV2CompleteCatalogOwnerProjectionSql('supabase_admin'))
+  } catch (restoreError) {
+    if (primaryError) {
+      throw new AggregateError(
+        [primaryError, restoreError],
+        'Protected V2 disposable local catalog collection and owner restoration both failed.',
+      )
+    }
+    throw restoreError
+  }
+  if (primaryError) throw primaryError
+  return value as T
+}
+
+function withoutSchemaDerivedFields(
+  row: Readonly<Record<string, unknown>>,
+  fields: readonly string[],
+): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(row).filter(([key]) => !fields.includes(key)))
+}
+
+function projectFreshAfterSnapshotToProtectedV2Before(
+  snapshot: ProtectedV2TransitionSnapshot,
+): ProtectedV2DatabaseEvidence {
+  const ledgerEntries = snapshot.ledgerEntries.filter(
+    (entry) =>
+      !(
+        entry.version === PROTECTED_GOLD_IMPORT_CONTRACT_V2.version &&
+        entry.name === PROTECTED_GOLD_IMPORT_CONTRACT_V2.migrationName
+      ),
+  )
+  if (snapshot.ledgerEntries.length - ledgerEntries.length !== 1) {
+    throw new Error('Fresh protected V2 projection requires exactly one V2 ledger entry.')
+  }
+  const historyRows = {
+    ...snapshot.historyRows,
+    operations: snapshot.historyRows.operations.map((row) =>
+      withoutSchemaDerivedFields(row, LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS),
+    ),
+    reviews: snapshot.historyRows.reviews.map((row) =>
+      withoutSchemaDerivedFields(row, LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS),
+    ),
+  }
+  const history = buildLiteratureGoldV2SchemaNeutralHistoryEvidence({
+    phase: 'before_v2',
+    rows: historyRows,
+  })
+  const projectedSnapshot: ProtectedV2TransitionSnapshot = {
+    ...snapshot,
+    effectiveStateSha256V2: null,
+    historyRows,
+    ledgerEntries,
+    phase: 'before_v2',
+    physicalStateSha256V1: history.physicalStateSha256V1,
+    physicalStateSha256V2: null,
+  }
+  return buildProtectedV2DatabaseEvidenceFromSnapshot({
+    completeCatalogAudit: null,
+    phase: 'before_v2',
+    readOnlyBracketMatches: true,
+    snapshot: projectedSnapshot,
+  })
+}
+
+/**
+ * Fresh applies V2 before loading the migration-equivalent protected rows, so
+ * it cannot observe a live pre-V2 schema. Rebuild the exact pre-V2 evidence
+ * twice from independently bracketed full-history reads, reversing only the
+ * policy's four schema-derived fields and the single V2 ledger occurrence.
+ */
+export async function collectProjectedFreshProtectedV2BeforeEvidence(
+  queryJson: (sql: string) => Promise<unknown>,
+): Promise<ProtectedV2DatabaseEvidence> {
+  const sql = buildProtectedV2TransitionSnapshotSql('after_v2')
+  const first = parseProtectedV2TransitionSnapshot(await queryJson(sql), 'after_v2')
+  const second = parseProtectedV2TransitionSnapshot(await queryJson(sql), 'after_v2')
+  if (canonicalJson(first) !== canonicalJson(second)) {
+    throw new Error('Fresh protected V2 projection changed across its read-only bracket.')
+  }
+  return projectFreshAfterSnapshotToProtectedV2Before(second)
+}
+
 export function validateV2SemanticFunctionMetadata(
   value: unknown,
   ownerProfile: 'postgres' | 'supabase_admin',
@@ -1139,6 +1335,10 @@ create table if not exists supabase_migrations.schema_migrations (
       await applyFixedMigration(filename)
     }
     let schemaOnlyUpgrade: { after: unknown; before: unknown } | null = null
+    let protectedBeforeCaptures:
+      | readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
+      | null = null
+    let protectedSchemaOnlyTransition: V2ProtectedSchemaOnlyTransitionEvidence | null = null
     let postV2SeedSnapshot: V2SchemaOnlySnapshot
     if (input.migrationPath === 'upgrade') {
       if (
@@ -1155,6 +1355,18 @@ create table if not exists supabase_migrations.schema_migrations (
       }
       await psql(preV1SeedSql)
       await applyFixedMigration(V1_MIGRATION_FILENAME)
+      if (input.evidenceBindings) {
+        protectedBeforeCaptures = [
+          await collectProtectedV2ReadOnlyTransitionEvidence({
+            dependencies: { queryJson },
+            phase: 'before_v2',
+          }),
+          await collectProtectedV2ReadOnlyTransitionEvidence({
+            dependencies: { queryJson },
+            phase: 'before_v2',
+          }),
+        ]
+      }
       const before = await collectV2SchemaOnlySnapshot(
         queryJson,
         seed.batchId,
@@ -1186,6 +1398,49 @@ create table if not exists supabase_migrations.schema_migrations (
         seed.batchId,
         'fresh post-V2 projected seed snapshot',
       )
+      if (input.evidenceBindings) {
+        protectedBeforeCaptures = [
+          await collectProjectedFreshProtectedV2BeforeEvidence(queryJson),
+          await collectProjectedFreshProtectedV2BeforeEvidence(queryJson),
+        ]
+      }
+    }
+
+    if (input.evidenceBindings) {
+      if (!protectedBeforeCaptures) {
+        throw new Error('Protected V2 disposable transition has no complete before captures.')
+      }
+      const catalogContext: ProtectedV2CatalogAuditQueryContext = {
+        psql: (sql) => psql(sql, true),
+        queryJson,
+      }
+      const after = await withProtectedV2DisposableLocalCatalogProjection(
+        catalogContext,
+        async (localContext) =>
+          collectProtectedV2ReadOnlyTransitionEvidence({
+            dependencies: {
+              collectCompleteCatalogAudit: () =>
+                collectProtectedV2CompleteCatalogAudit({
+                  context: localContext,
+                  profile: 'local',
+                }),
+              queryJson: localContext.queryJson,
+            },
+            phase: 'after_v2',
+          }),
+      )
+      const proof = validateProtectedV2SchemaOnlyDatabaseTransition({
+        after,
+        beforeCaptures: protectedBeforeCaptures,
+        expectedCatalogBindingSha256:
+          LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.catalog.expectedCatalogBindingSha256,
+        sourceAuthorizationSha256: input.evidenceBindings.operatorBundleBinding.bindingSha256,
+      })
+      protectedSchemaOnlyTransition = {
+        after,
+        beforeCaptures: protectedBeforeCaptures,
+        proof,
+      }
     }
 
     const ledger = z
@@ -1326,19 +1581,26 @@ create table if not exists supabase_migrations.schema_migrations (
         startedAt,
       },
     }
-    result = input.evidenceBindings
-      ? {
-          ...resultBase,
-          canonicalArtifacts: buildCanonicalV2RehearsalArtifacts({
-            ...canonicalArtifactInput,
-            authorizationBindings: input.evidenceBindings,
-          }),
-          evidenceAuthority: 'canonical_delivery_evidence',
-        }
-      : {
-          ...resultBase,
-          evidenceAuthority: 'transient_catalog_probe_not_delivery_evidence',
-        }
+    if (input.evidenceBindings) {
+      if (!protectedSchemaOnlyTransition) {
+        throw new Error('Canonical V2 rehearsal omitted its accepted schema-only transition.')
+      }
+      result = {
+        ...resultBase,
+        canonicalArtifacts: buildCanonicalV2RehearsalArtifacts({
+          ...canonicalArtifactInput,
+          authorizationBindings: input.evidenceBindings,
+        }),
+        evidenceAuthority: 'canonical_delivery_evidence',
+        schemaOnlyTransition: protectedSchemaOnlyTransition,
+      }
+    } else {
+      result = {
+        ...resultBase,
+        evidenceAuthority: 'transient_catalog_probe_not_delivery_evidence',
+        schemaOnlyTransition: null,
+      }
+    }
   } catch (error) {
     primaryError = error
   }

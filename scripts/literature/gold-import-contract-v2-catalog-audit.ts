@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
-import { GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES } from '../../src/features/literature/gold-set/import-compensation-v2'
-import { canonicalJson } from './gold-import-compensation-migration-operations'
+import { GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES } from '../../src/features/literature/gold-set/import-compensation-v2-identities'
+import { protectedV2CapabilityFreeCanonicalJson as canonicalJson } from './protected-gold-import-contract-v2-capability-free-canonical'
 import {
   buildContractInvariantIdentity,
   buildDeploymentProfileIdentity,
@@ -15,7 +15,7 @@ import {
 import {
   buildContractDiagnosticsSql,
   parseContractDiagnosticsOutput,
-} from './gold-import-compensation-contract-diagnostics'
+} from './gold-import-compensation-contract-diagnostics-core'
 import {
   SCHEMA_SECURITY_FUNCTION_NAMES,
   buildSchemaSecurityDefinitionIdentity,
@@ -23,8 +23,8 @@ import {
   type SchemaSecurityDefinitionIdentity,
   type SchemaSecurityDefinitionRecord,
 } from './gold-import-compensation-rehearsal-evidence'
-import { SECURITY_INTROSPECTION_SQL } from './rehearse-gold-import-compensation-db'
-import { assertDerivedV2ReadinessPolicy } from './audit-gold-import-compensation-v2'
+import { SECURITY_INTROSPECTION_SQL } from './gold-import-compensation-security-introspection-sql'
+import { assertDerivedV2ReadinessPolicy } from './gold-import-contract-v2-readiness-policy'
 import {
   PROTECTED_V2_CATALOG_EXPECTATION_SCHEMA_VERSION,
   PROTECTED_V2_CATALOG_NORMALIZED_INVENTORY_SCHEMA_VERSION,
