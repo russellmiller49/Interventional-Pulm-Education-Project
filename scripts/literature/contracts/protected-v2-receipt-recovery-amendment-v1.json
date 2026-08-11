@@ -1,7 +1,7 @@
 {
-  "amendmentIdentitySha256": "dd163ed5157fe1d8381936e108adc2a69198e5c27e8a45bc221069a6e8b1d4dd",
+  "amendmentIdentitySha256": "aeb5bb7f0fbf6a74bda3d4d3fcc8d488b54a102bd292b2abb3327e6de3e99165",
   "correctedRecoveryToolBundle": {
-    "aggregateSha256": "8c0dc30e007a0f93a9a8feed473be60902a3bcf17a4d856cdeee393d67c56861",
+    "aggregateSha256": "5217641b5401662e62b772bbf90e7bc49c2e31334483c0df5655fd44e8982a3a",
     "files": [
       {
         "gitMode": "100644",
@@ -101,17 +101,17 @@
       {
         "gitMode": "100644",
         "path": "scripts/literature/protected-gold-import-contract-v2-receipt-recovery-core.ts",
-        "sha256": "40cdd977deaf10b0a996330bbed3443ff581c385b40079bcc729151090d15a76"
+        "sha256": "d2b5d35ec616567f8678f53a2b35fe57df784a7ff8573d84d3054b8972513ec4"
       },
       {
         "gitMode": "100644",
         "path": "scripts/literature/protected-gold-import-contract-v2-receipt-recovery-read-only-adapter.ts",
-        "sha256": "302c4f6ecfa825d09331bab3b71e93ddcf6f88bb839022615d521c2f114d3f6f"
+        "sha256": "aac96dec51aedcee51d75f12c515ec94b9f6cc09bd8480cb037f2d39b00df90b"
       },
       {
         "gitMode": "100644",
         "path": "scripts/literature/protected-gold-import-contract-v2-receipt-recovery-runtime.ts",
-        "sha256": "0f4ba64c75ed16d7463eda10edc227aa9d54a157f496673e019ede0c0300eb4c"
+        "sha256": "3d5064fe51d2dcf4253be889f0a71077a9c7dd7325f4926de4fd47d20c6d3f57"
       },
       {
         "gitMode": "100644",
@@ -121,7 +121,7 @@
       {
         "gitMode": "100644",
         "path": "scripts/literature/protected-gold-import-contract-v2-recovery-evidence-adapter.ts",
-        "sha256": "a7b3fb050836be54d4891fbd2db88de4d7760418ef66c3495691bfc93f8ed8a9"
+        "sha256": "969ffdefce812033f8657f8c0ef04afaef43ff3e9c8182a1f8825211b33897a0"
       },
       {
         "gitMode": "100644",
