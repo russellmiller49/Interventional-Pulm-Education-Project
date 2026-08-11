@@ -39,9 +39,9 @@ const importCompensationV2MigrationPath = join(
   'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
 )
 const localSupabaseScriptPath = join(process.cwd(), 'scripts/literature/local-supabase.ts')
-const protectedMigrationScriptPath = join(
+const protectedMigrationSourceIdentitiesPath = join(
   process.cwd(),
-  'scripts/literature/protected-gold-import-contract-v2.ts',
+  'scripts/literature/protected-gold-import-contract-v2-source-identities.ts',
 )
 const legacyImportScriptPath = join(process.cwd(), 'scripts/literature/import-gold-reviews.ts')
 
@@ -56,7 +56,10 @@ describe('gold-set database contract', () => {
   const importCompensationSql = readFileSync(importCompensationMigrationPath, 'utf8')
   const importCompensationV2Sql = readFileSync(importCompensationV2MigrationPath, 'utf8')
   const localSupabaseScript = readFileSync(localSupabaseScriptPath, 'utf8')
-  const protectedMigrationScript = readFileSync(protectedMigrationScriptPath, 'utf8')
+  const protectedMigrationSourceIdentities = readFileSync(
+    protectedMigrationSourceIdentitiesPath,
+    'utf8',
+  )
   const legacyImportScript = readFileSync(legacyImportScriptPath, 'utf8')
   const tables = [
     'literature_gold_set_batches',
@@ -233,11 +236,17 @@ describe('gold-set database contract', () => {
     expect(localSupabaseScript).toContain('PROTECTED_GOLD_IMPORT_CONTRACT_V1.filename')
     expect(localSupabaseScript).toContain('PROTECTED_FORWARD_LITERATURE_MIGRATIONS')
     expect(localSupabaseScript).toContain('includeAppliedProtectedV2: false')
-    expect(protectedMigrationScript).toContain(
+    expect(protectedMigrationSourceIdentities).toContain(
       "filename: '20260809231651_add_literature_gold_import_compensation_contract_v2.sql'",
     )
-    expect(protectedMigrationScript).toContain(
+    expect(protectedMigrationSourceIdentities).toContain(
       "sha256: '3f34934391b3c1ca3ff2ab96c103fe64f05fc29e7b2e0d8375dd6742401995b1'",
+    )
+    expect(protectedMigrationSourceIdentities).toContain(
+      "filename: '20260809231651_verify_literature_gold_import_compensation_contract_v2.sql'",
+    )
+    expect(protectedMigrationSourceIdentities).toContain(
+      "sha256: '2570f0885ed646247df7dd3e375b835c7591f2750bc190d63845191cd0426eeb'",
     )
   })
 
