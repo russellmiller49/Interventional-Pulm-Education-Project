@@ -9,7 +9,7 @@ scoring, or publication package; the B6 draft panels and PR #94 are untouched.
 - Branch: `claude/ecmo-b7-3d-asset-fidelity-2026-08-11`
 - Base: `origin/main` at `99ad5991`
 - Owner visual gates: Gate 1 (asset candidates) **approved 2026-08-11**;
-  Gate 2 (integrated scene) recorded below.
+  Gate 2 (integrated scene) **approved 2026-08-11**.
 
 ---
 
@@ -220,7 +220,9 @@ as a draped supine mannequin at every size, matching the harness renders.
 ## Owner visual approvals
 
 - Gate 1 (candidates): **approved** — console A + patient A, 2026-08-11.
-- Gate 2 (integrated scene): pending; recorded when given.
+- Gate 2 (integrated scene): **approved** — 2026-08-11, against the
+  before/after strips for both tracks at all five camera poses plus the
+  in-browser review: "it looks good. I approve."
 
 ## Redistribution / licensing gate
 
