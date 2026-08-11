@@ -277,6 +277,12 @@ describe('V2 authenticated planning-state evidence', () => {
     expect(generatorSource).toContain(
       'requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(',
     )
+    expect(generatorSource).toContain(
+      'currentPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256',
+    )
+    expect(generatorSource).not.toContain(
+      'currentPhysicalStateSha256: audit.database.physicalStateSha256',
+    )
     expect(generatorSource).toContain("'finalized-migration-receipt-gate-v2.json'")
     expect(generatorFileSource).toContain("'finalized-migration-receipt-gate-v2.json',")
     expect(generatorFileSource).toContain('migrationReceiptGateSha256:')

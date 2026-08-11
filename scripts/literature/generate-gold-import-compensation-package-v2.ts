@@ -50,6 +50,7 @@ import {
   type GoldImportSourceAuthorizationSetV4,
 } from './gold-import-source-authorization-v4'
 import {
+  GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
   GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2,
   resolveV2ImportedNote,
   validateGoldImportNoteDispositionGateV2,
@@ -875,7 +876,7 @@ export function generateGoldImportCompensationPackageV2(
     audit: input.sources.noteDispositionAudit,
     currentState: {
       currentEffectiveStateSha256: audit.database.effectiveStateSha256,
-      currentPhysicalStateSha256: audit.database.physicalStateSha256,
+      currentPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
       currentPointersAreLatestHeads: audit.stateIntegrity.currentPointersAreLatestHeads,
       developmentPlanningStateSha256: rawPlanningStateSha256,
       revisionChainsLinear: audit.stateIntegrity.revisionChainsLinear,
