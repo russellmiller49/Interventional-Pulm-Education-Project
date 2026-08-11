@@ -3,11 +3,7 @@ import { lstat, readFile, readdir, realpath } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 import { promisify } from 'node:util'
 
-import {
-  LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
-  validateLiteratureGoldV2SchemaOnlyTransition,
-  type LiteratureGoldV2SchemaOnlyTransitionInput,
-} from './literature-gold-v2-schema-only-transition'
+import { LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256 } from './literature-gold-v2-schema-only-transition'
 import {
   PROTECTED_V2_RECEIPT_RECOVERY_COMMITTED_AMENDMENT_PATH,
   PROTECTED_V2_RECEIPT_RECOVERY_INCIDENT_AUTHORITY_PATH,
@@ -27,6 +23,10 @@ import {
   type ProtectedV2ReceiptRecoveryRepositoryEvidence,
 } from './protected-gold-import-contract-v2-receipt-recovery-core'
 import { buildCurrentProtectedV2ReceiptRecoveryToolBundle } from './protected-gold-import-contract-v2-receipt-recovery-tool-bundle'
+import {
+  validateProtectedV2SchemaOnlyDatabaseTransition,
+  type ProtectedV2SchemaOnlyDatabaseTransitionInput,
+} from './protected-gold-import-contract-v2-transition-evidence'
 
 export const PROTECTED_V2_RECEIPT_RECOVERY_PRIMARY_CHECKOUT =
   '/Users/russellmiller/Projects/Interventional-Pulm-Education-Project' as const
@@ -101,7 +101,7 @@ export interface ProtectedV2ReceiptRecoveryCollectedEvidence {
   capabilityCallCounts: ProtectedV2ReceiptRecoveryCapabilityCallCounts
   postEvidence: ProtectedV2ReceiptRecoveryPostEvidence
   queryAudit: ProtectedV2ReceiptRecoveryReadOnlyQueryAudit
-  transitionInput: LiteratureGoldV2SchemaOnlyTransitionInput
+  transitionInput: ProtectedV2SchemaOnlyDatabaseTransitionInput
 }
 
 export interface ProtectedV2ReceiptRecoveryReadOnlyEvidenceRequest {
@@ -559,8 +559,8 @@ export async function runProtectedV2ReceiptRecoveryCommand(
       },
       {
         validateSchemaOnlyTransition: (input) =>
-          validateLiteratureGoldV2SchemaOnlyTransition(
-            input as LiteratureGoldV2SchemaOnlyTransitionInput,
+          validateProtectedV2SchemaOnlyDatabaseTransition(
+            input as ProtectedV2SchemaOnlyDatabaseTransitionInput,
           ),
       },
     )
