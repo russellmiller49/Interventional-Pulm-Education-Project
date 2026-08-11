@@ -550,6 +550,32 @@ describe('protected V2 historical receipt recovery core', () => {
     expect(validator).toHaveBeenCalledTimes(1)
   })
 
+  it('verifies a completed receipt after clean main advances without rewriting bytes or rerunning validation', async () => {
+    const built = await setup()
+    const validator = jest.fn(() => built.proof)
+    await recoverProtectedV2HistoricalReceipt(built.input, {
+      validateSchemaOnlyTransition: validator,
+    })
+    const finalized = resolve(built.input.applicationOutputDirectory, 'finalized')
+    const names = (await readdir(finalized)).sort()
+    const first = await Promise.all(names.map((name) => readFile(resolve(finalized, name))))
+
+    const advancedMainHead = '1234567890abcdef1234567890abcdef12345678'
+    built.input.recoveryRepository.head = advancedMainHead
+    built.input.recoveryRepository.originMain = advancedMainHead
+    built.input.postEvidence.safety.finalizedAbsentAtEvidenceCollection = false
+    const repeated = await recoverProtectedV2HistoricalReceipt(built.input, {
+      validateSchemaOnlyTransition: validator,
+    })
+    const second = await Promise.all(names.map((name) => readFile(resolve(finalized, name))))
+
+    expect(repeated.state).toBe('already_finalized_verified')
+    expect(repeated.wroteFinalization).toBe(false)
+    expect(repeated.result.recoveryRepositoryHead).not.toBe(advancedMainHead)
+    expect(second).toEqual(first)
+    expect(validator).toHaveBeenCalledTimes(1)
+  })
+
   it('verifies the exact winner of a concurrent atomic-finalization race', async () => {
     const built = await setup()
     const outcomes = await Promise.all([

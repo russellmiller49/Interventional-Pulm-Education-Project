@@ -1326,8 +1326,7 @@ export async function recoverProtectedV2HistoricalReceipt(
     authenticateRepositoryAndPostEvidence(input, true)
     if (
       canonicalProtectedV2ReceiptRecoveryJson(loaded.result.currentRecoveryToolBundle) !==
-        canonicalProtectedV2ReceiptRecoveryJson(input.currentRecoveryToolBundle) ||
-      loaded.result.recoveryRepositoryHead !== input.recoveryRepository.head
+      canonicalProtectedV2ReceiptRecoveryJson(input.currentRecoveryToolBundle)
     ) {
       throw new Error('Completed recovery receipt no longer matches the authorized recovery.')
     }
