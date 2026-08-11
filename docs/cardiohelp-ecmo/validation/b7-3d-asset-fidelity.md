@@ -171,9 +171,30 @@ metrics above are contracts, not proof of appearance.
 ## Rendering results
 
 Offline harness (Blender EEVEE, both tracks, five poses each) re-rendered at
-baseline, per candidate, and integrated. Browser review at 1600×900,
-1440×900, 1280×720, 1024×768 with labels on and off — results recorded in the
-Gate 2 section.
+baseline, per candidate, and integrated (plus the clamped state). Adversarial
+render review caught and fixed one integration defect: the 0.105 m dressing
+film disc clipped through the drape window's raised rim (now 0.078 m, inside
+the window, mirrored in the harness).
+
+## Browser results (Gate 2 evidence)
+
+Real-browser review of the integrated scene on the dev server, VV and VA
+tracks, labels on and off. Label-pill overlap measured numerically —
+`getBoundingClientRect` pairwise intersection over every rendered pill:
+
+| Viewport   | VV pills / overlaps              | VA pills / overlaps |
+| ---------- | -------------------------------- | ------------------- |
+| 1600 × 900 | 8 / **0**                        | 9 / **0**           |
+| 1440 × 900 | 8 / **0**                        | —                   |
+| 1280 × 720 | 8 / **0**                        | —                   |
+| 1024 × 768 | 8 / 2 corner touches (≤11×28 px) | —                   |
+
+The baseline stacked 4–6 pills text-on-text at every size. The labels toggle
+hides all pills; `aria-hidden` on the viewport verified `"true"` while the
+canvas is live. The 500-error console entries during review are this
+worktree's missing Supabase env (pre-existing, unrelated to the module). The
+in-pane screenshots confirm the console reads as a CARDIOHELP and the patient
+as a draped supine mannequin at every size, matching the harness renders.
 
 ## Known limitations
 
