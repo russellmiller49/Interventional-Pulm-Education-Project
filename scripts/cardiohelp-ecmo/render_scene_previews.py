@@ -305,10 +305,11 @@ def main() -> None:
         ring = bpy.context.active_object
         ring.data.materials.append(ring_material)
 
-    # Access-site dressings
+    # Access-site dressings (film radius mirrors PatientAccessSite.tsx: fits
+    # inside the drape's access window instead of clipping its raised rim)
     for site in layout["accessSites"]:
         location = t2b(site["position"]) + Vector((0, 0, 0.008))
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.105, depth=0.006, location=location)
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.078, depth=0.006, location=location)
         film = bpy.context.active_object
         film.data.materials.append(
             make_material(f"dressing-{site['name']}", layout["palette"]["dressingFilm"], alpha=0.5)
