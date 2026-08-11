@@ -145,16 +145,81 @@ export function deriveProductFixtures(repoRoot: string): {
  *   ("Flexible grasping forceps"), and a hidden product whose trade name coincides with
  *   one is not identified by it.
  *
- * Below the per-field distinctiveness floor nothing is considered (short catalog numbers
- * like "0100" collide with markup), and matching is on token boundaries — for the
- * detection AND for every text-corpus exclusion, with the same `containsToken`: an
- * exclusion looser than the detection would silently unscreen a token whose only catalog
- * "occurrence" is inside a translation-key hex id.
+ * Below the per-field distinctiveness floor nothing is considered **standalone** (short
+ * catalog numbers like "0100" collide with markup) — but the floor no longer gets the last
+ * word: manufacturer-qualified composites ("olympus kv-6", with a deterministic
+ * hyphen-to-space variant) are derived from every identifier field BEFORE the floor
+ * discards it, because adjacency to the manufacturer is exactly what makes a short
+ * identifier identifying (P92-C4). Matching is on token boundaries — for the detection AND
+ * for every text-corpus exclusion, with the same `containsToken`: an exclusion looser than
+ * the detection would silently unscreen a token whose only catalog "occurrence" is inside
+ * a translation-key hex id. Each composite runs the same four corpus exclusions on the
+ * exact composite string itself; a standalone exclusion never carries over to it.
  */
 /** Boundary-matched token presence: a hit must not sit inside a longer alphanumeric run. */
 export function containsToken(haystack: string, token: string): boolean {
   const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(haystack)
+}
+
+/**
+ * The launch robots contract, as a directive set: all three must be present, parsed from the
+ * comma-separated header rather than substring-tested (P92-C3). `noindex` alone still lets a
+ * crawler that already holds the URL follow every link out of the page and archive what it
+ * fetched; the unlisted-beta posture needs all three, in both modes, from one predicate —
+ * a second implementation in either mode is how the two drift apart.
+ */
+export const REQUIRED_ROBOTS_DIRECTIVES = ['noindex', 'nofollow', 'noarchive'] as const
+
+/**
+ * Robots directives that legitimately carry a `name: value` shape. Anything else with a
+ * colon is a user-agent scope per the header grammar (`X-Robots-Tag: [user-agent:]
+ * directive, …`), and a scoped directive binds one crawler, not all of them.
+ */
+const VALUED_ROBOTS_DIRECTIVES = new Set([
+  'unavailable_after',
+  'max-snippet',
+  'max-image-preview',
+  'max-video-preview',
+])
+
+/**
+ * The required directives a header fails to carry. Case-insensitive, whitespace-tolerant,
+ * order-independent, and exact per directive: `noindexx` or `no-index` is not `noindex`, and
+ * a substring test that accepted them would be accepting a header no crawler obeys.
+ *
+ * Fail-closed hardenings from the adversarial pass:
+ * - A user-agent scope (`googlebot: noindex, …`) stops crediting every later token: once a
+ *   scope begins, the comma-joined value cannot prove those directives bind all agents, and
+ *   `googlebot: nosnippet, noindex, nofollow, noarchive` used to satisfy the set while
+ *   binding nobody but googlebot. Unscoped directives *before* the scope stay credited.
+ * - Tokens are trimmed as ASCII whitespace only and must be exact `[a-z0-9_-]` words: a raw
+ *   Latin-1 NBSP after `noindex` is stripped by ECMAScript `trim()` but not by a strict
+ *   crawler parser, so it must not be stripped here either.
+ */
+export function missingRobotsDirectives(header: string | null | undefined): string[] {
+  const directives = new Set<string>()
+  let userAgentScoped = false
+  for (const rawToken of (header ?? '').split(',')) {
+    const token = rawToken.replace(/^[ \t]+|[ \t]+$/g, '').toLowerCase()
+    if (token.length === 0) continue
+    const colon = token.indexOf(':')
+    if (colon !== -1) {
+      const name = token.slice(0, colon).replace(/[ \t]+$/g, '')
+      if (VALUED_ROBOTS_DIRECTIVES.has(name)) continue
+      userAgentScoped = true
+      continue
+    }
+    if (userAgentScoped) continue
+    if (!/^[a-z0-9_-]+$/.test(token)) continue
+    directives.add(token)
+  }
+  return REQUIRED_ROBOTS_DIRECTIVES.filter((directive) => !directives.has(directive))
+}
+
+/** One whitespace shape for token derivation and matching: NBSP → space, runs collapsed. */
+export function normalizeIdentityWhitespace(value: string): string {
+  return value.replace(/ /g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> {
@@ -167,6 +232,7 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     product_id: string
     verification_grade?: string
     visibility_state?: string
+    manufacturer?: string
     product_name?: string
     catalog_number?: string
     global_part_number?: string
@@ -178,6 +244,9 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     compatibility_text?: string
     notes?: string
     availability_note?: string
+    subcategory?: string
+    primary_category?: string
+    product_kind?: string
   }>
   const identityFields = [
     ['product_name', 12],
@@ -200,6 +269,56 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     return tokens
   }
 
+  /**
+   * Manufacturer-qualified identifier composites, built BEFORE the standalone floor gets a
+   * say (P92-C4). "Olympus KV-6" identifies a hidden product as surely as any GTIN, yet the
+   * bare "kv-6" sits under the five-character catalog-number floor — the floor exists to
+   * keep short tokens from colliding with markup, and a manufacturer-adjacent identifier has
+   * no such collision problem. One deterministic variant is added where the identifier
+   * itself carries a hyphen ("olympus kv 6"), because catalogs print both shapes; nothing
+   * here is fuzzy — every variant is an exact boundary-matched string.
+   *
+   * `product_name` is composed too (Lens D): a short distinctive trade name — "GSS Y
+   * Stent", "RevoLix jr." — sits under the twelve-character name floor exactly the way
+   * "KV-6" sits under the catalog-number floor, and "Novatech GSS Y Stent" in served prose
+   * is a full commercial identity. A generic short name ("Cotton Swab") composes into a
+   * manufacturer-qualified phrase that only ever matches the real adjacency.
+   *
+   * GTIN fields are deliberately not composed: their 12-digit floor never discards one, so
+   * the standalone token already screens every body a composite would.
+   */
+  const compositeIdentifierFields = [
+    'product_name',
+    'catalog_number',
+    'global_part_number',
+    'reference_part_number',
+    'alternate_ids',
+  ] as const
+  const compositeTokensOf = (product: (typeof products)[number]) => {
+    const manufacturer = normalizeIdentityWhitespace((product.manufacturer ?? '').toLowerCase())
+    if (!manufacturer) return []
+    const tokens: Array<{ token: string; field: string }> = []
+    for (const field of compositeIdentifierFields) {
+      const value = product[field]
+      if (typeof value !== 'string') continue
+      const identifier = normalizeIdentityWhitespace(value.toLowerCase())
+      // A degenerate-value guard, not a distinctiveness floor: one character next to a
+      // manufacturer name is a size or a count far more often than an identifier.
+      if (identifier.length < 2) continue
+      const variants = new Set([identifier])
+      if (identifier.includes('-')) {
+        variants.add(normalizeIdentityWhitespace(identifier.replace(/-/g, ' ')))
+      }
+      for (const variant of variants) {
+        tokens.push({
+          token: `${manufacturer} ${variant}`,
+          field: `${field} (manufacturer-qualified)`,
+        })
+      }
+    }
+    return tokens
+  }
+
   const publicSiteCopy = ['en', 'es', 'zh-CN'].map((locale) =>
     readFileSync(path.join(repoRoot, `messages/${locale}.json`), 'utf8').toLowerCase(),
   )
@@ -207,9 +326,15 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
   const governedLabels = new Set<string>()
   const roles = JSON.parse(
     readFileSync(path.join(repoRoot, 'data/ip-preference-cards/generated/roles.json'), 'utf8'),
-  ) as Array<{ role_name?: string }>
+  ) as Array<{ role_name?: string; description?: string; selection_guidance?: string }>
   for (const role of roles) {
     if (role.role_name) governedLabels.add(role.role_name.trim().toLowerCase())
+    // The clinical-role pages and the device-detail primary-role panel render the governed
+    // role description and selection guidance verbatim (Lens D): a hidden product whose
+    // trade name sits inside that deliberately served prose ("Radial ultrasound miniature
+    // probe …") is not identified by the prose being rendered.
+    if (role.description) governedLabels.add(role.description.trim().toLowerCase())
+    if (role.selection_guidance) governedLabels.add(role.selection_guidance.trim().toLowerCase())
   }
   const moduleVersions = JSON.parse(
     readFileSync(
@@ -252,6 +377,15 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
   }
 
   const cohortProducts = products.filter((product) => isAtlasCohortProduct(product))
+  // The atlas index and device-detail pages render the cohort rows' classification
+  // vocabulary — kind/category columns and badges — so those exact governed terms are
+  // deliberately served wherever a cohort row is (Lens D: a hidden product named
+  // "Flexible biopsy forceps" is not identified by a cohort forceps' subcategory badge).
+  for (const product of cohortProducts) {
+    for (const value of [product.subcategory, product.primary_category, product.product_kind]) {
+      if (typeof value === 'string' && value.trim()) governedLabels.add(value.trim().toLowerCase())
+    }
+  }
   const cohortTokens = cohortProducts.flatMap((product) =>
     tokensOf(product).map(({ token }) => token),
   )
@@ -273,14 +407,38 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
   // rendered ("surgical probe" inside the role name "Thoracoscopy surgical probe" on the
   // atlas filter), and the page text is the label, not the product.
   const governedLabelCorpus = [...governedLabels].join('\n')
+  // Composite tokens carry internal spaces, so their corpus checks run over
+  // whitespace-normalized copies; the standalone checks keep the raw corpora so their
+  // behavior is byte-for-byte what it was.
+  const cohortProseNormalized = cohortProse.map(normalizeIdentityWhitespace)
+  const publicSiteCopyNormalized = publicSiteCopy.map(normalizeIdentityWhitespace)
+  const governedLabelCorpusNormalized = [...governedLabels]
+    .map(normalizeIdentityWhitespace)
+    .join('\n')
   const leakTokens = new Map<string, string>()
   for (const product of products) {
     if (isAtlasCohortProduct(product)) continue
     for (const { token, field } of tokensOf(product)) {
-      if (cohortTokens.some((cohortToken) => cohortToken.includes(token))) continue
+      // Boundary-matched containment, with the same predicate as the detection (Lens D):
+      // plain substring containment let "10520" vanish because those five digits sit
+      // inside an unrelated cohort GTIN — a containment no page can ever boundary-render.
+      // A sibling SKU still excludes ("bf-1t180" sits at a word boundary inside the
+      // cohort's "bf-1t180 video bronchoscope"); a digit-run coincidence no longer does.
+      if (cohortTokens.some((cohortToken) => containsToken(cohortToken, token))) continue
       if (cohortProse.some((prose) => containsToken(prose, token))) continue
       if (publicSiteCopy.some((catalog) => containsToken(catalog, token))) continue
       if (containsToken(governedLabelCorpus, token)) continue
+      if (!leakTokens.has(token)) leakTokens.set(token, `${product.product_id} ${field}`)
+    }
+    // The same four data-derived exclusions, applied to the exact composite string itself —
+    // never inherited from the standalone identifier. A short token excluded (or floored)
+    // on its own says nothing about "Olympus KV-6": only a corpus that already serves that
+    // exact manufacturer-qualified phrase may screen it (P92-C4).
+    for (const { token, field } of compositeTokensOf(product)) {
+      if (cohortTokens.some((cohortToken) => containsToken(cohortToken, token))) continue
+      if (cohortProseNormalized.some((prose) => containsToken(prose, token))) continue
+      if (publicSiteCopyNormalized.some((catalog) => containsToken(catalog, token))) continue
+      if (containsToken(governedLabelCorpusNormalized, token)) continue
       if (!leakTokens.has(token)) leakTokens.set(token, `${product.product_id} ${field}`)
     }
   }
@@ -298,14 +456,24 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
  * output. Exported for the derivation tests.
  */
 export function servedIdentityLeaks(body: string, tokens: Map<string, string>): string[] {
-  const haystack = body
-    .toLowerCase()
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#x27;', "'")
-    .replaceAll('&#39;', "'")
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&amp;', '&')
+  // Entity decoding first, then the same whitespace normalization the composite tokens were
+  // derived under: NBSP (literal or entity) and repeated whitespace read as one space, so
+  // "Olympus&nbsp;KV-6" and "Olympus  KV-6" match the composite token exactly. Markup or
+  // other text between the manufacturer and the identifier still defeats the match — that
+  // is the boundary-safety contract, not a gap: adjacency is what identifies.
+  const haystack = normalizeIdentityWhitespace(
+    body
+      .toLowerCase()
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#x27;', "'")
+      .replaceAll('&#39;', "'")
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&#160;', ' ')
+      .replaceAll('&#xa0;', ' ')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&'),
+  )
   const leaks: string[] = []
   for (const [token, provenance] of tokens) {
     if (containsToken(haystack, token)) leaks.push(`"${token}" (${provenance})`)
@@ -351,21 +519,33 @@ async function expectStatus(
       : `got ${response.status}${response.headers.get('location') ? ` → ${response.headers.get('location')}` : ''}`,
   )
   if (options.requireRobotsHeader) {
-    const header = response.headers.get('x-robots-tag') ?? ''
+    const header = response.headers.get('x-robots-tag')
+    const missing = missingRobotsDirectives(header)
     check(
       results,
-      `${pathname} carries X-Robots-Tag noindex`,
-      header.includes('noindex') && header.includes('nofollow') && header.includes('noarchive'),
-      header || 'header absent',
+      `${pathname} carries X-Robots-Tag ${REQUIRED_ROBOTS_DIRECTIVES.join(', ')}`,
+      missing.length === 0,
+      missing.length === 0
+        ? (header as string)
+        : `missing directive(s): ${missing.join(', ')} — header ${header === null ? 'absent' : `"${header}"`}`,
     )
   }
   if (options.requireRobotsMeta) {
-    const hasMeta = /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/.test(body)
+    const metaContent =
+      /<meta[^>]+name="robots"[^>]+content="([^"]*)"/.exec(body)?.[1] ??
+      /<meta[^>]+content="([^"]*)"[^>]+name="robots"/.exec(body)?.[1] ??
+      null
+    const missingMeta =
+      metaContent === null ? [...REQUIRED_ROBOTS_DIRECTIVES] : missingRobotsDirectives(metaContent)
     check(
       results,
-      `${pathname} carries noindex robots metadata`,
-      hasMeta,
-      hasMeta ? 'meta present' : 'meta absent',
+      `${pathname} carries ${REQUIRED_ROBOTS_DIRECTIVES.join('/')} robots metadata`,
+      missingMeta.length === 0,
+      metaContent === null
+        ? 'meta absent'
+        : missingMeta.length === 0
+          ? `meta "${metaContent}"`
+          : `meta missing directive(s): ${missingMeta.join(', ')} — content "${metaContent}"`,
     )
   }
   return body
@@ -396,12 +576,15 @@ async function runOffChecks(baseUrl: string): Promise<CheckResult[]> {
       response.status !== 307 && response.status !== 302 && response.status !== 303,
       `status ${response.status}`,
     )
-    const header = response.headers.get('x-robots-tag') ?? ''
+    const header = response.headers.get('x-robots-tag')
+    const missing = missingRobotsDirectives(header)
     check(
       results,
-      `${pathname} keeps the noindex header tier`,
-      header.includes('noindex'),
-      header || 'header absent',
+      `${pathname} keeps the ${REQUIRED_ROBOTS_DIRECTIVES.join('/')} header tier`,
+      missing.length === 0,
+      missing.length === 0
+        ? (header as string)
+        : `missing directive(s): ${missing.join(', ')} — header ${header === null ? 'absent' : `"${header}"`}`,
     )
   }
   // An unrelated public-unlisted module is the control: the flag must gate D1 and only D1.
@@ -425,10 +608,13 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
       requireRobotsMeta: true,
     }),
   )
-  await expectStatus(results, baseUrl, '/en/procedures', 200, {
-    requireRobotsHeader: true,
-    requireRobotsMeta: true,
-  })
+  atlasBodies.set(
+    'procedures index',
+    await expectStatus(results, baseUrl, '/en/procedures', 200, {
+      requireRobotsHeader: true,
+      requireRobotsMeta: true,
+    }),
+  )
 
   const workspaceBodies = new Map<string, string>()
   for (const code of D1_EXEMPLAR_PROCEDURE_CODES) {
@@ -486,11 +672,16 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   )
 
   // The canonical clinical-role page carries the same served-page contract as every other
-  // D1 surface; the alias check above only proved the redirect.
-  await expectStatus(results, baseUrl, `/en/clinical-roles/${alias.canonical}`, 200, {
-    requireRobotsHeader: true,
-    requireRobotsMeta: true,
-  })
+  // D1 surface; the alias check above only proved the redirect. Its body joins the identity
+  // scans below — the role pages render governed role prose, which is exactly the surface
+  // class where an unexcluded vocabulary collision would first fire (Lens D).
+  atlasBodies.set(
+    'clinical role',
+    await expectStatus(results, baseUrl, `/en/clinical-roles/${alias.canonical}`, 200, {
+      requireRobotsHeader: true,
+      requireRobotsMeta: true,
+    }),
+  )
 
   // Absent from navigation and the sitemap. Both checks assert the status they read from,
   // so an unexpected redirect or error page cannot make the negative content check pass on

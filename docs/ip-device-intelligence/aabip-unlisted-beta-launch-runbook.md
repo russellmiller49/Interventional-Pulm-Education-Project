@@ -79,17 +79,25 @@ What the mode-on pass verifies, in one run:
   unknown code) → 404; two non-cohort (candidate/hidden) product ids derived from the
   committed catalog through the real cohort predicate → 404; one cohort product → 200.
 - A deprecated role code (permanent alias) redirects to its canonical role page.
-- Every checked D1 response carries the noindex header **and** noindex robots metadata.
+- Every checked D1 response carries all three robots directives — `noindex`, `nofollow`,
+  `noarchive` — parsed as a comma-separated directive set (exact, case-insensitive
+  directives, never a substring test), plus the noindex robots metadata. The same
+  directive-set predicate backs the mode-off header check, so the two modes cannot drift
+  apart, and a failing check names exactly the missing directive (P92-C3).
 - The D1 routes are absent from the home navigation and the sitemap.
 - The draft watermark on every workspace, the demo watermark
   ("DEMO DATA — NOT AN ACTUAL INSTITUTION") on every readiness page, and the qualified
   readiness headline ("Demo: Not ready") the committed data produces — proposals never
   satisfy coverage, and no institutional claim appears.
 - No non-cohort product identity anywhere in the served HTML of the scanned surfaces —
-  the three exemplar workspaces, their readiness pages, the atlas index, and the cohort
-  device detail page (the surface that serves free catalog prose) — both as `PRD-` ids
+  the three exemplar workspaces, their readiness pages, the atlas index, the procedures
+  index, the canonical clinical-role page, and the cohort device detail page (the
+  surfaces that serve free catalog and governed prose) — both as `PRD-` ids
   and as textual identity (product names, catalog and global/reference part numbers,
-  alternate ids, GTINs), matched on token boundaries. The token population is derived
+  alternate ids, GTINs, and manufacturer-qualified identifier composites such as
+  "Olympus KV-6" — built before the standalone distinctiveness floor discards a short
+  catalog/model number, with a deterministic hyphen-to-space variant and NBSP/whitespace
+  normalization, P92-C4), matched on token boundaries. The token population is derived
   from the committed catalog with data-derived exclusions that keep it an exposure check
   rather than a coincidence detector, each applied with the same boundary predicate as
   the detection: cohort identities (sibling SKUs share naming), phrases the cohort
@@ -97,12 +105,14 @@ What the mode-on pass verifies, in one run:
   already present in the public translation catalogs (public educational copy names real
   device models today, independent of the flag), and governed vocabulary labels the
   surface deliberately renders (a hidden product whose trade name coincides with a
-  generic authored label is not identified by it).
+  generic authored label is not identified by it). Each composite runs the same four
+  exclusions on the exact composite string itself — a standalone exclusion never carries
+  over to its manufacturer-qualified form.
 - F-09: the THERAPEUTIC_BRONCH workspace presents the rigid APC applicator as conditional
   ("Rigid system in use"), data-driven.
 
 Local rehearsal against the production build (`--start` in place of `--base-url`):
-`--mode=off` runs 22 checks, `--mode=on` 64, all expected to pass before the owner touches
+`--mode=off` runs 22 checks, `--mode=on` 68, all expected to pass before the owner touches
 the production flag.
 
 Manually spot-check one exemplar workspace and one readiness page in a browser as well —
