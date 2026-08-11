@@ -830,6 +830,22 @@ const PROTECTED_V2_FUNCTIONS_WITHOUT_SERVICE_ROLE_EXECUTE = [
   'get_literature_gold_review_item_v1',
 ] as const
 
+const PROTECTED_V2_SERVICE_ROLE_SELECT_ONLY_TABLES = [
+  'literature_gold_review_operation_actions',
+  'literature_gold_review_operations',
+] as const
+
+const PROTECTED_V2_SERVICE_ROLE_ALL_PRIVILEGE_TABLES = [
+  'literature_gold_set_batches',
+  'literature_gold_set_items',
+  'literature_gold_set_review_drafts',
+] as const
+
+const PROTECTED_V2_SERVICE_ROLE_READ_WRITE_TABLES = [
+  'literature_gold_set_events',
+  'literature_gold_set_reviews',
+] as const
+
 /**
  * Project the complete protected catalog between the two fixed supported owner
  * profiles. This is used only inside the owned disposable database and is
@@ -840,7 +856,35 @@ export function protectedV2CompleteCatalogOwnerProjectionSql(
 ): string {
   const restorePostgresTableAcl =
     owner === 'supabase_admin'
-      ? "\n    execute pg_catalog.format('revoke all privileges on table public.%I from postgres', target.table_name);\n    execute pg_catalog.format('grant all privileges on table public.%I to postgres', target.table_name);"
+      ? `
+    execute pg_catalog.format('revoke all privileges on table public.%I from postgres', target.table_name);
+    execute pg_catalog.format('revoke all privileges on table public.%I from service_role', target.table_name);
+    execute pg_catalog.format('grant all privileges on table public.%I to postgres', target.table_name);
+    if target.table_name in (
+      select table_name from (values ${protectedV2SqlValues(
+        PROTECTED_V2_SERVICE_ROLE_SELECT_ONLY_TABLES,
+      )}) as tables(table_name)
+    ) then
+      execute pg_catalog.format('grant select on table public.%I to service_role', target.table_name);
+    elsif target.table_name in (
+      select table_name from (values ${protectedV2SqlValues(
+        PROTECTED_V2_SERVICE_ROLE_ALL_PRIVILEGE_TABLES,
+      )}) as tables(table_name)
+    ) then
+      execute pg_catalog.format('grant all privileges on table public.%I to service_role', target.table_name);
+    elsif target.table_name in (
+      select table_name from (values ${protectedV2SqlValues(
+        PROTECTED_V2_SERVICE_ROLE_READ_WRITE_TABLES,
+      )}) as tables(table_name)
+    ) then
+      execute pg_catalog.format(
+        'grant delete, insert, maintain, select, update on table public.%I to service_role',
+        target.table_name
+      );
+    else
+      raise exception 'Protected V2 table ACL restoration received an unknown table: %',
+        target.table_name;
+    end if;`
       : ''
   const restorePostgresFunctionAcl =
     owner === 'supabase_admin'
