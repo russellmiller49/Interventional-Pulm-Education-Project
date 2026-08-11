@@ -69,8 +69,30 @@ This command:
 
 - prepares `local-data/literature/supabase-local`;
 - starts a stack named `ip-literature-local`;
-- applies the literature schema and gold-set schema; and
+- applies the ordinary literature schema through the currently authorized boundary; and
 - writes dedicated `LITERATURE_SUPABASE_*` values to the ignored `.env.local`.
+
+Protected pending migrations are excluded from ordinary first-start and migration-up. In
+particular, merging contract V2 does not arm this command: while V2 ledger occurrence is zero,
+ordinary start leaves it pending and says so. V2 requires the separate protected operator workflow
+in
+[`gold-import-contract-v2-protected-application-runbook.md`](./ip-literature/gold-import-contract-v2-protected-application-runbook.md).
+
+That protected path uses trusted-local-operator redundant-capture model
+`trusted-local-operator-redundant-captures/1.0.0`: two separately executed read-only captures and
+the exact operator attestation are accidental-safety controls, not cryptographic evidence against
+the filesystem/Docker-owning operator. It seals the protected operator dependency bundle before
+mutation, runs a complete read-only post-application catalog audit, records that the pinned verifier
+was not executed real-locally, and permits lost-ack recovery from a later clean main descendant only
+when the intent commit remains an ancestor, exact committed profile artifact is preserved, and the
+conservative Git-tracked bundle is unchanged. That bundle includes protected directories,
+`tsconfig.json`, Supabase config, package metadata/lockfile, sources, migrations, verifier,
+module-resolution evidence, and declared runtime inputs; unsupported dynamic inputs fail closed.
+Observed catalog hashes are descriptive, while the committed exact profile artifact authorizes
+readiness. Equal counts, target-generated expectations, self-consistent rehashing, and profile
+cross-use do not. Recovery never reapplies V2. Neither migration application nor its receipt
+authorizes a later import or compensation; package generation does not authorize execution, and
+compensation remains separately authorized.
 
 The main site's Supabase URL, authentication, and other modules are unchanged. Server-side
 literature queries use the dedicated local values when present and retain the existing main
@@ -78,11 +100,11 @@ database only as a backwards-compatible fallback.
 
 Useful lifecycle commands:
 
-| Command                           | Effect                                                      |
-| --------------------------------- | ----------------------------------------------------------- |
-| `npm run literature:local:status` | Show the safe local API and Studio URLs                     |
-| `npm run literature:local:reset`  | Recreate only the local literature database from migrations |
-| `npm run literature:local:stop`   | Stop this stack while preserving its local database volume  |
+| Command                           | Effect                                                              |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `npm run literature:local:status` | Observe safe local URLs and protected ledger state; change nothing  |
+| `npm run literature:local:reset`  | Reset only through the ordinary boundary; refuse after protected V2 |
+| `npm run literature:local:stop`   | Stop this stack without preparing migrations; preserve its volume   |
 
 Restart `npm run dev` after the first start so Next.js reloads `.env.local`.
 

@@ -114,14 +114,16 @@ const TRUSTED_MIGRATION_OWNER_ATTRIBUTES = {
   validUntil: null,
 } as const
 
-/**
- * Exact canonical role inventory observed for the pinned Supabase deployment runtime. The digest
- * covers every scoped role's attributes, direct members, direct memberships, and transitive
- * effective memberships. Both owner profiles use the same platform-role contract; only the
- * migration-object owner and allowed target differ.
- */
+/** Exact canonical role inventory observed for the accepted local Supabase runtime. */
 export const TRUSTED_SUPABASE_DEPLOYMENT_ROLE_INVENTORY_SHA256 =
   'bc6e3022cf9bf086c63ef30cb1f35c19b9a5c93928d0db561cb92770a8599418' as const
+
+/**
+ * Exact canonical role inventory in the pinned standalone disposable PostgreSQL image. The raw
+ * image lacks the local bootstrap's postgres pg_database_owner and Functions/Realtime memberships.
+ */
+export const TRUSTED_SUPABASE_DISPOSABLE_ROLE_INVENTORY_SHA256 =
+  '0c47556a34d2cee07ef57f94777ff516afef0919923cbd52d9140738a3731eb2' as const
 
 export const SUPPORTED_DEPLOYMENT_PROFILES: Readonly<
   Record<DeploymentProfileId, SupportedDeploymentProfile>
@@ -148,7 +150,7 @@ export const SUPPORTED_DEPLOYMENT_PROFILES: Readonly<
       superuser: true,
       roleName: 'supabase_admin',
     },
-    roleInventorySha256: TRUSTED_SUPABASE_DEPLOYMENT_ROLE_INVENTORY_SHA256,
+    roleInventorySha256: TRUSTED_SUPABASE_DISPOSABLE_ROLE_INVENTORY_SHA256,
   },
 }
 
