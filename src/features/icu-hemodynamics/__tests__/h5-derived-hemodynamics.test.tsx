@@ -13,6 +13,7 @@ import {
 import { DerivedHemodynamicsTeachingPanel } from '../components/PacMeasurementTeaching'
 import { pacGuidedObjectiveComplete } from '../components/PacGuidedSkillActivity'
 import {
+  cardiacOutputMethodById,
   derivedClaimVerifications,
   derivedInputDefinitions,
   derivedMeasurementEpisodes,
@@ -27,6 +28,7 @@ import {
   derivedTransferComparisonDecision,
   derivedUnsupportedClaimTopics,
   hemodynamicCaseById,
+  hemodynamicsSourceById,
   pacLearningPathwaySections,
   requireDerivedInputDefinition,
   requireDerivedMeasurementEpisode,
@@ -834,7 +836,7 @@ describe('H5 station surfaces', () => {
         onThresholdContextResolved={jest.fn()}
       />,
     )
-    fireEvent.click(screen.getByRole('tab', { name: 'The wedge did not wedge' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'The stored wedge is not interpretable' }))
 
     fireEvent.change(screen.getByLabelText(/PVR = \(mPAP − mean PAWP\) \/ CO/), {
       target: { value: 'withhold' },
@@ -868,7 +870,7 @@ describe('H5 station surfaces', () => {
         onThresholdContextResolved={jest.fn()}
       />,
     )
-    fireEvent.click(screen.getByRole('tab', { name: 'The wedge did not wedge' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'The stored wedge is not interpretable' }))
 
     fireEvent.change(screen.getByLabelText(/PVR = \(mPAP − mean PAWP\) \/ CO/), {
       target: { value: 'withhold' },
@@ -923,6 +925,360 @@ describe('H5 station surfaces', () => {
     ).toBeGreaterThan(0)
     fireEvent.click(screen.getByRole('tab', { name: 'CPO' }))
     expect(screen.getAllByText(/Cohort risk association/).length).toBeGreaterThan(0)
+  })
+})
+
+/**
+ * A wrong graded answer has to be recoverable.
+ *
+ * Two of these decisions carry completion evidence awarded only for the defensible option. Locking
+ * every commitment permanently meant a learner who answered wrong held that answer until they reset
+ * the activity. The contract below is: the first attempt and its feedback survive until the learner
+ * explicitly reconsiders, a defensible answer stays locked because there is nothing to recover from,
+ * and reconsidering never silently swaps the wrong answer for the right one.
+ */
+describe('H5 decision recovery', () => {
+  function renderWorkbench(overrides: {
+    readonly onDisagreementPreserved?: () => void
+    readonly onThresholdContextResolved?: () => void
+  }) {
+    render(
+      <DerivedEpisodeWorkbench
+        dispatch={jest.fn()}
+        checks={[DERIVED_SECTION_CHECKS.dependencyChain, DERIVED_SECTION_CHECKS.methodTraced]}
+        disagreementPreserved={false}
+        onDisagreementPreserved={overrides.onDisagreementPreserved ?? jest.fn()}
+        thresholdContextResolved={false}
+        onThresholdContextResolved={overrides.onThresholdContextResolved ?? jest.fn()}
+      />,
+    )
+  }
+
+  const RECONSIDER = 'Reconsider and commit again'
+  const COMMIT = 'Commit this position'
+
+  it('does not award disagreement preservation for averaging, and offers a way back', () => {
+    const onDisagreementPreserved = jest.fn()
+    renderWorkbench({ onDisagreementPreserved })
+    fireEvent.click(screen.getByRole('tab', { name: 'Two defensible flows, two result sets' }))
+
+    fireEvent.click(screen.getByLabelText(/Average the two flows to 4.85/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+
+    expect(onDisagreementPreserved).not.toHaveBeenCalled()
+    // The first attempt and its feedback stay put until the learner asks to change them.
+    expect(screen.getByText(/This averages or blends unlike quantities/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Average the two flows to 4.85/)).toBeChecked()
+    expect(screen.getByRole('button', { name: RECONSIDER })).toBeInTheDocument()
+  })
+
+  it('lets the wrong disagreement answer be reconsidered and then earns the check', () => {
+    const onDisagreementPreserved = jest.fn()
+    renderWorkbench({ onDisagreementPreserved })
+    fireEvent.click(screen.getByRole('tab', { name: 'Two defensible flows, two result sets' }))
+    fireEvent.click(screen.getByLabelText(/Average the two flows to 4.85/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+
+    fireEvent.click(screen.getByRole('button', { name: RECONSIDER }))
+
+    // Re-enabled, and the attempted selection is cleared rather than replaced with the right one.
+    const averaging = screen.getByLabelText(/Average the two flows to 4.85/)
+    expect(averaging).toBeEnabled()
+    expect(averaging).not.toBeChecked()
+    expect(screen.getByLabelText(/Keep two method-labeled result sets/)).not.toBeChecked()
+    expect(screen.queryByRole('button', { name: RECONSIDER })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText(/Keep two method-labeled result sets/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+    expect(onDisagreementPreserved).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not award threshold context for the universal reading, and offers a way back', () => {
+    const onThresholdContextResolved = jest.fn()
+    renderWorkbench({ onThresholdContextResolved })
+
+    fireEvent.click(screen.getByLabelText(/As a universal rule/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+
+    expect(onThresholdContextResolved).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: RECONSIDER })).toBeInTheDocument()
+  })
+
+  it('lets the wrong threshold answer be reconsidered and then earns the check', () => {
+    const onThresholdContextResolved = jest.fn()
+    renderWorkbench({ onThresholdContextResolved })
+    fireEvent.click(screen.getByLabelText(/As a treatment trigger/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+
+    fireEvent.click(screen.getByRole('button', { name: RECONSIDER }))
+    expect(screen.getByLabelText(/As a treatment trigger/)).not.toBeChecked()
+
+    fireEvent.click(screen.getByLabelText(/As a cohort finding from acute inferior MI/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+    expect(onThresholdContextResolved).toHaveBeenCalledTimes(1)
+  })
+
+  it('lets the transfer decision be retried without taking back the comparison', () => {
+    render(<DerivedTransferComparison />)
+    fireEvent.click(screen.getByLabelText(/Blend the two episodes/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+    expect(screen.getAllByText(/Evaluated ·/).length).toBe(2)
+
+    fireEvent.click(screen.getByRole('button', { name: RECONSIDER }))
+    expect(screen.getByLabelText(/Blend the two episodes/)).not.toBeChecked()
+    // The comparison was earned by committing once; reconsidering does not hide it again.
+    expect(screen.getAllByText(/Evaluated ·/).length).toBe(2)
+
+    fireEvent.click(screen.getByLabelText(/Report the coherent episode’s values/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+    expect(screen.getByText(/Defensible for this episode/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: RECONSIDER })).not.toBeInTheDocument()
+  })
+
+  it('keeps a correctly earned answer recorded and locked', () => {
+    render(
+      <DerivedEpisodeWorkbench
+        dispatch={jest.fn()}
+        checks={[DERIVED_SECTION_CHECKS.dependencyChain, DERIVED_SECTION_CHECKS.methodTraced]}
+        disagreementPreserved
+        onDisagreementPreserved={jest.fn()}
+        thresholdContextResolved
+        onThresholdContextResolved={jest.fn()}
+      />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: 'Two defensible flows, two result sets' }))
+
+    const defensible = screen.getByLabelText(/Keep two method-labeled result sets/)
+    expect(defensible).toBeChecked()
+    expect(defensible).toBeDisabled()
+    expect(screen.queryByRole('button', { name: RECONSIDER })).not.toBeInTheDocument()
+  })
+
+  it('moves focus to the re-enabled choices when the learner reconsiders', () => {
+    renderWorkbench({})
+    fireEvent.click(screen.getByLabelText(/As a universal rule/))
+    fireEvent.click(screen.getByRole('button', { name: COMMIT }))
+    fireEvent.click(screen.getByRole('button', { name: RECONSIDER }))
+
+    // The learner was sent back to the decision; focus lands on its first option, not on nothing.
+    expect(document.activeElement).toBe(
+      screen.getByLabelText(/As a cohort finding from acute inferior MI/),
+    )
+  })
+})
+
+/**
+ * A pressure is transduced from a waveform; a specimen is drawn from a site at a time. H4 gave
+ * `sampled` the second meaning, so letting a pressure claim it blurs the one provenance distinction
+ * the Fick oxygen inputs depend on. The rule is structural rather than per-record so a new pressure
+ * cannot quietly acquire it later.
+ */
+describe('H5 pressure provenance', () => {
+  const PRESSURE_INPUTS = [
+    'mapMmHg',
+    'rapMmHg',
+    'meanPapMmHg',
+    'papSystolicMmHg',
+    'papDiastolicMmHg',
+    'pawpMeanMmHg',
+  ] as const
+
+  it('marks every pressure input as a waveform reading', () => {
+    for (const inputId of PRESSURE_INPUTS) {
+      expect(requireDerivedInputDefinition(inputId).isPressureReading).toBe(true)
+    }
+  })
+
+  it('never accepts sampled for a pressure anywhere in the model', () => {
+    for (const metric of derivedMetricRecords) {
+      for (const dependency of metric.dependencies) {
+        if (!requireDerivedInputDefinition(dependency.inputId).isPressureReading) continue
+        expect(dependency.acceptableProvenance).not.toContain('sampled')
+      }
+    }
+  })
+
+  it('accepts a measured mean PAWP in both resistance metrics', () => {
+    for (const metricId of ['pulmonaryVascularResistance', 'pulmonaryVascularResistanceIndex']) {
+      const dependency = requireDerivedMetric(
+        metricId as DerivedMetricRecord['id'],
+      ).dependencies.find((candidate) => candidate.inputId === 'pawpMeanMmHg')
+      expect(dependency?.acceptableProvenance).toEqual(['measured'])
+    }
+    expect(evaluate(COHERENT, 'pulmonaryVascularResistance').status).toBe('available')
+    expect(evaluate(COHERENT, 'pulmonaryVascularResistanceIndex').status).toBe('available')
+  })
+
+  it('withholds PVR when the episode records the wedge as a specimen', () => {
+    const sampledWedge = withInput(COHERENT, 'pawpMeanMmHg', { provenance: 'sampled' })
+    expect(evaluate(sampledWedge, 'pulmonaryVascularResistance').status).toBe('withheld')
+  })
+
+  it('refuses a model that lets a pressure be sampled', () => {
+    const pvr = requireDerivedMetric('pulmonaryVascularResistance')
+    const broken: DerivedMetricRecord = {
+      ...pvr,
+      dependencies: pvr.dependencies.map((dependency) =>
+        dependency.inputId === 'pawpMeanMmHg'
+          ? { ...dependency, acceptableProvenance: ['measured', 'sampled'] as const }
+          : dependency,
+      ),
+    }
+    expect(() =>
+      validateDerivedMetrics(
+        derivedMetricRecords.map((metric) => (metric.id === broken.id ? broken : metric)),
+        derivedThresholdContexts,
+      ),
+    ).toThrow(/must not accept sampled/i)
+  })
+
+  it('shows only the Measured chip for PAWP on the PVR and PVRI cards', () => {
+    render(<DerivedHemodynamicsTeachingPanel />)
+    for (const tab of ['PVR', 'PVRI']) {
+      fireEvent.click(screen.getByRole('tab', { name: tab }))
+      const wedgeRow = screen.getByText('Mean PAWP (mmHg) · numerator').closest('div')
+      expect(wedgeRow).not.toBeNull()
+      expect(wedgeRow?.textContent).toContain('Measured')
+      expect(wedgeRow?.textContent).not.toContain('Sampled')
+    }
+  })
+
+  it('leaves sampled available to the genuine specimen inputs', () => {
+    // H4's oxygen measurements are what `sampled` was defined for; H5 must not take it from them.
+    const fick = cardiacOutputMethodById.get('fick-direct')
+    const sampled = fick?.inputs.filter((input) => input.status === 'sampled') ?? []
+    expect(sampled.map((input) => input.id)).toEqual(
+      expect.arrayContaining(['arterial-saturation', 'mixed-venous-saturation']),
+    )
+  })
+})
+
+/**
+ * An exact number on screen is a claim about a source. These pin the two the review caught: an SVRI
+ * interval attributed to a table that does not tabulate one, and a PAPi cut point attributed to a
+ * cohort that did not report it.
+ */
+describe('H5 threshold provenance', () => {
+  /** Every exact figure a displayed boundary states, as digits. */
+  function numbersIn(text: string): readonly string[] {
+    return text.match(/\d[\d,]*(?:\.\d+)?/g) ?? []
+  }
+
+  it('gives every displayed boundary a population and at least one resolvable source', () => {
+    for (const context of derivedThresholdContexts) {
+      expect(context.population.length).toBeGreaterThan(0)
+      expect(context.evidenceIds.length).toBeGreaterThan(0)
+      for (const evidenceId of context.evidenceIds) {
+        expect(hemodynamicsSourceById.get(evidenceId)).toBeDefined()
+      }
+    }
+  })
+
+  it('keeps 0.9 with the acute inferior-MI cohort', () => {
+    const context = requireDerivedThresholdContext('papi-acute-rv-infarction-cut-point')
+    expect(context.statement).toContain('0.9')
+    expect(context.evidenceIds).toContain('papi-rvmi-2012')
+    expect(context.evidenceIds).not.toContain('papi-lvad-rvf-2016')
+    expect(context.population).toMatch(/inferior-MI/i)
+  })
+
+  it('attributes 1.85 to the LVAD cohort that reported it, not to the acute-MI paper', () => {
+    const context = requireDerivedThresholdContext('papi-advanced-hf-teaching-band')
+    expect(context.statement).toContain('1.85')
+    expect(context.evidenceIds).toEqual(['papi-lvad-rvf-2016'])
+    expect(context.evidenceIds).not.toContain('papi-rvmi-2012')
+    // The specific study design, not a vague "advanced heart failure" band.
+    expect(context.statement).toMatch(/receiver-operating-characteristic/i)
+    expect(context.population).toMatch(/132/)
+    expect(context.intendedUse).toMatch(/postoperative right ventricular failure/i)
+    expect(context.notUniversal).toMatch(/not a treatment target/i)
+
+    const source = hemodynamicsSourceById.get('papi-lvad-rvf-2016')
+    expect(source?.citation).toMatch(/Morine/)
+    expect(source?.citation).toMatch(/J Card Fail\. 2016;22\(2\):110–116/)
+    expect(source?.citation).toMatch(/10\.1016\/j\.cardfail\.2015\.10\.019/)
+  })
+
+  it('records honest verification depth for the LVAD cut point', () => {
+    const record = derivedClaimVerifications.find(
+      (candidate) => candidate.topic === 'papi-lvad-cut-point',
+    )
+    // The paper was not available locally, so it must not claim locator-level verification.
+    expect(record?.depth).toBe('claim-text-audited')
+    expect(record?.locator).toBeNull()
+    expect(derivedSourceSupportsClaim('papi-lvad-rvf-2016', 'papi-lvad-cut-point')).toBe(true)
+  })
+
+  it('states no SVRI interval, because none was verified', () => {
+    const context = requireDerivedThresholdContext('svri-no-bedside-boundary')
+    expect(context.classification).toBe('reference-interval')
+    expect(numbersIn(context.statement)).toEqual([])
+    expect(context.statement).toMatch(/no adult reference interval for SVRI/i)
+    // The verified figures are the four the table actually carries.
+    const verified = derivedClaimVerifications.find(
+      (candidate) => candidate.topic === 'adult-reference-intervals',
+    )
+    expect(verified?.whatWasVerified).toMatch(/No SVRI interval was verified/i)
+  })
+
+  it('shows no SVRI number on the rendered card', () => {
+    render(<DerivedHemodynamicsTeachingPanel />)
+    fireEvent.click(screen.getByRole('tab', { name: 'SVRI' }))
+    expect(screen.queryByText(/1,970/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/2,390/)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/no adult reference interval for SVRI/i).length).toBeGreaterThan(0)
+  })
+
+  it('still refuses a treatment-target classification', () => {
+    const context = requireDerivedThresholdContext('papi-advanced-hf-teaching-band')
+    expect(() =>
+      validateDerivedMetrics(
+        derivedMetricRecords,
+        derivedThresholdContexts.map((candidate) =>
+          candidate.id === context.id
+            ? ({ ...candidate, classification: 'treatment-target' } as DerivedThresholdContext)
+            : candidate,
+        ),
+      ),
+    ).toThrow(/treatment target/i)
+  })
+})
+
+/**
+ * Over-wedging and incomplete occlusion are different failures with different tracings. The episode
+ * used to name both for one set of clues that fit only over-wedging.
+ */
+describe('H5 invalid-wedge mechanism', () => {
+  it('names over-wedging only, and agrees with its own upward-drift clue', () => {
+    const wedge = INVALID_PAWP.inputs.find((input) => input.inputId === 'pawpMeanMmHg')
+    const copy = `${INVALID_PAWP.title} ${INVALID_PAWP.presentation} ${wedge?.note ?? ''}`
+
+    expect(INVALID_PAWP.title).toBe('The stored wedge is not interpretable')
+    expect(copy).toMatch(/drifted upward/i)
+    expect(copy).toMatch(/over-wedging/i)
+    expect(copy).not.toMatch(/incomplete occlusion/i)
+    expect(copy).not.toMatch(/did not wedge/i)
+  })
+
+  it('leaves the evaluator outcome and selective withholding unchanged', () => {
+    expect(evaluate(INVALID_PAWP, 'pulmonaryVascularResistance').status).toBe('withheld')
+    expect(evaluate(INVALID_PAWP, 'pulmonaryVascularResistanceIndex').status).toBe('withheld')
+    for (const metricId of [
+      'systemicVascularResistance',
+      'cardiacIndexLMinM2',
+      'pulmonaryArteryPulsatilityIndex',
+      'cardiacPowerOutputW',
+    ] as const) {
+      expect(evaluate(INVALID_PAWP, metricId).status).toBe('available')
+    }
+  })
+
+  it('fails the copy contract if the two mechanisms are merged again', () => {
+    const merged = withInput(INVALID_PAWP, 'pawpMeanMmHg', {
+      note: 'The occlusion trace never showed atrial morphology and drifted upward — an over-wedged, incomplete occlusion.',
+    })
+    const note = merged.inputs.find((input) => input.inputId === 'pawpMeanMmHg')?.note ?? ''
+    expect(note).toMatch(/incomplete occlusion/i)
   })
 })
 

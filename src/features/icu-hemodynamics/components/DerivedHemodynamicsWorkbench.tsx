@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import {
   cardiacOutputInputStatusLabels,
@@ -314,30 +314,64 @@ function MetricResultCard({ evaluation }: { readonly evaluation: DerivedMetricEv
   )
 }
 
+/**
+ * A committed position, its reasoning, and — when the position was not defensible — a way back.
+ *
+ * Locking every commitment permanently was the wrong trade. Two of these decisions carry completion
+ * evidence that is only awarded for the defensible option, so a learner who committed a wrong answer
+ * was left holding it with no route to the right one short of resetting the activity. The station is
+ * about revising a reading when the evidence does not support it; refusing the learner that same
+ * revision taught the opposite lesson.
+ *
+ * A wrong answer is therefore recoverable, but never silently: the first attempt and its feedback
+ * stay on screen until the learner explicitly asks to reconsider. A defensible answer stays locked,
+ * because there is nothing to recover from.
+ */
 function DecisionFieldset({
   prompt,
   options,
   committedOptionId,
   onCommit,
+  onReconsider,
   disabled,
 }: {
   readonly prompt: string
   readonly options: readonly DerivedDecisionOption[]
   readonly committedOptionId: string | null
   readonly onCommit: (option: DerivedDecisionOption) => void
+  /** Clears whatever the parent recorded, so the fieldset can be answered again. */
+  readonly onReconsider?: () => void
   readonly disabled?: boolean
 }) {
   const groupName = useId()
   const [choiceId, setChoiceId] = useState<string | null>(null)
   const committed = committedOptionId !== null
   const chosen = options.find((option) => option.id === (committedOptionId ?? choiceId))
+  const recoverable = committed && chosen !== undefined && chosen.verdict !== 'defensible'
+
+  // Focus follows the learner back to the choices; it is the point they were returned to.
+  const firstOptionRef = useRef<HTMLInputElement | null>(null)
+  const returningToChoices = useRef(false)
+  useEffect(() => {
+    if (returningToChoices.current && !committed) {
+      returningToChoices.current = false
+      firstOptionRef.current?.focus()
+    }
+  }, [committed])
+
+  const reconsider = useCallback(() => {
+    returningToChoices.current = true
+    setChoiceId(null)
+    onReconsider?.()
+  }, [onReconsider])
 
   return (
     <fieldset className={styles.methodCommitment}>
       <legend>{prompt}</legend>
-      {options.map((option) => (
+      {options.map((option, index) => (
         <label key={option.id}>
           <input
+            ref={index === 0 ? firstOptionRef : undefined}
             type="radio"
             name={groupName}
             checked={(committedOptionId ?? choiceId) === option.id}
@@ -371,6 +405,11 @@ function DecisionFieldset({
             ? ` ${options.find((option) => option.verdict === 'defensible')?.why ?? ''}`
             : ''}
         </p>
+      ) : null}
+      {recoverable && onReconsider ? (
+        <button type="button" onClick={reconsider}>
+          Reconsider and commit again
+        </button>
       ) : null}
     </fieldset>
   )
@@ -911,6 +950,7 @@ export function DerivedEpisodeWorkbench({
               setDisagreementChoice(option.id)
               if (option.verdict === 'defensible') onDisagreementPreserved()
             }}
+            onReconsider={() => setDisagreementChoice(null)}
           />
         ) : null}
 
@@ -944,6 +984,7 @@ export function DerivedEpisodeWorkbench({
                   setThresholdChoice(option.id)
                   if (option.verdict === 'defensible') onThresholdContextResolved()
                 }}
+                onReconsider={() => setThresholdChoice(null)}
               />
             ) : null}
           </>
@@ -1000,6 +1041,8 @@ export function DerivedTransferComparison() {
     derivedTransferComparisonDecision.coherentEpisodeId,
   )
   const [committedOptionId, setCommittedOptionId] = useState<string | null>(null)
+  // Latched: the comparison was earned by committing once, and reconsidering does not take it back.
+  const [comparisonRevealed, setComparisonRevealed] = useState(false)
 
   const plausibleSets = useMemo(() => evaluateDerivedEpisode(plausible), [plausible])
   const coherentSets = useMemo(() => evaluateDerivedEpisode(coherent), [coherent])
@@ -1035,10 +1078,14 @@ export function DerivedTransferComparison() {
         prompt={derivedTransferComparisonDecision.prompt}
         options={derivedTransferComparisonDecision.options}
         committedOptionId={committedOptionId}
-        onCommit={(option) => setCommittedOptionId(option.id)}
+        onCommit={(option) => {
+          setCommittedOptionId(option.id)
+          setComparisonRevealed(true)
+        }}
+        onReconsider={() => setCommittedOptionId(null)}
       />
 
-      {committedOptionId !== null ? (
+      {comparisonRevealed ? (
         <div className={styles.scenarioSideBySide}>
           {[
             { episode: plausible, sets: plausibleSets },

@@ -25,6 +25,7 @@ export const DERIVED_CLAIM_TOPICS = [
   'adult-reference-intervals',
   'ph-hemodynamic-definition',
   'papi-phenotype-context',
+  'papi-lvad-cut-point',
   'cpo-formula-and-risk-context',
   'pa-compliance-cohort-distribution',
   'ppv-conditional-threshold',
@@ -70,6 +71,10 @@ const claimTopicsBySourceId: ReadonlyMap<string, readonly DerivedClaimTopic[]> =
   // "Derivation and context-specific interpretation of PAPi, including the ... cut point in acute
   //  inferior myocardial infarction with suspected RV dysfunction."
   ['papi-rvmi-2012', ['papi-phenotype-context'] as const],
+  // "Population-specific interpretation of PAPi in durable continuous-flow LVAD candidates,
+  //  including the ... receiver-operating-characteristic cut point for postoperative right
+  //  ventricular failure."
+  ['papi-lvad-rvf-2016', ['papi-lvad-cut-point'] as const],
   // "Cardiac-power-output formula and the high-risk context of values around or below ... W in
   //  acute cardiac disease and cardiogenic shock."
   ['cpo-acute-cardiac-2007', ['cpo-formula-and-risk-context'] as const],
@@ -152,7 +157,7 @@ export const derivedClaimVerifications: readonly DerivedClaimVerification[] = Ob
     depth: 'source-text-and-locator-verified',
     locator: `${PART2}, Table 1, p. 18`,
     whatWasVerified:
-      'CI 2.5–4.0 L/min/m², SV 60–100 mL, SVi 33–47 mL/m², SVR 800–1200 dyn·s·cm⁻⁵ as tabulated adult reference figures, with PAPi and CPI marked population-specific rather than given intervals.',
+      'CI 2.5–4.0 L/min/m², SV 60–100 mL, SVi 33–47 mL/m², SVR 800–1200 dyn·s·cm⁻⁵ as tabulated adult reference figures, with PAPi and CPI marked population-specific rather than given intervals. No SVRI interval was verified in that table, so this module presents none: the SVRI context states the absence instead of carrying a number.',
   },
   {
     topic: 'papi-phenotype-context',
@@ -181,6 +186,13 @@ export const derivedClaimVerifications: readonly DerivedClaimVerification[] = Ob
     locator: `${PART2}, §4.2–4.3, pp. 19 and 21`,
     whatWasVerified:
       'Intracardiac shunts falsify thermodilution CO and tricuspid regurgitation is reported with under-, over-, and no effect on CO — supporting fail-closed shunt handling and the refusal to assert a TR bias direction.',
+  },
+  {
+    topic: 'papi-lvad-cut-point',
+    depth: 'claim-text-audited',
+    locator: null,
+    whatWasVerified:
+      'The 1.85 boundary previously cited the acute inferior-MI record, which does not claim it. It now cites papi-lvad-rvf-2016 (Morine 2016, J Card Fail 22(2):110–116), registered from the citation and cohort description supplied by the module owner: a receiver-operating-characteristic cut point for postoperative RV failure in 132 continuous-flow LVAD recipients. The paper itself was not available in any project source location, so the figure, the cohort size, and that study’s RV-failure definition remain unread at source and stay at claim-text depth.',
   },
   {
     topic: 'cpo-formula-and-risk-context',

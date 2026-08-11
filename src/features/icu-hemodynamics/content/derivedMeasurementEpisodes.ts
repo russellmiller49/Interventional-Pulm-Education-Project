@@ -175,9 +175,9 @@ export const derivedMeasurementEpisodes: readonly DerivedMeasurementEpisode[] = 
    * ------------------------------------------------------------------ */
   {
     id: 'ep-invalid-pawp',
-    title: 'The wedge did not wedge',
+    title: 'The stored wedge is not interpretable',
     presentation:
-      'An adult with worsening oxygenation. During occlusion the trace never developed atrial morphology and drifted upward; the balloon was deflated promptly and the PA waveform returned. A number was stored anyway.',
+      'An adult with worsening oxygenation. During balloon inflation, the tracing drifted upward and never developed interpretable atrial components, concerning for over-wedging. The balloon was deflated promptly and the PA waveform returned. A number was stored anyway.',
     role: 'workbench',
     primaryMeasurementEpisodeId: 'primary',
     inputs: [
@@ -191,7 +191,7 @@ export const derivedMeasurementEpisodes: readonly DerivedMeasurementEpisode[] = 
         'pawpMeanMmHg',
         18,
         'measured',
-        'The occlusion trace never showed atrial morphology and drifted upward — an over-wedged, incomplete occlusion. The stored number does not represent left-atrial pressure.',
+        'The tracing drifted upward and lost interpretable atrial components, concerning for over-wedging. The stored number does not represent an interpretable mean PAWP.',
         { valid: false },
       ),
       input('bodySurfaceAreaM2', 2.05, 'calculated', CHARTED_BSA_NOTE),
@@ -758,7 +758,7 @@ export const derivedThresholdContextDecision = Object.freeze({
 export const derivedSelectiveDecision = Object.freeze({
   episodeId: 'ep-invalid-pawp',
   prompt:
-    'The stored PAWP in this episode is not a wedge. Decide, metric by metric, what survives — and give the reason for anything you withhold.',
+    'The stored PAWP in this episode is not an interpretable wedge. Decide, metric by metric, what survives — and give the reason for anything you withhold.',
   metricIds: [
     'pulmonaryVascularResistance',
     'systemicVascularResistance',
@@ -768,7 +768,7 @@ export const derivedSelectiveDecision = Object.freeze({
   withholdReasonOptions: [
     {
       id: 'required-input-invalid-pawp',
-      label: 'A required input is invalid: the stored PAWP is not a true wedge pressure.',
+      label: 'A required input is invalid: the stored PAWP is not an interpretable wedge pressure.',
     },
     {
       id: 'cardiac-output-method-unknown',

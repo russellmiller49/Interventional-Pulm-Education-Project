@@ -55,6 +55,15 @@ export interface DerivedInputDefinition {
   readonly requiredConvention: DerivedInputConvention | null
   /** Whether this quantity is itself an equation over other quantities. */
   readonly isCalculated: boolean
+  /**
+   * Whether this quantity is read off a pressure waveform.
+   *
+   * H4 defines `sampled` as a specimen drawn from a named site at a named time — a blood gas, a
+   * mixed-venous draw. A pressure is never obtained that way: it is transduced from a trace. Marking
+   * the distinction structurally lets the validator refuse `sampled` on a pressure while leaving it
+   * available to the oxygen measurements that genuinely are specimens.
+   */
+  readonly isPressureReading: boolean
 }
 
 export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object.freeze([
@@ -65,6 +74,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The rate the monitor derives from the rhythm during this episode.',
     requiredConvention: null,
     isCalculated: false,
+    isPressureReading: false,
   },
   {
     id: 'mapMmHg',
@@ -73,6 +83,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The mean systemic arterial pressure from a validated arterial line.',
     requiredConvention: 'mean-over-cycle',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'rapMmHg',
@@ -81,6 +92,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The mean right atrial pressure read at end expiration from a validated trace.',
     requiredConvention: 'mean-end-expiration',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'meanPapMmHg',
@@ -89,6 +101,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The mean pulmonary artery pressure from a confirmed PA trace.',
     requiredConvention: 'mean-over-cycle',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'papSystolicMmHg',
@@ -97,6 +110,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The systolic peak of the pulmonary artery trace.',
     requiredConvention: 'systolic-peak',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'papDiastolicMmHg',
@@ -105,6 +119,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The diastolic trough of the pulmonary artery trace.',
     requiredConvention: 'diastolic-trough',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'pawpMeanMmHg',
@@ -114,6 +129,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
       'The mean pulmonary artery wedge pressure at end expiration during a brief, valid occlusion.',
     requiredConvention: 'mean-end-expiration',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'cardiacOutputLMin',
@@ -123,6 +139,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
       'Flow per minute from a named acquisition method. It is itself derived, and it carries that method wherever it goes.',
     requiredConvention: null,
     isCalculated: true,
+    isPressureReading: false,
   },
   {
     id: 'strokeVolumeMl',
@@ -131,6 +148,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'Flow per beat, calculated from cardiac output and heart rate. Not measured.',
     requiredConvention: null,
     isCalculated: true,
+    isPressureReading: false,
   },
   {
     id: 'bodySurfaceAreaM2',
@@ -140,6 +158,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
       'Calculated by the charting system from an entered height and weight. This module does not implement the estimating formula; it consumes the recorded value with that provenance.',
     requiredConvention: null,
     isCalculated: true,
+    isPressureReading: false,
   },
   {
     id: 'pulsePressureMaxMmHg',
@@ -148,6 +167,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     whatItIs: 'The largest beat-to-beat arterial pulse pressure across one respiratory cycle.',
     requiredConvention: 'respiratory-cycle-extremes',
     isCalculated: false,
+    isPressureReading: true,
   },
   {
     id: 'pulsePressureMinMmHg',
@@ -157,6 +177,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
       'The smallest beat-to-beat arterial pulse pressure across the same respiratory cycle.',
     requiredConvention: 'respiratory-cycle-extremes',
     isCalculated: false,
+    isPressureReading: true,
   },
 ])
 
@@ -466,7 +487,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
     displayPrecision: 1,
     dependencies: [
       { inputId: 'meanPapMmHg', role: 'numerator', acceptableProvenance: ['measured'] },
-      { inputId: 'pawpMeanMmHg', role: 'numerator', acceptableProvenance: ['measured', 'sampled'] },
+      { inputId: 'pawpMeanMmHg', role: 'numerator', acceptableProvenance: ['measured'] },
       { inputId: 'cardiacOutputLMin', role: 'denominator', acceptableProvenance: ['calculated'] },
     ],
     requiresFlowMethod: true,
@@ -512,7 +533,7 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
     displayPrecision: 1,
     dependencies: [
       { inputId: 'meanPapMmHg', role: 'numerator', acceptableProvenance: ['measured'] },
-      { inputId: 'pawpMeanMmHg', role: 'numerator', acceptableProvenance: ['measured', 'sampled'] },
+      { inputId: 'pawpMeanMmHg', role: 'numerator', acceptableProvenance: ['measured'] },
       { inputId: 'cardiacOutputLMin', role: 'denominator', acceptableProvenance: ['calculated'] },
       {
         inputId: 'bodySurfaceAreaM2',
@@ -844,10 +865,12 @@ export const derivedThresholdContexts: readonly DerivedThresholdContext[] = Obje
     metricId: 'systemicVascularResistanceIndex',
     classification: 'reference-interval',
     statement:
-      'Published reference figures near 1,970–2,390 dyn·s·cm⁻⁵·m² vary between laboratories and texts; this module states no single boundary of its own.',
-    population: 'Adult reference tables, which disagree with one another.',
-    intendedUse: 'Orientation only.',
-    notUniversal: 'Where references disagree, no single interval is presented as the normal one.',
+      'This module presents no adult reference interval for SVRI. The reference figures verified against a registered source here cover CI, SV, SVI, and SVR; no SVRI interval was verified, so no number is shown.',
+    population: 'Not applicable — no interval is presented.',
+    intendedUse:
+      'Naming the absence of a source-verified interval, so the gap is visible rather than filled.',
+    notUniversal:
+      'Indexing changes both the units and the numbers, so the verified SVR interval must not be read across as an SVRI interval.',
     evidenceIds: ['pac-derived-part-2-2021'],
   },
   {
@@ -908,12 +931,14 @@ export const derivedThresholdContexts: readonly DerivedThresholdContext[] = Obje
     id: 'papi-advanced-hf-teaching-band',
     metricId: 'pulmonaryArteryPulsatilityIndex',
     classification: 'phenotype-specific-cutoff',
-    statement: `Values below ${papi.advancedHeartFailureTeachingMax} are discussed in advanced heart failure and LVAD cohorts.`,
-    population: 'Advanced heart failure and durable-LVAD populations.',
-    intendedUse: 'Context-specific teaching band in those cohorts.',
+    statement: `A PAPi below ${papi.advancedHeartFailureTeachingMax} was the receiver-operating-characteristic cut point for right ventricular failure after implantation in a 132-patient continuous-flow LVAD cohort.`,
+    population:
+      'Recipients of a durable continuous-flow left ventricular assist device in a single-center cohort of 132 patients.',
+    intendedUse:
+      "Preoperative identification of patients who went on to develop postoperative right ventricular failure under that study's definition.",
     notUniversal:
-      'The band is specific to those populations; it is not an alarm boundary and not a universal RV-failure definition.',
-    evidenceIds: ['papi-rvmi-2012', 'pac-derived-part-2-2021'],
+      'This is a surgical-cohort cut point for one postoperative outcome, not a general advanced-heart-failure threshold, not a universal RV-failure definition, and not a treatment target.',
+    evidenceIds: ['papi-lvad-rvf-2016'],
   },
   {
     id: 'pa-compliance-cohort-distribution',
@@ -1087,6 +1112,16 @@ export function validateDerivedMetrics(
       if (input.isCalculated && dependency.acceptableProvenance.includes('measured')) {
         throw new Error(
           `${metric.id}/${dependency.inputId}: ${input.label} is an equation over other values and must not be labeled measured.`,
+        )
+      }
+      /**
+       * A pressure is transduced from a waveform, never drawn as a specimen. H4 reserves `sampled`
+       * for a specimen taken from a named site at a named time; letting a pressure claim it would
+       * blur the one provenance distinction the oxygen-based Fick inputs depend on.
+       */
+      if (input.isPressureReading && dependency.acceptableProvenance.includes('sampled')) {
+        throw new Error(
+          `${metric.id}/${dependency.inputId}: ${input.label} is read from a pressure waveform and must not accept sampled, which names a specimen.`,
         )
       }
     }
