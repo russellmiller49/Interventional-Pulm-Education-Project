@@ -3,7 +3,7 @@ import {
   developmentDatabaseSeedScopeSchema,
 } from './gold-import-compensation-development-seed'
 import {
-  PROTECTED_V2_RECOVERY_EVIDENCE_SQL,
+  PROTECTED_V2_RECOVERY_READ_ONLY_QUERY_AUDIT,
   collectProtectedV2FixedLocalRecoveryEvidence,
 } from './protected-gold-import-contract-v2-recovery-evidence-adapter'
 import {
@@ -289,19 +289,7 @@ export async function collectProtectedV2ReceiptRecoveryReadOnlyEvidence(
       collected: collected.postEvidence,
       finalizedPresent: request.finalizedPresent,
     }),
-    queryAudit: {
-      databaseMutationCount: 0,
-      heldOutIdentitiesAccessed: false,
-      localDockerEndpoint: true,
-      remoteDatabaseAccessed: false,
-      transactionBatches: [
-        PROTECTED_V2_RECOVERY_EVIDENCE_SQL.transitionAfterV2,
-        PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogDiagnostics,
-        PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogSecurity,
-        PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogDetails,
-        PROTECTED_V2_RECOVERY_EVIDENCE_SQL.transitionAfterV2,
-      ],
-    },
+    queryAudit: PROTECTED_V2_RECOVERY_READ_ONLY_QUERY_AUDIT,
     transitionInput: collected.transitionInput,
   }
 }

@@ -18,6 +18,10 @@ import {
   protectedV2ReceiptRecoverySha256,
 } from './protected-gold-import-contract-v2-receipt-recovery-amendment'
 import {
+  PROTECTED_V2_RECOVERY_EVIDENCE_SQL,
+  PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES,
+} from './protected-gold-import-contract-v2-recovery-evidence-adapter'
+import {
   PROTECTED_V2_RECEIPT_RECOVERY_PACKAGE_COMMAND,
   PROTECTED_V2_RECEIPT_RECOVERY_PACKAGE_SCRIPT,
   assertProtectedV2ReceiptRecoveryToolBundleStaticClosure,
@@ -131,29 +135,29 @@ describe('protected V2 receipt recovery integration boundary', () => {
     ).rejects.toThrow('may expose only collectReadOnlyEvidence')
   })
 
-  it('accepts only repeatable-read/read-only SQL and rejects mutation or remote evidence', () => {
+  it('accepts the exact production read-only query sequence and rejects query drift', () => {
     const safe = {
       databaseMutationCount: 0 as const,
       heldOutIdentitiesAccessed: false as const,
       localDockerEndpoint: true as const,
       remoteDatabaseAccessed: false as const,
-      transactionBatches: [
-        "BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY; SET LOCAL statement_timeout = '120s'; SELECT 1; WITH exact AS (SELECT 2) SELECT * FROM exact; ROLLBACK;",
-      ],
+      transactionBatches: PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES,
     }
+    expect(new Set(PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES)).toEqual(
+      new Set(Object.values(PROTECTED_V2_RECOVERY_EVIDENCE_SQL)),
+    )
+    expect(new Set(PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES).size).toBe(4)
+    expect(PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogSecurity).toMatch(/'INSERT'/u)
     expect(() => assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit(safe)).not.toThrow()
-    for (const transactionBatches of [
-      ['BEGIN; SELECT 1; ROLLBACK;'],
-      [
-        'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; UPDATE exact SET changed = true; ROLLBACK;',
-      ],
-      [
-        'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; WITH changed AS (DELETE FROM exact RETURNING *) SELECT * FROM changed; ROLLBACK;',
-      ],
-      [
-        'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SELECT * FROM exact FOR UPDATE; ROLLBACK;',
-      ],
+    for (const replacement of [
+      'BEGIN; SELECT 1; ROLLBACK;',
+      "BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY; SET LOCAL work_mem = '4MB'; SELECT 1; ROLLBACK;",
+      'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; UPDATE exact SET changed = true; ROLLBACK;',
+      'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; WITH changed AS (DELETE FROM exact RETURNING *) SELECT * FROM changed; ROLLBACK;',
+      'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SELECT * FROM exact FOR UPDATE; ROLLBACK;',
     ]) {
+      const transactionBatches = [...PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES]
+      transactionBatches[2] = replacement
       expect(() =>
         assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit({ ...safe, transactionBatches }),
       ).toThrow()

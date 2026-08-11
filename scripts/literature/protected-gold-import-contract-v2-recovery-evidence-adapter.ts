@@ -41,6 +41,22 @@ export const PROTECTED_V2_RECOVERY_EVIDENCE_SQL = Object.freeze({
   transitionAfterV2: buildProtectedV2TransitionSnapshotSql('after_v2'),
 })
 
+export const PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES = Object.freeze([
+  PROTECTED_V2_RECOVERY_EVIDENCE_SQL.transitionAfterV2,
+  PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogDiagnostics,
+  PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogSecurity,
+  PROTECTED_V2_RECOVERY_EVIDENCE_SQL.catalogDetails,
+  PROTECTED_V2_RECOVERY_EVIDENCE_SQL.transitionAfterV2,
+] as const)
+
+export const PROTECTED_V2_RECOVERY_READ_ONLY_QUERY_AUDIT = Object.freeze({
+  databaseMutationCount: 0 as const,
+  heldOutIdentitiesAccessed: false as const,
+  localDockerEndpoint: true as const,
+  remoteDatabaseAccessed: false as const,
+  transactionBatches: PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES,
+})
+
 const PROTECTED_V2_RECOVERY_ALLOWED_SQL = new Set(Object.values(PROTECTED_V2_RECOVERY_EVIDENCE_SQL))
 
 export interface ProtectedV2FixedLocalPsqlRequest {

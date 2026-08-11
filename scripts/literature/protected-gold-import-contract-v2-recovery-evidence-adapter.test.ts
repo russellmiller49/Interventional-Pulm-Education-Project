@@ -32,6 +32,7 @@ import {
   PROTECTED_V2_RECOVERY_DOCKER_ARGUMENTS,
   PROTECTED_V2_RECOVERY_DOCKER_COMMAND,
   PROTECTED_V2_RECOVERY_EVIDENCE_SQL,
+  PROTECTED_V2_RECOVERY_READ_ONLY_QUERY_AUDIT,
   assertProtectedV2RecoveryEvidenceSqlReadOnly,
   collectProtectedV2FixedLocalRecoveryEvidence,
   executeProtectedV2FixedLocalReadOnlyPsql,
@@ -268,7 +269,7 @@ describe('protected V2 fixed-local recovery evidence adapter', () => {
     }
   })
 
-  test('collects two live transition snapshots plus exactly three catalog queries', async () => {
+  test('executes the byte-exact reported sequence of two snapshots and three catalog queries', async () => {
     mockCollectProtectedV2CompleteCatalogAudit.mockImplementation(async ({ context, profile }) => {
       expect(profile).toBe('local')
       await Promise.all([
@@ -305,6 +306,9 @@ describe('protected V2 fixed-local recovery evidence adapter', () => {
 
     expect(mockCollectProtectedV2CompleteCatalogAudit).toHaveBeenCalledTimes(1)
     expect(executor).toHaveBeenCalledTimes(5)
+    expect(executor.mock.calls.map(([request]) => request.sql)).toEqual(
+      PROTECTED_V2_RECOVERY_READ_ONLY_QUERY_AUDIT.transactionBatches,
+    )
     expect(
       executor.mock.calls.filter(([request]) =>
         request.sql.includes(PROTECTED_V2_TRANSITION_SNAPSHOT_SCHEMA_VERSION),

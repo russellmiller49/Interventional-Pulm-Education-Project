@@ -23,6 +23,7 @@ import {
   type ProtectedV2ReceiptRecoveryRepositoryEvidence,
 } from './protected-gold-import-contract-v2-receipt-recovery-core'
 import { buildCurrentProtectedV2ReceiptRecoveryToolBundle } from './protected-gold-import-contract-v2-receipt-recovery-tool-bundle'
+import { PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES } from './protected-gold-import-contract-v2-recovery-evidence-adapter'
 import {
   validateProtectedV2SchemaOnlyDatabaseTransition,
   type ProtectedV2SchemaOnlyDatabaseTransitionInput,
@@ -350,6 +351,10 @@ function statements(sql: string): string[] {
     .filter(Boolean)
 }
 
+function stripProtectedV2ReceiptRecoverySqlStringLiterals(sql: string): string {
+  return sql.replace(/'(?:''|[^'])*'/gu, "''")
+}
+
 export function assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit(
   audit: ProtectedV2ReceiptRecoveryReadOnlyQueryAudit,
 ): void {
@@ -369,7 +374,8 @@ export function assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit(
     audit.localDockerEndpoint !== true ||
     audit.remoteDatabaseAccessed !== false ||
     !Array.isArray(audit.transactionBatches) ||
-    audit.transactionBatches.length === 0
+    canonicalProtectedV2ReceiptRecoveryJson(audit.transactionBatches) !==
+      canonicalProtectedV2ReceiptRecoveryJson(PROTECTED_V2_RECOVERY_EVIDENCE_TRANSACTION_BATCHES)
   ) {
     throw new Error('Receipt recovery database evidence is not exact local read-only evidence.')
   }
@@ -386,14 +392,14 @@ export function assertProtectedV2ReceiptRecoveryReadOnlyQueryAudit(
         parsed[0]!,
       ) ||
       !/^rollback$/iu.test(parsed.at(-1)!) ||
-      parsed
-        .slice(1, -1)
-        .some(
-          (statement) =>
-            (!/^(?:select|with)\b/iu.test(statement) &&
-              !/^set\s+local\s+statement_timeout\s*=\s*'120s'$/iu.test(statement)) ||
-            forbidden.test(statement),
+      parsed.slice(1, -1).some((statement) => {
+        const inspected = stripProtectedV2ReceiptRecoverySqlStringLiterals(statement)
+        return (
+          (!/^(?:select|with)\b/iu.test(statement) &&
+            !/^set\s+local\s+statement_timeout\s*=\s*'120s'$/iu.test(statement)) ||
+          forbidden.test(inspected)
         )
+      })
     ) {
       throw new Error(
         'Receipt recovery SQL must be bracketed by repeatable-read/read-only BEGIN and ROLLBACK and contain only nonlocking SELECT/CTE statements.',
