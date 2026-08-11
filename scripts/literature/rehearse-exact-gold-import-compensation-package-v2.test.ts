@@ -200,6 +200,22 @@ describe('exact V2 package rehearsal entrypoint', () => {
     ).toThrow('accepted pre-V1')
   })
 
+  test('binds the post-schema V1 physical identity only at the ready-audit boundary', async () => {
+    const source = await readFile(
+      resolve(
+        process.cwd(),
+        'scripts/literature/execute-exact-gold-import-compensation-package-v2.ts',
+      ),
+      'utf8',
+    )
+    expect(source).toContain(
+      'physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256',
+    )
+    expect(source).toContain(
+      'currentPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256',
+    )
+  })
+
   test('authenticates exact branch, clean tracked/untracked state, and origin/main ancestry', async () => {
     const repositoryGit = (overrides?: {
       branch?: string

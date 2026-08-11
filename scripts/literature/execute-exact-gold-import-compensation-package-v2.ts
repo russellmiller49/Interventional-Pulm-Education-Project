@@ -60,6 +60,7 @@ import {
 import { buildProtectedV2ExpectedCatalogBinding } from './protected-gold-import-contract-v2-bindings'
 export { renderOwnerFirstFunctionRawAclV2 } from './gold-import-contract-v2-catalog-audit'
 import {
+  GOLD_IMPORT_V2_READY_STATE_IDENTITIES,
   validateReadyGoldImportCompensationV2Audit,
   type GoldImportCompensationV2ReadyAudit,
 } from './audit-gold-import-compensation-v2'
@@ -380,7 +381,7 @@ async function buildDisposableReadyAuditAndPackage(input: {
       developmentPlanningStateSha256:
         GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256,
       effectiveStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-      physicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256,
     },
     exactExistingHeadCohort: {
       cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
