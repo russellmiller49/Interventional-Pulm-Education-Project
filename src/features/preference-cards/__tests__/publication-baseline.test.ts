@@ -39,6 +39,7 @@ function artifacts(bundles: PreferenceCardReleaseBundle[]): PublicationArtifacts
   return {
     releaseBundles: { pointers: { [FIXTURE_PROCEDURE_CODE]: BRAVO_RELEASE_ID }, bundles },
     moduleLedger: null,
+    compositionLedger: null,
     catalogReleases: null,
     productFamilies: null,
   }
@@ -231,6 +232,7 @@ describe('product-family governance across the baseline', () => {
     return {
       releaseBundles: null,
       moduleLedger: null,
+      compositionLedger: null,
       catalogReleases: null,
       productFamilies: { formatVersion: '1.0', hashVersion: 'x', versions },
     }

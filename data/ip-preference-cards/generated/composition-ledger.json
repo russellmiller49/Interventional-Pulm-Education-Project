@@ -1,0 +1,2147 @@
+{
+  "formatVersion": "1.0",
+  "entries": [
+    {
+      "recipeVersionId": "recipe-bronch-ablation-v0-1",
+      "sourceProcedureCode": "BRONCH_ABLATION",
+      "definitionHash": "46ee98c1b4b20d36b21fe3794b7dca43f90b78e71f997d3f49b88fba9bc96d32",
+      "definition": {
+        "id": "recipe-bronch-ablation-v0-1",
+        "sourceProcedureCode": "BRONCH_ABLATION",
+        "sourceTemplateVersion": "0.1",
+        "name": "Bronchoscopic tumor ablation",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "CBCT",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "HIGH_BLEED_RISK",
+          "NAVIGATION",
+          "RADIAL_EBUS",
+          "ROBOTIC",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-03C81C8ED9": 7,
+          "SLOT-06198365DB": 6,
+          "SLOT-063C99B0F4": 19,
+          "SLOT-213AD02F3D": 12,
+          "SLOT-26B0E004DD": 21,
+          "SLOT-2EDD1F1A49": 13,
+          "SLOT-408806A1E9": 14,
+          "SLOT-5B5D976D2A": 17,
+          "SLOT-7DBF54AF12": 4,
+          "SLOT-8399A6050E": 5,
+          "SLOT-89F6487409": 10,
+          "SLOT-8AB12F127A": 22,
+          "SLOT-90EACE8A77": 15,
+          "SLOT-97AE031E2A": 2,
+          "SLOT-B7C11A32AD": 20,
+          "SLOT-BE38624BB8": 23,
+          "SLOT-C862A72632": 18,
+          "SLOT-D0D9794E05": 8,
+          "SLOT-D8AC96F833": 16,
+          "SLOT-DB4AA915E7": 11,
+          "SLOT-E3604B09C0": 9,
+          "SLOT-E919659133": 3,
+          "SLOT-F66DEC963D": 1
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-bronch-ablation-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-chest-tube-v0-1",
+      "sourceProcedureCode": "CHEST_TUBE",
+      "definitionHash": "0ee6a826648d845662a536db35503a9683bac35d6fce8a7e886a68e775e12ee0",
+      "definition": {
+        "id": "recipe-chest-tube-v0-1",
+        "sourceProcedureCode": "CHEST_TUBE",
+        "sourceTemplateVersion": "0.3",
+        "name": "Chest tube insertion",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_MOD_SED",
+          "DIGITAL_DRAINAGE",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "PLEURAL_MANOMETRY",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "TECH_CHEST_TUBE_LARGE_BORE",
+          "TECH_CHEST_TUBE_SMALL_BORE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-chest-tube-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "chest-tube-ultrasound-optional",
+            "sequence": 10,
+            "actionType": "set_requiredness",
+            "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+            "payload": {
+              "value": "optional",
+              "dependencyRule": "Image-guided insertion"
+            }
+          }
+        ],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-20D17E94D4": 5,
+          "SLOT-3631C94D7A": 6,
+          "SLOT-4BE1D79D6C": 10,
+          "SLOT-4D849E266F": 4,
+          "SLOT-67171A33D4": 13,
+          "SLOT-702914B1CF": 12,
+          "SLOT-708736B8C2": 2,
+          "SLOT-AECDA16326": 11,
+          "SLOT-B4E5C6A7A9": 9,
+          "SLOT-CE48C1B108": 7,
+          "SLOT-D02F71E583": 8,
+          "SLOT-D5C3DB0027": 3
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-chest-tube-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-chest-tube-v0-2",
+      "sourceProcedureCode": "CHEST_TUBE",
+      "definitionHash": "c23bdccdac7b62caec17975aec5e14da0a6e7f750c11f54d572b30bb60300fd5",
+      "definition": {
+        "id": "recipe-chest-tube-v0-2",
+        "sourceProcedureCode": "CHEST_TUBE",
+        "sourceTemplateVersion": "0.3",
+        "name": "Chest tube insertion",
+        "version": "0.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_MOD_SED",
+          "DIGITAL_DRAINAGE",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "PLEURAL_MANOMETRY",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "TECH_CHEST_TUBE_LARGE_BORE",
+          "TECH_CHEST_TUBE_SMALL_BORE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-chest-tube-specific-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "chest-tube-ultrasound-optional",
+            "sequence": 10,
+            "actionType": "set_requiredness",
+            "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+            "payload": {
+              "value": "optional",
+              "dependencyRule": "Image-guided insertion"
+            }
+          }
+        ],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-20D17E94D4": 5,
+          "SLOT-3631C94D7A": 6,
+          "SLOT-4BE1D79D6C": 10,
+          "SLOT-4D849E266F": 4,
+          "SLOT-708736B8C2": 2,
+          "SLOT-AECDA16326": 11,
+          "SLOT-CE48C1B108": 7,
+          "SLOT-D5C3DB0027": 3
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-chest-tube-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-custom-composition-v1-0",
+      "sourceProcedureCode": "CUSTOM_COMPOSITION",
+      "definitionHash": "541dadf452338b1eeb904d88405e7df0bfbf37fc6ee2d68f737727677d6508bf",
+      "definition": {
+        "id": "recipe-custom-composition-v1-0",
+        "sourceProcedureCode": "CUSTOM_COMPOSITION",
+        "sourceTemplateVersion": "1.0",
+        "name": "Custom module composition",
+        "version": "1.0",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-chest-tube-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 30
+          },
+          {
+            "moduleVersionId": "module-ebv-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 40
+          },
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 50
+          },
+          {
+            "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 60
+          },
+          {
+            "moduleVersionId": "module-icu-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 70
+          },
+          {
+            "moduleVersionId": "module-ipc-placement-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 80
+          },
+          {
+            "moduleVersionId": "module-med-thoracoscopy-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 90
+          },
+          {
+            "moduleVersionId": "module-perc-trach-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 100
+          },
+          {
+            "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 110
+          },
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 120
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 130
+          },
+          {
+            "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 140
+          },
+          {
+            "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 150
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 160
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 170
+          },
+          {
+            "moduleVersionId": "module-thoracentesis-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 180
+          },
+          {
+            "moduleVersionId": "module-wll-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 190
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {}
+      },
+      "firstPublishedByReleaseBundleId": "release-custom-composition-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-custom-composition-v1-1",
+      "sourceProcedureCode": "CUSTOM_COMPOSITION",
+      "definitionHash": "0028fb7607e32b7cb364beba0cb0e03968f435266d5bafcdcc366c17a4099fb3",
+      "definition": {
+        "id": "recipe-custom-composition-v1-1",
+        "sourceProcedureCode": "CUSTOM_COMPOSITION",
+        "sourceTemplateVersion": "1.0",
+        "name": "Custom module composition",
+        "version": "1.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-chest-tube-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 30
+          },
+          {
+            "moduleVersionId": "module-ebv-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 40
+          },
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 50
+          },
+          {
+            "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 60
+          },
+          {
+            "moduleVersionId": "module-icu-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 70
+          },
+          {
+            "moduleVersionId": "module-ipc-placement-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 80
+          },
+          {
+            "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 90
+          },
+          {
+            "moduleVersionId": "module-perc-trach-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 100
+          },
+          {
+            "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 110
+          },
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 120
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 130
+          },
+          {
+            "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 140
+          },
+          {
+            "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 150
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 160
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 170
+          },
+          {
+            "moduleVersionId": "module-thoracentesis-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 180
+          },
+          {
+            "moduleVersionId": "module-wll-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 190
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {}
+      },
+      "firstPublishedByReleaseBundleId": "release-custom-composition-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-custom-composition-v1-2",
+      "sourceProcedureCode": "CUSTOM_COMPOSITION",
+      "definitionHash": "369583a4f1d6023cddd9a2680cda84b2a92d1f5520c70468d1f051722c6e6862",
+      "definition": {
+        "id": "recipe-custom-composition-v1-2",
+        "sourceProcedureCode": "CUSTOM_COMPOSITION",
+        "sourceTemplateVersion": "1.0",
+        "name": "Custom module composition",
+        "version": "1.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-chest-tube-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 30
+          },
+          {
+            "moduleVersionId": "module-ebv-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 40
+          },
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 50
+          },
+          {
+            "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 60
+          },
+          {
+            "moduleVersionId": "module-icu-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 70
+          },
+          {
+            "moduleVersionId": "module-ipc-placement-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 80
+          },
+          {
+            "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 90
+          },
+          {
+            "moduleVersionId": "module-perc-trach-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 100
+          },
+          {
+            "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 110
+          },
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 120
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 130
+          },
+          {
+            "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 140
+          },
+          {
+            "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 150
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 160
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 170
+          },
+          {
+            "moduleVersionId": "module-thoracentesis-specific-v1-1",
+            "selectionBehavior": "optional",
+            "sequence": 180
+          },
+          {
+            "moduleVersionId": "module-wll-specific-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 190
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "custom-f04-ebus-fna-needle-zone",
+            "sequence": 10,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-1AF4BEFE3B",
+            "optionalTarget": true,
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-fna-needle-phase",
+            "sequence": 11,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-1AF4BEFE3B",
+            "optionalTarget": true,
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-fnb-needle-zone",
+            "sequence": 12,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-B83EBD2FBB",
+            "optionalTarget": true,
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-fnb-needle-phase",
+            "sequence": 13,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-B83EBD2FBB",
+            "optionalTarget": true,
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-miniforceps-zone",
+            "sequence": 14,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-D08C74941A",
+            "optionalTarget": true,
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-miniforceps-phase",
+            "sequence": 15,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-D08C74941A",
+            "optionalTarget": true,
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-vacuum-syringe-zone",
+            "sequence": 16,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-E8F0B48B49",
+            "optionalTarget": true,
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "custom-f04-ebus-vacuum-syringe-phase",
+            "sequence": 17,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-E8F0B48B49",
+            "optionalTarget": true,
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "custom-f04-tb-biopsy-forceps-zone",
+            "sequence": 18,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-D2974FC11B",
+            "optionalTarget": true,
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "custom-f04-tb-biopsy-forceps-phase",
+            "sequence": 19,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-D2974FC11B",
+            "optionalTarget": true,
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "custom-f04-tb-bal-kit-zone",
+            "sequence": 20,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-FDF73730B0",
+            "optionalTarget": true,
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "custom-f04-tb-bal-kit-phase",
+            "sequence": 21,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-FDF73730B0",
+            "optionalTarget": true,
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "custom-f05-thoracoscopy-chest-tube-zone",
+            "sequence": 30,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-57CA4B1298",
+            "optionalTarget": true,
+            "payload": {
+              "value": "sterile_field"
+            }
+          },
+          {
+            "id": "custom-f05-thoracoscopy-chest-tube-phase",
+            "sequence": 31,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-57CA4B1298",
+            "optionalTarget": true,
+            "payload": {
+              "value": "therapeutic"
+            }
+          },
+          {
+            "id": "custom-f05-thoracoscopy-ipc-kit-zone",
+            "sequence": 32,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-9A1C0491F9",
+            "optionalTarget": true,
+            "payload": {
+              "value": "sterile_field"
+            }
+          },
+          {
+            "id": "custom-f05-thoracoscopy-ipc-kit-phase",
+            "sequence": 33,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-9A1C0491F9",
+            "optionalTarget": true,
+            "payload": {
+              "value": "therapeutic"
+            }
+          }
+        ],
+        "requirementSequences": {}
+      },
+      "firstPublishedByReleaseBundleId": "release-custom-composition-v1-2"
+    },
+    {
+      "recipeVersionId": "recipe-ebus-tbna-v0-1",
+      "sourceProcedureCode": "EBUS_TBNA",
+      "definitionHash": "178ad4be92e4bd53d594d7fc795dbabc9b55a6d97cabf2b930b86e9d2e3495a7",
+      "definition": {
+        "id": "recipe-ebus-tbna-v0-1",
+        "sourceProcedureCode": "EBUS_TBNA",
+        "sourceTemplateVersion": "0.3",
+        "name": "EBUS-TBNA / EBUS-FNB",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "ROSE",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "SPEC_MOLECULAR"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "default_on",
+            "sequence": 30
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "ebus-tbna-suction-syringes",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+            "payload": {
+              "note": "Include aspiration syringes for needle sampling."
+            }
+          }
+        ],
+        "requirementSequences": {
+          "FLEX_BRONCH_SUCTION_SETUP": 11,
+          "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
+          "PROCEDURAL_FLUOROSCOPY_C_ARM": 14,
+          "PROCEDURAL_RADIATION_PROTECTION": 15,
+          "SLOT-12ACA27E54": 9,
+          "SLOT-1AF4BEFE3B": 6,
+          "SLOT-4648848CC3": 1,
+          "SLOT-76F4405D68": 10,
+          "SLOT-92874E31E1": 3,
+          "SLOT-93655BF7C4": 5,
+          "SLOT-B19121A5B9": 4,
+          "SLOT-B83EBD2FBB": 7,
+          "SLOT-CD12842559": 12,
+          "SLOT-D08C74941A": 8,
+          "SLOT-E8F0B48B49": 13
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-ebus-tbna-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-ebus-tbna-v0-2",
+      "sourceProcedureCode": "EBUS_TBNA",
+      "definitionHash": "ae183e6b09ecb421ddd39ac83c485a567312d72580a0bff69d61cc76005ca2e1",
+      "definition": {
+        "id": "recipe-ebus-tbna-v0-2",
+        "sourceProcedureCode": "EBUS_TBNA",
+        "sourceTemplateVersion": "0.3",
+        "name": "EBUS-TBNA / EBUS-FNB",
+        "version": "0.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "ROSE",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "SPEC_MOLECULAR"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "default_on",
+            "sequence": 30
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "ebus-tbna-suction-syringes",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+            "payload": {
+              "note": "Include aspiration syringes for needle sampling."
+            }
+          },
+          {
+            "id": "ebus-tbna-fna-needle-zone",
+            "sequence": 20,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-1AF4BEFE3B",
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "ebus-tbna-fna-needle-phase",
+            "sequence": 21,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-1AF4BEFE3B",
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "ebus-tbna-fnb-needle-zone",
+            "sequence": 22,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-B83EBD2FBB",
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "ebus-tbna-fnb-needle-phase",
+            "sequence": 23,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-B83EBD2FBB",
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "ebus-tbna-miniforceps-zone",
+            "sequence": 24,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-D08C74941A",
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "ebus-tbna-miniforceps-phase",
+            "sequence": 25,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-D08C74941A",
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "ebus-tbna-vacuum-syringe-zone",
+            "sequence": 26,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-E8F0B48B49",
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "ebus-tbna-vacuum-syringe-phase",
+            "sequence": 27,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-E8F0B48B49",
+            "payload": {
+              "value": "diagnostic"
+            }
+          }
+        ],
+        "requirementSequences": {
+          "FLEX_BRONCH_AIRWAY_ADAPTER": 17,
+          "FLEX_BRONCH_BITE_BLOCK": 16,
+          "FLEX_BRONCH_SUCTION_SETUP": 11,
+          "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
+          "PROCEDURAL_FLUOROSCOPY_C_ARM": 14,
+          "PROCEDURAL_RADIATION_PROTECTION": 15,
+          "SLOT-12ACA27E54": 9,
+          "SLOT-1AF4BEFE3B": 6,
+          "SLOT-4648848CC3": 1,
+          "SLOT-76F4405D68": 10,
+          "SLOT-92874E31E1": 3,
+          "SLOT-93655BF7C4": 5,
+          "SLOT-B19121A5B9": 4,
+          "SLOT-B83EBD2FBB": 7,
+          "SLOT-CD12842559": 12,
+          "SLOT-D08C74941A": 8,
+          "SLOT-E8F0B48B49": 13
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-ebus-tbna-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-ebv-v0-1",
+      "sourceProcedureCode": "EBV",
+      "definitionHash": "0c069b63b93a58c937fabcfa90ca359803d33a35685e0da58aac0bf21495a61d",
+      "definition": {
+        "id": "recipe-ebv-v0-1",
+        "sourceProcedureCode": "EBV",
+        "sourceTemplateVersion": "0.2",
+        "name": "Endobronchial valve placement",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-ebv-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "optional",
+            "sequence": 30
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "ebv-scope-channel-note",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "THERAPEUTIC_BRONCHOSCOPE_PLATFORM",
+            "payload": {
+              "note": "Match channel to delivery catheter."
+            }
+          },
+          {
+            "id": "ebv-retrieval-forceps-requiredness",
+            "sequence": 20,
+            "actionType": "set_requiredness",
+            "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+            "payload": {
+              "value": "conditional",
+              "dependencyRule": "Reposition/removal anticipated"
+            }
+          },
+          {
+            "id": "ebv-retrieval-forceps-note",
+            "sequence": 30,
+            "actionType": "append_note",
+            "targetRequirementKey": "AIRWAY_RETRIEVAL_FORCEPS",
+            "payload": {
+              "note": "Used here for endobronchial valve repositioning or retrieval."
+            }
+          }
+        ],
+        "requirementSequences": {
+          "AIRWAY_RETRIEVAL_FORCEPS": 6,
+          "SLOT-022D0D3DC6": 9,
+          "SLOT-030A408C27": 8,
+          "SLOT-639A3A4E14": 10,
+          "SLOT-A24CA7DB72": 2,
+          "SLOT-B14DF27813": 4,
+          "SLOT-C4034E9595": 3,
+          "SLOT-C657258C05": 11,
+          "SLOT-D336807B69": 7,
+          "SLOT-D48FE87D5A": 5,
+          "THERAPEUTIC_BRONCHOSCOPE_PLATFORM": 1
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-ebv-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-flex-diagnostic-v0-1",
+      "sourceProcedureCode": "FLEX_DIAGNOSTIC",
+      "definitionHash": "2d892623214e79e1da6529792fd203cb002bb534fe00e80cc6fe26963201c411",
+      "definition": {
+        "id": "recipe-flex-diagnostic-v0-1",
+        "sourceProcedureCode": "FLEX_DIAGNOSTIC",
+        "sourceTemplateVersion": "0.3",
+        "name": "Diagnostic flexible bronchoscopy",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "CBCT",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "HIGH_BLEED_RISK",
+          "NAVIGATION",
+          "RADIAL_EBUS",
+          "ROBOTIC",
+          "ROSE",
+          "SPEC_MICRO",
+          "SPEC_MOLECULAR"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-09EF760638": 11,
+          "SLOT-15CBA5DCD0": 17,
+          "SLOT-239938A6A9": 14,
+          "SLOT-34A46FFBA2": 1,
+          "SLOT-37F5B1E3DF": 19,
+          "SLOT-49853F1B39": 3,
+          "SLOT-4C2FE905D3": 16,
+          "SLOT-54D7E08779": 12,
+          "SLOT-6BFE5046B8": 2,
+          "SLOT-6C8ED671CE": 8,
+          "SLOT-7938FA701C": 18,
+          "SLOT-7BFC6EB54E": 10,
+          "SLOT-9363E589C4": 7,
+          "SLOT-C9A4F576D5": 15,
+          "SLOT-CD96ECF1DB": 6,
+          "SLOT-EA38AE186D": 9,
+          "SLOT-EB37262191": 13,
+          "SLOT-EFF8BA9B93": 5,
+          "SLOT-F969CF31B0": 4
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-flex-diagnostic-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-icu-bronch-v0-1",
+      "sourceProcedureCode": "ICU_BRONCH",
+      "definitionHash": "c1104ee97a25cd037256dc230fa50e9486be225bcf14bed1d71b312827fe89d6",
+      "definition": {
+        "id": "recipe-icu-bronch-v0-1",
+        "sourceProcedureCode": "ICU_BRONCH",
+        "sourceTemplateVersion": "0.3",
+        "name": "ICU / bedside bronchoscopy",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-icu-bronch-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-1A3A9B71B1": 10,
+          "SLOT-3BE665D0CA": 11,
+          "SLOT-42AC1F18B2": 1,
+          "SLOT-49FB14CBF6": 4,
+          "SLOT-4CC66ADF82": 8,
+          "SLOT-53400A7A7C": 9,
+          "SLOT-5D918DA83D": 6,
+          "SLOT-63E328321A": 12,
+          "SLOT-7BAF2FC882": 2,
+          "SLOT-8790F5F0AE": 5,
+          "SLOT-B138BA994E": 7,
+          "SLOT-B6ED05FBC7": 3
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-icu-bronch-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-ipc-placement-v0-1",
+      "sourceProcedureCode": "IPC_PLACEMENT",
+      "definitionHash": "fe455332f7ed9b4141978a01d841cd169b3868feb5f15354d67d775fd94aa021",
+      "definition": {
+        "id": "recipe-ipc-placement-v0-1",
+        "sourceProcedureCode": "IPC_PLACEMENT",
+        "sourceTemplateVersion": "0.3",
+        "name": "Tunneled indwelling pleural catheter placement",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "PLEURAL_MANOMETRY",
+          "SPEC_FLOW",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-ipc-placement-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "ipc-ultrasound-pleural-access-note",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+            "payload": {
+              "note": "Sterile cover for pleural access."
+            }
+          }
+        ],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-01010CB364": 8,
+          "SLOT-1BCF3D0702": 2,
+          "SLOT-1E91C231E5": 5,
+          "SLOT-27D1A61598": 6,
+          "SLOT-3FBC244FAF": 3,
+          "SLOT-6693BCAEE1": 4,
+          "SLOT-CA2DF6D3A0": 7
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-ipc-placement-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-ipc-placement-v0-2",
+      "sourceProcedureCode": "IPC_PLACEMENT",
+      "definitionHash": "8be697636f381ca28c1250e87ab284c0402f86c8b51ee6a03a58908b85eb2e09",
+      "definition": {
+        "id": "recipe-ipc-placement-v0-2",
+        "sourceProcedureCode": "IPC_PLACEMENT",
+        "sourceTemplateVersion": "0.3",
+        "name": "Tunneled indwelling pleural catheter placement",
+        "version": "0.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "PLEURAL_MANOMETRY",
+          "SPEC_FLOW",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-ipc-placement-specific-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "ipc-ultrasound-pleural-access-note",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "PLEURAL_ULTRASOUND_MACHINE",
+            "payload": {
+              "note": "Sterile cover for pleural access."
+            }
+          }
+        ],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-01010CB364": 8,
+          "SLOT-1BCF3D0702": 2,
+          "SLOT-1E91C231E5": 5,
+          "SLOT-27D1A61598": 6,
+          "SLOT-3FBC244FAF": 3,
+          "SLOT-6693BCAEE1": 4,
+          "SLOT-CA2DF6D3A0": 7
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-ipc-placement-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-1",
+      "sourceProcedureCode": "MED_THORACOSCOPY",
+      "definitionHash": "19e52f71ad40d2298ea9533b20430c9dd47971fa657741211e018f1aac389b06",
+      "definition": {
+        "id": "recipe-med-thoracoscopy-v0-1",
+        "sourceProcedureCode": "MED_THORACOSCOPY",
+        "sourceTemplateVersion": "0.3",
+        "name": "Medical thoracoscopy / pleuroscopy",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "DIGITAL_DRAINAGE",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "TALC_POUDRAGE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-med-thoracoscopy-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-0037091804": 16,
+          "SLOT-0B24E5F37A": 9,
+          "SLOT-1D10D8A2BF": 8,
+          "SLOT-3CA143BB11": 3,
+          "SLOT-51A2592738": 20,
+          "SLOT-545818F1DC": 5,
+          "SLOT-57CA4B1298": 10,
+          "SLOT-5A9EDD575F": 2,
+          "SLOT-65FFA3703B": 15,
+          "SLOT-694FCE203D": 17,
+          "SLOT-6D737D1334": 14,
+          "SLOT-8FC90750FF": 19,
+          "SLOT-9448C2A991": 4,
+          "SLOT-99F995A756": 18,
+          "SLOT-9A1C0491F9": 12,
+          "SLOT-AA3C2EAA6D": 11,
+          "SLOT-BC9CCE1853": 6,
+          "SLOT-D8D781E494": 7,
+          "SLOT-E63DC64C2F": 13
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-med-thoracoscopy-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-2",
+      "sourceProcedureCode": "MED_THORACOSCOPY",
+      "definitionHash": "267292d033615d095bebe15f479394938827864cd27b92f0d673c8ef9e6aadba",
+      "definition": {
+        "id": "recipe-med-thoracoscopy-v0-2",
+        "sourceProcedureCode": "MED_THORACOSCOPY",
+        "sourceTemplateVersion": "0.3",
+        "name": "Medical thoracoscopy / pleuroscopy",
+        "version": "0.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "DIGITAL_DRAINAGE",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "TALC_POUDRAGE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-0037091804": 16,
+          "SLOT-0B24E5F37A": 9,
+          "SLOT-1D10D8A2BF": 8,
+          "SLOT-3CA143BB11": 3,
+          "SLOT-51A2592738": 20,
+          "SLOT-545818F1DC": 5,
+          "SLOT-57CA4B1298": 10,
+          "SLOT-5A9EDD575F": 2,
+          "SLOT-65FFA3703B": 15,
+          "SLOT-694FCE203D": 17,
+          "SLOT-6D737D1334": 14,
+          "SLOT-8FC90750FF": 19,
+          "SLOT-9448C2A991": 4,
+          "SLOT-99F995A756": 18,
+          "SLOT-9A1C0491F9": 12,
+          "SLOT-AA3C2EAA6D": 11,
+          "SLOT-BC9CCE1853": 6,
+          "SLOT-D8D781E494": 7,
+          "SLOT-E63DC64C2F": 13
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-med-thoracoscopy-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
+      "sourceProcedureCode": "MED_THORACOSCOPY",
+      "definitionHash": "395370ab6033de0b1c7c314b9b0a745c4160740eb05a2a3c2274637bf83c8a26",
+      "definition": {
+        "id": "recipe-med-thoracoscopy-v0-3",
+        "sourceProcedureCode": "MED_THORACOSCOPY",
+        "sourceTemplateVersion": "0.3",
+        "name": "Medical thoracoscopy / pleuroscopy",
+        "version": "0.3",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "DIGITAL_DRAINAGE",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "SPEC_FLOW",
+          "SPEC_MICRO",
+          "TALC_POUDRAGE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "med-thoracoscopy-chest-tube-zone",
+            "sequence": 10,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-57CA4B1298",
+            "payload": {
+              "value": "sterile_field"
+            }
+          },
+          {
+            "id": "med-thoracoscopy-chest-tube-phase",
+            "sequence": 11,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-57CA4B1298",
+            "payload": {
+              "value": "therapeutic"
+            }
+          },
+          {
+            "id": "med-thoracoscopy-ipc-kit-zone",
+            "sequence": 12,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-9A1C0491F9",
+            "payload": {
+              "value": "sterile_field"
+            }
+          },
+          {
+            "id": "med-thoracoscopy-ipc-kit-phase",
+            "sequence": 13,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-9A1C0491F9",
+            "payload": {
+              "value": "therapeutic"
+            }
+          }
+        ],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-0037091804": 16,
+          "SLOT-0B24E5F37A": 9,
+          "SLOT-1D10D8A2BF": 8,
+          "SLOT-3CA143BB11": 3,
+          "SLOT-51A2592738": 20,
+          "SLOT-545818F1DC": 5,
+          "SLOT-57CA4B1298": 10,
+          "SLOT-5A9EDD575F": 2,
+          "SLOT-65FFA3703B": 15,
+          "SLOT-694FCE203D": 17,
+          "SLOT-6D737D1334": 14,
+          "SLOT-8FC90750FF": 19,
+          "SLOT-9448C2A991": 4,
+          "SLOT-99F995A756": 18,
+          "SLOT-9A1C0491F9": 12,
+          "SLOT-AA3C2EAA6D": 11,
+          "SLOT-BC9CCE1853": 6,
+          "SLOT-D8D781E494": 7,
+          "SLOT-E63DC64C2F": 13
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-med-thoracoscopy-v1-2"
+    },
+    {
+      "recipeVersionId": "recipe-perc-trach-v0-1",
+      "sourceProcedureCode": "PERC_TRACH",
+      "definitionHash": "b6969a7cd568ebbec98a9e7f6f0c0dcbeaccb7996e1c72e298c97df374407825",
+      "definition": {
+        "id": "recipe-perc-trach-v0-1",
+        "sourceProcedureCode": "PERC_TRACH",
+        "sourceTemplateVersion": "0.1",
+        "name": "Percutaneous dilational tracheostomy",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": ["ENV_BRONCH_SUITE", "ENV_ICU_BEDSIDE"],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-perc-trach-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-09D5542BAA": 5,
+          "SLOT-126F71E1BD": 10,
+          "SLOT-2C4CF749E6": 3,
+          "SLOT-32739F7002": 8,
+          "SLOT-657F12A89F": 9,
+          "SLOT-658CF18CF0": 2,
+          "SLOT-6EAB7FD727": 6,
+          "SLOT-738A987A4C": 7,
+          "SLOT-BC6864D752": 4,
+          "SLOT-C629C55E61": 1
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-perc-trach-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-photodynamic-therapy-v0-1",
+      "sourceProcedureCode": "PHOTODYNAMIC_THERAPY",
+      "definitionHash": "78af479cc3389f456fd42b5c82f8f63e977fdac2df6a9cbdc9776941121bb584",
+      "definition": {
+        "id": "recipe-photodynamic-therapy-v0-1",
+        "sourceProcedureCode": "PHOTODYNAMIC_THERAPY",
+        "sourceTemplateVersion": "0.1",
+        "name": "Photodynamic therapy (endobronchial)",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-0C667F3D98": 4,
+          "SLOT-2EF6D51123": 10,
+          "SLOT-395F6BD985": 5,
+          "SLOT-543A73947E": 12,
+          "SLOT-5D4FC2EC83": 7,
+          "SLOT-63B9691422": 3,
+          "SLOT-715F112605": 8,
+          "SLOT-8A0CAE91FF": 1,
+          "SLOT-B0F3DFF86F": 6,
+          "SLOT-BE2DEBB4E7": 9,
+          "SLOT-C6B7BC56B1": 2,
+          "SLOT-EADB8A307E": 11
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-photodynamic-therapy-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-rigid-bronch-v0-1",
+      "sourceProcedureCode": "RIGID_BRONCH",
+      "definitionHash": "1046f6674c847b2e95685325e99dc8e95b16e3960e97cb0697593e48a3fc956b",
+      "definition": {
+        "id": "recipe-rigid-bronch-v0-1",
+        "sourceProcedureCode": "RIGID_BRONCH",
+        "sourceTemplateVersion": "0.3",
+        "name": "Rigid bronchoscopy",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "APC",
+          "BALLOON_DILATION",
+          "CRYOTHERAPY",
+          "ELECTROCAUTERY",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "HIGH_BLEED_RISK",
+          "JET_VENT",
+          "LASER",
+          "RIGID_AIRWAY",
+          "SPEC_MICRO",
+          "STENT_PLACE",
+          "STENT_REMOVE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-00E8CCAE2A": 9,
+          "SLOT-04C940D8B9": 1,
+          "SLOT-113FCB30ED": 2,
+          "SLOT-140B672D52": 16,
+          "SLOT-175CA9F5B4": 3,
+          "SLOT-18617846CD": 17,
+          "SLOT-19FC83049A": 21,
+          "SLOT-2D59E32F4B": 7,
+          "SLOT-35ACE7FDA1": 27,
+          "SLOT-3C8165659D": 24,
+          "SLOT-3D6358F157": 10,
+          "SLOT-3FFB2D272E": 14,
+          "SLOT-5F3642C851": 11,
+          "SLOT-66C8ADA940": 23,
+          "SLOT-678712810C": 29,
+          "SLOT-6A75E6D661": 13,
+          "SLOT-6BDDC6260B": 4,
+          "SLOT-702FD644B7": 25,
+          "SLOT-72BAE3EC7C": 22,
+          "SLOT-8AA6269352": 18,
+          "SLOT-94783C387D": 5,
+          "SLOT-99199F9B11": 15,
+          "SLOT-A575600E20": 30,
+          "SLOT-A602F949A7": 26,
+          "SLOT-BC936B7BD8": 6,
+          "SLOT-C2EF0C350D": 8,
+          "SLOT-CD2D51CF8D": 28,
+          "SLOT-D6219069A9": 19,
+          "SLOT-D6B6FF156F": 12,
+          "SLOT-E8281AFEA1": 20,
+          "SLOT-E8965CB331": 31
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-rigid-bronch-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-tb-ruleout-v0-1",
+      "sourceProcedureCode": "TB_RULEOUT",
+      "definitionHash": "28d8f11a40022db04de04dcd0db7a89f92b974f1d19889174a3ce8a875d5e3b8",
+      "definition": {
+        "id": "recipe-tb-ruleout-v0-1",
+        "sourceProcedureCode": "TB_RULEOUT",
+        "sourceTemplateVersion": "0.3",
+        "name": "TB rule-out bronchoscopy",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-05F71417F2": 9,
+          "SLOT-0F96B1FA45": 2,
+          "SLOT-2943D859CB": 5,
+          "SLOT-2E7FF49D2D": 8,
+          "SLOT-313877F69F": 10,
+          "SLOT-46FDDCCF7C": 6,
+          "SLOT-763A2D63F1": 4,
+          "SLOT-9029673D34": 11,
+          "SLOT-A19D105581": 3,
+          "SLOT-C46D25AF46": 1,
+          "SLOT-D73F3C8E6D": 7
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-tb-ruleout-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-1",
+      "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+      "definitionHash": "d8a141e8fe4c3646db676cf9de403d2c3a41b8118e984f07c58519aaf4648dba",
+      "definition": {
+        "id": "recipe-therapeutic-bronch-v0-1",
+        "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+        "sourceTemplateVersion": "0.3",
+        "name": "Central airway obstruction / tumor debulking",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "APC",
+          "BALLOON_DILATION",
+          "CBCT",
+          "CRYOTHERAPY",
+          "ELECTROCAUTERY",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "HIGH_BLEED_RISK",
+          "JET_VENT",
+          "LASER",
+          "NAVIGATION",
+          "RADIAL_EBUS",
+          "RIGID_AIRWAY",
+          "ROBOTIC",
+          "ROSE",
+          "SPEC_MICRO",
+          "SPEC_MOLECULAR",
+          "STENT_PLACE",
+          "STENT_REMOVE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 30
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "default_on",
+            "sequence": 40
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "therapeutic-bronch-high-flow-suction",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+            "payload": {
+              "note": "High-flow suction tubing and canisters are required for therapeutic work."
+            }
+          }
+        ],
+        "requirementSequences": {
+          "AIRWAY_RETRIEVAL_FORCEPS": 6,
+          "FLEX_BRONCH_SUCTION_SETUP": 3,
+          "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
+          "PROCEDURAL_FLUOROSCOPY_C_ARM": 27,
+          "PROCEDURAL_RADIATION_PROTECTION": 28,
+          "SLOT-081FB0C695": 21,
+          "SLOT-09A64B2C62": 12,
+          "SLOT-0F8FA96C28": 14,
+          "SLOT-115310F554": 7,
+          "SLOT-14453819D5": 5,
+          "SLOT-1538BC9076": 20,
+          "SLOT-185FBB545F": 23,
+          "SLOT-34CDBAB683": 24,
+          "SLOT-38E5FB60B9": 29,
+          "SLOT-3FE6796B6D": 8,
+          "SLOT-45D721710F": 11,
+          "SLOT-6630AD392A": 25,
+          "SLOT-7412B3318B": 10,
+          "SLOT-90A43CBAEF": 16,
+          "SLOT-971BBE6BF8": 17,
+          "SLOT-97CFA5C9A2": 15,
+          "SLOT-D2974FC11B": 13,
+          "SLOT-D43C866FB5": 9,
+          "SLOT-D6B291DC80": 18,
+          "SLOT-D7F2D36301": 19,
+          "SLOT-EE17F755B2": 26,
+          "SLOT-FCE9E3810E": 4,
+          "SLOT-FDF73730B0": 22,
+          "THERAPEUTIC_BRONCHOSCOPE_PLATFORM": 1
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-therapeutic-bronch-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-2",
+      "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+      "definitionHash": "1f0ca4bf7a7c5748021d39754274d6f8472f2fd56d92034ea2c4a8b4e7c6a482",
+      "definition": {
+        "id": "recipe-therapeutic-bronch-v0-2",
+        "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+        "sourceTemplateVersion": "0.3",
+        "name": "Central airway obstruction / tumor debulking",
+        "version": "0.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "APC",
+          "BALLOON_DILATION",
+          "CBCT",
+          "CRYOTHERAPY",
+          "ELECTROCAUTERY",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "HIGH_BLEED_RISK",
+          "JET_VENT",
+          "LASER",
+          "NAVIGATION",
+          "RADIAL_EBUS",
+          "RIGID_AIRWAY",
+          "ROBOTIC",
+          "ROSE",
+          "SPEC_MICRO",
+          "SPEC_MOLECULAR",
+          "STENT_PLACE",
+          "STENT_REMOVE"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-flex-bronch-core-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          },
+          {
+            "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 30
+          },
+          {
+            "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+            "selectionBehavior": "default_on",
+            "sequence": 40
+          }
+        ],
+        "compositionActions": [
+          {
+            "id": "therapeutic-bronch-high-flow-suction",
+            "sequence": 10,
+            "actionType": "append_note",
+            "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
+            "payload": {
+              "note": "High-flow suction tubing and canisters are required for therapeutic work."
+            }
+          },
+          {
+            "id": "therapeutic-bronch-biopsy-forceps-zone",
+            "sequence": 20,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-D2974FC11B",
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "therapeutic-bronch-biopsy-forceps-phase",
+            "sequence": 21,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-D2974FC11B",
+            "payload": {
+              "value": "diagnostic"
+            }
+          },
+          {
+            "id": "therapeutic-bronch-bal-kit-zone",
+            "sequence": 22,
+            "actionType": "set_setup_zone",
+            "targetSlotId": "SLOT-FDF73730B0",
+            "payload": {
+              "value": "back_table"
+            }
+          },
+          {
+            "id": "therapeutic-bronch-bal-kit-phase",
+            "sequence": 23,
+            "actionType": "set_procedural_phase",
+            "targetSlotId": "SLOT-FDF73730B0",
+            "payload": {
+              "value": "diagnostic"
+            }
+          }
+        ],
+        "requirementSequences": {
+          "AIRWAY_RETRIEVAL_FORCEPS": 6,
+          "FLEX_BRONCH_AIRWAY_ADAPTER": 30,
+          "FLEX_BRONCH_BITE_BLOCK": 18,
+          "FLEX_BRONCH_SUCTION_SETUP": 3,
+          "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
+          "PROCEDURAL_FLUOROSCOPY_C_ARM": 27,
+          "PROCEDURAL_RADIATION_PROTECTION": 28,
+          "SLOT-081FB0C695": 21,
+          "SLOT-09A64B2C62": 12,
+          "SLOT-0F8FA96C28": 14,
+          "SLOT-115310F554": 7,
+          "SLOT-14453819D5": 5,
+          "SLOT-1538BC9076": 20,
+          "SLOT-185FBB545F": 23,
+          "SLOT-34CDBAB683": 24,
+          "SLOT-38E5FB60B9": 29,
+          "SLOT-3FE6796B6D": 8,
+          "SLOT-45D721710F": 11,
+          "SLOT-6630AD392A": 25,
+          "SLOT-7412B3318B": 10,
+          "SLOT-90A43CBAEF": 16,
+          "SLOT-971BBE6BF8": 17,
+          "SLOT-97CFA5C9A2": 15,
+          "SLOT-D2974FC11B": 13,
+          "SLOT-D43C866FB5": 9,
+          "SLOT-D7F2D36301": 19,
+          "SLOT-EE17F755B2": 26,
+          "SLOT-FCE9E3810E": 4,
+          "SLOT-FDF73730B0": 22,
+          "THERAPEUTIC_BRONCHOSCOPE_PLATFORM": 1
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-therapeutic-bronch-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-thoracentesis-v0-1",
+      "sourceProcedureCode": "THORACENTESIS",
+      "definitionHash": "051867fdab177a991916edfe43b2e7d316494ebe87bc4347de1c3df00f77a1c0",
+      "definition": {
+        "id": "recipe-thoracentesis-v0-1",
+        "sourceProcedureCode": "THORACENTESIS",
+        "sourceTemplateVersion": "0.2",
+        "name": "Thoracentesis",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "PLEURAL_MANOMETRY",
+          "SPEC_FLOW",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-thoracentesis-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-103FF61AAC": 4,
+          "SLOT-23A6DA3B89": 5,
+          "SLOT-A13A73CA93": 2,
+          "SLOT-C174DA0A4E": 6,
+          "SLOT-CA34F60BE9": 3
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-thoracentesis-v1-0"
+    },
+    {
+      "recipeVersionId": "recipe-thoracentesis-v0-2",
+      "sourceProcedureCode": "THORACENTESIS",
+      "definitionHash": "145aa657808e49f007a8d0ee391e1a37a88240a37bcb97b64f96fdea5471e2e1",
+      "definition": {
+        "id": "recipe-thoracentesis-v0-2",
+        "sourceProcedureCode": "THORACENTESIS",
+        "sourceTemplateVersion": "0.2",
+        "name": "Thoracentesis",
+        "version": "0.2",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "FLUOROSCOPY",
+          "PLEURAL_MANOMETRY",
+          "SPEC_FLOW",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-pleural-procedure-core-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          },
+          {
+            "moduleVersionId": "module-thoracentesis-specific-v1-1",
+            "selectionBehavior": "required",
+            "sequence": 20
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "PLEURAL_ULTRASOUND_MACHINE": 1,
+          "SLOT-103FF61AAC": 4,
+          "SLOT-23A6DA3B89": 5,
+          "SLOT-A13A73CA93": 2,
+          "SLOT-C174DA0A4E": 6,
+          "SLOT-CA34F60BE9": 3
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-thoracentesis-v1-1"
+    },
+    {
+      "recipeVersionId": "recipe-wll-v0-1",
+      "sourceProcedureCode": "WLL",
+      "definitionHash": "b1ba09f4c08bb22b858f1c5e3c0e0ebed530c88c1219a3c3d7e21a55cd7583b8",
+      "definition": {
+        "id": "recipe-wll-v0-1",
+        "sourceProcedureCode": "WLL",
+        "sourceTemplateVersion": "0.3",
+        "name": "Whole lung lavage",
+        "version": "0.1",
+        "governanceState": "draft",
+        "clinicalOwner": null,
+        "operationalOwner": null,
+        "allowedModifierCodes": [
+          "AIRBORNE_ISOLATION",
+          "AIRWAY_ETT",
+          "AIRWAY_LMA",
+          "ANES_GENERAL",
+          "ANES_MOD_SED",
+          "ENV_BRONCH_SUITE",
+          "ENV_ICU_BEDSIDE",
+          "ENV_OR",
+          "HIGH_BLEED_RISK",
+          "SPEC_MICRO"
+        ],
+        "catalogImportId": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+        "slots": [],
+        "moduleReferences": [
+          {
+            "moduleVersionId": "module-wll-specific-v1-0",
+            "selectionBehavior": "required",
+            "sequence": 10
+          }
+        ],
+        "compositionActions": [],
+        "requirementSequences": {
+          "SLOT-1039D6C9E8": 3,
+          "SLOT-2015EC8357": 7,
+          "SLOT-23E62136B4": 13,
+          "SLOT-2947B0846D": 1,
+          "SLOT-41977168DA": 6,
+          "SLOT-506C864DCC": 9,
+          "SLOT-57741DB666": 10,
+          "SLOT-5B9AA7A469": 4,
+          "SLOT-9BD475F03A": 11,
+          "SLOT-9EBCAD6487": 12,
+          "SLOT-C3D82E151B": 2,
+          "SLOT-DD40010751": 5,
+          "SLOT-ECF1B0860E": 8
+        }
+      },
+      "firstPublishedByReleaseBundleId": "release-wll-v1-0"
+    }
+  ]
+}

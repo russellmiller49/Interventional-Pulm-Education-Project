@@ -61,12 +61,12 @@
     "compositionActions": []
   },
   {
-    "recipeVersionId": "recipe-chest-tube-v0-1",
+    "recipeVersionId": "recipe-chest-tube-v0-2",
     "scenarioId": "chest-tube",
     "procedureCode": "CHEST_TUBE",
     "version": "1.0",
     "recipeName": "Chest tube insertion",
-    "recipeVersion": "0.1",
+    "recipeVersion": "0.2",
     "sourceTemplateVersion": "0.3",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -89,13 +89,9 @@
       "SLOT-3631C94D7A": 6,
       "SLOT-4BE1D79D6C": 10,
       "SLOT-4D849E266F": 4,
-      "SLOT-67171A33D4": 13,
-      "SLOT-702914B1CF": 12,
       "SLOT-708736B8C2": 2,
       "SLOT-AECDA16326": 11,
-      "SLOT-B4E5C6A7A9": 9,
       "SLOT-CE48C1B108": 7,
-      "SLOT-D02F71E583": 8,
       "SLOT-D5C3DB0027": 3
     },
     "moduleReferences": [
@@ -105,7 +101,7 @@
         "sequence": 10
       },
       {
-        "moduleVersionId": "module-chest-tube-specific-v1-0",
+        "moduleVersionId": "module-chest-tube-specific-v1-1",
         "selectionBehavior": "required",
         "sequence": 20
       }
@@ -124,12 +120,12 @@
     ]
   },
   {
-    "recipeVersionId": "recipe-ebus-tbna-v0-1",
+    "recipeVersionId": "recipe-ebus-tbna-v0-2",
     "scenarioId": "ebus-rose-molecular",
     "procedureCode": "EBUS_TBNA",
     "version": "1.0",
     "recipeName": "EBUS-TBNA / EBUS-FNB",
-    "recipeVersion": "0.1",
+    "recipeVersion": "0.2",
     "sourceTemplateVersion": "0.3",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -149,6 +145,8 @@
       "SPEC_MOLECULAR"
     ],
     "requirementSequences": {
+      "FLEX_BRONCH_AIRWAY_ADAPTER": 17,
+      "FLEX_BRONCH_BITE_BLOCK": 16,
       "FLEX_BRONCH_SUCTION_SETUP": 11,
       "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
       "PROCEDURAL_FLUOROSCOPY_C_ARM": 14,
@@ -167,7 +165,7 @@
     },
     "moduleReferences": [
       {
-        "moduleVersionId": "module-flex-bronch-core-v1-0",
+        "moduleVersionId": "module-flex-bronch-core-v1-1",
         "selectionBehavior": "required",
         "sequence": 10
       },
@@ -190,6 +188,78 @@
         "targetRequirementKey": "FLEX_BRONCH_SUCTION_SETUP",
         "payload": {
           "note": "Include aspiration syringes for needle sampling."
+        }
+      },
+      {
+        "id": "ebus-tbna-fna-needle-zone",
+        "sequence": 20,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-1AF4BEFE3B",
+        "payload": {
+          "value": "back_table"
+        }
+      },
+      {
+        "id": "ebus-tbna-fna-needle-phase",
+        "sequence": 21,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-1AF4BEFE3B",
+        "payload": {
+          "value": "diagnostic"
+        }
+      },
+      {
+        "id": "ebus-tbna-fnb-needle-zone",
+        "sequence": 22,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-B83EBD2FBB",
+        "payload": {
+          "value": "back_table"
+        }
+      },
+      {
+        "id": "ebus-tbna-fnb-needle-phase",
+        "sequence": 23,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-B83EBD2FBB",
+        "payload": {
+          "value": "diagnostic"
+        }
+      },
+      {
+        "id": "ebus-tbna-miniforceps-zone",
+        "sequence": 24,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-D08C74941A",
+        "payload": {
+          "value": "back_table"
+        }
+      },
+      {
+        "id": "ebus-tbna-miniforceps-phase",
+        "sequence": 25,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-D08C74941A",
+        "payload": {
+          "value": "diagnostic"
+        }
+      },
+      {
+        "id": "ebus-tbna-vacuum-syringe-zone",
+        "sequence": 26,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-E8F0B48B49",
+        "payload": {
+          "value": "back_table"
+        }
+      },
+      {
+        "id": "ebus-tbna-vacuum-syringe-phase",
+        "sequence": 27,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-E8F0B48B49",
+        "payload": {
+          "value": "diagnostic"
         }
       }
     ]
@@ -382,12 +452,12 @@
     "compositionActions": []
   },
   {
-    "recipeVersionId": "recipe-ipc-placement-v0-1",
+    "recipeVersionId": "recipe-ipc-placement-v0-2",
     "scenarioId": "ipc-placement",
     "procedureCode": "IPC_PLACEMENT",
     "version": "1.0",
     "recipeName": "Tunneled indwelling pleural catheter placement",
-    "recipeVersion": "0.1",
+    "recipeVersion": "0.2",
     "sourceTemplateVersion": "0.3",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -418,7 +488,7 @@
         "sequence": 10
       },
       {
-        "moduleVersionId": "module-ipc-placement-specific-v1-0",
+        "moduleVersionId": "module-ipc-placement-specific-v1-1",
         "selectionBehavior": "required",
         "sequence": 20
       }
@@ -436,12 +506,12 @@
     ]
   },
   {
-    "recipeVersionId": "recipe-med-thoracoscopy-v0-1",
+    "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
     "scenarioId": "med-thoracoscopy",
     "procedureCode": "MED_THORACOSCOPY",
     "version": "1.0",
     "recipeName": "Medical thoracoscopy / pleuroscopy",
-    "recipeVersion": "0.1",
+    "recipeVersion": "0.3",
     "sourceTemplateVersion": "0.3",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -486,12 +556,49 @@
         "sequence": 10
       },
       {
-        "moduleVersionId": "module-med-thoracoscopy-specific-v1-0",
+        "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
         "selectionBehavior": "required",
         "sequence": 20
       }
     ],
-    "compositionActions": []
+    "compositionActions": [
+      {
+        "id": "med-thoracoscopy-chest-tube-zone",
+        "sequence": 10,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-57CA4B1298",
+        "payload": {
+          "value": "sterile_field"
+        }
+      },
+      {
+        "id": "med-thoracoscopy-chest-tube-phase",
+        "sequence": 11,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-57CA4B1298",
+        "payload": {
+          "value": "therapeutic"
+        }
+      },
+      {
+        "id": "med-thoracoscopy-ipc-kit-zone",
+        "sequence": 12,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-9A1C0491F9",
+        "payload": {
+          "value": "sterile_field"
+        }
+      },
+      {
+        "id": "med-thoracoscopy-ipc-kit-phase",
+        "sequence": 13,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-9A1C0491F9",
+        "payload": {
+          "value": "therapeutic"
+        }
+      }
+    ]
   },
   {
     "recipeVersionId": "recipe-perc-trach-v0-1",
@@ -689,12 +796,12 @@
     "compositionActions": []
   },
   {
-    "recipeVersionId": "recipe-therapeutic-bronch-v0-1",
+    "recipeVersionId": "recipe-therapeutic-bronch-v0-2",
     "scenarioId": "central-airway-obstruction",
     "procedureCode": "THERAPEUTIC_BRONCH",
     "version": "1.0",
     "recipeName": "Central airway obstruction / tumor debulking",
-    "recipeVersion": "0.1",
+    "recipeVersion": "0.2",
     "sourceTemplateVersion": "0.3",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -728,6 +835,8 @@
     ],
     "requirementSequences": {
       "AIRWAY_RETRIEVAL_FORCEPS": 6,
+      "FLEX_BRONCH_AIRWAY_ADAPTER": 30,
+      "FLEX_BRONCH_BITE_BLOCK": 18,
       "FLEX_BRONCH_SUCTION_SETUP": 3,
       "FLEX_BRONCH_VIDEO_PROCESSOR": 2,
       "PROCEDURAL_FLUOROSCOPY_C_ARM": 27,
@@ -750,7 +859,6 @@
       "SLOT-97CFA5C9A2": 15,
       "SLOT-D2974FC11B": 13,
       "SLOT-D43C866FB5": 9,
-      "SLOT-D6B291DC80": 18,
       "SLOT-D7F2D36301": 19,
       "SLOT-EE17F755B2": 26,
       "SLOT-FCE9E3810E": 4,
@@ -759,7 +867,7 @@
     },
     "moduleReferences": [
       {
-        "moduleVersionId": "module-flex-bronch-core-v1-0",
+        "moduleVersionId": "module-flex-bronch-core-v1-1",
         "selectionBehavior": "required",
         "sequence": 10
       },
@@ -769,7 +877,7 @@
         "sequence": 20
       },
       {
-        "moduleVersionId": "module-therapeutic-bronch-specific-v1-0",
+        "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
         "selectionBehavior": "required",
         "sequence": 30
       },
@@ -788,16 +896,52 @@
         "payload": {
           "note": "High-flow suction tubing and canisters are required for therapeutic work."
         }
+      },
+      {
+        "id": "therapeutic-bronch-biopsy-forceps-zone",
+        "sequence": 20,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-D2974FC11B",
+        "payload": {
+          "value": "back_table"
+        }
+      },
+      {
+        "id": "therapeutic-bronch-biopsy-forceps-phase",
+        "sequence": 21,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-D2974FC11B",
+        "payload": {
+          "value": "diagnostic"
+        }
+      },
+      {
+        "id": "therapeutic-bronch-bal-kit-zone",
+        "sequence": 22,
+        "actionType": "set_setup_zone",
+        "targetSlotId": "SLOT-FDF73730B0",
+        "payload": {
+          "value": "back_table"
+        }
+      },
+      {
+        "id": "therapeutic-bronch-bal-kit-phase",
+        "sequence": 23,
+        "actionType": "set_procedural_phase",
+        "targetSlotId": "SLOT-FDF73730B0",
+        "payload": {
+          "value": "diagnostic"
+        }
       }
     ]
   },
   {
-    "recipeVersionId": "recipe-thoracentesis-v0-1",
+    "recipeVersionId": "recipe-thoracentesis-v0-2",
     "scenarioId": "thoracentesis",
     "procedureCode": "THORACENTESIS",
     "version": "1.0",
     "recipeName": "Thoracentesis",
-    "recipeVersion": "0.1",
+    "recipeVersion": "0.2",
     "sourceTemplateVersion": "0.2",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -826,7 +970,7 @@
         "sequence": 10
       },
       {
-        "moduleVersionId": "module-thoracentesis-specific-v1-0",
+        "moduleVersionId": "module-thoracentesis-specific-v1-1",
         "selectionBehavior": "required",
         "sequence": 20
       }

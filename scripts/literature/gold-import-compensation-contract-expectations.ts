@@ -32,6 +32,175 @@ export const TRUSTED_LOCAL_SUPABASE_ROLE_NAMES = [
   'supabase_admin',
 ] as const
 
+const ORDINARY_ROLE_ATTRIBUTES = {
+  bypassRls: false,
+  canLogin: false,
+  connectionLimit: -1,
+  createDb: false,
+  createRole: false,
+  inherit: true,
+  replication: false,
+  superuser: false,
+  validUntil: null,
+} as const
+
+const PRIVILEGED_ROLE_ATTRIBUTES = {
+  bypassRls: true,
+  canLogin: true,
+  connectionLimit: -1,
+  createDb: true,
+  createRole: true,
+  inherit: true,
+  replication: true,
+  superuser: true,
+  validUntil: null,
+} as const
+
+function apiRoleMembers(): RoleSecurityAttributes['members'] {
+  return [
+    {
+      adminOption: false,
+      grantor: 'supabase_admin',
+      inheritOption: false,
+      memberName: 'authenticator',
+      setOption: true,
+    },
+    {
+      adminOption: true,
+      grantor: 'supabase_admin',
+      inheritOption: true,
+      memberName: 'postgres',
+      setOption: true,
+    },
+  ]
+}
+
+function postgresMembership(
+  roleName: string,
+  adminOption = true,
+): RoleSecurityAttributes['memberOf'][number] {
+  return {
+    adminOption,
+    grantor: 'supabase_admin',
+    inheritOption: true,
+    roleName,
+    setOption: true,
+  }
+}
+
+/** Exact local-role projection used only to prove the supported profile in disposable rehearsal. */
+export const TRUSTED_LOCAL_SUPABASE_ROLE_INVENTORY: readonly RoleSecurityAttributes[] = [
+  {
+    attributes: ORDINARY_ROLE_ATTRIBUTES,
+    effectiveMemberships: ['anon'],
+    exists: true,
+    memberOf: [],
+    members: apiRoleMembers(),
+    roleName: 'anon',
+  },
+  {
+    attributes: ORDINARY_ROLE_ATTRIBUTES,
+    effectiveMemberships: ['authenticated'],
+    exists: true,
+    memberOf: [],
+    members: apiRoleMembers(),
+    roleName: 'authenticated',
+  },
+  {
+    attributes: { ...PRIVILEGED_ROLE_ATTRIBUTES, superuser: false },
+    effectiveMemberships: [
+      'anon',
+      'authenticated',
+      'authenticator',
+      'pg_create_subscription',
+      'pg_database_owner',
+      'pg_monitor',
+      'pg_read_all_data',
+      'pg_read_all_settings',
+      'pg_read_all_stats',
+      'pg_signal_backend',
+      'pg_stat_scan_tables',
+      'postgres',
+      'service_role',
+      'supabase_functions_admin',
+      'supabase_privileged_role',
+      'supabase_realtime_admin',
+    ],
+    exists: true,
+    memberOf: [
+      postgresMembership('anon'),
+      postgresMembership('authenticated'),
+      postgresMembership('authenticator'),
+      postgresMembership('pg_create_subscription'),
+      postgresMembership('pg_monitor'),
+      postgresMembership('pg_read_all_data'),
+      postgresMembership('pg_signal_backend'),
+      postgresMembership('service_role'),
+      postgresMembership('supabase_functions_admin', false),
+      postgresMembership('supabase_privileged_role', false),
+      postgresMembership('supabase_realtime_admin', false),
+    ],
+    members: [],
+    roleName: 'postgres',
+  },
+  {
+    attributes: { ...ORDINARY_ROLE_ATTRIBUTES, bypassRls: true },
+    effectiveMemberships: ['service_role'],
+    exists: true,
+    memberOf: [],
+    members: apiRoleMembers(),
+    roleName: 'service_role',
+  },
+  {
+    attributes: PRIVILEGED_ROLE_ATTRIBUTES,
+    effectiveMemberships: [
+      'anon',
+      'authenticated',
+      'authenticator',
+      'dashboard_user',
+      'pg_checkpoint',
+      'pg_create_subscription',
+      'pg_database_owner',
+      'pg_execute_server_program',
+      'pg_maintain',
+      'pg_monitor',
+      'pg_read_all_data',
+      'pg_read_all_settings',
+      'pg_read_all_stats',
+      'pg_read_server_files',
+      'pg_signal_backend',
+      'pg_stat_scan_tables',
+      'pg_use_reserved_connections',
+      'pg_write_all_data',
+      'pg_write_server_files',
+      'pgbouncer',
+      'postgres',
+      'service_role',
+      'supabase_admin',
+      'supabase_auth_admin',
+      'supabase_etl_admin',
+      'supabase_functions_admin',
+      'supabase_privileged_role',
+      'supabase_read_only_user',
+      'supabase_realtime_admin',
+      'supabase_replication_admin',
+      'supabase_storage_admin',
+    ],
+    exists: true,
+    memberOf: [],
+    members: [],
+    roleName: 'supabase_admin',
+  },
+]
+
+export function trustedLocalRoleInventoryProjection(): RoleSecurityAttributes[] {
+  const projection = JSON.parse(
+    reconciliationCanonicalJson(TRUSTED_LOCAL_SUPABASE_ROLE_INVENTORY),
+  ) as RoleSecurityAttributes[]
+  trustedLocalDeploymentProfileEvidence(projection)
+  return projection
+}
+
 function string(value: unknown, label: string): string {
   if (typeof value !== 'string' || value.length === 0) {
     throw new Error(`${label} must be a nonempty string.`)

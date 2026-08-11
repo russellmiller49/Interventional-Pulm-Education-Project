@@ -56,6 +56,7 @@ const DEFAULT_BASE = 'origin/main'
 const ARTIFACT_FILES = {
   releaseBundles: 'release-bundles.json',
   moduleLedger: 'module-ledger.json',
+  compositionLedger: 'composition-ledger.json',
   catalogReleases: 'catalog-release-manifests.json',
   productFamilies: 'product-family-versions.json',
 } as const
@@ -105,6 +106,7 @@ function parseArtifacts(files: Record<keyof typeof ARTIFACT_FILES, string | null
   return {
     releaseBundles: parse(files.releaseBundles),
     moduleLedger: parse(files.moduleLedger),
+    compositionLedger: parse(files.compositionLedger),
     catalogReleases: parse(files.catalogReleases),
     productFamilies: parse(files.productFamilies),
   } as PublicationArtifacts
@@ -124,6 +126,7 @@ async function readWorkingTreeArtifacts(generatedDirectory: string) {
   return parseArtifacts({
     releaseBundles: await read(ARTIFACT_FILES.releaseBundles),
     moduleLedger: await read(ARTIFACT_FILES.moduleLedger),
+    compositionLedger: await read(ARTIFACT_FILES.compositionLedger),
     catalogReleases: await read(ARTIFACT_FILES.catalogReleases),
     productFamilies: await read(ARTIFACT_FILES.productFamilies),
   })
@@ -140,6 +143,7 @@ async function readFixtureArtifacts(directory: string) {
   return parseArtifacts({
     releaseBundles: await read(ARTIFACT_FILES.releaseBundles),
     moduleLedger: await read(ARTIFACT_FILES.moduleLedger),
+    compositionLedger: await read(ARTIFACT_FILES.compositionLedger),
     catalogReleases: await read(ARTIFACT_FILES.catalogReleases),
     productFamilies: await read(ARTIFACT_FILES.productFamilies),
   })
@@ -189,6 +193,7 @@ async function readArtifactsAtCommit(commit: string, generatedDirectory: string)
   return parseArtifacts({
     releaseBundles: await read(ARTIFACT_FILES.releaseBundles),
     moduleLedger: await read(ARTIFACT_FILES.moduleLedger),
+    compositionLedger: await read(ARTIFACT_FILES.compositionLedger),
     catalogReleases: await read(ARTIFACT_FILES.catalogReleases),
     productFamilies: await read(ARTIFACT_FILES.productFamilies),
   })

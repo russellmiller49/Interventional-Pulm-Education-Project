@@ -18,7 +18,7 @@ import { resolveForSave } from '../server/user-cards'
 
 const GENERATED_AT = '2026-07-30T12:00:00.000Z'
 const SCENARIO_ID = 'ebus-rose-molecular'
-const FLEX_CORE = 'module-flex-bronch-core-v1-0'
+const FLEX_CORE = 'module-flex-bronch-core-v1-1'
 const EBUS_SPECIFIC = 'module-ebus-tbna-specific-v1-0'
 const FLUOROSCOPY = 'module-procedural-fluoroscopy-v1-0'
 
@@ -212,7 +212,7 @@ describe('a custom composition', () => {
     expect(
       first.card.warnings.some((warning) => warning.code === 'recipe_composition_conflict'),
     ).toBe(false)
-    expect(first.card.items).toHaveLength(3)
+    expect(first.card.items).toHaveLength(5)
   })
 
   it('still rejects a module version that is not in the catalog', () => {

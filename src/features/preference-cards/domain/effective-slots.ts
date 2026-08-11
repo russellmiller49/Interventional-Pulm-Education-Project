@@ -283,8 +283,13 @@ function applyModifierAction(
       return
     }
     default: {
+      // Compile-time exhaustive via the never-binding, and fail-loud at runtime (P91-C5):
+      // a silent skip here would resolve a card as though the unknown action had never been
+      // authored.
       const exhaustiveCheck: never = action.actionType
-      return exhaustiveCheck
+      throw new Error(
+        `Unknown modifier action type "${String(exhaustiveCheck)}" in action "${action.id}" while applying modifier "${action.modifierCode}" to the effective requirement set.`,
+      )
     }
   }
 

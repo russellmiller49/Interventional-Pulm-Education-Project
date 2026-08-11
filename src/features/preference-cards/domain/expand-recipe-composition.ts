@@ -1,17 +1,14 @@
-import { quantityExpressionSchema, setRequirednessPayloadSchema } from './schemas'
+import { parseProcedureCompositionActionPayload } from './schemas'
 import { stableStringify } from './stable-hash'
 import type {
   IncludedRecipeModule,
   ModuleSelectionSource,
-  OpenHoldStatus,
-  ProceduralPhase,
   ProcedureCompositionAction,
   RecipeModuleVersion,
   RecipeSlot,
   RecipeVersion,
   RuleMessage,
   RuleTraceEvent,
-  SetupZone,
 } from './types'
 
 /**
@@ -166,11 +163,6 @@ function union(left: readonly string[] | undefined, right: readonly string[] | u
     if (!result.includes(value)) result.push(value)
   }
   return result
-}
-
-function payloadString(action: ProcedureCompositionAction, key: string): string | null {
-  const value = action.payload[key]
-  return typeof value === 'string' && value.length > 0 ? value : null
 }
 
 function matchingSlots(slots: RecipeSlot[], action: ProcedureCompositionAction): RecipeSlot[] {
@@ -412,8 +404,22 @@ export function expandRecipeComposition(input: ExpandRecipeCompositionInput): Ex
     (left, right) => left.sequence - right.sequence || left.id.localeCompare(right.id),
   )
   for (const action of actions) {
+    // Parsed before target matching, deliberately: this evaluator is the enforcement
+    // boundary for every composition object handed to it — including generated and
+    // ledger-retained recipes that never pass a seed loader — so an invalid payload or an
+    // unknown action type fails the expansion even when its target is not in the current
+    // selection. Casting an unvalidated payload value onto a slot is what let
+    // `set_open_hold_status` propagate an arbitrary string (P91-C4).
+    const parsed = parseProcedureCompositionActionPayload(action, {
+      operation: `expanding the ${recipe.name} composition (${recipe.id})`,
+    })
     const affected = matchingSlots(slots, action)
     if (affected.length === 0) {
+      // An optional-target action whose requirement is not in the selected composition is
+      // simply not applicable to this card. It leaves no message and no trace on purpose:
+      // the trace is hashed, and stamping the absent target's identity into every card that
+      // did not select its module would move those cards' identity for a line they never had.
+      if (action.optionalTarget) continue
       emitMessage(emitter, {
         id: `composition-action-unmatched-${action.id}`,
         severity: 'warning',
@@ -424,8 +430,25 @@ export function expandRecipeComposition(input: ExpandRecipeCompositionInput): Ex
       })
       continue
     }
+    if (action.optionalTarget && affected.length > 1) {
+      // An optional-target action is authored against exactly one requirement. Two matches
+      // mean the slot-identity assumption broke — silently modifying both would apply a
+      // reviewed per-requirement statement to a requirement nobody reviewed it for.
+      emitMessage(emitter, {
+        id: `composition-action-ambiguous-${action.id}`,
+        severity: 'blocking',
+        code: 'recipe_composition_action_ambiguous',
+        message: `Composition action ${action.id} on ${recipe.name} matched ${affected.length} requirements (${affected
+          .map((slot) => slot.requirementKey)
+          .sort()
+          .join(', ')}); an optional-target action must identify exactly one.`,
+        sourceType: 'recipe',
+        sourceId: recipe.id,
+      })
+      continue
+    }
 
-    switch (action.actionType) {
+    switch (parsed.actionType) {
       case 'remove_slot': {
         const removedIds = new Set(affected.map((slot) => slot.id))
         for (const slot of affected) byRequirementKey.delete(slot.requirementKey)
@@ -435,47 +458,39 @@ export function expandRecipeComposition(input: ExpandRecipeCompositionInput): Ex
         break
       }
       case 'set_requiredness': {
-        const payload = setRequirednessPayloadSchema.parse(action.payload)
         for (const slot of affected) {
-          slot.requiredness = payload.value
-          if (payload.dependencyRule !== undefined) slot.dependencyRule = payload.dependencyRule
+          slot.requiredness = parsed.value
+          if (parsed.dependencyRule !== undefined) slot.dependencyRule = parsed.dependencyRule
         }
         break
       }
       case 'set_quantity': {
-        const expression = quantityExpressionSchema.parse(action.payload.expression)
-        for (const slot of affected) slot.quantityExpression = { ...expression }
+        for (const slot of affected) slot.quantityExpression = { ...parsed.expression }
         break
       }
       case 'set_setup_zone': {
-        const value = payloadString(action, 'value') as SetupZone | null
-        if (!value) break
-        for (const slot of affected) slot.setupZone = value
+        for (const slot of affected) slot.setupZone = parsed.value
         break
       }
       case 'set_procedural_phase': {
-        const value = payloadString(action, 'value') as ProceduralPhase | null
-        if (!value) break
-        for (const slot of affected) slot.proceduralPhase = value
+        for (const slot of affected) slot.proceduralPhase = parsed.value
         break
       }
       case 'set_open_hold_status': {
-        const value = payloadString(action, 'value') as OpenHoldStatus | null
-        if (!value) break
-        for (const slot of affected) slot.openHoldStatus = value
+        for (const slot of affected) slot.openHoldStatus = parsed.value
         break
       }
       case 'append_note': {
-        const note = payloadString(action, 'note')
-        if (!note) break
         for (const slot of affected) {
-          slot.notes = [slot.notes, note].filter(Boolean).join(' ')
+          slot.notes = [slot.notes, parsed.note].filter(Boolean).join(' ')
         }
         break
       }
       default: {
-        const exhaustiveCheck: never = action.actionType
-        return exhaustiveCheck
+        const exhaustiveCheck: never = parsed
+        throw new Error(
+          `Unknown composition action type in action "${action.id}" while expanding the ${recipe.name} composition (${recipe.id}): ${JSON.stringify(exhaustiveCheck)}`,
+        )
       }
     }
 

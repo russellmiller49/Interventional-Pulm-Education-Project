@@ -64,15 +64,22 @@
 // — so a future change that reworded a rule-trace message would move `snapshotHash` and leave this
 // alone, and a change to effective requiredness would move both. Having both in the fixture is what
 // makes that distinction visible in a diff rather than an argument about which hash to trust.
+// Re-pinned 2026-08-09 for the owner-review governed-data corrections (release v1-1 line):
+// F-04 moved six sampling instruments to back_table/diagnostic (both hashes move — zone and
+// phase are inside the projections); F-05 re-phased the Drainage section (both chest-tube
+// entries); F-06 removed the four IPC lines from CHEST_TUBE (item counts 11 → 7 and 12 → 8);
+// F-10 added the flex-core bite block and airway adapter (EBUS 19 → 21, therapeutic 57 → 58,
+// where the bite block also migrated its requirement key into the shared core). Readiness
+// states and the suppressed-item count were expected to stay put, and did.
 export const goldenScenarioExpectations = {
   ebusRoseMolecular: {
     scenarioId: 'ebus-rose-molecular',
     modifierCodes: ['ROSE', 'SPEC_MOLECULAR'],
     readinessState: 'complete_with_warnings',
-    itemCount: 19,
+    itemCount: 21,
     suppressedItemCount: 0,
-    snapshotHash: '09084ae504ca33e8bc87c29d0d62cc9564f7f8b3b185483924639dfc21251f7e',
-    resolvedContentHash: '78e77e4e542e756914856906158b19fd31e7d45211312c941270ed170b4aaffa',
+    snapshotHash: 'b2f033f7dd6abe281ca7ff7fb094d93bdac5392448ed3b1fb196e49b210fc90b',
+    resolvedContentHash: 'af722b416b13df64abc38a30c84babb7a661191865a659b8c9356870a4b43a6a',
   },
   centralAirwayObstruction: {
     scenarioId: 'central-airway-obstruction',
@@ -86,28 +93,28 @@ export const goldenScenarioExpectations = {
       'HIGH_BLEED_RISK',
     ],
     readinessState: 'complete_with_warnings',
-    itemCount: 57,
+    itemCount: 58,
     suppressedItemCount: 0,
-    snapshotHash: 'efc1eb5a5babd1bd4e95d1097fc076c2758cfbe839c7a72adffe4942de1b1495',
-    resolvedContentHash: 'e953535778dc3f55d827f93fe9c60b32f74558dfc7667fc5af98ea15b437b4f1',
+    snapshotHash: '1735412591ca5d068c782e23bf00de4fc468abdbcc95a955568fc79f2c75c5a2',
+    resolvedContentHash: '2a16bb12a2124a9d68b2c912528c8ab31c916f1f996c59867bd19928f7effcd6',
   },
   chestTubeSmallBoreDigital: {
     scenarioId: 'chest-tube',
     modifierCodes: ['TECH_CHEST_TUBE_SMALL_BORE', 'DIGITAL_DRAINAGE'],
     readinessState: 'complete_with_warnings',
-    itemCount: 11,
+    itemCount: 7,
     suppressedItemCount: 1,
-    snapshotHash: '7d8cbd5f08dce37e3d66dde70e9753405c4588ef7c834f0a47f4289ff151dd81',
-    resolvedContentHash: 'df53244739c30de6d3c81088f88542189797e7075e8d2a144e36bd45ae64d7d3',
+    snapshotHash: '53115b6aba1aae1b209269d8ab36d2dc641a5f95b93dafc0ebb1d04b9c5d7379',
+    resolvedContentHash: '3f7a85e8cacfa584e918140787527e7833494a8f998122a305026fae233407f5',
   },
   chestTubeLargeBoreConventional: {
     scenarioId: 'chest-tube',
     modifierCodes: ['TECH_CHEST_TUBE_LARGE_BORE'],
     readinessState: 'complete_with_warnings',
-    itemCount: 12,
+    itemCount: 8,
     suppressedItemCount: 0,
-    snapshotHash: '72f3311726219af5099d2ddec261f95ae541f4583970dbf1c8a8a7e02850ca59',
-    resolvedContentHash: 'ae632f4f94066c588822bf9aa8b583aa1c08900350156b7ab411ccbf860ec732',
+    snapshotHash: '53ab0e750cbf0ac62e59806987ba6fede4eac591070a386eaeadb220212904ab',
+    resolvedContentHash: '80c2236c66be7b14067f60208f6c24f642f5c9823124cfb4dfc6aa4c46abfa51',
   },
 } as const
 
@@ -146,6 +153,8 @@ export const goldenScenarioItemOrder = {
       'SLOT-E8F0B48B49', // Vacuum-locking syringe
       'PROCEDURAL_FLUOROSCOPY_C_ARM', // Fluoroscopy C-arm
       'PROCEDURAL_RADIATION_PROTECTION', // Radiation protection
+      'FLEX_BRONCH_BITE_BLOCK', // Bite block (F-10: flex core v1.1; EBUS row display_order 16)
+      'FLEX_BRONCH_AIRWAY_ADAPTER', // Airway adapter (F-10: flex core v1.1; EBUS row display_order 17)
       'OPS-ROSE-STATION',
       'OPS-ROSE-SUPPLIES',
       'OPS-MOLECULAR-SPECIMEN',
@@ -182,7 +191,7 @@ export const goldenScenarioItemOrder = {
       'SLOT-97CFA5C9A2', // Flexible APC probe
       'SLOT-90A43CBAEF', // Energy cable / adapter
       'SLOT-971BBE6BF8', // Cryosurgery platform accessories
-      'SLOT-D6B291DC80', // Bite block
+      'FLEX_BRONCH_BITE_BLOCK', // Bite block (F-10: same line, requirement key re-homed into flex core v1.1)
       'SLOT-D7F2D36301', // Cleaning brush
       'SLOT-1538BC9076', // APC gas-system accessories
       'SLOT-081FB0C695', // Airway stent sizing device
@@ -194,6 +203,7 @@ export const goldenScenarioItemOrder = {
       'PROCEDURAL_FLUOROSCOPY_C_ARM', // Fluoroscopy C-arm
       'PROCEDURAL_RADIATION_PROTECTION', // Radiation protection
       'SLOT-38E5FB60B9', // Tomosynthesis navigation system
+      'FLEX_BRONCH_AIRWAY_ADAPTER', // Airway adapter (F-10: therapeutic row display_order 30)
       'OPS-RIGID-HEAD',
       'OPS-RIGID-BARREL',
       'OPS-RIGID-ACCESSORY',

@@ -269,7 +269,7 @@
       "requiredDefaultOptionCoveragePercentage": 33.3,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-CE48C1B108", "SLOT-4BE1D79D6C"],
       "requiredCustomAllowedCount": 3,
-      "slotCount": 13,
+      "slotCount": 9,
       "slotCoverage": [
         {
           "slotId": "SLOT-C7DBD5BC4C",
@@ -342,26 +342,6 @@
           "hasCuratedDefault": false
         },
         {
-          "slotId": "SLOT-D02F71E583",
-          "roleCode": "IPC_INSERTION_KIT",
-          "requiredness": "optional",
-          "allowCustom": true,
-          "catalogProductCount": 13,
-          "curatedDefaultOptionCount": 10,
-          "hasCatalogProducts": true,
-          "hasCuratedDefault": true
-        },
-        {
-          "slotId": "SLOT-B4E5C6A7A9",
-          "roleCode": "IPC_DRAINAGE_KIT",
-          "requiredness": "conditional",
-          "allowCustom": true,
-          "catalogProductCount": 12,
-          "curatedDefaultOptionCount": 10,
-          "hasCatalogProducts": true,
-          "hasCuratedDefault": true
-        },
-        {
           "slotId": "SLOT-4BE1D79D6C",
           "roleCode": "DRESSING_SECUREMENT",
           "requiredness": "required",
@@ -380,26 +360,6 @@
           "curatedDefaultOptionCount": 11,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
-        },
-        {
-          "slotId": "SLOT-702914B1CF",
-          "roleCode": "IPC_DRESSING_KIT",
-          "requiredness": "conditional",
-          "allowCustom": true,
-          "catalogProductCount": 2,
-          "curatedDefaultOptionCount": 2,
-          "hasCatalogProducts": true,
-          "hasCuratedDefault": true
-        },
-        {
-          "slotId": "SLOT-67171A33D4",
-          "roleCode": "IPC_MANAGEMENT_ACCESSORY",
-          "requiredness": "conditional",
-          "allowCustom": true,
-          "catalogProductCount": 11,
-          "curatedDefaultOptionCount": 11,
-          "hasCatalogProducts": true,
-          "hasCuratedDefault": true
         }
       ]
     },
@@ -414,7 +374,7 @@
       "requiredDefaultOptionCoveragePercentage": 71.4,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-12ACA27E54", "SLOT-2E3065C976"],
       "requiredCustomAllowedCount": 7,
-      "slotCount": 15,
+      "slotCount": 17,
       "slotCoverage": [
         {
           "slotId": "SLOT-4648848CC3",
@@ -564,6 +524,26 @@
           "catalogProductCount": 0,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": false,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-2147BE329B",
+          "roleCode": "BITE_BLOCK",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-0306E7B77D",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
           "hasCuratedDefault": false
         }
       ]
@@ -2085,7 +2065,7 @@
       "requiredDefaultOptionCoveragePercentage": 66.7,
       "requiredSlotsWithoutDefaultOptions": ["SLOT-13609A744F"],
       "requiredCustomAllowedCount": 3,
-      "slotCount": 29,
+      "slotCount": 30,
       "slotCoverage": [
         {
           "slotId": "SLOT-B79D3CF198",
@@ -2373,6 +2353,16 @@
           "requiredness": "conditional",
           "allowCustom": true,
           "catalogProductCount": 2,
+          "curatedDefaultOptionCount": 0,
+          "hasCatalogProducts": true,
+          "hasCuratedDefault": false
+        },
+        {
+          "slotId": "SLOT-190EFC825B",
+          "roleCode": "GENERIC_AIRWAY_ADAPTER",
+          "requiredness": "conditional",
+          "allowCustom": true,
+          "catalogProductCount": 8,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false

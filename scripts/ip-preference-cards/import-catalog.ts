@@ -44,6 +44,11 @@ import {
   type ProcedureAdditionsReport,
 } from './apply-procedure-additions'
 import {
+  applyProcedureTemplateCorrections,
+  readProcedureTemplateCorrections,
+  type ProcedureTemplateCorrectionsReport,
+} from './apply-procedure-template-corrections'
+import {
   applyRoleTaxonomy,
   assertCanonicalRoleTaxonomy,
   type RoleTaxonomyReport,
@@ -122,6 +127,7 @@ interface ImportReport {
   catalog_additions?: AdditionsMergeReport
   role_taxonomy?: RoleTaxonomyReport
   procedure_additions?: ProcedureAdditionsReport
+  procedure_template_corrections?: ProcedureTemplateCorrectionsReport
   product_overrides?: OverridesReport
   external_review_remediation?: ExternalReviewRemediationReport
   external_review_completed_implementation?: ExternalReviewCompletedImplementationReport
@@ -645,6 +651,17 @@ export async function importCatalog(options?: ImportCatalogOptions) {
     },
   }
 
+  // Reviewed template corrections — slot rows the workbook carries in the wrong procedure
+  // (see apply-procedure-template-corrections.ts). Applied after the additions so a correction
+  // sees the full template, and before the reviewed overlays so a retargeting correction can
+  // never be aimed at a row this pass removes.
+  const templateCorrections = await readProcedureTemplateCorrections()
+  const templateCorrectionsReport = applyProcedureTemplateCorrections(
+    normalized as unknown as Record<string, CatalogRecord[]>,
+    templateCorrections,
+  )
+  report.procedure_template_corrections = templateCorrectionsReport
+
   // Versioned, externally reviewed semantic corrections are applied after source-preserving
   // overrides and additions, and before generated JSON or nonselectable proposals are written.
   // The applicator validates exact pre-remediation cohorts and mutates transactionally.
@@ -723,6 +740,7 @@ export async function importCatalog(options?: ImportCatalogOptions) {
     ...roleTaxonomyReport.errors.map((error) => `role taxonomy: ${error}`),
     ...procedureAdditionRolesReport.errors.map((error) => `procedure additions: ${error}`),
     ...procedureAdditionsReport.errors.map((error) => `procedure additions: ${error}`),
+    ...templateCorrectionsReport.errors.map((error) => `procedure template corrections: ${error}`),
     ...roleTaxonomyViolations.map((error) => `role taxonomy: ${error}`),
     ...overridesReport.errors.map((error) => `product overrides: ${error}`),
     ...(externalReviewRemediationReport?.errors ?? []).map(

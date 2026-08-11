@@ -334,7 +334,7 @@ describe('exact-slot clinician review workbook export', () => {
     ).toHaveLength(2)
 
     const realRows = getSlotOptionReviewRows()
-    expect(realRows).toHaveLength(813)
+    expect(realRows).toHaveLength(831)
     const workbook = await createExactSlotReviewWorkbook(
       { scope: 'all', locale: 'en' },
       'https://example.test',
@@ -347,15 +347,15 @@ describe('exact-slot clinician review workbook export', () => {
     )
     // Taxonomy v2 added 57 procedure slots across two new procedures and five existing ones,
     // so the derived non-selectable proposal set grew from 429 to 798.
-    expect(workbook.proposalKeys).toHaveLength(813)
+    expect(workbook.proposalKeys).toHaveLength(831)
     const parsed = await parseOoxmlWorkbookBytes(workbook.bytes)
-    expect(parsed.sheets.get('Exact Slot Review')?.maxRow).toBe(814)
+    expect(parsed.sheets.get('Exact Slot Review')?.maxRow).toBe(832)
 
     const preview = await importExactSlotReviewWorkbook(workbook.bytes, importOptions(realRows))
     expect(preview.summary).toMatchObject({
-      matchedProposalKeys: 813,
+      matchedProposalKeys: 831,
       missingCurrentProposals: 0,
-      rowsWithoutDecision: 813,
+      rowsWithoutDecision: 831,
       validCompletedDecisions: 0,
     })
     expect(preview.canExportNormalized).toBe(true)

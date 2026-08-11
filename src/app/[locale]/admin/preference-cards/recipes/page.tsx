@@ -105,6 +105,8 @@ export default async function PreferenceCardRecipesPage({
           modules: t('admin.modulePins'),
           recipe: t('admin.recipe'),
           requirementChanges: t('admin.requirementChanges'),
+          modifierEffectChanges: t('admin.modifierEffectChanges'),
+          modifierEffectNote: t('admin.modifierEffectNote'),
         }}
       />
 

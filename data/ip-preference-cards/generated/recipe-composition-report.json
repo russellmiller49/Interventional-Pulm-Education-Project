@@ -1,9 +1,9 @@
 {
   "generatedFrom": {
     "procedures": 15,
-    "procedureSlots": 233,
+    "procedureSlots": 232,
     "modules": 19,
-    "duplicateRequirementsRemoved": 9
+    "duplicateRequirementsRemoved": 11
   },
   "procedures": [
     {
@@ -19,23 +19,23 @@
     },
     {
       "procedureCode": "CHEST_TUBE",
-      "originalSlotCount": 13,
+      "originalSlotCount": 9,
       "coreModuleSlotCount": 1,
       "optionalModuleSlotCount": 0,
-      "procedureSpecificSlotCount": 12,
-      "defaultComposedSlotCount": 13,
+      "procedureSpecificSlotCount": 8,
+      "defaultComposedSlotCount": 9,
       "duplicateRequirementsRemoved": 1,
       "moduleCodes": ["PLEURAL_PROCEDURE_CORE", "CHEST_TUBE_SPECIFIC"],
       "hasReviewedCoreMapping": true
     },
     {
       "procedureCode": "EBUS_TBNA",
-      "originalSlotCount": 15,
-      "coreModuleSlotCount": 2,
+      "originalSlotCount": 17,
+      "coreModuleSlotCount": 4,
       "optionalModuleSlotCount": 2,
       "procedureSpecificSlotCount": 11,
-      "defaultComposedSlotCount": 15,
-      "duplicateRequirementsRemoved": 0,
+      "defaultComposedSlotCount": 17,
+      "duplicateRequirementsRemoved": 1,
       "moduleCodes": ["FLEX_BRONCH_CORE", "EBUS_TBNA_SPECIFIC", "PROCEDURAL_FLUOROSCOPY"],
       "hasReviewedCoreMapping": true
     },
@@ -140,12 +140,12 @@
     },
     {
       "procedureCode": "THERAPEUTIC_BRONCH",
-      "originalSlotCount": 29,
-      "coreModuleSlotCount": 4,
+      "originalSlotCount": 30,
+      "coreModuleSlotCount": 6,
       "optionalModuleSlotCount": 2,
-      "procedureSpecificSlotCount": 23,
-      "defaultComposedSlotCount": 29,
-      "duplicateRequirementsRemoved": 4,
+      "procedureSpecificSlotCount": 22,
+      "defaultComposedSlotCount": 30,
+      "duplicateRequirementsRemoved": 5,
       "moduleCodes": [
         "FLEX_BRONCH_CORE",
         "THERAPEUTIC_BRONCH_CORE",
@@ -184,6 +184,20 @@
       "definitionSourceSlotId": "SLOT-1647A73048",
       "absorbedSlotIds": ["SLOT-6AC64B5E3D"],
       "procedureCodes": ["EBV", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "FLEX_BRONCH_AIRWAY_ADAPTER",
+      "moduleCode": "FLEX_BRONCH_CORE",
+      "definitionSourceSlotId": "SLOT-0306E7B77D",
+      "absorbedSlotIds": ["SLOT-190EFC825B"],
+      "procedureCodes": ["EBUS_TBNA", "THERAPEUTIC_BRONCH"]
+    },
+    {
+      "requirementKey": "FLEX_BRONCH_BITE_BLOCK",
+      "moduleCode": "FLEX_BRONCH_CORE",
+      "definitionSourceSlotId": "SLOT-D6B291DC80",
+      "absorbedSlotIds": ["SLOT-2147BE329B"],
+      "procedureCodes": ["EBUS_TBNA", "THERAPEUTIC_BRONCH"]
     },
     {
       "requirementKey": "FLEX_BRONCH_SUCTION_SETUP",

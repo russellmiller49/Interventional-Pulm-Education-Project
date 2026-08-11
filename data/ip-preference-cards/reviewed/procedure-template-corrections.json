@@ -1,0 +1,42 @@
+{
+  "formatVersion": 1,
+  "notes": "Reviewed slot removals for rows the protected workbook carries in the wrong procedure template. Applied by scripts/ip-preference-cards/apply-procedure-template-corrections.ts, after the reviewed additions and before the external-review overlays. Every removal restates the row's procedure, role, and section, so a drifted workbook fails the import rather than deleting whatever the id points at now. Removals change only the current template: previously published module, recipe, and release versions retain the removed rows verbatim in the module and composition ledgers, so historical cards still reconstruct.",
+  "slotRemovals": [
+    {
+      "slot_id": "SLOT-D02F71E583",
+      "expect": {
+        "procedure_code": "CHEST_TUBE",
+        "role_code": "IPC_INSERTION_KIT",
+        "section": "Long-term drainage"
+      },
+      "reason": "Owner review F-06, option (a) (2026-08-09): tunnelled indwelling pleural catheter equipment belongs to the IPC_PLACEMENT procedure, which already carries IPC_INSERTION_KIT as SLOT-1BCF3D0702 with the identical authored product options. Removing it makes CHEST_TUBE representative of acute chest-tube insertion instead of devoting 4 of 13 requirements to a different procedure."
+    },
+    {
+      "slot_id": "SLOT-B4E5C6A7A9",
+      "expect": {
+        "procedure_code": "CHEST_TUBE",
+        "role_code": "IPC_DRAINAGE_KIT",
+        "section": "Long-term drainage"
+      },
+      "reason": "Owner review F-06, option (a) (2026-08-09): IPC drainage equipment belongs to IPC_PLACEMENT, which already carries IPC_DRAINAGE_KIT as SLOT-3FBC244FAF with the identical authored product options."
+    },
+    {
+      "slot_id": "SLOT-702914B1CF",
+      "expect": {
+        "procedure_code": "CHEST_TUBE",
+        "role_code": "IPC_DRESSING_KIT",
+        "section": "Long-term drainage"
+      },
+      "reason": "Owner review F-06, option (a) (2026-08-09): IPC dressing equipment belongs to IPC_PLACEMENT, which already carries IPC_DRESSING_KIT as SLOT-6693BCAEE1 with the identical authored product options."
+    },
+    {
+      "slot_id": "SLOT-67171A33D4",
+      "expect": {
+        "procedure_code": "CHEST_TUBE",
+        "role_code": "IPC_MANAGEMENT_ACCESSORY",
+        "section": "Long-term drainage"
+      },
+      "reason": "Owner review F-06, option (a) (2026-08-09): IPC management accessories belong to IPC_PLACEMENT, which already carries IPC_MANAGEMENT_ACCESSORY as SLOT-1E91C231E5 with the identical authored product options."
+    }
+  ]
+}

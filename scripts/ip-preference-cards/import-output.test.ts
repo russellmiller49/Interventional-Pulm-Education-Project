@@ -28,7 +28,7 @@ describe('generated IP preference-card import contract', () => {
 
   it('reports authored options and unreviewed proposals with accurate names', () => {
     expect(importReport.slot_option_proposals).toEqual({
-      authored_canonical_options: 2073,
+      authored_canonical_options: 2035,
       generated_unreviewed_proposals: slotOptionProposals.proposals.length,
       excluded_proposal_pairs: 0,
       required_slots_with_catalog_coverage: 82,
@@ -37,7 +37,7 @@ describe('generated IP preference-card import contract', () => {
       stale_exceptions: 0,
       proposal_generation_errors: 0,
     })
-    expect(slotOptionProposals.proposals).toHaveLength(813)
+    expect(slotOptionProposals.proposals).toHaveLength(831)
     expect(
       slotOptionProposals.proposals.every(
         (proposal) =>

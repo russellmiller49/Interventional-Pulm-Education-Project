@@ -48,7 +48,7 @@ const {
  */
 
 const SCENARIO_ID = 'ebus-rose-molecular'
-const FLEX_CORE = 'module-flex-bronch-core-v1-0'
+const FLEX_CORE = 'module-flex-bronch-core-v1-1'
 const EBUS_SPECIFIC = 'module-ebus-tbna-specific-v1-0'
 const FLUOROSCOPY = 'module-procedural-fluoroscopy-v1-0'
 const OWNER = 'user-owner'

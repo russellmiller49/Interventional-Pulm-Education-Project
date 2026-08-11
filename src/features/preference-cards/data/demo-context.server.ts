@@ -1,4 +1,6 @@
 import catalogReleaseJson from '../../../../data/ip-preference-cards/generated/catalog-release.json'
+import compositionLedgerJson from '../../../../data/ip-preference-cards/generated/composition-ledger.json'
+import customCompositionSeedJson from '../../../../data/ip-preference-cards/seed/custom-composition.json'
 import generatedModifiersJson from '../../../../data/ip-preference-cards/generated/modifier-definitions.json'
 import generatedScenariosJson from '../../../../data/ip-preference-cards/generated/scenarios.json'
 import moduleLedgerJson from '../../../../data/ip-preference-cards/generated/module-ledger.json'
@@ -14,7 +16,12 @@ import {
   defaultSelectedModuleVersionIds,
   expandDefaultRecipeComposition,
 } from '../domain/expand-recipe-composition'
+import {
+  parseProcedureCompositionActionPayload,
+  procedureCompositionActionSchema,
+} from '../domain/schemas'
 import { selectionsFromResolvedCard } from '../domain/hospital-selection'
+import { retainedRecipeById, type CompositionLedger } from '../domain/composition-ledger'
 import { resolveRetainedModules, type ModuleLedger } from '../domain/module-ledger'
 import type { ReleaseDefinitionSources } from '../domain/release-bundle'
 import {
@@ -26,9 +33,11 @@ import {
 import {
   CUSTOM_COMPOSITION_PROCEDURE_CODE,
   CUSTOM_COMPOSITION_RECIPE_ID,
+  CUSTOM_COMPOSITION_RECIPE_VERSION,
   CUSTOM_COMPOSITION_SCENARIO_ID,
 } from './scenario-ids'
 import { resolveCard } from '../domain/resolve-card'
+import { modifierActionTypes } from '../domain/types'
 import type {
   BuildCardInput,
   BuildContext,
@@ -194,6 +203,19 @@ const scenarioDefinitions = generatedScenariosJson as unknown as ScenarioDefinit
 const scenarioById = new Map(scenarioDefinitions.map((scenario) => [scenario.id, scenario]))
 
 const generatedModifierDefinitions = generatedModifiersJson as unknown as ModifierDefinition[]
+// The generated modifiers are informational today (zero actions), but they arrive by cast,
+// not by parse — so if a workbook regeneration ever authors one, an action type the
+// modifier engine and the release-impact summary do not know must refuse to load here
+// rather than reach their runtime switches (P91-C5).
+for (const modifier of generatedModifierDefinitions) {
+  for (const action of modifier.actions ?? []) {
+    if (!(modifierActionTypes as readonly string[]).includes(action.actionType)) {
+      throw new Error(
+        `Generated modifier ${modifier.code} action "${action.id}" carries unknown action type "${action.actionType}" (modifier-definitions.json). Known types: ${modifierActionTypes.join(', ')}.`,
+      )
+    }
+  }
+}
 const handTunedModifierCodes = new Set(operationalModifiers.map((modifier) => modifier.code))
 const allModifierDefinitions: ModifierDefinition[] = [
   ...operationalModifiers,
@@ -325,13 +347,138 @@ const customCompositionScenario: ScenarioDefinition = {
   owner: null,
 }
 
+/**
+ * The custom composition's authored surface: the identity it publishes under and the
+ * per-slot composition actions it applies (`seed/custom-composition.json`).
+ *
+ * The module list stays derived from the current module set, but the *actions* are governed
+ * seed content exactly like a procedure composition's — the same
+ * `ProcedureCompositionAction` schema, applied by the same evaluator
+ * (`expandRecipeComposition`), targeting the same stable imported slot ids. The one
+ * difference is `optionalTarget`: a custom card chooses its modules, so an action whose
+ * target's module was not selected is inapplicable rather than an authoring error.
+ *
+ * Validated here at module load rather than at card time, because every claim is checkable
+ * against the full module set before any card exists:
+ *
+ * - the seed and `scenario-ids.ts` must agree on the recipe version identity, or a saved
+ *   card's pin and the composition it resolves through would describe different things;
+ * - every action must satisfy the composition-action schema, **including its payload
+ *   values for every action type** (`parseProcedureCompositionActionPayload`, the same
+ *   dispatch the evaluator runs) — a misspelled zone, phase, requiredness, open/hold
+ *   status, an empty note, a malformed quantity, a stray payload key, or a payload on
+ *   `remove_slot` must refuse to load rather than surface later on someone's card;
+ * - every action's target must resolve to **exactly one** requirement across the offered
+ *   module set — zero would be a dead action nothing can ever apply, and two would be the
+ *   ambiguity `recipe_composition_action_ambiguous` exists to block, found at authoring
+ *   time instead of on someone's card;
+ * - a slot-targeted action's matched requirement must still be keyed by that slot id
+ *   (identity, not just cardinality): alias absorption is a live mechanism, and a slot id
+ *   migrating into a shared requirement would silently widen a reviewed per-slot statement
+ *   to every procedure sharing it — that is a re-review, not a pass;
+ * - no target may receive two actions of one type, and no two actions may share a
+ *   sequence, so application order can never decide what a card says.
+ */
+const customCompositionActions: ProcedureCompositionAction[] = (() => {
+  const seed = customCompositionSeedJson as {
+    recipeVersionId: string
+    recipeVersion: string
+    compositionActions: Array<Record<string, unknown>>
+  }
+  if (
+    seed.recipeVersionId !== CUSTOM_COMPOSITION_RECIPE_ID ||
+    seed.recipeVersion !== CUSTOM_COMPOSITION_RECIPE_VERSION
+  ) {
+    throw new Error(
+      `seed/custom-composition.json publishes ${seed.recipeVersionId} (v${seed.recipeVersion}) but scenario-ids.ts names ${CUSTOM_COMPOSITION_RECIPE_ID} (v${CUSTOM_COMPOSITION_RECIPE_VERSION}). The two must be versioned together.`,
+    )
+  }
+
+  const seenIds = new Set<string>()
+  const seenSequences = new Set<number>()
+  const seenTargetActionTypes = new Set<string>()
+  const actions = seed.compositionActions.map((raw) => {
+    if (!raw.reason) {
+      throw new Error(`Custom composition action ${String(raw.id)} has no reason.`)
+    }
+    const parsed = procedureCompositionActionSchema.parse(raw)
+    if (seenIds.has(parsed.id)) {
+      throw new Error(`Custom composition action id ${parsed.id} is reused.`)
+    }
+    seenIds.add(parsed.id)
+    if (seenSequences.has(parsed.sequence)) {
+      throw new Error(
+        `Custom composition action ${parsed.id} reuses sequence ${parsed.sequence}. Distinct sequences keep the application order authored rather than incidental.`,
+      )
+    }
+    seenSequences.add(parsed.sequence)
+    const targetActionType = `${parsed.targetRequirementKey ?? parsed.targetSlotId ?? parsed.targetRoleCode}:${parsed.actionType}`
+    if (seenTargetActionTypes.has(targetActionType)) {
+      throw new Error(
+        `Custom composition action ${parsed.id} repeats ${targetActionType}; two actions of one type on one target would silently last-write-win.`,
+      )
+    }
+    seenTargetActionTypes.add(targetActionType)
+
+    // The payload values, not just the shape — for **every** action type, not a subset
+    // (P91-C4): this is the same canonical dispatch the evaluator runs at card time, moved
+    // to load so a bad value is an authoring failure instead of a raw resolution error. An
+    // action type it does not know throws rather than passing through unvalidated.
+    parseProcedureCompositionActionPayload(parsed, {
+      operation: `validating seed/custom-composition.json for ${CUSTOM_COMPOSITION_RECIPE_ID}`,
+    })
+
+    const matchedRequirementKeys = new Set<string>()
+    for (const moduleVersion of recipeModules) {
+      for (const slot of moduleVersion.slots) {
+        const matches = parsed.targetRequirementKey
+          ? slot.requirementKey === parsed.targetRequirementKey
+          : parsed.targetSlotId
+            ? slot.id === parsed.targetSlotId ||
+              slot.sourceSlotId === parsed.targetSlotId ||
+              (slot.sourceSlotAliases ?? []).includes(parsed.targetSlotId)
+            : parsed.targetRoleCode
+              ? slot.roleCode === parsed.targetRoleCode
+              : false
+        if (matches) matchedRequirementKeys.add(slot.requirementKey)
+      }
+    }
+    if (matchedRequirementKeys.size !== 1) {
+      throw new Error(
+        `Custom composition action ${parsed.id} resolves to ${matchedRequirementKeys.size} requirement(s) across the offered module set (${[...matchedRequirementKeys].sort().join(', ') || 'none'}); it must identify exactly one.`,
+      )
+    }
+    if (parsed.targetSlotId && !matchedRequirementKeys.has(parsed.targetSlotId)) {
+      throw new Error(
+        `Custom composition action ${parsed.id} targets slot ${parsed.targetSlotId}, which now resolves to requirement ${[...matchedRequirementKeys][0]}. The slot has been absorbed into a shared requirement; a reviewed per-slot statement does not transfer — re-review and re-author the action.`,
+      )
+    }
+
+    // The seed's `reason` is authoring rationale, not runtime data — dropped by naming what
+    // the runtime keeps, matching how `build-recipe-compositions.ts` treats the procedure seed.
+    return {
+      id: parsed.id,
+      sequence: parsed.sequence,
+      actionType: parsed.actionType,
+      ...(parsed.targetRequirementKey ? { targetRequirementKey: parsed.targetRequirementKey } : {}),
+      ...(parsed.targetSlotId ? { targetSlotId: parsed.targetSlotId } : {}),
+      ...(parsed.targetRoleCode ? { targetRoleCode: parsed.targetRoleCode } : {}),
+      ...(parsed.optionalTarget ? { optionalTarget: true } : {}),
+      payload: { ...parsed.payload },
+    }
+  })
+  return actions.sort(
+    (left, right) => left.sequence - right.sequence || left.id.localeCompare(right.id),
+  )
+})()
+
 function customCompositionRecipe(): RecipeVersion {
   return {
     id: CUSTOM_COMPOSITION_RECIPE_ID,
     sourceProcedureCode: CUSTOM_COMPOSITION_PROCEDURE_CODE,
     sourceTemplateVersion: '1.0',
     name: customCompositionScenario.recipeName,
-    version: '1.0',
+    version: CUSTOM_COMPOSITION_RECIPE_VERSION,
     governanceState: 'draft',
     clinicalOwner: null,
     operationalOwner: null,
@@ -346,7 +493,10 @@ function customCompositionRecipe(): RecipeVersion {
       selectionBehavior: 'optional' as const,
       sequence: (index + 1) * 10,
     })),
-    compositionActions: [],
+    compositionActions: customCompositionActions.map((action) => ({
+      ...action,
+      payload: { ...action.payload },
+    })),
     // No procedure template authored this card, so nothing has a reviewed position and
     // every line falls back to the module band. That is the honest ordering for a card
     // the builder assembled: grouped by module, in the order the modules were offered.
@@ -386,13 +536,57 @@ function recipeForComposition(composition: GeneratedProcedureComposition): Recip
 }
 
 /**
+ * The recipe versions published releases froze, keyed by id — everything the current seed no
+ * longer produces but a pinned card may still name. Live data wins for ids it holds (see
+ * `recipeForRecipeVersionId`), which is safe because the release build fails when the two
+ * disagree about a published version.
+ */
+const retainedRecipes = retainedRecipeById(compositionLedgerJson as unknown as CompositionLedger)
+
+/**
  * The recipe for an exact recipe version id. Null when that version is not retained — never
  * a newer publication of the same procedure.
+ *
+ * Resolution order: the current custom-composition recipe, then the current generated
+ * compositions, then the retention ledger. The ledger comes last so a live definition always
+ * wins for an id both hold — the same ordering `resolveRetainedModules` uses one level down.
  */
 export function recipeForRecipeVersionId(recipeVersionId: string): RecipeVersion | null {
   if (recipeVersionId === CUSTOM_COMPOSITION_RECIPE_ID) return customCompositionRecipe()
   const composition = compositionByRecipeVersionId.get(recipeVersionId)
-  return composition ? recipeForComposition(composition) : null
+  if (composition) return recipeForComposition(composition)
+  const retained = retainedRecipes.get(recipeVersionId)
+  return retained ? cloneRecipeVersion(retained) : null
+}
+
+/** A defensive copy, so no caller can mutate the retained ledger definition in place. */
+function cloneRecipeVersion(recipe: RecipeVersion): RecipeVersion {
+  return {
+    ...recipe,
+    allowedModifierCodes: [...recipe.allowedModifierCodes],
+    slots: recipe.slots.map(cloneSlot),
+    moduleReferences: recipe.moduleReferences.map((reference) => ({ ...reference })),
+    compositionActions: recipe.compositionActions.map((action) => ({
+      ...action,
+      payload: { ...action.payload },
+    })),
+    requirementSequences: { ...recipe.requirementSequences },
+  }
+}
+
+/**
+ * Every recipe version the current generated data produces, by id — the "live" side the
+ * composition ledger is validated against. Excludes retained history on purpose: the release
+ * build compares these against the ledger to detect a published composition being edited in
+ * place, and folding the ledger in here would make that comparison vacuous.
+ */
+export function getLiveRecipeVersions(): Map<string, RecipeVersion> {
+  const live = new Map<string, RecipeVersion>()
+  for (const composition of compositionByRecipeVersionId.values()) {
+    live.set(composition.recipeVersionId, recipeForComposition(composition))
+  }
+  live.set(CUSTOM_COMPOSITION_RECIPE_ID, customCompositionRecipe())
+  return live
 }
 
 /** The recipe version a scenario currently publishes. Used to *start* a card, never to reopen one. */

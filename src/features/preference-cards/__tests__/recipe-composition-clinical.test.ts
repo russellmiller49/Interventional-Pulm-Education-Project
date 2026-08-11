@@ -20,12 +20,12 @@ import { resolveCatalogPick } from '../server/catalog'
  * modifier, catalog-pick, and custom-line behaviour all survive composition.
  */
 
-const FLEX_CORE = 'module-flex-bronch-core-v1-0'
+const FLEX_CORE = 'module-flex-bronch-core-v1-1'
 const THERAPEUTIC_CORE = 'module-therapeutic-bronch-core-v1-0'
 const PLEURAL_CORE = 'module-pleural-procedure-core-v1-0'
 const EBUS_SPECIFIC = 'module-ebus-tbna-specific-v1-0'
-const THERAPEUTIC_SPECIFIC = 'module-therapeutic-bronch-specific-v1-0'
-const CHEST_TUBE_SPECIFIC = 'module-chest-tube-specific-v1-0'
+const THERAPEUTIC_SPECIFIC = 'module-therapeutic-bronch-specific-v1-1'
+const CHEST_TUBE_SPECIFIC = 'module-chest-tube-specific-v1-1'
 const FLUOROSCOPY = 'module-procedural-fluoroscopy-v1-0'
 
 function moduleIds(card: ResolvedCard): string[] {
@@ -64,6 +64,8 @@ describe('EBUS-TBNA = Flexible Bronchoscopy Core + EBUS-TBNA specific + optional
     expect(ebusItems.map((item) => item.roleCode)).toContain('EBUS_SCOPE')
     expect(ebusItems.map((item) => item.roleCode)).not.toContain('VIDEO_PROCESSOR')
     expect(ebusItems.map((item) => item.roleCode)).not.toContain('GENERIC_SUCTION')
+    expect(ebusItems.map((item) => item.roleCode)).not.toContain('BITE_BLOCK')
+    expect(ebusItems.map((item) => item.roleCode)).not.toContain('GENERIC_AIRWAY_ADAPTER')
     expect(new Set(ebusItems.map((item) => item.requirementKey)).size).toBe(ebusItems.length)
   })
 
@@ -71,7 +73,7 @@ describe('EBUS-TBNA = Flexible Bronchoscopy Core + EBUS-TBNA specific + optional
     const videoProcessor = card.items.find(
       (item) => item.requirementKey === 'FLEX_BRONCH_VIDEO_PROCESSOR',
     )
-    expect(videoProcessor?.whyIncluded[0]).toBe('Included by Flexible Bronchoscopy Core v1.0')
+    expect(videoProcessor?.whyIncluded[0]).toBe('Included by Flexible Bronchoscopy Core v1.1')
     expect(videoProcessor?.sourceModuleVersionIds).toEqual([FLEX_CORE])
 
     const scope = card.items.find((item) => item.roleCode === 'EBUS_SCOPE')
@@ -180,6 +182,8 @@ describe('therapeutic flexible bronchoscopy = two shared cores + its own module'
     for (const requirementKey of [
       'FLEX_BRONCH_VIDEO_PROCESSOR',
       'FLEX_BRONCH_SUCTION_SETUP',
+      'FLEX_BRONCH_BITE_BLOCK',
+      'FLEX_BRONCH_AIRWAY_ADAPTER',
       'THERAPEUTIC_BRONCHOSCOPE_PLATFORM',
       'AIRWAY_RETRIEVAL_FORCEPS',
       'PROCEDURAL_FLUOROSCOPY_C_ARM',
