@@ -1,9 +1,15 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { isAtlasCohortProduct } from '../../../src/features/device-intelligence/domain/atlas-cohort'
 import { ROLE_CODE_ALIASES } from '../../../src/features/preference-cards/domain/role-taxonomy'
 
-import { deriveAliasFixture, deriveProductFixtures, parseOptions } from '../verify-unlisted-beta'
+import {
+  deriveAliasFixture,
+  deriveIdentityLeakTokens,
+  deriveProductFixtures,
+  parseOptions,
+} from '../verify-unlisted-beta'
 
 /**
  * The launch-verification harness's deterministic core. The HTTP checks themselves run
@@ -61,6 +67,62 @@ describe('deriveProductFixtures', () => {
     // populations exist in the committed catalog.
     expect(fixtures.cohortProductIds.size).toBeGreaterThan(100)
     void isAtlasCohortProduct
+  })
+})
+
+describe('deriveIdentityLeakTokens', () => {
+  const fixtures = deriveProductFixtures(REPO_ROOT)
+  const tokens = deriveIdentityLeakTokens(REPO_ROOT)
+
+  it('screens a real population of non-cohort identities, not just PRD ids', () => {
+    expect(tokens.size).toBeGreaterThan(500)
+    const fields = new Set([...tokens.values()].map((provenance) => provenance.split(' ')[1]))
+    // Names and at least one machine-identifier class must both be represented, or the
+    // scan has quietly narrowed back to a single identifier shape.
+    expect(fields.has('product_name')).toBe(true)
+    expect(
+      ['catalog_number', 'gtin', 'gtin_raw', 'global_part_number'].some((field) =>
+        fields.has(field),
+      ),
+    ).toBe(true)
+  })
+
+  it('attributes every token to a non-cohort product', () => {
+    for (const provenance of tokens.values()) {
+      const productId = provenance.split(' ')[0]
+      expect(`${provenance}:${fixtures.cohortProductIds.has(productId)}`).toBe(
+        `${provenance}:false`,
+      )
+    }
+  })
+
+  it('never carries a token a cohort product also answers to', () => {
+    // A cohort page legitimately serves cohort identities; a shared token would turn the
+    // leak scan into a false alarm on every workspace. The derivation excludes any token
+    // contained in a cohort identity — verified here against the committed catalog.
+    const products = JSON.parse(
+      readFileSync(
+        path.join(REPO_ROOT, 'data/ip-preference-cards/generated/catalog-products.json'),
+        'utf8',
+      ),
+    ) as Array<Record<string, unknown>>
+    const cohortIdentity = products
+      .filter((product) => isAtlasCohortProduct(product as never))
+      .flatMap((product) =>
+        [
+          product.product_name,
+          product.catalog_number,
+          product.global_part_number,
+          product.reference_part_number,
+          product.alternate_ids,
+          product.gtin,
+          product.gtin_raw,
+        ].filter((value): value is string => typeof value === 'string'),
+      )
+      .map((value) => value.trim().toLowerCase())
+    for (const token of tokens.keys()) {
+      expect(cohortIdentity.some((identity) => identity.includes(token))).toBe(false)
+    }
   })
 })
 

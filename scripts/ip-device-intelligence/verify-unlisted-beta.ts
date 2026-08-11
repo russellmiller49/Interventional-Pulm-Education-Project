@@ -121,6 +121,74 @@ export function deriveProductFixtures(repoRoot: string): {
   }
 }
 
+/**
+ * Every distinctive textual identity a NON-cohort product could leak through, not just its
+ * PRD id: product name, catalog number, global/reference part number, alternate id, GTIN.
+ * A served page must contain none of them — this is what catches a hidden or candidate
+ * product surfacing through a compatibility statement's prose, where no PRD token appears.
+ *
+ * Keyed lowercase token → provenance (`product_id field`), for a legible failure. Two
+ * exclusions keep the scan honest rather than noisy: a token below the per-field
+ * distinctiveness floor (short catalog numbers like "0100" collide with markup and CSS),
+ * and a token that equals or sits inside a cohort product's own identity (sibling SKUs
+ * share naming, and a cohort page legitimately serves the cohort sibling's name).
+ */
+export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> {
+  const products = JSON.parse(
+    readFileSync(
+      path.join(repoRoot, 'data/ip-preference-cards/generated/catalog-products.json'),
+      'utf8',
+    ),
+  ) as Array<{
+    product_id: string
+    verification_grade?: string
+    visibility_state?: string
+    product_name?: string
+    catalog_number?: string
+    global_part_number?: string
+    reference_part_number?: string
+    alternate_ids?: string
+    gtin?: string
+    gtin_raw?: string
+  }>
+  const identityFields = [
+    ['product_name', 12],
+    ['catalog_number', 5],
+    ['global_part_number', 5],
+    ['reference_part_number', 5],
+    ['alternate_ids', 5],
+    ['gtin', 12],
+    ['gtin_raw', 12],
+  ] as const
+
+  const tokensOf = (product: (typeof products)[number]) => {
+    const tokens: Array<{ token: string; field: string }> = []
+    for (const [field, minimumLength] of identityFields) {
+      const value = product[field]
+      if (typeof value !== 'string') continue
+      const token = value.trim().toLowerCase()
+      if (token.length >= minimumLength) tokens.push({ token, field })
+    }
+    return tokens
+  }
+
+  const cohortTokens = products
+    .filter((product) => isAtlasCohortProduct(product))
+    .flatMap((product) => tokensOf(product).map(({ token }) => token))
+  const leakTokens = new Map<string, string>()
+  for (const product of products) {
+    if (isAtlasCohortProduct(product)) continue
+    for (const { token, field } of tokensOf(product)) {
+      if (cohortTokens.some((cohortToken) => cohortToken.includes(token))) continue
+      if (!leakTokens.has(token)) leakTokens.set(token, `${product.product_id} ${field}`)
+    }
+  }
+  if (leakTokens.size === 0) {
+    throw new Error('No non-cohort identity tokens derived — the leak scan would be vacuous.')
+  }
+  return leakTokens
+}
+
 export function deriveAliasFixture(): { deprecated: string; canonical: string } {
   const entries = Object.entries(ROLE_CODE_ALIASES).sort(([a], [b]) => a.localeCompare(b))
   if (entries.length === 0) {
@@ -352,6 +420,26 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
       `${code} serves no non-cohort product identity`,
       leaked.length === 0,
       leaked.length === 0 ? `${served.length} cohort id(s) served` : `leaked: ${leaked.join(', ')}`,
+    )
+  }
+
+  // The same claim beyond the PRD prefix: no non-cohort product name, catalog/part number,
+  // alternate id, or GTIN in any served page — the shapes a hidden or candidate product
+  // leaks through when a compatibility statement names it in prose rather than by id.
+  const identityTokens = deriveIdentityLeakTokens(repoRoot)
+  for (const [code, body] of [...workspaceBodies, ...readinessBodies]) {
+    const haystack = body.toLowerCase().replaceAll('&amp;', '&')
+    const leakedIdentities: string[] = []
+    for (const [token, provenance] of identityTokens) {
+      if (haystack.includes(token)) leakedIdentities.push(`"${token}" (${provenance})`)
+    }
+    check(
+      results,
+      `${code} serves no non-cohort name, catalog number, or GTIN`,
+      leakedIdentities.length === 0,
+      leakedIdentities.length === 0
+        ? `${identityTokens.size} identity token(s) screened`
+        : `leaked: ${leakedIdentities.slice(0, 5).join('; ')}${leakedIdentities.length > 5 ? ` (+${leakedIdentities.length - 5} more)` : ''}`,
     )
   }
 

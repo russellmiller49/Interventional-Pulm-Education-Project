@@ -250,7 +250,6 @@ export async function saveUserCard(request: SaveCardRequest): Promise<UserCardRe
   // superseded release only resolved while its set pins still equaled the live sets. Now a
   // superseded release resolves its retained sets by design, which would let a crafted
   // create request originate a card on clinical semantics a published correction replaced.
-  // Editing an existing card keeps the card's own pin, checked one level down.
   if (!request.cardId) {
     const currentRelease = getCurrentReleaseBundleForScenario(request.scenarioId)
     if (!currentRelease || currentRelease.id !== request.releaseBundleId) {
@@ -259,6 +258,35 @@ export async function saveUserCard(request: SaveCardRequest): Promise<UserCardRe
         error: currentRelease
           ? `A new card is built on the current release for its procedure (${currentRelease.id}), not on ${request.releaseBundleId ?? 'an unpinned request'}. Reload the builder and try again.`
           : `No current release is published for "${request.scenarioId}", so a new card cannot be created for it.`,
+      }
+    }
+  }
+
+  // An EDIT keeps the card's own pin — as a server-checked fact, not a client convention.
+  // The wizard always echoes the stored pin back, so a differing pin is a crafted request:
+  // without this check, create-then-edit would originate a card on the current release and
+  // immediately re-pin it to any retained one, reaching exactly the superseded semantics the
+  // create guard refuses (and a sideways re-pin between historical releases is no better).
+  // Changing a card's release is the rebuild flow's job, which writes a NEW card through a
+  // governed plan. Absent-vs-absent is equality here: a schema-v2 card has no pin and an
+  // edit must not introduce one ("re-saving a version-2 card must not stamp today's release
+  // onto it", below). A missing row falls through — the atomic update reports not_found.
+  if (request.cardId) {
+    const { data: storedRow, error: storedError } = await supabase
+      .from(TABLE)
+      .select('builder_inputs')
+      .eq('id', request.cardId)
+      .maybeSingle()
+    if (storedError) return { ok: false, error: storedError.message }
+    if (storedRow) {
+      const storedPin =
+        (storedRow.builder_inputs as { releaseBundleId?: string } | null)?.releaseBundleId ?? null
+      const requestedPin = request.releaseBundleId ?? null
+      if (storedPin !== requestedPin) {
+        return {
+          ok: false,
+          error: `This card is pinned to ${storedPin ?? 'no release'} and an edit cannot move it to ${requestedPin ?? 'no release'}. To move a card onto another release, use the rebuild flow.`,
+        }
       }
     }
   }
