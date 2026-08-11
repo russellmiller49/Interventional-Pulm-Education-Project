@@ -56,6 +56,10 @@ import {
 } from './gold-import-contract-v2-catalog-expectations'
 import { buildProtectedV2ExpectedCatalogBinding } from './protected-gold-import-contract-v2-bindings'
 import { validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile } from './gold-import-contract-v2-catalog-audit'
+import {
+  buildInternalDisposableMigrationReceiptGate,
+  migrationReceiptGateArtifactSha256,
+} from './gold-import-compensation-v2-migration-receipt-gate'
 
 const SHA_A = 'a'.repeat(64)
 const SHA_B = 'b'.repeat(64)
@@ -262,6 +266,12 @@ describe('V2 authenticated planning-state evidence', () => {
       'compatibilityDevelopmentPlanningStateSchema.parse(\n    input.developmentPlanningState,',
     )
     expect(generatorSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
+    expect(generatorSource).toContain(
+      'validateGoldImportCompensationV2MigrationReceiptGateForAudit(',
+    )
+    expect(generatorSource).toContain("'finalized-migration-receipt-gate-v2.json'")
+    expect(generatorFileSource).toContain("'finalized-migration-receipt-gate-v2.json',")
+    expect(generatorFileSource).toContain('migrationReceiptGateSha256:')
     expect(verifierSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
     expect(verifierSource.match(/input\.files/gu)).toHaveLength(1)
     expect(verifierSource.match(/input\.sourceArtifactBytes/gu)).toHaveLength(1)
@@ -642,6 +652,10 @@ describe('migration-first and source-authorization-before-client ordering', () =
           calls.client += 1
           return {}
         },
+        expectedMigrationReceiptGateSha256: SHA_A,
+        loadFinalizedMigrationReceiptGate: () => {
+          throw new Error('receipt loader must remain unreachable')
+        },
         readMigrationProbe: () => migrationProbe(0),
         readSourceArtifacts: () => {
           calls.source += 1
@@ -658,12 +672,19 @@ describe('migration-first and source-authorization-before-client ordering', () =
 
   it('does not construct a client when source authorization revalidation fails', async () => {
     const calls = { client: 0, source: 0, validation: 0 }
+    const audit = validateReadyGoldImportCompensationV2Audit(
+      exactReadyAudit('supabase_admin_owner_v1', 'disposable'),
+    )
+    const migrationReceiptGate = buildInternalDisposableMigrationReceiptGate(audit)
     await expect(
       prepareGoldImportCompensationV2Runtime({
         createDatabaseClient: () => {
           calls.client += 1
           return {}
         },
+        expectedMigrationReceiptGateSha256:
+          migrationReceiptGateArtifactSha256(migrationReceiptGate),
+        loadFinalizedMigrationReceiptGate: () => migrationReceiptGate,
         readMigrationProbe: readyAudit,
         readSourceArtifacts: () => {
           calls.source += 1
@@ -673,10 +694,38 @@ describe('migration-first and source-authorization-before-client ordering', () =
           calls.validation += 1
           throw new Error('source authorization drift')
         },
-        validateReadyAuditForTest: () => readyAudit() as never,
+        validateReadyAuditForTest: () => audit,
       }),
     ).rejects.toThrow('source authorization drift')
     expect(calls).toEqual({ client: 0, source: 1, validation: 1 })
+  })
+
+  it('loads and authenticates the finalized receipt before source reads or client creation', async () => {
+    const calls = { client: 0, receipt: 0, source: 0 }
+    const audit = validateReadyGoldImportCompensationV2Audit(
+      exactReadyAudit('supabase_admin_owner_v1', 'disposable'),
+    )
+    await expect(
+      prepareGoldImportCompensationV2Runtime({
+        createDatabaseClient: () => {
+          calls.client += 1
+          return {}
+        },
+        expectedMigrationReceiptGateSha256: SHA_A,
+        loadFinalizedMigrationReceiptGate: () => {
+          calls.receipt += 1
+          throw new Error('finalized receipt unavailable')
+        },
+        readMigrationProbe: readyAudit,
+        readSourceArtifacts: () => {
+          calls.source += 1
+          return {}
+        },
+        validateReadyAuditForTest: () => audit,
+        validateSourceAuthorization: () => ({}),
+      }),
+    ).rejects.toThrow('finalized receipt unavailable')
+    expect(calls).toEqual({ client: 0, receipt: 1, source: 0 })
   })
 })
 

@@ -35,6 +35,11 @@ import {
   validateProtectedV2ExpectedCatalogBinding,
   type ProtectedV2ExpectedCatalogBinding,
 } from './protected-gold-import-contract-v2-bindings'
+import {
+  migrationReceiptGateArtifactSha256,
+  validateGoldImportCompensationV2MigrationReceiptGateForAudit,
+  type GoldImportCompensationV2MigrationReceiptGate,
+} from './gold-import-compensation-v2-migration-receipt-gate'
 
 export const GOLD_IMPORT_COMPENSATION_V2_AUDIT_SCHEMA_VERSION =
   'gold-import-compensation-v2-package-audit/1.0.0' as const
@@ -461,6 +466,10 @@ export function validateReadyGoldImportCompensationV2Audit(
 
 export interface V2MigrationFirstRuntimeDependencies<TSources, TValidated, TClient> {
   createDatabaseClient: () => Promise<TClient> | TClient
+  expectedMigrationReceiptGateSha256: string
+  loadFinalizedMigrationReceiptGate: (
+    audit: GoldImportCompensationV2ReadyAudit,
+  ) => Promise<unknown> | unknown
   readMigrationProbe: () => Promise<unknown> | unknown
   readSourceArtifacts: () => Promise<TSources> | TSources
   validateSourceAuthorization: (
@@ -479,6 +488,7 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
 ): Promise<{
   audit: GoldImportCompensationV2ReadyAudit
   client: TClient
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   sources: TSources
   validatedSourceAuthorization: TValidated
 }> {
@@ -490,13 +500,23 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
   const audit = (
     dependencies.validateReadyAuditForTest ?? validateReadyGoldImportCompensationV2Audit
   )(probe)
+  const migrationReceiptGate = validateGoldImportCompensationV2MigrationReceiptGateForAudit(
+    await dependencies.loadFinalizedMigrationReceiptGate(audit),
+    audit,
+  )
+  if (
+    migrationReceiptGateArtifactSha256(migrationReceiptGate) !==
+    dependencies.expectedMigrationReceiptGateSha256
+  ) {
+    throw new Error('Live finalized V2 migration receipt differs from the packaged receipt gate.')
+  }
   const sources = await dependencies.readSourceArtifacts()
   const validatedSourceAuthorization = await dependencies.validateSourceAuthorization(
     sources,
     audit,
   )
   const client = await dependencies.createDatabaseClient()
-  return { audit, client, sources, validatedSourceAuthorization }
+  return { audit, client, migrationReceiptGate, sources, validatedSourceAuthorization }
 }
 
 const HELP = `Audit the file-only V2 package-readiness probe.

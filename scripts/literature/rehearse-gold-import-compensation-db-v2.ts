@@ -110,6 +110,7 @@ export function buildV2MigrationPathPlan(value: unknown): V2MigrationPathPlan {
 
 export interface V2DisposableDatabaseContext {
   batchId: string
+  migrationReceiptGate?: unknown
   migrationPath: V2MigrationPath
   migrationSha256: string
   postV2SeedSnapshot: V2SchemaOnlySnapshot

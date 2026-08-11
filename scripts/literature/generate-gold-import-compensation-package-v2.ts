@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { lstat, readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
@@ -64,6 +64,15 @@ import {
   validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
   type ProtectedV2CompleteCatalogAuditIdentity,
 } from './gold-import-contract-v2-catalog-audit'
+import {
+  loadCommittedProtectedV2RecoveryReceiptAuthority,
+  loadGoldImportCompensationV2LocalMigrationReceiptGate,
+  migrationReceiptGateArtifactBytes,
+  migrationReceiptGateArtifactSha256,
+  validateGoldImportCompensationV2MigrationReceiptGateForAudit,
+  validateGoldImportCompensationV2MigrationReceiptGateForBinding,
+  type GoldImportCompensationV2MigrationReceiptGate,
+} from './gold-import-compensation-v2-migration-receipt-gate'
 
 export const GOLD_IMPORT_COMPENSATION_PACKAGE_GENERATOR_SCHEMA_VERSION_V2 =
   'gold-import-compensation-package-generator/2.0.0' as const
@@ -256,6 +265,12 @@ export const packageDescriptorV2Schema = z
         sha256: sha256Schema,
       })
       .strict(),
+    migrationReceiptGateSha256: sha256Schema,
+    migrationReceiptKind: z.enum([
+      'normal_application',
+      'historical_recovery',
+      'disposable_rehearsal',
+    ]),
     expectedCatalogArtifactContentSha256: sha256Schema,
     expectedCatalogArtifactFileSha256: sha256Schema,
     expectedCatalogBindingSha256: sha256Schema,
@@ -279,6 +294,7 @@ export interface GenerateGoldImportCompensationPackageV2Sources extends NoteDisp
 export interface GenerateGoldImportCompensationPackageV2Input {
   audit: GoldImportCompensationV2ReadyAudit | unknown
   developmentPlanningState: unknown
+  migrationReceiptGate: unknown
   sources: GenerateGoldImportCompensationPackageV2Sources
 }
 
@@ -288,6 +304,7 @@ export interface GeneratedGoldImportCompensationPackageV2 {
   files: ReadonlyMap<string, Buffer>
   importPlan: ImportPlanV2
   manifestSha256: string
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   packageDescriptor: Record<string, unknown>
   sourceArtifactBytes: Buffer
   sourceAuthorizationSet: GoldImportSourceAuthorizationSetV4
@@ -296,6 +313,7 @@ export interface GeneratedGoldImportCompensationPackageV2 {
     developmentPlanningStateSha256: string
     expectedCatalogBindingSha256: string
     migrationSha256: string
+    migrationReceiptGateSha256: string
     sourceArtifactSha256: string
     sourceAuthorizationSetSha256: string
   }
@@ -784,6 +802,10 @@ export function generateGoldImportCompensationPackageV2(
   input: GenerateGoldImportCompensationPackageV2Input,
 ): GeneratedGoldImportCompensationPackageV2 {
   const audit = validateReadyGoldImportCompensationV2Audit(input.audit)
+  const migrationReceiptGate = validateGoldImportCompensationV2MigrationReceiptGateForAudit(
+    input.migrationReceiptGate,
+    audit,
+  )
   const { authenticatedSource: authenticatedDevelopmentPlanningState, projection: planningState } =
     validateAndSnapshotDevelopmentPlanningStateV2(input.developmentPlanningState)
   const rawPlanningStateSha256 = sha256Canonical(authenticatedDevelopmentPlanningState)
@@ -1019,6 +1041,10 @@ export function generateGoldImportCompensationPackageV2(
     }),
   )
   files.set(
+    'finalized-migration-receipt-gate-v2.json',
+    migrationReceiptGateArtifactBytes(migrationReceiptGate),
+  )
+  files.set(
     'boolean-normalization-ledger-v2.json',
     canonicalPretty({
       artifactSha256: artifact.artifactSha256,
@@ -1121,6 +1147,8 @@ export function generateGoldImportCompensationPackageV2(
     expectedCatalogArtifactFileSha256: audit.expectedCatalog.artifact.fileSha256,
     expectedCatalogBindingSha256: audit.expectedCatalog.bindingSha256,
     migration: { id: audit.migration.id, sha256: audit.migration.sha256 },
+    migrationReceiptGateSha256: migrationReceiptGateArtifactSha256(migrationReceiptGate),
+    migrationReceiptKind: migrationReceiptGate.source.receiptKind,
     noteDispositionAuditSha256: GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2,
     packageVersion: GOLD_IMPORT_COMPENSATION_PACKAGE_VERSION_V2,
     remoteAccess: false,
@@ -1137,6 +1165,7 @@ export function generateGoldImportCompensationPackageV2(
     files,
     importPlan,
     manifestSha256: sha256Bytes(manifest),
+    migrationReceiptGate,
     packageDescriptor,
     sourceArtifactBytes: Buffer.from(input.sources.finalArtifactBytes),
     sourceAuthorizationSet,
@@ -1145,6 +1174,7 @@ export function generateGoldImportCompensationPackageV2(
       developmentPlanningStateSha256: rawPlanningStateSha256,
       expectedCatalogBindingSha256: audit.expectedCatalog.bindingSha256,
       migrationSha256: sourceIdentities.migrationSha256,
+      migrationReceiptGateSha256: migrationReceiptGateArtifactSha256(migrationReceiptGate),
       sourceArtifactSha256: artifact.artifactSha256,
       sourceAuthorizationSetSha256,
     },
@@ -1157,6 +1187,7 @@ const REQUIRED_PACKAGE_FILES_V2 = [
   'boolean-normalization-ledger-v2.json',
   'checksum-manifest-v2.sha256',
   'exact-catalog-binding-v2.json',
+  'finalized-migration-receipt-gate-v2.json',
   'immutable-atomic-import-plan-v2.json',
   'journal-template-v2.json',
   'note-disposition-proof-v2.json',
@@ -1175,6 +1206,7 @@ export interface VerifiedGoldImportCompensationPackageV2IntrinsicFiles {
   files: ReadonlyMap<string, Buffer>
   importPlan: ImportPlanV2
   manifestSha256: string
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   packageDescriptor: PackageDescriptorV2
   sourceAuthorizationSet: GoldImportSourceAuthorizationSetV4
 }
@@ -1207,6 +1239,25 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
   const sourceAuthorizationBytes = files.get('source-authorization-set-v4.json')!
   const sourceAuthorization =
     parseCanonicalGoldImportSourceAuthorizationSetV4Bytes(sourceAuthorizationBytes)
+  const migrationReceiptGate = validateGoldImportCompensationV2MigrationReceiptGateForBinding(
+    JSON.parse(files.get('finalized-migration-receipt-gate-v2.json')!.toString('utf8')) as unknown,
+    {
+      auditTarget: sourceAuthorization.auditTarget,
+      batchId: sourceAuthorization.currentDatabase.batchId,
+      completeCatalogAuditIdentitySha256:
+        sourceAuthorization.completeCatalogAudit.fullAuditIdentitySha256,
+      developmentMembershipSha256: sourceAuthorization.currentDatabase.developmentMembershipSha256,
+      developmentPlanningStateSha256:
+        sourceAuthorization.currentDatabase.developmentPlanningStateSha256,
+      expectedCatalogBindingSha256: sourceAuthorization.expectedCatalog.bindingSha256,
+      migrationId: sourceAuthorization.migration.id,
+      migrationSha256: sourceAuthorization.migration.sha256,
+      preImportEffectiveStateSha256: sourceAuthorization.v2PreImportState.effectiveStateSha256,
+      preImportPhysicalStateSha256: sourceAuthorization.v2PreImportState.physicalStateSha256,
+      v1Occurrence: 1,
+      v2Occurrence: 1,
+    },
+  )
   const rawExactCatalogBinding = z
     .object({
       auditTarget: z.enum(['disposable_clone', 'local']),
@@ -1310,7 +1361,10 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
     packageDescriptor.expectedCatalogBindingSha256 !==
       exactCatalogBinding.expectedCatalog.bindingSha256 ||
     packageDescriptor.sourceAuthorizationSetSha256 !== sha256Bytes(sourceAuthorizationBytes) ||
-    packageDescriptor.migration.sha256 !== sourceAuthorization.migration.sha256
+    packageDescriptor.migration.sha256 !== sourceAuthorization.migration.sha256 ||
+    packageDescriptor.migrationReceiptGateSha256 !==
+      migrationReceiptGateArtifactSha256(migrationReceiptGate) ||
+    packageDescriptor.migrationReceiptKind !== migrationReceiptGate.source.receiptKind
   ) {
     throw new Error('V2 package descriptor is stale or does not cover every canonical artifact.')
   }
@@ -1556,6 +1610,7 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
     files,
     importPlan: canonicalFrozenClone(plan),
     manifestSha256: sha256Bytes(manifest),
+    migrationReceiptGate: canonicalFrozenClone(migrationReceiptGate),
     packageDescriptor: canonicalFrozenClone(packageDescriptor),
     sourceAuthorizationSet: canonicalFrozenClone(sourceAuthorization),
   }
@@ -1574,6 +1629,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     developmentPlanningStateSha256: sha256Canonical(authenticatedDevelopmentPlanningState),
     expectedCatalogBindingSha256: intrinsic.sourceAuthorizationSet.expectedCatalog.bindingSha256,
     migrationSha256: intrinsic.sourceAuthorizationSet.migration.sha256,
+    migrationReceiptGateSha256: migrationReceiptGateArtifactSha256(intrinsic.migrationReceiptGate),
     sourceArtifactSha256: intrinsic.sourceAuthorizationSet.finalArtifactSha256,
     sourceAuthorizationSetSha256: sha256Bytes(
       intrinsic.files.get('source-authorization-set-v4.json')!,
@@ -1583,6 +1639,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     intrinsic.manifestSha256 !== input.manifestSha256 ||
     canonicalJson(intrinsic.compensationTemplate) !== canonicalJson(input.compensationTemplate) ||
     canonicalJson(intrinsic.importPlan) !== canonicalJson(input.importPlan) ||
+    canonicalJson(intrinsic.migrationReceiptGate) !== canonicalJson(input.migrationReceiptGate) ||
     canonicalJson(intrinsic.packageDescriptor) !== canonicalJson(input.packageDescriptor) ||
     canonicalJson(intrinsic.sourceAuthorizationSet) !==
       canonicalJson(input.sourceAuthorizationSet) ||
@@ -1603,6 +1660,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     files: intrinsic.files,
     importPlan: intrinsic.importPlan,
     manifestSha256: intrinsic.manifestSha256,
+    migrationReceiptGate: intrinsic.migrationReceiptGate,
     packageDescriptor: intrinsic.packageDescriptor,
     sourceArtifactBytes,
     sourceAuthorizationSet: intrinsic.sourceAuthorizationSet,
@@ -1636,6 +1694,7 @@ const CLI_ARGUMENTS = [
   'audit',
   'help',
   'migration',
+  'migration-receipt-output',
   'note-disposition-audit',
   'output',
   'output-root',
@@ -1648,7 +1707,7 @@ export async function runGenerateGoldImportCompensationPackageV2(argv: string[])
   assertKnownArguments(arguments_, CLI_ARGUMENTS)
   if (arguments_.flags.has('help')) {
     return {
-      help: 'Generate a canonical unsigned V2 package from an authenticated upgraded disposable audit.',
+      help: 'Generate a canonical unsigned V2 package only after loading a complete finalized local migration receipt.',
     }
   }
   // Audit and migration occurrence are authenticated before any source path is opened.
@@ -1659,6 +1718,13 @@ export async function runGenerateGoldImportCompensationPackageV2(argv: string[])
   const audit = validateReadyGoldImportCompensationV2Audit(
     JSON.parse(auditBytes.toString('utf8')) as unknown,
   )
+  const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+  const migrationReceiptGate = await loadGoldImportCompensationV2LocalMigrationReceiptGate({
+    audit,
+    loadRecoveryAuthority: () => loadCommittedProtectedV2RecoveryReceiptAuthority(repositoryRoot),
+    outputDirectory: requiredArgument(arguments_, 'migration-receipt-output'),
+    receiptRoot: resolve(repositoryRoot, 'local-data/literature/protected-v2-application-receipts'),
+  })
   const [
     amendedAuthorizationBytes,
     amendedAuthorizationExactTextBytes,
@@ -1715,6 +1781,7 @@ export async function runGenerateGoldImportCompensationPackageV2(argv: string[])
     generateGoldImportCompensationPackageV2({
       audit,
       developmentPlanningState: JSON.parse(planningStateBytes.toString('utf8')) as unknown,
+      migrationReceiptGate,
       sources: {
         amendedAuthorizationBytes,
         amendedAuthorizationExactTextBytes,
@@ -1741,6 +1808,7 @@ export async function runGenerateGoldImportCompensationPackageV2(argv: string[])
   return {
     actionCounts: generated.importPlan.counts,
     manifestSha256: generated.manifestSha256,
+    migrationReceiptGateSha256: generated.verifiedBindings.migrationReceiptGateSha256,
     outputDirectory,
     sourceAuthorizationVersion: 4,
   }

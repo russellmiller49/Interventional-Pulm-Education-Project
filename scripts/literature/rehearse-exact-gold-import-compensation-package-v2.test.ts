@@ -127,6 +127,16 @@ describe('exact V2 package rehearsal entrypoint', () => {
     expect(direct).not.toContain('const plan = package_.importPlan')
     expect(direct).toContain('bindDisposableCompensation(privatePackage, imported)')
     expect(direct).toContain('verifyCompensationPayloadCopies(context, privatePackage)')
+    expect(bootstrap).toContain('referenceMigrationReceiptGate')
+    expect(bootstrap).toContain('migrationReceiptGate: privatePackage.migrationReceiptGate')
+    const gateIndex = direct.indexOf(
+      'validateGoldImportCompensationV2MigrationReceiptGateForBinding(',
+    )
+    const firstQueryIndex = direct.indexOf('context.queryJson(')
+    const firstRpcIndex = direct.indexOf('bindDisposableImportAuthorization(plan)')
+    expect(gateIndex).toBeGreaterThan(-1)
+    expect(firstQueryIndex).toBeGreaterThan(gateIndex)
+    expect(firstRpcIndex).toBeGreaterThan(gateIndex)
   })
 
   test('observes the controlled-fault journal in a command after the volatile RPC', () => {
