@@ -432,8 +432,9 @@ function validateExactRehearsalExecutionReceipt(input: {
         runtime.containerId !== containerId ||
         runtime.containerName !== containerName ||
         runtime.host !== '127.0.0.1' ||
-        !Number.isSafeInteger(runtime.automaticallyAssignedPort) ||
-        Number(runtime.automaticallyAssignedPort) <= 0 ||
+        typeof runtime.automaticallyAssignedPort !== 'string' ||
+        !/^[1-9]\d{0,4}$/u.test(runtime.automaticallyAssignedPort) ||
+        Number(runtime.automaticallyAssignedPort) > 65_535 ||
         typeof runtime.dockerContext !== 'string' ||
         runtime.dockerContext.length === 0 ||
         typeof runtime.dockerEndpoint !== 'string' ||

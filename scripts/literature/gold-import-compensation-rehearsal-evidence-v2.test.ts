@@ -371,7 +371,10 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
       migration: { sha256: string }
       verifierEvidence: {
         ownerProfiles: {
-          disposableSupabaseAdmin: { rpcMetadata: unknown }
+          disposableSupabaseAdmin: { rpcMetadata: unknown; semanticFunctions: unknown }
+          supportedLocalPostgresProjection: {
+            authenticatedByTransactionalCatalogProjection?: unknown
+          }
         }
         v1: {
           migrationSha256: string
@@ -391,6 +394,15 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
       v1MigrationSha256: evidence.verifierEvidence.v1.migrationSha256,
       v1VerifierSha256: evidence.verifierEvidence.v1.verifierSha256,
     }
+    expect(
+      Array.isArray(
+        evidence.verifierEvidence.ownerProfiles.disposableSupabaseAdmin.semanticFunctions,
+      ),
+    ).toBe(true)
+    expect(
+      evidence.verifierEvidence.ownerProfiles.supportedLocalPostgresProjection
+        .authenticatedByTransactionalCatalogProjection,
+    ).toBe(true)
     expect(validateCanonicalV2RehearsalEvidence(evidence, context)).toMatchObject({
       migration: { path: 'fresh' },
     })
@@ -409,6 +421,23 @@ describe('V2 gold import-compensation rehearsal evidence', () => {
     }
     expect(() => validateCanonicalV2RehearsalEvidence(wrapperDrift, context)).toThrow(
       'RPC metadata must be an array',
+    )
+
+    const semanticWrapperDrift = JSON.parse(bytes.toString('utf8')) as CanonicalFixtureEvidence
+    const semanticRows =
+      semanticWrapperDrift.verifierEvidence.ownerProfiles.disposableSupabaseAdmin.semanticFunctions
+    semanticWrapperDrift.verifierEvidence.ownerProfiles.disposableSupabaseAdmin.semanticFunctions =
+      {
+        functions: semanticRows,
+      }
+    expect(() => validateCanonicalV2RehearsalEvidence(semanticWrapperDrift, context)).toThrow(
+      'semantic metadata must be an array',
+    )
+
+    const unauthenticatedProjection = JSON.parse(bytes.toString('utf8')) as CanonicalFixtureEvidence
+    unauthenticatedProjection.verifierEvidence.ownerProfiles.supportedLocalPostgresProjection.authenticatedByTransactionalCatalogProjection = false
+    expect(() => validateCanonicalV2RehearsalEvidence(unauthenticatedProjection, context)).toThrow(
+      'was not authenticated by transactional catalog projection',
     )
   })
 

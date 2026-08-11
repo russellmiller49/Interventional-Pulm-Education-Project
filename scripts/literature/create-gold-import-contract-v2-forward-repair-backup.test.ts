@@ -390,6 +390,34 @@ describe('gold import contract V2 forward-repair backup', () => {
     refreshGroup(missing, 'package-rehearsal-evidence')
     expect(() => validateFixture(missing)).toThrow('execution-receipt-v2.json')
 
+    const productionShaped = cloneFixture(fixture)
+    const productionShapedGroup = mutableGroup(productionShaped, 'package-rehearsal-evidence')
+    const productionShapedReceipt = JSON.parse(
+      productionShapedGroup.get('execution-receipt-v2.json')!.toString('utf8'),
+    ) as {
+      fresh: Array<{ rawReceipt: { disposableRuntime: { automaticallyAssignedPort: unknown } } }>
+      upgrade: Array<{ rawReceipt: { disposableRuntime: { automaticallyAssignedPort: unknown } } }>
+    }
+    for (const run of [...productionShapedReceipt.fresh, ...productionShapedReceipt.upgrade]) {
+      expect(run.rawReceipt.disposableRuntime.automaticallyAssignedPort).toMatch(/^[1-9]\d{0,4}$/u)
+    }
+
+    for (const replacement of [55_000, { port: '55000' }, '0', '05500', '65536']) {
+      const drifted = cloneFixture(fixture)
+      const driftedGroup = mutableGroup(drifted, 'package-rehearsal-evidence')
+      const driftedReceipt = JSON.parse(
+        driftedGroup.get('execution-receipt-v2.json')!.toString('utf8'),
+      ) as {
+        fresh: Array<{
+          rawReceipt: { disposableRuntime: { automaticallyAssignedPort: unknown } }
+        }>
+      }
+      driftedReceipt.fresh[0].rawReceipt.disposableRuntime.automaticallyAssignedPort = replacement
+      driftedGroup.set('execution-receipt-v2.json', canonicalBytes(driftedReceipt))
+      refreshGroup(drifted, 'package-rehearsal-evidence')
+      expect(() => validateFixture(drifted)).toThrow('fresh runtime receipt drifted')
+    }
+
     const duplicated = cloneFixture(fixture)
     const duplicatedGroup = mutableGroup(duplicated, 'package-rehearsal-evidence')
     const receipt = JSON.parse(

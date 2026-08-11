@@ -1224,85 +1224,79 @@ function validateCanonicalSemanticFunctionMetadata(
   value: unknown,
   owner: 'postgres' | 'supabase_admin',
 ) {
-  const metadata = record(value, `canonical verifier ${owner} semantic metadata`)
-  exactKeys(metadata, ['functions'], `canonical verifier ${owner} semantic metadata`)
-  const functions = array(
-    metadata.functions,
-    `canonical verifier ${owner} semantic metadata.functions`,
-  ).map((entry, index) => {
-    const function_ = record(
-      entry,
-      `canonical verifier ${owner} semantic metadata.functions[${index}]`,
-    )
-    exactKeys(
-      function_,
-      [
-        'anonExecute',
-        'authenticatedExecute',
-        'identityArguments',
-        'name',
-        'owner',
-        'publicExecute',
-        'rawDefinitionSha256',
-        'resultType',
-        'searchPath',
-        'securityDefiner',
-        'serviceRoleExecute',
-        'volatility',
-      ],
-      `canonical verifier ${owner} semantic metadata.functions[${index}]`,
-    )
-    const name = string(function_.name, 'canonical verifier semantic function name')
-    const identity =
-      GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES[
-        name as keyof typeof GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES
-      ]
-    const contract =
-      V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS[
-        name as keyof typeof V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS
-      ]
-    const rawDefinitionSha256 =
-      V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256[
-        name as keyof typeof V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256
-      ]
-    if (
-      !identity ||
-      !contract ||
-      !rawDefinitionSha256 ||
-      function_.identityArguments !== identity.identityArguments ||
-      function_.owner !== owner ||
-      function_.anonExecute !== false ||
-      function_.authenticatedExecute !== false ||
-      function_.publicExecute !== false ||
-      function_.securityDefiner !== contract.securityDefiner ||
-      function_.serviceRoleExecute !== contract.serviceRoleExecute ||
-      function_.searchPath !== contract.searchPath ||
-      function_.resultType !== contract.resultType ||
-      function_.volatility !== contract.volatility ||
-      function_.rawDefinitionSha256 !== rawDefinitionSha256
-    ) {
-      throw new Error(`Canonical verifier metadata is unsafe for V2 function ${name}.`)
-    }
-    return {
-      anonExecute: false,
-      authenticatedExecute: false,
-      identityArguments: identity.identityArguments,
-      name,
-      owner,
-      publicExecute: false,
-      rawDefinitionSha256,
-      resultType: contract.resultType,
-      searchPath: contract.searchPath,
-      securityDefiner: contract.securityDefiner,
-      serviceRoleExecute: contract.serviceRoleExecute,
-      volatility: contract.volatility,
-    }
-  })
+  const functions = array(value, `canonical verifier ${owner} semantic metadata`).map(
+    (entry, index) => {
+      const function_ = record(entry, `canonical verifier ${owner} semantic metadata[${index}]`)
+      exactKeys(
+        function_,
+        [
+          'anonExecute',
+          'authenticatedExecute',
+          'identityArguments',
+          'name',
+          'owner',
+          'publicExecute',
+          'rawDefinitionSha256',
+          'resultType',
+          'searchPath',
+          'securityDefiner',
+          'serviceRoleExecute',
+          'volatility',
+        ],
+        `canonical verifier ${owner} semantic metadata[${index}]`,
+      )
+      const name = string(function_.name, 'canonical verifier semantic function name')
+      const identity =
+        GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES[
+          name as keyof typeof GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES
+        ]
+      const contract =
+        V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS[
+          name as keyof typeof V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS
+        ]
+      const rawDefinitionSha256 =
+        V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256[
+          name as keyof typeof V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256
+        ]
+      if (
+        !identity ||
+        !contract ||
+        !rawDefinitionSha256 ||
+        function_.identityArguments !== identity.identityArguments ||
+        function_.owner !== owner ||
+        function_.anonExecute !== false ||
+        function_.authenticatedExecute !== false ||
+        function_.publicExecute !== false ||
+        function_.securityDefiner !== contract.securityDefiner ||
+        function_.serviceRoleExecute !== contract.serviceRoleExecute ||
+        function_.searchPath !== contract.searchPath ||
+        function_.resultType !== contract.resultType ||
+        function_.volatility !== contract.volatility ||
+        function_.rawDefinitionSha256 !== rawDefinitionSha256
+      ) {
+        throw new Error(`Canonical verifier metadata is unsafe for V2 function ${name}.`)
+      }
+      return {
+        anonExecute: false,
+        authenticatedExecute: false,
+        identityArguments: identity.identityArguments,
+        name,
+        owner,
+        publicExecute: false,
+        rawDefinitionSha256,
+        resultType: contract.resultType,
+        searchPath: contract.searchPath,
+        securityDefiner: contract.securityDefiner,
+        serviceRoleExecute: contract.serviceRoleExecute,
+        volatility: contract.volatility,
+      }
+    },
+  )
   const names = functions.map(({ name }) => name).sort((left, right) => left.localeCompare(right))
   if (canonicalJson(names) !== canonicalJson([...REQUIRED_V2_SEMANTIC_FUNCTIONS].sort())) {
     throw new Error('Canonical verifier semantic function inventory drifted.')
   }
-  return { functions: functions.sort((left, right) => left.name.localeCompare(right.name)) }
+  return functions.sort((left, right) => left.name.localeCompare(right.name))
 }
 
 function validateCanonicalV1VerifierEvidence(
@@ -1567,8 +1561,22 @@ function validateCanonicalVerifierEvidence(
   }
   const validateOwner = (value: unknown, owner: 'postgres' | 'supabase_admin') => {
     const profile = record(value, `canonical verifier ${owner} profile`)
-    exactKeys(profile, ['rpcMetadata', 'semanticFunctions'], `canonical verifier ${owner} profile`)
+    exactKeys(
+      profile,
+      owner === 'postgres'
+        ? ['authenticatedByTransactionalCatalogProjection', 'rpcMetadata', 'semanticFunctions']
+        : ['rpcMetadata', 'semanticFunctions'],
+      `canonical verifier ${owner} profile`,
+    )
+    if (owner === 'postgres' && profile.authenticatedByTransactionalCatalogProjection !== true) {
+      throw new Error(
+        'Canonical verifier postgres profile was not authenticated by transactional catalog projection.',
+      )
+    }
     return {
+      ...(owner === 'postgres'
+        ? { authenticatedByTransactionalCatalogProjection: true as const }
+        : {}),
       rpcMetadata: validateV2RpcMetadata(
         { functions: array(profile.rpcMetadata, `canonical verifier ${owner} RPC metadata`) },
         owner,
@@ -1588,11 +1596,9 @@ function validateCanonicalVerifierEvidence(
     rpcMetadata: profile.rpcMetadata.map((entry) =>
       Object.fromEntries(Object.entries(entry).filter(([key]) => key !== 'owner')),
     ),
-    semanticFunctions: {
-      functions: profile.semanticFunctions.functions.map((entry) =>
-        Object.fromEntries(Object.entries(entry).filter(([key]) => key !== 'owner')),
-      ),
-    },
+    semanticFunctions: profile.semanticFunctions.map((entry) =>
+      Object.fromEntries(Object.entries(entry).filter(([key]) => key !== 'owner')),
+    ),
   })
   const disposableOwnerNeutral = ownerNeutral(disposableSupabaseAdmin)
   const localOwnerNeutral = ownerNeutral(supportedLocalPostgresProjection)

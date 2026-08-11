@@ -1243,30 +1243,27 @@ function rpcMetadata(owner: 'postgres' | 'supabase_admin') {
 }
 
 function semanticFunctions(owner: 'postgres' | 'supabase_admin') {
-  return {
-    functions: Object.keys(GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES)
-      .sort((left, right) => left.localeCompare(right, 'en'))
-      .map((name) => {
-        const typedName =
-          name as keyof typeof GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES
-        const identity = GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES[typedName]
-        const contract = V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS[typedName]
-        return {
-          anonExecute: false,
-          authenticatedExecute: false,
-          identityArguments: identity.identityArguments,
-          name,
-          owner,
-          publicExecute: false,
-          rawDefinitionSha256: V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256[typedName],
-          resultType: contract.resultType,
-          searchPath: contract.searchPath,
-          securityDefiner: contract.securityDefiner,
-          serviceRoleExecute: contract.serviceRoleExecute,
-          volatility: contract.volatility,
-        }
-      }),
-  }
+  return Object.keys(GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES)
+    .sort((left, right) => left.localeCompare(right, 'en'))
+    .map((name) => {
+      const typedName = name as keyof typeof GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES
+      const identity = GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES[typedName]
+      const contract = V2_CANONICAL_SEMANTIC_FUNCTION_CONTRACTS[typedName]
+      return {
+        anonExecute: false,
+        authenticatedExecute: false,
+        identityArguments: identity.identityArguments,
+        name,
+        owner,
+        publicExecute: false,
+        rawDefinitionSha256: V2_CANONICAL_SEMANTIC_FUNCTION_RAW_DEFINITION_SHA256[typedName],
+        resultType: contract.resultType,
+        searchPath: contract.searchPath,
+        securityDefiner: contract.securityDefiner,
+        serviceRoleExecute: contract.serviceRoleExecute,
+        volatility: contract.volatility,
+      }
+    })
 }
 
 function verifierEvidence(input: {
@@ -1278,6 +1275,9 @@ function verifierEvidence(input: {
   v1VerifierSha256: string
 }) {
   const ownerProfile = (owner: 'postgres' | 'supabase_admin') => ({
+    ...(owner === 'postgres'
+      ? { authenticatedByTransactionalCatalogProjection: true as const }
+      : {}),
     rpcMetadata: validateV2RpcMetadata(rpcMetadata(owner), owner),
     semanticFunctions: semanticFunctions(owner),
   })
@@ -1381,7 +1381,9 @@ function buildExecutionReceipt(input: {
         completedAt: `2026-08-10T13:0${index}:01.000Z`,
         databaseMutationOutsideDisposableTarget: false,
         disposableRuntime: {
-          automaticallyAssignedPort: 55_000 + index + (migrationPath === 'upgrade' ? 10 : 0),
+          automaticallyAssignedPort: String(
+            55_000 + index + (migrationPath === 'upgrade' ? 10 : 0),
+          ),
           containerId,
           containerName,
           dockerContext: 'synthetic-test-context',
