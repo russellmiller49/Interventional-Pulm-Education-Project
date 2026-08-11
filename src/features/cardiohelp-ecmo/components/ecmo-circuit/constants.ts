@@ -9,6 +9,7 @@ export const CONSOLE_ASSET = `${ASSET_ROOT}/cardiohelp-console.glb`
 export const OXYGENATOR_ASSET = `${ASSET_ROOT}/oxygenator.glb`
 export const CLAMP_ASSET = `${ASSET_ROOT}/circuit-clamp.glb`
 export const SENSOR_ASSET = `${ASSET_ROOT}/hls-sensor-connector.glb`
+export const BLENDER_ASSET = `${ASSET_ROOT}/sweep-gas-blender.glb`
 
 export const PATIENT_POSITION: [number, number, number] = [-1.35, -0.405, -0.3]
 export const PATIENT_SCALE = 0.92
@@ -48,6 +49,37 @@ export const CONSOLE_PLACEMENT = {
   rotation: [0, -0.35, 0] as [number, number, number],
   scale: 1,
 } as const
+
+/**
+ * The sweep-gas air/O2 blender's model-local bounding box and placement.
+ *
+ * Measured from `sweep-gas-blender.glb` (build_fidelity_assets.py); origin at
+ * the pole base, mixer and flowmeters offset toward +x. The outlet is the tip
+ * of the green mixed-gas stub — the sweep line begins there, so the tubing
+ * visibly leaves a modeled gas source instead of rising out of the floor.
+ */
+export const BLENDER_MODEL_BOUNDS = {
+  min: [-0.17, -0.014, -0.17],
+  max: [0.2978, 1.396, 0.17],
+} as const
+
+export const BLENDER_PLACEMENT = {
+  x: 2.2,
+  z: 1.0,
+  rotation: [0, -0.35, 0] as [number, number, number],
+  scale: 1,
+} as const
+
+/**
+ * Yaw of the HLS oxygenator on its pump head, shared by the runtime scene and
+ * the offline harness (each used to hardcode its own copy, tuned for the old
+ * scan's arbitrary frame). The B7 module's label face is authored on +Z; this
+ * turns it toward the default camera.
+ */
+export const OXYGENATOR_ROTATION: [number, number, number] = [0, 0.6, 0]
+
+/** Mixed-gas outlet stub tip in the blender's local frame (three.js axes). */
+export const BLENDER_OUTLET_LOCAL: [number, number, number] = [0.29, 0.93, 0.03]
 
 // Target sits between bed and console but weighted toward the patient: at the
 // old dead-center target the patient rendered ~40% smaller than the console

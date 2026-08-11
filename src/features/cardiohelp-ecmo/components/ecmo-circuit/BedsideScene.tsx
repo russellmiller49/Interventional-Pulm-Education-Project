@@ -6,6 +6,9 @@ import * as THREE from 'three'
 
 import type { EcmoSimulationState, SimulationAction } from '../../engine'
 import {
+  BLENDER_ASSET,
+  BLENDER_MODEL_BOUNDS,
+  BLENDER_PLACEMENT,
   bloodColor,
   CAMERA_TARGET,
   CONSOLE_ASSET,
@@ -192,6 +195,11 @@ export function BedsideScene({
         bounds={CONSOLE_MODEL_BOUNDS}
         placement={CONSOLE_PLACEMENT}
       />
+      <GroundedAsset
+        url={BLENDER_ASSET}
+        bounds={BLENDER_MODEL_BOUNDS}
+        placement={BLENDER_PLACEMENT}
+      />
       <HlsModule
         layout={layout}
         running={state.device.pumpRunning}
@@ -298,6 +306,11 @@ export function BedsideScene({
         position={[layout.hlsModulePosition.x, FLOOR_Y + 0.012, layout.hlsModulePosition.z]}
         radius={0.5}
         opacity={0.45}
+      />
+      <ContactShadow
+        position={[BLENDER_PLACEMENT.x, FLOOR_Y + 0.012, BLENDER_PLACEMENT.z]}
+        radius={0.3}
+        opacity={0.4}
       />
 
       <OrbitControls

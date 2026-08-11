@@ -243,12 +243,26 @@ def main() -> None:
     bpy.context.view_layer.update()
     console.location.z += floor_z - bounds_min_z(console_objects)
 
+    # Sweep-gas blender, grounded like the console (key may be absent in
+    # layouts exported before the blender existed).
+    if "blenderPlacement" in layout:
+        blender_objects = import_glb(assets_dir / "sweep-gas-blender.glb")
+        blender = group_objects(blender_objects, "blender-root")
+        blender_spec = layout["blenderPlacement"]
+        blender.location = t2b((blender_spec["x"], 0.0, blender_spec["z"]))
+        blender.rotation_euler = t2b_euler(blender_spec["rotation"])
+        blender.scale = (blender_spec.get("scale", 1.0),) * 3
+        bpy.context.view_layer.update()
+        blender.location.z += floor_z - bounds_min_z(blender_objects)
+
     # HLS module: oxygenator GLB above a placeholder pump head
     module = t2b(layout["hlsModule"])
     oxygenator_objects = import_glb(assets_dir / "oxygenator.glb")
     oxygenator = group_objects(oxygenator_objects, "oxygenator-root")
     oxygenator.location = module + Vector((0, 0, 0.2))
-    oxygenator.rotation_euler = (0.02, 0.0, -0.55)
+    oxygenator.rotation_euler = t2b_euler(
+        layout.get("oxygenatorRotation", [0.02, -0.55, 0.0])
+    )
     bpy.ops.mesh.primitive_cylinder_add(radius=0.18, depth=0.16, location=module + Vector((0, 0, -0.16)))
     pump = bpy.context.active_object
     pump.data.materials.append(

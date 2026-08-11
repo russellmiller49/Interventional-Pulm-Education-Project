@@ -1,8 +1,8 @@
 """B7 deterministic builders for the CARDIOHELP bedside fidelity assets.
 
-Owner-approved at Visual Approval Gate 1 (2026-08-11): console Candidate A and
-patient Candidate A. This script is the reproducible source for three runtime
-GLBs — no supplied source files, no manual .blend edits, no randomness beyond
+Owner-approved at Visual Approval Gate 1 and the follow-up gate (both
+2026-08-11). This script is the reproducible source for five runtime GLBs —
+no supplied source files, no manual .blend edits, no randomness beyond
 Blender's fixed-parameter procedural textures:
 
   cardiohelp-console.glb      procedural CARDIOHELP System console (original
@@ -26,6 +26,15 @@ Blender's fixed-parameter procedural textures:
                               jaws straddle the scene's 0.08 m-OD circuit
                               tubing (the previous clamp's 0.048 m jaw span
                               could not reach around the tube it clamps).
+  oxygenator.glb              procedural HLS Module Advanced (diamond clear
+                              housing, fiber bundle, red frame + volute,
+                              plain label plate, stopcocks, brass HX ports,
+                              pump stem), replacing the supplied
+                              photogrammetry scan and its textures.
+  sweep-gas-blender.glb       pole-mounted air/O2 mixer with FiO2 dial, two
+                              flowmeter tubes, supply hoses, and the green
+                              mixed-gas outlet the runtime sweep line
+                              originates from (BLENDER_OUTLET_LOCAL).
 
 Coordinate conventions:
   - Console and clamp are authored in Blender Z-up standing upright; the glTF
@@ -47,7 +56,7 @@ material at join. That is how the previous patient exported a null material
 slot and a default-white drape. Materials are therefore always assigned
 BEFORE boolean cuts here.
 
-Run (rebuilds all three in place):
+Run (rebuilds all five in place):
   /Applications/Blender.app/Contents/MacOS/Blender --background \
     --python scripts/cardiohelp-ecmo/build_fidelity_assets.py -- \
     public/models/cardiohelp-ecmo
@@ -778,6 +787,302 @@ def build_clamp(output_dir: Path) -> dict:
     return mesh_stats(clamp, output_path)
 
 
+
+
+# ---------------------------------------------------------------- HLS module + gas blender
+# (Owner-approved at the B7 follow-up visual gate, 2026-08-11: procedural HLS
+# Module Advanced replacing the supplied oxygenator scan, and the sweep-gas
+# air/O2 blender the sweep line now originates from.)
+
+COLLECTED: list[bpy.types.Object] = []
+
+
+def make_alpha_material(name, color, *, roughness=0.45, metallic=0.0, alpha=1.0):
+    material = bpy.data.materials.new(name)
+    material.use_nodes = True
+    principled = next(n for n in material.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    principled.inputs["Base Color"].default_value = (*color, 1.0)
+    principled.inputs["Metallic"].default_value = metallic
+    principled.inputs["Roughness"].default_value = roughness
+    if alpha < 1.0:
+        principled.inputs["Alpha"].default_value = alpha
+        if hasattr(material, "surface_render_method"):
+            material.surface_render_method = "BLENDED"
+    material.diffuse_color = (*color, alpha)
+    material.metallic = metallic
+    material.roughness = roughness
+    return material
+
+
+def register(obj):
+    COLLECTED.append(obj)
+    return obj
+
+
+def rounded_box(name, location, size, material, *, bevel=0.01, segments=3,
+                rotation=(0.0, 0.0, 0.0)):
+    bpy.ops.mesh.primitive_cube_add(location=location)
+    obj = bpy.context.object
+    obj.name = name
+    obj.dimensions = size
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    if bevel > 0:
+        modifier = obj.modifiers.new("bevel", type="BEVEL")
+        modifier.width = min(bevel, min(size) * 0.45)
+        modifier.segments = segments
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_apply(modifier=modifier.name)
+    if any(rotation):
+        obj.rotation_euler = Euler(rotation)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+    obj.data.materials.append(material)
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+    return register(obj)
+
+
+def cylinder(name, location, radius, depth, material, *, axis="Z", vertices=24,
+             rotation=None):
+    axis_rotation = {
+        "Z": (0.0, 0.0, 0.0),
+        "X": (0.0, math.radians(90), 0.0),
+        "Y": (math.radians(90), 0.0, 0.0),
+    }[axis]
+    bpy.ops.mesh.primitive_cylinder_add(
+        vertices=vertices, radius=radius, depth=depth, location=location,
+        rotation=rotation if rotation is not None else axis_rotation,
+    )
+    obj = bpy.context.object
+    obj.name = name
+    obj.data.materials.append(material)
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+    return register(obj)
+
+
+def sphere(name, location, radius, material, *, segments=16, rings=10,
+           scale=(1.0, 1.0, 1.0)):
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=segments, ring_count=rings, location=location, radius=radius
+    )
+    obj = bpy.context.object
+    obj.name = name
+    obj.scale = scale
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    obj.data.materials.append(material)
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+    return register(obj)
+
+
+def tube(name, points, radius, material, *, resolution=8, bevel_resolution=5):
+    curve_data = bpy.data.curves.new(name, type="CURVE")
+    curve_data.dimensions = "3D"
+    spline = curve_data.splines.new("NURBS")
+    spline.points.add(len(points) - 1)
+    for index, point in enumerate(points):
+        spline.points[index].co = (*point, 1.0)
+    spline.use_endpoint_u = True
+    spline.order_u = 3
+    spline.resolution_u = resolution
+    curve_data.bevel_depth = radius
+    curve_data.bevel_resolution = bevel_resolution
+    curve_data.use_fill_caps = True
+    obj = bpy.data.objects.new(name, curve_data)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    bpy.ops.object.convert(target="MESH")
+    obj = bpy.context.object
+    obj.data.materials.append(material)
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+    return register(obj)
+
+
+def join_and_export(name, out_path, *, center=True):
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in COLLECTED:
+        obj.select_set(True)
+    bpy.context.view_layer.objects.active = COLLECTED[0]
+    bpy.ops.object.join()
+    joined = bpy.context.view_layer.objects.active
+    joined.name = name
+    joined.data.name = f"{name}_mesh"
+    bpy.ops.object.material_slot_remove_unused()
+    lo = Vector((min(v.co[i] for v in joined.data.vertices) for i in range(3)))
+    hi = Vector((max(v.co[i] for v in joined.data.vertices) for i in range(3)))
+    if center:
+        joined.data.transform(Matrix.Translation(-(lo + hi) / 2))
+        joined.data.update()
+        lo, hi = lo - (lo + hi) / 2, hi - (lo + hi) / 2
+    bpy.ops.object.select_all(action="DESELECT")
+    joined.select_set(True)
+    bpy.context.view_layer.objects.active = joined
+    bpy.ops.export_scene.gltf(
+        filepath=str(out_path),
+        export_format="GLB",
+        use_selection=True,
+        export_apply=True,
+        export_yup=True,
+        export_materials="EXPORT",
+        export_texcoords=True,
+        export_normals=True,
+        export_tangents=False,
+        export_attributes=False,
+        export_animations=False,
+        export_cameras=False,
+        export_lights=False,
+    )
+    return {
+        "output": out_path.name,
+        "triangles": sum(max(1, len(p.vertices) - 2) for p in joined.data.polygons),
+        "vertices": len(joined.data.vertices),
+        "materials": [m.name if m else None for m in joined.data.materials],
+        "local_bounds": {"min": [round(v, 4) for v in lo], "max": [round(v, 4) for v in hi]},
+        "bytes": out_path.stat().st_size,
+    }
+
+
+# ------------------------------------------------------------- HLS module
+
+def build_oxygenator(output_dir: Path) -> dict:
+    out_path = output_dir / "oxygenator.glb"
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    COLLECTED.clear()
+
+    clear_poly = make_alpha_material("hls_clear_housing", srgb("#dfeef2"), roughness=0.1, alpha=0.16)
+    fiber = make_alpha_material("hls_fiber_bundle", srgb("#f0f1ee"), roughness=0.78)
+    red = make_alpha_material("hls_red", srgb("#a01d23"), roughness=0.38)
+    label_white = make_alpha_material("hls_label_white", srgb("#f4f6f7"), roughness=0.5)
+    label_blue = make_alpha_material("hls_label_blue", srgb("#2159a8"), roughness=0.5)
+    stop_blue = make_alpha_material("hls_stopcock_blue", srgb("#2a6fd6"), roughness=0.4)
+    brass = make_alpha_material("hls_port_brass", srgb("#b9975b"), roughness=0.35, metallic=0.8)
+    dark = make_alpha_material("hls_port_dark", srgb("#2b3238"), roughness=0.5)
+
+    tilt45 = (0.0, math.radians(45.0), 0.0)
+
+    # Diamond housing (square standing on a corner), fiber bundle inside.
+    rounded_box("housing_clear", (0, 0, 0), (0.27, 0.13, 0.27), clear_poly,
+                bevel=0.02, segments=3, rotation=tilt45)
+    rounded_box("fiber_bundle", (0, 0, 0), (0.20, 0.085, 0.20), fiber,
+                bevel=0.02, segments=3, rotation=tilt45)
+    # Red edge frame: four bars along the diamond's edges.
+    half = 0.135  # half-side of the square before rotation
+    for index, (sx, sz) in enumerate(((1, 1), (-1, 1), (-1, -1), (1, -1))):
+        # Edge midpoint after 45-degree tilt lies on the x/z axes.
+        angle = math.radians(45.0 if sx * sz > 0 else -45.0)
+        rounded_box(
+            f"frame_edge_{index}",
+            (sx * half / math.sqrt(2), 0.0, sz * half / math.sqrt(2)),
+            (0.295, 0.138, 0.024),
+            red,
+            bevel=0.008,
+            segments=2,
+            rotation=(0.0, angle, 0.0),
+        )
+
+    # Label plate + blue band on the front face (-Y), no text.
+    rounded_box("label_plate", (0.0, -0.069, 0.02), (0.115, 0.006, 0.15),
+                label_white, bevel=0.004, segments=1)
+    rounded_box("label_band", (0.0, -0.0725, -0.032), (0.115, 0.006, 0.05),
+                label_blue, bevel=0.004, segments=1)
+
+    # Red top volute with de-airing cap.
+    cylinder("volute", (0.0, 0.0, 0.235), 0.052, 0.1, red, axis="Z", vertices=28)
+    cylinder("volute_cap", (0.0, 0.0, 0.292), 0.03, 0.02, red, axis="Z", vertices=20)
+    cylinder("deairing_port", (0.0, -0.045, 0.27), 0.011, 0.035, label_white, axis="Y",
+             vertices=12)
+
+    # Bottom blood ports + stopcocks (blue venous-side, red arterial-side).
+    cylinder("port_left", (-0.1, -0.02, -0.155), 0.019, 0.09, dark, axis="Z",
+             rotation=(math.radians(20), 0, math.radians(15)), vertices=16)
+    cylinder("port_right", (0.1, -0.02, -0.155), 0.019, 0.09, dark, axis="Z",
+             rotation=(math.radians(20), 0, math.radians(-15)), vertices=16)
+    for name, x_pos, material in (("stopcock_blue", -0.125, stop_blue), ("stopcock_red", 0.125, red)):
+        cylinder(f"{name}_body", (x_pos, -0.045, -0.175), 0.011, 0.05, label_white,
+                 axis="X", vertices=12)
+        cylinder(f"{name}_handle", (x_pos, -0.07, -0.175), 0.014, 0.028, material,
+                 axis="Y", vertices=10)
+
+    # Brass heat-exchanger ports, lower rear.
+    for x_pos in (-0.05, 0.05):
+        cylinder(f"hx_port_{x_pos}", (x_pos, 0.075, -0.19), 0.016, 0.05, brass,
+                 axis="Y", vertices=14)
+
+    # Stem down to the runtime pump head.
+    cylinder("pump_stem", (0.0, 0.0, -0.24), 0.036, 0.12, dark, axis="Z", vertices=20)
+    cylinder("pump_collar", (0.0, 0.0, -0.295), 0.05, 0.02, label_white, axis="Z",
+             vertices=20)
+
+    return join_and_export("membrane_oxygenator", out_path, center=True)
+
+
+# ------------------------------------------------------------- gas blender
+
+def build_blender(output_dir: Path) -> dict:
+    out_path = output_dir / "sweep-gas-blender.glb"
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    COLLECTED.clear()
+
+    steel = make_alpha_material("blender_pole", srgb("#c4c9cd"), roughness=0.3, metallic=0.85)
+    box_gray = make_alpha_material("blender_box", srgb("#dfe2e3"), roughness=0.45)
+    panel_dark = make_alpha_material("blender_panel", srgb("#2b3238"), roughness=0.55)
+    knob_black = make_alpha_material("blender_knob", srgb("#17191b"), roughness=0.6)
+    clear_acrylic = make_alpha_material("blender_flowtube", srgb("#eef4f6"), roughness=0.12, alpha=0.3)
+    float_steel = make_alpha_material("blender_float", srgb("#5f6d74"), roughness=0.3, metallic=0.6)
+    hose_green = make_alpha_material("blender_hose_o2", srgb("#3d8f4e"), roughness=0.6)
+    hose_white = make_alpha_material("blender_hose_air", srgb("#e8e9e6"), roughness=0.6)
+
+    # Weighted base + pole.
+    cylinder("base", (0.0, 0.0, 0.014), 0.17, 0.028, steel, axis="Z", vertices=28)
+    cylinder("base_hub", (0.0, 0.0, 0.05), 0.03, 0.06, steel, axis="Z", vertices=16)
+    cylinder("pole", (0.0, 0.0, 0.72), 0.013, 1.36, steel, axis="Z", vertices=16)
+    cylinder("pole_cap", (0.0, 0.0, 1.4), 0.016, 0.02, steel, axis="Z", vertices=12)
+
+    # Clamp block joining mixer to pole.
+    rounded_box("clamp_block", (0.045, 0.0, 1.08), (0.07, 0.05, 0.05), steel, bevel=0.008)
+
+    # Mixer box with FiO2 dial on the front (-Y).
+    rounded_box("mixer_box", (0.145, 0.0, 1.08), (0.13, 0.1, 0.15), box_gray,
+                bevel=0.012, segments=3)
+    rounded_box("mixer_label", (0.145, -0.048, 1.125), (0.07, 0.008, 0.028), panel_dark,
+                bevel=0.004, segments=1)
+    for port_x in (0.115, 0.175):
+        cylinder(f"mixer_port_{port_x}", (port_x, 0.02, 1.0), 0.008, 0.025, steel,
+                 axis="Z", vertices=10)
+    cylinder("dial_ring", (0.145, -0.053, 1.045), 0.034, 0.01, panel_dark, axis="Y",
+             vertices=24)
+    cylinder("dial_knob", (0.145, -0.062, 1.045), 0.026, 0.022, box_gray, axis="Y",
+             vertices=18)
+    rounded_box("dial_pointer", (0.145, -0.072, 1.06), (0.006, 0.006, 0.024), panel_dark,
+                bevel=0.002, segments=1)
+
+    # Two clear flowmeter tubes with floats and black needle-valve knobs.
+    for index, x_pos in enumerate((-0.005, 0.055)):
+        rounded_box(f"flowtube_{index}", (x_pos, -0.025, 1.1), (0.04, 0.04, 0.28),
+                    clear_acrylic, bevel=0.008, segments=2)
+        cylinder(f"flowbore_{index}", (x_pos, -0.025, 1.1), 0.004, 0.24, hose_white,
+                 axis="Z", vertices=10)
+        sphere(f"float_{index}", (x_pos, -0.025, 1.05 + index * 0.07), 0.012, float_steel)
+        cylinder(f"flowknob_{index}", (x_pos, -0.055, 0.945), 0.017, 0.03, knob_black,
+                 axis="Y", vertices=14)
+
+    # Supply hoses (air white, O2 green) dropping behind the pole to the floor.
+    tube("hose_air", [(0.115, 0.02, 1.0), (0.115, 0.03, 0.96), (0.07, 0.09, 0.6),
+                      (0.02, 0.12, 0.25), (-0.01, 0.13, 0.02)], 0.009, hose_white)
+    tube("hose_o2", [(0.175, 0.02, 1.0), (0.175, 0.03, 0.96), (0.14, 0.1, 0.55),
+                     (0.08, 0.14, 0.2), (0.05, 0.15, 0.02)], 0.009, hose_green)
+
+    # Mixed-gas outlet: barb + green stub, low on the mixer's right side. The
+    # runtime sweep line begins at this stub's tip.
+    cylinder("outlet_barb", (0.215, 0.0, 1.02), 0.009, 0.03, steel, axis="X", vertices=10)
+    tube("outlet_stub", [(0.23, 0.0, 1.02), (0.27, -0.02, 0.98), (0.29, -0.03, 0.93)],
+         0.0085, hose_green)
+
+    return join_and_export("sweep_gas_blender", out_path, center=False)
+
+
 # ---------------------------------------------------------------- main
 
 def main() -> None:
@@ -795,6 +1100,10 @@ def main() -> None:
         report.append(build_patient(output_dir))
     if only in (None, "clamp"):
         report.append(build_clamp(output_dir))
+    if only in (None, "oxygenator"):
+        report.append(build_oxygenator(output_dir))
+    if only in (None, "blender"):
+        report.append(build_blender(output_dir))
     print("ECMO_FIDELITY_REPORT=" + json.dumps(report, indent=2))
 
 

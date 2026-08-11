@@ -217,6 +217,42 @@ as a draped supine mannequin at every size, matching the harness renders.
   (PMREM room environment, shadow setup); browser captures are the authority
   for the shipped look.
 
+## Follow-up package: HLS module, sweep-gas blender, cannula re-route
+
+Owner-requested after Gate 2 ("Lets do that and also add sweep gas and flow
+blender"), with a dedicated visual gate (contact sheets + integrated harness
+renders) **approved 2026-08-11**, including the cannula re-route.
+
+- **`oxygenator.glb` replaced**: the 2.25 MB photogrammetry scan (mirrored
+  label textures, floating scan filaments, opaque flanks) gives way to a
+  1,660-tri / 62 KB procedural HLS Module Advanced — clear diamond housing
+  with visible fiber bundle, red frame and top volute with de-airing port,
+  plain label plate (no text/logos), blue/red stopcocks, brass
+  heat-exchanger ports, and a stem that seats onto the runtime pump head.
+  Its yaw is now the shared `OXYGENATOR_ROTATION` constant read by both the
+  runtime and the harness (each had hardcoded its own tuned-for-the-scan
+  copy).
+- **`sweep-gas-blender.glb` added** (4,200 tris / 123 KB): pole-mounted
+  air/O2 mixer with FiO2 dial, two clear flowmeter tubes with floats and
+  needle-valve knobs, air + O2 supply hoses, green mixed-gas outlet. The
+  sweep line now begins at `BLENDER_OUTLET_LOCAL` (transformed by
+  `BLENDER_PLACEMENT`), so the tubing visibly leaves a modeled source; the
+  sweep label names the device ("Air–O₂ blender — sweep-gas source") and the
+  geometry-test contract records why the old "line / source connection" text
+  is retired.
+- **Cannula re-route (owner-approved)**: the drainage limb now runs caudally
+  over the drape and crosses low over the legs; the return limb hugs the
+  near bed edge at flank level. The X-cross over the abdomen is gone.
+- **Payload: 1.0 MB of the 6 MB budget** (from 3.15 MB); **zero textures**
+  in any runtime asset.
+- Browser re-verification: label pills 8 (VV) / 9 (VA); overlaps 0 at
+  1600×900 and 1280×720; the same two ~10 px corner touches at 1024×768.
+  Cardiohelp suite: 36 suites / 1,057 tests green (contract suite extended
+  to 19 tests: blender node/height/outlet-on-asset, HLS material set, and
+  the payload is now asserted texture-free).
+- Provenance: only `hls-sensor-connector.glb` still derives from a supplied
+  file; the licensing gate below narrows to that one asset.
+
 ## Owner visual approvals
 
 - Gate 1 (candidates): **approved** — console A + patient A, 2026-08-11.

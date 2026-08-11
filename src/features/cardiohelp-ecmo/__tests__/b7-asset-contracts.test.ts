@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { PATIENT_POSITION, PATIENT_SCALE, TUBE_RADII } from '../components/ecmo-circuit/constants'
+import {
+  BLENDER_OUTLET_LOCAL,
+  PATIENT_POSITION,
+  PATIENT_SCALE,
+  TUBE_RADII,
+} from '../components/ecmo-circuit/constants'
 import { buildCircuitLayout, patientWorldPoint } from '../components/ecmo-circuit/layout'
 
 /**
@@ -26,6 +31,7 @@ const RUNTIME_ASSETS = [
   'oxygenator.glb',
   'circuit-clamp.glb',
   'hls-sensor-connector.glb',
+  'sweep-gas-blender.glb',
 ] as const
 
 const ASSET_BUDGET_BYTES = 6 * 1024 * 1024
@@ -123,6 +129,7 @@ describe('runtime GLB structure', () => {
       'oxygenator.glb': 'membrane_oxygenator',
       'circuit-clamp.glb': 'circuit_clamp',
       'hls-sensor-connector.glb': 'hls_sensor_connector',
+      'sweep-gas-blender.glb': 'sweep_gas_blender',
     }
     for (const [file, nodeName] of Object.entries(expected)) {
       const names = (readGlb(file).json.nodes ?? []).map((node) => node.name)
@@ -138,14 +145,12 @@ describe('runtime GLB structure', () => {
     expect(total).toBeLessThan(ASSET_BUDGET_BYTES)
   })
 
-  it('embeds textures only in the oxygenator', () => {
+  it('embeds no textures in any runtime asset', () => {
+    // The scanned oxygenator carried the payload's only textures; its
+    // procedural replacement (B7 follow-up) retired them, so every asset is
+    // plain-PBR and the whole payload rides on geometry alone.
     for (const name of RUNTIME_ASSETS) {
-      const images = readGlb(name).json.images ?? []
-      if (name === 'oxygenator.glb') {
-        expect(images.length).toBeGreaterThan(0)
-      } else {
-        expect(images).toHaveLength(0)
-      }
+      expect(readGlb(name).json.images ?? []).toHaveLength(0)
     }
   })
 })
@@ -234,6 +239,40 @@ describe('the B7 patient mannequin', () => {
       expect(localY).toBeGreaterThan(0.05)
       expect(localY).toBeLessThan(0.16)
     }
+  })
+})
+
+describe('the B7 HLS module and sweep-gas blender', () => {
+  it('oxygenator ships the procedural HLS material set', () => {
+    const doc = readGlb('oxygenator.glb')
+    const names = (doc.json.materials ?? []).map((material) => material.name)
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'hls_clear_housing',
+        'hls_fiber_bundle',
+        'hls_red',
+        'hls_label_white',
+        'hls_stopcock_blue',
+      ]),
+    )
+  })
+
+  it('blender stands pole-height on the floor with its outlet inside its bounds', () => {
+    const { min, max } = positionBounds(readGlb('sweep-gas-blender.glb'))
+    // Standing asset: base at y~0, pole ~1.4 m tall.
+    expect(min[1]).toBeGreaterThan(-0.05)
+    expect(min[1]).toBeLessThan(0.02)
+    expect(max[1]).toBeGreaterThan(1.2)
+    expect(max[1]).toBeLessThan(1.6)
+    // The sweep line's origin (BLENDER_OUTLET_LOCAL) must be a point ON the
+    // asset, not floating beside it.
+    const [ox, oy, oz] = BLENDER_OUTLET_LOCAL
+    expect(ox).toBeGreaterThan(min[0] - 0.01)
+    expect(ox).toBeLessThan(max[0] + 0.01)
+    expect(oy).toBeGreaterThan(min[1])
+    expect(oy).toBeLessThan(max[1])
+    expect(oz).toBeGreaterThan(min[2] - 0.01)
+    expect(oz).toBeLessThan(max[2] + 0.01)
   })
 })
 

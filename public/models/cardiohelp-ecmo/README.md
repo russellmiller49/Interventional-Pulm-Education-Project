@@ -1,19 +1,20 @@
 # CARDIOHELP ECMO runtime models
 
 Prepared 2026-07-17, axis/quality rework 2026-07-18, and B7 fidelity rebuild
-2026-08-11 (owner-approved at Visual Approval Gate 1). The console, patient
-and clamp are procedural in-repo originals; the oxygenator and sensor still
-derive from supplied source files.
+2026-08-11 (owner-approved at Visual Approval Gate 1, Gate 2, and the
+follow-up asset gate). Five of the six runtime GLBs are procedural in-repo
+originals; only the sensor connector still derives from a supplied file.
 
 | Runtime file                 | Provenance                                     | Runtime triangles | Size    | Purpose                                                                                  |
 | ---------------------------- | ---------------------------------------------- | ----------------: | ------- | ---------------------------------------------------------------------------------------- |
 | `cardiohelp-console.glb`     | Procedural (build_fidelity_assets.py)          |            12,164 | ~310 KB | CARDIOHELP console: cage, screen, keypad, rotary knob, connector panel, HLS holder plate |
 | `patient-femoral-access.glb` | Procedural (build_fidelity_assets.py)          |            21,860 | ~388 KB | Neutral supine mannequin, fitted drape, 2 groin access windows                           |
 | `circuit-clamp.glb`          | Procedural (build_fidelity_assets.py)          |             3,744 | ~93 KB  | Interactive tubing clamp, jaws sized to the 0.08 m tube OD                               |
-| `oxygenator.glb`             | Supplied `oxygenator.glb` (textures preserved) |            61,437 | ~2.2 MB | Textured membrane oxygenator                                                             |
+| `oxygenator.glb`             | Procedural (build_fidelity_assets.py)          |             1,660 | ~62 KB  | HLS Module Advanced: clear diamond housing, fiber bundle, red frame + volute, stopcocks  |
+| `sweep-gas-blender.glb`      | Procedural (build_fidelity_assets.py)          |             4,200 | ~123 KB | Pole-mounted air/O2 mixer + flowmeters; the sweep line starts at its outlet              |
 | `hls-sensor-connector.glb`   | Supplied `HLS internal sensor connection..glb` |             1,091 | ~20 KB  | Return-line sensor, tangent-aligned axis                                                 |
 
-Total payload ≈ 3.15 MB (budget 6 MB).
+Total payload ≈ 1.0 MB (budget 6 MB) — no textures in any runtime asset.
 
 ## 2026-08-11 B7 fidelity rebuild notes
 
@@ -32,6 +33,13 @@ Total payload ≈ 3.15 MB (budget 6 MB).
   skin heights (the builder prints them).
 - **Clamp.** Jaw span now clears the 0.08 m tube OD (the old 0.048 m jaws
   hovered beside the tube); ratchet rack seated instead of floating chips.
+- **HLS module + sweep-gas blender (follow-up gate).** The photogrammetry
+  oxygenator scan (2.25 MB, mirrored labels, scan filaments) is replaced by a
+  procedural HLS Module Advanced; its yaw is the shared `OXYGENATOR_ROTATION`
+  constant (runtime + harness). The new `sweep-gas-blender.glb` models the
+  air/O2 mixer with flowmeters; the sweep line begins at `BLENDER_OUTLET_LOCAL`
+  transformed by `BLENDER_PLACEMENT`, and both cannulae were re-routed to run
+  caudally instead of crossing over the abdomen (owner-approved).
 - **Material-slot trap** (this shipped a defect once): applying a boolean
   whose cutter has no material inserts a `None` slot at index 0, orphaning a
   later-appended material, and `material_slot_remove_unused` then deletes it
@@ -57,10 +65,9 @@ Total payload ≈ 3.15 MB (budget 6 MB).
 # Subset:
 ... build_fidelity_assets.py -- public/models/cardiohelp-ecmo --only patient
 
-# Oxygenator/sensor polish from supplied sources (do NOT run the console or
-# clamp paths of the legacy scripts — they would overwrite the B7 assets):
-# prepare_assets.py / polish_runtime_assets.py remain for provenance of the
-# supplied-file pipeline only.
+# The legacy prepare_assets.py / polish_runtime_assets.py remain only as
+# provenance for the supplied-file pipeline (sensor). Do NOT run their
+# console/clamp/oxygenator paths — they would overwrite the B7 assets.
 ```
 
 ## Visual verification (offline harness)
@@ -76,6 +83,6 @@ blender --background --python scripts/cardiohelp-ecmo/render_scene_previews.py -
   public/models/cardiohelp-ecmo scripts/cardiohelp-ecmo/circuit-layout.vv.json /tmp/ecmo-previews/vv
 ```
 
-The supplied files (oxygenator, sensor) did not include license or provenance
-metadata. Confirm redistribution rights before public release; the console,
-patient and clamp no longer carry that constraint.
+Only `hls-sensor-connector.glb` still derives from a supplied file without
+license metadata — confirm redistribution rights before public release. Every
+other runtime asset is an in-repo procedural original.

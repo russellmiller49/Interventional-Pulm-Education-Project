@@ -212,8 +212,11 @@ describe.each(['vv', 'va'] as const)('%s scene labels name what they point at', 
     const sweepLabel = layout.labels.find((label) => label.id === 'sweep')
     expect(consoleLabel?.text).toBe('CARDIOHELP console')
     expect(consoleLabel?.text).not.toMatch(/sweep|gas/i)
-    // No modelled blender or wall outlet, so the label names the line and its connection.
-    expect(sweepLabel?.text).toBe('Sweep-gas line / source connection')
+    // The pole-mounted air/O2 blender is modelled now (B7 follow-up), so the
+    // label names the device. Before it existed the label deliberately named
+    // only "the line and its connection" — naming a device that was not there
+    // was this suite's original defect.
+    expect(sweepLabel?.text).toBe('Air–O₂ blender — sweep-gas source')
   })
 
   it('keeps the console and sweep labels apart', () => {

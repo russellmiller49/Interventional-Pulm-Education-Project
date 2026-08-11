@@ -10,6 +10,7 @@ import { CanvasErrorBoundary } from '@/components/airway-anatomy-lesson/CanvasEr
 
 import type { EcmoSimulationState, GuidedControlId, SimulationAction } from '../engine'
 import {
+  BLENDER_ASSET,
   CAMERA_FOV,
   CAMERA_POSITION,
   CLAMP_ASSET,
@@ -28,6 +29,7 @@ useGLTF.preload(CONSOLE_ASSET)
 useGLTF.preload(OXYGENATOR_ASSET)
 useGLTF.preload(CLAMP_ASSET)
 useGLTF.preload(SENSOR_ASSET)
+useGLTF.preload(BLENDER_ASSET)
 
 interface EcmoCircuit3DProps {
   state: EcmoSimulationState

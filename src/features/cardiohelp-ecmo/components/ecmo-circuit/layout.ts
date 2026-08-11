@@ -2,6 +2,9 @@ import * as THREE from 'three'
 
 import type { SupportMode } from '../../engine/types'
 import {
+  BLENDER_MODEL_BOUNDS,
+  BLENDER_OUTLET_LOCAL,
+  BLENDER_PLACEMENT,
   CONSOLE_MODEL_BOUNDS,
   CONSOLE_PLACEMENT,
   DRAINAGE_CLAMP_U,
@@ -65,6 +68,15 @@ export interface CircuitLayout {
  */
 export const consolePlacement = groundAsset(CONSOLE_MODEL_BOUNDS, CONSOLE_PLACEMENT, FLOOR_Y)
 
+/** The sweep-gas blender, grounded like the console. */
+export const blenderPlacement = groundAsset(BLENDER_MODEL_BOUNDS, BLENDER_PLACEMENT, FLOOR_Y)
+
+/** World position of the blender's mixed-gas outlet stub — the sweep line origin. */
+export const blenderOutlet = new THREE.Vector3(...BLENDER_OUTLET_LOCAL)
+  .applyEuler(new THREE.Euler(...BLENDER_PLACEMENT.rotation))
+  .multiplyScalar(BLENDER_PLACEMENT.scale)
+  .add(blenderPlacement.origin)
+
 export function patientWorldPoint(x: number, y: number, z: number): THREE.Vector3 {
   return new THREE.Vector3(
     PATIENT_POSITION[0] + x * PATIENT_SCALE,
@@ -97,18 +109,13 @@ const RETURN_HUB = vec(-0.71, -0.1, -0.13)
 // (the B7 console's holder plate faces −X/−Z under its −0.35 yaw); the old
 // (0.9, −0.05, 0.3) sat 0.65 m from the console body, so the disposable read
 // as floating on a pedestal in mid-air rather than carried by the console.
-const HLS_MODULE = vec(0.98, -0.02, 0.36)
-const PUMP_INLET = vec(0.98, -0.27, 0.4)
-const OXYGENATOR_OUTLET = vec(0.84, 0.13, 0.26)
-/*
- * Where the sweep-gas line enters the scene, on the floor in front of the console.
- *
- * No external blender or wall outlet is modelled, so this is a tubing origin and nothing more — it
- * was previously placed *inside* the console's own volume, which made the console read as the gas
- * source and put the "Sweep gas" pill on top of it. The label names the connection, not a device.
- */
-const SWEEP_SOURCE = vec(1.46, -0.66, 1.17)
-const SWEEP_CAP = vec(1.01, 0.27, 0.47)
+const HLS_MODULE = vec(0.92, -0.05, 0.33)
+const PUMP_INLET = vec(0.92, -0.3, 0.37)
+const OXYGENATOR_OUTLET = vec(0.78, 0.1, 0.23)
+// The sweep line now leaves a MODELED gas source: the pole-mounted air/O2
+// blender's outlet stub (see BLENDER_PLACEMENT). Its floor-origin predecessor
+// existed only because nothing represented the source.
+const SWEEP_CAP = vec(0.95, 0.24, 0.44)
 
 function curve(points: THREE.Vector3[]): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5)
@@ -118,16 +125,23 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
   const drainageInsertion = GROIN_VEIN_LEFT
   const returnInsertion = supportMode === 'va' ? GROIN_ARTERY_RIGHT : GROIN_VEIN_RIGHT
 
+  // Owner-approved re-route (B7 follow-up): both cannulae used to rise from
+  // the groin and cross in an X over the abdomen on their way to the hubs.
+  // The drainage limb now runs caudally over the drape and crosses low over
+  // the legs; the return limb hugs the near bed edge at flank level. Heights
+  // sit ~3-5 cm above the measured drape/leg surfaces.
   const drainageCannula = curve([
     drainageInsertion,
-    vec(-1.34, -0.09, -0.11),
-    vec(-1.05, -0.04, 0.03),
+    vec(-1.44, -0.24, 0.05),
+    vec(-1.28, -0.28, 0.35),
+    vec(-1.0, -0.3, 0.45),
+    vec(-0.8, -0.2, 0.3),
     DRAINAGE_HUB,
   ])
   const returnCannula = curve([
     RETURN_HUB,
-    vec(-0.92, -0.08, -0.08),
-    vec(-1.08, -0.1, -0.15),
+    vec(-0.85, -0.22, -0.24),
+    vec(-1.05, -0.3, -0.26),
     returnInsertion,
   ])
 
@@ -148,13 +162,15 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     vec(-0.5, -0.05, -0.26),
     RETURN_HUB,
   ])
-  // Routed round the console's near-left corner rather than through it: the console now stands on
-  // its base and occupies the volume this line used to cut across.
+  // From the blender outlet, drooping toward the floor and rounding the
+  // console's near corner (never through its oriented box) up to the
+  // oxygenator's sweep cap.
   const sweepLine = curve([
-    SWEEP_SOURCE,
-    vec(1.12, -0.55, 1.12),
-    vec(0.84, -0.3, 0.84),
-    vec(0.8, -0.06, 0.56),
+    blenderOutlet.clone(),
+    vec(2.0, -0.3, 1.25),
+    vec(1.4, -0.55, 1.25),
+    vec(0.95, -0.3, 0.85),
+    vec(0.8, -0.02, 0.55),
     SWEEP_CAP,
   ])
 
@@ -234,16 +250,12 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       position: sensorPosition.clone().add(vec(-0.85, -0.42, -0.7)),
     },
     {
-      /*
-       * Anchored to the start of the sweep curve, and named for what is actually there.
-       *
-       * Nothing in this scene models a gas blender or a wall outlet, so "Sweep gas" beside a point
-       * that happened to sit inside the console labelled the console as the gas source. This names
-       * the tubing and its connection instead — the thing the learner can see.
-       */
+      // The blender is modeled now, so the label names the device. Anchored
+      // just above the outlet, which keeps it beside both the mixer box and
+      // the start of the sweep line.
       id: 'sweep',
-      text: 'Sweep-gas line / source connection',
-      position: SWEEP_SOURCE.clone().add(vec(0.06, 0.34, 0.06)),
+      text: 'Air\u2013O\u2082 blender \u2014 sweep-gas source',
+      position: blenderOutlet.clone().add(vec(-0.12, 0.08, -0.04)),
     },
     {
       // Sits just above the transformed console box, so it stays on the console when the placement
