@@ -389,7 +389,7 @@ describe('deterministic production-readiness reports', () => {
     const coverage = generateReports(manifest, options).get('source-coverage-report.md') ?? ''
     expect(coverage).toContain('Distinct source URLs')
     expect(coverage).toContain('Distinct source documents')
-    expect(coverage).toContain('| TIER_0 | 1 | 3 | 2 | 2 | 3 | 0 | 3 |')
+    expect(coverage).toMatch(/\| TIER_0\s+\| 1\s+\| 3\s+\| 2\s+\| 2\s+\| 3\s+\| 0\s+\| 3\s+\|/)
   })
 
   it('uses a claim/tier matrix so contextual or weak safety sources cannot close requirements', () => {
@@ -495,7 +495,7 @@ describe('deterministic production-readiness reports', () => {
     expect(validation.ok).toBe(true)
     if (!validation.ok) throw new Error('Scale fixture unexpectedly failed validation.')
     const coverage = generateReports(validation.manifest, options).get('source-coverage-report.md')
-    expect(coverage).toContain('| TIER_0 | 35 | 35 | 1 | 1 | 35 | 0 | 35 |')
+    expect(coverage).toMatch(/\| TIER_0\s+\| 35\s+\| 35\s+\| 1\s+\| 1\s+\| 35\s+\| 0\s+\| 35\s+\|/)
   })
 
   it('validates manifest semantics inside programmatic report generation', () => {

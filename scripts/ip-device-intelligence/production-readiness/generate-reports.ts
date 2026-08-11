@@ -53,14 +53,17 @@ function markdownCell(value: unknown): string {
 }
 
 function markdownTable(headers: string[], rows: unknown[][]): string {
-  const header = `| ${headers.map(markdownCell).join(' | ')} |`
-  const separator = `| ${headers.map(() => '---').join(' | ')} |`
-  if (rows.length === 0) {
-    return `${header}\n${separator}\n| ${headers.map((_, index) => (index === 0 ? '_None_' : '—')).join(' | ')} |`
-  }
-  return [header, separator, ...rows.map((row) => `| ${row.map(markdownCell).join(' | ')} |`)].join(
-    '\n',
+  const renderedHeaders = headers.map(markdownCell)
+  const renderedRows = (
+    rows.length === 0 ? [headers.map((_, index) => (index === 0 ? '_None_' : '—'))] : rows
+  ).map((row) => row.map(markdownCell))
+  const widths = renderedHeaders.map((header, index) =>
+    Math.max(header.length, ...renderedRows.map((row) => row[index].length)),
   )
+  const renderRow = (row: string[]): string =>
+    `| ${row.map((cell, index) => cell.padEnd(widths[index])).join(' | ')} |`
+  const separator = `| ${widths.map((width) => '-'.repeat(Math.max(3, width))).join(' | ')} |`
+  return [renderRow(renderedHeaders), separator, ...renderedRows.map(renderRow)].join('\n')
 }
 
 function sortedUnique(values: string[]): string[] {
