@@ -26,14 +26,25 @@ export const proceduralPhases = [
 
 export type ProceduralPhase = (typeof proceduralPhases)[number]
 
-export type Requiredness = 'required' | 'conditional' | 'optional' | 'backup' | 'emergency_only'
+export const requirednessValues = [
+  'required',
+  'conditional',
+  'optional',
+  'backup',
+  'emergency_only',
+] as const
 
-export type OpenHoldStatus =
-  | 'open_or_set_up_now'
-  | 'have_in_room'
-  | 'hold_unopened'
-  | 'emergency_pull'
-  | 'do_not_substitute'
+export type Requiredness = (typeof requirednessValues)[number]
+
+export const openHoldStatuses = [
+  'open_or_set_up_now',
+  'have_in_room',
+  'hold_unopened',
+  'emergency_pull',
+  'do_not_substitute',
+] as const
+
+export type OpenHoldStatus = (typeof openHoldStatuses)[number]
 
 export type GovernanceState = 'draft' | 'in_review' | 'approved' | 'retired'
 export type ReadinessState = 'blocked' | 'complete_with_warnings' | 'complete'
@@ -153,14 +164,17 @@ export interface RecipeModuleReference {
   sequence: number
 }
 
-export type ProcedureCompositionActionType =
-  | 'remove_slot'
-  | 'set_requiredness'
-  | 'set_quantity'
-  | 'set_setup_zone'
-  | 'set_procedural_phase'
-  | 'set_open_hold_status'
-  | 'append_note'
+export const procedureCompositionActionTypes = [
+  'remove_slot',
+  'set_requiredness',
+  'set_quantity',
+  'set_setup_zone',
+  'set_procedural_phase',
+  'set_open_hold_status',
+  'append_note',
+] as const
+
+export type ProcedureCompositionActionType = (typeof procedureCompositionActionTypes)[number]
 
 /**
  * A reviewed, explicit adjustment a procedure makes to a requirement it inherits from a
@@ -173,6 +187,22 @@ export interface ProcedureCompositionAction {
   targetRequirementKey?: string
   targetSlotId?: string
   targetRoleCode?: string
+  /**
+   * The action applies only when its target requirement is present in the composed
+   * selection; matching nothing is expected rather than an authoring error.
+   *
+   * Absent (the default), an unmatched action raises `recipe_composition_action_unmatched`,
+   * which is right for a procedure whose modules are fixed: the target is always composed, so
+   * a miss means the authoring is wrong. It is wrong for a composition whose modules are
+   * *chosen per card* — the custom module composition — where a selection that omits the
+   * target's module is an ordinary card, not a defect, and warning on every such card would
+   * teach readers to ignore the warning that matters.
+   *
+   * An optional-target action is authored as a statement about exactly one requirement, so
+   * matching *more than one* is treated as the identity assumption breaking and blocks
+   * (`recipe_composition_action_ambiguous`) instead of silently modifying both.
+   */
+  optionalTarget?: boolean
   payload: Record<string, unknown>
 }
 
@@ -290,21 +320,24 @@ export interface HospitalRoleOption {
   rationale: string | null
 }
 
-export type ModifierActionType =
-  | 'add_slot'
-  | 'remove_slot'
-  | 'replace_role'
-  | 'set_requiredness'
-  | 'set_quantity'
-  | 'set_setup_zone'
-  | 'set_procedural_phase'
-  | 'set_open_hold_status'
-  | 'append_note'
-  | 'require_room_capability'
-  | 'add_rescue_module'
-  | 'validate_compatibility'
-  | 'raise_warning'
-  | 'raise_blocking_error'
+export const modifierActionTypes = [
+  'add_slot',
+  'remove_slot',
+  'replace_role',
+  'set_requiredness',
+  'set_quantity',
+  'set_setup_zone',
+  'set_procedural_phase',
+  'set_open_hold_status',
+  'append_note',
+  'require_room_capability',
+  'add_rescue_module',
+  'validate_compatibility',
+  'raise_warning',
+  'raise_blocking_error',
+] as const
+
+export type ModifierActionType = (typeof modifierActionTypes)[number]
 
 export interface ModifierAction {
   id: string

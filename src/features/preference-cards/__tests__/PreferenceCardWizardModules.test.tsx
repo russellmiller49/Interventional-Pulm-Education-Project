@@ -115,7 +115,7 @@ describe('included setup modules', () => {
 
     await user.selectOptions(
       screen.getByLabelText('Filter by source module'),
-      'module-flex-bronch-core-v1-0',
+      'module-flex-bronch-core-v1-1',
     )
     expect(
       screen.getByRole('heading', { name: 'Compatible video processor/light source' }),

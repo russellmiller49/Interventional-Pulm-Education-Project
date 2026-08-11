@@ -566,11 +566,11 @@
     ]
   },
   {
-    "id": "module-chest-tube-specific-v1-0",
+    "id": "module-chest-tube-specific-v1-1",
     "code": "CHEST_TUBE_SPECIFIC",
     "name": "Chest tube insertion specific requirements",
-    "description": "What chest tube insertion needs beyond the pleural core: the small-bore, large-bore, and surgical tube branches, the drainage unit, and the securement and long-term drainage pathways.",
-    "version": "1.0",
+    "description": "What chest tube insertion needs beyond the pleural core: the small-bore, large-bore, and surgical tube branches, the drainage unit, and the securement pathway.",
+    "version": "1.1",
     "kind": "procedure_specific",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -599,7 +599,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-D5C3DB0027",
@@ -623,7 +623,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-4D849E266F",
@@ -647,7 +647,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-20D17E94D4",
@@ -671,7 +671,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-3631C94D7A",
@@ -688,14 +688,14 @@
         },
         "selectionMode": "single",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 6,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-CE48C1B108",
@@ -712,62 +712,14 @@
         },
         "selectionMode": "multiple",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 7,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
-      },
-      {
-        "id": "SLOT-D02F71E583",
-        "sourceSlotId": "SLOT-D02F71E583",
-        "requirementKey": "SLOT-D02F71E583",
-        "roleCode": "IPC_INSERTION_KIT",
-        "label": "Indwelling pleural catheter kit",
-        "genericRequirement": "Tunneled indwelling pleural catheter and insertion kit.",
-        "requiredness": "optional",
-        "dependencyRule": "Long-term recurrent effusion pathway",
-        "quantityExpression": {
-          "op": "literal",
-          "value": 1
-        },
-        "selectionMode": "single",
-        "setupZone": "back_table",
-        "proceduralPhase": "therapeutic",
-        "setupSequence": 8,
-        "openHoldStatus": "have_in_room",
-        "responsibleRole": null,
-        "sterileStatus": null,
-        "allowCustom": true,
-        "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
-      },
-      {
-        "id": "SLOT-B4E5C6A7A9",
-        "sourceSlotId": "SLOT-B4E5C6A7A9",
-        "requirementKey": "SLOT-B4E5C6A7A9",
-        "roleCode": "IPC_DRAINAGE_KIT",
-        "label": "Compatible IPC drainage kits",
-        "genericRequirement": "Vacuum bottle, bag, or drainage set for an indwelling pleural catheter.",
-        "requiredness": "conditional",
-        "dependencyRule": "IPC selected",
-        "quantityExpression": {
-          "op": "literal",
-          "value": 1
-        },
-        "selectionMode": "multiple",
-        "setupZone": "back_table",
-        "proceduralPhase": "therapeutic",
-        "setupSequence": 9,
-        "openHoldStatus": "have_in_room",
-        "responsibleRole": null,
-        "sterileStatus": null,
-        "allowCustom": true,
-        "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-4BE1D79D6C",
@@ -791,7 +743,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       },
       {
         "id": "SLOT-AECDA16326",
@@ -808,62 +760,14 @@
         },
         "selectionMode": "multiple",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 11,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
-      },
-      {
-        "id": "SLOT-702914B1CF",
-        "sourceSlotId": "SLOT-702914B1CF",
-        "requirementKey": "SLOT-702914B1CF",
-        "roleCode": "IPC_DRESSING_KIT",
-        "label": "IPC dressing kit",
-        "genericRequirement": "Dressing supplies compatible with selected IPC system.",
-        "requiredness": "conditional",
-        "dependencyRule": "Required when IPC_INSERTION_KIT is selected",
-        "quantityExpression": {
-          "op": "literal",
-          "value": 1
-        },
-        "selectionMode": "single",
-        "setupZone": "back_table",
-        "proceduralPhase": "therapeutic",
-        "setupSequence": 12,
-        "openHoldStatus": "have_in_room",
-        "responsibleRole": null,
-        "sterileStatus": null,
-        "allowCustom": true,
-        "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
-      },
-      {
-        "id": "SLOT-67171A33D4",
-        "sourceSlotId": "SLOT-67171A33D4",
-        "requirementKey": "SLOT-67171A33D4",
-        "roleCode": "IPC_MANAGEMENT_ACCESSORY",
-        "label": "IPC management accessories",
-        "genericRequirement": "Valve, cap, drainage line, adapter, or removal kit for selected IPC system.",
-        "requiredness": "conditional",
-        "dependencyRule": "Required as applicable for selected IPC system",
-        "quantityExpression": {
-          "op": "literal",
-          "value": 1
-        },
-        "selectionMode": "single",
-        "setupZone": "back_table",
-        "proceduralPhase": "therapeutic",
-        "setupSequence": 13,
-        "openHoldStatus": "have_in_room",
-        "responsibleRole": null,
-        "sterileStatus": null,
-        "allowCustom": true,
-        "notes": null,
-        "includedBy": "Included by Chest tube insertion specific requirements v1.0"
+        "includedBy": "Included by Chest tube insertion specific requirements v1.1"
       }
     ]
   },
@@ -1376,11 +1280,11 @@
     ]
   },
   {
-    "id": "module-flex-bronch-core-v1-0",
+    "id": "module-flex-bronch-core-v1-1",
     "code": "FLEX_BRONCH_CORE",
     "name": "Flexible Bronchoscopy Core",
-    "description": "The imaging and suction setup every flexible bronchoscopy shares, whatever is done through the scope.",
-    "version": "1.0",
+    "description": "The imaging, suction, and airway-protection setup every flexible bronchoscopy shares, whatever is done through the scope.",
+    "version": "1.1",
     "kind": "core",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -1410,7 +1314,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Flexible Bronchoscopy Core v1.0"
+        "includedBy": "Included by Flexible Bronchoscopy Core v1.1"
       },
       {
         "id": "SLOT-2E3065C976",
@@ -1435,7 +1339,57 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Flexible Bronchoscopy Core v1.0"
+        "includedBy": "Included by Flexible Bronchoscopy Core v1.1"
+      },
+      {
+        "id": "SLOT-D6B291DC80",
+        "sourceSlotId": "SLOT-D6B291DC80",
+        "requirementKey": "FLEX_BRONCH_BITE_BLOCK",
+        "sourceSlotAliases": ["SLOT-2147BE329B"],
+        "roleCode": "BITE_BLOCK",
+        "label": "Bite block",
+        "genericRequirement": "Bite block matched to scope diameter.",
+        "requiredness": "conditional",
+        "dependencyRule": "Oral insertion without protected airway",
+        "quantityExpression": {
+          "op": "literal",
+          "value": 1
+        },
+        "selectionMode": "single",
+        "setupZone": "mayo_stand",
+        "proceduralPhase": "airway_access",
+        "setupSequence": 16,
+        "openHoldStatus": "have_in_room",
+        "responsibleRole": null,
+        "sterileStatus": null,
+        "allowCustom": true,
+        "notes": null,
+        "includedBy": "Included by Flexible Bronchoscopy Core v1.1"
+      },
+      {
+        "id": "SLOT-0306E7B77D",
+        "sourceSlotId": "SLOT-0306E7B77D",
+        "requirementKey": "FLEX_BRONCH_AIRWAY_ADAPTER",
+        "sourceSlotAliases": ["SLOT-190EFC825B"],
+        "roleCode": "GENERIC_AIRWAY_ADAPTER",
+        "label": "Airway adapter if mechanically ventilated",
+        "genericRequirement": "Swivel, bronchoscopy, or ventilation adapter.",
+        "requiredness": "conditional",
+        "dependencyRule": "Mechanically ventilated patient",
+        "quantityExpression": {
+          "op": "literal",
+          "value": 1
+        },
+        "selectionMode": "single",
+        "setupZone": "room_capital_equipment",
+        "proceduralPhase": "airway_access",
+        "setupSequence": 17,
+        "openHoldStatus": "have_in_room",
+        "responsibleRole": null,
+        "sterileStatus": null,
+        "allowCustom": true,
+        "notes": null,
+        "includedBy": "Included by Flexible Bronchoscopy Core v1.1"
       }
     ]
   },
@@ -2212,11 +2166,11 @@
     ]
   },
   {
-    "id": "module-ipc-placement-specific-v1-0",
+    "id": "module-ipc-placement-specific-v1-1",
     "code": "IPC_PLACEMENT_SPECIFIC",
     "name": "Tunnelled indwelling pleural catheter specific requirements",
     "description": "What tunnelled IPC placement needs beyond the pleural core: the insertion, drainage, and dressing kits and the patient-education handover.",
-    "version": "1.0",
+    "version": "1.1",
     "kind": "procedure_specific",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -2245,7 +2199,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       },
       {
         "id": "SLOT-3FBC244FAF",
@@ -2262,14 +2216,14 @@
         },
         "selectionMode": "single",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 3,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       },
       {
         "id": "SLOT-6693BCAEE1",
@@ -2293,7 +2247,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       },
       {
         "id": "SLOT-1E91C231E5",
@@ -2317,7 +2271,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": "Source section \"Accessories\" needs setup-zone and phase review.",
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       },
       {
         "id": "SLOT-27D1A61598",
@@ -2334,14 +2288,14 @@
         },
         "selectionMode": "single",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 6,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       },
       {
         "id": "SLOT-CA2DF6D3A0",
@@ -2365,7 +2319,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       },
       {
         "id": "SLOT-01010CB364",
@@ -2389,16 +2343,16 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.0"
+        "includedBy": "Included by Tunnelled indwelling pleural catheter specific requirements v1.1"
       }
     ]
   },
   {
-    "id": "module-med-thoracoscopy-specific-v1-0",
+    "id": "module-med-thoracoscopy-specific-v1-1",
     "code": "MED_THORACOSCOPY_SPECIFIC",
     "name": "Medical thoracoscopy specific requirements",
     "description": "What medical thoracoscopy needs beyond the pleural core: the pleuroscope and telescope, access and instrumentation, pleurodesis, energy, and post-procedure drainage.",
-    "version": "1.0",
+    "version": "1.1",
     "kind": "procedure_specific",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -2427,7 +2381,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-3CA143BB11",
@@ -2451,7 +2405,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-9448C2A991",
@@ -2475,7 +2429,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-545818F1DC",
@@ -2499,7 +2453,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-BC9CCE1853",
@@ -2523,7 +2477,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-D8D781E494",
@@ -2547,7 +2501,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-1D10D8A2BF",
@@ -2571,7 +2525,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-0B24E5F37A",
@@ -2595,7 +2549,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-57CA4B1298",
@@ -2612,14 +2566,14 @@
         },
         "selectionMode": "single",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 10,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-AA3C2EAA6D",
@@ -2636,14 +2590,14 @@
         },
         "selectionMode": "single",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 11,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-9A1C0491F9",
@@ -2660,14 +2614,14 @@
         },
         "selectionMode": "single",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 12,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-E63DC64C2F",
@@ -2691,7 +2645,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-6D737D1334",
@@ -2715,7 +2669,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-65FFA3703B",
@@ -2739,7 +2693,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-0037091804",
@@ -2763,7 +2717,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-694FCE203D",
@@ -2787,7 +2741,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-99F995A756",
@@ -2811,7 +2765,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-8FC90750FF",
@@ -2835,7 +2789,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-51A2592738",
@@ -2859,7 +2813,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Medical thoracoscopy specific requirements v1.0"
+        "includedBy": "Included by Medical thoracoscopy specific requirements v1.1"
       }
     ]
   },
@@ -4623,11 +4577,11 @@
     ]
   },
   {
-    "id": "module-therapeutic-bronch-specific-v1-0",
+    "id": "module-therapeutic-bronch-specific-v1-1",
     "code": "THERAPEUTIC_BRONCH_SPECIFIC",
     "name": "Therapeutic flexible bronchoscopy specific requirements",
     "description": "What therapeutic flexible bronchoscopy needs beyond the shared cores: energy, cryotherapy, dilation, stents, retrieval, and peripheral navigation.",
-    "version": "1.0",
+    "version": "1.1",
     "kind": "procedure_specific",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -4656,7 +4610,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": "APC/electrocautery/laser must follow local airway-fire policy.",
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-14453819D5",
@@ -4680,7 +4634,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-115310F554",
@@ -4704,7 +4658,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-3FE6796B6D",
@@ -4728,7 +4682,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-D43C866FB5",
@@ -4752,7 +4706,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-7412B3318B",
@@ -4776,7 +4730,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-45D721710F",
@@ -4800,7 +4754,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-09A64B2C62",
@@ -4824,7 +4778,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-D2974FC11B",
@@ -4848,7 +4802,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-0F8FA96C28",
@@ -4872,7 +4826,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-97CFA5C9A2",
@@ -4896,7 +4850,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-90A43CBAEF",
@@ -4920,7 +4874,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-971BBE6BF8",
@@ -4944,31 +4898,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
-      },
-      {
-        "id": "SLOT-D6B291DC80",
-        "sourceSlotId": "SLOT-D6B291DC80",
-        "requirementKey": "SLOT-D6B291DC80",
-        "roleCode": "BITE_BLOCK",
-        "label": "Bite block",
-        "genericRequirement": "Bite block matched to scope diameter.",
-        "requiredness": "conditional",
-        "dependencyRule": "Oral insertion without protected airway",
-        "quantityExpression": {
-          "op": "literal",
-          "value": 1
-        },
-        "selectionMode": "single",
-        "setupZone": "mayo_stand",
-        "proceduralPhase": "airway_access",
-        "setupSequence": 18,
-        "openHoldStatus": "have_in_room",
-        "responsibleRole": null,
-        "sterileStatus": null,
-        "allowCustom": true,
-        "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-D7F2D36301",
@@ -4992,7 +4922,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-1538BC9076",
@@ -5016,7 +4946,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-081FB0C695",
@@ -5040,7 +4970,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-FDF73730B0",
@@ -5064,7 +4994,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-185FBB545F",
@@ -5088,7 +5018,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": "Mehta’s rule of 4, for a flexible-bronchoscopy laser case: lesion no longer than 4 cm, lung collapsed under 4 weeks, life expectancy over 4 weeks, procedure under 4 hours, FiO2 under 40%, under 40 pulses between fibre cleanings, no more than 4 repeat treatments, a team of 4, and initial settings of 40 W non-contact or 4 W contact at 0.4 s. Sustained power above 40 W or pulses longer than 1 s are the reported risk factors for perforation.",
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-34CDBAB683",
@@ -5112,7 +5042,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": "Distances that matter: the fibre protrudes at least 4 mm beyond the working channel, sits about 4 mm from the lesion, and the tube stays more than 4 cm back from it. Keep coolant airflow low and avoid direct probe-to-tissue contact — air embolism has been attributed to high coolant flow.",
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-6630AD392A",
@@ -5136,7 +5066,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": "Eyewear is not interchangeable between laser systems. Plan a second suction line: one for the bronchoscope and one for the mouth, to clear blood, secretions, and the laser plume. Human papillomavirus transmission through surgical plume has been documented, so in recurrent respiratory papillomatosis optimize suction, minimize laser use, and consider cryotherapy instead.",
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-EE17F755B2",
@@ -5160,7 +5090,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": "A standard endotracheal tube is not recommended when a laser is fired in the airway. FiO2 and FeO2 both stay at or below 40% while the beam is on.",
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       },
       {
         "id": "SLOT-38E5FB60B9",
@@ -5184,16 +5114,16 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.0"
+        "includedBy": "Included by Therapeutic flexible bronchoscopy specific requirements v1.1"
       }
     ]
   },
   {
-    "id": "module-thoracentesis-specific-v1-0",
+    "id": "module-thoracentesis-specific-v1-1",
     "code": "THORACENTESIS_SPECIFIC",
     "name": "Thoracentesis specific requirements",
     "description": "What thoracentesis needs beyond the pleural core: the catheter tray, the drainage path, specimen containers, and the dressing.",
-    "version": "1.0",
+    "version": "1.1",
     "kind": "procedure_specific",
     "governanceState": "draft",
     "clinicalOwner": null,
@@ -5222,7 +5152,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Thoracentesis specific requirements v1.0"
+        "includedBy": "Included by Thoracentesis specific requirements v1.1"
       },
       {
         "id": "SLOT-CA34F60BE9",
@@ -5239,14 +5169,14 @@
         },
         "selectionMode": "multiple",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 3,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Thoracentesis specific requirements v1.0"
+        "includedBy": "Included by Thoracentesis specific requirements v1.1"
       },
       {
         "id": "SLOT-103FF61AAC",
@@ -5270,7 +5200,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Thoracentesis specific requirements v1.0"
+        "includedBy": "Included by Thoracentesis specific requirements v1.1"
       },
       {
         "id": "SLOT-23A6DA3B89",
@@ -5294,7 +5224,7 @@
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Thoracentesis specific requirements v1.0"
+        "includedBy": "Included by Thoracentesis specific requirements v1.1"
       },
       {
         "id": "SLOT-C174DA0A4E",
@@ -5311,14 +5241,14 @@
         },
         "selectionMode": "multiple",
         "setupZone": "equipment_tower",
-        "proceduralPhase": "post_procedure",
+        "proceduralPhase": "pre_induction_or_sedation",
         "setupSequence": 6,
         "openHoldStatus": "have_in_room",
         "responsibleRole": null,
         "sterileStatus": null,
         "allowCustom": true,
         "notes": null,
-        "includedBy": "Included by Thoracentesis specific requirements v1.0"
+        "includedBy": "Included by Thoracentesis specific requirements v1.1"
       }
     ]
   },

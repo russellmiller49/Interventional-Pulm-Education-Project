@@ -68,6 +68,14 @@ are owner verifications recorded as "verified correct — no change").
 
 ## 3. Governed-data review queue (deferred by instruction, not judgment)
 
+> **Closed out 2026-08-09 by the D1.1 data-correction pass** — see
+> [../d1-data-corrections/README.md](../d1-data-corrections/README.md): items 1 (F-04),
+> 2 (F-05), 3 (F-06), and 5 (F-10) are APPLIED as forward-versioned releases; item 4 (F-09)
+> is BLOCKED with the exact reason and mechanism proposal in
+> [../d1-data-corrections/f09-blocker.md](../d1-data-corrections/f09-blocker.md); items 6–8
+> (F-21, F-30, F-33) have owner decision packets in the same directory. The text below is the
+> original queue, kept as the record of what was deferred.
+
 Each item below is an owner-confirmed clinical or authoring problem whose correct fix lives in
 governed/seed/generated data. This pass changed none of those files; the UI keeps presenting
 the governed values honestly. Each needs the owner's data pass, then `npm run ip-intel:audit`

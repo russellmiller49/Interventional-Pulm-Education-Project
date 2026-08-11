@@ -21,17 +21,22 @@ describe('ip-device-intelligence data-readiness audit', () => {
     const report = computeDataReadiness(inputs)
     const byCode = new Map(report.procedures.map((procedure) => [procedure.code, procedure]))
 
+    // Re-pinned for the owner-review data corrections (2026-08-09):
+    // F-10 adds the flex-core bite block and airway adapter to EBUS (15 → 17, both
+    // conditional → contingency 4 → 6) and the airway adapter to THERAPEUTIC_BRONCH
+    // (29 → 30, contingency 21 → 22). F-06 removes the four IPC requirements from
+    // CHEST_TUBE (13 → 9: one optional and three conditional rows leave the template).
     const ebus = byCode.get('EBUS_TBNA')
-    expect(ebus?.slots.total).toBe(15)
-    expect(ebus?.slots.requiredness).toEqual({ required: 7, contingency: 4, optional: 4 })
+    expect(ebus?.slots.total).toBe(17)
+    expect(ebus?.slots.requiredness).toEqual({ required: 7, contingency: 6, optional: 4 })
 
     const therapeutic = byCode.get('THERAPEUTIC_BRONCH')
-    expect(therapeutic?.slots.total).toBe(29)
-    expect(therapeutic?.slots.requiredness).toEqual({ required: 3, contingency: 21, optional: 5 })
+    expect(therapeutic?.slots.total).toBe(30)
+    expect(therapeutic?.slots.requiredness).toEqual({ required: 3, contingency: 22, optional: 5 })
 
     const chestTube = byCode.get('CHEST_TUBE')
-    expect(chestTube?.slots.total).toBe(13)
-    expect(chestTube?.slots.requiredness).toEqual({ required: 3, contingency: 7, optional: 3 })
+    expect(chestTube?.slots.total).toBe(9)
+    expect(chestTube?.slots.requiredness).toEqual({ required: 3, contingency: 4, optional: 2 })
   })
 
   it('keeps requiredness breakdowns summing to slot totals for every procedure', () => {
@@ -73,9 +78,13 @@ describe('ip-device-intelligence data-readiness audit', () => {
     expect(report.global.products).toBe(1532)
     expect(report.global.roles).toBe(135)
     expect(report.global.procedures).toBe(15)
-    expect(report.global.procedureSlots).toBe(233)
-    expect(report.global.authoredSlotOptions).toBe(2073)
-    expect(report.global.slotOptionProposals).toBe(813)
+    // Re-pinned for the owner-review data corrections (2026-08-09): F-06 removes four
+    // CHEST_TUBE slots and their 38 authored options (identical option sets remain on the
+    // IPC_PLACEMENT slots); F-10 adds three template rows whose roles are proposal-only,
+    // so the proposal generator emits 18 more machine proposals (813 → 831).
+    expect(report.global.procedureSlots).toBe(232)
+    expect(report.global.authoredSlotOptions).toBe(2035)
+    expect(report.global.slotOptionProposals).toBe(831)
   })
 
   it('is deterministic: computing twice yields deep-equal reports and identical bytes', async () => {

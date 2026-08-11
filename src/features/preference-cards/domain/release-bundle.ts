@@ -1,7 +1,9 @@
+import { expandRecipeComposition } from './expand-recipe-composition'
 import { stableSnapshotHash, stableStringify } from './stable-hash'
 import type {
   BuildContext,
   GovernanceState,
+  ModifierAction,
   ModifierDefinition,
   RecipeModuleVersion,
   RecipeSlot,
@@ -865,6 +867,38 @@ export interface ReleaseRequirementChange {
   changedFields: string[]
 }
 
+/**
+ * A change to the **authored effect of selecting a modifier** this procedure offers.
+ *
+ * Not a statement that the modifier is selected in any scenario: the base requirement diff
+ * (`requirementChanges`) covers what every card starts from, and this covers what selecting
+ * the named modifier *would do* — a distinction the report keeps explicit so a reader cannot
+ * mistake a conditional pathway change for a default-card change. Without this layer, a
+ * release whose only difference is the modifier set reads as "a set pin moved, zero
+ * requirement changes" while, for example, a modifier-added requirement silently went from
+ * required to conditional — a clinically meaningful change the release review exists to
+ * catch.
+ */
+export interface ReleaseModifierEffectChange {
+  sourceKind: 'modifier'
+  modifierCode: string
+  /** The authored action this row describes; null for a modifier-level field change. */
+  actionId: string | null
+  actionType: string | null
+  /** The action's authored application order, where an action is being described. */
+  sequence: number | null
+  kind: 'added' | 'removed' | 'changed'
+  /**
+   * The requirement identity the action adds or targets — the added slot's requirement key
+   * for `add_slot`, otherwise the authored target. Null for modifier-level changes.
+   */
+  requirementKey: string | null
+  changedFields: string[]
+  /** The authored effect before/after, at the field level a reviewer reads. */
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+}
+
 export interface ReleaseImpactReport {
   previousReleaseBundleId: string | null
   nextReleaseBundleId: string
@@ -872,7 +906,15 @@ export interface ReleaseImpactReport {
   /** True when nothing a card resolves from differs; publishing would be a no-op. */
   identical: boolean
   pinChanges: ReleaseImpactPinChange[]
+  /**
+   * Changes to the effective requirement definitions — the exact pinned recipes and modules
+   * expanded through the canonical action evaluator over the release's full authored surface
+   * (every referenced module, optional ones included). Not merely the default card: an
+   * optional module a card may select is diffable content too.
+   */
   requirementChanges: ReleaseRequirementChange[]
+  /** Changes to the authored effect of selecting a modifier this procedure offers. */
+  modifierEffectChanges: ReleaseModifierEffectChange[]
   catalogImportChanged: boolean
   resolverContractChanged: boolean
 }
@@ -906,38 +948,309 @@ export const REQUIREMENT_COMPARED_FIELDS = [
   'notes',
 ] as const satisfies readonly (keyof RecipeSlot)[]
 
-function requirementIndex(sources: ReleaseDefinitionSources) {
-  const index = new Map<string, { slot: Record<string, unknown>; moduleVersionIds: string[] }>()
-  for (const moduleVersion of sources.modules) {
-    for (const slot of moduleVersion.slots) {
-      const existing = index.get(slot.requirementKey)
-      if (existing) {
-        existing.moduleVersionIds.push(moduleVersion.id)
-        continue
-      }
-      index.set(slot.requirementKey, {
-        slot: slot as unknown as Record<string, unknown>,
-        moduleVersionIds: [moduleVersion.id],
-      })
-    }
+/**
+ * The **effective** requirement definitions a release expresses, keyed by requirement key.
+ *
+ * Expanded through the canonical action evaluator rather than read off the raw module slots,
+ * because the raw slots are inputs, not the release's semantics: a per-slot
+ * `set_setup_zone` / `set_procedural_phase` / `set_requiredness` composition action changes
+ * what every consuming card says while every module slot sits untouched. Diffing the raw
+ * slots is how the six F-04 sampling-instrument corrections shipped without a single
+ * requirement-level line in the canonical impact report (P91-C3, 2026-08-10) — the change
+ * was real, reviewed, and invisible at exactly the boundary the release review reads.
+ *
+ * Expanded with **every module the recipe references**, not the default selection: an
+ * optional module a card may select is part of the release's authored surface, and its
+ * requirements must be diffable — and the custom module composition offers every module as
+ * optional, so a default expansion of it would be empty. Requirement keys are globally
+ * unique across modules (the composition build fails otherwise), so the full selection
+ * cannot manufacture a conflict that a real card could not hit.
+ */
+function effectiveRequirementIndex(sources: ReleaseDefinitionSources) {
+  const expansion = expandRecipeComposition({
+    recipe: sources.recipe,
+    modules: sources.modules,
+    selectedModuleVersionIds: sources.recipe.moduleReferences.map(
+      (reference) => reference.moduleVersionId,
+    ),
+    startSequence: 1,
+  })
+  const blocking = expansion.messages.filter((message) => message.severity === 'blocking')
+  if (blocking.length > 0) {
+    // A diff over a failed expansion would under-report the change — the one failure mode a
+    // release-review artifact must not have — so this is an error, never a partial answer.
+    throw new Error(
+      `Release impact cannot be computed for ${sources.recipe.id}: expanding its full composition raised ${blocking.length} blocking message(s) (${[...new Set(blocking.map((message) => message.code))].sort().join(', ')}).`,
+    )
   }
-  for (const slot of sources.recipe.slots) {
-    if (index.has(slot.requirementKey)) continue
+  const index = new Map<string, { slot: Record<string, unknown>; moduleVersionIds: string[] }>()
+  for (const slot of expansion.slots) {
     index.set(slot.requirementKey, {
       slot: slot as unknown as Record<string, unknown>,
-      moduleVersionIds: [],
+      moduleVersionIds: [...(slot.sourceModuleVersionIds ?? [])],
     })
   }
   return index
 }
 
 /**
+ * What an authored modifier action *does*, summarized at the field level a reviewer reads.
+ *
+ * `add_slot` summarizes the added requirement itself — the same authored fields the base
+ * requirement diff compares (`REQUIREMENT_COMPARED_FIELDS`) plus the slot's `id`, which the
+ * runtime dedupes and targets by; the targeted action types summarize their target identity
+ * plus the specific effect field their payload carries, so a `set_requiredness` change reads
+ * as `requiredness` rather than as an opaque `payload`.
+ *
+ * A summary must never claim an effect the modifier engine does not apply: the modifier
+ * evaluator's `set_requiredness` reads only `payload.value` (unlike the composition
+ * evaluator, which also carries the dependency rule), so any other authored payload keys are
+ * surfaced under `unappliedPayload` — visible when they change, never presented as an
+ * effect.
+ */
+function modifierActionEffectSummary(action: ModifierAction): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    actionType: action.actionType,
+    sequence: action.sequence,
+    targetSlotId: action.targetSlotId ?? null,
+    targetRequirementKey: action.targetRequirementKey ?? null,
+    targetRoleCode: action.targetRoleCode ?? null,
+  }
+  const payload = action.payload
+  const withUnapplied = (
+    summary: Record<string, unknown>,
+    appliedKeys: readonly string[],
+  ): Record<string, unknown> => {
+    const rest = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => !appliedKeys.includes(key)),
+    )
+    return Object.keys(rest).length > 0 ? { ...summary, unappliedPayload: rest } : summary
+  }
+  switch (action.actionType) {
+    case 'add_slot': {
+      const slot = (payload.slot ?? {}) as Record<string, unknown>
+      const summarized = [
+        'id',
+        'requirementKey',
+        'roleCode',
+        'label',
+        'genericRequirement',
+        'requiredness',
+        'dependencyRule',
+        'quantityExpression',
+        'selectionMode',
+        'setupZone',
+        'proceduralPhase',
+        'setupSequence',
+        'openHoldStatus',
+        'responsibleRole',
+        'sterileStatus',
+        'allowCustom',
+        'notes',
+      ] as const
+      return {
+        ...base,
+        ...Object.fromEntries(summarized.map((field) => [field, slot[field] ?? null])),
+      }
+    }
+    case 'set_requiredness':
+      return withUnapplied({ ...base, requiredness: payload.value ?? null }, ['value'])
+    case 'set_setup_zone':
+      return withUnapplied({ ...base, setupZone: payload.value ?? null }, ['value'])
+    case 'set_procedural_phase':
+      return withUnapplied({ ...base, proceduralPhase: payload.value ?? null }, ['value'])
+    case 'set_open_hold_status':
+      return withUnapplied({ ...base, openHoldStatus: payload.value ?? null }, ['value'])
+    case 'set_quantity':
+      return withUnapplied({ ...base, quantityExpression: payload.expression ?? null }, [
+        'expression',
+      ])
+    case 'append_note':
+      return withUnapplied({ ...base, notes: payload.note ?? null }, ['note'])
+    case 'replace_role':
+      return withUnapplied(
+        {
+          ...base,
+          roleCode: payload.roleCode ?? null,
+          label: payload.label ?? null,
+          genericRequirement: payload.genericRequirement ?? null,
+        },
+        ['roleCode', 'label', 'genericRequirement'],
+      )
+    case 'remove_slot':
+      return withUnapplied(base, [])
+    case 'require_room_capability':
+      return withUnapplied({ ...base, capability: payload.capability ?? null }, ['capability'])
+    case 'add_rescue_module':
+      return withUnapplied({ ...base, rescueModuleCode: payload.code ?? null }, ['code'])
+    case 'validate_compatibility':
+    case 'raise_warning':
+    case 'raise_blocking_error':
+      return { ...base, payload: { ...payload } }
+    default: {
+      // Compile-time exhaustive via the never-binding, and fail-loud at runtime (P91-C5):
+      // an action type this summary does not know must abort the diff — returning anything
+      // here would let the release generator write a malformed impact report.
+      const exhaustiveCheck: never = action.actionType
+      throw new Error(
+        `Unknown modifier action type "${String(exhaustiveCheck)}" in action "${action.id}" while building release-impact evidence for modifier "${action.modifierCode}".`,
+      )
+    }
+  }
+}
+
+/** The requirement identity an action adds or targets, for the report row. */
+function modifierActionRequirementKey(action: ModifierAction): string | null {
+  if (action.actionType === 'add_slot') {
+    const slot = (action.payload.slot ?? {}) as Record<string, unknown>
+    const key = slot.requirementKey ?? slot.id
+    return typeof key === 'string' ? key : null
+  }
+  return action.targetRequirementKey ?? action.targetSlotId ?? action.targetRoleCode ?? null
+}
+
+function summaryChangedFields(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+): string[] {
+  return [...new Set([...Object.keys(before), ...Object.keys(after)])]
+    .filter((field) => stableStringify(before[field]) !== stableStringify(after[field]))
+    .sort()
+}
+
+/**
+ * The authored-modifier-effect diff between two releases' definition sets.
+ *
+ * Scoped to the modifiers either release's recipe **offers** (`allowedModifierCodes`): a
+ * change to a modifier no card of this procedure may select cannot change any of its cards,
+ * and reporting it on every procedure would repeat one global edit sixteen times. Within
+ * scope, a modifier entering or leaving the selectable offer reports a first-class
+ * modifier-level row (`changedFields: ["offered"]`) — without it, withdrawing a
+ * **zero-action** modifier would read as a bare pin move, and withdrawing an acting one
+ * would read as its actions being deleted; actions are then compared by authored id; and a
+ * modifier-level change to `conflictsWith` or `active` reports as its own row, because
+ * mutual exclusion and selectability are part of the authored effect.
+ */
+function diffModifierEffects(
+  previous: ReleaseDefinitionSources,
+  next: ReleaseDefinitionSources,
+): ReleaseModifierEffectChange[] {
+  const scope = new Set([
+    ...previous.recipe.allowedModifierCodes,
+    ...next.recipe.allowedModifierCodes,
+  ])
+  const changes: ReleaseModifierEffectChange[] = []
+
+  const offeredBefore = new Set(previous.recipe.allowedModifierCodes)
+  const offeredAfter = new Set(next.recipe.allowedModifierCodes)
+  const definitionBefore = new Map(previous.modifiers.map((modifier) => [modifier.code, modifier]))
+  const definitionAfter = new Map(next.modifiers.map((modifier) => [modifier.code, modifier]))
+
+  for (const modifierCode of [...scope].sort()) {
+    // A modifier participates on a side only when that side both offers it and defines it —
+    // an offered code with no definition cannot be selected, and a defined code the recipe
+    // does not offer cannot be selected either.
+    const before = offeredBefore.has(modifierCode) ? definitionBefore.get(modifierCode) : undefined
+    const after = offeredAfter.has(modifierCode) ? definitionAfter.get(modifierCode) : undefined
+    if (!before && !after) continue
+
+    if (!before || !after) {
+      // The modifier entered or left this procedure's selectable offer. First-class row, so
+      // a zero-action modifier's withdrawal is never a bare pin move and an acting one's
+      // withdrawal is not misread as its actions being deleted from the set.
+      const present = (before ?? after) as ModifierDefinition
+      changes.push({
+        sourceKind: 'modifier',
+        modifierCode,
+        actionId: null,
+        actionType: null,
+        sequence: null,
+        kind: after ? 'added' : 'removed',
+        requirementKey: null,
+        changedFields: ['offered'],
+        before: before ? { offered: true, actionCount: present.actions.length } : null,
+        after: after ? { offered: true, actionCount: present.actions.length } : null,
+      })
+    }
+
+    const actionsBefore = new Map((before?.actions ?? []).map((action) => [action.id, action]))
+    const actionsAfter = new Map((after?.actions ?? []).map((action) => [action.id, action]))
+    for (const actionId of [...new Set([...actionsBefore.keys(), ...actionsAfter.keys()])].sort()) {
+      const actionBefore = actionsBefore.get(actionId)
+      const actionAfter = actionsAfter.get(actionId)
+      const summaryBefore = actionBefore ? modifierActionEffectSummary(actionBefore) : null
+      const summaryAfter = actionAfter ? modifierActionEffectSummary(actionAfter) : null
+      if (summaryBefore && summaryAfter) {
+        const changedFields = summaryChangedFields(summaryBefore, summaryAfter)
+        if (changedFields.length === 0) continue
+        changes.push({
+          sourceKind: 'modifier',
+          modifierCode,
+          actionId,
+          actionType: (actionAfter as ModifierAction).actionType,
+          sequence: (actionAfter as ModifierAction).sequence,
+          kind: 'changed',
+          requirementKey: modifierActionRequirementKey(actionAfter as ModifierAction),
+          changedFields,
+          before: summaryBefore,
+          after: summaryAfter,
+        })
+        continue
+      }
+      const present = (actionBefore ?? actionAfter) as ModifierAction
+      changes.push({
+        sourceKind: 'modifier',
+        modifierCode,
+        actionId,
+        actionType: present.actionType,
+        sequence: present.sequence,
+        kind: actionAfter ? 'added' : 'removed',
+        requirementKey: modifierActionRequirementKey(present),
+        changedFields: [],
+        before: summaryBefore,
+        after: summaryAfter,
+      })
+    }
+
+    if (before && after) {
+      const levelBefore = {
+        conflictsWith: [...before.conflictsWith].sort(),
+        active: before.active,
+      }
+      const levelAfter = { conflictsWith: [...after.conflictsWith].sort(), active: after.active }
+      const changedFields = summaryChangedFields(levelBefore, levelAfter)
+      if (changedFields.length > 0) {
+        changes.push({
+          sourceKind: 'modifier',
+          modifierCode,
+          actionId: null,
+          actionType: null,
+          sequence: null,
+          kind: 'changed',
+          requirementKey: null,
+          changedFields,
+          before: levelBefore,
+          after: levelAfter,
+        })
+      }
+    }
+  }
+
+  return changes
+}
+
+/**
  * What advancing from one release to another would change, at the level a reviewer reads.
  *
- * Two layers, because a pin diff alone is not reviewable: "the compatibility rule set hash
+ * Three layers, because a pin diff alone is not reviewable: "the compatibility rule set hash
  * moved" tells a clinician nothing, while "AIRWAY_RETRIEVAL_FORCEPS changed from required to
- * backup" is the sentence they can approve or reject. The pin layer proves *what* is different;
- * the requirement layer says *what that means on a card*.
+ * backup" is the sentence they can approve or reject. The pin layer proves *what* is
+ * different; the requirement layer says what that means on the **base effective recipe** —
+ * the exact old and new pinned recipes and modules, expanded through the canonical action
+ * evaluator, so an action-borne change is a first-class requirement change rather than an
+ * invisible recipe-pin move; and the modifier layer says what changed about the **authored
+ * effect of selecting a modifier** the procedure offers, without implying any scenario
+ * selects it.
  *
  * Deliberately not a recommendation. It does not score the change, gate it, or decide whether
  * the pointer should advance — a person reads it and decides.
@@ -984,8 +1297,8 @@ export function diffReleaseBundles(
   }
 
   const requirementChanges: ReleaseRequirementChange[] = []
-  const beforeRequirements = previous ? requirementIndex(previous.sources) : new Map()
-  const afterRequirements = requirementIndex(next.sources)
+  const beforeRequirements = previous ? effectiveRequirementIndex(previous.sources) : new Map()
+  const afterRequirements = effectiveRequirementIndex(next.sources)
   const keys = [
     ...new Set([...beforeRequirements.keys(), ...afterRequirements.keys()]),
   ].sort() as string[]
@@ -1024,13 +1337,21 @@ export function diffReleaseBundles(
     })
   }
 
+  // A comparison needs two sides: an initial release has no "authored effect it changed",
+  // so its modifier layer is empty rather than a dump of every offered modifier's actions.
+  const modifierEffectChanges = previous ? diffModifierEffects(previous.sources, next.sources) : []
+
   return {
     previousReleaseBundleId: previous?.bundle.id ?? null,
     nextReleaseBundleId: next.bundle.id,
     sourceProcedureCode: next.bundle.sourceProcedureCode,
-    identical: pinChanges.length === 0 && requirementChanges.length === 0,
+    identical:
+      pinChanges.length === 0 &&
+      requirementChanges.length === 0 &&
+      modifierEffectChanges.length === 0,
     pinChanges,
     requirementChanges,
+    modifierEffectChanges,
     catalogImportChanged: previous
       ? previous.bundle.catalogImportId !== next.bundle.catalogImportId
       : false,

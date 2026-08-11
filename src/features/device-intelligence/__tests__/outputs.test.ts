@@ -47,7 +47,10 @@ describe('read-only output previews', () => {
     expect(outputs.gaps.formularySummary.carriedRows).toBe(0)
     expect(outputs.gaps.formularySummary.preferredRows).toBe(0)
     // Audit-pinned dimension gap count for CHEST_TUBE's authored-option products.
-    expect(outputs.gaps.dimensionGapCount).toBe(89)
+    // Re-pinned 89 → 70 for F-06 (2026-08-09): the four IPC requirements left the template,
+    // so the IPC-only authored-option products no longer count toward this procedure's
+    // dimension-gap denominator.
+    expect(outputs.gaps.dimensionGapCount).toBe(70)
   })
 
   it('shows the BOM-suppressed requirement in the suppressed list, never silently dropped', () => {

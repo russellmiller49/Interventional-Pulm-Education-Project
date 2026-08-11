@@ -10,13 +10,13 @@
   "compositions": [
     {
       "procedureCode": "EBUS_TBNA",
-      "recipeVersionId": "recipe-ebus-tbna-v0-1",
-      "recipeVersion": "0.1",
+      "recipeVersionId": "recipe-ebus-tbna-v0-2",
+      "recipeVersion": "0.2",
       "version": "1.0",
       "moduleReferences": [
         {
           "moduleCode": "FLEX_BRONCH_CORE",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 10
         },
@@ -43,18 +43,82 @@
             "note": "Include aspiration syringes for needle sampling."
           },
           "reason": "The imported EBUS suction row read 'Suction source/tubing/syringes'; the syringes are restored as a note now that the line is shared."
+        },
+        {
+          "id": "ebus-tbna-fna-needle-zone",
+          "sequence": 20,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-1AF4BEFE3B",
+          "payload": { "value": "back_table" },
+          "reason": "Owner review F-04 (2026-08-09): the EBUS-TBNA FNA needle is a sampling instrument used at the procedural field, not a specimen-processing supply. The section-level Sampling mapping stays correct for receptacles; this per-slot override places the instrument at the back table."
+        },
+        {
+          "id": "ebus-tbna-fna-needle-phase",
+          "sequence": 21,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-1AF4BEFE3B",
+          "payload": { "value": "diagnostic" },
+          "reason": "Owner review F-04 (2026-08-09): the FNA needle is used during the diagnostic phase, not during specimen handling."
+        },
+        {
+          "id": "ebus-tbna-fnb-needle-zone",
+          "sequence": 22,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-B83EBD2FBB",
+          "payload": { "value": "back_table" },
+          "reason": "Owner review F-04 (2026-08-09): the EBUS FNB needle is a sampling instrument used at the procedural field, placed at the back table."
+        },
+        {
+          "id": "ebus-tbna-fnb-needle-phase",
+          "sequence": 23,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-B83EBD2FBB",
+          "payload": { "value": "diagnostic" },
+          "reason": "Owner review F-04 (2026-08-09): the FNB needle is used during the diagnostic phase."
+        },
+        {
+          "id": "ebus-tbna-miniforceps-zone",
+          "sequence": 24,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-D08C74941A",
+          "payload": { "value": "back_table" },
+          "reason": "Owner review F-04 (2026-08-09): intranodal mini-forceps are a sampling instrument used at the procedural field, placed at the back table."
+        },
+        {
+          "id": "ebus-tbna-miniforceps-phase",
+          "sequence": 25,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-D08C74941A",
+          "payload": { "value": "diagnostic" },
+          "reason": "Owner review F-04 (2026-08-09): mini-forceps sampling happens during the diagnostic phase."
+        },
+        {
+          "id": "ebus-tbna-vacuum-syringe-zone",
+          "sequence": 26,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-E8F0B48B49",
+          "payload": { "value": "back_table" },
+          "reason": "Owner review F-04 (2026-08-09): the vacuum-locking syringe travels with the needle at the field, not with the specimen bench."
+        },
+        {
+          "id": "ebus-tbna-vacuum-syringe-phase",
+          "sequence": 27,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-E8F0B48B49",
+          "payload": { "value": "diagnostic" },
+          "reason": "Owner review F-04 (2026-08-09): the vacuum-locking syringe is used during the diagnostic phase."
         }
       ]
     },
     {
       "procedureCode": "THERAPEUTIC_BRONCH",
-      "recipeVersionId": "recipe-therapeutic-bronch-v0-1",
-      "recipeVersion": "0.1",
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-2",
+      "recipeVersion": "0.2",
       "version": "1.0",
       "moduleReferences": [
         {
           "moduleCode": "FLEX_BRONCH_CORE",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 10
         },
@@ -66,7 +130,7 @@
         },
         {
           "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 30
         },
@@ -87,6 +151,38 @@
             "note": "High-flow suction tubing and canisters are required for therapeutic work."
           },
           "reason": "The imported therapeutic suction row read 'High-flow suction tubing/canisters'; the high-flow expectation is restored as a note now that the line is shared."
+        },
+        {
+          "id": "therapeutic-bronch-biopsy-forceps-zone",
+          "sequence": 20,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-D2974FC11B",
+          "payload": { "value": "back_table" },
+          "reason": "Owner review F-04 (2026-08-09): flexible biopsy forceps are a sampling instrument used at the procedural field, not a specimen-processing supply. The section-level Sampling mapping stays correct for receptacles; this per-slot override places the instrument at the back table."
+        },
+        {
+          "id": "therapeutic-bronch-biopsy-forceps-phase",
+          "sequence": 21,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-D2974FC11B",
+          "payload": { "value": "diagnostic" },
+          "reason": "Owner review F-04 (2026-08-09): biopsy forceps are used during the diagnostic phase, not during specimen handling."
+        },
+        {
+          "id": "therapeutic-bronch-bal-kit-zone",
+          "sequence": 22,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-FDF73730B0",
+          "payload": { "value": "back_table" },
+          "reason": "Owner review F-04 (2026-08-09): the BAL kit is used at the procedural field during lavage, placed at the back table."
+        },
+        {
+          "id": "therapeutic-bronch-bal-kit-phase",
+          "sequence": 23,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-FDF73730B0",
+          "payload": { "value": "diagnostic" },
+          "reason": "Owner review F-04 (2026-08-09): bronchoalveolar lavage happens during the diagnostic phase."
         }
       ]
     },
@@ -151,8 +247,8 @@
     },
     {
       "procedureCode": "THORACENTESIS",
-      "recipeVersionId": "recipe-thoracentesis-v0-1",
-      "recipeVersion": "0.1",
+      "recipeVersionId": "recipe-thoracentesis-v0-2",
+      "recipeVersion": "0.2",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -163,7 +259,7 @@
         },
         {
           "moduleCode": "THORACENTESIS_SPECIFIC",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 20
         }
@@ -172,8 +268,8 @@
     },
     {
       "procedureCode": "CHEST_TUBE",
-      "recipeVersionId": "recipe-chest-tube-v0-1",
-      "recipeVersion": "0.1",
+      "recipeVersionId": "recipe-chest-tube-v0-2",
+      "recipeVersion": "0.2",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -184,7 +280,7 @@
         },
         {
           "moduleCode": "CHEST_TUBE_SPECIFIC",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 20
         }
@@ -205,8 +301,8 @@
     },
     {
       "procedureCode": "IPC_PLACEMENT",
-      "recipeVersionId": "recipe-ipc-placement-v0-1",
-      "recipeVersion": "0.1",
+      "recipeVersionId": "recipe-ipc-placement-v0-2",
+      "recipeVersion": "0.2",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -217,7 +313,7 @@
         },
         {
           "moduleCode": "IPC_PLACEMENT_SPECIFIC",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 20
         }
@@ -237,8 +333,8 @@
     },
     {
       "procedureCode": "MED_THORACOSCOPY",
-      "recipeVersionId": "recipe-med-thoracoscopy-v0-1",
-      "recipeVersion": "0.1",
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
+      "recipeVersion": "0.3",
       "version": "1.0",
       "moduleReferences": [
         {
@@ -249,12 +345,45 @@
         },
         {
           "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
-          "moduleVersion": "1.0",
+          "moduleVersion": "1.1",
           "selectionBehavior": "required",
           "sequence": 20
         }
       ],
-      "compositionActions": []
+      "compositionActions": [
+        {
+          "id": "med-thoracoscopy-chest-tube-zone",
+          "sequence": 10,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-57CA4B1298",
+          "payload": { "value": "sterile_field" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the post-thoracoscopy chest tube is an insertable device placed through the sterile field, not drainage-preparation hardware, so the section-level F-05 re-phase over-reached when it moved this row with its Drainage section. Placement matches the governed home-procedure precedent CHEST_TUBE SLOT-708736B8C2 (CHEST_TUBE_SMALL_BORE, section Tube -> sterile_field)."
+        },
+        {
+          "id": "med-thoracoscopy-chest-tube-phase",
+          "sequence": 11,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-57CA4B1298",
+          "payload": { "value": "therapeutic" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the chest tube is placed during the procedure, matching the governed home-procedure precedent CHEST_TUBE SLOT-708736B8C2 (section Tube -> therapeutic); it is not primed pre-induction with the drainage unit."
+        },
+        {
+          "id": "med-thoracoscopy-ipc-kit-zone",
+          "sequence": 12,
+          "actionType": "set_setup_zone",
+          "targetSlotId": "SLOT-9A1C0491F9",
+          "payload": { "value": "sterile_field" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the IPC insertion kit is an insertable device placed through the sterile field when 'IPC placement planned', not drainage-preparation hardware, so the section-level F-05 re-phase over-reached when it moved this row with its Drainage section. Placement matches the governed home-procedure precedent IPC_PLACEMENT SLOT-1BCF3D0702 (IPC_INSERTION_KIT, section Catheter system -> sterile_field)."
+        },
+        {
+          "id": "med-thoracoscopy-ipc-kit-phase",
+          "sequence": 13,
+          "actionType": "set_procedural_phase",
+          "targetSlotId": "SLOT-9A1C0491F9",
+          "payload": { "value": "therapeutic" },
+          "reason": "Codex correction P91-C2 (2026-08-10): the IPC is inserted during the procedure, matching the governed home-procedure precedent IPC_PLACEMENT SLOT-1BCF3D0702 (section Catheter system -> therapeutic); it is not primed pre-induction with the drainage unit."
+        }
+      ]
     },
     {
       "procedureCode": "BRONCH_ABLATION",

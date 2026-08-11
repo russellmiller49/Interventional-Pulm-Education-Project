@@ -48,7 +48,7 @@ describe('D1 accessibility and required warnings', () => {
   }, 120_000)
 
   it('workspace page: no-rescue fact and BOM-managed securement render for CHEST_TUBE', async () => {
-    const { getByText, getAllByText, queryByText } = await renderPage(
+    const { getByText, queryByText } = await renderPage(
       ProcedureWorkspacePage({
         params: Promise.resolve({ locale: 'en', procedureCode: 'CHEST_TUBE' }),
         searchParams: Promise.resolve({ view: 'phases' }),
@@ -64,12 +64,18 @@ describe('D1 accessibility and required warnings', () => {
     getByText(/of 11 allowed modifiers change the requirement list in this release/)
     // ...and the inert ones sit behind a labeled disclosure.
     getByText(/informational only in this release/)
-    // F-06: the divergent IPC pathway is separated behind its own labeled disclosure
-    // (asserted against the <summary>, not the workspace note), and the coverage imbalance
-    // is named at workspace level.
-    expect(getAllByText(/Long-term drainage — divergent pathway \(/).length).toBeGreaterThan(0)
-    getByText(/divergent long-term pathway/)
-    getByText(/Authoring coverage reflects catalog ingestion, not clinical priority/)
+    // F-06 (data pass, 2026-08-09): the four IPC requirements left the chest-tube template
+    // for IPC_PLACEMENT, so the divergent-pathway disclosure and the imbalance note — both
+    // gated on the section's presence in the composition, not on the procedure code — no
+    // longer render. The defensive runtime behaviour stays in place for any future
+    // composition that carries a Long-term drainage section.
+    expect(queryByText(/Long-term drainage — divergent pathway \(/)).toBeNull()
+    expect(queryByText(/divergent long-term pathway/)).toBeNull()
+    expect(
+      queryByText(/Authoring coverage reflects catalog ingestion, not clinical priority/),
+    ).toBeNull()
+    // The IPC equipment itself is gone from the page.
+    expect(queryByText(/Indwelling pleural catheter kit/)).toBeNull()
   }, 120_000)
 
   it('workspace page: kit-suppressed requirements render in the room-setup preview (F-02)', async () => {
@@ -158,6 +164,39 @@ describe('D1 accessibility and required warnings', () => {
     getByText(/template language only/)
     getByText(
       /does not establish that any hospital carries, stocks, prefers, approves, or uses any product/,
+    )
+  }, 120_000)
+
+  it('requirement browser: a Long-term drainage section still renders as the labeled divergent disclosure (F-06 defensive path)', async () => {
+    // No governed composition carries the section any more (the F-06 data pass moved the IPC
+    // requirements to IPC_PLACEMENT), so this pins the retained defensive rendering with a
+    // synthetic requirement: if a future composition reintroduces the section, it must render
+    // behind the separated, labeled disclosure — never inline as core setup.
+    const { RequirementBrowser } =
+      await import('@/features/device-intelligence/components/RequirementBrowser')
+    const { getProcedureWorkspace } =
+      await import('@/features/device-intelligence/server/procedures.server')
+    const workspace = getProcedureWorkspace('CHEST_TUBE')!
+    const template = workspace.requirements[0]
+    const synthetic = {
+      ...workspace,
+      requirements: [
+        ...workspace.requirements,
+        { ...template, id: 'SYNTH-DIVERGENT', section: 'Long-term drainage' },
+      ],
+    }
+    const { getByText, container } = await renderPage(
+      RequirementBrowser({ locale: 'en', workspace: synthetic, view: 'zones' }),
+    )
+    // The jest next-intl mock returns the raw ICU message for plural keys, so the assertion
+    // pins the stable prefix rather than the interpolated count.
+    getByText(/Long-term drainage — divergent pathway \(/)
+    getByText(/a pathway distinct from chest-tube insertion itself/)
+    // The divergent card sits inside the collapsed disclosure, not inline with the group.
+    const details = container.querySelector('details')
+    expect(details).not.toBeNull()
+    expect(details!.querySelector('summary')!.textContent).toContain(
+      'Long-term drainage — divergent pathway',
     )
   }, 120_000)
 })

@@ -42,7 +42,7 @@ const { saveUserCardAction } = jest.requireMock('@/app/[locale]/preference-cards
 
 const SCENARIO_ID = 'ebus-rose-molecular'
 const CARD_ID = '00000000-0000-4000-8000-000000000001'
-const FLEX_CORE = 'module-flex-bronch-core-v1-0'
+const FLEX_CORE = 'module-flex-bronch-core-v1-1'
 const EBUS_SPECIFIC = 'module-ebus-tbna-specific-v1-0'
 const REBUILT_AT = '2026-07-30T12:00:00.000Z'
 
@@ -163,7 +163,7 @@ describe('edit mode context', () => {
     await user.click(screen.getByRole('button', { name: /Step 1 of 5/ }))
 
     expect(screen.getByText('Procedure (locked)')).toBeInTheDocument()
-    expect(screen.getByText('recipe-ebus-tbna-v0-1')).toBeInTheDocument()
+    expect(screen.getByText('recipe-ebus-tbna-v0-2')).toBeInTheDocument()
     // Nothing here can change what the card is.
     expect(screen.queryByRole('button', { name: 'Select' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Start a custom card' })).not.toBeInTheDocument()

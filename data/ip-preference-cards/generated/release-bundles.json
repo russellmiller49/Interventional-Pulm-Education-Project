@@ -1,20 +1,20 @@
 {
   "pointers": {
     "BRONCH_ABLATION": "release-bronch-ablation-v1-0",
-    "CHEST_TUBE": "release-chest-tube-v1-0",
-    "CUSTOM_COMPOSITION": "release-custom-composition-v1-0",
-    "EBUS_TBNA": "release-ebus-tbna-v1-0",
+    "CHEST_TUBE": "release-chest-tube-v1-1",
+    "CUSTOM_COMPOSITION": "release-custom-composition-v1-2",
+    "EBUS_TBNA": "release-ebus-tbna-v1-1",
     "EBV": "release-ebv-v1-0",
     "FLEX_DIAGNOSTIC": "release-flex-diagnostic-v1-0",
     "ICU_BRONCH": "release-icu-bronch-v1-0",
-    "IPC_PLACEMENT": "release-ipc-placement-v1-0",
-    "MED_THORACOSCOPY": "release-med-thoracoscopy-v1-0",
+    "IPC_PLACEMENT": "release-ipc-placement-v1-1",
+    "MED_THORACOSCOPY": "release-med-thoracoscopy-v1-2",
     "PERC_TRACH": "release-perc-trach-v1-0",
     "PHOTODYNAMIC_THERAPY": "release-photodynamic-therapy-v1-0",
     "RIGID_BRONCH": "release-rigid-bronch-v1-0",
     "TB_RULEOUT": "release-tb-ruleout-v1-0",
-    "THERAPEUTIC_BRONCH": "release-therapeutic-bronch-v1-0",
-    "THORACENTESIS": "release-thoracentesis-v1-0",
+    "THERAPEUTIC_BRONCH": "release-therapeutic-bronch-v1-1",
+    "THORACENTESIS": "release-thoracentesis-v1-1",
     "WLL": "release-wll-v1-0"
   },
   "bundles": [
@@ -105,6 +105,53 @@
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
       "definitionHash": "ccfa44053d1096744732a0e9c56e20b15967854988bd8a953e1c372add9a2e4d"
+    },
+    {
+      "id": "release-chest-tube-v1-1",
+      "sourceProcedureCode": "CHEST_TUBE",
+      "scenarioId": "chest-tube",
+      "recipeVersionId": "recipe-chest-tube-v0-2",
+      "recipeDefinitionHash": "c23bdccdac7b62caec17975aec5e14da0a6e7f750c11f54d572b30bb60300fd5",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-chest-tube-specific-v1-1",
+          "moduleCode": "CHEST_TUBE_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "84614da6be6aed09c1dec37d0a70478aa1e323234ea37122e15c70dd64c22ad4"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-chest-tube-v1-0",
+      "releaseNotes": "Owner-review data corrections (2026-08-09). F-05: the Drainage section re-phases from post-procedure to pre-induction/sedation \u2014 the drainage unit and suction are primed before the tube goes in. F-06 (owner option a): the four indwelling-pleural-catheter requirements leave the chest-tube template for the IPC_PLACEMENT procedure, which already carries them; CHEST_TUBE now represents acute chest-tube insertion.",
+      "definitionHash": "30e3aabc01467aaac8f0f756ee211daa900dfd7dfeb24e84c3590a5125c0ea6d"
     },
     {
       "id": "release-custom-composition-v1-0",
@@ -256,6 +303,304 @@
       "definitionHash": "229c870d61ff3c106a8c4a985956add797c4d883724876a53ab0a12dcda0debf"
     },
     {
+      "id": "release-custom-composition-v1-1",
+      "sourceProcedureCode": "CUSTOM_COMPOSITION",
+      "scenarioId": "custom-composition",
+      "recipeVersionId": "recipe-custom-composition-v1-1",
+      "recipeDefinitionHash": "0028fb7607e32b7cb364beba0cb0e03968f435266d5bafcdcc366c17a4099fb3",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+          "moduleCode": "BRONCH_ABLATION_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "215eee2349d547c0e0afa5de623110bdc4559337c0ae37743d9203bebe22cb7a"
+        },
+        {
+          "moduleVersionId": "module-chest-tube-specific-v1-1",
+          "moduleCode": "CHEST_TUBE_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "84614da6be6aed09c1dec37d0a70478aa1e323234ea37122e15c70dd64c22ad4"
+        },
+        {
+          "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+          "moduleCode": "EBUS_TBNA_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+        },
+        {
+          "moduleVersionId": "module-ebv-specific-v1-0",
+          "moduleCode": "EBV_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "4cfb67d73588169ab6f58e1f46cbe5b0db99b80e4e6f85b1542a34ba4b252216"
+        },
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-1",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.1",
+          "definitionHash": "b1532cd29346c5a867f81b0dca3bca679a562fa76896222021966ada80779b86"
+        },
+        {
+          "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+          "moduleCode": "FLEX_DIAGNOSTIC_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "2c056de53c0ef627bfb78fd105d7968448755d1ec00fb47d364f3c4077fe6195"
+        },
+        {
+          "moduleVersionId": "module-icu-bronch-specific-v1-0",
+          "moduleCode": "ICU_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "0c46ed7fd57d4cdcabcdd0bdb9dd4c3d0a1342abaf444891b67282640d1e89c0"
+        },
+        {
+          "moduleVersionId": "module-ipc-placement-specific-v1-1",
+          "moduleCode": "IPC_PLACEMENT_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "0071af649dc4063472ab3c15838bb29900201da5f51552ae8166ee5980993f69"
+        },
+        {
+          "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "b0f57dc5acb6fb247535c6a9edb0df808cf7b1fdfecaf167245659ffccf2add3"
+        },
+        {
+          "moduleVersionId": "module-perc-trach-specific-v1-0",
+          "moduleCode": "PERC_TRACH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "d6fbc561ecacd0253f170b34d748e25936e35c55b81ae6a3a9cb46e46b4db70e"
+        },
+        {
+          "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+          "moduleCode": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "80362d1440a2fa70d53f96ee80b59e681448a04c949a656bbd55450e65b7a9d1"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        },
+        {
+          "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+          "moduleCode": "RIGID_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "60871cc2b9a82a9d56beb7ce91644f446e131a81825c8589dddb966d2873615f"
+        },
+        {
+          "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+          "moduleCode": "TB_RULEOUT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "878ef6f9599e4ac872b19e1686e62ffd5115d0bd2b995bdd35fed4dc1dec7eb1"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
+          "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "a86bccd508c7c4eb192e0b5e4af7f79a92579def8978f2704fbff01203669fb1"
+        },
+        {
+          "moduleVersionId": "module-thoracentesis-specific-v1-1",
+          "moduleCode": "THORACENTESIS_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "2b45972956e87a8d7b78cdc8c8196a86e7a3857d7dffa15e72f98b94a8347368"
+        },
+        {
+          "moduleVersionId": "module-wll-specific-v1-0",
+          "moduleCode": "WLL_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "e1707612175e1e6bb3875d65d6918d2349b7bdc444b04f92cf062b7af30bae1b"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-custom-composition-v1-0",
+      "releaseNotes": "The custom module composition offers the current module set, so it advances with the 2026-08-09 owner-review data corrections: Flexible Bronchoscopy Core v1.1 (bite block, airway adapter) and the v1.1 procedure-specific modules for therapeutic bronchoscopy, chest tube, thoracentesis, IPC placement, and medical thoracoscopy. No clinical content beyond those corrections changed. Scope note: the F-04 sampling-instrument zone/phase overrides are recipe-level composition actions on the EBUS and therapeutic recipes and do not reach this module-derived composition; a custom card selecting those modules retains the pre-correction sampling zones.",
+      "definitionHash": "65be5c3697fc3970b368624ce3328ecc5e38f6f7b3a12e0d725b1c4ec785f47a"
+    },
+    {
+      "id": "release-custom-composition-v1-2",
+      "sourceProcedureCode": "CUSTOM_COMPOSITION",
+      "scenarioId": "custom-composition",
+      "recipeVersionId": "recipe-custom-composition-v1-2",
+      "recipeDefinitionHash": "369583a4f1d6023cddd9a2680cda84b2a92d1f5520c70468d1f051722c6e6862",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-bronch-ablation-specific-v1-0",
+          "moduleCode": "BRONCH_ABLATION_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "215eee2349d547c0e0afa5de623110bdc4559337c0ae37743d9203bebe22cb7a"
+        },
+        {
+          "moduleVersionId": "module-chest-tube-specific-v1-1",
+          "moduleCode": "CHEST_TUBE_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "84614da6be6aed09c1dec37d0a70478aa1e323234ea37122e15c70dd64c22ad4"
+        },
+        {
+          "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+          "moduleCode": "EBUS_TBNA_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+        },
+        {
+          "moduleVersionId": "module-ebv-specific-v1-0",
+          "moduleCode": "EBV_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "4cfb67d73588169ab6f58e1f46cbe5b0db99b80e4e6f85b1542a34ba4b252216"
+        },
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-1",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.1",
+          "definitionHash": "b1532cd29346c5a867f81b0dca3bca679a562fa76896222021966ada80779b86"
+        },
+        {
+          "moduleVersionId": "module-flex-diagnostic-specific-v1-0",
+          "moduleCode": "FLEX_DIAGNOSTIC_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "2c056de53c0ef627bfb78fd105d7968448755d1ec00fb47d364f3c4077fe6195"
+        },
+        {
+          "moduleVersionId": "module-icu-bronch-specific-v1-0",
+          "moduleCode": "ICU_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "0c46ed7fd57d4cdcabcdd0bdb9dd4c3d0a1342abaf444891b67282640d1e89c0"
+        },
+        {
+          "moduleVersionId": "module-ipc-placement-specific-v1-1",
+          "moduleCode": "IPC_PLACEMENT_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "0071af649dc4063472ab3c15838bb29900201da5f51552ae8166ee5980993f69"
+        },
+        {
+          "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "b0f57dc5acb6fb247535c6a9edb0df808cf7b1fdfecaf167245659ffccf2add3"
+        },
+        {
+          "moduleVersionId": "module-perc-trach-specific-v1-0",
+          "moduleCode": "PERC_TRACH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "d6fbc561ecacd0253f170b34d748e25936e35c55b81ae6a3a9cb46e46b4db70e"
+        },
+        {
+          "moduleVersionId": "module-photodynamic-therapy-specific-v1-0",
+          "moduleCode": "PHOTODYNAMIC_THERAPY_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "80362d1440a2fa70d53f96ee80b59e681448a04c949a656bbd55450e65b7a9d1"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        },
+        {
+          "moduleVersionId": "module-rigid-bronch-specific-v1-0",
+          "moduleCode": "RIGID_BRONCH_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "60871cc2b9a82a9d56beb7ce91644f446e131a81825c8589dddb966d2873615f"
+        },
+        {
+          "moduleVersionId": "module-tb-ruleout-specific-v1-0",
+          "moduleCode": "TB_RULEOUT_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "878ef6f9599e4ac872b19e1686e62ffd5115d0bd2b995bdd35fed4dc1dec7eb1"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
+          "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "a86bccd508c7c4eb192e0b5e4af7f79a92579def8978f2704fbff01203669fb1"
+        },
+        {
+          "moduleVersionId": "module-thoracentesis-specific-v1-1",
+          "moduleCode": "THORACENTESIS_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "2b45972956e87a8d7b78cdc8c8196a86e7a3857d7dffa15e72f98b94a8347368"
+        },
+        {
+          "moduleVersionId": "module-wll-specific-v1-0",
+          "moduleCode": "WLL_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "e1707612175e1e6bb3875d65d6918d2349b7bdc444b04f92cf062b7af30bae1b"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "cb21a7bc64d8ca84c909153bb6ae65ec9055750bfccbf1ac5a5a5bf0f69cfa7d",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-10T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-custom-composition-v1-1",
+      "releaseNotes": "Codex corrections P91-C1 and P91-C2 (2026-08-10). The custom module composition gains an authored action channel (seed/custom-composition.json): sixteen per-slot composition actions, applied by the same canonical evaluator as the procedure recipes, each applying only when its target requirement is present in the selected modules. P91-C1 closes the v1-1 scope note: the six owner-named F-04 sampling instruments (EBUS FNA needle, FNB needle, mini-forceps, vacuum syringe; therapeutic biopsy forceps, BAL kit) now resolve to back table / diagnostic on custom cards that select their modules — specimen handling stays at the specimen station. P91-C2 applies the same two MED_THORACOSCOPY insertable-device placements (sterile field / therapeutic) to custom cards. Module list unchanged from v1-1.",
+      "definitionHash": "3d9139efcd2c7ca439c08c7c2cfb3058fb4afe2ea293c390d5085e08f51010ba"
+    },
+    {
       "id": "release-ebus-tbna-v1-0",
       "sourceProcedureCode": "EBUS_TBNA",
       "scenarioId": "ebus-rose-molecular",
@@ -307,6 +652,59 @@
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
       "definitionHash": "db46d9cca5db256ed3e7025aee36069eb4676b970f0648db7407b2040b660ea8"
+    },
+    {
+      "id": "release-ebus-tbna-v1-1",
+      "sourceProcedureCode": "EBUS_TBNA",
+      "scenarioId": "ebus-rose-molecular",
+      "recipeVersionId": "recipe-ebus-tbna-v0-2",
+      "recipeDefinitionHash": "ae183e6b09ecb421ddd39ac83c485a567312d72580a0bff69d61cc76005ca2e1",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-ebus-tbna-specific-v1-0",
+          "moduleCode": "EBUS_TBNA_SPECIFIC",
+          "moduleVersion": "1.0",
+          "definitionHash": "15039c48c4b727737a7852bcf69e529b9edd5287058f32dabd0a3c6051f1a1b9"
+        },
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-1",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.1",
+          "definitionHash": "b1532cd29346c5a867f81b0dca3bca679a562fa76896222021966ada80779b86"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-ebus-tbna-v1-0",
+      "releaseNotes": "Owner-review data corrections (2026-08-09). F-04: the four sampling instruments (FNA needle, FNB needle, intranodal mini-forceps, vacuum-locking syringe) move to back table / diagnostic via per-slot composition actions; specimen receptacles stay at the specimen station. F-10: Flexible Bronchoscopy Core v1.1 adds the bite block and airway adapter, so EBUS inherits both with the existing governed dependency rules.",
+      "definitionHash": "9fac0962db91d8e98add9c785c02e5a9fc78850202879b2fe4af6f6acee46998"
     },
     {
       "id": "release-ebv-v1-0",
@@ -491,6 +889,53 @@
       "definitionHash": "6b51ab3cc173c865e7d5d60f2aa2c0914a4a75711592a54ebda74ee499624d16"
     },
     {
+      "id": "release-ipc-placement-v1-1",
+      "sourceProcedureCode": "IPC_PLACEMENT",
+      "scenarioId": "ipc-placement",
+      "recipeVersionId": "recipe-ipc-placement-v0-2",
+      "recipeDefinitionHash": "8be697636f381ca28c1250e87ab284c0402f86c8b51ee6a03a58908b85eb2e09",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-ipc-placement-specific-v1-1",
+          "moduleCode": "IPC_PLACEMENT_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "0071af649dc4063472ab3c15838bb29900201da5f51552ae8166ee5980993f69"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-ipc-placement-v1-0",
+      "releaseNotes": "Owner-review data correction F-05 (2026-08-09): the Drainage section re-phases from post-procedure to pre-induction/sedation, so the drainage kit and initial drainage connection read as prepared before the catheter goes in.",
+      "definitionHash": "0db14ddecb1c01fea7d946cff8d6d984dd39e97c32a6265241e32f155ae74d33"
+    },
+    {
       "id": "release-med-thoracoscopy-v1-0",
       "sourceProcedureCode": "MED_THORACOSCOPY",
       "scenarioId": "med-thoracoscopy",
@@ -536,6 +981,100 @@
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
       "definitionHash": "8b8878eb3f02ee1be4567c596ec0042bc5e88a26da80a764c4001bc95cb0cec7"
+    },
+    {
+      "id": "release-med-thoracoscopy-v1-1",
+      "sourceProcedureCode": "MED_THORACOSCOPY",
+      "scenarioId": "med-thoracoscopy",
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-2",
+      "recipeDefinitionHash": "267292d033615d095bebe15f479394938827864cd27b92f0d673c8ef9e6aadba",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "b0f57dc5acb6fb247535c6a9edb0df808cf7b1fdfecaf167245659ffccf2add3"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-med-thoracoscopy-v1-0",
+      "releaseNotes": "Owner-review data correction F-05 (2026-08-09): the Drainage section re-phases from post-procedure to pre-induction/sedation, so the post-thoracoscopy drainage equipment reads as prepared before the procedure.",
+      "definitionHash": "b53baacd1dafa2f0b580078f87ee3cf552d041ca506093693fba5d4096d34aa1"
+    },
+    {
+      "id": "release-med-thoracoscopy-v1-2",
+      "sourceProcedureCode": "MED_THORACOSCOPY",
+      "scenarioId": "med-thoracoscopy",
+      "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
+      "recipeDefinitionHash": "395370ab6033de0b1c7c314b9b0a745c4160740eb05a2a3c2274637bf83c8a26",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-med-thoracoscopy-specific-v1-1",
+          "moduleCode": "MED_THORACOSCOPY_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "b0f57dc5acb6fb247535c6a9edb0df808cf7b1fdfecaf167245659ffccf2add3"
+        },
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "cb21a7bc64d8ca84c909153bb6ae65ec9055750bfccbf1ac5a5a5bf0f69cfa7d",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-10T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-med-thoracoscopy-v1-1",
+      "releaseNotes": "Codex correction P91-C2 (2026-08-10). The v1-1 section-level F-05 re-phase correctly moved drainage preparation to pre-induction but over-reached on two insertable devices that share the Drainage section: the post-thoracoscopy chest tube (SLOT-57CA4B1298) and the optional IPC insertion kit (SLOT-9A1C0491F9). Per-slot composition actions now place both at sterile field / therapeutic, matching their governed home-procedure precedents (CHEST_TUBE SLOT-708736B8C2, IPC_PLACEMENT SLOT-1BCF3D0702). The drainage unit and every other Drainage row keep the v1-1 pre-induction placement; dependency rules, requiredness, labels, and option sets are unchanged.",
+      "definitionHash": "4386eb65a183cf0634e533bb5eb7c5799da107995e52eb499c58d353c1a64a94"
     },
     {
       "id": "release-perc-trach-v1-0",
@@ -761,6 +1300,65 @@
       "definitionHash": "10b7a6ed40b4d73855c514275697522978133734be6feb3c975711d5691217ed"
     },
     {
+      "id": "release-therapeutic-bronch-v1-1",
+      "sourceProcedureCode": "THERAPEUTIC_BRONCH",
+      "scenarioId": "central-airway-obstruction",
+      "recipeVersionId": "recipe-therapeutic-bronch-v0-2",
+      "recipeDefinitionHash": "1f0ca4bf7a7c5748021d39754274d6f8472f2fd56d92034ea2c4a8b4e7c6a482",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-flex-bronch-core-v1-1",
+          "moduleCode": "FLEX_BRONCH_CORE",
+          "moduleVersion": "1.1",
+          "definitionHash": "b1532cd29346c5a867f81b0dca3bca679a562fa76896222021966ada80779b86"
+        },
+        {
+          "moduleVersionId": "module-procedural-fluoroscopy-v1-0",
+          "moduleCode": "PROCEDURAL_FLUOROSCOPY",
+          "moduleVersion": "1.0",
+          "definitionHash": "eb323e693de084f5dd620a45e195b1df1d5603b91f84d015240c23a4732d7278"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-core-v1-0",
+          "moduleCode": "THERAPEUTIC_BRONCH_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "73d6dc9aad0f4b9367707373252564e68190398d84e792936aee630c6a0d874c"
+        },
+        {
+          "moduleVersionId": "module-therapeutic-bronch-specific-v1-1",
+          "moduleCode": "THERAPEUTIC_BRONCH_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "a86bccd508c7c4eb192e0b5e4af7f79a92579def8978f2704fbff01203669fb1"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-therapeutic-bronch-v1-0",
+      "releaseNotes": "Owner-review data corrections (2026-08-09). F-04: flexible biopsy forceps and the BAL kit move to back table / diagnostic via per-slot composition actions; specimen containers stay at the specimen station. F-10: the bite block re-homes from the procedure-specific module into Flexible Bronchoscopy Core v1.1, and the airway adapter is added through the same core.",
+      "definitionHash": "2105ccd346777f6f48e1de94a0a913c1b9f10f152b44f409fa64826e1f91d5cb"
+    },
+    {
       "id": "release-thoracentesis-v1-0",
       "sourceProcedureCode": "THORACENTESIS",
       "scenarioId": "thoracentesis",
@@ -806,6 +1404,53 @@
       "supersedesReleaseBundleId": null,
       "releaseNotes": "Initial release. Freezes the composition, module versions, modifier set, rescue modules, typed compatibility rules, and role alias table this procedure resolved against when release bundles were introduced. No clinical content changed.",
       "definitionHash": "e4d69a5f09af247baee0905e4035bb1d06579276a1b64bf37caf7addd1e16505"
+    },
+    {
+      "id": "release-thoracentesis-v1-1",
+      "sourceProcedureCode": "THORACENTESIS",
+      "scenarioId": "thoracentesis",
+      "recipeVersionId": "recipe-thoracentesis-v0-2",
+      "recipeDefinitionHash": "145aa657808e49f007a8d0ee391e1a37a88240a37bcb97b64f96fdea5471e2e1",
+      "modulePins": [
+        {
+          "moduleVersionId": "module-pleural-procedure-core-v1-0",
+          "moduleCode": "PLEURAL_PROCEDURE_CORE",
+          "moduleVersion": "1.0",
+          "definitionHash": "7ecc7767daa0ba06993cafb67fe1ea1ce6b63374bf2d4d029ad16aeac1544c32"
+        },
+        {
+          "moduleVersionId": "module-thoracentesis-specific-v1-1",
+          "moduleCode": "THORACENTESIS_SPECIFIC",
+          "moduleVersion": "1.1",
+          "definitionHash": "2b45972956e87a8d7b78cdc8c8196a86e7a3857d7dffa15e72f98b94a8347368"
+        }
+      ],
+      "modifierSetPin": {
+        "id": "definition-set-modifiers",
+        "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165"
+      },
+      "rescueModuleSetPin": {
+        "id": "definition-set-rescue-modules",
+        "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8"
+      },
+      "compatibilityRuleSetPin": {
+        "id": "definition-set-compatibility-rules",
+        "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663"
+      },
+      "roleTaxonomyPin": {
+        "id": "definition-set-role-taxonomy",
+        "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b"
+      },
+      "catalogImportId": "8ece7648b84360b5e63d76cad6e3b57144f74c38d608a0ea855119686ad86cf7",
+      "resolverContractVersion": "ip-cards-resolver-contract/1",
+      "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+      "releaseState": "published",
+      "governanceState": "draft",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "retiredAt": null,
+      "supersedesReleaseBundleId": "release-thoracentesis-v1-0",
+      "releaseNotes": "Owner-review data correction F-05 (2026-08-09): the Drainage section re-phases from post-procedure to pre-induction/sedation, so the suction and drainage accessories read as prepared before the procedure.",
+      "definitionHash": "7d2900ed02977cde4c0d4410e5cc193c7b2857a1a45efc664bbd4b0915e2c456"
     },
     {
       "id": "release-wll-v1-0",

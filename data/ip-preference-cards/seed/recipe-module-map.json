@@ -10,13 +10,13 @@
   "modules": [
     {
       "code": "FLEX_BRONCH_CORE",
-      "version": "1.0",
+      "version": "1.1",
       "name": "Flexible Bronchoscopy Core",
       "kind": "core",
       "governanceState": "draft",
       "clinicalOwner": null,
       "operationalOwner": null,
-      "description": "The imaging and suction setup every flexible bronchoscopy shares, whatever is done through the scope.",
+      "description": "The imaging, suction, and airway-protection setup every flexible bronchoscopy shares, whatever is done through the scope.",
       "requirements": [
         {
           "requirementKey": "FLEX_BRONCH_VIDEO_PROCESSOR",
@@ -31,6 +31,20 @@
           "sourceSlotAliases": ["SLOT-13609A744F"],
           "sequence": 11,
           "reason": "Both procedures require a suction source with tubing and canisters as a multiple-selection line. The therapeutic card's high-flow expectation and the EBUS card's aspiration syringes are restored as procedure notes rather than by forking the requirement."
+        },
+        {
+          "requirementKey": "FLEX_BRONCH_BITE_BLOCK",
+          "definitionSourceSlotId": "SLOT-D6B291DC80",
+          "sourceSlotAliases": ["SLOT-2147BE329B"],
+          "sequence": 16,
+          "reason": "Owner review F-10 (2026-08-09): the bite block belongs to every flexible bronchoscopy — a linear EBUS scope is almost always inserted orally — so it moves from the therapeutic-specific module into the shared core. The therapeutic row defines the content; the reviewed EBUS row it absorbs was authored identical, dependency rule included."
+        },
+        {
+          "requirementKey": "FLEX_BRONCH_AIRWAY_ADAPTER",
+          "definitionSourceSlotId": "SLOT-0306E7B77D",
+          "sourceSlotAliases": ["SLOT-190EFC825B"],
+          "sequence": 17,
+          "reason": "Owner review F-10 (2026-08-09): the airway adapter joins the shared flexible core so every flexible procedure inherits it consistently. Both reviewed rows were authored identical, copied verbatim from the existing governed TB_RULEOUT flexible-bronchoscopy row, dependency rule included."
         }
       ]
     },
@@ -119,7 +133,7 @@
     },
     {
       "code": "THERAPEUTIC_BRONCH_SPECIFIC",
-      "version": "1.0",
+      "version": "1.1",
       "name": "Therapeutic flexible bronchoscopy specific requirements",
       "kind": "procedure_specific",
       "governanceState": "draft",
@@ -143,7 +157,7 @@
     },
     {
       "code": "THORACENTESIS_SPECIFIC",
-      "version": "1.0",
+      "version": "1.1",
       "name": "Thoracentesis specific requirements",
       "kind": "procedure_specific",
       "governanceState": "draft",
@@ -155,19 +169,19 @@
     },
     {
       "code": "CHEST_TUBE_SPECIFIC",
-      "version": "1.0",
+      "version": "1.1",
       "name": "Chest tube insertion specific requirements",
       "kind": "procedure_specific",
       "governanceState": "draft",
       "clinicalOwner": null,
       "operationalOwner": null,
-      "description": "What chest tube insertion needs beyond the pleural core: the small-bore, large-bore, and surgical tube branches, the drainage unit, and the securement and long-term drainage pathways.",
+      "description": "What chest tube insertion needs beyond the pleural core: the small-bore, large-bore, and surgical tube branches, the drainage unit, and the securement pathway.",
       "remainingSlotsFromProcedure": "CHEST_TUBE",
       "reason": "Every chest-tube row not claimed by the pleural procedure core."
     },
     {
       "code": "IPC_PLACEMENT_SPECIFIC",
-      "version": "1.0",
+      "version": "1.1",
       "name": "Tunnelled indwelling pleural catheter specific requirements",
       "kind": "procedure_specific",
       "governanceState": "draft",
@@ -179,7 +193,7 @@
     },
     {
       "code": "MED_THORACOSCOPY_SPECIFIC",
-      "version": "1.0",
+      "version": "1.1",
       "name": "Medical thoracoscopy specific requirements",
       "kind": "procedure_specific",
       "governanceState": "draft",

@@ -56,7 +56,7 @@
   },
   "Drainage": {
     "setup_zone": "equipment_tower",
-    "procedural_phase": "post_procedure",
+    "procedural_phase": "pre_induction_or_sedation",
     "needs_review": false
   },
   "Dressing": {

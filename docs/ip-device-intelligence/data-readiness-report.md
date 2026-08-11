@@ -1,5 +1,15 @@
 # Data-readiness report — EBUS_TBNA, THERAPEUTIC_BRONCH, CHEST_TUBE
 
+> **Addendum (2026-08-09).** The D1.1 owner-review data corrections changed the governed data
+> this report narrates: CHEST_TUBE is now 9 slots (the four IPC requirements moved to
+> IPC_PLACEMENT), EBUS_TBNA 17 and THERAPEUTIC_BRONCH 30 (flex-core bite block and airway
+> adapter), globals 232 slots / 2,035 authored options / 831 proposals, and the Drainage
+> section is phased pre-induction. The figures below describe the **pre-correction D0
+> snapshot** and are kept as the discovery record; the current deltas are classified in
+> [d1-data-corrections/before-after.md](./d1-data-corrections/before-after.md) and
+> [d1-data-corrections/audit-diff.md](./d1-data-corrections/audit-diff.md), and
+> [data-readiness-audit.json](./data-readiness-audit.json) is regenerated and current.
+
 Phase D0 discovery document (2026-08-08) — describes current repository state and proposals.
 Physician-owner decisions D-01–D-10 were recorded 2026-08-08 in
 [decision-log.md](./decision-log.md) (D-03 and D-07 accepted with modification, D-10 with

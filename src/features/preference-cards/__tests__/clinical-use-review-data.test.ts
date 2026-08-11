@@ -128,15 +128,17 @@ describe('full-catalog clinical-use review data', () => {
       // taxonomy v2 grew the catalog: products 1474 -> 1527, product-roles 1567 -> 1617.
       catalogProducts: 1532,
       productRoles: 1622,
-      // Unchanged: the new slots ship only unreviewed proposals, no authored options.
-      currentSlots: 2073,
+      // Owner-review corrections 2026-08-09 (F-06): 2073 -> 2035 — the four removed
+      // CHEST_TUBE IPC rows carried 38 authored options (identical sets remain on the
+      // IPC_PLACEMENT slots); the three new flex-core rows ship only unreviewed proposals.
+      currentSlots: 2035,
     })
     expect(getClinicalUseReviewCounts()).toEqual(data.counts)
     expect(data.roleOptions).toHaveLength(135) // taxonomy v2 roles 116 -> 134
-    expect(data.slotOptions).toHaveLength(233) // taxonomy v2 procedure slots 174 -> 233
+    expect(data.slotOptions).toHaveLength(232) // owner-review corrections 2026-08-09: 233 - 4 IPC rows (F-06) + 3 flex-core rows (F-10)
     expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1532)
     expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(1622)
-    expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2073)
+    expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2035)
     expect(data.productRoles.every((row) => row.reviewKey.startsWith('product_role:'))).toBe(true)
     expect(data.currentSlots.every((row) => row.reviewKey.startsWith('slot_product:'))).toBe(true)
     expect(data.productRoles.every((row) => row.clinicalUseManifestHash === MANIFEST_HASH)).toBe(

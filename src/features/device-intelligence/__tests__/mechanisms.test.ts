@@ -7,6 +7,7 @@ import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
 import { getCatalogStore } from '@/features/preference-cards/server/catalog'
 import { intentionallyFailingApcRule } from '@/features/preference-cards/__fixtures__/test-compatibility-rules'
 import { requiresLaserPathwayDisclosure } from '@/features/device-intelligence/domain/laser-pathway'
+import procedureSlots from '../../../../data/ip-preference-cards/generated/procedure-slots.json'
 import {
   CANONICAL_PROCEDURAL_PHASE_ORDER,
   getCoverageLadderForProcedure,
@@ -356,27 +357,32 @@ describe('owner-review regressions (2026-08-09 findings)', () => {
     ).toBe(false)
   })
 
-  it('F-06: the divergent-pathway caption stays true — IPC roles selectable, several chest-tube pathway roles not', () => {
-    // Pins the two coverage claims of `longTermDrainageNote` exactly: every Long-term
-    // drainage requirement carries authored selectable options, while several (>= 2)
-    // requirements of the chest-tube pathway itself do not.
+  it('F-06: the IPC requirements have left the chest-tube template, and the divergent-pathway presentation is inactive', () => {
+    // The owner's data pass (option (a), 2026-08-09) moved the four IPC roles out of
+    // CHEST_TUBE into IPC_PLACEMENT, which already carried each of them exactly once. The
+    // earlier interim pin — every Long-term drainage requirement selectable while the
+    // chest-tube pathway is not — is superseded: the section no longer exists here, so the
+    // divergent-pathway disclosure and the imbalance note (both gated on the section's
+    // presence, not on the procedure code) deactivate without any presentation change.
     const workspace = getProcedureWorkspace('CHEST_TUBE')!
-    const longTerm = workspace.requirements.filter(
-      (requirement) => requirement.section === 'Long-term drainage',
-    )
-    expect(longTerm.length).toBeGreaterThan(0)
-    for (const requirement of longTerm) {
-      expect({ role: requirement.roleCode, coverage: requirement.coverage?.coverage }).toEqual({
-        role: requirement.roleCode,
-        coverage: 'selectable_authored',
-      })
+    expect(workspace.requirements).toHaveLength(9)
+    const ipcRoles = [
+      'IPC_INSERTION_KIT',
+      'IPC_DRAINAGE_KIT',
+      'IPC_DRESSING_KIT',
+      'IPC_MANAGEMENT_ACCESSORY',
+    ]
+    for (const requirement of workspace.requirements) {
+      expect(ipcRoles).not.toContain(requirement.roleCode)
+      expect(requirement.section).not.toBe('Long-term drainage')
     }
-    const nonSelectableCore = workspace.requirements.filter(
-      (requirement) =>
-        requirement.section !== 'Long-term drainage' &&
-        requirement.coverage !== null &&
-        requirement.coverage.coverage !== 'selectable_authored',
-    )
-    expect(nonSelectableCore.length).toBeGreaterThanOrEqual(2)
+    expect(workspace.sectionOrder).not.toContain('Long-term drainage')
+
+    // The move, not a deletion: IPC_PLACEMENT's own template carries each role exactly once,
+    // with the identical authored option sets the chest-tube rows had.
+    const ipcSlots = procedureSlots.filter((slot) => slot.procedure_code === 'IPC_PLACEMENT')
+    for (const role of ipcRoles) {
+      expect(ipcSlots.filter((slot) => slot.role_code === role)).toHaveLength(1)
+    }
   })
 })

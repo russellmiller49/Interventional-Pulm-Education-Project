@@ -32,6 +32,12 @@ interface ReleaseBundleTableProps {
     modules: string
     recipe: string
     requirementChanges: string
+    modifierEffectChanges: string
+    /**
+     * Renders beside the modifier-effect rows: these are changes to the authored effect of
+     * *selecting* the named modifier, not a statement that any scenario selects it.
+     */
+    modifierEffectNote: string
   }
 }
 
@@ -130,7 +136,7 @@ export function ReleaseBundleTable({ bundles, pointers, impact, labels }: Releas
                           {report.requirementChanges.length} {labels.requirementChanges}
                         </p>
                         <ul className="space-y-0.5 font-mono text-[10px] text-muted-foreground">
-                          {report.requirementChanges.slice(0, 6).map((change) => (
+                          {report.requirementChanges.slice(0, 12).map((change) => (
                             <li key={change.requirementKey}>
                               {change.kind} {change.requirementKey}
                               {change.changedFields.length > 0
@@ -139,6 +145,27 @@ export function ReleaseBundleTable({ bundles, pointers, impact, labels }: Releas
                             </li>
                           ))}
                         </ul>
+                        {report.modifierEffectChanges.length > 0 ? (
+                          <div className="space-y-1 pt-1">
+                            <p className="text-muted-foreground">
+                              {report.modifierEffectChanges.length} {labels.modifierEffectChanges}
+                            </p>
+                            <p className="max-w-sm text-[10px] leading-4 text-muted-foreground">
+                              {labels.modifierEffectNote}
+                            </p>
+                            <ul className="space-y-0.5 font-mono text-[10px] text-muted-foreground">
+                              {report.modifierEffectChanges.slice(0, 12).map((change) => (
+                                <li key={`${change.modifierCode}-${change.actionId ?? 'modifier'}`}>
+                                  {change.modifierCode} {change.kind}{' '}
+                                  {change.requirementKey ?? change.actionId ?? change.modifierCode}
+                                  {change.changedFields.length > 0
+                                    ? ` (${change.changedFields.join(', ')})`
+                                    : ''}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
                       </div>
                     )}
                     {bundle.releaseNotes ? (
