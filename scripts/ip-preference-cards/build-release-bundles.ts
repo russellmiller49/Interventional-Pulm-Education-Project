@@ -65,14 +65,14 @@ import type {
   RoleRecord,
 } from '../../src/features/preference-cards/server/catalog-store'
 
-import { computeCatalogRelease } from './catalog-release-id'
+import { computeCatalogRelease, type CatalogRelease } from './catalog-release-id'
 import { deriveCatalogRetention } from './catalog-retention'
 import {
   deriveReviewedProductFamilyVersion,
   productFamilyVersionIdFor,
   type SeedProductFamilyFile,
 } from './product-family-derivation'
-import { computeResolverRelease } from './resolver-release-id'
+import { computeResolverRelease, type ResolverRelease } from './resolver-release-id'
 import { formatJson } from './format-json'
 
 /**
@@ -90,6 +90,14 @@ import { formatJson } from './format-json'
  * standing assertion: edit any pinned definition and this script fails with the list of what
  * moved, and the only way forward is to publish a new release. That is the mechanism behind
  * "published definitions are immutable" — not a convention, a build failure.
+ *
+ * The command is build-first, write-last (P91-C5b). Every artifact is constructed and every
+ * validation runs in memory before the first byte reaches disk, so a failing run modifies no
+ * committed target file — it used to overwrite `catalog-release.json` and
+ * `resolver-release.json` before validation, leaving provenance that disagreed with the
+ * failure it exited with. The guarantee is validation-before-write, not a transactional
+ * multi-file commit: an operating-system failure between the final writes can still leave
+ * the target set partially updated, and rerunning the command is the recovery.
  */
 
 const GENERATED_DIRECTORY = 'data/ip-preference-cards/generated'
@@ -424,13 +432,107 @@ function buildProductFamilies(input: {
   return { versions, failures }
 }
 
-async function main() {
-  const generatedDirectory = process.argv[2] ?? GENERATED_DIRECTORY
-  const seedDirectory = process.argv[3] ?? SEED_DIRECTORY
-  const reviewedDirectory = process.argv[4] ?? REVIEWED_DIRECTORY
+/**
+ * Every file the release-generation command writes, all under the generated directory.
+ *
+ * The inventory is load-bearing (P91-C5b): `writeReleaseArtifacts` writes exactly these
+ * files and nothing else, and the CLI atomicity test plants a sentinel in every one of them
+ * to prove a failing run modifies none. A new write belongs in `BuiltReleaseArtifacts`, in
+ * `writeReleaseArtifacts`, and in this list, or the test that enumerates it will not guard
+ * it.
+ */
+export const RELEASE_GENERATION_TARGET_FILENAMES = [
+  'catalog-release.json',
+  'resolver-release.json',
+  'catalog-rows.json',
+  'catalog-release-manifests.json',
+  'product-family-versions.json',
+  'module-ledger.json',
+  'composition-ledger.json',
+  'definition-set-ledger.json',
+  'release-bundles.json',
+  'release-impact-report.json',
+] as const
+
+/** Everything the command intends to write, fully constructed and validated in memory. */
+interface BuiltReleaseArtifacts {
+  catalogRelease: CatalogRelease
+  resolverRelease: ResolverRelease
+  catalogRows: HistoricalCatalogRowStore
+  catalogReleaseManifests: HistoricalCatalogReleaseFile
+  productFamilyVersions: ProductFamilyLedger
+  moduleLedger: ModuleLedger
+  compositionLedger: CompositionLedger
+  definitionSetLedger: DefinitionSetLedger
+  releaseBundles: { pointers: ReleasePointerMap; bundles: PreferenceCardReleaseBundle[] }
+  releaseImpactReport: ReleaseImpactReport[]
+}
+
+/** The final write block — the only place this command touches a target file. */
+async function writeReleaseArtifacts(artifacts: BuiltReleaseArtifacts, generatedDirectory: string) {
+  await writeJsonWhenChanged(generatedDirectory, 'catalog-release.json', artifacts.catalogRelease)
+  await writeJsonWhenChanged(generatedDirectory, 'resolver-release.json', artifacts.resolverRelease)
+  await writeJsonWhenChanged(generatedDirectory, 'catalog-rows.json', artifacts.catalogRows)
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'catalog-release-manifests.json',
+    artifacts.catalogReleaseManifests,
+  )
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'product-family-versions.json',
+    artifacts.productFamilyVersions,
+  )
+  await writeJsonWhenChanged(generatedDirectory, 'module-ledger.json', artifacts.moduleLedger)
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'composition-ledger.json',
+    artifacts.compositionLedger,
+  )
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'definition-set-ledger.json',
+    artifacts.definitionSetLedger,
+  )
+  await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', artifacts.releaseBundles)
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'release-impact-report.json',
+    artifacts.releaseImpactReport,
+  )
+}
+
+/**
+ * The whole command behind the CLI: build and validate everything in memory, then — only if
+ * nothing failed — write the target files.
+ *
+ * Exported so the CLI atomicity test can run the real orchestration against an isolated
+ * directory fixture and prove the write ordering, rather than trusting that it exists.
+ * Returns false when a validation failed (the caller exits nonzero); throws where the build
+ * itself throws. On either failure path no target file has been touched.
+ */
+export async function runBuildReleaseBundles(input: {
+  generatedDirectory: string
+  seedDirectory: string
+  reviewedDirectory: string
+  /**
+   * The definition-source loader, injectable for the same reason `buildReleaseBundles`
+   * exposes one: the atomicity test feeds a poisoned source and asserts the failure leaves
+   * every target byte-identical. The CLI never passes it.
+   */
+  loadSources?: (
+    recipeVersionId: string,
+    resolverContract: { version: string; implementationHash: string },
+    setPins?: ReleaseDefinitionSetPins,
+  ) => ReleaseDefinitionSources | null
+}): Promise<boolean> {
+  const { generatedDirectory, seedDirectory, reviewedDirectory } = input
+  const loadSources = input.loadSources ?? getReleaseDefinitionSources
+
+  // ---- PHASE A — build and validate everything in memory; nothing below writes ----------
 
   // Recomputed before anything else reads it, so the runtime's notion of "which catalog
-  // release is current" is never staler than the catalog itself.
+  // release is current" is never staler than the catalog itself. Written only in phase B.
   const importReport = await readJson<{ workbook_sha256: string }>(
     generatedDirectory,
     'import-report.json',
@@ -439,12 +541,10 @@ async function main() {
     generatedDirectory,
     importReport.workbook_sha256,
   )
-  await writeJsonWhenChanged(generatedDirectory, 'catalog-release.json', catalogRelease)
 
   // Recomputed from source here rather than read back from the generated file, so a bundle
   // published in this run records the build that is actually producing it.
   const resolverRelease = await computeResolverRelease(PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION)
-  await writeJsonWhenChanged(generatedDirectory, 'resolver-release.json', resolverRelease)
   const resolverContract = {
     version: resolverRelease.resolverContractVersion,
     implementationHash: resolverRelease.resolverImplementationHash,
@@ -469,7 +569,7 @@ async function main() {
     seed,
     resolverContractVersion: resolverContract.version,
     loadSources: (recipeVersionId, setPins) =>
-      getReleaseDefinitionSources(recipeVersionId, resolverContract, setPins),
+      loadSources(recipeVersionId, resolverContract, setPins),
     recordedSetPinsByReleaseId,
   })
 
@@ -500,11 +600,7 @@ async function main() {
   const pinnedSetHashes = new Map<string, Set<string>>()
   for (const bundle of result.bundles) {
     if (bundle.releaseState === 'draft') continue
-    const sources = getReleaseDefinitionSources(
-      bundle.recipeVersionId,
-      resolverContract,
-      setPinsOfBundle(bundle),
-    )
+    const sources = loadSources(bundle.recipeVersionId, resolverContract, setPinsOfBundle(bundle))
     for (const moduleVersion of sources?.modules ?? []) {
       pinnedModuleVersionIds.add(moduleVersion.id)
       publishedModules.push({ moduleVersion, releaseBundleId: bundle.id })
@@ -703,8 +799,7 @@ async function main() {
     console.log('')
     console.error(`${ledgerProblems.length} module retention problem(s):`)
     for (const problem of ledgerProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
-    process.exitCode = 1
-    return
+    return false
   }
 
   if (compositionLedgerProblems.length > 0) {
@@ -713,8 +808,7 @@ async function main() {
     for (const problem of compositionLedgerProblems) {
       console.error(`  ✗ ${problem.code}: ${problem.message}`)
     }
-    process.exitCode = 1
-    return
+    return false
   }
 
   if (definitionSetLedgerProblems.length > 0) {
@@ -723,16 +817,14 @@ async function main() {
     for (const problem of definitionSetLedgerProblems) {
       console.error(`  ✗ ${problem.code}: ${problem.message}`)
     }
-    process.exitCode = 1
-    return
+    return false
   }
 
   if (catalogProblems.length > 0) {
     console.log('')
     console.error(`${catalogProblems.length} catalog retention problem(s):`)
     for (const problem of catalogProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
-    process.exitCode = 1
-    return
+    return false
   }
 
   if (families.failures.length > 0 || familyProblems.length > 0) {
@@ -740,35 +832,35 @@ async function main() {
     console.error(`${families.failures.length + familyProblems.length} product family problem(s):`)
     for (const failure of families.failures) console.error(`  ✗ ${failure}`)
     for (const problem of familyProblems) console.error(`  ✗ ${problem.code}: ${problem.message}`)
-    process.exitCode = 1
-    return
+    return false
   }
 
   if (blocking.length > 0) {
     console.log('')
     console.error(`${blocking.length} blocking problem(s):`)
     for (const message of blocking) console.error(`  ✗ ${message.code}: ${message.message}`)
-    // Nothing is written. A generated file that disagreed with a failed validation would be
-    // a record of the mutation rather than a barrier to it.
-    process.exitCode = 1
-    return
+    // Nothing has been written — phase B never runs. A generated file that disagreed with a
+    // failed validation would be a record of the mutation rather than a barrier to it.
+    return false
   }
 
-  await writeJsonWhenChanged(generatedDirectory, 'catalog-rows.json', retained.store)
-  await writeJsonWhenChanged(
+  // ---- PHASE B — every validation passed; write the target files -------------------------
+
+  await writeReleaseArtifacts(
+    {
+      catalogRelease,
+      resolverRelease,
+      catalogRows: retained.store,
+      catalogReleaseManifests: retained.releases,
+      productFamilyVersions: familyLedger,
+      moduleLedger: ledger,
+      compositionLedger,
+      definitionSetLedger,
+      releaseBundles: { pointers: result.pointers, bundles: result.bundles },
+      releaseImpactReport: result.impact,
+    },
     generatedDirectory,
-    'catalog-release-manifests.json',
-    retained.releases,
   )
-  await writeJsonWhenChanged(generatedDirectory, 'product-family-versions.json', familyLedger)
-  await writeJsonWhenChanged(generatedDirectory, 'module-ledger.json', ledger)
-  await writeJsonWhenChanged(generatedDirectory, 'composition-ledger.json', compositionLedger)
-  await writeJsonWhenChanged(generatedDirectory, 'definition-set-ledger.json', definitionSetLedger)
-  await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', {
-    pointers: result.pointers,
-    bundles: result.bundles,
-  })
-  await writeJsonWhenChanged(generatedDirectory, 'release-impact-report.json', result.impact)
 
   // An initial release has no predecessor, so every requirement reads as "added". True, and
   // useless to a reviewer — release impact is a comparison, and there is nothing to compare
@@ -783,7 +875,7 @@ async function main() {
   )
   for (const report of supersessions) {
     console.log(
-      `  ${report.nextReleaseBundleId}: ${report.pinChanges.length} pin change(s), ${report.requirementChanges.length} requirement change(s) against ${report.previousReleaseBundleId ?? 'no predecessor'}`,
+      `  ${report.nextReleaseBundleId}: ${report.pinChanges.length} pin change(s), ${report.requirementChanges.length} requirement change(s), ${report.modifierEffectChanges.length} authored modifier-effect change(s) against ${report.previousReleaseBundleId ?? 'no predecessor'}`,
     )
     for (const requirement of report.requirementChanges) {
       console.log(
@@ -792,7 +884,24 @@ async function main() {
         }`,
       )
     }
+    for (const effect of report.modifierEffectChanges) {
+      console.log(
+        `    modifier ${effect.modifierCode} ${effect.kind} ${effect.actionId ?? '(modifier-level)'}${
+          effect.requirementKey ? ` → ${effect.requirementKey}` : ''
+        }${effect.changedFields.length > 0 ? ` (${effect.changedFields.join(', ')})` : ''}`,
+      )
+    }
   }
+  return true
+}
+
+async function main() {
+  const ok = await runBuildReleaseBundles({
+    generatedDirectory: process.argv[2] ?? GENERATED_DIRECTORY,
+    seedDirectory: process.argv[3] ?? SEED_DIRECTORY,
+    reviewedDirectory: process.argv[4] ?? REVIEWED_DIRECTORY,
+  })
+  if (!ok) process.exitCode = 1
 }
 
 if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) {

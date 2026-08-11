@@ -100,16 +100,26 @@ describe('F-04 — sampling instruments sit at the procedural field, specimen ha
   })
 })
 
-describe('F-05 — drainage equipment is prepared before induction, dressing stays post-procedure', () => {
-  const drainageBySlot: Record<string, string[]> = {
+describe('F-05 — drainage preparation is set up before induction, dressing stays post-procedure', () => {
+  /**
+   * Deliberately NOT "every Drainage-section row shares one phase". That sweep was the test
+   * defect that encoded the over-broad v1-1 behaviour: the MED_THORACOSCOPY `Drainage`
+   * section also holds two *insertable devices* (the post-thoracoscopy chest tube and the
+   * optional IPC insertion kit), and asserting the section-uniform phase pinned them to
+   * pre-induction alongside the actual drainage-preparation hardware. The correction pass
+   * (P91-C2, `governed-data-corrections-2026-08-10.test.ts`) places those two at
+   * sterile_field / therapeutic per their governed home-procedure precedents; this suite now
+   * asserts the drainage-preparation class by exact slot.
+   */
+  const drainagePreparationBySlot: Record<string, string[]> = {
     'recipe-chest-tube-v0-2': ['SLOT-3631C94D7A', 'SLOT-CE48C1B108', 'SLOT-AECDA16326'],
     'recipe-ipc-placement-v0-2': ['SLOT-3FBC244FAF', 'SLOT-27D1A61598'],
-    'recipe-med-thoracoscopy-v0-2': ['SLOT-57CA4B1298', 'SLOT-AA3C2EAA6D', 'SLOT-9A1C0491F9'],
+    'recipe-med-thoracoscopy-v0-3': ['SLOT-AA3C2EAA6D'],
     'recipe-thoracentesis-v0-2': ['SLOT-CA34F60BE9', 'SLOT-C174DA0A4E'],
   }
 
-  it.each(Object.entries(drainageBySlot))(
-    'phases every Drainage-section requirement of %s to pre_induction_or_sedation',
+  it.each(Object.entries(drainagePreparationBySlot))(
+    'phases the drainage-preparation requirements of %s to pre_induction_or_sedation',
     (recipeVersionId, sourceSlotIds) => {
       const slots = expandedSlots(recipeVersionId)
       for (const sourceSlotId of sourceSlotIds) {
@@ -130,7 +140,13 @@ describe('F-05 — drainage equipment is prepared before induction, dressing sta
     expect(ipc.proceduralPhase).toBe('post_procedure')
   })
 
-  it('leaves no Drainage-section row phased post_procedure anywhere in current data', () => {
+  it('phases every current Drainage-section row by its semantic class, none post_procedure', () => {
+    // The two MED_THORACOSCOPY insertable devices carry per-slot overrides (P91-C2); every
+    // other Drainage row is drainage preparation and stays on the F-05 section re-phase.
+    const insertableDeviceOverrides: Record<string, 'therapeutic'> = {
+      'SLOT-57CA4B1298': 'therapeutic',
+      'SLOT-9A1C0491F9': 'therapeutic',
+    }
     const drainageRows = (procedureSlots as Array<{ slot_id: string; section: string }>).filter(
       (row) => row.section === 'Drainage',
     )
@@ -142,12 +158,15 @@ describe('F-05 — drainage equipment is prepared before induction, dressing sta
       const recipeVersionId = {
         CHEST_TUBE: 'recipe-chest-tube-v0-2',
         IPC_PLACEMENT: 'recipe-ipc-placement-v0-2',
-        MED_THORACOSCOPY: 'recipe-med-thoracoscopy-v0-2',
+        MED_THORACOSCOPY: 'recipe-med-thoracoscopy-v0-3',
         THORACENTESIS: 'recipe-thoracentesis-v0-2',
       }[procedure.procedure_code]
       expect(recipeVersionId).toBeDefined()
       const slot = bySourceSlotId(expandedSlots(recipeVersionId as string), row.slot_id)
-      expect(slot.proceduralPhase).toBe('pre_induction_or_sedation')
+      expect(slot.proceduralPhase).toBe(
+        insertableDeviceOverrides[row.slot_id] ?? 'pre_induction_or_sedation',
+      )
+      expect(slot.proceduralPhase).not.toBe('post_procedure')
     }
   })
 })
@@ -245,7 +264,7 @@ describe('F-10 — the flexible core carries the bite block and airway adapter f
       'recipe-chest-tube-v0-2',
       'recipe-thoracentesis-v0-2',
       'recipe-ipc-placement-v0-2',
-      'recipe-med-thoracoscopy-v0-2',
+      'recipe-med-thoracoscopy-v0-3',
     ]) {
       const slots = expandedSlots(recipeVersionId)
       const keys = slots.map((slot) => slot.requirementKey)

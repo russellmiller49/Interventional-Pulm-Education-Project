@@ -7673,6 +7673,8 @@
       "releaseInitial": "首个发布包——无可比较对象。",
       "modulePins": "模块：",
       "requirementChanges": "项需求变更",
+      "modifierEffectChanges": "项修饰符既定效果变更",
+      "modifierEffectNote": "这些是对选择该修饰符时所产生的既定效果的变更。仅当卡片选择该修饰符时才适用；这并不表示任何场景选择了它。",
       "procedureColumn": "操作"
     },
     "catalog": {

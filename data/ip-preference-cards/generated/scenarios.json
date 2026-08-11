@@ -264,7 +264,7 @@
     "title": "Medical thoracoscopy / pleuroscopy",
     "recipeName": "Medical thoracoscopy / pleuroscopy",
     "shortDescription": "Equipment and room setup for medical thoracoscopy / pleuroscopy.",
-    "recipeVersionId": "recipe-med-thoracoscopy-v0-2",
+    "recipeVersionId": "recipe-med-thoracoscopy-v0-3",
     "sourceProcedureCode": "MED_THORACOSCOPY",
     "templateVersion": "0.3",
     "defaultModifierCodes": [],

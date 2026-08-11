@@ -1,11 +1,11 @@
 {
   "resolverContractVersion": "ip-cards-resolver-contract/1",
-  "resolverImplementationHash": "72ea5fc70fc3a2425ba9e2676d86e42564d505117fa81e888c7b75a5c95df181",
+  "resolverImplementationHash": "9055b714dde5f5865d5511676cf598237a674149961a6317235aef8f07fede7d",
   "sources": {
     "src/features/preference-cards/domain/resolve-card.ts": "ede3e1b3a0f0403fbe5eae1c6153f8a4a67cbe2251134140c8bf2dcc546ee977",
-    "src/features/preference-cards/domain/effective-slots.ts": "81c0004d8366850e4d9a7ceea16d09be57f6a989d89d3e4415112a9899301fc6",
+    "src/features/preference-cards/domain/effective-slots.ts": "ec7acfc7fb01e13d1cd0e45ef47635e04e5a19a64ae9136610e206daa1e5dbf7",
     "src/features/preference-cards/domain/card-hashes.ts": "09fddddb916e20e0c7f0c4219bffc6232c51b72bcbdbd107731497370a0acb9f",
-    "src/features/preference-cards/domain/expand-recipe-composition.ts": "297a8281908b5d7cbf239ca06659740e80d8d316cd2dd0ac8751101f155e0d37",
+    "src/features/preference-cards/domain/expand-recipe-composition.ts": "fa18e37383913faa62f766549738c65a7c5e1ccf4f964c1132f76afc157d3644",
     "src/features/preference-cards/domain/evaluate-compatibility.ts": "90b52dcdb98446fde4766e5a88dc6a985a3454b7b8119576b67a846c2ad9ac22",
     "src/features/preference-cards/domain/kit-suppression.ts": "0f86b1081947baecba940681fbe14452960a48a9dae160e369059f9f004e99af",
     "src/features/preference-cards/domain/quantity-expression.ts": "65dbeda0caa7e24cf06e658cc42bf46bc90d1daa6da09cbd94f8304c0cc58baa",

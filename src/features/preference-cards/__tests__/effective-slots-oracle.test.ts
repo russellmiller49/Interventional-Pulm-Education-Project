@@ -469,4 +469,23 @@ describe('every effective-slot action, against a literal expectation', () => {
     })
     expect(only(ctx, ['ORDERED']).setupZone).toBe('sterile_field')
   })
+
+  it('throws on an unknown action type instead of resolving as though it were never authored (P91-C5)', () => {
+    // Cast in, exactly as untrusted data would arrive; the runtime default must fail loudly
+    // rather than silently skip — a skipped action resolves a card the author never wrote.
+    const ctx = context({
+      modifiers: [
+        modifier('UNKNOWN', [
+          {
+            actionType: 'future_unknown_action' as ModifierAction['actionType'],
+            targetSlotId: BASE_SLOT_ID,
+          },
+        ]),
+      ],
+    })
+    expect(() => expand(ctx, ['UNKNOWN'])).toThrow(
+      'Unknown modifier action type "future_unknown_action" in action "UNKNOWN-0" ' +
+        'while applying modifier "UNKNOWN" to the effective requirement set.',
+    )
+  })
 })

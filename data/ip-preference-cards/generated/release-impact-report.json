@@ -182,6 +182,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -314,6 +315,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -392,6 +394,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -1892,6 +1895,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2090,6 +2094,80 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": "release-custom-composition-v1-1",
+    "nextReleaseBundleId": "release-custom-composition-v1-2",
+    "sourceProcedureCode": "CUSTOM_COMPOSITION",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "recipe:recipe-custom-composition-v1-1",
+        "kind": "removed",
+        "previousHash": "0028fb7607e32b7cb364beba0cb0e03968f435266d5bafcdcc366c17a4099fb3",
+        "nextHash": null
+      },
+      {
+        "pin": "recipe:recipe-custom-composition-v1-2",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "369583a4f1d6023cddd9a2680cda84b2a92d1f5520c70468d1f051722c6e6862"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-1AF4BEFE3B",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-57CA4B1298",
+        "kind": "changed",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-9A1C0491F9",
+        "kind": "changed",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-B83EBD2FBB",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-D08C74941A",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-D2974FC11B",
+        "kind": "changed",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-E8F0B48B49",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-FDF73730B0",
+        "kind": "changed",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      }
+    ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2240,6 +2318,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2286,8 +2365,33 @@
         "kind": "added",
         "moduleVersionIds": ["module-flex-bronch-core-v1-1"],
         "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-1AF4BEFE3B",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-B83EBD2FBB",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-D08C74941A",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-E8F0B48B49",
+        "kind": "changed",
+        "moduleVersionIds": ["module-ebus-tbna-specific-v1-0"],
+        "changedFields": ["setupZone", "proceduralPhase"]
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2426,6 +2530,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2588,6 +2693,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2708,6 +2814,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2810,6 +2917,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -2858,6 +2966,7 @@
         "changedFields": ["proceduralPhase"]
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3032,6 +3141,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3086,6 +3196,44 @@
         "changedFields": ["proceduralPhase"]
       }
     ],
+    "modifierEffectChanges": [],
+    "catalogImportChanged": false,
+    "resolverContractChanged": false
+  },
+  {
+    "previousReleaseBundleId": "release-med-thoracoscopy-v1-1",
+    "nextReleaseBundleId": "release-med-thoracoscopy-v1-2",
+    "sourceProcedureCode": "MED_THORACOSCOPY",
+    "identical": false,
+    "pinChanges": [
+      {
+        "pin": "recipe:recipe-med-thoracoscopy-v0-2",
+        "kind": "removed",
+        "previousHash": "267292d033615d095bebe15f479394938827864cd27b92f0d673c8ef9e6aadba",
+        "nextHash": null
+      },
+      {
+        "pin": "recipe:recipe-med-thoracoscopy-v0-3",
+        "kind": "added",
+        "previousHash": null,
+        "nextHash": "395370ab6033de0b1c7c314b9b0a745c4160740eb05a2a3c2274637bf83c8a26"
+      }
+    ],
+    "requirementChanges": [
+      {
+        "requirementKey": "SLOT-57CA4B1298",
+        "kind": "changed",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
+        "requirementKey": "SLOT-9A1C0491F9",
+        "kind": "changed",
+        "moduleVersionIds": ["module-med-thoracoscopy-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      }
+    ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3194,6 +3342,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3314,6 +3463,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3548,6 +3698,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3679,6 +3830,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3919,6 +4071,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -3979,12 +4132,25 @@
         "changedFields": []
       },
       {
+        "requirementKey": "SLOT-D2974FC11B",
+        "kind": "changed",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
+      },
+      {
         "requirementKey": "SLOT-D6B291DC80",
         "kind": "removed",
         "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-0"],
         "changedFields": []
+      },
+      {
+        "requirementKey": "SLOT-FDF73730B0",
+        "kind": "changed",
+        "moduleVersionIds": ["module-therapeutic-bronch-specific-v1-1"],
+        "changedFields": ["setupZone", "proceduralPhase"]
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -4092,6 +4258,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -4140,6 +4307,7 @@
         "changedFields": ["proceduralPhase"]
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   },
@@ -4266,6 +4434,7 @@
         "changedFields": []
       }
     ],
+    "modifierEffectChanges": [],
     "catalogImportChanged": false,
     "resolverContractChanged": false
   }

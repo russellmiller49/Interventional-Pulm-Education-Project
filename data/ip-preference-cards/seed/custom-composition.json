@@ -1,0 +1,158 @@
+{
+  "formatVersion": "1.0",
+  "notes": [
+    "The custom module composition's authored surface. Its module list is derived from the current module set (every module offered as 'optional'), so the modules are not authored here — only the identity the composition publishes under and the per-slot composition actions it applies.",
+    "Every action carries 'optionalTarget': true because the custom composition's modules are chosen per card: a selection that omits the target's module is an ordinary card, not an authoring error, so an unmatched action is silently inapplicable rather than a warning. An action matching more than one requirement blocks (recipe_composition_action_ambiguous).",
+    "Actions target imported slot ids — the stable requirement identity that survives module versioning — and are validated at load: every target must resolve to exactly one requirement across the offered module set, or the server refuses to start.",
+    "The recipeVersionId versions forward exactly like an authored composition. Superseded versions are retained verbatim by generated/composition-ledger.json; do not edit a version a published release pins — author the next one.",
+    "The runtime drops 'reason' (authoring rationale, not runtime data), matching how build-recipe-compositions.ts treats seed/procedure-compositions.json."
+  ],
+  "recipeVersionId": "recipe-custom-composition-v1-2",
+  "recipeVersion": "1.2",
+  "compositionActions": [
+    {
+      "id": "custom-f04-ebus-fna-needle-zone",
+      "sequence": 10,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-1AF4BEFE3B",
+      "optionalTarget": true,
+      "payload": { "value": "back_table" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the EBUS-TBNA FNA needle is a sampling instrument used at the procedural field, not a specimen-processing supply. Same per-slot statement as the EBUS_TBNA recipe action ebus-tbna-fna-needle-zone."
+    },
+    {
+      "id": "custom-f04-ebus-fna-needle-phase",
+      "sequence": 11,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-1AF4BEFE3B",
+      "optionalTarget": true,
+      "payload": { "value": "diagnostic" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the FNA needle is used during the diagnostic phase, not during specimen handling."
+    },
+    {
+      "id": "custom-f04-ebus-fnb-needle-zone",
+      "sequence": 12,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-B83EBD2FBB",
+      "optionalTarget": true,
+      "payload": { "value": "back_table" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the EBUS FNB needle is a sampling instrument used at the procedural field, placed at the back table."
+    },
+    {
+      "id": "custom-f04-ebus-fnb-needle-phase",
+      "sequence": 13,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-B83EBD2FBB",
+      "optionalTarget": true,
+      "payload": { "value": "diagnostic" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the FNB needle is used during the diagnostic phase."
+    },
+    {
+      "id": "custom-f04-ebus-miniforceps-zone",
+      "sequence": 14,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-D08C74941A",
+      "optionalTarget": true,
+      "payload": { "value": "back_table" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): intranodal mini-forceps are a sampling instrument used at the procedural field, placed at the back table."
+    },
+    {
+      "id": "custom-f04-ebus-miniforceps-phase",
+      "sequence": 15,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-D08C74941A",
+      "optionalTarget": true,
+      "payload": { "value": "diagnostic" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): mini-forceps sampling happens during the diagnostic phase."
+    },
+    {
+      "id": "custom-f04-ebus-vacuum-syringe-zone",
+      "sequence": 16,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-E8F0B48B49",
+      "optionalTarget": true,
+      "payload": { "value": "back_table" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the vacuum-locking syringe travels with the needle at the field, not with the specimen bench."
+    },
+    {
+      "id": "custom-f04-ebus-vacuum-syringe-phase",
+      "sequence": 17,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-E8F0B48B49",
+      "optionalTarget": true,
+      "payload": { "value": "diagnostic" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the vacuum-locking syringe is used during the diagnostic phase."
+    },
+    {
+      "id": "custom-f04-tb-biopsy-forceps-zone",
+      "sequence": 18,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-D2974FC11B",
+      "optionalTarget": true,
+      "payload": { "value": "back_table" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): flexible biopsy forceps are a sampling instrument used at the procedural field, not a specimen-processing supply. Same per-slot statement as the THERAPEUTIC_BRONCH recipe action therapeutic-bronch-biopsy-forceps-zone."
+    },
+    {
+      "id": "custom-f04-tb-biopsy-forceps-phase",
+      "sequence": 19,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-D2974FC11B",
+      "optionalTarget": true,
+      "payload": { "value": "diagnostic" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): biopsy forceps are used during the diagnostic phase, not during specimen handling."
+    },
+    {
+      "id": "custom-f04-tb-bal-kit-zone",
+      "sequence": 20,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-FDF73730B0",
+      "optionalTarget": true,
+      "payload": { "value": "back_table" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): the BAL kit is used at the procedural field during lavage, placed at the back table."
+    },
+    {
+      "id": "custom-f04-tb-bal-kit-phase",
+      "sequence": 21,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-FDF73730B0",
+      "optionalTarget": true,
+      "payload": { "value": "diagnostic" },
+      "reason": "Owner review F-04 (2026-08-09), applied to the custom composition per Codex correction P91-C1 (2026-08-10): bronchoalveolar lavage happens during the diagnostic phase."
+    },
+    {
+      "id": "custom-f05-thoracoscopy-chest-tube-zone",
+      "sequence": 30,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-57CA4B1298",
+      "optionalTarget": true,
+      "payload": { "value": "sterile_field" },
+      "reason": "Codex correction P91-C2 (2026-08-10): the post-thoracoscopy chest tube is an insertable device placed through the sterile field, not drainage-preparation hardware; the section-level F-05 re-phase moved it with its Drainage section. Placement matches the governed home-procedure precedent CHEST_TUBE SLOT-708736B8C2 (CHEST_TUBE_SMALL_BORE, section Tube -> sterile_field). Same per-slot statement as the MED_THORACOSCOPY recipe action med-thoracoscopy-chest-tube-zone."
+    },
+    {
+      "id": "custom-f05-thoracoscopy-chest-tube-phase",
+      "sequence": 31,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-57CA4B1298",
+      "optionalTarget": true,
+      "payload": { "value": "therapeutic" },
+      "reason": "Codex correction P91-C2 (2026-08-10): the chest tube is placed during the procedure, matching the governed home-procedure precedent CHEST_TUBE SLOT-708736B8C2 (section Tube -> therapeutic), not prepared pre-induction with the drainage unit."
+    },
+    {
+      "id": "custom-f05-thoracoscopy-ipc-kit-zone",
+      "sequence": 32,
+      "actionType": "set_setup_zone",
+      "targetSlotId": "SLOT-9A1C0491F9",
+      "optionalTarget": true,
+      "payload": { "value": "sterile_field" },
+      "reason": "Codex correction P91-C2 (2026-08-10): the IPC insertion kit is an insertable device placed through the sterile field when 'IPC placement planned', not drainage-preparation hardware. Placement matches the governed home-procedure precedent IPC_PLACEMENT SLOT-1BCF3D0702 (IPC_INSERTION_KIT, section Catheter system -> sterile_field). Same per-slot statement as the MED_THORACOSCOPY recipe action med-thoracoscopy-ipc-kit-zone."
+    },
+    {
+      "id": "custom-f05-thoracoscopy-ipc-kit-phase",
+      "sequence": 33,
+      "actionType": "set_procedural_phase",
+      "targetSlotId": "SLOT-9A1C0491F9",
+      "optionalTarget": true,
+      "payload": { "value": "therapeutic" },
+      "reason": "Codex correction P91-C2 (2026-08-10): the IPC is inserted during the procedure, matching the governed home-procedure precedent IPC_PLACEMENT SLOT-1BCF3D0702 (section Catheter system -> therapeutic), not prepared pre-induction with the drainage unit."
+    }
+  ]
+}
