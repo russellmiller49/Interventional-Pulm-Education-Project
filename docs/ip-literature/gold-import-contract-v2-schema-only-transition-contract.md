@@ -48,6 +48,27 @@ an excluded field with any other value fails before hashing. Component hashes se
 review, item, event, pointer, reveal, operation, action, draft, and batch rows. An evidence binding
 authenticates the complete identity set and counts.
 
+Before row ordering, history projection, counting, or hashing, one shared validator now enforces
+both database primary identity and exact canonical-row uniqueness across the protected history:
+
+- batches: exactly one selected row, identified by `id`;
+- items, reviews, events, operations, and actions: unique `id`;
+- drafts: unique `item_id`, matching the database's one-draft-per-item primary key.
+
+Canonical duplicate comparison uses the same schema-neutral row projection as the evidence. Review
+rows remove only the three permitted review fields, operation rows remove only `contract_version`,
+and every other collection retains its exact row. Object keys are recursively code-unit sorted and
+the resulting canonical JSON strings—not their SHA-256 digests—are the uniqueness keys. Exact
+duplicates, including clones with reordered object keys, fail closed; rows are never collapsed or
+deduplicated. Distinct IDs with similar clinical content or event payloads remain distinct.
+
+Both exported builders invoke that validator, and the evidence builder passes only validated rows
+to the physical-projection/hash path. Consequently no production caller can create new protected
+history evidence from duplicate row arrays. The projection and evidence schema versions remain
+`1.0.0`: their valid-data shape, normalization, and bytes are unchanged. The strengthened acceptance
+contract is instead explicit in the transition-policy invariant list and its regenerated identity,
+preserving the authorized incident history and component identities.
+
 The same pure module also predicts the post-V2 V1 physical hash from a pre-V2 capture. This closes
 the aggregate-hash loophole: a caller cannot present an arbitrary post physical hash merely because
 membership or effective state stayed constant.
@@ -56,7 +77,7 @@ membership or effective state stayed constant.
 
 All consumers must call `validateLiteratureGoldV2SchemaOnlyTransition`. Its reviewed reason is
 `schema_derived_v1_physical_projection_transition`; its policy identity is
-`d68693a8e31fbffd8bf03a9a7f74c04e4498bc0e192376dcc1cec28a3e7d2b8b`.
+`19487c129832a2f95015f0d26a6e222ab72c345dd63c08e976e4f4433c0c8396`.
 
 The validator fails closed unless both pre-application captures agree, V1 is present exactly once
 before and after, V2 changes from zero to exactly one, migration and verifier bytes are exact,
@@ -67,6 +88,11 @@ are zero, source authorization is unchanged, the V2 effective/physical identitie
 the complete local PostgreSQL-owner catalog identity is exact. The catalog authority is the
 self-authenticating stable full-audit identity; a timestamped post-application audit wrapper is
 never used as transition authority.
+
+The incident-specific authority already contained the confirmed defect: its exact row counts and
+component/full-history identities would reject an injected duplicate even under the former generic
+projector. That containment is retained and regression-tested. The generic projector is now
+independently fail closed, rather than relying on incident-specific pins for uniqueness.
 
 ## Integration contract
 

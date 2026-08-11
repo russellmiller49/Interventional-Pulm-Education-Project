@@ -1,7 +1,7 @@
 {
-  "amendmentIdentitySha256": "aeb5bb7f0fbf6a74bda3d4d3fcc8d488b54a102bd292b2abb3327e6de3e99165",
+  "amendmentIdentitySha256": "67bfcd9cb58b90e1d23e4eccd99c3d5970167a8b0fedbe14e6d50323aa963273",
   "correctedRecoveryToolBundle": {
-    "aggregateSha256": "5217641b5401662e62b772bbf90e7bc49c2e31334483c0df5655fd44e8982a3a",
+    "aggregateSha256": "41c8c7591164dc1eeba9c5c74260eeb65673ee08663d6d3a0bbb960489681512",
     "files": [
       {
         "gitMode": "100644",
@@ -76,12 +76,12 @@
       {
         "gitMode": "100644",
         "path": "scripts/literature/literature-gold-v2-schema-neutral-history.ts",
-        "sha256": "91d69a9cba511d205462fe3631487566abab18a883bb1272ec1f01041c3fadff"
+        "sha256": "9334ee6b685e6685bee97258d29d03e7dc589f9576ea940220c98d9642958e07"
       },
       {
         "gitMode": "100644",
         "path": "scripts/literature/literature-gold-v2-schema-only-transition.ts",
-        "sha256": "cc7d11fed68f7fafcc6f5b82d960b9507ab4a6a9857ec18a7029205c32499111"
+        "sha256": "28547e5106f9186b362d99f0b02f631c7a1a98adebd533bdbc7d1b8611d811b1"
       },
       {
         "gitMode": "100644",
@@ -91,7 +91,7 @@
       {
         "gitMode": "100644",
         "path": "scripts/literature/protected-gold-import-contract-v2-receipt-recovery-amendment.ts",
-        "sha256": "c1951f6472fb21f56a15cff7d801fd823422f105f914a05cc577f89803b49dac"
+        "sha256": "557409d7328edaa878004a52e7d8ab048a4a0e591d9e54b275d4a4f624dc9378"
       },
       {
         "gitMode": "100644",
@@ -156,7 +156,7 @@
     ],
     "schemaVersion": "literature-gold-protected-v2-receipt-recovery-bundle/1.0.0"
   },
-  "correctedTransitionPolicyIdentitySha256": "d68693a8e31fbffd8bf03a9a7f74c04e4498bc0e192376dcc1cec28a3e7d2b8b",
+  "correctedTransitionPolicyIdentitySha256": "19487c129832a2f95015f0d26a6e222ab72c345dd63c08e976e4f4433c0c8396",
   "defectIdentifier": "protected_v2_schema_sensitive_physical_equality_finalization_defect_v1",
   "expectedCatalog": {
     "bindingSha256": "cd2295c1c69fbefa5920c82c429f0ce10bcc6ac6d0b4714c479f108bf7b2f900",

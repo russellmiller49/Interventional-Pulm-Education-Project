@@ -354,6 +354,23 @@ describe('schema-neutral physical history', () => {
     expect(sql).toContain('literature_gold_set_reviews')
     expect(sql).toContain('literature_gold_review_operation_actions')
   })
+
+  test('rejects duplicate rows before newly built evidence can reach the shared validator', () => {
+    const duplicateRows = rows('before_v2')
+    const events = duplicateRows.events as Array<Readonly<Record<string, unknown>>>
+    events.push(clone(duplicateRows.events[0]!))
+    const input = incidentTransition()
+    let validatorInvoked = false
+    expect(() => {
+      input.beforeCaptures[0].history = buildLiteratureGoldV2SchemaNeutralHistoryEvidence({
+        phase: 'before_v2',
+        rows: duplicateRows,
+      })
+      validatorInvoked = true
+      validateLiteratureGoldV2SchemaOnlyTransition(input)
+    }).toThrow('Schema-neutral history events canonical projected row is duplicated.')
+    expect(validatorInvoked).toBe(false)
+  })
 })
 
 describe('shared V2 schema-only transition validator', () => {
@@ -451,6 +468,27 @@ describe('shared V2 schema-only transition validator', () => {
     rebindAfterHistory(input)
     expect(() => validateLiteratureGoldV2SchemaOnlyTransition(input)).toThrow(
       'schema-neutral full-history identity drifted',
+    )
+  })
+
+  test('documents that exact incident counts already contained a legacy duplicate row', () => {
+    const input = incidentTransition()
+    const legacyDuplicateHistory = clone(input.beforeCaptures[0].history)
+    legacyDuplicateHistory.counts.reviews += 1
+    legacyDuplicateHistory.schemaDerivedFields.reviewRowCount += 1
+    legacyDuplicateHistory.componentIdentities.reviewRowsSha256 = hash(
+      'legacy projection with one cloned review',
+    )
+    legacyDuplicateHistory.schemaNeutralHistorySha256 = hash(
+      'legacy neutral history with one cloned review',
+    )
+    const { bindingSha256: _binding, ...unsigned } = legacyDuplicateHistory
+    void _binding
+    input.beforeCaptures[0].history = bindHistory(unsigned)
+    input.beforeCaptures[1].history = bindHistory(unsigned)
+
+    expect(() => validateLiteratureGoldV2SchemaOnlyTransition(input)).toThrow(
+      'review row count drifted',
     )
   })
 

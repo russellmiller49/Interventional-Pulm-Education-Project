@@ -87,6 +87,8 @@ export const LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY = {
     'migration_and_verifier_bytes_exact',
     'two_preapplication_captures_agree',
     'membership_effective_v1_planning_unchanged',
+    'protected_history_primary_identities_unique',
+    'protected_history_canonical_projection_rows_unique',
     'schema_neutral_full_history_unchanged',
     'review_note_chain_pointer_event_reveal_identities_unchanged',
     'schema_sensitive_v1_physical_equals_precomputed_schema_transition',
@@ -129,7 +131,7 @@ const DERIVED_TRANSITION_POLICY_IDENTITY_SHA256 = sha256Canonical(
 
 // This reviewed literal makes policy drift an explicit source change.
 export const LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256 =
-  'd68693a8e31fbffd8bf03a9a7f74c04e4498bc0e192376dcc1cec28a3e7d2b8b' as const
+  '19487c129832a2f95015f0d26a6e222ab72c345dd63c08e976e4f4433c0c8396' as const
 
 if (
   DERIVED_TRANSITION_POLICY_IDENTITY_SHA256 !==

@@ -152,6 +152,85 @@ function withoutKeys(row: JsonRow, keys: readonly string[]): JsonRow {
   return Object.fromEntries(Object.entries(row).filter(([key]) => !keys.includes(key)))
 }
 
+type ProtectedHistoryCollection =
+  | 'actions'
+  | 'batches'
+  | 'drafts'
+  | 'events'
+  | 'items'
+  | 'operations'
+  | 'reviews'
+
+function schemaNeutralProjectedRow(collection: ProtectedHistoryCollection, row: JsonRow): JsonRow {
+  if (collection === 'reviews') {
+    return withoutKeys(row, LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS)
+  }
+  if (collection === 'operations') {
+    return withoutKeys(row, LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS)
+  }
+  return row
+}
+
+function assertUniqueIdentity(
+  rows: readonly JsonRow[],
+  identityKey: 'id' | 'item_id',
+  collection: ProtectedHistoryCollection,
+): void {
+  const identities = new Set<string>()
+  rows.forEach((row, index) => {
+    const identity = requiredString(row, identityKey, `${collection}[${index}]`)
+    if (identities.has(identity)) {
+      throw new Error(
+        `Schema-neutral history ${collection} primary identity ${identityKey} is duplicated.`,
+      )
+    }
+    identities.add(identity)
+  })
+}
+
+function assertUniqueCanonicalProjectedRows(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
+  for (const [collection, selectedRows] of [
+    ['actions', rows.actions],
+    ['batches', rows.batches],
+    ['drafts', rows.drafts],
+    ['events', rows.events],
+    ['items', rows.items],
+    ['operations', rows.operations],
+    ['reviews', rows.reviews],
+  ] as const) {
+    const canonicalRows = new Set<string>()
+    selectedRows.forEach((row) => {
+      const canonicalRow = JSON.stringify(
+        sortedCanonicalValue(schemaNeutralProjectedRow(collection, row)),
+      )
+      if (canonicalRows.has(canonicalRow)) {
+        throw new Error(
+          `Schema-neutral history ${collection} canonical projected row is duplicated.`,
+        )
+      }
+      canonicalRows.add(canonicalRow)
+    })
+  }
+}
+
+function assertProtectedHistoryRowsUnique(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
+  // Compare canonical strings, rather than their hashes, so collision resistance is not the
+  // uniqueness boundary. Run this before primary-identity checks so exact clones are classified as
+  // canonical duplicates while same-identity/different-content rows still fail closed.
+  assertUniqueCanonicalProjectedRows(rows)
+  for (const [collection, selectedRows, identityKey] of [
+    ['actions', rows.actions, 'id'],
+    ['batches', rows.batches, 'id'],
+    ['drafts', rows.drafts, 'item_id'],
+    ['events', rows.events, 'id'],
+    ['items', rows.items, 'id'],
+    ['operations', rows.operations, 'id'],
+    ['reviews', rows.reviews, 'id'],
+  ] as const) {
+    assertUniqueIdentity(selectedRows, identityKey, collection)
+  }
+}
+
 function assertScope(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
   if (!UUID_PATTERN.test(rows.batchId) || rows.datasetSplit !== 'development') {
     throw new Error('Schema-neutral history requires one valid development batch scope.')
@@ -167,11 +246,10 @@ function assertScope(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
     const label = `items[${index}]`
     const id = requiredString(item, 'id', label)
     if (
-      itemIds.has(id) ||
       requiredString(item, 'batch_id', label) !== rows.batchId ||
       item.dataset_split !== 'development'
     ) {
-      throw new Error(`${label} is outside or duplicates the selected development scope.`)
+      throw new Error(`${label} is outside the selected development scope.`)
     }
     itemIds.add(id)
   }
@@ -201,11 +279,10 @@ function assertScope(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
     const label = `operations[${index}]`
     const id = requiredString(operation, 'id', label)
     if (
-      operationIds.has(id) ||
       requiredString(operation, 'batch_id', label) !== rows.batchId ||
       operation.dataset_split !== 'development'
     ) {
-      throw new Error(`${label} is outside or duplicates the selected development scope.`)
+      throw new Error(`${label} is outside the selected development scope.`)
     }
     operationIds.add(id)
   })
@@ -214,6 +291,11 @@ function assertScope(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
       throw new Error(`actions[${index}] is outside the selected operations.`)
     }
   })
+}
+
+function assertProtectedHistoryRows(rows: LiteratureGoldV2SchemaNeutralHistoryRows): void {
+  assertProtectedHistoryRowsUnique(rows)
+  assertScope(rows)
 }
 
 function assertSchemaDerivedFields(
@@ -327,10 +409,9 @@ function sortedRows(rows: LiteratureGoldV2SchemaNeutralHistoryRows) {
   }
 }
 
-export function buildLiteratureGoldV2SchemaNeutralHistoryProjection(
+function buildLiteratureGoldV2SchemaNeutralHistoryProjectionFromValidatedRows(
   rows: LiteratureGoldV2SchemaNeutralHistoryRows,
 ): LiteratureGoldV2SchemaNeutralHistoryProjection {
-  assertScope(rows)
   const sorted = sortedRows(rows)
   return {
     actions: sorted.actions,
@@ -340,17 +421,20 @@ export function buildLiteratureGoldV2SchemaNeutralHistoryProjection(
     drafts: sorted.drafts,
     events: sorted.events,
     items: sorted.items,
-    operations: sorted.operations.map((row) =>
-      withoutKeys(row, LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS),
-    ),
+    operations: sorted.operations.map((row) => schemaNeutralProjectedRow('operations', row)),
     projectionVersion: LITERATURE_GOLD_V2_SCHEMA_NEUTRAL_HISTORY_VERSION,
-    reviews: sorted.reviews.map((row) =>
-      withoutKeys(row, LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS),
-    ),
+    reviews: sorted.reviews.map((row) => schemaNeutralProjectedRow('reviews', row)),
   }
 }
 
-function physicalProjection(
+export function buildLiteratureGoldV2SchemaNeutralHistoryProjection(
+  rows: LiteratureGoldV2SchemaNeutralHistoryRows,
+): LiteratureGoldV2SchemaNeutralHistoryProjection {
+  assertProtectedHistoryRows(rows)
+  return buildLiteratureGoldV2SchemaNeutralHistoryProjectionFromValidatedRows(rows)
+}
+
+function physicalProjectionFromValidatedRows(
   rows: LiteratureGoldV2SchemaNeutralHistoryRows,
   mode: 'observed' | 'expected_post_v2',
 ) {
@@ -440,9 +524,11 @@ export function buildLiteratureGoldV2SchemaNeutralHistoryEvidence(input: {
   phase: LiteratureGoldV2SchemaOnlyTransitionPhase
   rows: LiteratureGoldV2SchemaNeutralHistoryRows
 }): LiteratureGoldV2SchemaNeutralHistoryEvidence {
-  assertScope(input.rows)
+  assertProtectedHistoryRows(input.rows)
   assertSchemaDerivedFields(input.phase, input.rows)
-  const projection = buildLiteratureGoldV2SchemaNeutralHistoryProjection(input.rows)
+  const projection = buildLiteratureGoldV2SchemaNeutralHistoryProjectionFromValidatedRows(
+    input.rows,
+  )
   const pointers = projection.items.map((item) => ({
     currentReviewId: item.current_review_id ?? null,
     itemId: item.id,
@@ -500,10 +586,12 @@ export function buildLiteratureGoldV2SchemaNeutralHistoryEvidence(input: {
     },
     datasetSplit: 'development',
     expectedPostV1PhysicalStateSha256: sha256ContractCanonical(
-      physicalProjection(input.rows, 'expected_post_v2'),
+      physicalProjectionFromValidatedRows(input.rows, 'expected_post_v2'),
     ),
     phase: input.phase,
-    physicalStateSha256V1: sha256ContractCanonical(physicalProjection(input.rows, 'observed')),
+    physicalStateSha256V1: sha256ContractCanonical(
+      physicalProjectionFromValidatedRows(input.rows, 'observed'),
+    ),
     schemaDerivedFields: {
       operationFields: LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
       operationRowCount: input.rows.operations.length,
