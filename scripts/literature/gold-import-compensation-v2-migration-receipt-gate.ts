@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { lstat, readFile, readdir, realpath } from 'node:fs/promises'
-import { relative, resolve, sep } from 'node:path'
+import { dirname, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
 
@@ -39,6 +40,11 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const sha256Schema = z.string().regex(SHA256_PATTERN)
 const uuidSchema = z.string().uuid()
 const issuedMigrationReceiptGates = new WeakSet<object>()
+const CANONICAL_REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const CANONICAL_PROTECTED_V2_RECEIPT_ROOT = resolve(
+  CANONICAL_REPOSITORY_ROOT,
+  'local-data/literature/protected-v2-application-receipts',
+)
 
 const migrationSchema = z
   .object({
@@ -735,16 +741,15 @@ async function recoveryReceiptGate(input: {
 
 export async function loadGoldImportCompensationV2LocalMigrationReceiptGate(input: {
   audit: GoldImportCompensationV2ReadyAudit
-  loadRecoveryAuthority?: () =>
-    | Promise<ProtectedV2FinalizedRecoveryReceiptAuthority>
-    | ProtectedV2FinalizedRecoveryReceiptAuthority
   outputDirectory: string
-  receiptRoot: string
 }): Promise<GoldImportCompensationV2LocalMigrationReceiptGate> {
   if (input.audit.target !== 'local') {
     throw new Error('Filesystem migration receipt gates are restricted to the local audit target.')
   }
-  const files = await loadStrictReceiptFiles(input)
+  const files = await loadStrictReceiptFiles({
+    outputDirectory: input.outputDirectory,
+    receiptRoot: CANONICAL_PROTECTED_V2_RECEIPT_ROOT,
+  })
   let rawResult: unknown
   try {
     rawResult = JSON.parse(files.resultBytes) as unknown
@@ -757,10 +762,8 @@ export async function loadGoldImportCompensationV2LocalMigrationReceiptGate(inpu
   const gate = isRecovery
     ? await recoveryReceiptGate({
         audit: input.audit,
-        authority: await (input.loadRecoveryAuthority?.() ??
-          Promise.reject(
-            new Error('Historical recovery receipt requires exact committed recovery authority.'),
-          )),
+        authority:
+          await loadCommittedProtectedV2RecoveryReceiptAuthority(CANONICAL_REPOSITORY_ROOT),
         files,
       })
     : normalReceiptGate({ audit: input.audit, files })

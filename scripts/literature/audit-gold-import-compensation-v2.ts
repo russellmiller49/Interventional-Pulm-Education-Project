@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
@@ -35,7 +35,6 @@ import {
   type ProtectedV2ExpectedCatalogBinding,
 } from './protected-gold-import-contract-v2-bindings'
 import {
-  loadCommittedProtectedV2RecoveryReceiptAuthority,
   loadGoldImportCompensationV2LocalMigrationReceiptGate,
   migrationReceiptGateArtifactSha256,
   requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit,
@@ -521,7 +520,6 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
   const audit = (
     dependencies.validateReadyAuditForTest ?? validateReadyGoldImportCompensationV2Audit
   )(probe)
-  const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
   let loadedMigrationReceiptGate: unknown
   if (audit.target === 'local') {
     if (
@@ -534,12 +532,7 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
     }
     loadedMigrationReceiptGate = await loadGoldImportCompensationV2LocalMigrationReceiptGate({
       audit,
-      loadRecoveryAuthority: () => loadCommittedProtectedV2RecoveryReceiptAuthority(repositoryRoot),
       outputDirectory: dependencies.migrationReceiptOutputDirectory,
-      receiptRoot: resolve(
-        repositoryRoot,
-        'local-data/literature/protected-v2-application-receipts',
-      ),
     })
   } else {
     if (

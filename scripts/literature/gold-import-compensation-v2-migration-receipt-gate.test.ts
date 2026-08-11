@@ -1,6 +1,8 @@
 /** @jest-environment node */
 
 import { createHash } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 
 import { GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2 } from '../../src/features/literature/gold-set/import-compensation-v2'
 import {
@@ -163,5 +165,21 @@ describe('target-discriminated finalized migration receipt gate', () => {
     expect(gate.gateIdentitySha256).not.toBe(
       createHash('sha256').update(migrationReceiptGateArtifactBytes(gate)).digest('hex'),
     )
+  })
+
+  it('keeps local gate issuance bound to the module-owned repository and authority loaders', async () => {
+    const source = await readFile(
+      resolve(
+        process.cwd(),
+        'scripts/literature/gold-import-compensation-v2-migration-receipt-gate.ts',
+      ),
+      'utf8',
+    )
+    expect(source).not.toContain('loadRecoveryAuthority?:')
+    expect(source).not.toContain('receiptRoot: string\n}): Promise<GoldImportCompensationV2Local')
+    expect(source).toMatch(
+      /authority:\s+await loadCommittedProtectedV2RecoveryReceiptAuthority\(CANONICAL_REPOSITORY_ROOT\)/u,
+    )
+    expect(source).toContain('receiptRoot: CANONICAL_PROTECTED_V2_RECEIPT_ROOT')
   })
 })

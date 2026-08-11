@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { lstat, readFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
@@ -65,7 +65,6 @@ import {
   type ProtectedV2CompleteCatalogAuditIdentity,
 } from './gold-import-contract-v2-catalog-audit'
 import {
-  loadCommittedProtectedV2RecoveryReceiptAuthority,
   loadGoldImportCompensationV2LocalMigrationReceiptGate,
   migrationReceiptGateArtifactBytes,
   migrationReceiptGateArtifactSha256,
@@ -1718,12 +1717,9 @@ export async function runGenerateGoldImportCompensationPackageV2(argv: string[])
   const audit = validateReadyGoldImportCompensationV2Audit(
     JSON.parse(auditBytes.toString('utf8')) as unknown,
   )
-  const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
   const migrationReceiptGate = await loadGoldImportCompensationV2LocalMigrationReceiptGate({
     audit,
-    loadRecoveryAuthority: () => loadCommittedProtectedV2RecoveryReceiptAuthority(repositoryRoot),
     outputDirectory: requiredArgument(arguments_, 'migration-receipt-output'),
-    receiptRoot: resolve(repositoryRoot, 'local-data/literature/protected-v2-application-receipts'),
   })
   const [
     amendedAuthorizationBytes,
