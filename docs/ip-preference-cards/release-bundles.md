@@ -49,12 +49,13 @@ release-ebus-tbna-v1-0
    **authored effect of selecting a modifier** the procedure offers (field-level
    before/after for `add_slot` payloads and the targeted action types, plus first-class
    rows for a modifier entering or leaving the offer), explicitly without implying any
-   scenario selects it. Today every release resolves the same four definition sets, so the
-   modifier layer is empty on real data and a set edit is refused outright by the
-   immutability gates; the layer is proven on a synthetic fixture and becomes live the
-   moment releases pin **per-bundle** definition sets (the retention mechanism PR #92
-   introduces) — at which point a set revision reports its requirement-level effect rather
-   than only a moved hash.
+   scenario selects it. The layer is live on real data: releases resolve their four
+   definition sets **per bundle** through the retention ledger
+   (`definition-set-retention.md`), so a set revision reports its requirement-level effect
+   rather than only a moved hash — the two F-09 releases carry exactly one
+   `modifierEffectChanges` row each (`APC`/`apc-232` → `OPS-APC-RIGID`, `required`/no rule
+   → `conditional`/"Rigid system in use"), and every release still sharing a set generation
+   reports an empty layer, pinned by regression.
 3. **Publish.** Copy the reported hash into the seed entry, set `releaseState: "published"`,
    `publishedAt`, `catalogImportId`, and `resolverContractVersion`. Publication **is** freezing
    the hash.

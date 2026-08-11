@@ -45,6 +45,27 @@
       "runtimeArgs": ["next", "dev", "--port", "3121", "--webpack"],
       "port": 3121,
       "autoPort": false
+    },
+    {
+      "name": "claude-b-beta-on",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE=true",
+        "npx",
+        "next",
+        "start",
+        "-p",
+        "3213"
+      ],
+      "port": 3213,
+      "autoPort": false
+    },
+    {
+      "name": "claude-b-beta-off",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "start", "-p", "3214"],
+      "port": 3214,
+      "autoPort": false
     }
   ]
 }

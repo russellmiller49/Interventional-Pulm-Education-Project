@@ -262,15 +262,30 @@ The **modifier-set pin** moved for the two new releases and only for them:
 compatibility-rule, and role-taxonomy pins are unchanged on every release. The two prior
 generations of the modifier set are both retained in the ledger.
 
-### 5.4 Known reporting gap
+### 5.4 Reporting gap — CLOSED by the merged-main integration
 
-`diffReleaseBundles`' requirement-level diff indexes recipe and module slots; a requirement
-living inside a modifier's `add_slot` payload is outside it, so the impact report for each
-new release shows the pin change and **zero requirement changes** — the same class of gap
-recorded for F-04 in the D1.1 pass. The semantic delta is proven at expansion level instead:
-`f09-apc-rigid-applicator.test.ts` diffs the effective slots and the resolved card of
-v1-1 vs v1-2 field by field and pins that exactly one item changed, in exactly the four
-conditional fields.
+As first published on this branch, `diffReleaseBundles`' requirement-level diff indexed
+recipe and module slots; a requirement living inside a modifier's `add_slot` payload was
+outside it, so the impact report for each new release showed the pin change and **zero
+requirement changes** — the same class of gap recorded for F-04 in the D1.1 pass, accepted
+at the time with the semantic delta proven at expansion level instead
+(`f09-apc-rigid-applicator.test.ts`).
+
+That limitation did not survive the integration with merged main (§7). PR #91's P91-C3
+added the generic `modifierEffectChanges` layer to `diffReleaseBundles`, fixture-proven
+against exactly this F-09 shape and waiting for per-bundle set resolution to feed it real
+old/new sets. The integration is that feed: the generator resolves each frozen release's
+sources through its recorded whole-set pins, so the diff's previous side carries the
+retained `e3335096…` modifier set and the next side the `a9758b0b…` set, and the canonical
+report for both F-09 releases now carries the authored effect natively —
+`sourceKind: "modifier"`, modifier `APC`, action `apc-232` (`add_slot`, sequence 232),
+requirement `OPS-APC-RIGID`, `changedFields: ["dependencyRule", "requiredness"]`, with the
+full before/after (`required`/null → `conditional`/`"Rigid system in use"`). Base
+`requirementChanges` remain zero for both releases — correct, not a gap: APC is not
+selected by default, so the base effective recipe is unchanged; the modifier-effect layer
+is where a set revision's authored consequence is reported. The expansion-level proof in
+`f09-apc-rigid-applicator.test.ts` still stands, now alongside the canonical artifact
+rather than in place of it.
 
 ### 5.5 Publication mechanics
 
@@ -306,7 +321,7 @@ Every generated file this branch touches, with its generator and content identit
 | ------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------- |
 | `generated/definition-set-ledger.json`                  | `npm run ip-cards:releases` | new artifact; 4 entries at the foundation commit, 5 after F-09 (two modifier-set generations)                                                                                                                                                                                                | — (absent)               | `855da98e16d1b240…` (foundation: `5da5ea61fe7b360e…`) |
 | `generated/release-bundles.json`                        | `npm run ip-cards:releases` | +2 published releases; 2 pointer moves; all 23 prior bundles byte-identical                                                                                                                                                                                                                  | `8b7453196efecb55…`      | `65087cfe12a3d3bb…`                                   |
-| `generated/release-impact-report.json`                  | `npm run ip-cards:releases` | +2 reports, one modifier-set pin change each, zero requirement changes                                                                                                                                                                                                                       | `41ba0880bcf7bfa9…`      | `02f4080f7eb5bb5c…`                                   |
+| `generated/release-impact-report.json`                  | `npm run ip-cards:releases` | +2 reports, one modifier-set pin change each — regenerated again in §7 with the F-09 `modifierEffectChanges` row on both                                                                                                                                                                     | `41ba0880bcf7bfa9…`      | `02f4080f7eb5bb5c…` (superseded in §7)                |
 | `docs/ip-device-intelligence/data-readiness-audit.json` | `npm run ip-intel:audit`    | **unchanged** — F-09 is outside the audit's measured surface: the audit reads the generated workbook-derived artifacts (`procedure-slots.json`, `slot-product-options.json`, `modifier-definitions.json`, which excludes the hand-tuned seed modifiers), none of which the seed edit touches | `bba2b9402cbfe4a4…`      | `bba2b9402cbfe4a4…` (identical)                       |
 
 `module-ledger.json`, `composition-ledger.json`, `catalog-rows.json`,
@@ -354,3 +369,57 @@ this pass's scope and is recorded as accepted: `isProductCurrentlyUnselectable`
 catalog picks during rebuild — fail-closed (a pick can become unavailable, never silently
 substituted), predates this branch, and concerns catalog governance rather than the four
 definition sets.
+
+One adjacent live read sits outside the four sets and is documented rather than pinned:
+the reopen path resolves the card's **scenario** from the live `scenarios.json`
+(`buildReleaseContext` → `getScenarioDefinition`), and the wizard's modifier picker
+intersects the pinned context's modifiers with the live scenario's
+`availableModifierCodes`. The pinned recipe's `allowedModifierCodes` stays the
+authorization boundary (the server re-validates against it on save), and an intersection
+can only narrow the picker, never widen it — the residual risk is presentational: a
+scenario regeneration that drops a code a retained release still grants would silently
+hide that modifier from a reopened card's picker. `release-bundle-integrity.test.ts`
+("never lets the live scenario list narrow a pinned recipe's modifier offer") pins the
+pairing so that narrowing forces a review instead of shipping.
+
+## 7. Integration with merged main (PR #91, 2026-08-10)
+
+Everything above §7 records the branch as built on the pre-review PR #91 head
+(`e833b97f`) — deliberately left intact as the historical record, including the §2
+reproduction performed at that commit. PR #91 subsequently passed independent Codex
+review and merged (`66eddbb2b41a417cef8b6a20b0d2c8e1cfe6b245`); this branch merged that
+state in and reconciled both directions. What changed against the record above:
+
+- **Release universe.** Merged main publishes 25 releases (the 23 of §4 plus the P91
+  correction releases `release-custom-composition-v1-2` and
+  `release-med-thoracoscopy-v1-2`); with the two F-09 releases this branch totals 27.
+  Both P91 releases pin the same four set hashes as the original 23, so the ledger's
+  five entries (§5.7) cover every pin of every release on the integrated branch — the
+  foundation was re-validated, not re-captured, against the 27-bundle universe: every
+  (set, hash) pin resolves, every retained payload re-hashes to its recorded key, no
+  duplicate keys, deterministic order. `check-publication-baseline` against merged main
+  (merge base `66eddbb2…`): 94 base entries unchanged, 0 lifecycle advances, 7 additions
+  (the two F-09 releases and the five ledger entries).
+- **Release generation.** The definition-set ledger is now the **tenth** validated target
+  inside PR #91's build-first/write-last orchestration (`runBuildReleaseBundles`,
+  `RELEASE_GENERATION_TARGET_FILENAMES`, `writeReleaseArtifacts`), with the same
+  fail-before-write guarantee — proven by the CLI atomicity suite, which also
+  distinguishes the four read-and-merge retained artifacts (the ledgers and
+  `release-bundles.json`, whose recorded whole-set pins are themselves retained history)
+  from the write-only targets, and pins that a corrupted retained artifact fails loudly
+  rather than degrading to "empty and rebuilt".
+- **Release impact.** §5.4's accepted gap is closed: both F-09 reports carry the
+  canonical `modifierEffectChanges` row. The two frozen F-09 release hashes
+  (`eee55a3e…`, `759912d0…`) were reproduced unchanged by regeneration against merged
+  main; the only regenerated artifact delta of the integration is the impact report.
+- **Pointer delta vs merged main.** Exactly `RIGID_BRONCH` (v1-0 → v1-1) and
+  `THERAPEUTIC_BRONCH` (v1-1 → v1-2). The P91 pointer advances (CUSTOM_COMPOSITION,
+  MED_THORACOSCOPY) arrive from main unchanged.
+- **Create/edit boundary hardening.** The create-currency guard (a NEW card originates
+  only on the current pointer) gained its missing sibling: `saveUserCard`'s edit branch
+  now refuses a request whose `releaseBundleId` differs from the stored card's pin, so
+  create-then-edit can no longer land a fresh card on a superseded release the ledger
+  keeps resolvable. Moving a card between releases remains the rebuild flow's job.
+- **D0 audit boundary.** `data-readiness-audit.json` is byte-identical to merged main
+  (`bba2b940…`), as §5.7 predicted — the F-09 seed edit is outside the audit's measured
+  surface.

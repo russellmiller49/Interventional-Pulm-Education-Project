@@ -152,12 +152,14 @@ surface under `unappliedPayload` — visible when they change, never presented a
 A synthetic fixture (`createModifierRevisionFixture`) proves the exact PR #92 F-09 shape: a
 modifier-added requirement moving from `required` / no dependency rule to `conditional` /
 "Rigid system in use" produces a requirement-level report row rather than only a set-pin
-hash. Every committed report today carries an empty modifier layer — the current releases
-all resolve one shared modifier set, and editing that set is refused by the immutability
-gates rather than diffed — so the layer is fixture-proven now and becomes live exactly when
-releases pin per-bundle definition sets: PR #92's retention mechanism. After PR #92 is
-restacked, its per-bundle set resolution feeds this same diff and F-09's forward releases
-report the OPS-APC-RIGID change natively. PR #92 itself was not modified.
+hash. When this pass merged, every committed report carried an empty modifier layer — the
+releases then all resolved one shared modifier set, and editing that set was refused by the
+immutability gates rather than diffed — so the layer was fixture-proven and waiting for
+per-bundle definition sets: PR #92's retention mechanism. PR #92 itself was not modified by
+this pass. _[Since done: the PR #92 integration with merged main feeds its per-bundle set
+resolution into this same diff, and the two F-09 forward releases report the OPS-APC-RIGID
+change natively in the canonical artifact — see
+`docs/ip-preference-cards/definition-set-retention.md` §5.4/§7.]_
 
 ## Final residual corrections (P91-C4, P91-C5)
 

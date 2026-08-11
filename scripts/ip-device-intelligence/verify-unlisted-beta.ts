@@ -127,11 +127,25 @@ export function deriveProductFixtures(repoRoot: string): {
  * A served page must contain none of them — this is what catches a hidden or candidate
  * product surfacing through a compatibility statement's prose, where no PRD token appears.
  *
- * Keyed lowercase token → provenance (`product_id field`), for a legible failure. Two
- * exclusions keep the scan honest rather than noisy: a token below the per-field
- * distinctiveness floor (short catalog numbers like "0100" collide with markup and CSS),
- * and a token that equals or sits inside a cohort product's own identity (sibling SKUs
- * share naming, and a cohort page legitimately serves the cohort sibling's name).
+ * Keyed lowercase token → provenance (`product_id field`), for a legible failure. What is
+ * screened is the claim actually being made — "the D1 surface does not expose non-cohort
+ * identity **from the device-intelligence data**" — so three data-derived exclusions keep
+ * the scan an exposure check rather than a coincidence detector:
+ *
+ * - a token that equals or sits inside a **cohort** product's identity (sibling SKUs share
+ *   naming, and a cohort page legitimately serves the cohort sibling's name);
+ * - a token already present in the site's **translation catalogs** (`messages/*.json`) —
+ *   public educational copy names real device models today, ships on public pages
+ *   regardless of the beta flag, and is embedded in every page's payload; its presence on
+ *   a D1 page is the message bundle, not the catalog;
+ * - a token that equals a **governed vocabulary label** the D1 surface deliberately
+ *   renders — role names and authored requirement labels are generic descriptors
+ *   ("Flexible grasping forceps"), and a hidden product whose trade name coincides with
+ *   one is not identified by it.
+ *
+ * Below the per-field distinctiveness floor nothing is considered (short catalog numbers
+ * like "0100" collide with markup), and matching is on token boundaries
+ * (`servedIdentityLeaks`), so "10530" cannot match inside a content-hash key.
  */
 export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> {
   const products = JSON.parse(
@@ -172,6 +186,57 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     return tokens
   }
 
+  const publicSiteCopy = ['en', 'es', 'zh-CN'].map((locale) =>
+    readFileSync(path.join(repoRoot, `messages/${locale}.json`), 'utf8').toLowerCase(),
+  )
+
+  const governedLabels = new Set<string>()
+  const roles = JSON.parse(
+    readFileSync(path.join(repoRoot, 'data/ip-preference-cards/generated/roles.json'), 'utf8'),
+  ) as Array<{ role_name?: string }>
+  for (const role of roles) {
+    if (role.role_name) governedLabels.add(role.role_name.trim().toLowerCase())
+  }
+  const moduleVersions = JSON.parse(
+    readFileSync(
+      path.join(repoRoot, 'data/ip-preference-cards/generated/recipe-modules.json'),
+      'utf8',
+    ),
+  ) as Array<{ slots: Array<{ label?: string }> }>
+  for (const moduleVersion of moduleVersions) {
+    for (const slot of moduleVersion.slots) {
+      if (slot.label) governedLabels.add(slot.label.trim().toLowerCase())
+    }
+  }
+  const definitionSetLedger = JSON.parse(
+    readFileSync(
+      path.join(repoRoot, 'data/ip-preference-cards/generated/definition-set-ledger.json'),
+      'utf8',
+    ),
+  ) as {
+    entries: Array<{ definitionSetId: string; definition: unknown }>
+  }
+  for (const entry of definitionSetLedger.entries) {
+    if (
+      entry.definitionSetId !== 'definition-set-modifiers' &&
+      entry.definitionSetId !== 'definition-set-rescue-modules'
+    ) {
+      continue
+    }
+    for (const definition of entry.definition as Array<{
+      actions?: Array<{ payload?: { slot?: { label?: string } } }>
+      slots?: Array<{ label?: string }>
+    }>) {
+      for (const action of definition.actions ?? []) {
+        const label = action.payload?.slot?.label
+        if (label) governedLabels.add(label.trim().toLowerCase())
+      }
+      for (const slot of definition.slots ?? []) {
+        if (slot.label) governedLabels.add(slot.label.trim().toLowerCase())
+      }
+    }
+  }
+
   const cohortTokens = products
     .filter((product) => isAtlasCohortProduct(product))
     .flatMap((product) => tokensOf(product).map(({ token }) => token))
@@ -180,6 +245,8 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     if (isAtlasCohortProduct(product)) continue
     for (const { token, field } of tokensOf(product)) {
       if (cohortTokens.some((cohortToken) => cohortToken.includes(token))) continue
+      if (publicSiteCopy.some((catalog) => catalog.includes(token))) continue
+      if (governedLabels.has(token)) continue
       if (!leakTokens.has(token)) leakTokens.set(token, `${product.product_id} ${field}`)
     }
   }
@@ -187,6 +254,23 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     throw new Error('No non-cohort identity tokens derived — the leak scan would be vacuous.')
   }
   return leakTokens
+}
+
+/**
+ * The identity tokens a served body actually contains, matched on token boundaries: a hit
+ * must not sit inside a longer alphanumeric run, or numeric catalog numbers match inside
+ * content-hash keys and chunk names. Exported for the derivation tests.
+ */
+export function servedIdentityLeaks(body: string, tokens: Map<string, string>): string[] {
+  const haystack = body.toLowerCase().replaceAll('&amp;', '&')
+  const leaks: string[] = []
+  for (const [token, provenance] of tokens) {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    if (new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(haystack)) {
+      leaks.push(`"${token}" (${provenance})`)
+    }
+  }
+  return leaks
 }
 
 export function deriveAliasFixture(): { deprecated: string; canonical: string } {
@@ -428,11 +512,7 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   // leaks through when a compatibility statement names it in prose rather than by id.
   const identityTokens = deriveIdentityLeakTokens(repoRoot)
   for (const [code, body] of [...workspaceBodies, ...readinessBodies]) {
-    const haystack = body.toLowerCase().replaceAll('&amp;', '&')
-    const leakedIdentities: string[] = []
-    for (const [token, provenance] of identityTokens) {
-      if (haystack.includes(token)) leakedIdentities.push(`"${token}" (${provenance})`)
-    }
+    const leakedIdentities = servedIdentityLeaks(body, identityTokens)
     check(
       results,
       `${code} serves no non-cohort name, catalog number, or GTIN`,

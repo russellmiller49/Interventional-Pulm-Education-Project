@@ -98,11 +98,12 @@ since publication, leaves the card view-only; no other version is substituted fo
 [`release-bundles.md`](./release-bundles.md) and
 [`saved-card-editing.md`](./saved-card-editing.md).
 
-Cards written before release bundles (`builder_inputs.schemaVersion` 2) still reopen through
-`buildPinnedContext(scenarioId, recipeVersionId)`, which resolves the recipe by version id
-against every composition the generated data retains and returns `recipe_version_unavailable`
-when the pin is gone. That path is exact about the recipe and the modules and unpinned below
-them, which is everything those cards ever recorded.
+Cards written before release bundles (`builder_inputs.schemaVersion` 2) recorded a recipe
+and module pin and nothing below it — exact as far as it went, silent about the modifier
+set, rescue modules, compatibility rules, and role table the same card also resolves
+through. They are view-only now: the stored snapshot is the card, and the edit path refuses
+them (`builder_inputs_not_release_pinned`) rather than keeping a weaker reconstruction
+route alive for something to reach by accident.
 
 Compositions are keyed by `recipeVersionId`, not by procedure code. A map keyed by procedure
 was the structural reason a superseded composition could not be kept at all: one procedure, one

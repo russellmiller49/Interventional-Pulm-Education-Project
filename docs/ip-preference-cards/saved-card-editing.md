@@ -78,10 +78,19 @@ one is looked up in the authoritative catalog and the pinned composition:
 A card reopens against the definitions it was built from, never "what this procedure means
 today". Version-3 cards resolve through a **release bundle**, which pins the whole authored
 dependency set by content hash — the composition, every module version, the modifier set, the
-rescue modules, the typed compatibility rules, and the role alias table. Version-2 cards
-resolve through `buildPinnedContext(scenarioId, recipeVersionId)`, which is exact about the
-recipe and the modules and unpinned below them. See
+rescue modules, the typed compatibility rules, and the role alias table. Version-2 cards are
+**view-only**: they recorded a recipe and module pin but nothing below it, so reopening them
+for edit is refused (`builder_inputs_not_release_pinned`) rather than resolved against
+definitions they never recorded — the stored snapshot remains the card. See
 [`release-bundles.md`](./release-bundles.md).
+
+Two saves guard the pin itself. A **new** card originates only on the release the current
+pointer names — superseded releases stay resolvable for the cards pinned to them (that is
+what definition-set retention is for), and the create guard is what keeps that
+resolvability from becoming a creation loophole. An **edit** keeps the card's own pin: a
+request whose `releaseBundleId` differs from the stored one is refused server-side, so
+create-then-edit cannot land a fresh card on a superseded release. Moving a card onto
+another release is the rebuild flow's job, through a governed plan.
 
 - Module versions are exact. `module-flex-bronch-core-v1-0` is looked up by that id; there is
   no lookup by code, and therefore no "latest module" anywhere in the edit or save path.

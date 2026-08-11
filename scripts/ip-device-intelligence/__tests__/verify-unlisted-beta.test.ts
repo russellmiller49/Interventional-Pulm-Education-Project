@@ -9,6 +9,7 @@ import {
   deriveIdentityLeakTokens,
   deriveProductFixtures,
   parseOptions,
+  servedIdentityLeaks,
 } from '../verify-unlisted-beta'
 
 /**
@@ -93,6 +94,42 @@ describe('deriveIdentityLeakTokens', () => {
       expect(`${provenance}:${fixtures.cohortProductIds.has(productId)}`).toBe(
         `${provenance}:false`,
       )
+    }
+  })
+
+  it('matches identifiers on token boundaries, not inside hash keys', () => {
+    const fixture = new Map([['10530', 'PRD-TEST catalog_number']])
+    // The i18n payload embeds hashed message keys; a numeric catalog number must not match
+    // inside one, and must still match when served as an actual token.
+    expect(servedIdentityLeaks('…\\"h_1a7610530739\\":\\"Morphology slide 3\\"…', fixture)).toEqual(
+      [],
+    )
+    expect(servedIdentityLeaks('<td>Catalog no. 10530</td>', fixture)).toEqual([
+      '"10530" (PRD-TEST catalog_number)',
+    ])
+  })
+
+  it('excludes identity already present in the public translation catalogs', () => {
+    // Public educational copy names real device models today (e.g. the radial-probe models
+    // in the EBUS course strings); those ship on public pages regardless of the beta flag,
+    // so their presence on a D1 page is the message bundle, not a catalog exposure.
+    const catalogs = ['en', 'es', 'zh-CN'].map((locale) =>
+      readFileSync(path.join(REPO_ROOT, `messages/${locale}.json`), 'utf8').toLowerCase(),
+    )
+    for (const token of tokens.keys()) {
+      expect(catalogs.some((catalog) => catalog.includes(token))).toBe(false)
+    }
+  })
+
+  it('excludes governed vocabulary labels the D1 surface deliberately renders', () => {
+    // A hidden product whose trade name coincides with a generic authored label
+    // ("Flexible grasping forceps") is not identified by that label being served.
+    const roles = JSON.parse(
+      readFileSync(path.join(REPO_ROOT, 'data/ip-preference-cards/generated/roles.json'), 'utf8'),
+    ) as Array<{ role_name?: string }>
+    for (const role of roles) {
+      if (!role.role_name) continue
+      expect(tokens.has(role.role_name.trim().toLowerCase())).toBe(false)
     }
   })
 
