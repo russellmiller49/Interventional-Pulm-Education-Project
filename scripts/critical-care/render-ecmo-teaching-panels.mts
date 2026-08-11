@@ -1,6 +1,6 @@
 /**
- * Offline visual harness for every ECMO teaching panel — the ten foundation panels and the six
- * live drill panels of the B4 pilot slice.
+ * Offline visual harness for every ECMO teaching panel — the ten foundation panels and all twenty
+ * live drill panels (six frozen pilots plus fourteen B6 draft/non-credit panels).
  *
  * Same reason as the mechanical-ventilation harness: the Learn workspace sits behind login and
  * behind a viewport gate, so the panels cannot be screenshotted in the running app. This renders
@@ -16,10 +16,8 @@
  * The VV-only panels are deliberately never rendered against a VA circuit: their route cannot
  * produce that combination, and showing it here would review a state no learner can reach.
  *
- * The drill panels are rendered at two pane widths. Their teaching pane is about 480px wide in the
- * three-pane arrangement and about 700px in the laptop arrangement, and a table that reads well at
- * one of those can be unreadable at the other — which is the density question this package was
- * asked about, and it cannot be answered by looking at one width.
+ * The drill panels are rendered at compact, laptop, and wide pane widths. A table that reads well
+ * at one can be unreadable at another, so the harness keeps all three states beside one another.
  *
  * Each drill is rendered both before and after a commitment, because the panels deliberately show
  * different content either side of it. A leak would appear here as mechanism text in a cell labelled
@@ -65,9 +63,11 @@ import type {
 } from '../../src/features/cardiohelp-ecmo/engine/types.ts'
 import {
   EcmoDrillTeachingPanel,
+  ecmoDrillPanelMetadata,
   ecmoDrillTeachingPanelScenarioIds,
 } from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel.tsx'
 import { requireEcmoLearnPrediction } from '../../src/features/cardiohelp-ecmo/content/learnPredictionItems.ts'
+import { cardiohelpScenarioById } from '../../src/features/cardiohelp-ecmo/content/scenarios.ts'
 
 function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationState {
   let current = state
@@ -77,7 +77,10 @@ function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationSta
   return current
 }
 
-function settled(profileId: EcmoReferenceProfileId, action?: SimulationAction): EcmoSimulationState {
+function settled(
+  profileId: EcmoReferenceProfileId,
+  action?: SimulationAction,
+): EcmoSimulationState {
   let state = advance(createReferenceSimulationState(profileId), 8)
   if (action) state = advance(ecmoSimulationReducer(state, action), 12)
   return state
@@ -149,7 +152,11 @@ function vvOnlyVariants(sectionId: EcmoVvOnlyFoundationSectionId): readonly Vari
     const snapshot = ecmoFoundationSnapshot(opening)
     return [
       { label: 'reference at the captured snapshot', state: opening, snapshot },
-      { label: 'after 20 modeled seconds, compared with the snapshot', state: advance(opening, 20), snapshot },
+      {
+        label: 'after 20 modeled seconds, compared with the snapshot',
+        state: advance(opening, 20),
+        snapshot,
+      },
       {
         label: 'transfer and narrative — compared with the retained samples',
         state: advance(opening, 40),
@@ -270,7 +277,7 @@ function scopeLabel(sectionId: EcmoInteractiveFoundationSectionId): string {
 }
 
 /* ------------------------------------------------------------------ *
- * The six live drill panels
+ * All twenty live drill panels
  * ------------------------------------------------------------------ */
 
 function drillState(scenarioId: string, seconds = 12): EcmoSimulationState {
@@ -300,117 +307,77 @@ interface DrillVariant {
   readonly state: EcmoSimulationState
 }
 
-function drillVariants(scenarioId: string): readonly DrillVariant[] {
-  if (scenarioId === 'startup-sensor-orientation') {
-    const stopped = drillState(scenarioId, 2)
-    const running = advance(ecmoSimulationReducer(stopped, { type: 'SET_RPM', rpm: 3200 }), 6)
-    return [
-      { label: 'settled pump-off — before commitment', state: stopped },
-      { label: 'reference demonstration running — before commitment', state: running },
-      {
-        label: 'returned to pre-use — after commitment',
-        state: commit(
-          ecmoSimulationReducer(running, {
-            type: 'LOAD_SCENARIO',
-            scenarioId,
-            mode: 'guided',
-          }),
-        ),
-      },
-    ]
-  }
+function correctAuthoredCause(state: EcmoSimulationState): EcmoSimulationState {
+  const definition = cardiohelpScenarioById.get(state.scenario.scenarioId)
+  if (!definition) throw new Error(`No authored Learn scenario: ${state.scenario.scenarioId}`)
 
-  if (scenarioId === 'preload-drainage-collapse') {
-    const opening = drillState(scenarioId)
-    return [
-      { label: 'as it stands — before commitment', state: opening },
-      // The unsafe option, so the committed-choice line can be reviewed for anything that reads as
-      // a verdict. Correctness belongs beside the question, never here.
-      { label: 'after committing the unsafe option', state: commit(opening, 'unsafe') },
-      {
-        label: 'after reducing demand and correcting the cause',
-        state: advance(
-          ecmoSimulationReducer(
-            ecmoSimulationReducer(commit(opening), { type: 'SET_RPM', rpm: 3300 }),
-            { type: 'CORRECT_FAULT', fault: 'preload-limited' },
-          ),
-          8,
-        ),
-      },
-    ]
-  }
-
-  if (scenarioId === 'vv-recirculation') {
-    const opening = drillState(scenarioId)
-    return [
-      { label: 'as it stands — before commitment', state: opening },
-      { label: 'after commitment, at the opening speed', state: commit(opening) },
-      {
-        // The A2 illusion, which is the reason this drill exists: displayed flow up, effective down.
-        label: 'after commitment, speed escalated to 4400 rpm',
-        state: advance(ecmoSimulationReducer(commit(opening), { type: 'SET_RPM', rpm: 4400 }), 8),
-      },
-    ]
-  }
-
-  if (scenarioId === 'gas-source-interruption') {
-    const before = drillState(scenarioId, 3)
-    const after = advance(before, 12)
-    return [
-      { label: 'before the interruption — before commitment', state: before },
-      { label: 'after the interruption — after commitment', state: commit(after) },
-      {
-        label: 'after the source is restored',
-        state: advance(ecmoSimulationReducer(commit(after), { type: 'RESTORE_GAS_SOURCE' }), 12),
-      },
-    ]
-  }
-
-  if (scenarioId === 'arterial-bubble-stop') {
-    const stopped = drillState(scenarioId, 6)
-    const committed = commit(stopped)
-    const isolated = ecmoSimulationReducer(
-      ecmoSimulationReducer(committed, {
-        type: 'TOGGLE_CIRCUIT_CLAMP',
-        limb: 'return',
-        closed: true,
-      }),
-      { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true },
-    )
-    return [
-      { label: 'pump stopped, clamps open — before commitment', state: stopped },
-      { label: 'both limbs isolated — after commitment', state: isolated },
-      {
-        label: 'source corrected, latch still set — after commitment',
-        state: ecmoSimulationReducer(isolated, {
-          type: 'CORRECT_FAULT',
-          fault: 'arterial-bubble',
-        }),
-      },
-    ]
-  }
-
-  const opening = drillState(scenarioId)
-  return [
-    { label: 'as it stands — before commitment', state: opening },
-    { label: 'after commitment', state: commit(opening) },
-    {
-      label: 'after the pattern is verified and escalated',
-      state: advance(
-        ecmoSimulationReducer(commit(opening), {
-          type: 'CORRECT_FAULT',
-          fault: 'differential-hypoxemia',
-        }),
-        12,
-      ),
-    },
-  ]
+  const action: SimulationAction =
+    definition.expectation.correctiveFault === 'gas-source-interruption'
+      ? { type: 'RESTORE_GAS_SOURCE' }
+      : definition.expectation.correctiveFault === 'ac-power-loss'
+        ? { type: 'RESTORE_AC_POWER' }
+        : { type: 'CORRECT_FAULT', fault: definition.expectation.correctiveFault }
+  return advance(ecmoSimulationReducer(state, action), 8)
 }
 
-/** The two pane widths the drill teaching pane actually gets in the workspace. */
+/** Reach unavailable pressure channels through the engine by stopping pump demand at zero RPM. */
+function withUnavailablePressureChannels(state: EcmoSimulationState): EcmoSimulationState {
+  return advance(ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 0 }), 1)
+}
+
+function bubbleCorrectionState(state: EcmoSimulationState): EcmoSimulationState {
+  const isolated = ecmoSimulationReducer(
+    ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: true,
+    }),
+    { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true },
+  )
+  return ecmoSimulationReducer(isolated, {
+    type: 'CORRECT_FAULT',
+    fault: 'arterial-bubble',
+  })
+}
+
+function drillVariants(scenarioId: string): readonly DrillVariant[] {
+  const active = drillState(scenarioId)
+  const committed = commit(active)
+  const corrected = scenarioId.endsWith('arterial-bubble-stop')
+    ? bubbleCorrectionState(committed)
+    : correctAuthoredCause(committed)
+
+  const variants: DrillVariant[] = [
+    { label: 'active authored state — before commitment', state: active },
+    { label: 'active authored state — after commitment', state: committed },
+    { label: 'authored cause corrected — after commitment', state: corrected },
+    {
+      label: 'engine-reached pump stop; pressure channels unavailable — after commitment',
+      state: withUnavailablePressureChannels(committed),
+    },
+  ]
+
+  // Retain two high-value pilot challenge frames in addition to the uniform four-state contract.
+  if (scenarioId === 'preload-drainage-collapse') {
+    variants.push({
+      label: 'unsafe option committed — postcommit gate review',
+      state: commit(active, 'unsafe'),
+    })
+  }
+  if (scenarioId === 'vv-recirculation') {
+    variants.push({
+      label: 'speed escalated to 4400 rpm — postcommit live-pattern review',
+      state: advance(ecmoSimulationReducer(committed, { type: 'SET_RPM', rpm: 4400 }), 8),
+    })
+  }
+  return variants
+}
+
+/** Compact, laptop, and wide teaching-pane review widths. */
 const PANE_WIDTHS: readonly { readonly label: string; readonly px: number }[] = [
-  { label: 'three-pane teaching column', px: 480 },
-  { label: 'laptop context column', px: 700 },
+  { label: 'compact teaching column', px: 480 },
+  { label: 'laptop teaching column', px: 700 },
+  { label: 'wide teaching column', px: 944 },
 ]
 
 let renderedCells = 0
@@ -418,6 +385,7 @@ let renderedDrillCells = 0
 
 const drills = ecmoDrillTeachingPanelScenarioIds
   .map((scenarioId) => {
+    const metadata = ecmoDrillPanelMetadata(scenarioId)
     const columns = drillVariants(scenarioId)
       .map((variant) => {
         // Rendered once, placed at both widths: the markup is identical, only the box changes.
@@ -431,7 +399,7 @@ const drills = ecmoDrillTeachingPanelScenarioIds
         ).join('\n')
       })
       .join('\n')
-    return `<section><h2>${scenarioId} <span class="scope">drill panel — B4 pilot slice</span></h2><div class="matrix matrix-drill">${columns}</div></section>`
+    return `<section><h2>${scenarioId} <span class="scope">${metadata.reviewStatus} · ${metadata.creditEligible ? 'credit-eligible baseline' : 'non-credit draft'} · ${metadata.supportMode.toUpperCase()}</span></h2><div class="matrix matrix-drill">${columns}</div></section>`
   })
   .join('\n')
 
@@ -456,6 +424,12 @@ const sections = ecmoInteractiveFoundationSectionIds
 
 const drillCount = ecmoDrillTeachingPanelScenarioIds.length
 const foundationCount = ecmoInteractiveFoundationSectionIds.length
+
+if (drillCount !== 20 || foundationCount !== 10) {
+  throw new Error(
+    `B6 render contract expected 20 drill and 10 foundation panels; found ${drillCount} and ${foundationCount}.`,
+  )
+}
 
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>ECMO teaching panels — foundation and drill</title>
@@ -514,9 +488,9 @@ const html = `<!doctype html>
 </style></head><body>
 <h1>ECMO teaching panels — ${foundationCount} foundation sections and ${drillCount} drill panels</h1>
 <p>Check for: clipping, unreadable text, duplicated narrative, missing units, pane overflow, table overflow, <code>--</code> readouts without an accessible reason, <code>[object Object]</code>, and universal-target copy.</p>
-<p><strong>For the drill panels specifically:</strong> nothing in a cell labelled &ldquo;before commitment&rdquo; may name the mechanism, the fitting response, or the harmful reflex; every signal row must carry a site and a spelled-out kind; and each panel is shown at both pane widths it actually gets, so density is reviewable at each.</p>
+<p><strong>For the drill panels specifically:</strong> nothing in a cell labelled &ldquo;before commitment&rdquo; may name the mechanism, the fitting response, or the harmful reflex; every signal row must carry a site and a spelled-out kind; and each panel is shown at compact, laptop, and wide pane widths so density is reviewable at each.</p>
 
-<h1>Drill panels — B4 pilot slice (${drillCount} panels, ${renderedDrillCells} states, ${PANE_WIDTHS.length} widths each)</h1>
+<h1>Drill panels — frozen pilots plus B6 drafts (${drillCount} panels, ${renderedDrillCells} states, ${PANE_WIDTHS.length} widths each)</h1>
 ${drills}
 
 <h1>Foundation panels (${foundationCount} sections, ${renderedCells} states)</h1>
@@ -532,6 +506,6 @@ console.log(
   `${foundationCount} foundation panels (${ecmoSharedFoundationSectionIds.length} shared × 2 profiles × 3 states, ${ecmoVvOnlyFoundationSectionIds.length} VV-only, ${ecmoVaOnlyFoundationSectionIds.length} VA-only) — ${renderedCells} rendered states`,
 )
 console.log(
-  `${drillCount} drill panels — ${renderedDrillCells} rendered states, each at ${PANE_WIDTHS.map((width) => `${width.px}px`).join(' and ')}`,
+  `${drillCount} drill panels — ${renderedDrillCells} rendered states, each at ${PANE_WIDTHS.map((width) => `${width.px}px`).join(', ')}`,
 )
 console.log(`${foundationCount + drillCount} panels reviewable from this one page.`)

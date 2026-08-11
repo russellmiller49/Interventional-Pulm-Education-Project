@@ -20,20 +20,20 @@ import { createInitialSimulationState, ecmoSimulationReducer } from '../engine'
 import type { EcmoSimulationState } from '../engine/types'
 import { DRILL_SIGNAL_KINDS } from '../components/teaching/drills/drillPanelPrimitives'
 import {
+  ecmoDraftDrillTeachingPanelScenarioIds,
+  ecmoDrillPanelMetadata,
   EcmoDrillTeachingPanel,
   ecmoDrillTeachingPanelScenarioIds,
+  ecmoFrozenPilotPanelScenarioIds,
   hasEcmoDrillTeachingPanel,
   validateEcmoDrillPanelRegistry,
 } from '../components/teaching/EcmoDrillTeachingPanel'
 
 /**
- * The B4 pilot slice: six live drill teaching panels.
+ * The six B4 pilot panels remain a protected subset of the twenty-panel B6 registry.
  *
- * Two things are being pinned here. The registry has to stay exactly six known drills — a foundation
- * section registered as a drill would take a section's own teaching off the guided workbench, and a
- * seventh id added without a panel would render nothing at all. And each panel has to teach how to
- * read the circuit without answering the prediction: everything the authored item holds back until
- * a commitment must still be absent from the panel beside it.
+ * The pilot behavior checks below stay scoped to those same six files. B6 registry and draft-panel
+ * contracts live alongside them rather than weakening the frozen assertions.
  */
 
 const PILOT_IDS = [
@@ -68,10 +68,15 @@ function afterCommitment(state: EcmoSimulationState): EcmoSimulationState {
 }
 
 describe('B4: the drill teaching-panel registry', () => {
-  it('registers exactly the six pilot drills, and validates itself at import', () => {
+  it('registers all twenty drills while preserving exactly six frozen pilots', () => {
     expect(validateEcmoDrillPanelRegistry()).toEqual([])
-    expect([...ecmoDrillTeachingPanelScenarioIds].sort()).toEqual([...PILOT_IDS].sort())
-    expect(ecmoDrillTeachingPanelScenarioIds).toHaveLength(6)
+    expect([...ecmoFrozenPilotPanelScenarioIds].sort()).toEqual([...PILOT_IDS].sort())
+    expect(ecmoFrozenPilotPanelScenarioIds).toHaveLength(6)
+    expect(ecmoDraftDrillTeachingPanelScenarioIds).toHaveLength(14)
+    expect(ecmoDrillTeachingPanelScenarioIds).toHaveLength(20)
+    expect([...ecmoDrillTeachingPanelScenarioIds].sort()).toEqual(
+      [...cardiohelpLearnLessonByScenarioId.keys()].sort(),
+    )
   })
 
   it('registers no duplicate id', () => {
@@ -94,12 +99,21 @@ describe('B4: the drill teaching-panel registry', () => {
     }
   })
 
-  it('leaves the other fourteen drills without a panel rather than borrowing one', () => {
-    const unregistered = cardiohelpScenarios.filter(
-      (scenario) => !hasEcmoDrillTeachingPanel(scenario.id),
+  it('marks the fourteen derived additions draft and non-credit', () => {
+    for (const id of ecmoDraftDrillTeachingPanelScenarioIds) {
+      expect(ecmoDrillPanelMetadata(id)).toMatchObject({
+        reviewStatus: 'draft',
+        creditEligible: false,
+      })
+    }
+  })
+
+  it('keeps a neutral fallback for non-Learn transfer and assessment scenarios', () => {
+    const unregistered = cardiohelpScenarios.find(
+      (scenario) => !cardiohelpLearnLessonByScenarioId.has(scenario.id),
     )
-    expect(unregistered.length).toBeGreaterThan(0)
-    const state = settled(unregistered[0].id)
+    expect(unregistered).toBeDefined()
+    const state = settled(unregistered?.id ?? 'vv-off-sweep-capstone')
     const { container } = render(<EcmoDrillTeachingPanel state={state} />)
     expect(container.querySelector('[data-drill-panel-unavailable]')).not.toBeNull()
     expect(container.querySelector('[data-drill-panel]')).toBeNull()

@@ -1,4 +1,7 @@
-import { cardiohelpLearnLessonByScenarioId } from '../../content/learnLessons'
+import {
+  cardiohelpLearnLessonByScenarioId,
+  cardiohelpLearnLessons,
+} from '../../content/learnLessons'
 import { ecmoLearnPredictionFor } from '../../content/learnPredictionItems'
 import { ecmoFoundationSections } from '../../content/foundationLessons'
 import { cardiohelpScenarioById } from '../../content/scenarios'
@@ -6,6 +9,14 @@ import type { EcmoSimulationState, SupportMode } from '../../engine/types'
 import { ArterialBubbleStopPanel } from './drills/ArterialBubbleStopPanel'
 import { GasSourceInterruptionPanel } from './drills/GasSourceInterruptionPanel'
 import { PreloadDrainageCollapsePanel } from './drills/PreloadDrainageCollapsePanel'
+import {
+  remainingVaDrillPanelComponents,
+  type RemainingVaDrillPanelId,
+} from './drills/RemainingVaDrillPanels'
+import {
+  remainingVvDrillPanelComponents,
+  type RemainingVvDrillId,
+} from './drills/RemainingVvDrillPanels'
 import { StartupSensorOrientationPanel } from './drills/StartupSensorOrientationPanel'
 import { VaDifferentialHypoxemiaPanel } from './drills/VaDifferentialHypoxemiaPanel'
 import { VvRecirculationPanel } from './drills/VvRecirculationPanel'
@@ -14,56 +25,123 @@ import { styles } from './shared'
 /**
  * Scenario id → the live teaching panel for that guided drill.
  *
- * This is the B4 pilot slice: six of the twenty drills, chosen so that between them they exercise
- * valid against unavailable signals, a normal startup and reference state, pressure–flow preload
- * physiology, displayed flow against effective flow, blood path against gas path, a safety-critical
- * air sequence, and peripheral venoarterial dual-circulation reasoning — across the device, circuit,
- * gas, and patient domains. The other fourteen deliberately have no panel yet and fall back to the
- * neutral card below rather than borrowing one.
+ * The six B4/B5 pilot panels remain frozen. B6 adds fourteen visibly draft, non-credit panels. The
+ * draft ids are not maintained by hand: they are derived below from all authored guided Learn
+ * lessons minus the frozen six and fail closed unless the difference is exactly fourteen.
  *
  * Keyed on the scenario the *engine* has loaded rather than on the lesson the learner opened. A
  * transfer step loads a different case, and rendering this lesson's teaching over that case's
  * circuit would describe a circuit that is not on screen.
  */
 
-export type EcmoDrillPanelScenarioId =
-  | 'startup-sensor-orientation'
-  | 'preload-drainage-collapse'
-  | 'vv-recirculation'
-  | 'gas-source-interruption'
-  | 'arterial-bubble-stop'
-  | 'va-differential-hypoxemia'
-
-interface DrillPanelEntry {
-  /** Declared here as well as on the scenario, so the two are reconciled rather than assumed. */
-  readonly supportMode: SupportMode
-  readonly Panel: (props: { readonly state: EcmoSimulationState }) => React.JSX.Element
-}
-
-const panels: Readonly<Record<EcmoDrillPanelScenarioId, DrillPanelEntry>> = {
-  'startup-sensor-orientation': { supportMode: 'vv', Panel: StartupSensorOrientationPanel },
-  'preload-drainage-collapse': { supportMode: 'vv', Panel: PreloadDrainageCollapsePanel },
-  'vv-recirculation': { supportMode: 'vv', Panel: VvRecirculationPanel },
-  'gas-source-interruption': { supportMode: 'vv', Panel: GasSourceInterruptionPanel },
-  'arterial-bubble-stop': { supportMode: 'vv', Panel: ArterialBubbleStopPanel },
-  'va-differential-hypoxemia': { supportMode: 'va', Panel: VaDifferentialHypoxemiaPanel },
-}
-
-/**
- * The pilot ids, declared separately from the registry.
- *
- * Two declarations of the same fact, compared below. A single list that the registry was derived
- * from could not catch a panel silently added or dropped, which is the whole failure this slice is
- * meant to make loud.
- */
-export const ecmoDrillTeachingPanelScenarioIds: readonly EcmoDrillPanelScenarioId[] = [
+export const ecmoFrozenPilotPanelScenarioIds = [
   'startup-sensor-orientation',
   'preload-drainage-collapse',
   'vv-recirculation',
   'gas-source-interruption',
   'arterial-bubble-stop',
   'va-differential-hypoxemia',
+] as const
+
+export type EcmoFrozenPilotPanelScenarioId = (typeof ecmoFrozenPilotPanelScenarioIds)[number]
+export type EcmoDraftDrillPanelScenarioId = RemainingVvDrillId | RemainingVaDrillPanelId
+export type EcmoDrillPanelScenarioId =
+  | EcmoFrozenPilotPanelScenarioId
+  | EcmoDraftDrillPanelScenarioId
+
+export type EcmoDrillPanelReviewStatus = 'frozen-pilot' | 'draft'
+
+interface DrillPanelEntry {
+  /** Declared here as well as on the scenario, so the two are reconciled rather than assumed. */
+  readonly supportMode: SupportMode
+  readonly reviewStatus: EcmoDrillPanelReviewStatus
+  readonly creditEligible: boolean
+  readonly Panel: (props: { readonly state: EcmoSimulationState }) => React.JSX.Element
+}
+
+const frozenPilotPanels: Readonly<Record<EcmoFrozenPilotPanelScenarioId, DrillPanelEntry>> = {
+  'startup-sensor-orientation': {
+    supportMode: 'vv',
+    reviewStatus: 'frozen-pilot',
+    creditEligible: true,
+    Panel: StartupSensorOrientationPanel,
+  },
+  'preload-drainage-collapse': {
+    supportMode: 'vv',
+    reviewStatus: 'frozen-pilot',
+    creditEligible: true,
+    Panel: PreloadDrainageCollapsePanel,
+  },
+  'vv-recirculation': {
+    supportMode: 'vv',
+    reviewStatus: 'frozen-pilot',
+    creditEligible: true,
+    Panel: VvRecirculationPanel,
+  },
+  'gas-source-interruption': {
+    supportMode: 'vv',
+    reviewStatus: 'frozen-pilot',
+    creditEligible: true,
+    Panel: GasSourceInterruptionPanel,
+  },
+  'arterial-bubble-stop': {
+    supportMode: 'vv',
+    reviewStatus: 'frozen-pilot',
+    creditEligible: true,
+    Panel: ArterialBubbleStopPanel,
+  },
+  'va-differential-hypoxemia': {
+    supportMode: 'va',
+    reviewStatus: 'frozen-pilot',
+    creditEligible: true,
+    Panel: VaDifferentialHypoxemiaPanel,
+  },
+}
+
+const draftPanelComponents: Readonly<
+  Record<EcmoDraftDrillPanelScenarioId, DrillPanelEntry['Panel']>
+> = {
+  ...remainingVvDrillPanelComponents,
+  ...remainingVaDrillPanelComponents,
+}
+
+const draftPanels = Object.fromEntries(
+  Object.entries(draftPanelComponents).map(([scenarioId, Panel]) => [
+    scenarioId,
+    {
+      supportMode: scenarioId in remainingVvDrillPanelComponents ? 'vv' : 'va',
+      reviewStatus: 'draft',
+      creditEligible: false,
+      Panel,
+    } satisfies DrillPanelEntry,
+  ]),
+) as Readonly<Record<EcmoDraftDrillPanelScenarioId, DrillPanelEntry>>
+
+const panels: Readonly<Record<EcmoDrillPanelScenarioId, DrillPanelEntry>> = {
+  ...frozenPilotPanels,
+  ...draftPanels,
+}
+
+/**
+ * The B6 difference is derived from authored Learn content rather than copied into a second list.
+ * The imported component maps remain independent declarations and are reconciled in validation.
+ */
+export const ecmoDraftDrillTeachingPanelScenarioIds = cardiohelpLearnLessons
+  .map((lesson) => lesson.scenarioId)
+  .filter(
+    (scenarioId): scenarioId is EcmoDraftDrillPanelScenarioId =>
+      !(ecmoFrozenPilotPanelScenarioIds as readonly string[]).includes(scenarioId),
+  )
+
+export const ecmoDrillTeachingPanelScenarioIds: readonly EcmoDrillPanelScenarioId[] = [
+  ...ecmoFrozenPilotPanelScenarioIds,
+  ...ecmoDraftDrillTeachingPanelScenarioIds,
 ]
+
+export function ecmoDrillPanelMetadata(scenarioId: EcmoDrillPanelScenarioId) {
+  const { supportMode, reviewStatus, creditEligible } = panels[scenarioId]
+  return { supportMode, reviewStatus, creditEligible } as const
+}
 
 export function hasEcmoDrillTeachingPanel(
   scenarioId: string,
@@ -75,13 +153,29 @@ export function hasEcmoDrillTeachingPanel(
 export function validateEcmoDrillPanelRegistry(): readonly string[] {
   const errors: string[] = []
   const registered = Object.keys(panels)
+  const authored = cardiohelpLearnLessons.map((lesson) => lesson.scenarioId)
+  const draftComponentIds = Object.keys(draftPanelComponents)
+
+  if (ecmoFrozenPilotPanelScenarioIds.length !== 6) {
+    errors.push('the frozen pilot id list is no longer exactly six')
+  }
+  if (ecmoDraftDrillTeachingPanelScenarioIds.length !== 14) {
+    errors.push(
+      `authored Learn ids minus the frozen pilots must equal fourteen, found ${ecmoDraftDrillTeachingPanelScenarioIds.length}`,
+    )
+  }
+  if (authored.length !== 20) {
+    errors.push(
+      `the guided Learn registry must contain exactly twenty lessons, found ${authored.length}`,
+    )
+  }
 
   for (const scenarioId of ecmoDrillTeachingPanelScenarioIds) {
-    if (!(scenarioId in panels)) errors.push(`pilot drill has no panel: ${scenarioId}`)
+    if (!(scenarioId in panels)) errors.push(`guided Learn drill has no panel: ${scenarioId}`)
   }
   for (const id of registered) {
     if (!(ecmoDrillTeachingPanelScenarioIds as readonly string[]).includes(id)) {
-      errors.push(`panel registered for a scenario outside the pilot slice: ${id}`)
+      errors.push(`panel registered for a scenario outside authored guided Learn: ${id}`)
     }
   }
   // Object keys cannot repeat, so a duplicate can only be a duplicate in the id list — which means
@@ -89,10 +183,21 @@ export function validateEcmoDrillPanelRegistry(): readonly string[] {
   if (
     new Set(ecmoDrillTeachingPanelScenarioIds).size !== ecmoDrillTeachingPanelScenarioIds.length
   ) {
-    errors.push('the pilot id list repeats a scenario id')
+    errors.push('the full panel id list repeats a scenario id')
   }
   if (ecmoDrillTeachingPanelScenarioIds.length !== registered.length) {
-    errors.push('the pilot id list and the panel registry differ in length')
+    errors.push('the full panel id list and registry differ in length')
+  }
+  if (
+    [...authored].sort().join('\n') !== [...ecmoDrillTeachingPanelScenarioIds].sort().join('\n')
+  ) {
+    errors.push('the panel registry does not match all authored guided Learn ids')
+  }
+  if (
+    [...draftComponentIds].sort().join('\n') !==
+    [...ecmoDraftDrillTeachingPanelScenarioIds].sort().join('\n')
+  ) {
+    errors.push('the fourteen derived draft ids and imported draft component maps differ')
   }
 
   const foundationSectionIds = new Set(ecmoFoundationSections.map((section) => section.id))
@@ -109,6 +214,13 @@ export function validateEcmoDrillPanelRegistry(): readonly string[] {
       errors.push(
         `panel declares ${entry.supportMode} but the scenario is ${scenario.supportMode}: ${scenarioId}`,
       )
+    }
+    const isFrozen = (ecmoFrozenPilotPanelScenarioIds as readonly string[]).includes(scenarioId)
+    if (isFrozen && (entry.reviewStatus !== 'frozen-pilot' || !entry.creditEligible)) {
+      errors.push(`frozen pilot metadata changed: ${scenarioId}`)
+    }
+    if (!isFrozen && (entry.reviewStatus !== 'draft' || entry.creditEligible)) {
+      errors.push(`B6 panel is not draft and non-credit: ${scenarioId}`)
     }
     // A drill panel with no guided lesson could never be reached, and one with no authored
     // prediction has no commitment to withhold its mechanism behind.
@@ -139,9 +251,9 @@ if (registryErrors.length > 0) {
  * The teaching pane's content for the guided drill Learn route.
  *
  * Renders the panel for whatever case the engine currently holds, and says so plainly when there is
- * none. The fallback is deliberately not a smaller version of a panel: fourteen drills have no
- * authored teaching yet, and a generic card that looked like teaching would be indistinguishable
- * from one that had been written.
+ * none. All twenty authored guided Learn drills have panels on this branch. Transfer, Practice, and
+ * assessment scenarios can still be loaded without one, and the neutral fallback refuses to
+ * describe a case whose panel was not authored.
  */
 export function EcmoDrillTeachingPanel({ state }: { readonly state: EcmoSimulationState }) {
   const scenarioId = state.scenario.scenarioId
@@ -166,8 +278,9 @@ export function EcmoDrillTeachingPanel({ state }: { readonly state: EcmoSimulati
               : 'A live teaching panel has not been authored for it yet.'}
           </p>
           <p className="mt-2 text-muted-foreground">
-            The lesson step, the guided task, and the console beside it are unaffected. Six drills
-            carry a live panel in this release; the rest are still to be written.
+            The lesson step, the guided task, and the console beside it are unaffected. All twenty
+            authored guided Learn drills have panels on this branch; other cases keep this neutral
+            fallback rather than borrowing a panel.
           </p>
         </section>
       </div>
