@@ -371,6 +371,27 @@ describe('deterministic production-readiness reports', () => {
     expect(reports.get('owner-supplied-missing-products.md')).toContain('MEDTRONIC-1899200')
   })
 
+  it('reports partial researcher component-group crosswalks as exact-suffix risks', () => {
+    const manifest = cloneFixture()
+    manifest.candidates = [manifest.candidates[0]]
+    const candidate = manifest.candidates[0]
+    candidate.requiredClaimTypes = ['PACKAGING']
+    candidate.claimType = 'PACKAGING'
+    candidate.claimClassification = 'RESEARCHER_INFERENCE'
+    candidate.claimScope = 'FAMILY'
+    candidate.evidenceStatus = 'PARTIALLY_SUPPORTED'
+    candidate.source.scopeLevel = 'FAMILY'
+    candidate.source.exactModelOrOrderCodes = ['1899']
+
+    const reports = generateReports(manifest, options)
+    const expectedRisk = 'PARTIAL FAMILY-GROUP CROSSWALK — exact-suffix BOM unresolved'
+    expect(reports.get('evidence-conflicts.md')).toContain(expectedRisk)
+    expect(reports.get('owner-supplied-missing-products.md')).toContain(expectedRisk)
+    expect(reports.get('owner-supplied-missing-products.md')).toContain(
+      'NO — CLOSE LISTED GAPS FIRST',
+    )
+  })
+
   it('counts distinct source URLs and source documents separately from candidate records', () => {
     const manifest = cloneFixture()
     manifest.candidates = [manifest.candidates[0]]

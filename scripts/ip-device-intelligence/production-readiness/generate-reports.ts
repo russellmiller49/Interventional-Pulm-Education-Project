@@ -384,6 +384,15 @@ ${markdownTable(
 
 function familySourceRisk(candidate: EvidenceCandidate): string | null {
   if (
+    candidate.claimType === 'PACKAGING' &&
+    candidate.claimClassification === 'RESEARCHER_INFERENCE' &&
+    candidate.evidenceStatus === 'PARTIALLY_SUPPORTED' &&
+    candidate.productIdentity?.model
+  ) {
+    return 'PARTIAL FAMILY-GROUP CROSSWALK — exact-suffix BOM unresolved'
+  }
+
+  if (
     !['MODEL', 'CONFIGURATION'].includes(candidate.claimScope) ||
     candidate.source.scopeLevel !== 'FAMILY'
   ) {
@@ -608,7 +617,7 @@ function ownerProductReport(manifest: EvidenceManifest, options: ReportOptions):
         !accessRisk &&
         !nonPrimaryEvidence &&
         !blockedReviewState &&
-        !familyRisks.some((risk) => risk.startsWith('UNQUALIFIED')) &&
+        !familyRisks.some((risk) => risk.startsWith('UNQUALIFIED') || risk.startsWith('PARTIAL')) &&
         !sorted.some((candidate) => candidate.candidateState === 'FINAL_REJECTED')
       return [
         `${productLabel(sorted[0])}; owner id ${ownerProductId}`,
