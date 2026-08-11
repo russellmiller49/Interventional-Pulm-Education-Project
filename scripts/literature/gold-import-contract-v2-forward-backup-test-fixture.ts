@@ -58,6 +58,7 @@ import {
   GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
   GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2,
 } from './gold-import-note-disposition-gate-v2'
+import { GOLD_IMPORT_V2_READY_STATE_IDENTITIES } from './audit-gold-import-compensation-v2'
 import {
   GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
   GOLD_IMPORT_FINAL_V3_ARTIFACT_SHA256_V4,
@@ -250,7 +251,15 @@ function exactReadyAudit(repositoryHead: string) {
       schemaSecurityDefinitionIdentity: inventory.schemaSecurityDefinitionIdentity,
     },
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
-    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    database: {
+      batchId: BATCH_ID,
+      developmentMembershipSha256:
+        GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
+      developmentPlanningStateSha256:
+        GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentPlanningStateSha256,
+      effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.effectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256,
+    },
     exactExistingHeadCohort: {
       cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
       headCount: 9,

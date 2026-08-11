@@ -18,6 +18,7 @@ import {
   sha256Canonical,
 } from '../../src/features/literature/gold-set/import-compensation'
 import {
+  GOLD_IMPORT_V2_READY_STATE_IDENTITIES,
   V2_MIGRATION_REQUIRED_BEFORE_SOURCE_OR_CLIENT,
   prepareGoldImportCompensationV2Runtime,
   validateReadyGoldImportCompensationV2Audit,
@@ -68,6 +69,13 @@ const ITEM_ID = '20000000-0000-4000-8000-000000000001'
 const ACTION_ID = '30000000-0000-4000-8000-000000000001'
 const REVIEW_ID = '40000000-0000-4000-8000-000000000001'
 const TIME = '2026-08-08T00:00:00.000Z'
+const V2_READY_DATABASE = {
+  developmentMembershipSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
+  developmentPlanningStateSha256:
+    GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentPlanningStateSha256,
+  effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.effectiveStateSha256,
+  physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256,
+}
 const LOCAL_EXPECTED_CATALOG = buildProtectedV2ExpectedCatalogBinding(
   'local_supabase_postgres_owner_v1',
   'local',
@@ -478,7 +486,7 @@ describe('V2 review and plan contract', () => {
 function migrationProbe(v2Occurrence: number) {
   return {
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
-    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    database: { batchId: BATCH_ID, ...V2_READY_DATABASE },
     migration: {
       id: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
       sha256: SHA_A,
@@ -529,7 +537,10 @@ function readyAudit() {
       reviewRowMutationCount: 0,
     },
     testSplitLocked: true,
-    v2PreImportState: { effectiveStateSha256: SHA_A, physicalStateSha256: SHA_B },
+    v2PreImportState: {
+      effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2EffectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2PhysicalStateSha256,
+    },
   }
 }
 
@@ -574,7 +585,7 @@ function exactReadyAudit(
       schemaSecurityDefinitionIdentity: fullEnvironmentInventory.schemaSecurityDefinitionIdentity,
     },
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
-    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    database: { batchId: BATCH_ID, ...V2_READY_DATABASE },
     exactExistingHeadCohort: {
       cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
       headCount: 9,
@@ -608,7 +619,10 @@ function exactReadyAudit(
     },
     target: target === 'local' ? ('local' as const) : ('disposable_clone' as const),
     testSplitLocked: true,
-    v2PreImportState: { effectiveStateSha256: SHA_A, physicalStateSha256: SHA_B },
+    v2PreImportState: {
+      effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2EffectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2PhysicalStateSha256,
+    },
   }
 }
 

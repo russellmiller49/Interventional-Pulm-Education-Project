@@ -45,9 +45,16 @@ import {
   buildProtectedV2RuntimeBundleBinding,
 } from './protected-gold-import-contract-v2-bindings'
 import { buildProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  PROTECTED_V2_TRANSITION_SNAPSHOT_SCHEMA_VERSION,
+  buildProtectedV2DatabaseEvidenceFromSnapshot,
+  type ProtectedV2TransitionSnapshot,
+} from './protected-gold-import-contract-v2-transition-evidence'
 
 export const GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION =
-  'gold-import-contract-v2-preapplication-report/1.0.0' as const
+  'gold-import-contract-v2-preapplication-report/2.0.0' as const
+export const GOLD_IMPORT_V2_PREAPPLICATION_STATE_BACKUP_SCHEMA_VERSION =
+  'literature-gold-protected-v2-state-backup/2.0.0' as const
 export const GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION =
   PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION
 export const GOLD_IMPORT_V2_TASK_BRANCH =
@@ -400,6 +407,48 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
     snapshotAfter,
     String(batch.id ?? ''),
   )
+  const developmentSeedRows = record(snapshotAfter.developmentSeed, 'snapshot.developmentSeed')
+  const capturedRows = (key: string) => {
+    const value = developmentSeedRows[key]
+    if (!Array.isArray(value)) throw new Error(`Transition capture ${key} rows are absent.`)
+    return value.map((entry, index) => record(entry, `transition capture ${key}[${index}]`))
+  }
+  const transitionSnapshot: ProtectedV2TransitionSnapshot = {
+    actionCount: operationCountsAfter.actionCount,
+    batchId: String(batch.id ?? ''),
+    compensationCount: operationCountsAfter.compensationCount,
+    developmentMembershipSha256: stateHashesAfter.developmentMembershipSha256,
+    effectiveStateSha256V1: stateHashesAfter.effectiveStateSha256,
+    effectiveStateSha256V2: null,
+    historyRows: {
+      actions: [],
+      batchId: String(batch.id ?? ''),
+      batches: capturedRows('batches'),
+      datasetSplit: 'development',
+      drafts: capturedRows('drafts'),
+      events: capturedRows('events'),
+      items: capturedRows('items'),
+      operations: [],
+      reviews: capturedRows('reviews'),
+    },
+    importCount: operationCountsAfter.importCount,
+    ledgerEntries: protectedLedgerEntries,
+    operationCount: operationCountsAfter.operationCount,
+    phase: 'before_v2',
+    physicalStateSha256V1: stateHashesAfter.physicalStateSha256,
+    physicalStateSha256V2: null,
+    readOnlyTransaction: true,
+    schemaVersion: PROTECTED_V2_TRANSITION_SNAPSHOT_SCHEMA_VERSION,
+  }
+  const databaseEvidence = buildProtectedV2DatabaseEvidenceFromSnapshot({
+    completeCatalogAudit: null,
+    phase: 'before_v2',
+    readOnlyBracketMatches: true,
+    snapshot: transitionSnapshot,
+  })
+  if (databaseEvidence.developmentPlanningStateSha256 !== planningAfter) {
+    throw new Error('Transition capture planning identity disagrees with the read-only snapshot.')
+  }
   const migrationLedgerBackup = {
     schemaVersion: 'literature-gold-protected-v2-ledger-backup/1.0.0',
     entries: snapshotAfter.migrationLedger,
@@ -410,7 +459,7 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
     },
   }
   const stateHashBackup = {
-    schemaVersion: 'literature-gold-protected-v2-state-backup/1.0.0',
+    schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_STATE_BACKUP_SCHEMA_VERSION,
     batchId: String(batch.id ?? ''),
     batchName: BATCH_NAME,
     datasetSplit: 'development',
@@ -418,6 +467,7 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
     developmentPlanningStateSha256: planningAfter,
     effectiveStateSha256: stateHashesAfter.effectiveStateSha256,
     physicalStateSha256: stateHashesAfter.physicalStateSha256,
+    databaseEvidence,
   }
   const backupFiles = {
     'development-database-seed.json': canonicalJson(developmentSeed),
@@ -451,7 +501,11 @@ export async function runGoldImportV2PreapplicationDiagnostic(argv: string[]) {
         developmentMembershipSha256: stateHashesAfter.developmentMembershipSha256,
         developmentPlanningStateSha256: planningAfter,
         effectiveStateSha256: stateHashesAfter.effectiveStateSha256,
+        effectiveStateSha256V2: null,
+        eventStateSha256: databaseEvidence.eventStateSha256,
         physicalStateSha256: stateHashesAfter.physicalStateSha256,
+        physicalStateSha256V2: null,
+        schemaNeutralHistorySha256: databaseEvidence.history.schemaNeutralHistorySha256,
       },
       readOnlyBracket: {
         before: { ...stateHashesBefore, developmentPlanningStateSha256: planningBefore },

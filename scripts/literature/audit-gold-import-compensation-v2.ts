@@ -25,7 +25,6 @@ import {
 } from './gold-import-compensation-contract-reconciliation'
 import { validateSchemaSecurityDefinitionIdentity } from './gold-import-compensation-rehearsal-evidence'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
-import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import { GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4 } from './gold-import-source-authorization-v4'
 import {
   validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
@@ -40,11 +39,27 @@ import {
   validateGoldImportCompensationV2MigrationReceiptGateForAudit,
   type GoldImportCompensationV2MigrationReceiptGate,
 } from './gold-import-compensation-v2-migration-receipt-gate'
+import { LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY } from './literature-gold-v2-schema-only-transition'
 
 export const GOLD_IMPORT_COMPENSATION_V2_AUDIT_SCHEMA_VERSION =
   'gold-import-compensation-v2-package-audit/1.0.0' as const
 export const V2_MIGRATION_REQUIRED_BEFORE_SOURCE_OR_CLIENT =
   'V2 migration is absent; stop before reading source artifacts or constructing a database client.' as const
+
+/** Post-migration/pre-import identities. The older note-disposition constant remains pre-V2. */
+export const GOLD_IMPORT_V2_READY_STATE_IDENTITIES = Object.freeze({
+  developmentMembershipSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.developmentMembershipSha256,
+  developmentPlanningStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.planningStateSha256,
+  effectiveStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.effectiveStateSha256V1,
+  physicalStateSha256: LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.physicalStateSha256V1,
+  v2EffectiveStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.effectiveStateSha256V2,
+  v2PhysicalStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.physicalStateSha256V2,
+} as const)
 
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/u)
 const uuidSchema = z.string().uuid()
@@ -56,15 +71,13 @@ export const goldImportCompensationV2MigrationProbeSchema = z
       .object({
         batchId: uuidSchema,
         developmentMembershipSha256: z.literal(
-          GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentMembershipSha256,
+          GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
         ),
         developmentPlanningStateSha256: z.literal(
-          GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256,
+          GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentPlanningStateSha256,
         ),
-        effectiveStateSha256: z.literal(
-          GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-        ),
-        physicalStateSha256: z.literal(GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256),
+        effectiveStateSha256: z.literal(GOLD_IMPORT_V2_READY_STATE_IDENTITIES.effectiveStateSha256),
+        physicalStateSha256: z.literal(GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256),
       })
       .strict(),
     migration: z
@@ -136,7 +149,12 @@ export const goldImportCompensationV2ReadyAuditSchema = goldImportCompensationV2
       .strict(),
     testSplitLocked: z.literal(true),
     v2PreImportState: z
-      .object({ effectiveStateSha256: sha256Schema, physicalStateSha256: sha256Schema })
+      .object({
+        effectiveStateSha256: z.literal(
+          GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2EffectiveStateSha256,
+        ),
+        physicalStateSha256: z.literal(GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2PhysicalStateSha256),
+      })
       .strict(),
   })
   .strict()

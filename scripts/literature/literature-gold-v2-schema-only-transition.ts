@@ -15,7 +15,9 @@ export const LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_PROOF_VERSION =
 export const LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY = {
   batchId: 'fff41ba3-811d-4d28-ba73-9302db3a942a',
   catalog: {
-    auditIdentitySha256: '7d79b3449190502399510d4fa2e668d57f6db8babb84b8be0f7bf50d27e993ce',
+    // The complete audit is already self-authenticating. Bind its stable full identity here;
+    // never bind the timestamped post-application wrapper identity.
+    auditIdentitySha256: 'd0a5d56bcc88b1cf7fa642d25d16c75031dc4a14b349229959389b0dbf0c5783',
     expectedCatalogBindingSha256:
       'cd2295c1c69fbefa5920c82c429f0ce10bcc6ac6d0b4714c479f108bf7b2f900',
     fullAuditIdentitySha256: 'd0a5d56bcc88b1cf7fa642d25d16c75031dc4a14b349229959389b0dbf0c5783',
@@ -127,7 +129,7 @@ const DERIVED_TRANSITION_POLICY_IDENTITY_SHA256 = sha256Canonical(
 
 // This reviewed literal makes policy drift an explicit source change.
 export const LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256 =
-  '896e0d7d5f1d0161661b453ff1c5af1cebe34167483ce1e93ae734d64577fc31' as const
+  'd68693a8e31fbffd8bf03a9a7f74c04e4498bc0e192376dcc1cec28a3e7d2b8b' as const
 
 if (
   DERIVED_TRANSITION_POLICY_IDENTITY_SHA256 !==

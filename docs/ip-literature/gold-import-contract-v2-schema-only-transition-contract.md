@@ -22,13 +22,13 @@ the exact post-V2 V1 projection from either pre-application capture produces
 
 The accepted identities are:
 
-| Identity | SHA-256 |
-| --- | --- |
-| Pre-V2 V1 physical | `3986852c329bb66abf293d499655f2f278ae881801291756c9c1f75cc0351c70` |
-| Post-V2 V1 physical | `dab46b9df0c32e5ac98558495988d07f2be7474a61ed1d85fb8af9b5e6bff5fb` |
+| Identity                                            | SHA-256                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------ |
+| Pre-V2 V1 physical                                  | `3986852c329bb66abf293d499655f2f278ae881801291756c9c1f75cc0351c70` |
+| Post-V2 V1 physical                                 | `dab46b9df0c32e5ac98558495988d07f2be7474a61ed1d85fb8af9b5e6bff5fb` |
 | Schema-neutral full history, both captures and post | `5469be890970ad79ccef977ff9db55f454edd6cc010b6394e20f4ce733e8cddb` |
-| V2 effective | `f79b825c70f0032642cd877ffa06238b6965dec479c6855105e45ee64bd01f4c` |
-| V2 physical | `afce1a294fd5343a9127d86f6d210baabe8888ee9dc77b3ee3fcb3559d6741dd` |
+| V2 effective                                        | `f79b825c70f0032642cd877ffa06238b6965dec479c6855105e45ee64bd01f4c` |
+| V2 physical                                         | `afce1a294fd5343a9127d86f6d210baabe8888ee9dc77b3ee3fcb3559d6741dd` |
 
 Membership, V1 effective state, and planning do not serialize the newly added schema fields and
 therefore remain unchanged.
@@ -56,7 +56,7 @@ membership or effective state stayed constant.
 
 All consumers must call `validateLiteratureGoldV2SchemaOnlyTransition`. Its reviewed reason is
 `schema_derived_v1_physical_projection_transition`; its policy identity is
-`896e0d7d5f1d0161661b453ff1c5af1cebe34167483ce1e93ae734d64577fc31`.
+`d68693a8e31fbffd8bf03a9a7f74c04e4498bc0e192376dcc1cec28a3e7d2b8b`.
 
 The validator fails closed unless both pre-application captures agree, V1 is present exactly once
 before and after, V2 changes from zero to exactly one, migration and verifier bytes are exact,
@@ -64,7 +64,9 @@ membership/V1-effective/planning and every schema-neutral history component are 
 observed post V1 physical hash equals the independently predicted schema-derived value, all
 review/pointer/event/reveal mutation counts are zero, operation/action/import/compensation counts
 are zero, source authorization is unchanged, the V2 effective/physical identities are exact, and
-the complete local PostgreSQL-owner catalog identity is exact.
+the complete local PostgreSQL-owner catalog identity is exact. The catalog authority is the
+self-authenticating stable full-audit identity; a timestamped post-application audit wrapper is
+never used as transition authority.
 
 ## Integration contract
 

@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import {
   LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
@@ -16,6 +18,23 @@ import {
   type LiteratureGoldV2SchemaOnlyTransitionInput,
   type LiteratureGoldV2SchemaOnlyTransitionState,
 } from './literature-gold-v2-schema-only-transition'
+import {
+  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
+  expectedObservedAuditIdentityFromArtifact,
+} from './gold-import-contract-v2-catalog-expectations'
+import {
+  PROTECTED_GOLD_IMPORT_CONTRACT_V1,
+  PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+} from './protected-gold-import-contract-v2-source-identities'
+import {
+  PROTECTED_V2_TRANSITION_DATABASE_EVIDENCE_SCHEMA_VERSION,
+  assertProtectedV2TransitionEvidenceSqlReadOnly,
+  buildProtectedV2SchemaOnlyDatabaseTransitionInput,
+  buildProtectedV2TransitionSnapshotSql,
+  validateProtectedV2LocalCompleteCatalogAudit,
+  validateProtectedV2SchemaOnlyDatabaseTransition,
+  type ProtectedV2DatabaseEvidence,
+} from './protected-gold-import-contract-v2-transition-evidence'
 
 function sorted(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sorted)
@@ -130,6 +149,59 @@ function incidentTransition(): LiteratureGoldV2SchemaOnlyTransitionInput {
     sourceIdentities: {
       ...LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.sourceIdentities,
     },
+  }
+}
+
+function databaseEvidence(phase: 'before_v2' | 'after_v2'): ProtectedV2DatabaseEvidence {
+  const authority = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY
+  const transitionState = state(phase)
+  const catalogAudit =
+    phase === 'after_v2'
+      ? validateProtectedV2LocalCompleteCatalogAudit(
+          expectedObservedAuditIdentityFromArtifact(
+            committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
+              'local_supabase_postgres_owner_v1',
+              'local',
+            ),
+          ),
+        )
+      : null
+  return {
+    actionCount: 0,
+    batchId: authority.batchId,
+    compensationCount: 0,
+    completeCatalogAudit: catalogAudit,
+    developmentMembershipSha256: transitionState.developmentMembershipSha256,
+    developmentPlanningStateSha256: transitionState.planningStateSha256,
+    effectiveStateSha256: transitionState.effectiveStateSha256V1,
+    effectiveStateSha256V2: transitionState.effectiveStateSha256V2,
+    eventStateSha256: transitionState.eventStateSha256,
+    history: transitionState.history,
+    importCount: 0,
+    ledgerEntries: [
+      {
+        name: PROTECTED_GOLD_IMPORT_CONTRACT_V1.migrationName,
+        version: PROTECTED_GOLD_IMPORT_CONTRACT_V1.version,
+      },
+      ...(phase === 'after_v2'
+        ? [
+            {
+              name: PROTECTED_GOLD_IMPORT_CONTRACT_V2.migrationName,
+              version: PROTECTED_GOLD_IMPORT_CONTRACT_V2.version,
+            },
+          ]
+        : []),
+    ],
+    operationCount: 0,
+    physicalStateSha256: transitionState.history.physicalStateSha256V1,
+    physicalStateSha256V2: transitionState.physicalStateSha256V2,
+    pointerStateSha256: transitionState.pointerStateSha256,
+    readOnlyBracketMatches: true,
+    revealStateSha256: transitionState.revealStateSha256,
+    reviewStateSha256: transitionState.reviewStateSha256,
+    schemaVersion: PROTECTED_V2_TRANSITION_DATABASE_EVIDENCE_SCHEMA_VERSION,
+    v1Occurrence: 1,
+    v2Occurrence: phase === 'before_v2' ? 0 : 1,
   }
 }
 
@@ -404,5 +476,51 @@ describe('shared V2 schema-only transition validator', () => {
     expect(() => validateLiteratureGoldV2SchemaOnlyTransition(capturesDrifted)).toThrow(
       'two exact pre-application captures do not agree',
     )
+  })
+})
+
+describe('capability-free protected V2 transition evidence adapter', () => {
+  test.each(['before_v2', 'after_v2'] as const)(
+    'uses one repeatable-read read-only %s snapshot and always rolls back',
+    (phase) => {
+      const sql = buildProtectedV2TransitionSnapshotSql(phase)
+      expect(() => assertProtectedV2TransitionEvidenceSqlReadOnly(sql)).not.toThrow()
+      expect(sql).toMatch(/^begin transaction isolation level repeatable read read only;/u)
+      expect(sql).toMatch(/rollback;$/u)
+      expect(sql).not.toMatch(
+        /\b(insert|update|delete|truncate|alter|create|drop|grant|revoke|call|do|copy|commit)\b/iu,
+      )
+      expect(sql.includes('literature_gold_effective_state_hash_v2')).toBe(phase === 'after_v2')
+    },
+  )
+
+  test('has no application, staging, catalog-executor, rehearsal, or migration-capable imports', () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        'scripts/literature/protected-gold-import-contract-v2-transition-evidence.ts',
+      ),
+      'utf8',
+    )
+    expect(source).not.toMatch(
+      /from ['"][^'"]*(apply-protected|local-supabase|gold-import-contract-v2-catalog-audit|rehearse|migration-operations)[^'"]*['"]/u,
+    )
+  })
+
+  test('builds recovery-ready input and invokes the same strict transition validator', () => {
+    const before = databaseEvidence('before_v2')
+    const transitionInput = buildProtectedV2SchemaOnlyDatabaseTransitionInput({
+      after: databaseEvidence('after_v2'),
+      beforeCaptures: [before, clone(before)],
+      expectedCatalogBindingSha256:
+        LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.catalog.expectedCatalogBindingSha256,
+      sourceAuthorizationSha256: hash('unchanged-source-authorization'),
+    })
+    expect(validateProtectedV2SchemaOnlyDatabaseTransition(transitionInput)).toMatchObject({
+      accepted: true,
+      physicalTransitionChanged: true,
+      transitionPolicyIdentitySha256:
+        LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
+    })
   })
 })

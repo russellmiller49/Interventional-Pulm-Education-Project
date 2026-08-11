@@ -1,11 +1,20 @@
+import { createHash } from 'node:crypto'
+
 import { assertReadOnlySnapshotSql } from './gold-import-compensation-migration-operations'
 import {
   GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION,
   GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION,
+  GOLD_IMPORT_V2_PREAPPLICATION_STATE_BACKUP_SCHEMA_VERSION,
   GOLD_IMPORT_V2_TASK_BRANCH,
   buildGoldImportV2PreapplicationDevelopmentBackup,
   buildGoldImportV2PreapplicationCountSql,
 } from './diagnose-gold-import-compensation-v2-preapplication'
+import {
+  LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
+  LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS,
+  type LiteratureGoldV2SchemaNeutralHistoryEvidence,
+} from './literature-gold-v2-schema-neutral-history'
+import { LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY } from './literature-gold-v2-schema-only-transition'
 import { buildProtectedV2BackupExecutionReceipt } from './protected-gold-import-contract-v2-evidence'
 import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V1,
@@ -21,9 +30,101 @@ import {
   buildProtectedV2RuntimeBundleBinding,
   type ProtectedV2RuntimeBundleBinding,
 } from './protected-gold-import-contract-v2-bindings'
+import {
+  PROTECTED_V2_TRANSITION_DATABASE_EVIDENCE_SCHEMA_VERSION,
+  validateProtectedV2DatabaseEvidence,
+  type ProtectedV2DatabaseEvidence,
+} from './protected-gold-import-contract-v2-transition-evidence'
 
 let operatorBundleBinding: ProtectedV2RuntimeBundleBinding
 let operatorBundle: ProtectedV2OperatorBundle
+
+function sorted(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sorted)
+  if (value !== null && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return Object.fromEntries(
+      Object.keys(record)
+        .sort()
+        .map((key) => [key, sorted(record[key])]),
+    )
+  }
+  return value
+}
+
+function digest(value: unknown): string {
+  return createHash('sha256')
+    .update(`${JSON.stringify(sorted(value), null, 2)}\n`)
+    .digest('hex')
+}
+
+function beforeV2History(): LiteratureGoldV2SchemaNeutralHistoryEvidence {
+  const authority = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY
+  const unsigned: Omit<LiteratureGoldV2SchemaNeutralHistoryEvidence, 'bindingSha256'> = {
+    batchId: authority.batchId,
+    componentIdentities: { ...authority.historyComponentIdentities },
+    counts: { ...authority.counts },
+    datasetSplit: 'development',
+    expectedPostV1PhysicalStateSha256: authority.post.physicalStateSha256V1,
+    phase: 'before_v2',
+    physicalStateSha256V1: authority.pre.physicalStateSha256V1,
+    schemaDerivedFields: {
+      operationFields: LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
+      operationRowCount: authority.counts.operations,
+      operationValuesSha256: authority.pre.schemaDerivedOperationValuesSha256,
+      reviewFields: LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS,
+      reviewRowCount: authority.counts.reviews,
+      reviewValuesSha256: authority.pre.schemaDerivedReviewValuesSha256,
+    },
+    schemaNeutralHistorySha256: authority.post.schemaNeutralHistorySha256,
+    schemaVersion: 'literature-gold-schema-neutral-physical-history-evidence/1.0.0',
+  }
+  return { ...unsigned, bindingSha256: digest(unsigned) }
+}
+
+function preV2StateHashCapture() {
+  const authority = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY
+  const databaseEvidence: ProtectedV2DatabaseEvidence = {
+    actionCount: authority.counts.actions,
+    batchId: authority.batchId,
+    compensationCount: 0,
+    completeCatalogAudit: null,
+    developmentMembershipSha256: authority.post.developmentMembershipSha256,
+    developmentPlanningStateSha256: authority.post.planningStateSha256,
+    effectiveStateSha256: authority.post.effectiveStateSha256V1,
+    effectiveStateSha256V2: null,
+    eventStateSha256: authority.post.eventStateSha256,
+    history: beforeV2History(),
+    importCount: 0,
+    ledgerEntries: [
+      {
+        name: PROTECTED_GOLD_IMPORT_CONTRACT_V1.migrationName,
+        version: PROTECTED_GOLD_IMPORT_CONTRACT_V1.version,
+      },
+    ],
+    operationCount: authority.counts.operations,
+    physicalStateSha256: authority.pre.physicalStateSha256V1,
+    physicalStateSha256V2: null,
+    pointerStateSha256: authority.post.pointerStateSha256,
+    readOnlyBracketMatches: true,
+    revealStateSha256: authority.post.revealStateSha256,
+    reviewStateSha256: authority.post.reviewStateSha256,
+    schemaVersion: PROTECTED_V2_TRANSITION_DATABASE_EVIDENCE_SCHEMA_VERSION,
+    v1Occurrence: 1,
+    v2Occurrence: 0,
+  }
+  return {
+    batchId: authority.batchId,
+    batchName: 'gold-set-v1' as const,
+    databaseEvidence,
+    datasetSplit: 'development' as const,
+    developmentMembershipSha256: databaseEvidence.developmentMembershipSha256,
+    developmentPlanningStateSha256: databaseEvidence.developmentPlanningStateSha256,
+    effectiveStateSha256: databaseEvidence.effectiveStateSha256,
+    physicalStateSha256: databaseEvidence.physicalStateSha256,
+    schemaVersion: GOLD_IMPORT_V2_PREAPPLICATION_STATE_BACKUP_SCHEMA_VERSION,
+  }
+}
 
 describe('gold import contract V2 real-local pre-application diagnostic', () => {
   beforeAll(async () => {
@@ -36,11 +137,78 @@ describe('gold import contract V2 real-local pre-application diagnostic', () => 
       'codex/ip-literature-import-contract-v2-forward-repair-v1',
     )
     expect(GOLD_IMPORT_V2_PREAPPLICATION_REPORT_SCHEMA_VERSION).toBe(
-      'gold-import-contract-v2-preapplication-report/1.0.0',
+      'gold-import-contract-v2-preapplication-report/2.0.0',
+    )
+    expect(GOLD_IMPORT_V2_PREAPPLICATION_STATE_BACKUP_SCHEMA_VERSION).toBe(
+      'literature-gold-protected-v2-state-backup/2.0.0',
     )
     expect(GOLD_IMPORT_V2_PREAPPLICATION_RECEIPT_SCHEMA_VERSION).toBe(
       'gold-import-contract-v2-preapplication-execution/2.0.0',
     )
+  })
+
+  it('embeds two independent, complete pre-V2 database-history captures', () => {
+    const authority = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY
+    const captures = [preV2StateHashCapture(), preV2StateHashCapture()] as const
+
+    expect(captures[1]).toEqual(captures[0])
+    expect(captures[1]).not.toBe(captures[0])
+    expect(captures[1].databaseEvidence).not.toBe(captures[0].databaseEvidence)
+    expect(captures[1].databaseEvidence.history).not.toBe(captures[0].databaseEvidence.history)
+    expect(captures[1].databaseEvidence.ledgerEntries).not.toBe(
+      captures[0].databaseEvidence.ledgerEntries,
+    )
+
+    for (const capture of captures) {
+      const evidence = validateProtectedV2DatabaseEvidence(capture.databaseEvidence, 'before_v2')
+      expect(capture).toMatchObject({
+        schemaVersion: 'literature-gold-protected-v2-state-backup/2.0.0',
+        batchId: authority.batchId,
+        batchName: 'gold-set-v1',
+        datasetSplit: 'development',
+        developmentMembershipSha256: evidence.developmentMembershipSha256,
+        developmentPlanningStateSha256: evidence.developmentPlanningStateSha256,
+        effectiveStateSha256: evidence.effectiveStateSha256,
+        physicalStateSha256: evidence.physicalStateSha256,
+      })
+      expect(evidence).toMatchObject({
+        actionCount: 0,
+        compensationCount: 0,
+        completeCatalogAudit: null,
+        effectiveStateSha256V2: null,
+        importCount: 0,
+        operationCount: 0,
+        physicalStateSha256V2: null,
+        readOnlyBracketMatches: true,
+        schemaVersion: 'literature-gold-protected-v2-transition-database-evidence/1.0.0',
+        v1Occurrence: 1,
+        v2Occurrence: 0,
+      })
+      expect(evidence.history).toMatchObject({
+        batchId: authority.batchId,
+        componentIdentities: authority.historyComponentIdentities,
+        counts: authority.counts,
+        datasetSplit: 'development',
+        phase: 'before_v2',
+        physicalStateSha256V1: authority.pre.physicalStateSha256V1,
+        schemaNeutralHistorySha256: authority.post.schemaNeutralHistorySha256,
+      })
+      expect(evidence.ledgerEntries).toEqual([
+        {
+          name: PROTECTED_GOLD_IMPORT_CONTRACT_V1.migrationName,
+          version: PROTECTED_GOLD_IMPORT_CONTRACT_V1.version,
+        },
+      ])
+    }
+
+    captures[0].databaseEvidence.history.counts.events = 0
+    expect(captures[1].databaseEvidence.history.counts.events).toBe(authority.counts.events)
+    expect(() =>
+      validateProtectedV2DatabaseEvidence(captures[0].databaseEvidence, 'before_v2'),
+    ).toThrow('binding is invalid')
+    expect(() =>
+      validateProtectedV2DatabaseEvidence(captures[1].databaseEvidence, 'before_v2'),
+    ).not.toThrow()
   })
 
   it('derives a path-, state-, ledger-, nonce-, and manifest-bound backup instance identity', () => {

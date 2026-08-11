@@ -643,11 +643,10 @@ function sqlLiteral(value: string): string {
  * column, so the same bytes project both schemas; the pure builder performs
  * the only four reviewed exclusions and validates their post-V2 values.
  */
-export function literatureGoldV2SchemaNeutralHistoryRowsSql(batchId: string): string {
+export function literatureGoldV2SchemaNeutralHistoryRowsJsonExpression(batchId: string): string {
   if (!UUID_PATTERN.test(batchId)) throw new Error('Invalid batch ID for history projection.')
   const id = sqlLiteral(batchId)
-  return String.raw`
-select pg_catalog.jsonb_build_object(
+  return String.raw`pg_catalog.jsonb_build_object(
   'batchId', ${id},
   'datasetSplit', 'development',
   'batches', coalesce((select pg_catalog.jsonb_agg(to_jsonb(batch) order by batch.id)
@@ -681,5 +680,9 @@ select pg_catalog.jsonb_build_object(
     from public.literature_gold_review_operation_actions action
     join public.literature_gold_review_operations operation on operation.id = action.operation_id
     where operation.batch_id = ${id}::uuid and operation.dataset_split = 'development'), '[]'::jsonb)
-);`.trim()
+)`.trim()
+}
+
+export function literatureGoldV2SchemaNeutralHistoryRowsSql(batchId: string): string {
+  return `select ${literatureGoldV2SchemaNeutralHistoryRowsJsonExpression(batchId)};`
 }
