@@ -94,6 +94,34 @@ cross-use do not. Recovery never reapplies V2. Neither migration application nor
 authorizes a later import or compensation; package generation does not authorize execution, and
 compensation remains separately authorized.
 
+### Incident-specific V2 receipt recovery
+
+The historical intent
+`deeedb1e93921d0e0e8a01009a6a1ed5c67114f53f94ea5cac277d99f113d8f4` may use the
+separate receipt-only recovery command after the hotfix is merged and a reviewed complete amendment
+is committed. This is not the ordinary protected application or descendant reconciliation path.
+It cannot stage or apply V1/V2, import, compensate, or mutate clinical state.
+
+Before any eventual execution, require all of the following: the exact primary checkout; clean
+`main`; `HEAD == origin/main`; the intent commit remains an ancestor; the original three intent
+files and both captures are unchanged; the incident backup authenticates; the complete recovery
+bundle and committed amendment match; V1 and V2 each occur exactly once; the complete local-profile
+catalog matches; the schema-neutral history and all protected-state identities match; and every
+mutation/capability count is zero. Database evidence is collected only in repeatable-read/read-only
+transactions against `supabase_db_ip-literature-local` through a local Docker endpoint.
+
+The operator must provide the exact reviewed amendment identity; paths and targets are not
+configurable:
+
+```bash
+npm run literature:recover-protected-gold-import-contract-v2-receipt -- \
+  --expected-amendment-sha256 <exact-reviewed-amendment-identity>
+```
+
+The command may add only the atomic `finalized/` receipt package. It never rewrites the sealed
+intent or captures, never replays V2, and remains insufficient to authorize import or compensation.
+During hotfix implementation and PR review, do not execute the real-local recovery command.
+
 The main site's Supabase URL, authentication, and other modules are unchanged. Server-side
 literature queries use the dedicated local values when present and retain the existing main
 database only as a backwards-compatible fallback.

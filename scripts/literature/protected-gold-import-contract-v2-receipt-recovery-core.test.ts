@@ -529,6 +529,7 @@ describe('protected V2 historical receipt recovery core', () => {
     const finalized = resolve(built.input.applicationOutputDirectory, 'finalized')
     const names = (await readdir(finalized)).sort()
     const first = await Promise.all(names.map((name) => readFile(resolve(finalized, name))))
+    built.input.postEvidence.safety.finalizedAbsentAtEvidenceCollection = false
     const repeated = await recoverProtectedV2HistoricalReceipt(built.input, {
       validateSchemaOnlyTransition: validator,
     })

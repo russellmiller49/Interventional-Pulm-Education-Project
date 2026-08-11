@@ -126,7 +126,7 @@ export interface ProtectedV2ReceiptRecoveryPostEvidence {
   }
   safety: {
     contradictoryPartialFinalization: false
-    finalizedAbsentAtEvidenceCollection: true
+    finalizedAbsentAtEvidenceCollection: boolean
     heldOutIdentitiesAccessed: false
     originalCapturesModified: false
     originalIntentModified: false
@@ -650,7 +650,10 @@ function authenticateCaptures(input: ProtectedV2ReceiptRecoveryInput): void {
   }
 }
 
-function authenticateRepositoryAndPostEvidence(input: ProtectedV2ReceiptRecoveryInput): void {
+function authenticateRepositoryAndPostEvidence(
+  input: ProtectedV2ReceiptRecoveryInput,
+  finalizedExists: boolean,
+): void {
   const repository = input.recoveryRepository
   const post = input.postEvidence
   const authority = input.amendment
@@ -677,7 +680,7 @@ function authenticateRepositoryAndPostEvidence(input: ProtectedV2ReceiptRecovery
     canonicalProtectedV2ReceiptRecoveryJson(post.state) !==
       canonicalProtectedV2ReceiptRecoveryJson(authority.stateAuthority.post) ||
     Object.values(post.mutationEvidence).some((count) => count !== 0) ||
-    post.safety.finalizedAbsentAtEvidenceCollection !== true ||
+    post.safety.finalizedAbsentAtEvidenceCollection !== !finalizedExists ||
     post.safety.contradictoryPartialFinalization !== false ||
     post.safety.readOnly !== true ||
     post.safety.repeatableRead !== true ||
@@ -1148,7 +1151,6 @@ export async function recoverProtectedV2HistoricalReceipt(
     outputDirectory: input.applicationOutputDirectory,
   })
   authenticateCaptures(input)
-  authenticateRepositoryAndPostEvidence(input)
 
   const finalizedPath = resolve(
     input.applicationOutputDirectory,
@@ -1166,6 +1168,7 @@ export async function recoverProtectedV2HistoricalReceipt(
       authority: finalizedAuthority(input.amendment),
       outputDirectory: input.applicationOutputDirectory,
     })
+    authenticateRepositoryAndPostEvidence(input, true)
     if (
       canonicalProtectedV2ReceiptRecoveryJson(loaded.result.currentRecoveryToolBundle) !==
         canonicalProtectedV2ReceiptRecoveryJson(input.currentRecoveryToolBundle) ||
@@ -1179,6 +1182,7 @@ export async function recoverProtectedV2HistoricalReceipt(
       wroteFinalization: false,
     }
   }
+  authenticateRepositoryAndPostEvidence(input, false)
 
   const proof = await dependencies.validateSchemaOnlyTransition(input.transitionInput)
   const transitionProofSha256 = authenticateTransitionProof({

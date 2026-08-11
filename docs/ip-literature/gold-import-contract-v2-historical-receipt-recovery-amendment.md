@@ -9,11 +9,12 @@ authorize migration staging or application, import, compensation, or clinical-st
 The defect identifier is
 `protected_v2_schema_sensitive_physical_equality_finalization_defect_v1`. The only permitted
 transition reason is `schema_derived_v1_physical_projection_transition` under shared transition
-policy identity `896e0d7d5f1d0161661b453ff1c5af1cebe34167483ce1e93ae734d64577fc31`.
+policy identity exported by the reviewed shared validator. The complete committed amendment records
+that exact identity; this specification deliberately does not duplicate a changeable identity.
 
 ## Authority split
 
-`buildProtectedV2ReceiptRecoveryIncidentAmendment` binds three separately reviewed authorities:
+The recovery runtime binds three separately reviewed authorities:
 
 1. The exact historical intent, authorization, repository tree, two captures, source files,
    expected catalog, and pre/post incident identities copied into the checksum-verified incident
@@ -22,22 +23,50 @@ policy identity `896e0d7d5f1d0161661b453ff1c5af1cebe34167483ce1e93ae734d64577fc3
 3. A narrow current recovery-tool bundle with a sorted per-file SHA-256 inventory.
 
 The current recovery-tool bundle must include every executable recovery-specific file, including
-the amendment module, recovery core, CLI entry point, and any executable helper added during
-integration. The final amendment identity is computed only after that complete inventory is known
-and becomes an explicit operator confirmation. Changing any bundle file changes the amendment
-identity and cannot reuse the reviewed confirmation.
+the amendment module, recovery core, CLI entry point, read-only adapter, maintainer finalizer,
+shared policy/history modules, and every transitive executable helper added during integration. It
+also seals `package.json`, `package-lock.json`, `tsconfig.json`, and
+`scripts/require-primary-checkout.mjs`. A static-closure audit rejects an omitted dependency,
+untracked shadow, unsafe Git mode, or changed package command.
+
+Two JSON contracts avoid self-reference:
+
+- `protected-v2-receipt-recovery-incident-authority-v1.json` records immutable facts for this one
+  incident, but is not itself the amendment.
+- `protected-v2-receipt-recovery-amendment-v1.json` is generated only after integration is final
+  and contains the policy identity, complete sorted per-file recovery bundle, and its amendment
+  identity. The amendment file is excluded from its own bundle and is independently authenticated.
+
+The maintainer first runs the amendment finalizer with `--print-candidate`, reviews the candidate,
+then may create the full contract only with `--write --expected-amendment-sha256 <exact-sha>`. It
+never overwrites an amendment. The recovery command independently requires the same externally
+supplied `--expected-amendment-sha256`; changing any policy or bundle byte invalidates both the
+committed amendment comparison and that confirmation.
 
 ## Execution boundary
 
-`recoverProtectedV2HistoricalReceipt` accepts one dependency only:
-`validateSchemaOnlyTransition`. Its dependency object rejects extra properties and has no migration,
-import, or compensation callbacks. It authenticates all historical/current evidence before calling
-the shared validator.
+`recoverProtectedV2HistoricalReceipt` accepts one dependency only: `validateSchemaOnlyTransition`.
+The outer command accepts one dependency only: `collectReadOnlyEvidence`. Both dependency objects
+reject extra properties and expose no migration, import, or compensation callbacks. The command is
+fixed to the primary checkout, clean `main` at exact `origin/main`, the one historical intent/output
+path, the two exact captures, the checksum-verified incident backup, and the one local container.
+It accepts no target or path argument.
+
+Every database query batch must begin `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY`, contain
+only nonlocking `SELECT`/CTE statements, and end `ROLLBACK`. The evidence boundary reports and the
+runtime verifies zero migration-stage, migration-application, import, compensation, and database
+mutation calls. Remote Docker/database access and held-out identity access are rejected.
 
 The workflow atomically renames a complete four-file `finalized/` subpackage into place. It never
 rewrites the original three intent files. A preexisting exact package is verified without a write;
 partial or contradictory finalization fails closed. A concurrent rename loser must verify that the
-winner wrote byte-identical authorized output.
+winner wrote byte-identical authorized output. A repeated command reports that finalized evidence
+was present, reloads and verifies it, and does not invoke transition validation or rewrite bytes.
+
+The command snapshots the original intent, both captures, and incident evidence before collection
+and reauthenticates them in a `finally` boundary after success or failure. Its only permitted write
+is the atomic four-file `finalized/` receipt package. Implementation and review sessions must not
+execute this command against real-local data.
 
 ## Downstream gate
 
