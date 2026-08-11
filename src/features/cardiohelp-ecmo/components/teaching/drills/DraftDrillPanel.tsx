@@ -203,7 +203,11 @@ export function DraftDrillPanel({
     >
       <DraftStatusNotice />
       {config.supportMode === 'va' ? <VaConfigurationLabel /> : null}
-      <SignalRegister rows={signalRows} summary={liveText(config.signalSummary, state)} />
+      <SignalRegister
+        rows={signalRows}
+        summary={liveText(config.signalSummary, state)}
+        taxonomy="b6-draft"
+      />
       <PatternReading
         rows={config.patternRows(state)}
         summary={liveText(config.patternSummary, state)}

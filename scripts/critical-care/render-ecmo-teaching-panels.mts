@@ -66,6 +66,7 @@ import {
   ecmoDrillPanelMetadata,
   ecmoDrillTeachingPanelScenarioIds,
 } from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel.tsx'
+import { faultState } from '../../src/features/cardiohelp-ecmo/components/teaching/drills/DraftDrillPanel.tsx'
 import { requireEcmoLearnPrediction } from '../../src/features/cardiohelp-ecmo/content/learnPredictionItems.ts'
 import { cardiohelpScenarioById } from '../../src/features/cardiohelp-ecmo/content/scenarios.ts'
 
@@ -341,6 +342,9 @@ function bubbleCorrectionState(state: EcmoSimulationState): EcmoSimulationState 
 }
 
 function drillVariants(scenarioId: string): readonly DrillVariant[] {
+  const preEvent = createInitialSimulationState(scenarioId, 'guided')
+  const definition = cardiohelpScenarioById.get(scenarioId)
+  if (!definition) throw new Error(`No authored Learn scenario: ${scenarioId}`)
   const active = drillState(scenarioId)
   const committed = commit(active)
   const corrected = scenarioId.endsWith('arterial-bubble-stop')
@@ -356,6 +360,13 @@ function drillVariants(scenarioId: string): readonly DrillVariant[] {
       state: withUnavailablePressureChannels(committed),
     },
   ]
+
+  if (faultState(preEvent, definition.expectation.correctiveFault) === 'not active') {
+    variants.unshift({
+      label: 'true initial state — before the timed cause and before commitment',
+      state: preEvent,
+    })
+  }
 
   // Retain two high-value pilot challenge frames in addition to the uniform four-state contract.
   if (scenarioId === 'preload-drainage-collapse') {

@@ -170,11 +170,14 @@ export function SignalRegister({
   summary,
   title = 'What is on screen, and what each reading is worth',
   headingId = 'drill-signals-heading',
+  taxonomy = 'frozen-pilot',
 }: {
   readonly rows: readonly DrillSignalRow[]
   readonly summary: ReactNode
   readonly title?: string
   readonly headingId?: string
+  /** Keeps the six-pilot screen-reader copy byte-for-byte stable while drafts add new kinds. */
+  readonly taxonomy?: 'frozen-pilot' | 'b6-draft'
 }) {
   return (
     <section className={styles.section} aria-labelledby={headingId}>
@@ -196,9 +199,18 @@ export function SignalRegister({
       >
         <table className="w-full text-sm" data-signal-register>
           <caption className="sr-only">
-            Every signal this drill turns on, where it is measured, and whether it is valid,
-            unavailable, unmodeled, configured, estimated, derived, off the console, at the bedside,
-            or authored.
+            {taxonomy === 'b6-draft' ? (
+              <>
+                Every signal this drill turns on, where it is measured, and whether it is valid,
+                unavailable, unmodeled, configured, estimated, derived, off the console, at the
+                bedside, or authored.
+              </>
+            ) : (
+              <>
+                Every signal this drill turns on, where it is measured, and whether it is valid,
+                unavailable, unmodeled, estimated, off the console, at the bedside, or authored.
+              </>
+            )}
           </caption>
           <thead>
             <tr className="text-left">

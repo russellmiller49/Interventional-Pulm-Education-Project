@@ -1289,7 +1289,7 @@ export const remainingVaDrillPanelConfigs = Object.freeze({
         'Patient mean arterial pressure',
         'Independent patient arterial line',
         liveNumber(state.patient.meanArterialPressure, 'mmHg'),
-        'A patient perfusion value during interrupted forward VA support.',
+        'A patient perfusion value interpreted beside the current pump, flow, and support state.',
         'meanArterialPressure',
       ),
       offConsoleSignalRow(
@@ -1306,8 +1306,7 @@ export const remainingVaDrillPanelConfigs = Object.freeze({
       {
         label: 'Device state',
         reading: `${pumpState(state)}; reset ${state.circuit.bubbleResetRequired ? 'required' : 'not required'}`,
-        movement:
-          'Read as device facts, not as proof of isolation or correction of the initiating cause.',
+        movement: 'Read as device facts, not as proof of physical circuit or source state.',
       },
       {
         label: 'Two bedside circuit states',
@@ -1324,7 +1323,7 @@ export const remainingVaDrillPanelConfigs = Object.freeze({
       {
         label: 'Patient state',
         reading: `MAP ${liveNumber(state.patient.meanArterialPressure, 'mmHg')}; right radial ${livePercent(state.patient.rightRadialSpo2, 1)}`,
-        movement: 'Read during the interruption of forward circuit support.',
+        movement: 'Read beside the current pump, flow, protection, and physical-circuit states.',
       },
     ],
     patternSummary: (state) =>
@@ -1335,7 +1334,8 @@ export const remainingVaDrillPanelConfigs = Object.freeze({
         whereToLook: 'Pump, latch, and protection state beside the two physical clamp states.',
       },
       {
-        question: 'Does the location of the protective indication establish the initiating cause?',
+        question:
+          'What would the location of a protective indication establish—and not establish—about a possible entry source?',
         whereToLook:
           'The full drainage-to-return circuit inspection and recently handled connections.',
       },

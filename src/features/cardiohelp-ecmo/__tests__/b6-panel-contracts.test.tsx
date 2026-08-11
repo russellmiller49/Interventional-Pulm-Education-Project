@@ -186,6 +186,27 @@ describe('B6 panel registry and metadata contracts', () => {
     expect(new Set(ecmoDrillTeachingPanelScenarioIds).size).toBe(20)
   })
 
+  it.each(ecmoFrozenPilotPanelScenarioIds)(
+    '%s preserves the frozen signal-register screen-reader caption',
+    (id) => {
+      const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
+      const captions = Array.from(container.querySelectorAll('[data-signal-register] caption'))
+      expect(captions.length).toBeGreaterThan(0)
+      for (const caption of captions) {
+        expect(caption.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+          'Every signal this drill turns on, where it is measured, and whether it is valid, unavailable, unmodeled, estimated, off the console, at the bedside, or authored.',
+        )
+      }
+    },
+  )
+
+  it.each(DRAFT_IDS)('%s uses the expanded draft-only signal taxonomy caption', (id) => {
+    const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
+    const caption = container.querySelector('[data-signal-register] caption')
+    expect(caption?.textContent).toMatch(/configured/i)
+    expect(caption?.textContent).toMatch(/derived/i)
+  })
+
   it.each(DRAFT_IDS)(
     '%s maps to a real lesson/scenario/prediction and is draft/non-credit',
     (id) => {
@@ -374,6 +395,25 @@ describe('B6 draft panels render live active, corrected, and unavailable states'
     expect(container.querySelector('[data-clinical-question]')?.textContent).toMatch(
       /which baseline .* findings should be established/i,
     )
+  })
+
+  it('keeps the complete VA bubble surface truthful before the timed event', () => {
+    const initial = createInitialSimulationState('va-arterial-bubble-stop', 'guided')
+    expect(initial.device.pumpRunning).toBe(true)
+    expect(initial.circuit.bloodFlow).toBeGreaterThan(0)
+    expect(initial.circuit.arterialBubbleDetected).toBe(false)
+
+    const { container } = render(<EcmoDrillTeachingPanel state={initial} />)
+    const text = container.textContent ?? ''
+    expect(
+      container.querySelector('[data-signal="Protective return-side intervention"]'),
+    ).toHaveTextContent(/intervention not active/i)
+    expect(text).toMatch(/pump turning/i)
+    expect(text).not.toMatch(
+      /during (?:the )?interrupt(?:ed|ion) (?:forward )?(?:VA |circuit )?support/i,
+    )
+    expect(text).not.toMatch(/initiating cause/i)
+    expect(text).not.toMatch(/reset before isolation/i)
   })
 
   it.each(DRAFT_IDS)('%s renders all required state classes without invalid output', (id) => {
