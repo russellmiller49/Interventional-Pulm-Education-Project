@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Clone, OrbitControls, useGLTF } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import type { EcmoSimulationState, SimulationAction } from '../../engine'
 import {
@@ -23,6 +25,7 @@ import {
   TUBE_RADII,
 } from './constants'
 import { drainageChatterActive } from './chatter'
+import { clampPanTarget, panEnabledAtDistance, retargetTowardDefault } from './panning'
 import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
@@ -116,6 +119,34 @@ export function BedsideScene({
 }: BedsideSceneProps) {
   const layout = useMemo(() => buildCircuitLayout(state.supportMode), [state.supportMode])
   const [orbiting, setOrbiting] = useState(false)
+  const controls = useRef<OrbitControlsImpl>(null)
+  const interacting = useRef(false)
+
+  /*
+   * Pan unlocks with zoom, and the target stays fenced to the scene.
+   *
+   * Mutated directly on the controls instance rather than through state: the
+   * distance changes every zoom frame, and a React round-trip per frame would
+   * buy nothing. Once the user zooms back out past the unlock distance the
+   * target glides home (snaps under reduced motion), so the default framing
+   * every guided lesson references is restored instead of staying wherever
+   * the last pan ended.
+   */
+  useFrame((_, delta) => {
+    const instance = controls.current
+    if (!instance) return
+    const distance = instance.object.position.distanceTo(instance.target)
+    instance.enablePan = panEnabledAtDistance(distance)
+    if (clampPanTarget(instance.target)) instance.update()
+    if (!instance.enablePan && !interacting.current) {
+      const shift = retargetTowardDefault(instance.target, delta, reduceMotion)
+      if (shift) {
+        // Camera moves with the target — undoing a pan is a rig translation.
+        instance.object.position.add(shift)
+        instance.update()
+      }
+    }
+  })
   const patient = useGLTF(PATIENT_ASSET)
   const sensor = useGLTF(SENSOR_ASSET)
   const sensorAlignment = useMemo(
@@ -314,6 +345,7 @@ export function BedsideScene({
       />
 
       <OrbitControls
+        ref={controls}
         makeDefault
         target={CAMERA_TARGET}
         enablePan={false}
@@ -321,8 +353,14 @@ export function BedsideScene({
         maxDistance={7.2}
         minPolarAngle={0.65}
         maxPolarAngle={1.38}
-        onStart={() => setOrbiting(true)}
-        onEnd={() => setOrbiting(false)}
+        onStart={() => {
+          interacting.current = true
+          setOrbiting(true)
+        }}
+        onEnd={() => {
+          interacting.current = false
+          setOrbiting(false)
+        }}
       />
     </>
   )

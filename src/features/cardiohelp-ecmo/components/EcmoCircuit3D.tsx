@@ -235,7 +235,10 @@ export function EcmoCircuit3D({
           <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
           {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
           <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
-          <small>Drag to orbit · scroll to zoom · select a clamp or use the controls below</small>
+          <small>
+            Drag to orbit · scroll to zoom · zoom in to pan (right-drag or two-finger drag) · select
+            a clamp or use the controls below
+          </small>
         </div>
         {compactViewport ? (
           <div className={styles.circuit3dLabels} aria-hidden="true">

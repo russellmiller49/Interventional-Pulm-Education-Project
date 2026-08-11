@@ -253,6 +253,28 @@ renders) **approved 2026-08-11**, including the cannula re-route.
 - Provenance: only `hls-sensor-connector.glb` still derives from a supplied
   file; the licensing gate below narrows to that one asset.
 
+## Pan when zoomed in (owner-requested)
+
+`OrbitControls` shipped with pan hard-disabled so a learner could not lose the
+scene. Pan now unlocks when the camera is closer than `PAN_UNLOCK_DISTANCE`
+(between the closest allowed zoom and the default framing), the pan target is
+clamped to `PAN_TARGET_BOUNDS` (a box containing the bed, console, HLS module,
+blender, and every label anchor — asserted by test for both tracks), and on
+zooming back out the rig glides home so the canonical framing every guided
+lesson references is restored (snap under reduced motion). The glide
+translates target AND camera together — a pan is a rig translation, and the
+first implementation's target-only lerp changed the camera-target distance,
+re-crossed the unlock threshold mid-glide, and stalled partway (caught in
+live-browser testing, pinned by a distance-preservation test).
+
+Verified live with synthetic pointer/wheel events: pan unlock after zoom,
+right-drag panning (every world-anchored label pill shifted), pan locked at
+the default framing. The glide-home is verified by the five-test
+`bedside-panning` jest suite rather than live: injected pointers never
+register a gesture end with OrbitControls in the headless pane (the same
+end event drives the long-shipped orbit label-dimming, which recovers
+normally with real input). HUD hint updated to mention pan.
+
 ## Owner visual approvals
 
 - Gate 1 (candidates): **approved** — console A + patient A, 2026-08-11.
