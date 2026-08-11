@@ -5,6 +5,7 @@ import { isAtlasCohortProduct } from '../../../src/features/device-intelligence/
 import { ROLE_CODE_ALIASES } from '../../../src/features/preference-cards/domain/role-taxonomy'
 
 import {
+  containsToken,
   deriveAliasFixture,
   deriveIdentityLeakTokens,
   deriveProductFixtures,
@@ -109,21 +110,41 @@ describe('deriveIdentityLeakTokens', () => {
     ])
   })
 
-  it('excludes identity already present in the public translation catalogs', () => {
+  it('excludes identity already present in the public translation catalogs — as tokens, not substrings', () => {
     // Public educational copy names real device models today (e.g. the radial-probe models
     // in the EBUS course strings); those ship on public pages regardless of the beta flag,
-    // so their presence on a D1 page is the message bundle, not a catalog exposure.
+    // so their presence on a D1 page is the message bundle, not a catalog exposure. The
+    // exclusion is boundary-matched with the same predicate as the detection: a catalog
+    // number whose only catalog "occurrence" is inside a translation-key hex id (10530 in
+    // h_1a7610530739) stays SCREENED rather than being silently unscreened.
     const catalogs = ['en', 'es', 'zh-CN'].map((locale) =>
       readFileSync(path.join(REPO_ROOT, `messages/${locale}.json`), 'utf8').toLowerCase(),
     )
     for (const token of tokens.keys()) {
-      expect(catalogs.some((catalog) => catalog.includes(token))).toBe(false)
+      expect(catalogs.some((catalog) => containsToken(catalog, token))).toBe(false)
     }
+    // The genuine public-copy mention stays excluded, the hash-key coincidences stay in.
+    expect(tokens.has('um-s20-17s')).toBe(false)
+    expect(tokens.has('10530')).toBe(true)
+    expect(tokens.has('10358a')).toBe(true)
+    expect(tokens.has('10384b')).toBe(true)
+  })
+
+  it('excludes phrases the cohort records’ own prose already serves', () => {
+    // The cohort record is the approved payload: the atlas renders its description and
+    // compatibility text verbatim, so a phrase those fields carry cannot be a leak of
+    // itself even when a non-cohort accessory is named exactly that phrase. The concrete
+    // committed instance: a cohort unit's description says it includes a two-pedal
+    // footswitch, and a non-cohort accessory's product_name is that phrase.
+    expect(tokens.has('two-pedal footswitch')).toBe(false)
   })
 
   it('excludes governed vocabulary labels the D1 surface deliberately renders', () => {
     // A hidden product whose trade name coincides with a generic authored label
-    // ("Flexible grasping forceps") is not identified by that label being served.
+    // ("Flexible grasping forceps") is not identified by that label being served — and the
+    // same holds for an inner phrase of a label ("Surgical Probe" inside the role name
+    // "Thoracoscopy surgical probe" on the atlas filter), which boundary-matches wherever
+    // the longer label renders.
     const roles = JSON.parse(
       readFileSync(path.join(REPO_ROOT, 'data/ip-preference-cards/generated/roles.json'), 'utf8'),
     ) as Array<{ role_name?: string }>
@@ -131,6 +152,8 @@ describe('deriveIdentityLeakTokens', () => {
       if (!role.role_name) continue
       expect(tokens.has(role.role_name.trim().toLowerCase())).toBe(false)
     }
+    expect(tokens.has('flexible grasping forceps')).toBe(false)
+    expect(tokens.has('surgical probe')).toBe(false)
   })
 
   it('never carries a token a cohort product also answers to', () => {

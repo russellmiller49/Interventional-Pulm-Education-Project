@@ -561,6 +561,14 @@ export async function runBuildReleaseBundles(input: {
     'release-bundles.json',
     null,
   )
+  // Wrong-shape JSON is as corrupt as unparseable JSON: degrading it to an empty pin map
+  // would quietly re-resolve every frozen release against the live sets — the exact
+  // misleading cascade the hardened reader exists to refuse.
+  if (generatedBefore !== null && !Array.isArray(generatedBefore.bundles)) {
+    throw new Error(
+      `${path.join(generatedDirectory, 'release-bundles.json')} parsed but does not carry a bundles array — the recorded whole-set pins are unreadable. Restore the file; frozen releases must resolve the sets they recorded.`,
+    )
+  }
   const recordedSetPinsByReleaseId = new Map<string, ReleaseDefinitionSetPins>(
     (generatedBefore?.bundles ?? []).map((bundle) => [bundle.id, setPinsOfBundle(bundle)]),
   )

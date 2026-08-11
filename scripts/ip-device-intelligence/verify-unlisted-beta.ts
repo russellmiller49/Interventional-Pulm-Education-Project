@@ -20,8 +20,10 @@ import { ROLE_CODE_ALIASES } from '../../src/features/preference-cards/domain/ro
  * `--mode=on` expects a server WITH the flag set locally, and checks the full exposure
  * contract: exemplar routes serve, non-exemplars and non-cohort products 404, aliases
  * redirect, every page is noindex with its demo watermarks and no-claim footers, no
- * non-cohort product identity appears in served HTML, and the F-09 conditional presentation
- * is live.
+ * non-cohort product identity appears in the served HTML of the scanned surfaces (the
+ * three exemplar workspaces and readiness pages, the atlas index, and the cohort device
+ * detail page — both as PRD ids and as boundary-matched textual identity), and the F-09
+ * conditional presentation is live.
  *
  * Instead of `--base-url`, `--start` builds nothing and launches `npx next start` over the
  * existing production build on `--port` (default 3210), with the flag set only in that child
@@ -144,9 +146,17 @@ export function deriveProductFixtures(repoRoot: string): {
  *   one is not identified by it.
  *
  * Below the per-field distinctiveness floor nothing is considered (short catalog numbers
- * like "0100" collide with markup), and matching is on token boundaries
- * (`servedIdentityLeaks`), so "10530" cannot match inside a content-hash key.
+ * like "0100" collide with markup), and matching is on token boundaries — for the
+ * detection AND for every text-corpus exclusion, with the same `containsToken`: an
+ * exclusion looser than the detection would silently unscreen a token whose only catalog
+ * "occurrence" is inside a translation-key hex id.
  */
+/** Boundary-matched token presence: a hit must not sit inside a longer alphanumeric run. */
+export function containsToken(haystack: string, token: string): boolean {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(haystack)
+}
+
 export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> {
   const products = JSON.parse(
     readFileSync(
@@ -164,6 +174,10 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     alternate_ids?: string
     gtin?: string
     gtin_raw?: string
+    description?: string
+    compatibility_text?: string
+    notes?: string
+    availability_note?: string
   }>
   const identityFields = [
     ['product_name', 12],
@@ -237,16 +251,36 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
     }
   }
 
-  const cohortTokens = products
-    .filter((product) => isAtlasCohortProduct(product))
-    .flatMap((product) => tokensOf(product).map(({ token }) => token))
+  const cohortProducts = products.filter((product) => isAtlasCohortProduct(product))
+  const cohortTokens = cohortProducts.flatMap((product) =>
+    tokensOf(product).map(({ token }) => token),
+  )
+  // The cohort records ARE the approved payload — the atlas serves their prose fields
+  // (description, compatibility text, notes) verbatim by design, so a phrase those fields
+  // already carry ("includes a two-pedal footswitch") cannot be a leak of itself, even
+  // when a non-cohort accessory happens to be named exactly that phrase.
+  const cohortProse = cohortProducts
+    .flatMap((product) => [
+      product.description,
+      product.compatibility_text,
+      product.notes,
+      product.availability_note,
+    ])
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => value.toLowerCase())
+  // Containment, not equality, for the same reason the cohort rule is containment: any
+  // inner phrase of a deliberately served label boundary-matches wherever the label is
+  // rendered ("surgical probe" inside the role name "Thoracoscopy surgical probe" on the
+  // atlas filter), and the page text is the label, not the product.
+  const governedLabelCorpus = [...governedLabels].join('\n')
   const leakTokens = new Map<string, string>()
   for (const product of products) {
     if (isAtlasCohortProduct(product)) continue
     for (const { token, field } of tokensOf(product)) {
       if (cohortTokens.some((cohortToken) => cohortToken.includes(token))) continue
-      if (publicSiteCopy.some((catalog) => catalog.includes(token))) continue
-      if (governedLabels.has(token)) continue
+      if (cohortProse.some((prose) => containsToken(prose, token))) continue
+      if (publicSiteCopy.some((catalog) => containsToken(catalog, token))) continue
+      if (containsToken(governedLabelCorpus, token)) continue
       if (!leakTokens.has(token)) leakTokens.set(token, `${product.product_id} ${field}`)
     }
   }
@@ -259,16 +293,22 @@ export function deriveIdentityLeakTokens(repoRoot: string): Map<string, string> 
 /**
  * The identity tokens a served body actually contains, matched on token boundaries: a hit
  * must not sit inside a longer alphanumeric run, or numeric catalog numbers match inside
- * content-hash keys and chunk names. Exported for the derivation tests.
+ * content-hash keys and chunk names. The common HTML entity escapes are decoded first, so
+ * a token containing `&`, a quote, or an angle bracket stays matchable against React
+ * output. Exported for the derivation tests.
  */
 export function servedIdentityLeaks(body: string, tokens: Map<string, string>): string[] {
-  const haystack = body.toLowerCase().replaceAll('&amp;', '&')
+  const haystack = body
+    .toLowerCase()
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#x27;', "'")
+    .replaceAll('&#39;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&')
   const leaks: string[] = []
   for (const [token, provenance] of tokens) {
-    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    if (new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(haystack)) {
-      leaks.push(`"${token}" (${provenance})`)
-    }
+    if (containsToken(haystack, token)) leaks.push(`"${token}" (${provenance})`)
   }
   return leaks
 }
@@ -374,10 +414,17 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   const fixtures = deriveProductFixtures(repoRoot)
   const alias = deriveAliasFixture()
 
-  await expectStatus(results, baseUrl, '/en/devices', 200, {
-    requireRobotsHeader: true,
-    requireRobotsMeta: true,
-  })
+  // The atlas bodies join the identity scans below: the device pages are the one D1
+  // surface that serves free catalog prose (descriptions, compatibility statements), which
+  // is exactly where a non-cohort product gets named without a PRD token appearing.
+  const atlasBodies = new Map<string, string>()
+  atlasBodies.set(
+    'devices index',
+    await expectStatus(results, baseUrl, '/en/devices', 200, {
+      requireRobotsHeader: true,
+      requireRobotsMeta: true,
+    }),
+  )
   await expectStatus(results, baseUrl, '/en/procedures', 200, {
     requireRobotsHeader: true,
     requireRobotsMeta: true,
@@ -415,10 +462,13 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   for (const productId of fixtures.nonCohortProductIds) {
     await expectStatus(results, baseUrl, `/en/devices/${productId}`, 404)
   }
-  await expectStatus(results, baseUrl, `/en/devices/${fixtures.cohortProductId}`, 200, {
-    requireRobotsHeader: true,
-    requireRobotsMeta: true,
-  })
+  atlasBodies.set(
+    'device detail',
+    await expectStatus(results, baseUrl, `/en/devices/${fixtures.cohortProductId}`, 200, {
+      requireRobotsHeader: true,
+      requireRobotsMeta: true,
+    }),
+  )
 
   // A deprecated role code redirects to its canonical page rather than serving content twice.
   const { response: aliasResponse } = await fetchPath(
@@ -495,8 +545,10 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   }
 
   // No non-cohort product identity in any served page: every PRD- token in the HTML must be
-  // a cohort member.
-  for (const [code, body] of [...workspaceBodies, ...readinessBodies]) {
+  // a cohort member. The atlas bodies are in the set — the compatibility wall withholds by
+  // exact identifier, and this is where a withheld id would surface if it slipped through.
+  const scannedBodies = [...workspaceBodies, ...readinessBodies, ...atlasBodies]
+  for (const [code, body] of scannedBodies) {
     const served = [...new Set(body.match(/PRD-[A-Z0-9]{6,20}/g) ?? [])]
     const leaked = served.filter((productId) => !fixtures.cohortProductIds.has(productId))
     check(
@@ -511,7 +563,7 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   // alternate id, or GTIN in any served page — the shapes a hidden or candidate product
   // leaks through when a compatibility statement names it in prose rather than by id.
   const identityTokens = deriveIdentityLeakTokens(repoRoot)
-  for (const [code, body] of [...workspaceBodies, ...readinessBodies]) {
+  for (const [code, body] of scannedBodies) {
     const leakedIdentities = servedIdentityLeaks(body, identityTokens)
     check(
       results,

@@ -310,6 +310,25 @@ describe('release generation writes nothing when validation fails', () => {
     expect(listing(fixture.root)).toEqual(before)
   })
 
+  it('a retained record parsed to the wrong shape fails the CLI loudly before any write', () => {
+    const fixture = makeFixture()
+    // Valid JSON, wrong shape: without the shape guard this degrades to an empty recorded-
+    // pin map and every frozen release quietly re-resolves the live sets.
+    writeFileSync(path.join(fixture.generated, 'release-bundles.json'), '{}')
+    const armed = new Map<string, string>()
+    for (const filename of RELEASE_GENERATION_TARGET_FILENAMES) {
+      armed.set(filename, sha256(path.join(fixture.generated, filename)))
+    }
+    const before = listing(fixture.root)
+
+    const run = spawnCli(fixture)
+
+    expect(run.status).not.toBe(0)
+    expect(run.stderr).toContain('does not carry a bundles array')
+    expectTargetsUntouched(fixture.generated, armed)
+    expect(listing(fixture.root)).toEqual(before)
+  })
+
   it('a corrupted (unparseable) retained artifact fails the CLI loudly before any write', () => {
     const fixture = makeFixture()
     // Read-and-merge retained history must never silently degrade to "empty and rebuilt":

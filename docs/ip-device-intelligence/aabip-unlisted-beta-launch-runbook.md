@@ -85,20 +85,24 @@ What the mode-on pass verifies, in one run:
   ("DEMO DATA — NOT AN ACTUAL INSTITUTION") on every readiness page, and the qualified
   readiness headline ("Demo: Not ready") the committed data produces — proposals never
   satisfy coverage, and no institutional claim appears.
-- No non-cohort product identity anywhere in the served HTML of any checked page — both as
-  `PRD-` ids and as textual identity (product names, catalog and global/reference part
-  numbers, alternate ids, GTINs), matched on token boundaries. The token population is
-  derived from the committed catalog with three data-derived exclusions that keep it an
-  exposure check rather than a coincidence detector: cohort identities (sibling SKUs share
-  naming), strings already present in the public translation catalogs (public educational
-  copy names real device models today, independent of the flag), and governed vocabulary
-  labels the surface deliberately renders (a hidden product whose trade name coincides
-  with a generic authored label is not identified by it).
+- No non-cohort product identity anywhere in the served HTML of the scanned surfaces —
+  the three exemplar workspaces, their readiness pages, the atlas index, and the cohort
+  device detail page (the surface that serves free catalog prose) — both as `PRD-` ids
+  and as textual identity (product names, catalog and global/reference part numbers,
+  alternate ids, GTINs), matched on token boundaries. The token population is derived
+  from the committed catalog with data-derived exclusions that keep it an exposure check
+  rather than a coincidence detector, each applied with the same boundary predicate as
+  the detection: cohort identities (sibling SKUs share naming), phrases the cohort
+  records' own prose fields already serve (the record is the approved payload), strings
+  already present in the public translation catalogs (public educational copy names real
+  device models today, independent of the flag), and governed vocabulary labels the
+  surface deliberately renders (a hidden product whose trade name coincides with a
+  generic authored label is not identified by it).
 - F-09: the THERAPEUTIC_BRONCH workspace presents the rigid APC applicator as conditional
   ("Rigid system in use"), data-driven.
 
 Local rehearsal against the production build (`--start` in place of `--base-url`):
-`--mode=off` runs 22 checks, `--mode=on` 60, all expected to pass before the owner touches
+`--mode=off` runs 22 checks, `--mode=on` 64, all expected to pass before the owner touches
 the production flag.
 
 Manually spot-check one exemplar workspace and one readiness page in a browser as well —
