@@ -1,49 +1,66 @@
 # CARDIOHELP ECMO runtime models
 
-These GLBs were prepared for the browser runtime on 2026-07-17 and reworked on
-2026-07-18 (axis correction + quality pass). Supplied source files are not
-modified; the patient and clamp are generated locally.
+Prepared 2026-07-17, axis/quality rework 2026-07-18, and B7 fidelity rebuild
+2026-08-11 (owner-approved at Visual Approval Gate 1). The console, patient
+and clamp are procedural in-repo originals; the oxygenator and sensor still
+derive from supplied source files.
 
-| Runtime file                 | Provenance                                 | Runtime triangles | Size    | Purpose                                  |
-| ---------------------------- | ------------------------------------------ | ----------------: | ------- | ---------------------------------------- |
-| `patient-femoral-access.glb` | Procedurally generated (prepare_assets.py) |           ~17,700 | ~316 KB | Draped supine patient, 3 groin windows   |
-| `cardiohelp-console.glb`     | `cardiohelp_console.glb` + polish pass     |            15,999 | ~476 KB | Bedside console, standing orientation    |
-| `oxygenator.glb`             | `oxygenator.glb` (textures preserved)      |            61,444 | ~2.2 MB | Textured membrane oxygenator             |
-| `circuit-clamp.glb`          | Procedurally generated (polish script)     |            ~5,900 | ~88 KB  | Interactive tubing clamp (jaws/ratchet)  |
-| `hls-sensor-connector.glb`   | `HLS internal sensor connection..glb`      |             1,091 | ~20 KB  | Return-line sensor, tangent-aligned axis |
+| Runtime file                 | Provenance                                     | Runtime triangles | Size    | Purpose                                                                                  |
+| ---------------------------- | ---------------------------------------------- | ----------------: | ------- | ---------------------------------------------------------------------------------------- |
+| `cardiohelp-console.glb`     | Procedural (build_fidelity_assets.py)          |            12,164 | ~310 KB | CARDIOHELP console: cage, screen, keypad, rotary knob, connector panel, HLS holder plate |
+| `patient-femoral-access.glb` | Procedural (build_fidelity_assets.py)          |            21,860 | ~388 KB | Neutral supine mannequin, fitted drape, 2 groin access windows                           |
+| `circuit-clamp.glb`          | Procedural (build_fidelity_assets.py)          |             3,744 | ~93 KB  | Interactive tubing clamp, jaws sized to the 0.08 m tube OD                               |
+| `oxygenator.glb`             | Supplied `oxygenator.glb` (textures preserved) |            61,437 | ~2.2 MB | Textured membrane oxygenator                                                             |
+| `hls-sensor-connector.glb`   | Supplied `HLS internal sensor connection..glb` |             1,091 | ~20 KB  | Return-line sensor, tangent-aligned axis                                                 |
 
-Total payload ≈ 3.1 MB (budget 6 MB).
+Total payload ≈ 3.15 MB (budget 6 MB).
 
-## 2026-07-18 rework notes
+## 2026-08-11 B7 fidelity rebuild notes
 
-- **Axis correction.** The original export skipped the Z-up → Y-up conversion,
-  so the patient rendered standing upright and the console lay on its back in
-  the browser. Orientation is now normalized: patient supine along Z, console
-  and sensor heights along Y. (`bpy.ops.object.transform_apply` silently
-  no-ops on glTF-imported objects in Blender 5.1 background mode — both
-  scripts transform mesh data directly.)
-- **Patient quality.** Higher metaball resolution, shoulder/knee/ankle
-  volumes, a shrinkwrapped drape with boolean-cut windows, and recessed
-  three-site groin dressings (bilateral vein + right artery for VA) with gauze.
-- **Clamp.** The supplied flat 8 mm plate was replaced by a procedural tubing
-  clamp (jaws, hinge, ratchet, finger loops) authored for the runtime's
-  alignment convention (length along X, jaw opening along Y).
+- **Console.** The supplied console scan (not recognizable as a CARDIOHELP;
+  single monochrome material) is retired from the runtime. The procedural
+  replacement is authored upright — base at local −Y, operated face on +Z —
+  so `CONSOLE_PLACEMENT` is a plain yaw; the legacy `[π, yaw, 0]` flip is
+  gone. No manufacturer logos or copied artwork; the screen is deliberately
+  blank (display content lives in the 2D console facsimile).
+- **Patient.** Skin-modifier skeleton with 7.5-head adult proportions
+  (~1.75 m), mitten hands, dorsiflexed feet, featureless face with a
+  surgical-cap treatment, fitted chest-to-knees drape with a circular
+  left-vein window and a capsule window over the right vein/artery cluster.
+  No baked gauze — the runtime draws dressings at the layout anchors. The
+  groin anchors in `layout.ts` are re-measured from this asset's raycast
+  skin heights (the builder prints them).
+- **Clamp.** Jaw span now clears the 0.08 m tube OD (the old 0.048 m jaws
+  hovered beside the tube); ratchet rack seated instead of floating chips.
+- **Material-slot trap** (this shipped a defect once): applying a boolean
+  whose cutter has no material inserts a `None` slot at index 0, orphaning a
+  later-appended material, and `material_slot_remove_unused` then deletes it
+  at join — the old patient's drape rendered default-white this way. Assign
+  materials before boolean cuts; `b7-asset-contracts.test.ts` guards it.
+
+## 2026-07-18 rework notes (still applicable to the supplied assets)
+
+- `bpy.ops.object.transform_apply` silently no-ops on glTF-imported objects
+  in Blender 5.1 background mode — scripts transform mesh data directly.
+- The oxygenator's orphaned normal-map image was stripped; embedded
+  base-color/roughness textures preserved.
 - The supplied `Fem_Fem_legs.glb` remains unused (open/cropped geometry).
 
 ## Rebuild
 
 ```sh
-# Full rebuild from supplied sources (not in repo):
-blender --background --python scripts/cardiohelp-ecmo/prepare_assets.py -- \
-  /path/to/source-assets public/models/cardiohelp-ecmo
+# B7 assets (console, patient, clamp) — no source files needed:
+/Applications/Blender.app/Contents/MacOS/Blender --background \
+  --python scripts/cardiohelp-ecmo/build_fidelity_assets.py -- \
+  public/models/cardiohelp-ecmo
 
-# Patient only (no sources needed):
-blender --background --python scripts/cardiohelp-ecmo/prepare_assets.py -- \
-  --patient-only public/models/cardiohelp-ecmo
+# Subset:
+... build_fidelity_assets.py -- public/models/cardiohelp-ecmo --only patient
 
-# Polish/reorient the runtime GLBs in place (no sources needed):
-blender --background --python scripts/cardiohelp-ecmo/polish_runtime_assets.py -- \
-  public/models/cardiohelp-ecmo public/models/cardiohelp-ecmo
+# Oxygenator/sensor polish from supplied sources (do NOT run the console or
+# clamp paths of the legacy scripts — they would overwrite the B7 assets):
+# prepare_assets.py / polish_runtime_assets.py remain for provenance of the
+# supplied-file pipeline only.
 ```
 
 ## Visual verification (offline harness)
@@ -59,5 +76,6 @@ blender --background --python scripts/cardiohelp-ecmo/render_scene_previews.py -
   public/models/cardiohelp-ecmo scripts/cardiohelp-ecmo/circuit-layout.vv.json /tmp/ecmo-previews/vv
 ```
 
-The supplied files did not include license or provenance metadata. Confirm
-redistribution rights before public release.
+The supplied files (oxygenator, sensor) did not include license or provenance
+metadata. Confirm redistribution rights before public release; the console,
+patient and clamp no longer carry that constraint.
