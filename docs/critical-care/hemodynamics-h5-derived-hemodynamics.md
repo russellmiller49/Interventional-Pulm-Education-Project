@@ -55,7 +55,8 @@ review was read directly. `derivedSourceBoundaries.ts` records per-topic depth:
   p. 19), and the shunt/TR interpretation limits (§4.2–4.3).
 - **claim-text-audited** — the CPO formula and cohort context (Mendoza 2007
   not present), the PA-compliance distribution (Mounsey 2026 not present),
-  the PPV threshold (Michard 2000 not present), and the model registration.
+  the PPV threshold (Michard 2000 not present), the PAPi LVAD cut point
+  (Morine 2016 not present), and the model registration.
 - **registry-membership-only** — the declared gaps: no BSA estimating
   formula, no universal derived normal ranges, no numeric small-denominator
   criterion, and no derived-value treatment targets. No number is shown for
@@ -120,6 +121,61 @@ fail. The H5 routes are public-unlisted and return before that line, so they
 serve normally. Separately, `scripts/literature/protected-gold-import-contract-v2-recovery-bundle.test.ts`
 (a file this branch does not touch, added by `main`) exceeds its own 15 s
 cap under full-suite parallelism; it passes in isolation.
+
+## Review corrections (2026-08-11)
+
+Four narrow corrections from the PR review, each with its own falsification.
+
+**Decision recovery.** `DecisionFieldset` locked every commitment for good.
+Because the disagreement and threshold decisions award their completion
+evidence only for the defensible option, a learner who answered either one
+wrong was stuck with it. A non-defensible commitment now offers _Reconsider and
+commit again_, which clears the attempted selection, re-enables the options,
+and moves focus to the first one. The first attempt and its feedback stay until
+the learner asks; a defensible answer stays locked. All three consumers use it,
+including the transfer comparison, whose evaluated side-by-side is latched so
+reconsidering does not withdraw it. Falsified by pinning `recoverable` to
+`false`: six of the seven recovery tests fail, and the seventh — the one
+asserting a correct answer stays locked — still passes, which is the right
+signature for that defect.
+
+**PAWP provenance.** H4 defines `sampled` as a specimen from a named site at a
+named time, which a transduced pressure never is. PVR and PVRI now accept only
+`measured` for the mean PAWP. The rule is structural: `isPressureReading` on the
+input definition, checked at import for every dependency, so MAP, RAP, mPAP,
+PASP, PADP, mean PAWP, and both pulse pressures are all covered and a future
+pressure cannot quietly acquire `sampled`. The Fick oxygen specimens keep it.
+Falsified by restoring `['measured', 'sampled']`: the validator throws at import
+and every consuming suite refuses to load.
+
+**Wedge mechanism.** The invalid-wedge episode named over-wedging and incomplete
+occlusion together, though its clues — upward drift, loss of interpretable
+atrial components — fit only over-wedging. It is now _The stored wedge is not
+interpretable_ and names one mechanism; the decision copy speaks of an
+interpretable wedge rather than a "true" one. The evaluator outcome is
+unchanged: PAWP invalid, PVR and PVRI withheld, SVR/CI/PAPi/CPO available.
+Falsified by restoring the combined phrase: the copy contract fails on
+`incomplete occlusion`.
+
+**Threshold provenance.** The SVRI context displayed 1,970–2,390 citing a table
+that tabulates no SVRI interval; it now states the absence and shows no number,
+keeping its `reference-interval` classification. The PAPi 1.85 boundary cited
+the acute inferior-MI paper, which does not claim it; it now cites Morine 2016
+— newly registered as `papi-lvad-rvf-2016` — as that study's ROC cut point for
+postoperative RV failure in 132 continuous-flow LVAD recipients. Because that
+paper is not available in any project source location, the new
+`papi-lvad-cut-point` topic is recorded at **claim-text-audited** depth with no
+locator: the citation and cohort description came from the module owner, not
+from the document. Korabathina 2012 keeps the 0.9 boundary. The shared
+threshold constants in `sharedClinicalThresholds.ts` were not modified.
+Falsified twice — restoring the SVRI range fails two tests, and re-pointing 1.85
+at the acute-MI record fails the attribution test.
+
+Rendered review at 1440×900, 1280×720, and 1024×768: PVR and PVRI show only the
+Measured chip for PAWP; the wrong-then-reconsider-then-correct loop was driven
+live on both the disagreement and threshold decisions; the renamed episode, the
+number-free SVRI context, and the two distinctly-populated PAPi contexts all
+render. No H5 overflow, no duplicate ids, verdict contrast 8.0:1.
 
 ## Boundaries
 
