@@ -71,6 +71,23 @@ export type PublishedReleaseInstantParse =
     }
 
 /**
+ * Render a non-string value for a failure reason without being able to throw doing it:
+ * `JSON.stringify` rejects BigInt and cycles and re-throws a poisoned `toJSON`, and a
+ * diagnostic path must not convert a bad value into a crash.
+ */
+function describeNonString(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    try {
+      return String(value)
+    } catch {
+      return '[unrepresentable value]'
+    }
+  }
+}
+
+/**
  * Parse a release's `publishedAt` under the canonical contract, or say exactly why not.
  *
  * Total over `unknown` — seed JSON can carry anything — and never throws: callers that must
@@ -91,7 +108,7 @@ export function parsePublishedReleaseInstant(value: unknown): PublishedReleaseIn
     return {
       ok: false,
       raw: value,
-      reason: `is ${JSON.stringify(value)} (a ${typeof value}), not a string, so it is not ${PUBLISHED_RELEASE_INSTANT_CONTRACT}`,
+      reason: `is ${describeNonString(value)} (a ${typeof value}), not a string, so it is not ${PUBLISHED_RELEASE_INSTANT_CONTRACT}`,
     }
   }
   if (!publishedReleaseInstantStringSchema.safeParse(value).success) {

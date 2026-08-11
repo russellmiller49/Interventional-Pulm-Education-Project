@@ -30,8 +30,12 @@ describe('parsePublishedReleaseInstant', () => {
     ['a date-only value', '2026-08-11'],
     ['a timezone-less datetime', '2026-08-11T12:00:00'],
     ['an impossible month', '2026-13-01T00:00:00.000Z'],
+    ['month zero', '2026-00-10T00:00:00.000Z'],
     ['an impossible day', '2026-04-31T00:00:00.000Z'],
+    ['day zero', '2026-01-00T00:00:00.000Z'],
     ['an impossible leap day (2026 is not a leap year)', '2026-02-29T00:00:00.000Z'],
+    ['a century non-leap day (2100 is not a leap year)', '2100-02-29T00:00:00.000Z'],
+    ['a century non-leap day (1900 is not a leap year)', '1900-02-29T00:00:00.000Z'],
     ['hour 24', '2026-08-11T24:00:00.000Z'],
     ['minute 60', '2026-08-11T12:60:00.000Z'],
     ['second 60 (leap seconds are outside the contract)', '2026-08-11T12:00:60.000Z'],
@@ -41,9 +45,17 @@ describe('parsePublishedReleaseInstant', () => {
       '2026-08-11T12:00:00.000+01:00',
     ],
     ['a negative offset form', '2026-08-11T12:00:00.000-05:00'],
+    [
+      'the +00:00 spelling of UTC (the contract is Z-designated only)',
+      '2026-08-11T12:00:00.000+00:00',
+    ],
+    ['the -00:00 spelling of UTC', '2026-08-11T12:00:00.000-00:00'],
     ['trailing text', '2026-08-11T12:00:00.000Z (frozen)'],
     ['leading whitespace', ' 2026-08-11T12:00:00.000Z'],
     ['trailing whitespace', '2026-08-11T12:00:00.000Z '],
+    ['a trailing newline (non-multiline anchors must not admit it)', '2026-08-11T12:00:00.000Z\n'],
+    ['full-width unicode digits', '２０２６-08-11T12:00:00.000Z'],
+    ['an Arabic-Indic zero in the year', '٠026-08-11T12:00:00.000Z'],
     ['a number', 1785456000000],
     ['a boolean', true],
     ['an object', { publishedAt: '2026-08-11T12:00:00.000Z' }],
@@ -65,7 +77,9 @@ describe('parsePublishedReleaseInstant', () => {
     // Every failure carries the raw value and a reason precise enough to act on.
     expect(parsed.raw).toBe(value)
     expect(parsed.reason.length).toBeGreaterThan(0)
-    if (typeof value === 'string' && value.length > 0) {
+    // Whitespace-only strings are excluded from the containment check: every reason contains
+    // spaces, so the assertion would be vacuously true for them.
+    if (typeof value === 'string' && value.trim().length > 0) {
       expect(parsed.reason).toContain(value)
     }
   })
@@ -137,6 +151,16 @@ describe('comparePublicationOrder over parsed instants (P92-C2b)', () => {
     const half = { releaseBundleId: 'release-half', publishedAt: '2026-08-11T00:00:00.5Z' }
     const tenth = { releaseBundleId: 'release-tenth', publishedAt: '2026-08-11T00:00:00.10Z' }
     expect(comparePublicationOrder(tenth, half)).toBeLessThan(0)
+  })
+
+  it('truncates beyond milliseconds, so sub-millisecond differences fall to the id tiebreak', () => {
+    // Two genuinely different instants at micro precision compare equal at the contract's
+    // millisecond resolution — documented truncation, resolved deterministically by id.
+    const later = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.1239Z' }
+    const earlier = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.1234Z' }
+    expect(comparePublicationOrder(earlier, later)).toBeLessThan(0)
+    expect(comparePublicationOrder(later, earlier)).toBeGreaterThan(0)
+    expect([later, earlier].sort(comparePublicationOrder)[0].releaseBundleId).toBe('release-a-v1-0')
   })
 
   it('throws on a malformed instant, naming the release and the raw value', () => {
