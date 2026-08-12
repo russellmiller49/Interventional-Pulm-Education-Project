@@ -6,6 +6,7 @@ import { D1_EXEMPLAR_PROCEDURE_CODES } from '@/features/device-intelligence/doma
 import { getAtlasProductDetail } from '@/features/device-intelligence/server/atlas.server'
 import { getAtlasCatalogStore } from '@/features/device-intelligence/server/atlas-store.server'
 import { textReferencesNonCohortIdentity } from '@/features/device-intelligence/server/compatibility.server'
+import { getProcedureOutputPreviews } from '@/features/device-intelligence/server/outputs.server'
 import { getProcedureWorkspace } from '@/features/device-intelligence/server/procedures.server'
 import { normalizeIdentifier } from '@/features/preference-cards/server/catalog-store'
 
@@ -120,6 +121,26 @@ describe('C-02 — the workspace view model is cohort-walled at the server bound
       for (const productId of nonCohortIds) {
         if (serialized.includes(productId)) {
           throw new Error(`${code} workspace serializes non-cohort product id ${productId}`)
+        }
+      }
+    }
+  })
+
+  it('serializes no non-cohort product id into any exemplar operational output', () => {
+    for (const code of D1_EXEMPLAR_PROCEDURE_CODES) {
+      const workspace = getProcedureWorkspace(code)!
+      const outputs = getProcedureOutputPreviews(
+        workspace.procedureCode,
+        workspace.scenarioId,
+        workspace.formularySummary,
+      )!
+      const serialized = JSON.stringify(outputs)
+      expect(textReferencesNonCohortIdentity(serialized)).toBe(false)
+      for (const productId of nonCohortIds) {
+        if (serialized.includes(productId)) {
+          throw new Error(
+            `${code} operational outputs serialize non-cohort product id ${productId}`,
+          )
         }
       }
     }

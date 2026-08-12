@@ -1,98 +1,46 @@
 import 'server-only'
 
 import {
-  buildDemoContext,
-  resolveDemoScenario,
-} from '@/features/preference-cards/data/demo-context.server'
-import { expandEffectiveSlots } from '@/features/preference-cards/domain/effective-slots'
-import { defaultSelectedModuleVersionIds } from '@/features/preference-cards/domain/expand-recipe-composition'
-import { getCatalogStore } from '@/features/preference-cards/server/catalog'
-import type { ResolvedCardItem } from '@/features/preference-cards/domain/types'
-
+  buildOperationalOutputRegistry,
+  type GapOutputPayload,
+  type OperationalOutputRegistry,
+  type OutputLine,
+  type SuppressedOutputLine,
+} from '@/features/device-intelligence/domain/operational-outputs'
 import { isExemplarProcedureCode } from '@/features/device-intelligence/domain/exemplars'
-import type { ReadinessProjection } from '@/features/device-intelligence/domain/readiness'
 import {
+  CANONICAL_PROCEDURAL_PHASE_ORDER,
   buildReadinessProjection,
   getCoverageLadderForProcedure,
-  sortPhasesCanonically,
   type RealFormularySummary,
 } from './procedures.server'
 
+import {
+  buildReleaseContext,
+  getCurrentReleaseBundle,
+} from '@/features/preference-cards/data/release-bundles.server'
+import { expandEffectiveSlots } from '@/features/preference-cards/domain/effective-slots'
+import { defaultSelectedModuleVersionIds } from '@/features/preference-cards/domain/expand-recipe-composition'
+import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
+import type { BuildCardInput, ResolvedCardItem } from '@/features/preference-cards/domain/types'
+import {
+  DEMO_LOCATION_ID,
+  DEMO_ORGANIZATION_ID,
+  DEMO_SITE_ID,
+} from '@/features/preference-cards/seed/operational'
+import { getCatalogStore } from '@/features/preference-cards/server/catalog'
+import { getAtlasCatalogStore } from './atlas-store.server'
+
 /**
- * The read-only output previews (vertical-slice-spec §5, outputs 2–5).
+ * The read-only operational-output adapter.
  *
- * All four projections are computed from ONE resolution of the scenario through the existing
- * resolver — the same `BuildContext`, the same `expandEffectiveSlots` path the preference-card
- * engine uses. Nothing here re-resolves, re-ranks, or persists; output 1 (the preference card
- * itself) stays in the existing builder, which the workspace links to.
+ * This is the only layer allowed to obtain the resolved card. It verifies the procedure's exact
+ * current release, resolves that pinned definition set exactly once, enriches its already-resolved
+ * lines with non-resolution slot display fields, and passes the frozen result into the pure output
+ * registry. Registry projectors cannot call a resolver or persistence surface.
  */
 
-export interface OutputLine {
-  itemId: string
-  label: string
-  roleCode: string
-  quantityDisplay: string
-  openHoldStatus: string
-  sterileStatus: string | null
-  responsibleRole: string | null
-  setupZone: string
-  proceduralPhase: string
-  effectiveRequiredness: string
-  resolutionState: string
-  verificationState: string
-  selectedDescription: string | null
-  /** Authored clinician texts, quoted verbatim for the training view. */
-  genericRequirement: string
-  dependencyRule: string | null
-  selectionGuidance: string | null
-  requiresCurrentIfu: boolean
-  notes: string | null
-}
-
-export interface GroupedOutput<Key extends string = string> {
-  key: Key
-  lines: OutputLine[]
-}
-
-export interface ProcedureOutputPreviews {
-  procedureCode: string
-  scenarioId: string
-  modifierCodes: string[]
-  generatedFrom: {
-    recipeVersionId: string
-    recipeName: string
-    engineVersion: string
-    readinessState: string
-  }
-  /** Output 2 — resolved requirements by setup zone, in setup sequence. */
-  roomSetup: GroupedOutput[]
-  /** Output 3 — resolved requirements by responsible role, then canonical procedural phase. */
-  nursing: { responsibleRole: string; phases: GroupedOutput[] }[]
-  /** Output 5 — requirements grouped in the CANONICAL procedural-phase sequence (F-03). */
-  training: GroupedOutput[]
-  /** Output 4 — structural demo/readiness gap preview (not a procurement report). */
-  gaps: {
-    projection: ReadinessProjection
-    proposalsOnlyRoles: string[]
-    unmappedRoles: string[]
-    nonSelectableOnlyRoles: string[]
-    demoStandInRoles: string[]
-    dimensionGapCount: number
-    formularySummary: RealFormularySummary
-  }
-  /**
-   * Requirements the resolver suppressed because a selected kit's bill of materials already
-   * includes them (owner-review F-02). `reason` quotes the resolver's own suppression trace,
-   * which names the kit — rendered, never silently dropped.
-   */
-  suppressedItems: {
-    itemId: string
-    label: string
-    roleCode: string
-    rationale: string | null
-    reason: string | null
-  }[]
-}
+const OUTPUT_GENERATED_AT = '2026-07-25T12:00:00.000Z'
 
 const DIMENSION_FIELDS = [
   'diameter_mm',
@@ -113,29 +61,58 @@ export function getProcedureOutputPreviews(
   procedureCode: string,
   scenarioId: string,
   formularySummary: RealFormularySummary,
-): ProcedureOutputPreviews | null {
+): OperationalOutputRegistry | null {
   if (!isExemplarProcedureCode(procedureCode)) return null
-  const store = getCatalogStore()
-  const resolved = resolveDemoScenario(scenarioId)
-  const context = buildDemoContext(scenarioId)
 
-  // The same expansion the resolver ran, re-derived to recover the slot fields the resolved
-  // item does not carry (sterile status, responsible role). Same engine, same inputs — the
-  // expansion is deterministic, so the join is exact by requirement id.
+  const store = getCatalogStore()
+  const atlasStore = getAtlasCatalogStore()
+  const procedure = store.procedureByCode.get(procedureCode)
+  const release = getCurrentReleaseBundle(procedureCode)
+  if (!procedure || !release || release.scenarioId !== scenarioId) return null
+
+  const released = buildReleaseContext(release.id, { scenarioId })
+  if (!released.ok || released.bundle.sourceProcedureCode !== procedureCode) return null
+
+  const selectedModuleVersionIds = defaultSelectedModuleVersionIds(released.context.recipe)
+  const input: BuildCardInput = {
+    organizationId: DEMO_ORGANIZATION_ID,
+    siteId: DEMO_SITE_ID,
+    locationId: DEMO_LOCATION_ID,
+    recipeVersionId: released.context.recipe.id,
+    selectedModuleVersionIds,
+    modifierCodes: [...released.scenario.defaultModifierCodes],
+    variables: { generated_at: OUTPUT_GENERATED_AT },
+    conditionalStates: {},
+  }
+
+  // Exactly one resolution. Everything below is a projection of this immutable result.
+  const resolved = resolveCard(input, released.context)
+
+  // `ResolvedCardItem` intentionally omits two operational display fields. Re-run the canonical
+  // expansion (not card resolution) against the SAME verified release context and exact selected
+  // modules/modifiers, then join by immutable requirement id. No ranking or selection occurs.
   const effective = expandEffectiveSlots(
     {
-      selectedModuleVersionIds: defaultSelectedModuleVersionIds(context.recipe),
+      selectedModuleVersionIds,
       modifierCodes: resolved.selectedModifiers,
     },
-    context,
+    released.context,
   )
   const slotById = new Map(effective.slots.map((slot) => [slot.id, slot]))
 
   const toLine = (item: ResolvedCardItem): OutputLine => {
     const slot = slotById.get(item.id)
     const role = store.roleByCode.get(item.roleCode)
+    const selectedProductId = item.selectedItemSnapshot?.catalogProduct?.productId ?? null
+    const selectedIdentityState: OutputLine['selectedIdentityState'] = selectedProductId
+      ? atlasStore.productById.has(selectedProductId)
+        ? 'visible'
+        : 'withheld'
+      : 'not_recorded'
     return {
       itemId: item.id,
+      sourceSlotId: item.sourceSlotId,
+      sourceModuleVersionIds: [...(item.sourceModuleVersionIds ?? [])],
       label: item.label,
       roleCode: item.roleCode,
       quantityDisplay: item.quantityDisplay,
@@ -144,14 +121,19 @@ export function getProcedureOutputPreviews(
       responsibleRole: slot?.responsibleRole ?? null,
       setupZone: item.setupZone,
       proceduralPhase: item.proceduralPhase,
+      requiredness: item.requiredness,
       effectiveRequiredness: item.effectiveRequiredness,
+      conditionalState: item.conditionalState,
+      dependencyRule: item.dependencyRule,
       resolutionState: item.resolutionState,
       verificationState: item.verificationState,
+      compatibilityState: item.compatibilityState,
       selectedDescription: item.selectedItemSnapshot?.localDescription ?? null,
+      selectedIdentityState,
       genericRequirement: item.genericRequirement,
-      dependencyRule: item.dependencyRule,
       selectionGuidance: role?.selection_guidance ?? null,
       requiresCurrentIfu: role?.requires_current_ifu === true,
+      whyIncluded: [...item.whyIncluded],
       notes: item.notes,
     }
   }
@@ -160,41 +142,18 @@ export function getProcedureOutputPreviews(
     (left, right) => left.setupSequence - right.setupSequence || left.id.localeCompare(right.id),
   )
   const lines = orderedItems.map(toLine)
-
-  const groupBy = (values: OutputLine[], key: (line: OutputLine) => string): GroupedOutput[] => {
-    const groups = new Map<string, OutputLine[]>()
-    for (const line of values) {
-      const groupKey = key(line)
-      const existing = groups.get(groupKey)
-      if (existing) existing.push(line)
-      else groups.set(groupKey, [line])
-    }
-    return [...groups.entries()].map(([groupKey, groupLines]) => ({
-      key: groupKey,
-      lines: groupLines,
-    }))
-  }
-
-  // Phase-keyed groups follow the canonical clinical sequence (F-03), never the template's
-  // first-appearance order.
-  const groupByPhaseCanonically = (values: OutputLine[]): GroupedOutput[] => {
-    const groups = groupBy(values, (line) => line.proceduralPhase)
-    const orderedKeys = sortPhasesCanonically(groups.map((group) => group.key))
-    return orderedKeys.map((key) => groups.find((group) => group.key === key)!)
-  }
-
-  const nursingGroups = groupBy(lines, (line) => line.responsibleRole ?? 'unassigned').map(
-    (group) => ({
-      responsibleRole: group.key,
-      phases: groupByPhaseCanonically(group.lines),
-    }),
-  )
+  const suppressedItems: SuppressedOutputLine[] = resolved.suppressedItems.map((item) => ({
+    ...toLine(item),
+    rationale: item.rationale,
+    suppressionReason:
+      item.whyIncluded.find((entry) => entry.startsWith('Suppressed because')) ?? null,
+  }))
 
   const ladder = getCoverageLadderForProcedure(procedureCode)
   const projection = buildReadinessProjection(procedureCode, resolved, ladder)
 
-  // Dimension gaps over the authored-option products of this procedure, matching the audit's
-  // DIMENSION_FIELDS definition exactly.
+  // Dimension gaps remain explicitly current audit data, not a claim that these counts were
+  // frozen into the release. The registry definition carries that mixed-source provenance.
   const procedureSlotIds = new Set(
     store.procedureSlots
       .filter((slot) => slot.procedure_code === procedureCode)
@@ -214,47 +173,34 @@ export function getProcedureOutputPreviews(
     }
   }
 
-  return {
-    procedureCode,
-    scenarioId,
-    modifierCodes: [...resolved.selectedModifiers],
-    generatedFrom: {
-      recipeVersionId: resolved.recipeVersionId,
-      recipeName: resolved.recipeName,
-      engineVersion: resolved.engineVersion,
-      readinessState: resolved.readinessState,
-    },
-    roomSetup: groupBy(lines, (line) => line.setupZone),
-    nursing: nursingGroups,
-    training: groupByPhaseCanonically(lines),
-    gaps: {
-      projection,
-      proposalsOnlyRoles: ladder.roles
-        .filter((role) => role.coverage === 'proposals_only')
-        .map((role) => role.roleCode),
-      unmappedRoles: ladder.roles
-        .filter(
-          (role) =>
-            role.coverage === 'no_option_no_proposal_role_mapped' ||
-            role.coverage === 'no_option_no_proposal_unmapped',
-        )
-        .map((role) => role.roleCode),
-      nonSelectableOnlyRoles: ladder.roles
-        .filter((role) => role.coverage === 'non_selectable_authored_only')
-        .map((role) => role.roleCode),
-      demoStandInRoles: ladder.roles
-        .filter((role) => role.demoStandIn)
-        .map((role) => role.roleCode),
-      dimensionGapCount,
-      formularySummary,
-    },
-    suppressedItems: resolved.suppressedItems.map((item) => ({
-      itemId: item.id,
-      label: item.label,
-      roleCode: item.roleCode,
-      rationale: item.rationale,
-      // The resolver's own suppression sentence, which names the satisfying kit.
-      reason: item.whyIncluded.find((entry) => entry.startsWith('Suppressed because')) ?? null,
-    })),
+  const gaps: GapOutputPayload = {
+    projection,
+    proposalsOnlyRoles: ladder.roles
+      .filter((role) => role.coverage === 'proposals_only')
+      .map((role) => role.roleCode),
+    unmappedRoles: ladder.roles
+      .filter(
+        (role) =>
+          role.coverage === 'no_option_no_proposal_role_mapped' ||
+          role.coverage === 'no_option_no_proposal_unmapped',
+      )
+      .map((role) => role.roleCode),
+    nonSelectableOnlyRoles: ladder.roles
+      .filter((role) => role.coverage === 'non_selectable_authored_only')
+      .map((role) => role.roleCode),
+    demoStandInRoles: ladder.roles.filter((role) => role.demoStandIn).map((role) => role.roleCode),
+    dimensionGapCount,
+    formularySummary,
   }
+
+  return buildOperationalOutputRegistry({
+    scenarioId,
+    procedureStatus: procedure.status ?? 'unknown',
+    card: resolved,
+    lines,
+    suppressedItems,
+    canonicalPhaseOrder: CANONICAL_PROCEDURAL_PHASE_ORDER,
+    identifiableCatalogProductIds: new Set(atlasStore.productById.keys()),
+    gaps,
+  })
 }

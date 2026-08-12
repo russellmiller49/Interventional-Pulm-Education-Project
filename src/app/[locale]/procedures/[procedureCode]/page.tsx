@@ -11,6 +11,7 @@ import {
   OutputsPanel,
   type OutputTab,
 } from '@/features/device-intelligence/components/OutputsPanel'
+import { isOperationalOutputTab } from '@/features/device-intelligence/domain/operational-outputs'
 import {
   DIVERGENT_PATHWAY_SECTION,
   RequirementBrowser,
@@ -52,11 +53,7 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
 
   const search = (await searchParams) ?? {}
   const view: RequirementView = search.view === 'phases' ? 'phases' : 'zones'
-  const outputTab: OutputTab = (['card', 'room', 'nursing', 'training', 'gaps'] as const).includes(
-    search.output as OutputTab,
-  )
-    ? (search.output as OutputTab)
-    : 'card'
+  const outputTab: OutputTab = isOperationalOutputTab(search.output) ? search.output : 'card'
 
   const outputs = getProcedureOutputPreviews(
     workspace.procedureCode,
@@ -160,14 +157,12 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
   const outputsPanel = await OutputsPanel({
     locale,
     procedureCode: workspace.procedureCode,
-    scenarioId: workspace.scenarioId,
     outputs,
     tab: outputTab,
-    formularySummary: workspace.formularySummary,
   })
 
   return (
-    <div className="container space-y-8 py-8 md:py-10">
+    <div className="device-intelligence-workspace container space-y-8 py-8 md:py-10">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link href={`/${locale}/procedures` as Route}>
           <ChevronLeft aria-hidden="true" className="h-4 w-4" />

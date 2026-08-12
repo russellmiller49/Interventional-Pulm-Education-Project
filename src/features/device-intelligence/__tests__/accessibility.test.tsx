@@ -89,6 +89,34 @@ describe('D1 accessibility and required warnings', () => {
     getByText(/Suppressed because .* includes this component/)
   }, 120_000)
 
+  it('workspace page: printable setup packet is keyboard-accessible and carries provenance', async () => {
+    const { container, getByRole, getByText, getAllByText } = await renderPage(
+      ProcedureWorkspacePage({
+        params: Promise.resolve({ locale: 'en', procedureCode: 'CHEST_TUBE' }),
+        searchParams: Promise.resolve({ output: 'packet' }),
+      }),
+    )
+    getByRole('button', { name: 'Print this output' })
+    getByRole('heading', { name: 'Printable setup packet' })
+    getByText('Source and provenance manifest')
+    getByText('Kit-suppressed requirements')
+    getByText(/Suppressed because .* includes this component/)
+    expect(getAllByText('DEMO DATA — NOT AN ACTUAL INSTITUTION').length).toBeGreaterThan(0)
+    expect(getAllByText('DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE').length).toBeGreaterThan(
+      0,
+    )
+
+    const sourceRegion = getByRole('region', {
+      name: 'Requirement source and provenance table (scrolls horizontally)',
+    })
+    expect(sourceRegion).toHaveAttribute('tabindex', '0')
+    expect(sourceRegion).toHaveClass('overflow-x-auto')
+    expect(sourceRegion.querySelector('table')).not.toBeNull()
+    expect(container.querySelector('.device-output-print')).not.toBeNull()
+    expect(container.querySelector('.output-print-group')).not.toBeNull()
+    expect(await axe(container)).toHaveNoViolations()
+  }, 120_000)
+
   it('workspace page: THERAPEUTIC_BRONCH carries the authored laser-pathway note (F-07)', async () => {
     const { getByText, getAllByText, queryByText } = await renderPage(
       ProcedureWorkspacePage({

@@ -91,7 +91,12 @@ body:has(.ip-card-print) > div > main {
   .no-print,
   body:has(.ip-card-print) > a.skip-link,
   body:has(.ip-card-print) > div > header,
-  body:has(.ip-card-print) > div > footer {
+  body:has(.ip-card-print) > div > footer,
+  body:has(.device-output-print) > a.skip-link,
+  body:has(.device-output-print) > div > header,
+  body:has(.device-output-print) > div > footer,
+  body:has(.device-output-print) .device-intelligence-workspace > :not(#outputs),
+  body:has(.device-output-print) #outputs > section > :not(.device-output-print) {
     display: none !important;
   }
 
@@ -121,6 +126,30 @@ body:has(.ip-card-print) > div > main {
 
   .ip-card-print [class*='shadow'] {
     box-shadow: none !important;
+  }
+
+  .device-output-print {
+    color: #111827;
+    font-size: 10pt;
+  }
+
+  .device-output-print .output-print-group {
+    break-inside: avoid;
+  }
+
+  .device-output-print .device-output-scroll {
+    overflow: visible !important;
+  }
+
+  .device-output-print .device-output-scroll table {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
+    font-size: 7pt;
+  }
+
+  .device-output-print .device-output-scroll :is(th, td) {
+    overflow-wrap: anywhere;
   }
 }
 

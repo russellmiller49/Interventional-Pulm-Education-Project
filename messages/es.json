@@ -8575,13 +8575,26 @@
     "outputs": {
       "heading": "Read-only output previews",
       "tabsLabel": "Output previews",
-      "readOnlyNote": "All previews are recomputed projections of one resolved demo card. Nothing is saved, exported, or written in Phase D1.",
+      "readOnlyNote": "Every view is a deterministic projection of one exact release-pinned resolved demo card. Nothing is saved, persisted, or written.",
+      "print": "Print this output",
       "tabs": {
         "card": "Preference card",
         "room": "Room setup",
         "nursing": "Nursing / technician",
         "training": "Training",
-        "gaps": "Gap preview"
+        "gaps": "Gap preview",
+        "packet": "Setup packet"
+      },
+      "identity": {
+        "heading": "Output identity and provenance",
+        "demo": "Demo",
+        "draft": "Draft",
+        "output": "Registered output",
+        "release": "Release bundle",
+        "catalogRelease": "Catalog release",
+        "resolvedCard": "Resolved content hash",
+        "outputDigest": "Deterministic output digest",
+        "projectionSource": "Projection source"
       },
       "card": {
         "heading": "Preference card — existing builder",
@@ -8619,6 +8632,54 @@
       "suppressed": {
         "heading": "Included in a selected kit — not listed separately",
         "note": "The resolver records these requirements as satisfied by a selected kit's bill of materials. They are suppressed from the lists above and shown here — never silently dropped."
+      },
+      "packet": {
+        "heading": "Printable setup packet",
+        "demoLabel": "Demo data",
+        "draftLabel": "Draft prototype",
+        "body": "This packet is for education and device setup review only. Actual use depends on patient anatomy, device model, accessory compatibility, current manufacturer instructions, procedural conditions, local policy, and operator judgment.",
+        "noResponsibleRole": "Responsible role is not recorded on any resolved requirement. This packet leaves ownership unassigned and does not infer a role.",
+        "setupHeading": "Room setup checklist",
+        "setupNote": "Lines follow setup sequence within their authored setup zones. Requiredness, dependencies, unresolved states, and evidence states remain visible.",
+        "suppressedHeading": "Kit-suppressed requirements",
+        "suppressedNote": "These requirements remain part of the card record but the resolver suppressed a separate pull because a selected kit includes them.",
+        "diagnosticsHeading": "Resolver diagnostics",
+        "diagnosticsNote": "Messages are copied from the same resolved card. Acknowledgment does not change severity or readiness impact.",
+        "noDiagnostics": "No resolver diagnostics are recorded.",
+        "provenanceHeading": "Source and provenance manifest",
+        "provenanceNote": "This appendix comes from the same resolved card. Product identities held behind the Device Intelligence cohort wall remain withheld.",
+        "releaseHeading": "Release and card identity",
+        "modulesHeading": "Included module manifest",
+        "tableRegionLabel": "Requirement source and provenance table (scrolls horizontally)",
+        "withheldEvidence": "Identity withheld from this public view",
+        "none": "None",
+        "footer": "Read-only demo draft. Confirm every item against current manufacturer instructions, local policy, actual inventory, procedural conditions, and operator judgment. This packet does not establish readiness for a real case.",
+        "fields": {
+          "quantity": "Quantity",
+          "selectedItem": "Resolved demo item",
+          "requiredness": "Authored → effective requiredness",
+          "responsibleRole": "Responsible role",
+          "sterileStatus": "Sterile status",
+          "evidenceStates": "Verification · compatibility",
+          "dependency": "Dependency rule",
+          "releaseBundle": "Release bundle",
+          "resolvedContentHash": "Resolved content hash",
+          "modifiers": "Selected modifiers",
+          "readiness": "Resolver readiness",
+          "releaseDefinitionHash": "Release definition hash",
+          "catalogRelease": "Catalog release",
+          "resolverContract": "Resolver contract",
+          "engineVersion": "Engine version",
+          "catalogImport": "Recipe source import",
+          "snapshotHash": "Snapshot hash",
+          "snapshotIntegrityHash": "Snapshot integrity hash",
+          "presence": "Presence",
+          "requirement": "Requirement",
+          "sourceSlot": "Source slot",
+          "sourceModules": "Source modules",
+          "states": "Resolution · verification · compatibility",
+          "evidence": "Visible evidence identity and source"
+        }
       }
     }
   }
