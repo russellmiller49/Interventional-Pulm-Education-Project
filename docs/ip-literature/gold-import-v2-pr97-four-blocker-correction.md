@@ -3,6 +3,30 @@
 This document records the source/evidence correction made on draft PR #97. It is implementation
 evidence only. It does not authorize a real capture, package, import, or compensation operation.
 
+## Independently confirmed backup-authority release correction
+
+The prior current-backup authority was internally self-consistent but not externally frozen. A
+caller could change both repository head fields to forty `1` characters, recompute the authority
+identity, and pass validation. A caller could also remove
+`scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts`, recompute the authority
+identity, omit the optional expected-path argument, and pass a 33/34 inventory. Both exact attacks
+were reproduced against the archived `04b45e34` backup before editing.
+
+The correction separates three states: candidate backup authority, externally frozen release
+expectations, and verified release backup. The public authority validator and directory verifier now
+require one complete external expectation object containing expected branch, frozen base, frozen
+head, exact canonically ordered changed paths, and expected authority identity SHA-256. All fields
+are mandatory in TypeScript and runtime parsing. Neither expected head nor expected authority
+identity can be inferred from the candidate.
+
+After the source correction is committed and pushed, `create-release-freeze` records the exact
+remote head and full Git name-status inventory in an external canonical artifact. Backup generation
+must match local HEAD, upstream HEAD, embedded authority repository evidence, and the full frozen
+range exactly. A separate external release-verification artifact then pins the candidate authority,
+backup path, manifest, checksum manifest, and receipt identities. Keeping both release artifacts
+outside canonical authority content avoids final-commit and authority-hash self-reference. The old
+`04b45e34` backup remains unchanged historical evidence; the successor uses the new final-head path.
+
 ## Confirmed defects and exact corrections
 
 1. Fixed-local target constants previously described the intended target without proving the

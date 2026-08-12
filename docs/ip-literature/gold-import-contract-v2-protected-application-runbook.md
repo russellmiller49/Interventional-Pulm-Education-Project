@@ -258,11 +258,16 @@ and rehearsal `2.0` tuple remains valid only for that historical delivery and ca
 PR #97 capture/readiness authority.
 
 Current delivery uses `literature:backup-gold-import-v2-postmigration-delivery`. Its manifest binds
-the exact PR #97 branch/frozen base/pushed HEAD, finalized receipt authority, target-observation and
-compatibility contracts, current transitive capture/readiness/package/rehearsal runtime bundle and
-all archived runtime source bytes, every changed tracked file, and the exact named correction
-evidence inventory. The verifier rebuilds the runtime identity from archived bytes and rejects a
-missing, unexpected, or modified source before authenticating its canonical manifest, checksum
-manifest, and receipt. The older
+the exact PR #97 branch/frozen base/pushed HEAD from an external release freeze, finalized receipt
+authority, target-observation and compatibility contracts, current transitive
+capture/readiness/package/rehearsal runtime bundle and all archived runtime source bytes, every
+changed tracked file, and the exact named correction evidence inventory. Generation rejects any
+local/upstream head or full Git name-status inventory difference. Release verification separately
+requires an external artifact that pins the exact expected authority, backup path, manifest,
+checksum-manifest, and receipt identities. Every public current verifier requires the external
+branch/base/head/paths/authority expectations; a self-consistent candidate cannot verify itself.
+The release artifacts remain outside canonical authority content to avoid hash self-reference. The
+verifier rebuilds the runtime identity from archived bytes and rejects a missing, unexpected, or
+modified source before authenticating its canonical manifest, checksum manifest, and receipt. The older
 `literature:backup-post-migration-contract-reconciliation` command is a V1-only, old-branch blocked
 reconciliation archive; it is not Phase-10 V2 delivery evidence.

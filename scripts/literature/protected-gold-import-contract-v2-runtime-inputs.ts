@@ -648,7 +648,16 @@ export const PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS = [
     api: 'child_process.execFile',
     disposition: 'system_executable',
     executables: ['git'],
-    fingerprints: ['df0e471a668e29785a6625df51cdc1bf992c38436ae77f37c05a26273bb488a6'],
+    fingerprints: [
+      'df0e471a668e29785a6625df51cdc1bf992c38436ae77f37c05a26273bb488a6',
+      'd369a94583ca236b62da4e16e03fbe3c675f1731703757069fb5c5b091de11d7',
+    ],
+    sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.fstatSync',
+    disposition: 'generated_local_state',
+    fingerprints: ['7bd82d90664766c7f954cce3d67805598eebdc0a12bc65957c2ef4f848a70aac'],
     sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
   }),
   ...declareRuntimeCallSites({
@@ -681,6 +690,8 @@ export const PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS = [
     fingerprints: [
       '738e8a4f1fe28744dd53f222af5c3b0e6c61bf2eb6f306369d7f2e85e6ee287c',
       '8ef81688d72d9897c0ac5094e6ef28b31e7d1a353e1defe4c030de679f982e73',
+      '4f2a6c54c33d8ca4724b5e8b4d4c21b6ebc8b9a7fab861425c870a6f577171b5',
+      '665bd4e3ca49af68c6897cd38b9e031ef9e956ac1733563ba7a8ed03c0413036',
       '32d10f03e830cd38806be1c3a9c48bd682fd0426ddb115e850f74e1b3509d68e',
     ],
     sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
@@ -688,7 +699,32 @@ export const PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS = [
   ...declareRuntimeCallSites({
     api: 'fs.realpathSync',
     disposition: 'repository_metadata',
-    fingerprints: ['babff8aa9ccc6c58de9f32ff402739f90e5ea9c898a95b8e9a27021b23ddb684'],
+    fingerprints: [
+      'fb7aa482d940a3aeebe8bf6dfab948f2b1572e66e8a9eb1b4726b984830ad2f0',
+      '321a94827ea18c4493eec6db048905fa2ffa22ed1e08614b0f34c1c81ab4a8cb',
+      'babff8aa9ccc6c58de9f32ff402739f90e5ea9c898a95b8e9a27021b23ddb684',
+    ],
+    sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstatSync',
+    disposition: 'generated_local_state',
+    fingerprints: ['93aabd16058c3a16ba4bcf87fd5c2052a009cba754ac9017ff028c63a0649e1b'],
+    sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.openSync',
+    disposition: 'generated_local_state',
+    fingerprints: ['818fbe4b144bada0c84eef29fd5aee08265eddc1e27d82041064c1e2fdebfa41'],
+    sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'process.chdir',
+    disposition: 'generated_local_state',
+    fingerprints: [
+      '2e72262e4d22607a75e01ed4c7f1eff63a33fccb4da90e6adc05cec997306fc9',
+      '5631206b033dcf51a921f87b6ecd21e9253338ca857832813a6617d3b383a078',
+    ],
     sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
   }),
   ...declareRuntimeCallSites({

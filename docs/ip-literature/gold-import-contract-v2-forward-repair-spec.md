@@ -277,14 +277,16 @@ rehearsal orchestration is private; exported rehearsal surfaces are pure non-pri
 validators/data, and the exported package generator is restricted to disposable-clone evidence.
 None can act as a production feature-branch escape hatch.
 
-Final delivery uses only the additive V2 forward-repair backup. Its manifest embeds both exact
+Historical PR #95 delivery uses only the additive V2 forward-repair backup. Its manifest embeds both exact
 catalog bindings and the detailed runtime-bundle binding; its fixed evidence groups preserve the
 catalog proposal/comparison, exact drift matrix, bundle/module/runtime audits, recovery/trust tests,
 canonical package/rehearsal artifacts, two real-local captures, validation/build evidence, critic,
 merge readiness, and final PR body. It re-parses copied bytes, verifies the exact package manifest,
 rejects transient probe/proposal authority, and self-hashes its receipt. The historical
 post-migration-reconciliation backup remains a branch-pinned V1 archive and is not V2 delivery
-evidence.
+evidence. Current PR #97 postmigration delivery is a separate authority. It additionally requires
+external frozen branch/base/head/changed-path and authority-identity expectations and does not route
+historical PR #95 artifacts through the current verifier.
 
 ## Verification obligations
 

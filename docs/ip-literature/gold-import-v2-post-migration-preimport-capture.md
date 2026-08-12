@@ -187,8 +187,30 @@ reject arbitrary `2.x`, future, missing, relabeled, field-changed, or unknown-fi
 
 The former `gold-import-contract-v2-forward-repair-backup/2.0.0` and exact rehearsal `2.0` tuple is
 preserved only as explicitly historical PR #95 evidence. It cannot satisfy current readiness. The
-current backup command is `literature:backup-gold-import-v2-postmigration-delivery`; it binds the PR
-#97 branch/base/pushed HEAD, every changed tracked file, the full current runtime closure and source
-bytes, exact finalized-receipt authority, target-observation contract, compatibility matrix, and
-the complete named review/test evidence inventory. Missing, unexpected, or modified source bytes
-fail verification.
+current backup command is `literature:backup-gold-import-v2-postmigration-delivery`. It has two
+explicit phases. `create-release-freeze` runs only after the correction commit is pushed and writes
+an additive sibling artifact outside tracked source and outside the backup authority. That canonical
+freeze binds schema, repository, PR #97 branch, frozen base, exact local/upstream head, ordered
+`git diff --name-status -z --find-renames <base>...<head>` inventory, count, inventory SHA-256,
+creation time, source Git commands, and a canonical freeze identity. Deleted, copied, renamed,
+duplicate, noncanonical, escaping, symlink-substituted, earlier, later, or locally divergent release
+state fails closed.
+
+`create-backup` then requires that exact freeze, reobserves local HEAD and the exact upstream branch
+head, and independently rederives the complete changed-path range before reading changed files. It
+publishes a candidate and reports its descriptive identities. A later
+`create-release-verification` call requires those identities as explicit independently reviewed CLI
+inputs; it does not infer them from the candidate. The candidate backup remains descriptive until
+the resulting external release-verification artifact pins its
+authority SHA-256, exact backup path, manifest SHA-256, checksum-manifest SHA-256, receipt identity,
+verification time, embedded freeze, and its own canonical identity. The release-verification
+artifact is an external sibling, never canonical authority content, so it introduces no commit-hash
+or authority-hash self-reference.
+
+Every public current-authority and directory verification boundary requires all five external
+expectations with no defaults: expected branch, frozen base, frozen head, exact ordered changed-file
+inventory, and expected authority identity SHA-256. A self-consistent recomputed authority hash is
+not release authorization. The verifier also binds the full current runtime closure and source
+bytes, exact finalized-receipt authority, target-observation contract, compatibility matrix, and the
+complete named review/test evidence inventory. Missing, unexpected, or modified source bytes fail
+verification. Historical PR #95 validation stays explicitly historical and separate.
