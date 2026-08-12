@@ -21,11 +21,10 @@ import {
   validateGoldImportCompensationV2MigrationReceiptGate,
   validateGoldImportCompensationV2MigrationReceiptGateForAudit,
 } from './gold-import-compensation-v2-migration-receipt-gate'
-import { LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256 } from './literature-gold-v2-schema-only-transition'
 import {
   PROTECTED_V2_RECEIPT_RECOVERY_COMMITTED_AMENDMENT_PATH,
   PROTECTED_V2_RECEIPT_RECOVERY_INCIDENT_AUTHORITY_PATH,
-  parseProtectedV2ReceiptRecoveryCommittedAmendment,
+  parseImmutableProtectedV2ReceiptRecoveryCommittedAmendment,
 } from './protected-gold-import-contract-v2-receipt-recovery-authority'
 import { buildCurrentProtectedV2ReceiptRecoveryToolBundle } from './protected-gold-import-contract-v2-receipt-recovery-tool-bundle'
 import type { GoldImportCompensationV2ReadyAudit } from './audit-gold-import-compensation-v2'
@@ -164,7 +163,7 @@ describe('target-discriminated finalized migration receipt gate', () => {
     ).toThrow('noncanonical or stale')
   })
 
-  it('binds the committed recovery amendment and receipt authority to the exact current closure', async () => {
+  it('binds downstream receipt authority to immutable historical bytes, not the current closure', async () => {
     const repositoryRoot = process.cwd()
     const [incidentAuthorityBytes, amendmentBytes, receiptAuthorityBytes] = await Promise.all([
       readFile(
@@ -183,21 +182,20 @@ describe('target-discriminated finalized migration receipt gate', () => {
     const currentRecoveryToolBundle = await buildCurrentProtectedV2ReceiptRecoveryToolBundle({
       cwd: repositoryRoot,
     })
-    const amendment = parseProtectedV2ReceiptRecoveryCommittedAmendment({
+    const amendment = parseImmutableProtectedV2ReceiptRecoveryCommittedAmendment({
       amendmentBytes,
       authorityBytes: incidentAuthorityBytes,
-      correctedRecoveryToolBundle: currentRecoveryToolBundle,
-      correctedTransitionPolicyIdentitySha256:
-        LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
     })
-    expect(amendment.correctedRecoveryToolBundle).toEqual(currentRecoveryToolBundle)
+    expect(amendment.correctedRecoveryToolBundle.aggregateSha256).not.toBe(
+      currentRecoveryToolBundle.aggregateSha256,
+    )
 
     const receiptAuthority =
       parseCommittedProtectedV2RecoveryReceiptAuthority(receiptAuthorityBytes)
     const expectedReference = {
       amendmentIdentitySha256: amendment.amendmentIdentitySha256,
       originalIntentSha256: amendment.historicalIncident.intentSha256,
-      recoveryToolBundleSha256: currentRecoveryToolBundle.aggregateSha256,
+      recoveryToolBundleSha256: amendment.correctedRecoveryToolBundle.aggregateSha256,
     }
     expect(receiptAuthority.authority).toEqual(expectedReference)
     expect(await loadCommittedProtectedV2RecoveryReceiptAuthority(repositoryRoot)).toEqual({

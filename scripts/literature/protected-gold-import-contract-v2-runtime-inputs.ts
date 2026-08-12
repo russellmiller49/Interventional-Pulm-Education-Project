@@ -55,6 +55,24 @@ export interface ProtectedV2PackageScriptDeclaration {
 export const PROTECTED_V2_PACKAGE_SCRIPT_DECLARATIONS = [
   {
     arguments: [],
+    entryPoint: 'scripts/literature/capture-gold-import-v2-preimport-state.ts',
+    name: 'literature:capture-gold-import-v2-preimport-state',
+    requiresPrimaryCheckout: true,
+  },
+  {
+    arguments: [],
+    entryPoint: 'scripts/literature/generate-gold-import-compensation-package-v2.ts',
+    name: 'literature:generate-gold-import-compensation-package-v2',
+    requiresPrimaryCheckout: true,
+  },
+  {
+    arguments: [],
+    entryPoint: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+    name: 'literature:rehearse-exact-gold-import-compensation-package-v2',
+    requiresPrimaryCheckout: true,
+  },
+  {
+    arguments: [],
     entryPoint: 'scripts/literature/apply-protected-gold-import-contract-v2.ts',
     name: 'literature:apply-protected-gold-import-contract-v2',
     requiresPrimaryCheckout: true,
@@ -88,9 +106,12 @@ export const PROTECTED_V2_PACKAGE_SCRIPT_DECLARATIONS = [
 export const PROTECTED_V2_RUNTIME_ENTRY_POINTS = [
   'scripts/literature/apply-protected-gold-import-contract-v2.ts',
   'scripts/literature/audit-gold-import-compensation-v2.ts',
+  'scripts/literature/capture-gold-import-v2-preimport-state.ts',
   'scripts/literature/create-gold-import-contract-v2-forward-repair-backup.ts',
+  'scripts/literature/generate-gold-import-compensation-package-v2.ts',
   'scripts/literature/local-supabase.ts',
   'scripts/literature/recover-protected-gold-import-contract-v2-receipt.ts',
+  'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
   'scripts/require-primary-checkout.mjs',
 ] as const
 
@@ -151,6 +172,374 @@ function declareRuntimeCallSites(input: {
  * site therefore fails until it receives a narrow, reviewed disposition.
  */
 export const PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS = [
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'a49c591b0055b19681b8a78688a583c850707de5dee74960bdaabe0a3395a455',
+      '2ebf746e677bdae357e13e349a7dea6601bbbf0592995f1468343cfa4cf2409f',
+      'c5364bcf232ba86b88a1997daecbdac2385fca40a0f0290d85a100fd5a94285d',
+      '1baedeb2118442d11ead1fe94ab8c2a4bc2596552de4c3da165219cdb849a641',
+    ],
+    sourcePath: 'scripts/literature/generate-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '6684dfad2cc5785f82889884068d38149f0a9c48d6a087c2d2114d9b6baa8fcc',
+      'c450d9a2b6fef1b39754e8955a099b0c524e6bf2749251dd241aa3bb416dfcb2',
+      '0b1941970fba95ef5d0b19d5190845247f70a096da37a1264a5db2118357b435',
+      '4be1b9a7bbaffec02c571f51df8ac50a775d8644d3f594a666baf28fbbbad2ac',
+      '76bd41d13bbc1c66ff7e9df4afd6fa78eb93e893a3fd54e8ffdce60bd81fbe58',
+      'a4550a4ed158785779a815fbe6a831ee255be99de196691c889fcb06e80ea6a7',
+    ],
+    sourcePath: 'scripts/literature/generate-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '3f705e26f95ffd448a7fba0c0ee79140cc087656926a6a1dd95dc6fbb6adceff',
+      '03f341317ecf5e2287a2a262495d80372d32ab901cf21dd19b9a257a3b19da64',
+    ],
+    sourcePath: 'scripts/literature/generate-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: ['e78351621e9c6777efc214fd706aac093f50f8c110a28a77d746b2ae640d6d1c'],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['c372a705b4d4e18cc65ceb5031339dc219b62b18997b8150654e0439aeefb373'],
+    repositoryInputs: [
+      'supabase/migrations/20260808035633_add_literature_gold_import_compensation_contract.sql',
+    ],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['54979735b46de37af29985a0b24ac2a0f47a61c3cb1b83be47d6fd3465532b32'],
+    repositoryInputs: [
+      'supabase/verification/20260808035633_verify_literature_gold_import_compensation_contract.sql',
+    ],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['4fb105e5e21f2622cd7dc4a114410683b6ae9e57f8abc1cd0e7946ef89cd8b98'],
+    repositoryInputs: [...PROTECTED_V2_ORDINARY_MIGRATION_INPUTS],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'be461ca242726c537e34873521adbc36d6b500028ed5e12df591340339eebfb0',
+      '25b2eedabc0804b753e961cdb7b68aacf44eaf78cbef0ccde8f7c1650566aac0',
+      'ac027c84b8a194649ed29afab627bb298ea9396f282132bc4348c040d270e86f',
+      'ddf3c8f2c770fd023224fd29dc21fa111223521efe4767044e0a7b9cd6278031',
+      '244a54f9150056810ddeb5ecb801ec7b8957c1ebe4f900327f3ae54fc44d4ad1',
+    ],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readdir',
+    disposition: 'operator_evidence',
+    fingerprints: ['df4b92076c700389cac7065ed7effcaba643d5c791c5c2fad70b23ef325adc80'],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['3ef0416165a2d26feb16d05a4df7b206864f5b09568640fcac7425d8f0ef2723'],
+    repositoryInputs: [
+      'supabase/verification/20260808035633_verify_literature_gold_import_compensation_contract.sql',
+    ],
+    sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['05c6364da63e1ad749067dce535d41fa8ca2df4e6fea4211d3dad6ccd02e770a'],
+    repositoryInputs: [
+      'supabase/verification/20260809231651_verify_literature_gold_import_compensation_contract_v2.sql',
+    ],
+    sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['e6d53987c5b21aa5df87e1e13d9cecf31fbb8018de3af94dbdc09b7999df18f6'],
+    repositoryInputs: [
+      ...PROTECTED_V2_ORDINARY_MIGRATION_INPUTS,
+      'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+    ],
+    sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['daf3752d0f925ee5069c8f76c74fd7b6eac16492560a033a10cb4c7f39641ca9'],
+    repositoryInputs: [
+      ...PROTECTED_V2_ORDINARY_MIGRATION_INPUTS,
+      'supabase/verification/20260808035633_verify_literature_gold_import_compensation_contract.sql',
+      'scripts/literature/rehearse-gold-import-compensation-db.ts',
+      'scripts/literature/gold-import-compensation-rehearsal-evidence.ts',
+    ],
+    sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['c1f48cf9166612d1d771a511f398f2dc6491a57be3230d1dbc4133802d64defa'],
+    repositoryInputs: [
+      'scripts/literature/fixtures/post-migration-schema-security-definition-identity.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-compensation-contract-expectations.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.spawn',
+    disposition: 'system_executable',
+    executables: ['docker'],
+    fingerprints: ['7a93f99f2ed5fe8a6886d424d21c3128c22123c537448bdcf9d52ea24c026b6b'],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v1.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.spawn',
+    disposition: 'system_executable',
+    executables: ['docker'],
+    fingerprints: ['de82ff77bd0320455cbe1e23ffab54ee269630d4029e73dd9c7c526f02b6c370'],
+    sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.spawn',
+    disposition: 'system_executable',
+    executables: ['docker'],
+    fingerprints: ['92c577d38f1d5b397fe8f9be33d4fc3315cc7ff1141ddeb22699ddf69bd041be'],
+    sourcePath: 'scripts/literature/rehearse-gold-import-compensation-db.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '3228011dff275435fd08e9f683e26f49662c18331f9b636e6604f713f283e4e5',
+      'd82b372bf232f429a031e8c23ffdc73931ee13ead24b71c944c41e8d3fbe0b41',
+    ],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: ['63d84e126c2ac7f50359eeeb49eb1186280b9ed8471dc4c97a6b9aa146ea2c40'],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpathSync',
+    disposition: 'repository_metadata',
+    fingerprints: [
+      '5ac57ac36f938b109768cb6f2f850d44edc89637bc12a3bcf5f5993493816c05',
+      'f45c513a8fd86198aaa01efcfa579387ac11ec282ac4d073cbb1b873abf2e51a',
+      'b90941b18a8074e4989e811f6f10fcda637ba9dd2646ec1e539a6a0d2207ac61',
+    ],
+    sourcePath: 'scripts/literature/capture-gold-import-v2-preimport-state.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpathSync',
+    disposition: 'repository_metadata',
+    fingerprints: [
+      'f014e75d2d2dc158d1b25b8d681640e3e4dda90f9651ebce765f53330edb945a',
+      '1db9087402069e187f808ec40021153c318a614d6e546623fc744e8944eff5ea',
+      'cfd3879cbdd42452fce4d9cf1997ce2dc969b1cdb4a9acb6b2f52ef279084d95',
+    ],
+    sourcePath: 'scripts/literature/generate-gold-import-compensation-package-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpathSync',
+    disposition: 'repository_metadata',
+    fingerprints: [
+      '7caaeecebb9ef98df079034cdfb9a58a8c2d2c0a2a36dd5c0c14f709ddd3eb8f',
+      '1914a95bc82392e4c959726d2d9ec91ee3b2927354a8044329411b12065db6d7',
+      '1ee7f2991678893c0745c5e374d41b652df4e2f535f629e61d1ce7368f33b961',
+    ],
+    sourcePath: 'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'generated_local_state',
+    fingerprints: [
+      '85afd5fa274c9ffc4457ebba1c7b409c8a030794ff4af41fcbb753ba02d1e111',
+      'f65e06bda441b23945b4331521b9cfef7d2668992cf104a4886be81106b87028',
+    ],
+    sourcePath: 'scripts/literature/capture-gold-import-v2-preimport-state.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.stat',
+    disposition: 'generated_local_state',
+    fingerprints: ['8c515fa12dd5ea7c4bd7dfd03324128b1493918e35b6425572210e614c4f0c52'],
+    sourcePath: 'scripts/literature/capture-gold-import-v2-preimport-state.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.execFile',
+    disposition: 'system_executable',
+    executables: ['git'],
+    fingerprints: ['1712cad04117facf592ed08d587cedd678799afb11defe9a2202a9bd6878568c'],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '3d913d666fc3f16d272d00e16da49e17df4e25fcfd24eff4b125af216c907d25',
+      '3f64fba876b47c75cd59850af25e6cf7f68b47433e8d804405563e19f7ec6a3c',
+      'fcb6b36896a0cd97147b8dc8963d084bc858151161e40e5714a623e21ee4670f',
+      '24e7d03b35f0ae03164c0773b3f40d92dfd58786195c839bde8879050a344583',
+      '8633453965cc9cd2771f516797811d4f33de26bece641146eabc3d3a0bd86a9e',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'tracked_repository_inventory',
+    fingerprints: [
+      '9a6dca2bdadb7abb56809778c47892292bb7b6e1027cddc1188a52b750985ae7',
+      '1f80e19b665db824edffb502b2becaefd46ceee2a1f951f19b3785e934c6d7d5',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'tracked_repository_inventory',
+    fingerprints: [
+      '1c870bf36e47ad2a4e35a3e30407857aa8bd33dfd9e9c1738674f2e7c080931d',
+      'f4a81fb1a1c7449a1108d457c28ee012001d4c131ab7386d8d9aef80be5e6fc2',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'aeb26183ef37db6c5fe1305c15117cc33b5d822c6153215abceff10d3bc6d424',
+      'ab5dded7ae204d846ca7e42977df7c8915fb8988bc056ce85b654a6b2e638a6c',
+      '34c300c25cfd24f373060b7be7cd416278f299208a4194b8474ccf099dcf5732',
+      '0e72b5b602435ecb4ea5e017d2a24c8842889d309cf53dcf6f27b5fc11fce56b',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readdir',
+    disposition: 'operator_evidence',
+    fingerprints: ['ac03e40f6bf78bd3a3ee431a24455e84c20d51d55a9ed930934a87dbc3590b31'],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'b547d2e30aede78cc8b7258bfdf786bdef3e65e6e115abf48f70e1fb15fe8c8a',
+      '99228d6a441cbbecd058ff5cd3b1ccda2978a5b2255a7cd8196d8a7a26f20582',
+      '367cc437f2299e4b2bc5f0505a80505743a4bbabe86f2b118f2a4e0e87419d8f',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'repository_metadata',
+    fingerprints: ['e127c360f74d785fbe728c65ea2849bd1da9ffaf488938b08aadfc51cdd62606'],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'tracked_repository_inventory',
+    fingerprints: ['e7fee0efa61f7b1fd9d61e85d1fc8266482980771e13aac8fc0a6a9f68140d13'],
+    sourcePath: 'scripts/literature/gold-import-v2-preimport-capture.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'child_process.execFile',
+    disposition: 'system_executable',
+    executables: ['git'],
+    fingerprints: ['b5138bd864f6b599c8ed0c8e1029ac0a10e3781179eac323fc2ddb05cf76b10c'],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.lstat',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'ab56be613f132bbc4a61e2306c618e8777585d42381f980bd1496b9548c043ff',
+      '2ca6af84836c931dda6af1a40bee47c4319941fddf8e4acdbd3b3fd14c5f0157',
+      'b59373a1044248e4e9a811e5b57c2ac6e751738a8ce145c433d0d904a0b09a24',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['0a2185f18e94872846dbcd611da928e81a9b02e12aba4c1bab21eafc8bbd1611'],
+    repositoryInputs: [
+      'scripts/literature/contracts/protected-v2-receipt-recovery-amendment-v1.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['fd8e20892e675bf5ead3aa5a7889d209e86a41b15a4dc563123f4a8fe0cc036c'],
+    repositoryInputs: [
+      'scripts/literature/contracts/protected-v2-finalized-receipt-recovery-authority-v1.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'repository_input',
+    fingerprints: ['b00269f62957f4c5d824e2b954f7e4a1dddf94376cf9e0a400ffab826a718dd9'],
+    repositoryInputs: [
+      'scripts/literature/contracts/protected-v2-receipt-recovery-incident-authority-v1.json',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readFile',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      '5810f7611e1870d7880ce69aa99dff870c99423dd765021ad5afb87a4f95426d',
+      'fdca2565aa2028315b7c3be5f8885f09c551263c0753d3fee7b494bf9afbfcf9',
+      '6e323966de2bb396ae9525a3551cfeca6c3f03f697b51cde69f87c44a80da821',
+      '53897e579bffdabbe065db8173ff27fd014fc688e20f843dda54d2f665f7a36c',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.readdir',
+    disposition: 'operator_evidence',
+    fingerprints: ['89722279d25a289ff2e24c3dc46a2b39b645ae22347efd1fc87cf69ab1f38940'],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'operator_evidence',
+    fingerprints: [
+      'aaf79c16f15f20bd4528de1e9c0c8d05c570c768b9a4aff669001ed793ec0372',
+      '14898c3ab1e736337eef08f99cbfc89e92f139305acf51ac357923973019f8c7',
+      '0bf28096735368cd7e36e61436272f616198a9df9c3c6c49056550518d871968',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
+  ...declareRuntimeCallSites({
+    api: 'fs.realpath',
+    disposition: 'repository_metadata',
+    fingerprints: [
+      '9c22f4b9bd463cf2615c9f0b15a965a48350782fefdec9a646d98bec731edf02',
+      'b1ce04bbd64768d369cdd7ac0730f590738bc727ea26fe055480f09873537bef',
+    ],
+    sourcePath: 'scripts/literature/gold-import-v2-package-readiness.ts',
+  }),
   ...declareRuntimeCallSites({
     api: 'fs.lstat',
     disposition: 'operator_evidence',

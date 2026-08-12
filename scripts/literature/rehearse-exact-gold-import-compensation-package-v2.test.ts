@@ -11,85 +11,26 @@ import {
 } from './execute-exact-gold-import-compensation-package-v2'
 import {
   GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2,
-  V2_REHEARSAL_TASK_BRANCH,
-  authenticateV2RehearsalRepositoryHead,
+  EXACT_V2_REHEARSAL_PATH_ORDER,
   assertAuthenticatedPreV1BackupIdentityV2,
-  assertV2RehearsalRepositoryUnchanged,
-  executeCompleteV2Rehearsal,
-  runExactPackageRehearsalV2Cli,
+  assertV2RehearsalRepositoryEvidenceUnchanged,
+  validateExactV2PackageRehearsalCliArguments,
+  validateV2RehearsalCoreRepositoryEvidence,
+  type V2RehearsalRepositoryEvidence,
 } from './rehearse-exact-gold-import-compensation-package-v2'
 import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
-import type { V2DisposablePathResult } from './rehearse-gold-import-compensation-db-v2'
-import type { V2CanonicalAuthorizationBindings } from './gold-import-compensation-rehearsal-evidence-v2'
-import type { DisposableContainerCleanupOutcome } from './rehearse-exact-gold-import-compensation-package-v1'
-import { buildProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
-import {
-  buildProtectedV2ExpectedCatalogBinding,
-  buildProtectedV2RuntimeBundleBinding,
-} from './protected-gold-import-contract-v2-bindings'
-import {
-  committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
-  expectedObservedAuditIdentityFromArtifact,
-} from './gold-import-contract-v2-catalog-expectations'
-import { validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile } from './gold-import-contract-v2-catalog-audit'
 
-let AUTHORIZATION_BINDINGS: V2CanonicalAuthorizationBindings
-
-function cleanup(): DisposableContainerCleanupOutcome {
-  return {
-    absenceChecks: [
-      { identifier: 'owned', kind: 'exact_name', present: false },
-      { identifier: 'a'.repeat(64), kind: 'container_id', present: false },
-    ],
-    absenceVerification: 'verified_absent',
-    attempted: true,
-    containerId: 'a'.repeat(64),
-    containerName: 'owned',
-    errors: [],
-    outcome: 'removed_and_verified_absent',
-    removalCommandSucceeded: true,
-  }
-}
-
-function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
-  const evidence = Buffer.from(`${path}-canonical-evidence\n`)
-  return {
-    canonicalArtifacts: new Map([
-      ['canonical-manifest.sha256', Buffer.from(`${'a'.repeat(64)}  evidence\n`)],
-      ['v2-rehearsal-evidence.json', evidence],
-    ]),
-    cleanup: cleanup(),
-    evidenceAuthority: 'canonical_delivery_evidence',
-    migrationPath: path,
-    migrationSha256: 'b'.repeat(64),
-    rawReceipt: {},
-    schemaOnlyTransition: {} as V2DisposablePathResult['schemaOnlyTransition'],
-  }
-}
+const CORE_REPOSITORY_EVIDENCE = {
+  branch: 'codex/disposable-rehearsal-test',
+  cleanTrackedAndUntrackedWorktree: true,
+  headSha: '2'.repeat(40),
+  originMainIsAncestor: true,
+  originMainSha: '1'.repeat(40),
+  primaryCheckout: false,
+  repositoryRoot: process.cwd(),
+} satisfies V2RehearsalRepositoryEvidence
 
 describe('exact V2 package rehearsal entrypoint', () => {
-  beforeAll(async () => {
-    const operatorBundle = await buildProtectedV2OperatorBundle({ cwd: process.cwd() })
-    AUTHORIZATION_BINDINGS = {
-      completeCatalogAudit: validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile(
-        expectedObservedAuditIdentityFromArtifact(
-          committedProtectedV2CatalogExpectedArtifactForValidatedProfile(
-            'supabase_admin_owner_v1',
-            'disposable',
-          ),
-        ),
-        'supabase_admin_owner_v1',
-        'disposable',
-      ),
-      expectedCatalog: buildProtectedV2ExpectedCatalogBinding(
-        'supabase_admin_owner_v1',
-        'disposable',
-      ),
-      operatorBundle,
-      operatorBundleBinding: buildProtectedV2RuntimeBundleBinding(operatorBundle),
-    }
-  })
-
   test('correlates controlled-fault post-state to the captured receipt operation', () => {
     const operationId = '00000000-0000-4000-8000-000000000001'
     const sql = v2StateSql('00000000-0000-4000-8000-000000000002', operationId)
@@ -229,80 +170,85 @@ describe('exact V2 package rehearsal entrypoint', () => {
     )
   })
 
-  test('authenticates exact branch, clean tracked/untracked state, and origin/main ancestry', async () => {
-    const repositoryGit = (overrides?: {
-      branch?: string
-      dirty?: boolean
-      noAncestry?: boolean
-    }) => ({
-      run: jest.fn(async (arguments_: readonly string[]) => {
-        const command = arguments_.join(' ')
-        if (command === 'symbolic-ref --short HEAD') {
-          return { stdout: `${overrides?.branch ?? V2_REHEARSAL_TASK_BRANCH}\n` }
-        }
-        if (command === 'status --porcelain=v1 --untracked-files=all') {
-          return { stdout: overrides?.dirty ? '?? untracked-evidence.json\n' : '' }
-        }
-        if (command === 'merge-base --is-ancestor origin/main HEAD') {
-          if (overrides?.noAncestry) throw new Error('not an ancestor')
-          return { stdout: '' }
-        }
-        if (command === 'rev-parse HEAD') return { stdout: `${'1'.repeat(40)}\n` }
-        throw new Error(`Unexpected git command: ${command}`)
+  test('keeps injected core evidence branch-agnostic and complete', () => {
+    expect(validateV2RehearsalCoreRepositoryEvidence(CORE_REPOSITORY_EVIDENCE)).toEqual(
+      CORE_REPOSITORY_EVIDENCE,
+    )
+    expect(() =>
+      validateV2RehearsalCoreRepositoryEvidence({
+        ...CORE_REPOSITORY_EVIDENCE,
+        originMainIsAncestor: false as true,
       }),
-    })
-
-    const clean = repositoryGit()
-    await expect(authenticateV2RehearsalRepositoryHead(clean)).resolves.toBe('1'.repeat(40))
-    expect(clean.run).toHaveBeenCalledWith(['status', '--porcelain=v1', '--untracked-files=all'])
-    await expect(
-      authenticateV2RehearsalRepositoryHead(repositoryGit({ branch: 'codex/wrong' })),
-    ).rejects.toThrow('exact task branch')
-    await expect(
-      authenticateV2RehearsalRepositoryHead(repositoryGit({ dirty: true })),
-    ).rejects.toThrow('clean tracked and untracked')
-    await expect(
-      authenticateV2RehearsalRepositoryHead(repositoryGit({ noAncestry: true })),
-    ).rejects.toThrow('origin/main')
-  })
-
-  test('re-authenticates the same clean repository HEAD after all four runs', async () => {
-    await expect(
-      assertV2RehearsalRepositoryUnchanged('1'.repeat(40), async () => '1'.repeat(40)),
-    ).resolves.toBeUndefined()
-    await expect(
-      assertV2RehearsalRepositoryUnchanged('1'.repeat(40), async () => '2'.repeat(40)),
-    ).rejects.toThrow('HEAD changed')
-  })
-
-  test('bootstraps upgrade first, then runs upgrade and fresh twice sequentially', async () => {
-    const paths: string[] = []
-    const complete = await executeCompleteV2Rehearsal({
-      dependencies: {
-        executePath: async ({ migrationPath }) => {
-          paths.push(migrationPath)
-          return result(migrationPath)
-        },
-      },
-      evidenceBindings: AUTHORIZATION_BINDINGS,
-      exactPackageExecutor: { execute: async () => ({}) as never },
-      seed: {} as never,
-    })
-    expect(paths).toEqual(['upgrade', 'upgrade', 'fresh', 'fresh'])
-    expect(complete.bootstrapUpgrade.migrationPath).toBe('upgrade')
-    expect(complete.upgrade).toHaveLength(2)
-    expect(complete.fresh).toHaveLength(2)
-  })
-
-  test('rejects any caller database/host/SQL target before loading a backup', async () => {
-    const loadPreMigrationBackup = jest.fn()
-    await expect(
-      runExactPackageRehearsalV2Cli(['--database-url', 'postgresql://forbidden'], {
-        loadPreMigrationBackup,
-        readRepositoryHead: async () => '1'.repeat(40),
+    ).toThrow('incomplete or unsafe')
+    expect(() =>
+      validateV2RehearsalCoreRepositoryEvidence({
+        ...CORE_REPOSITORY_EVIDENCE,
+        headSha: 'not-a-commit',
       }),
-    ).rejects.toThrow('Unknown option')
-    expect(loadPreMigrationBackup).not.toHaveBeenCalled()
+    ).toThrow('incomplete or unsafe')
+  })
+
+  test('purely compares identical non-primary repository evidence', () => {
+    expect(() =>
+      assertV2RehearsalRepositoryEvidenceUnchanged(CORE_REPOSITORY_EVIDENCE, {
+        ...CORE_REPOSITORY_EVIDENCE,
+      }),
+    ).not.toThrow()
+    expect(() =>
+      assertV2RehearsalRepositoryEvidenceUnchanged(CORE_REPOSITORY_EVIDENCE, {
+        ...CORE_REPOSITORY_EVIDENCE,
+        headSha: '5'.repeat(40),
+      }),
+    ).toThrow('Repository evidence changed')
+  })
+
+  test('publishes the immutable four-run disposable path order as pure data', () => {
+    expect(EXACT_V2_REHEARSAL_PATH_ORDER).toEqual(['upgrade', 'upgrade', 'fresh', 'fresh'])
+  })
+
+  test('rejects caller database/host/SQL targets in the pure parser', () => {
+    expect(() =>
+      validateExactV2PackageRehearsalCliArguments(['--database-url', 'postgresql://forbidden']),
+    ).toThrow('Unknown option')
+    expect(validateExactV2PackageRehearsalCliArguments([])).toEqual({ help: false })
+    expect(validateExactV2PackageRehearsalCliArguments(['--help'])).toEqual({ help: true })
+  })
+
+  test('authenticates repository evidence before backup/source reads and exposes no feature bypass', async () => {
+    const source = await readFile(
+      'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+      'utf8',
+    )
+    const core = source.slice(
+      source.indexOf('async function runExactPackageRehearsalV2WithDependencies'),
+    )
+    expect(core.indexOf('validateV2RehearsalRepositoryEvidence(')).toBeGreaterThan(-1)
+    expect(core.indexOf('dependencies.loadPreMigrationBackup(')).toBeGreaterThan(
+      core.indexOf('validateV2RehearsalRepositoryEvidence('),
+    )
+    expect(source).toContain('inspectGoldImportV2PrimaryMainRepository({ cwd: REPOSITORY_ROOT })')
+    expect(source).toContain("requiredArgument(arguments_, 'preimport-capture-one')")
+    expect(source).toContain("requiredArgument(arguments_, 'preimport-capture-two')")
+    expect(source).toContain('collectGoldImportV2PreimportFixedLocalState()')
+    expect(source).toContain('assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({')
+    expect(source).toContain('await dependencies.assertCurrentProductionReadiness()')
+    expect(source).toContain('postV2PreImportReadiness: {')
+    expect(source).toContain('realLocalDatabaseMutated: false')
+    expect(source).toContain('realpathSync(fileURLToPath(import.meta.url))')
+    expect(source).toContain(
+      "'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts'",
+    )
+    expect(source).toContain('EXECUTING_MODULE_PATH !== EXPECTED_PRODUCTION_MODULE_PATH')
+    expect(source).toContain('realpathSync(resolve(process.argv[1])) !== EXECUTING_MODULE_PATH')
+    expect(source).toContain('async function runExactPackageRehearsalV2Cli(')
+    expect(source).not.toContain('export async function runExactPackageRehearsalV2Cli(')
+    expect(source).not.toContain('export interface ExactV2PackageRehearsalCoreDependencies')
+    expect(source).not.toContain('export interface ExactV2DisposablePackageRehearsalDependencies')
+    expect(source).not.toContain('export async function runExactPackageRehearsalV2Core')
+    expect(source).not.toContain('export async function executeCompleteV2Rehearsal')
+    expect(source).toContain('export const EXACT_V2_REHEARSAL_PATH_ORDER')
+    expect(source).not.toContain('allow-feature-branch')
+    expect(source).not.toContain('ip-literature-v2-physical-hash-receipt-recovery-v1')
   })
 
   test('rejects a rebound but byte-different action plan against the bootstrap reference', () => {
@@ -365,6 +311,6 @@ describe('exact V2 package rehearsal entrypoint', () => {
       expect(source).not.toContain(forbidden)
     }
     expect(source).toContain('executeCompleteV2Rehearsal')
-    expect(source).toContain("const bootstrapUpgrade = await run('upgrade')")
+    expect(source).toContain('const bootstrapUpgrade = await run(EXACT_V2_REHEARSAL_PATH_ORDER[0])')
   })
 })

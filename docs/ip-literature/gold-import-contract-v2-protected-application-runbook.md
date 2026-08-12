@@ -1,11 +1,14 @@
 # Gold import contract V2 protected-application runbook
 
-> Status: implementation and disposable rehearsal ready; real-local V2 migration application
-> remains separately authorized and unapplied.
+> Status: historical application record. Real-local V2 is applied exactly once and its recovered
+> migration receipt is finalized. Do not rerun the application or receipt-recovery commands.
 
-This runbook is the only supported path for later application of the forward-only Literature gold
-import contract V2 migration. Merging the implementation does not arm ordinary local startup.
-`npm run literature:local:start` is a development lifecycle command, not migration authorization.
+This runbook preserves the completed forward-only Literature gold-import V2 application boundary.
+Its operator sequence is retained for audit meaning only and is no longer executable authority.
+Current package preparation begins with the separately versioned
+[`gold-import-v2-post-migration-preimport-capture.md`](./gold-import-v2-post-migration-preimport-capture.md)
+workflow. `npm run literature:local:start` remains a development lifecycle command, not migration,
+package, import, or compensation authorization.
 
 ## Fixed boundary
 
@@ -84,10 +87,11 @@ migration. A staged checksum mismatch is a hard stop. If the ledger is exact and
 is absent, ordinary start restores it from the checksum-pinned repository source after the stack is
 running and before migration-up. This restoration cannot reapply the already-recorded migration.
 
-## Future operator sequence
+## Historical operator sequence — do not rerun
 
-Do not run this sequence from a feature worktree. A later separately approved operator must use the
-primary checkout after the PR is merged, fetch the remote, and prove all of the following:
+This completed sequence must not be run again. It is preserved to explain the immutable historical
+captures, intent, and receipt. The operator used the primary checkout and proved all of the
+following:
 
 ```bash
 git fetch --prune origin
@@ -241,6 +245,10 @@ import still requires its own exact source/package/state authorization and human
 compensation requires the committed import receipt, fresh observed state, a finalized compensation
 plan, and a new compensation-specific authorization. Never treat this runbook, its dry-run, its
 migration authorization, or its receipt as authorization for either operation.
+
+The finalized receipt now feeds the post-V2 pre-import readiness workflow only as immutable
+historical evidence. Two new post-V2 captures are required; neither of the original V2-absent
+preapplication captures may be substituted.
 
 ## Final V2 delivery backup
 

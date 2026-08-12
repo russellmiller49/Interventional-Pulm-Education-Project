@@ -14,6 +14,7 @@ import {
   type GoldReviewPayloadV2,
 } from '../../src/features/literature/gold-set/import-compensation-v2'
 import {
+  canonicalJson,
   goldReviewPayloadSchema,
   sha256Canonical,
 } from '../../src/features/literature/gold-set/import-compensation'
@@ -28,10 +29,17 @@ import {
   buildDeploymentProfileIdentity,
 } from './gold-import-compensation-contract-reconciliation'
 import {
+  GOLD_IMPORT_V2_PACKAGE_GENERATION_READINESS_SCHEMA_VERSION,
+  buildGoldImportV2PackageGenerationReadiness,
   buildExpectedPostImportEffectiveStateProjectionV2,
-  validateAndSnapshotDevelopmentPlanningStateV2,
   deriveExpectedPostImportEffectiveStateSha256V2,
   deriveImportActionCountsV2,
+  generateGoldImportCompensationPackageV2,
+  unsignedCompensationAuthorizationTemplateV2Schema,
+  unsignedImportAuthorizationTemplateV2Schema,
+  validateAndSnapshotDevelopmentPlanningStateV2,
+  validateGoldImportCompensationPackageV2CliArguments,
+  validateGoldImportV2PackageGenerationReadiness,
   type PackagePlanningRowV2,
 } from './generate-gold-import-compensation-package-v2'
 import {
@@ -61,6 +69,38 @@ import {
   buildInternalDisposableMigrationReceiptGate,
   migrationReceiptGateArtifactSha256,
 } from './gold-import-compensation-v2-migration-receipt-gate'
+import {
+  GOLD_IMPORT_V2_ACCEPTED_STATE_IDENTITIES,
+  GOLD_IMPORT_V2_COMPLETE_LOCAL_CATALOG_AUDIT_SHA256,
+  GOLD_IMPORT_V2_EXPECTED_CATALOG_BINDING_SHA256,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_AUTHORITY_IDENTITY_SHA256,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_DIRECTORY,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_EVIDENCE_SCHEMA_VERSION,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_EXECUTION_SHA256,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_MANIFEST_SHA256,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_OUTPUT_DIRECTORY,
+  GOLD_IMPORT_V2_FINALIZED_RECEIPT_RESULT_SHA256,
+  GOLD_IMPORT_V2_PACKAGE_READINESS_SCHEMA_VERSION,
+  GOLD_IMPORT_V2_PACKAGE_SOURCE_AUTHORITIES,
+  GOLD_IMPORT_V2_PRIMARY_CHECKOUT,
+  GOLD_IMPORT_V2_REPOSITORY_EVIDENCE_SCHEMA_VERSION,
+  type GoldImportV2FinalizedReceiptEvidence,
+  type GoldImportV2PackageReadinessState,
+  type GoldImportV2RepositoryEvidence,
+} from './gold-import-v2-package-readiness'
+import {
+  GOLD_IMPORT_V2_PREIMPORT_CAPTURE_FRESHNESS_MS,
+  buildGoldImportV2PreimportCapture,
+  buildGoldImportV2PreimportExecutionReceipt,
+  buildGoldImportV2PreimportRuntimeBundle,
+  type GoldImportV2PreimportRuntimeBundle,
+  type GoldImportV2VerifiedPreimportCapture,
+} from './gold-import-v2-preimport-capture'
+import {
+  PROTECTED_GOLD_IMPORT_CONTRACT_V1,
+  PROTECTED_GOLD_IMPORT_CONTRACT_V2,
+  PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
+} from './protected-gold-import-contract-v2-source-identities'
 
 const SHA_A = 'a'.repeat(64)
 const SHA_B = 'b'.repeat(64)
@@ -69,6 +109,9 @@ const ITEM_ID = '20000000-0000-4000-8000-000000000001'
 const ACTION_ID = '30000000-0000-4000-8000-000000000001'
 const REVIEW_ID = '40000000-0000-4000-8000-000000000001'
 const TIME = '2026-08-08T00:00:00.000Z'
+const PACKAGE_CAPTURE_HEAD = '1234567890abcdef1234567890abcdef12345678'
+const PACKAGE_CAPTURED_AT = '2026-08-11T05:00:00.000Z'
+const PACKAGE_CAPTURE_NOW = new Date('2026-08-11T05:30:00.000Z')
 const V2_READY_DATABASE = {
   developmentMembershipSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
   developmentPlanningStateSha256:
@@ -91,6 +134,164 @@ const LOCAL_COMPLETE_CATALOG_AUDIT =
     'local_supabase_postgres_owner_v1',
     'local',
   )
+
+function packageRepository(head = PACKAGE_CAPTURE_HEAD): GoldImportV2RepositoryEvidence {
+  return {
+    branch: 'main',
+    cleanNonIgnoredUntracked: true,
+    cleanTracked: true,
+    gitCommonDirectory: `${GOLD_IMPORT_V2_PRIMARY_CHECKOUT}/.git`,
+    gitDirectory: `${GOLD_IMPORT_V2_PRIMARY_CHECKOUT}/.git`,
+    headSha: head,
+    originMainSha: head,
+    primaryCheckout: true,
+    repositoryRoot: GOLD_IMPORT_V2_PRIMARY_CHECKOUT,
+    schemaVersion: GOLD_IMPORT_V2_REPOSITORY_EVIDENCE_SCHEMA_VERSION,
+  }
+}
+
+function packageReadinessState(): GoldImportV2PackageReadinessState {
+  return {
+    authorities: {
+      expectedCatalogBindingSha256: GOLD_IMPORT_V2_EXPECTED_CATALOG_BINDING_SHA256,
+      packageSources: { ...GOLD_IMPORT_V2_PACKAGE_SOURCE_AUTHORITIES },
+    },
+    batch: { id: BATCH_ID, name: 'gold-set-v1', scope: 'development' },
+    database: {
+      container: 'supabase_db_ip-literature-local',
+      database: 'postgres',
+      host: '127.0.0.1',
+      port: 55322,
+      profile: 'local_supabase_postgres_owner_v1',
+      project: 'ip-literature-local',
+    },
+    migrationLedger: {
+      v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
+      v2: {
+        filename: PROTECTED_GOLD_IMPORT_CONTRACT_V2.filename,
+        migrationName: PROTECTED_GOLD_IMPORT_CONTRACT_V2.migrationName,
+        occurrence: 1,
+        sha256: PROTECTED_GOLD_IMPORT_CONTRACT_V2.sha256,
+        version: PROTECTED_GOLD_IMPORT_CONTRACT_V2.version,
+      },
+      verifier: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER },
+    },
+    mutationAssertions: {
+      actionMutationCount: 0,
+      eventMutationCount: 0,
+      noteMutationCount: 0,
+      pointerMutationCount: 0,
+      protectedStateMutationCount: 0,
+      revealMutationCount: 0,
+      reviewMutationCount: 0,
+      sourceAuthorizationMutationCount: 0,
+      statusMutationCount: 0,
+    },
+    operationCounts: {
+      actionCount: 0,
+      compensationCount: 0,
+      importCount: 0,
+      operationCount: 0,
+    },
+    receipt: packageFinalizedReceipt(),
+    safety: {
+      compensationAuthorized: false,
+      databaseMutationCount: 0,
+      heldOutIdentitiesAccessed: false,
+      importAuthorized: false,
+      originalMigrationCapturesChanged: false,
+      originalMigrationIntentChanged: false,
+      remoteDatabaseAccessed: false,
+      repeatableRead: true,
+      sourceAuthorizationsChanged: false,
+      transactionReadOnly: true,
+      writeCapableDatabaseClientConstructed: false,
+    },
+    schemaVersion: GOLD_IMPORT_V2_PACKAGE_READINESS_SCHEMA_VERSION,
+    stateIdentities: {
+      completeLocalProfileCatalogAuditSha256: GOLD_IMPORT_V2_COMPLETE_LOCAL_CATALOG_AUDIT_SHA256,
+      ...GOLD_IMPORT_V2_ACCEPTED_STATE_IDENTITIES,
+    },
+  }
+}
+
+function packageFinalizedReceipt(): GoldImportV2FinalizedReceiptEvidence {
+  return {
+    amendmentIdentitySha256: 'a'.repeat(64),
+    authorityIdentitySha256: GOLD_IMPORT_V2_FINALIZED_RECEIPT_AUTHORITY_IDENTITY_SHA256,
+    complete: true,
+    compensationAuthorized: false,
+    executionReceiptSha256: GOLD_IMPORT_V2_FINALIZED_RECEIPT_EXECUTION_SHA256,
+    finalManifestSha256: GOLD_IMPORT_V2_FINALIZED_RECEIPT_MANIFEST_SHA256,
+    finalizedDirectory: GOLD_IMPORT_V2_FINALIZED_RECEIPT_DIRECTORY,
+    finalizedLatestMtimeMs: Date.parse('2026-08-11T04:30:00.000Z'),
+    importAuthorized: false,
+    migrationApplicationCallCount: 0,
+    migrationReexecuted: false,
+    migrationStagingCallCount: 0,
+    originalIntentSha256: 'b'.repeat(64),
+    outputDirectory: GOLD_IMPORT_V2_FINALIZED_RECEIPT_OUTPUT_DIRECTORY,
+    receiptReconciled: true,
+    recoveryToolBundleSha256: 'c'.repeat(64),
+    resultSha256: GOLD_IMPORT_V2_FINALIZED_RECEIPT_RESULT_SHA256,
+    schemaVersion: GOLD_IMPORT_V2_FINALIZED_RECEIPT_EVIDENCE_SCHEMA_VERSION,
+  }
+}
+
+function packageRuntime(suffix = 'current'): GoldImportV2PreimportRuntimeBundle {
+  return buildGoldImportV2PreimportRuntimeBundle([
+    { bytes: `generator ${suffix}`, path: 'scripts/literature/generate.ts' },
+    { bytes: `package ${suffix}`, path: 'package.json' },
+  ])
+}
+
+function packageVerifiedCapture(input: {
+  capturedAt?: string
+  id: string
+  nonce: string
+  outputDirectory: string
+  packageReadiness?: GoldImportV2PackageReadinessState
+  repository?: GoldImportV2RepositoryEvidence
+  runtimeBundle?: GoldImportV2PreimportRuntimeBundle
+}): GoldImportV2VerifiedPreimportCapture {
+  const capture = buildGoldImportV2PreimportCapture({
+    captureId: input.id,
+    captureRuntimeBundle: input.runtimeBundle ?? packageRuntime(),
+    capturedAt: input.capturedAt ?? PACKAGE_CAPTURED_AT,
+    executionNonce: input.nonce,
+    outputDirectory: input.outputDirectory,
+    packageReadiness: input.packageReadiness ?? packageReadinessState(),
+    repository: input.repository ?? packageRepository(),
+  })
+  const executionReceipt = buildGoldImportV2PreimportExecutionReceipt({
+    canonicalManifestSha256: 'd'.repeat(64),
+    capture,
+    captureFileSha256: 'e'.repeat(64),
+  })
+  return {
+    capture,
+    directoryRealpath: capture.outputDirectory,
+    executionReceipt,
+    executionReceiptSha256: createHash('sha256')
+      .update(canonicalJson(executionReceipt))
+      .digest('hex'),
+  }
+}
+
+function packageCapturePair() {
+  return [
+    packageVerifiedCapture({
+      id: '10000000-0000-4000-8000-000000000001',
+      nonce: '1'.repeat(64),
+      outputDirectory: '/backup/package-capture-one',
+    }),
+    packageVerifiedCapture({
+      id: '20000000-0000-4000-8000-000000000002',
+      nonce: '2'.repeat(64),
+      outputDirectory: '/backup/package-capture-two',
+    }),
+  ] as const
+}
 
 function includedReview() {
   return {
@@ -254,14 +455,12 @@ describe('V2 authenticated planning-state evidence', () => {
       'utf8',
     )
     const generatorSource = generatorFileSource.slice(
-      generatorFileSource.indexOf('export function generateGoldImportCompensationPackageV2'),
-      generatorFileSource.indexOf('const REQUIRED_PACKAGE_FILES_V2'),
+      generatorFileSource.indexOf('function generateGoldImportCompensationPackageV2Internal'),
+      generatorFileSource.indexOf('const BASE_REQUIRED_PACKAGE_FILES_V2'),
     )
     const verifierSource = generatorFileSource.slice(
       generatorFileSource.indexOf('export function verifyGeneratedGoldImportCompensationPackageV2'),
-      generatorFileSource.indexOf(
-        'export async function runGenerateGoldImportCompensationPackageV2',
-      ),
+      generatorFileSource.indexOf('async function runGenerateGoldImportCompensationPackageV2'),
     )
     expect(generatorSource).toContain(
       'developmentPlanningState: authenticatedDevelopmentPlanningState,',
@@ -774,6 +973,279 @@ describe('migration-first and source-authorization-before-client ordering', () =
       }),
     ).rejects.toThrow('fixed live finalized-receipt filesystem loader')
     expect(calls).toEqual({ client: 0, receipt: 0, source: 0 })
+  })
+})
+
+describe('post-V2 capture-pair package-generation boundary', () => {
+  function buildReadiness(
+    captures: readonly GoldImportV2VerifiedPreimportCapture[] = packageCapturePair(),
+    receipt = packageFinalizedReceipt(),
+    repository = packageRepository(),
+    runtimeBundle = packageRuntime(),
+    now = PACKAGE_CAPTURE_NOW,
+  ) {
+    return buildGoldImportV2PackageGenerationReadiness({
+      captures,
+      currentFinalizedReceipt: receipt,
+      currentRepository: repository,
+      currentRuntimeBundle: runtimeBundle,
+      now,
+    })
+  }
+
+  it('binds two fresh distinct captures, current receipt/repository/runtime, and false authorization', () => {
+    const first = buildReadiness()
+    const repeated = buildReadiness(
+      packageCapturePair(),
+      packageFinalizedReceipt(),
+      packageRepository(),
+      packageRuntime(),
+      new Date(PACKAGE_CAPTURE_NOW.getTime() + 60_000),
+    )
+    expect(validateGoldImportV2PackageGenerationReadiness(first)).toEqual(first)
+    expect(first).toEqual(repeated)
+    expect(first.schemaVersion).toBe(GOLD_IMPORT_V2_PACKAGE_GENERATION_READINESS_SCHEMA_VERSION)
+    expect(first.capturePair.captures).toHaveLength(2)
+    expect(first.capturePair.captures[0].captureId).not.toBe(
+      first.capturePair.captures[1].captureId,
+    )
+    expect(first.safetyBoundary).toEqual({
+      compensationAuthorized: false,
+      heldOutIdentitiesAccessed: false,
+      importAuthorized: false,
+      packageExecutionAuthorized: false,
+      remoteDatabaseAccessed: false,
+      writeCapableDatabaseClientConstructed: false,
+    })
+    expect(first.notExecutable).toBe(true)
+  })
+
+  it('rejects one capture, one capture twice, stale evidence, and current binding drift', () => {
+    const captures = packageCapturePair()
+    expect(() => buildReadiness([captures[0]])).toThrow('exactly two')
+    expect(() => buildReadiness([captures[0], captures[0]])).toThrow('distinct')
+
+    const staleState = packageReadinessState()
+    staleState.receipt.finalizedLatestMtimeMs = Date.parse('2026-08-11T02:00:00.000Z')
+    const staleAt = new Date(
+      PACKAGE_CAPTURE_NOW.getTime() - GOLD_IMPORT_V2_PREIMPORT_CAPTURE_FRESHNESS_MS - 1,
+    ).toISOString()
+    const staleCaptures = [
+      packageVerifiedCapture({
+        capturedAt: staleAt,
+        id: '10000000-0000-4000-8000-000000000001',
+        nonce: '1'.repeat(64),
+        outputDirectory: '/backup/package-capture-one',
+        packageReadiness: staleState,
+      }),
+      packageVerifiedCapture({
+        capturedAt: staleAt,
+        id: '20000000-0000-4000-8000-000000000002',
+        nonce: '2'.repeat(64),
+        outputDirectory: '/backup/package-capture-two',
+        packageReadiness: staleState,
+      }),
+    ] as const
+    expect(() => buildReadiness(staleCaptures, staleState.receipt, undefined, undefined)).toThrow(
+      'stale',
+    )
+    expect(() =>
+      buildReadiness(captures, {
+        ...packageFinalizedReceipt(),
+        finalizedLatestMtimeMs: packageFinalizedReceipt().finalizedLatestMtimeMs + 1,
+      }),
+    ).toThrow('current finalized migration receipt')
+    expect(() => buildReadiness(captures, undefined, packageRepository('f'.repeat(40)))).toThrow(
+      'stale',
+    )
+    expect(() =>
+      buildReadiness(captures, undefined, undefined, packageRuntime('advanced')),
+    ).toThrow('stale')
+  })
+
+  it('rejects historical/pre-V2, pre-finalization, disagreement, held-out, and remote evidence', () => {
+    const captures = packageCapturePair()
+    const historical = JSON.parse(JSON.stringify(captures[0])) as Record<string, unknown>
+    ;(historical.capture as Record<string, unknown>).schemaVersion =
+      'literature-gold-v2-preapplication-capture/1.0.0'
+    expect(() =>
+      buildReadiness([historical as unknown as GoldImportV2VerifiedPreimportCapture, captures[1]]),
+    ).toThrow()
+
+    const preV2 = packageReadinessState() as unknown as Record<string, unknown>
+    ;((preV2.migrationLedger as Record<string, unknown>).v2 as Record<string, unknown>).occurrence =
+      0
+    expect(() =>
+      packageVerifiedCapture({
+        id: '30000000-0000-4000-8000-000000000003',
+        nonce: '3'.repeat(64),
+        outputDirectory: '/backup/pre-v2',
+        packageReadiness: preV2 as unknown as GoldImportV2PackageReadinessState,
+      }),
+    ).toThrow()
+    expect(() =>
+      packageVerifiedCapture({
+        capturedAt: '2026-08-11T04:00:00.000Z',
+        id: '30000000-0000-4000-8000-000000000003',
+        nonce: '3'.repeat(64),
+        outputDirectory: '/backup/pre-finalization',
+      }),
+    ).toThrow('predates finalized migration receipt')
+
+    const disagreeingState = packageReadinessState()
+    disagreeingState.batch.id = '90000000-0000-4000-8000-000000000009'
+    const disagreeing = packageVerifiedCapture({
+      id: '20000000-0000-4000-8000-000000000002',
+      nonce: '2'.repeat(64),
+      outputDirectory: '/backup/package-capture-two',
+      packageReadiness: disagreeingState,
+    })
+    expect(() => buildReadiness([captures[0], disagreeing])).toThrow('disagree')
+
+    for (const mutate of [
+      (state: Record<string, unknown>) =>
+        ((state.safety as Record<string, unknown>).heldOutIdentitiesAccessed = true),
+      (state: Record<string, unknown>) =>
+        ((state.safety as Record<string, unknown>).remoteDatabaseAccessed = true),
+      (state: Record<string, unknown>) =>
+        ((state.database as Record<string, unknown>).host = '192.0.2.1'),
+      (state: Record<string, unknown>) =>
+        ((state.database as Record<string, unknown>).profile = 'remote'),
+    ]) {
+      const changed = packageReadinessState() as unknown as Record<string, unknown>
+      mutate(changed)
+      expect(() =>
+        packageVerifiedCapture({
+          id: '30000000-0000-4000-8000-000000000003',
+          nonce: '3'.repeat(64),
+          outputDirectory: '/backup/unsafe',
+          packageReadiness: changed as unknown as GoldImportV2PackageReadinessState,
+        }),
+      ).toThrow()
+    }
+  })
+
+  it('production wrapper exposes no receipt, target, remote, held-out, or dependency override', async () => {
+    const source = readFileSync(
+      resolve('scripts/literature/generate-gold-import-compensation-package-v2.ts'),
+      'utf8',
+    )
+    expect(source).not.toContain("'migration-receipt-output'")
+    expect(source).not.toContain('loadGoldImportCompensationV2LocalMigrationReceiptGate')
+    expect(source).toContain('verifyGoldImportV2PreimportCaptureDirectory({')
+    expect(source).toContain('collectDatabaseEvidence: collectGoldImportV2PreimportFixedLocalState')
+    expect(source).toContain('assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({')
+    expect(source).toContain("'post-v2-preimport-package-readiness-v2.json'")
+    expect(source).toContain('realpathSync(fileURLToPath(import.meta.url))')
+    expect(source).toContain("'scripts/literature/generate-gold-import-compensation-package-v2.ts'")
+    expect(source).toContain('EXECUTING_MODULE_PATH !== EXPECTED_PRODUCTION_MODULE_PATH')
+    expect(source).toContain('realpathSync(resolve(process.argv[1])) !== EXECUTING_MODULE_PATH')
+    expect(source).toContain('async function runGenerateGoldImportCompensationPackageV2(')
+    expect(source).not.toContain(
+      'export async function runGenerateGoldImportCompensationPackageV2(argv: string[])',
+    )
+    expect(source).toContain(
+      'return runGenerateGoldImportCompensationPackageV2WithDependencies(\n    argv,',
+    )
+    const productionCore = source.slice(
+      source.indexOf('async function runGenerateGoldImportCompensationPackageV2WithDependencies'),
+    )
+    expect(productionCore.indexOf('dependencies.collectDatabaseEvidence()')).toBeGreaterThan(-1)
+    expect(
+      productionCore.indexOf(
+        "readRegularNonSymlinkFile(\n    requiredArgument(arguments_, 'audit')",
+      ),
+    ).toBeGreaterThan(productionCore.indexOf('dependencies.collectDatabaseEvidence()'))
+    const finalDatabaseCollection = productionCore.lastIndexOf(
+      'dependencies.collectDatabaseEvidence()',
+    )
+    expect(finalDatabaseCollection).toBeGreaterThan(
+      productionCore.indexOf('generateGoldImportCompensationPackageV2Internal({'),
+    )
+    expect(productionCore.lastIndexOf('dependencies.inspectRepository()')).toBeGreaterThan(
+      finalDatabaseCollection,
+    )
+    expect(productionCore.lastIndexOf('dependencies.loadFinalizedReceipt()')).toBeGreaterThan(
+      finalDatabaseCollection,
+    )
+    expect(productionCore.lastIndexOf('dependencies.loadRuntimeBundle()')).toBeGreaterThan(
+      finalDatabaseCollection,
+    )
+    expect(productionCore.lastIndexOf('dependencies.verifyCapture(')).toBeGreaterThan(
+      finalDatabaseCollection,
+    )
+
+    expect(() =>
+      validateGoldImportCompensationPackageV2CliArguments(['--remote', 'forbidden']),
+    ).toThrow('Unknown option')
+    expect(source).not.toContain(
+      'export interface GenerateGoldImportCompensationPackageV2ProductionDependencies',
+    )
+    expect(source).not.toContain(
+      'export async function runGenerateGoldImportCompensationPackageV2Core',
+    )
+    expect(source).toContain('generateGoldImportCompensationPackageV2Internal({')
+    expect(
+      unsignedImportAuthorizationTemplateV2Schema.safeParse({ authorized: true }).success,
+    ).toBe(false)
+    expect(
+      unsignedCompensationAuthorizationTemplateV2Schema.safeParse({ authorized: true }).success,
+    ).toBe(false)
+  })
+
+  it('keeps the exported generator disposable-only regardless of caller environment', () => {
+    expect(() =>
+      generateGoldImportCompensationPackageV2({
+        audit: readyAudit(),
+        developmentPlanningState: {},
+        migrationReceiptGate: {},
+        sources: {} as never,
+      }),
+    ).toThrow('restricted to disposable rehearsal')
+    expect(() =>
+      generateGoldImportCompensationPackageV2({
+        audit: {},
+        developmentPlanningState: {},
+        migrationReceiptGate: {},
+        productionReadiness: {} as never,
+        sources: {} as never,
+      } as never),
+    ).toThrow('cannot accept production readiness')
+  })
+
+  it('snapshots a disposable audit before entering the private generator', () => {
+    let auditReads = 0
+    let productionReadinessReads = 0
+    const input = new Proxy(
+      {
+        developmentPlanningState: {},
+        migrationReceiptGate: {},
+        sources: {} as never,
+      },
+      {
+        get(target, property, receiver) {
+          if (property === 'audit') {
+            auditReads += 1
+            return auditReads === 1
+              ? exactReadyAudit('supabase_admin_owner_v1', 'disposable')
+              : exactReadyAudit('local_supabase_postgres_owner_v1', 'local')
+          }
+          if (property === 'productionReadiness') {
+            productionReadinessReads += 1
+            return {} as never
+          }
+          return Reflect.get(target, property, receiver)
+        },
+        has(target, property) {
+          if (property === 'productionReadiness') return false
+          return Reflect.has(target, property)
+        },
+      },
+    )
+
+    expect(() => generateGoldImportCompensationPackageV2(input as never)).toThrow()
+    expect(auditReads).toBe(1)
+    expect(productionReadinessReads).toBe(0)
   })
 })
 
