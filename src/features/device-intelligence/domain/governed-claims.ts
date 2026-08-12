@@ -50,60 +50,80 @@ const publishedOrHistoricalStates = new Set<GovernedClaimLifecycleState>([
 
 const forbiddenGenericClaimTypePattern =
   /equival|substitut|interchange|replacement|alternative[_ -]?product/iu
-const relationshipDecisionTerm = String.raw`(?:equival\w*|substitut\w*|interchange\w*|replacement|alternative(?:[_ -]?product)?)`
-const affirmativeRelationshipAuxiliary = String.raw`(?:is|are|was|were|may\s+be|can\s+be|could\s+be|should\s+be|must\s+be|has\s+been|have\s+been)`
 /**
- * Narrow, affirmative product-relationship predicates. These are intentionally not keyword
- * filters: relationship nouns used for packaging/setup and explicit uncertainty/negation stay
- * valid under the limitation patterns below.
+ * This is deliberately a protected-lexeme gate, not an affirmative-phrase allowlist. Every
+ * clause containing one of these relationship terms fails closed unless the complete clause
+ * matches one of the narrowly anchored limitation/uncertainty grammars below.
  */
-const forbiddenRelationshipDecisionPatterns = [
+const protectedRelationshipLexemeSource = String.raw`(?:equival\p{L}*|interchang\p{L}*|substitut\p{L}*|replac\p{L}*|alternatives?(?:[-_\s]+(?:products?|devices?|models?|to|for)))`
+const protectedRelationshipLexemePattern = new RegExp(
+  String.raw`\b${protectedRelationshipLexemeSource}\b`,
+  'iu',
+)
+const noProtectedRelationshipText = String.raw`(?:(?!\b${protectedRelationshipLexemeSource}\b)[\s\S])*`
+const limitationRelationshipObject = String.raw`(?:(?:a|an|the|clinical|functional)\s+)*(?:equivalence|interchangeability|substitution|replacement|alternative[-_\s]+product(?:\s+relationship)?|compatibility)`
+const limitationRelationshipObjectList = String.raw`${limitationRelationshipObject}(?:\s*(?:,\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+)${limitationRelationshipObject})*`
+const epistemicVerb = String.raw`(?:establish|demonstrate|support|prove|confirm|authorize|justify|show|imply|infer|conclude)`
+const negativeAuxiliary = String.raw`(?:(?:is|are|was|were|do|does|did|can|could|may|might|must|should|would|will|has|have|had)\s+(?:not|never)|cannot|can't|couldn't|don't|doesn't|didn't|mayn't|mightn't|mustn't|shouldn't|wouldn't|won't|isn't|aren't|wasn't|weren't|hasn't|haven't|hadn't)`
+const uncertaintyTerm = String.raw`(?:unknown|unresolved|undetermined|uncertain|not\s+(?:yet\s+)?established)`
+
+const explicitRelationshipLimitationClausePatterns = [
+  // Shared attributes do not establish equivalence, compatibility, or substitution.
   new RegExp(
-    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:considered|deemed)\s+)?(?:(?:clinically|functionally)\s+)?equivalent(?:\s+products?)?(?:\s+to\b|\b)`,
+    String.raw`^${noProtectedRelationshipText}\b${negativeAuxiliary}\s+${epistemicVerb}\s+${limitationRelationshipObjectList}$`,
+    'iu',
+  ),
+  // The review fails to establish equivalence.
+  new RegExp(
+    String.raw`^${noProtectedRelationshipText}\b(?:fails?|failed)\s+to\s+${epistemicVerb}\s+${limitationRelationshipObjectList}$`,
+    'iu',
+  ),
+  // There is no evidence that X is equivalent to Y.
+  new RegExp(
+    String.raw`^(?:there\s+(?:is|are)\s+)?(?:no|insufficient|inadequate|limited|conflicting|absent)\s+(?:available\s+)?(?:evidence|basis|support)\s+(?:that|to|showing|demonstrating|supporting)\s+${noProtectedRelationshipText}\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}$`,
+    'iu',
+  ),
+  // Available evidence is insufficient to establish equivalence.
+  new RegExp(
+    String.raw`^(?:the\s+)?(?:available\s+)?(?:evidence|basis|support)\s+(?:is|are|was|were|remains?)\s+(?:absent|insufficient|inadequate|limited|conflicting)\s+to\s+${epistemicVerb}\s+${limitationRelationshipObjectList}$`,
+    'iu',
+  ),
+  // X is not equivalent to Y; X must not be treated as a substitute for Y.
+  new RegExp(
+    String.raw`^${noProtectedRelationshipText}\b${negativeAuxiliary}\s+(?:(?:(?:be\s+)?(?:used|treated|considered|deemed|regarded|presented|described)\s+(?:as\s+)?)|(?:be\s+))?(?:(?:clinically|functionally)\s+)?(?:an?\s+)?\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}$`,
+    'iu',
+  ),
+  // Do not use X interchangeably with Y.
+  new RegExp(
+    String.raw`^(?:do\s+not|never)\s+(?:use|treat|consider|regard|present|describe)\s+${noProtectedRelationshipText}(?:as\s+)?\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}$`,
     'iu',
   ),
   new RegExp(
-    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+as\s+)?(?:an?\s+)?(?:(?:direct|clinical)\s+)?substitute(?:\s+(?:product|device|model))?\s+(?:for|of)\b`,
+    String.raw`^(?:do\s+not|never)\s+\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}$`,
     'iu',
   ),
-  /\b(?:may|can|could|should|must)\s+be\s+substituted\s+(?:for|with)\b/iu,
+  // Whether X is interchangeable with Y remains unresolved.
   new RegExp(
-    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+)?(?:(?:clinically|functionally)\s+)?interchangeabl(?:e|y)\s+with\b`,
+    String.raw`^(?:whether|if)\s+${noProtectedRelationshipText}\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}\b(?:is|are|remains?|remain)\s+${uncertaintyTerm}$`,
     'iu',
   ),
+  // It remains unknown whether X is interchangeable with Y.
   new RegExp(
-    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+as\s+)?(?:an?\s+)?(?:(?:direct|drop-in|clinical)\s+)?replacement(?:\s+(?:product|device|model))?\s+(?:for|of)\b`,
+    String.raw`^(?:it\s+)?(?:is|remains?)\s+${uncertaintyTerm}\s+(?:whether|if)\s+${noProtectedRelationshipText}\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}$`,
     'iu',
   ),
-  /\b(?:may|can|could|should|must)\s+(?:directly\s+)?replace\b/iu,
+  // Equivalence between X and Y has not been established.
   new RegExp(
-    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+as\s+)?(?:an?\s+)?(?:(?:direct|clinical|viable|acceptable|approved)\s+)?alternative(?:\s+(?:product|device|model))?\s+(?:to|for)\b`,
-    'iu',
-  ),
-] as const
-const explicitRelationshipLimitationPatterns = [
-  new RegExp(
-    String.raw`\b(?:does?|did|can|could|may|might|must|should|would|will|has|have|had)\s+(?:not|never)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    String.raw`^(?:the\s+)?\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}\b(?:is|are|remains?|remain)\s+${uncertaintyTerm}$`,
     'iu',
   ),
   new RegExp(
-    String.raw`\b(?:cannot|can't|couldn't|shouldn't|wouldn't|mustn't)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    String.raw`^(?:the\s+)?\b${protectedRelationshipLexemeSource}\b${noProtectedRelationshipText}\b(?:has|have)\s+not\s+(?:yet\s+)?been\s+established$`,
     'iu',
   ),
+  // This claim does not assess equivalence.
   new RegExp(
-    String.raw`\b(?:no|insufficient|inadequate|absent|lacking)\s+(?:\w+\s+){0,3}(?:evidence|basis|support)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
-    'iu',
-  ),
-  new RegExp(
-    String.raw`\b(?:evidence|basis|support)\s+(?:is|are|was|were|remains?)\s+(?:absent|insufficient|inadequate|lacking|unresolved)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
-    'iu',
-  ),
-  new RegExp(
-    String.raw`\b(?:unknown|unresolved|undetermined|not\s+established)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
-    'iu',
-  ),
-  new RegExp(
-    String.raw`\b(?:whether|if)\b[^.!?;]*\b${relationshipDecisionTerm}\b[^.!?;]*\b(?:unknown|unresolved|undetermined|not\s+established)\b`,
+    String.raw`^(?:this|the)\s+(?:claim|review|record|evidence)\s+${negativeAuxiliary}\s+(?:address|assess|determine|approve|authorize|conclude)\s+${limitationRelationshipObjectList}$`,
     'iu',
   ),
 ] as const
@@ -680,12 +700,14 @@ function rawClaimId(input: unknown): string {
 }
 
 function hasForbiddenRelationshipDecision(text: string): boolean {
-  const clauses = text.split(/[.!?;\n]+|,\s*|\s+\b(?:but|however)\b\s+/iu)
-  return clauses.some(
-    (clause) =>
-      !explicitRelationshipLimitationPatterns.some((pattern) => pattern.test(clause)) &&
-      forbiddenRelationshipDecisionPatterns.some((pattern) => pattern.test(clause)),
-  )
+  const clauses = text
+    .split(/[.!?;\n]+|(?:,\s*|\s+)\b(?:but|however|nevertheless|yet)\b\s*/iu)
+    .map((clause) => clause.replace(/\s+/gu, ' ').trim())
+    .filter(Boolean)
+  return clauses.some((clause) => {
+    if (!protectedRelationshipLexemePattern.test(clause)) return false
+    return !explicitRelationshipLimitationClausePatterns.some((pattern) => pattern.test(clause))
+  })
 }
 
 function preSchemaMessages(input: unknown): GovernanceValidationMessage[] {
@@ -713,7 +735,7 @@ function preSchemaMessages(input: unknown): GovernanceValidationMessage[] {
       message(
         'forbidden_relationship_decision_language',
         claimId,
-        'claimStatement contains an affirmative equivalence, substitution, interchangeability, replacement, or alternative-product decision. This generic governed-claim contract cannot approve that relationship.',
+        'claimStatement contains protected equivalence, substitution, interchangeability, replacement, or alternative-product language outside the complete-clause limitation/uncertainty grammar. This generic governed-claim contract cannot approve that relationship.',
       ),
     )
   }
@@ -1101,7 +1123,7 @@ function validateTypedClaim(claim: GovernedClaim): GovernanceValidationMessage[]
       message(
         'forbidden_relationship_decision_language',
         claim.claimId,
-        `${prose.location} contains an affirmative equivalence, substitution, interchangeability, replacement, or alternative-product decision that this generic claim contract cannot approve.`,
+        `${prose.location} contains protected equivalence, substitution, interchangeability, replacement, or alternative-product language outside the complete-clause limitation/uncertainty grammar that this generic claim contract permits.`,
       ),
     )
   }

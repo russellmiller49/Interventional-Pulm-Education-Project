@@ -272,6 +272,15 @@ describe('governed claim lifecycle foundation', () => {
     'Fictional Model X may be used as an alternative product to Fictional Model Y.',
     'Fictional Model X is a replacement device for Fictional Model Y.',
     'Fictional Model X is a viable alternative to Fictional Model Y.',
+    'Fictional Model X substitutes for Fictional Model Y.',
+    'Fictional Model X may substitute for Fictional Model Y.',
+    'Use Fictional Model X as a substitute for Fictional Model Y.',
+    'Fictional Model X replaces Fictional Model Y.',
+    'Fictional Model X serves as a replacement for Fictional Model Y.',
+    'Fictional Model X offers an alternative to Fictional Model Y.',
+    'Use Fictional Model X interchangeably with Fictional Model Y.',
+    'Fictional Model X does not require an adapter and is interchangeable with Fictional Model Y.',
+    'Replacement connector packaging must remain sealed during this fictional setup.',
   ])('rejects forbidden relationship decisions in claim prose: %s', (claimStatement) => {
     const claim = rebindClaimStatement(createFictionalResearchCandidate(), claimStatement)
     expect(codes(claim)).toContain('forbidden_relationship_decision_language')
@@ -279,8 +288,60 @@ describe('governed claim lifecycle foundation', () => {
 
   it('rejects forbidden relationship decisions hidden in decision-bearing rationale', () => {
     const claim = cloneClaim(createFictionalApprovedClaim())
-    claim.reviews[0].rationale = 'Fictional Model X is clinically equivalent to Fictional Model Y.'
+    claim.reviews[0].rationale = 'Use Fictional Model X as a substitute for Fictional Model Y.'
     expect(codes(claim)).toContain('forbidden_relationship_decision_language')
+  })
+
+  it('refuses an imperative relationship decision in a physician-review rationale', () => {
+    const reviewRequired = transitionGovernedClaim(createFictionalResearchCandidate(), {
+      toState: 'physician_review_required',
+      occurredAt: '2026-02-03T00:00:00.000Z',
+      actor: fictionalResearcher,
+      rationale: 'Fictional packet ready for review.',
+    })
+    expect(() =>
+      appendClaimReview(reviewRequired, {
+        reviewId: 'FICT-REVIEW-IMPERATIVE-RELATIONSHIP',
+        reviewer: {
+          personId: fictionalPhysicianOwner.personId,
+          displayName: fictionalPhysicianOwner.displayName,
+          reviewerRole: 'physician',
+        },
+        reviewedAt: '2026-02-04T00:00:00.000Z',
+        decision: 'approved',
+        rationale: 'Use Fictional Model X interchangeably with Fictional Model Y.',
+      }),
+    ).toThrow('forbidden_relationship_decision_language')
+  })
+
+  it('applies the protected-clause gate across retained decision rationales', () => {
+    const mutateRationale: Array<(claim: GovernedClaim) => void> = [
+      (claim) => {
+        claim.stalenessPolicy.rationale = 'Fictional Model X replaces Fictional Model Y.'
+      },
+      (claim) => {
+        claim.historicalRetention.rationale =
+          'Fictional Model X serves as a replacement for Fictional Model Y.'
+      },
+      (claim) => {
+        claim.transitions[0].rationale =
+          'Fictional Model X offers an alternative to Fictional Model Y.'
+      },
+      (claim) => {
+        claim.affectedReleaseAssessments[0].rationale =
+          'Use Fictional Model X interchangeably with Fictional Model Y.'
+      },
+      (claim) => {
+        claim.implementationHistory[1].rationale =
+          'Use Fictional Model X as a substitute for Fictional Model Y.'
+      },
+    ]
+
+    for (const mutate of mutateRationale) {
+      const claim = cloneClaim(createFictionalPublishedClaim())
+      mutate(claim)
+      expect(codes(claim)).toContain('forbidden_relationship_decision_language')
+    }
   })
 
   it('rejects forbidden relationship decisions hidden in an evidence-conflict summary', () => {
@@ -308,13 +369,25 @@ describe('governed claim lifecycle foundation', () => {
 
   it.each([
     'This claim does not establish equivalence, substitution, interchangeability, replacement, or an alternative-product relationship.',
+    'Shared attributes do not establish equivalence, compatibility, or substitution.',
     'There is no evidence that Fictional Model X is equivalent to Fictional Model Y.',
     'Whether Fictional Model X is interchangeable with Fictional Model Y remains unresolved.',
+    'Equivalence between Fictional Model X and Fictional Model Y has not been established.',
+    'Available evidence is insufficient to establish substitution.',
     'Fictional Model X must not be treated as clinically equivalent to Fictional Model Y.',
-    'Replacement connector packaging must remain sealed during this fictional setup.',
-  ])('does not reject explicit limitations or incidental terminology: %s', (claimStatement) => {
+    'Fictional Model X cannot be substituted for Fictional Model Y.',
+    'Do not substitute Fictional Model X for Fictional Model Y.',
+  ])('allows only a complete explicit limitation or uncertainty clause: %s', (claimStatement) => {
     const claim = rebindClaimStatement(createFictionalResearchCandidate(), claimStatement)
     expect(codes(claim)).not.toContain('forbidden_relationship_decision_language')
+  })
+
+  it('does not let unrelated negation exempt a later protected predicate', () => {
+    const claim = rebindClaimStatement(
+      createFictionalResearchCandidate(),
+      'Fictional Model X is not equivalent to Fictional Model Y and replaces Fictional Model Z.',
+    )
+    expect(codes(claim)).toContain('forbidden_relationship_decision_language')
   })
 
   it('enforces the cross-history partial order on retained records', () => {

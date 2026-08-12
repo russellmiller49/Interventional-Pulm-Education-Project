@@ -83,10 +83,13 @@ perform either action.
 Claim types are intentionally narrow: identity, manufacturer specification, regulatory status,
 compatibility, clinical-role mapping, procedure requirement, setup instruction, and evidence
 limitation. Generic equivalence, substitution, interchangeability, or "alternative product"
-types are rejected. Affirmative equivalence, substitution, interchangeability, replacement, and
-alternative-product decisions are also rejected when embedded in a claim statement or retained
-decision rationale; explicit limitations and incidental uses of those words remain valid. D5A
-does not define the stronger governed contract those decisions would need.
+types are rejected. A claim statement or retained decision rationale also fails closed when any
+complete clause contains protected equivalence, substitution, interchangeability, replacement,
+or alternative-product language. The only exceptions are complete clauses matching the narrow
+explicit limitation/uncertainty grammar (for example, “Shared attributes do not establish
+equivalence, compatibility, or substitution”). Negation must bind the relationship predicate or
+an evidence-limitation predicate; unrelated negation does not exempt a later relationship claim.
+D5A does not define the stronger governed contract those decisions would need.
 
 ## 4. Exact signoff binding
 
@@ -120,9 +123,9 @@ Cross-field validation rejects:
   support from an exact-model `manufacturer_labeling`, `manufacturer_ifu`,
   `manufacturer_manual`, or `regulator_record`; guidance, literature, internal review, contextual
   evidence, and family-only applicability cannot qualify merely by being labeled primary;
-- a generic equivalence/substitution/interchangeability/replacement claim type, or an affirmative
-  equivalence, substitution, interchangeability, replacement, or alternative-product decision in
-  claim or decision-bearing prose;
+- a generic equivalence/substitution/interchangeability/replacement claim type, or any protected
+  relationship lexeme in claim or decision-bearing prose unless its complete clause matches the
+  narrow explicit limitation/uncertainty grammar;
 - absent source revision, in-place source revision changes, or removal of retained source identity;
 - rewritten transition, review, release-impact, or implementation history;
 - a cross-history timestamp that puts review before the review-required transition, evidence
