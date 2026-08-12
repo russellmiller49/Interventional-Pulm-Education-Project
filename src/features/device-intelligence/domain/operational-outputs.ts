@@ -1,4 +1,4 @@
-import type { ReadinessProjection } from './readiness'
+import type { ReadinessProjection, RequirementReadinessState } from './readiness'
 
 import { stableSnapshotHash } from '@/features/preference-cards/domain/stable-hash'
 import type {
@@ -22,7 +22,7 @@ import type {
  * every definition makes the one mixed-source preview (structural gaps) explicit instead of
  * implying that current audit counts were frozen into the card's release.
  */
-export const OPERATIONAL_OUTPUT_SCHEMA_VERSION = 'device-intelligence-operational-output/1' as const
+export const OPERATIONAL_OUTPUT_SCHEMA_VERSION = 'device-intelligence-operational-output/2' as const
 
 export const OPERATIONAL_OUTPUT_DEFINITIONS = {
   preferenceCard: {
@@ -47,7 +47,7 @@ export const OPERATIONAL_OUTPUT_DEFINITIONS = {
     id: 'training',
     tab: 'training',
     delivery: 'projection',
-    sourceKind: 'release_pinned_card_and_slot_definitions',
+    sourceKind: 'release_pinned_resolved_card',
   },
   gaps: {
     id: 'gap-preview',
@@ -107,30 +107,116 @@ export interface OutputLine {
   resolutionState: ResolutionState
   verificationState: VerificationState
   compatibilityState: CompatibilityState
-  selectedDescription: string | null
-  selectedIdentityState: 'visible' | 'withheld' | 'not_recorded'
+  selection: OutputSelection
   /** Authored clinician texts, quoted verbatim by the training projection. */
   genericRequirement: string
-  selectionGuidance: string | null
-  requiresCurrentIfu: boolean
-  whyIncluded: string[]
-  notes: string | null
 }
 
-export interface SuppressedOutputLine extends OutputLine {
-  rationale: string | null
-  /** The resolver's own kit-suppression trace sentence. */
-  suppressionReason: string | null
+/**
+ * A discriminated identity boundary. The withheld branch has no optional identity field that a
+ * future renderer could accidentally print.
+ */
+export type OutputSelection =
+  | { identityState: 'visible'; description: string }
+  | { identityState: 'withheld' }
+  | { identityState: 'not_recorded' }
+
+export type SuppressionDisclosure =
+  | { state: 'verbatim'; reason: string }
+  | { state: 'withheld' }
+  | { state: 'not_recorded' }
+
+export interface SuppressedOutputLine {
+  itemId: string
+  label: string
+  roleCode: string
+  requiredness: Requiredness
+  effectiveRequiredness: Requiredness
+  conditionalState: ConditionalState | null
+  dependencyRule: string | null
+  resolutionState: 'suppressed_by_kit'
+  verificationState: VerificationState
+  compatibilityState: CompatibilityState
+  selectionIdentityState: OutputSelection['identityState']
+  /** The resolver trace is present only when it carries no withheld identity. */
+  suppression: SuppressionDisclosure
 }
 
-export interface GroupedOutput<Key extends string = string> {
+export interface RoomOutputLine {
+  itemId: string
+  label: string
+  quantityDisplay: string
+  openHoldStatus: OpenHoldStatus
+  sterileStatus: string | null
+  requiredness: Requiredness
+  effectiveRequiredness: Requiredness
+  conditionalState: ConditionalState | null
+  dependencyRule: string | null
+  resolutionState: ResolutionState
+  verificationState: VerificationState
+  compatibilityState: CompatibilityState
+  selectionIdentityState: OutputSelection['identityState']
+}
+
+export interface NursingOutputLine {
+  itemId: string
+  label: string
+  openHoldStatus: OpenHoldStatus
+  requiredness: Requiredness
+  effectiveRequiredness: Requiredness
+  conditionalState: ConditionalState | null
+  dependencyRule: string | null
+  resolutionState: ResolutionState
+  verificationState: VerificationState
+  compatibilityState: CompatibilityState
+  selection: OutputSelection
+}
+
+export interface TrainingOutputLine {
+  itemId: string
+  label: string
+  genericRequirement: string
+  dependencyRule: string | null
+  requiredness: Requiredness
+  effectiveRequiredness: Requiredness
+  conditionalState: ConditionalState | null
+  resolutionState: ResolutionState
+  verificationState: VerificationState
+  compatibilityState: CompatibilityState
+  /** Not present on the pinned card; deliberately never enriched from the live role store. */
+  selectionGuidance: null
+  /** Not present on the pinned card; deliberately never enriched from the live role store. */
+  requiresCurrentIfu: null
+  selectionIdentityState: OutputSelection['identityState']
+}
+
+/** Checklist-specific DTO: no training prose, trace, notes, or source identity. */
+export interface SetupPacketLine {
+  itemId: string
+  label: string
+  roleCode: string
+  quantityDisplay: string
+  openHoldStatus: OpenHoldStatus
+  sterileStatus: string | null
+  responsibleRole: string | null
+  requiredness: Requiredness
+  effectiveRequiredness: Requiredness
+  conditionalState: ConditionalState | null
+  dependencyRule: string | null
+  resolutionState: ResolutionState
+  verificationState: VerificationState
+  compatibilityState: CompatibilityState
+  selection: OutputSelection
+}
+
+export interface GroupedOutput<Line = OutputLine, Key extends string = string> {
   key: Key
-  lines: OutputLine[]
+  lines: Line[]
 }
 
 export interface NursingOutputGroup {
   responsibleRole: string
-  phases: GroupedOutput[]
+  phases: GroupedOutput<NursingOutputLine>[]
 }
 
 export interface OperationalFormularySummary {
@@ -140,14 +226,30 @@ export interface OperationalFormularySummary {
   rowsWithAnyLocalField: number
 }
 
+export interface OperationalReadinessProjection {
+  headline: RequirementReadinessState
+  requirements: {
+    itemId: string
+    state: RequirementReadinessState
+    diagnosticCodes: string[]
+  }[]
+  cardDiagnosticCodes: string[]
+  blockingWarningCount: number
+  otherWarningCount: number
+}
+
 export interface GapOutputPayload {
-  projection: ReadinessProjection
+  projection: OperationalReadinessProjection
   proposalsOnlyRoles: string[]
   unmappedRoles: string[]
   nonSelectableOnlyRoles: string[]
   demoStandInRoles: string[]
   dimensionGapCount: number
   formularySummary: OperationalFormularySummary
+}
+
+export interface GapOutputInput extends Omit<GapOutputPayload, 'projection'> {
+  projection: ReadinessProjection
 }
 
 export interface ExactReleaseIdentity {
@@ -179,16 +281,22 @@ export interface OperationalOutputCommonEnvelope {
   }
 }
 
-export interface OutputDiagnostic {
+interface OutputDiagnosticBase {
   id: string
   severity: 'info' | 'warning' | 'blocking'
   code: string
-  message: string
   sourceType: string
-  sourceId: string | null
   acknowledged: boolean
-  waiverReason: string | null
 }
+
+export type OutputDiagnostic =
+  | (OutputDiagnosticBase & {
+      disclosureState: 'verbatim'
+      message: string
+      sourceId: string | null
+      waiverReason: string | null
+    })
+  | (OutputDiagnosticBase & { disclosureState: 'withheld' })
 
 export interface ProvenanceRequirementEntry {
   itemId: string
@@ -203,14 +311,19 @@ export interface ProvenanceRequirementEntry {
   resolutionState: ResolutionState
   verificationState: VerificationState
   compatibilityState: CompatibilityState
-  evidence: {
-    identityState: 'visible' | 'withheld' | 'not_recorded'
-    catalogProductId: string | null
-    sourceId: string | null
-    sourceLocation: string | null
-    verificationStatus: string | null
-  }
+  evidence: ProvenanceEvidence
 }
+
+export type ProvenanceEvidence =
+  | {
+      identityState: 'visible'
+      catalogProductId: string
+      sourceId: string | null
+      sourceLocation: string | null
+      verificationStatus: string | null
+    }
+  | { identityState: 'withheld' }
+  | { identityState: 'not_recorded' }
 
 export interface ProvenanceManifestPayload {
   releaseIdentity: ExactReleaseIdentity
@@ -244,7 +357,7 @@ export interface OperationalOutputPayloadMap {
     behavior: 'existing_builder_link'
   }
   roomSetup: {
-    groups: GroupedOutput[]
+    groups: GroupedOutput<RoomOutputLine>[]
     suppressedItems: SuppressedOutputLine[]
   }
   nursing: {
@@ -253,12 +366,11 @@ export interface OperationalOutputPayloadMap {
     suppressedItems: SuppressedOutputLine[]
   }
   training: {
-    groups: GroupedOutput[]
-    ifuScope: 'all' | 'some' | 'none'
+    groups: GroupedOutput<TrainingOutputLine>[]
   }
   gaps: GapOutputPayload
   setupPacket: {
-    roomSetup: GroupedOutput[]
+    roomSetup: GroupedOutput<SetupPacketLine>[]
     responsibilityState: 'authored' | 'not_recorded'
     suppressedItems: SuppressedOutputLine[]
     diagnostics: OutputDiagnostic[]
@@ -283,12 +395,15 @@ export interface BuildOperationalOutputRegistryInput {
   scenarioId: string
   procedureStatus: string
   card: ResolvedCard
-  lines: OutputLine[]
-  suppressedItems: SuppressedOutputLine[]
+  slotAnnotations: {
+    itemId: string
+    sterileStatus: string | null
+    responsibleRole: string | null
+  }[]
   canonicalPhaseOrder: readonly string[]
   /** Product ids admitted by the existing D1 verified-source + prototype-visible cohort wall. */
   identifiableCatalogProductIds: ReadonlySet<string>
-  gaps: GapOutputPayload
+  gaps: GapOutputInput
 }
 
 function exactReleaseIdentity(card: ResolvedCard): ExactReleaseIdentity {
@@ -309,8 +424,8 @@ function exactReleaseIdentity(card: ResolvedCard): ExactReleaseIdentity {
   }
 }
 
-function groupBy(values: OutputLine[], keyForLine: (line: OutputLine) => string): GroupedOutput[] {
-  const groups = new Map<string, OutputLine[]>()
+function groupBy<Line>(values: Line[], keyForLine: (line: Line) => string): GroupedOutput<Line>[] {
+  const groups = new Map<string, Line[]>()
   for (const line of values) {
     const key = keyForLine(line)
     const existing = groups.get(key)
@@ -320,10 +435,10 @@ function groupBy(values: OutputLine[], keyForLine: (line: OutputLine) => string)
   return [...groups.entries()].map(([key, lines]) => ({ key, lines }))
 }
 
-function groupByPhase(
-  values: OutputLine[],
+function groupByPhase<Line extends { proceduralPhase: ProceduralPhase }>(
+  values: Line[],
   canonicalPhaseOrder: readonly string[],
-): GroupedOutput[] {
+): GroupedOutput<Line>[] {
   const rank = (phase: string) => {
     const index = canonicalPhaseOrder.indexOf(phase)
     return index === -1 ? canonicalPhaseOrder.length : index
@@ -333,17 +448,160 @@ function groupByPhase(
   )
 }
 
-function outputDiagnostic(card: ResolvedCard): OutputDiagnostic[] {
-  return card.warnings.map((warning) => ({
-    id: warning.id,
-    severity: warning.severity,
-    code: warning.code,
-    message: warning.message,
-    sourceType: warning.sourceType,
-    sourceId: warning.sourceId,
-    acknowledged: warning.acknowledged,
-    waiverReason: warning.waiverReason,
-  }))
+interface WithheldIdentityBoundary {
+  catalogProductIds: ReadonlySet<string>
+  hospitalItemIds: ReadonlySet<string>
+  tokens: readonly string[]
+}
+
+function selectedProductIds(item: ResolvedCardItem): string[] {
+  return [item.selectedCatalogProductId, item.selectedItemSnapshot?.catalogProduct?.productId]
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .filter((value, index, values) => values.indexOf(value) === index)
+}
+
+function isItemIdentityWithheld(
+  item: ResolvedCardItem,
+  identifiableCatalogProductIds: ReadonlySet<string>,
+): boolean {
+  const snapshot = item.selectedItemSnapshot
+  const product = snapshot?.catalogProduct ?? null
+  if (item.verificationState === 'hidden' || snapshot?.verificationState === 'hidden') return true
+  if (item.selectedHospitalItemId && !snapshot) return true
+  if (product?.visibilityState === 'hidden') return true
+  const productIds = selectedProductIds(item)
+  if (product && productIds.length === 0) return true
+  return productIds.some((productId) => !identifiableCatalogProductIds.has(productId))
+}
+
+function addIdentityToken(tokens: Set<string>, value: unknown): void {
+  if (typeof value !== 'string') return
+  const trimmed = value.trim()
+  if (trimmed) tokens.add(trimmed)
+}
+
+function referencesWithheldIdentity(
+  value: string | null | undefined,
+  boundary: Pick<WithheldIdentityBoundary, 'tokens'>,
+): boolean {
+  if (!value) return false
+  const normalized = value.toLocaleLowerCase('en-US')
+  return boundary.tokens.some((token) => normalized.includes(token.toLocaleLowerCase('en-US')))
+}
+
+function withheldIdentityBoundary(
+  card: ResolvedCard,
+  identifiableCatalogProductIds: ReadonlySet<string>,
+): WithheldIdentityBoundary {
+  const catalogProductIds = new Set<string>()
+  const hospitalItemIds = new Set<string>()
+  const tokens = new Set<string>()
+  const allItems = [...card.items, ...card.suppressedItems]
+
+  for (const item of allItems) {
+    if (!isItemIdentityWithheld(item, identifiableCatalogProductIds)) continue
+    const snapshot = item.selectedItemSnapshot
+    const product = snapshot?.catalogProduct ?? null
+    for (const productId of selectedProductIds(item)) {
+      catalogProductIds.add(productId)
+      addIdentityToken(tokens, productId)
+    }
+    if (item.selectedHospitalItemId) {
+      hospitalItemIds.add(item.selectedHospitalItemId)
+      addIdentityToken(tokens, item.selectedHospitalItemId)
+    }
+    if (snapshot) {
+      hospitalItemIds.add(snapshot.id)
+      addIdentityToken(tokens, snapshot.id)
+      addIdentityToken(tokens, snapshot.localDescription)
+      addIdentityToken(tokens, snapshot.localItemNumber)
+      addIdentityToken(tokens, snapshot.storageLocation)
+      addIdentityToken(tokens, snapshot.notes)
+      for (const attribute of Object.values(snapshot.attributes))
+        addIdentityToken(tokens, attribute)
+    }
+    if (product) {
+      addIdentityToken(tokens, product.productId)
+      addIdentityToken(tokens, product.productName)
+      addIdentityToken(tokens, product.manufacturer)
+      addIdentityToken(tokens, product.catalogNumber)
+      addIdentityToken(tokens, product.gtin)
+      addIdentityToken(tokens, product.sourceId)
+      addIdentityToken(tokens, product.sourceLocation)
+    }
+    addIdentityToken(tokens, item.rationale)
+    addIdentityToken(tokens, item.notes)
+    for (const reason of item.whyIncluded) addIdentityToken(tokens, reason)
+  }
+
+  const initialBoundary = { tokens: [...tokens] }
+  for (const trace of card.ruleTrace) {
+    if (
+      (trace.sourceId !== null && hospitalItemIds.has(trace.sourceId)) ||
+      referencesWithheldIdentity(trace.message, initialBoundary) ||
+      referencesWithheldIdentity(trace.sourceId, initialBoundary)
+    ) {
+      addIdentityToken(tokens, trace.message)
+      addIdentityToken(tokens, trace.sourceId)
+    }
+  }
+
+  return {
+    catalogProductIds,
+    hospitalItemIds,
+    tokens: [...tokens].sort(
+      (left, right) => right.length - left.length || left.localeCompare(right),
+    ),
+  }
+}
+
+function outputSelection(
+  item: ResolvedCardItem,
+  identifiableCatalogProductIds: ReadonlySet<string>,
+): OutputSelection {
+  if (isItemIdentityWithheld(item, identifiableCatalogProductIds)) {
+    return { identityState: 'withheld' }
+  }
+  const description = item.selectedItemSnapshot?.localDescription.trim()
+  return description ? { identityState: 'visible', description } : { identityState: 'not_recorded' }
+}
+
+function outputDiagnostic(
+  card: ResolvedCard,
+  boundary: WithheldIdentityBoundary,
+): OutputDiagnostic[] {
+  return card.warnings.map((warning, index) => {
+    const withheld =
+      ((boundary.catalogProductIds.size > 0 || boundary.hospitalItemIds.size > 0) &&
+        warning.sourceType === 'compatibility_rule') ||
+      (warning.sourceId !== null &&
+        (boundary.hospitalItemIds.has(warning.sourceId) ||
+          boundary.catalogProductIds.has(warning.sourceId))) ||
+      referencesWithheldIdentity(warning.id, boundary) ||
+      referencesWithheldIdentity(warning.code, boundary) ||
+      referencesWithheldIdentity(warning.message, boundary) ||
+      referencesWithheldIdentity(warning.sourceId, boundary) ||
+      referencesWithheldIdentity(warning.waiverReason, boundary)
+    const common = {
+      id: withheld ? `withheld-diagnostic-${index + 1}` : warning.id,
+      severity: warning.severity,
+      code: referencesWithheldIdentity(warning.code, boundary) ? 'identity_withheld' : warning.code,
+      sourceType: warning.sourceType,
+      acknowledged: warning.acknowledged,
+    }
+    return withheld
+      ? {
+          ...common,
+          disclosureState: 'withheld' as const,
+        }
+      : {
+          ...common,
+          disclosureState: 'verbatim' as const,
+          message: warning.message,
+          sourceId: warning.sourceId,
+          waiverReason: warning.waiverReason,
+        }
+  })
 }
 
 function provenanceRequirement(
@@ -354,12 +612,17 @@ function provenanceRequirement(
   const product = item.selectedItemSnapshot?.catalogProduct ?? null
   // The D1 cohort wall remains authoritative: a hidden product's identity and evidence pointer
   // never ride into this public-unlisted projection merely because the resolved card retains it.
-  const identityState: ProvenanceRequirementEntry['evidence']['identityState'] = product
-    ? identifiableCatalogProductIds.has(product.productId)
-      ? 'visible'
-      : 'withheld'
-    : 'not_recorded'
-  const mayIdentifyProduct = identityState === 'visible'
+  const evidence: ProvenanceEvidence = isItemIdentityWithheld(item, identifiableCatalogProductIds)
+    ? { identityState: 'withheld' }
+    : product
+      ? {
+          identityState: 'visible',
+          catalogProductId: product.productId,
+          sourceId: product.sourceId,
+          sourceLocation: product.sourceLocation,
+          verificationStatus: product.verificationStatus,
+        }
+      : { identityState: 'not_recorded' }
   return {
     itemId: item.id,
     presence,
@@ -373,13 +636,81 @@ function provenanceRequirement(
     resolutionState: item.resolutionState,
     verificationState: item.verificationState,
     compatibilityState: item.compatibilityState,
-    evidence: {
-      identityState,
-      catalogProductId: mayIdentifyProduct ? (product?.productId ?? null) : null,
-      sourceId: mayIdentifyProduct ? (product?.sourceId ?? null) : null,
-      sourceLocation: mayIdentifyProduct ? (product?.sourceLocation ?? null) : null,
-      verificationStatus: mayIdentifyProduct ? (product?.verificationStatus ?? null) : null,
-    },
+    evidence,
+  }
+}
+
+function publicReadinessProjection(
+  projection: ReadinessProjection,
+): OperationalReadinessProjection {
+  return {
+    headline: projection.headline,
+    requirements: projection.requirements.map((requirement) => ({
+      itemId: requirement.itemId,
+      state: requirement.state,
+      diagnosticCodes: [...new Set(requirement.diagnostics.map((diagnostic) => diagnostic.code))],
+    })),
+    cardDiagnosticCodes: [
+      ...new Set(projection.cardDiagnostics.map((diagnostic) => diagnostic.code)),
+    ],
+    blockingWarningCount: projection.blockingWarnings.length,
+    otherWarningCount: projection.otherWarnings.length,
+  }
+}
+
+function outputLine(
+  item: ResolvedCardItem,
+  annotation: BuildOperationalOutputRegistryInput['slotAnnotations'][number] | undefined,
+  identifiableCatalogProductIds: ReadonlySet<string>,
+): OutputLine {
+  return {
+    itemId: item.id,
+    sourceSlotId: item.sourceSlotId,
+    sourceModuleVersionIds: [...(item.sourceModuleVersionIds ?? [])],
+    label: item.label,
+    roleCode: item.roleCode,
+    quantityDisplay: item.quantityDisplay,
+    openHoldStatus: item.openHoldStatus,
+    sterileStatus: annotation?.sterileStatus ?? null,
+    responsibleRole: annotation?.responsibleRole ?? null,
+    setupZone: item.setupZone,
+    proceduralPhase: item.proceduralPhase,
+    requiredness: item.requiredness,
+    effectiveRequiredness: item.effectiveRequiredness,
+    conditionalState: item.conditionalState,
+    dependencyRule: item.dependencyRule,
+    resolutionState: item.resolutionState,
+    verificationState: item.verificationState,
+    compatibilityState: item.compatibilityState,
+    selection: outputSelection(item, identifiableCatalogProductIds),
+    genericRequirement: item.genericRequirement,
+  }
+}
+
+function suppressedOutputLine(
+  item: ResolvedCardItem,
+  boundary: WithheldIdentityBoundary,
+  identifiableCatalogProductIds: ReadonlySet<string>,
+): SuppressedOutputLine {
+  const reason = item.whyIncluded.find((entry) => entry.startsWith('Suppressed because')) ?? null
+  const suppression: SuppressionDisclosure = !reason
+    ? { state: 'not_recorded' }
+    : referencesWithheldIdentity(reason, boundary)
+      ? { state: 'withheld' }
+      : { state: 'verbatim', reason }
+  return {
+    itemId: item.id,
+    label: item.label,
+    roleCode: item.roleCode,
+    requiredness: item.requiredness,
+    effectiveRequiredness: item.effectiveRequiredness,
+    conditionalState: item.conditionalState,
+    dependencyRule: item.dependencyRule,
+    resolutionState: 'suppressed_by_kit',
+    verificationState: item.verificationState,
+    compatibilityState: item.compatibilityState,
+    selectionIdentityState: outputSelection(item, identifiableCatalogProductIds).identityState,
+    suppression,
   }
 }
 
@@ -448,6 +779,20 @@ export function buildOperationalOutputRegistry(
 ): OperationalOutputRegistry {
   const { card } = input
   const releaseIdentity = exactReleaseIdentity(card)
+  const annotationByItemId = new Map(
+    input.slotAnnotations.map((annotation) => [annotation.itemId, annotation]),
+  )
+  const boundary = withheldIdentityBoundary(card, input.identifiableCatalogProductIds)
+  const lines = [...card.items]
+    .sort(
+      (left, right) => left.setupSequence - right.setupSequence || left.id.localeCompare(right.id),
+    )
+    .map((item) =>
+      outputLine(item, annotationByItemId.get(item.id), input.identifiableCatalogProductIds),
+    )
+  const suppressedItems = card.suppressedItems.map((item) =>
+    suppressedOutputLine(item, boundary, input.identifiableCatalogProductIds),
+  )
   const common: OperationalOutputCommonEnvelope = {
     schemaVersion: OPERATIONAL_OUTPUT_SCHEMA_VERSION,
     procedureCode: card.sourceProcedureCode,
@@ -470,20 +815,96 @@ export function buildOperationalOutputRegistry(
     },
   }
 
-  const roomGroups = groupBy(input.lines, (line) => line.setupZone)
-  const nursingGroups = groupBy(input.lines, (line) => line.responsibleRole ?? 'unassigned').map(
+  const roomGroups: GroupedOutput<RoomOutputLine>[] = groupBy(lines, (line) => line.setupZone).map(
     (group) => ({
-      responsibleRole: group.key,
-      phases: groupByPhase(group.lines, input.canonicalPhaseOrder),
+      key: group.key,
+      lines: group.lines.map((line) => ({
+        itemId: line.itemId,
+        label: line.label,
+        quantityDisplay: line.quantityDisplay,
+        openHoldStatus: line.openHoldStatus,
+        sterileStatus: line.sterileStatus,
+        requiredness: line.requiredness,
+        effectiveRequiredness: line.effectiveRequiredness,
+        conditionalState: line.conditionalState,
+        dependencyRule: line.dependencyRule,
+        resolutionState: line.resolutionState,
+        verificationState: line.verificationState,
+        compatibilityState: line.compatibilityState,
+        selectionIdentityState: line.selection.identityState,
+      })),
     }),
   )
-  const responsibilityState = input.lines.some((line) => line.responsibleRole !== null)
+  const nursingGroups: NursingOutputGroup[] = groupBy(
+    lines,
+    (line) => line.responsibleRole ?? 'unassigned',
+  ).map((group) => ({
+    responsibleRole: group.key,
+    phases: groupByPhase(group.lines, input.canonicalPhaseOrder).map((phase) => ({
+      key: phase.key,
+      lines: phase.lines.map((line) => ({
+        itemId: line.itemId,
+        label: line.label,
+        openHoldStatus: line.openHoldStatus,
+        requiredness: line.requiredness,
+        effectiveRequiredness: line.effectiveRequiredness,
+        conditionalState: line.conditionalState,
+        dependencyRule: line.dependencyRule,
+        resolutionState: line.resolutionState,
+        verificationState: line.verificationState,
+        compatibilityState: line.compatibilityState,
+        selection: line.selection,
+      })),
+    })),
+  }))
+  const responsibilityState = lines.some((line) => line.responsibleRole !== null)
     ? 'authored'
     : 'not_recorded'
-  const trainingGroups = groupByPhase(input.lines, input.canonicalPhaseOrder)
-  const ifuCount = input.lines.filter((line) => line.requiresCurrentIfu).length
-  const ifuScope = ifuCount === 0 ? 'none' : ifuCount === input.lines.length ? 'all' : 'some'
-  const diagnostics = outputDiagnostic(card)
+  const trainingGroups: GroupedOutput<TrainingOutputLine>[] = groupByPhase(
+    lines,
+    input.canonicalPhaseOrder,
+  ).map((group) => ({
+    key: group.key,
+    lines: group.lines.map((line) => ({
+      itemId: line.itemId,
+      label: line.label,
+      genericRequirement: line.genericRequirement,
+      dependencyRule: line.dependencyRule,
+      requiredness: line.requiredness,
+      effectiveRequiredness: line.effectiveRequiredness,
+      conditionalState: line.conditionalState,
+      resolutionState: line.resolutionState,
+      verificationState: line.verificationState,
+      compatibilityState: line.compatibilityState,
+      selectionGuidance: null,
+      requiresCurrentIfu: null,
+      selectionIdentityState: line.selection.identityState,
+    })),
+  }))
+  const setupPacketGroups: GroupedOutput<SetupPacketLine>[] = groupBy(
+    lines,
+    (line) => line.setupZone,
+  ).map((group) => ({
+    key: group.key,
+    lines: group.lines.map((line) => ({
+      itemId: line.itemId,
+      label: line.label,
+      roleCode: line.roleCode,
+      quantityDisplay: line.quantityDisplay,
+      openHoldStatus: line.openHoldStatus,
+      sterileStatus: line.sterileStatus,
+      responsibleRole: line.responsibleRole,
+      requiredness: line.requiredness,
+      effectiveRequiredness: line.effectiveRequiredness,
+      conditionalState: line.conditionalState,
+      dependencyRule: line.dependencyRule,
+      resolutionState: line.resolutionState,
+      verificationState: line.verificationState,
+      compatibilityState: line.compatibilityState,
+      selection: line.selection,
+    })),
+  }))
+  const diagnostics = outputDiagnostic(card, boundary)
   const manifest = provenanceManifest(
     card,
     releaseIdentity,
@@ -493,12 +914,17 @@ export function buildOperationalOutputRegistry(
 
   const roomPayload: OperationalOutputPayloadMap['roomSetup'] = {
     groups: roomGroups,
-    suppressedItems: input.suppressedItems,
+    suppressedItems,
   }
   const nursingPayload: OperationalOutputPayloadMap['nursing'] = {
     groups: nursingGroups,
     responsibilityState,
-    suppressedItems: input.suppressedItems,
+    suppressedItems,
+  }
+  const { projection, ...gapFacts } = input.gaps
+  const gapPayload: GapOutputPayload = {
+    ...gapFacts,
+    projection: publicReadinessProjection(projection),
   }
 
   return {
@@ -510,13 +936,12 @@ export function buildOperationalOutputRegistry(
     nursing: envelope('nursing', common, nursingPayload),
     training: envelope('training', common, {
       groups: trainingGroups,
-      ifuScope,
     }),
-    gaps: envelope('gaps', common, input.gaps),
+    gaps: envelope('gaps', common, gapPayload),
     setupPacket: envelope('setupPacket', common, {
-      roomSetup: roomGroups,
+      roomSetup: setupPacketGroups,
       responsibilityState,
-      suppressedItems: input.suppressedItems,
+      suppressedItems,
       diagnostics,
       provenanceAppendix: manifest,
     }),

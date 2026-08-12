@@ -77,8 +77,14 @@ export async function OutputsPanel({
               <li key={item.itemId} className="text-sm">
                 <span className="font-medium">{item.label}</span>{' '}
                 <span className="font-mono text-xs text-muted-foreground">{item.roleCode}</span>
-                {item.suppressionReason ? (
-                  <p className="text-xs italic text-muted-foreground">“{item.suppressionReason}”</p>
+                {item.suppression.state === 'verbatim' ? (
+                  <p className="text-xs italic text-muted-foreground">
+                    “{item.suppression.reason}”
+                  </p>
+                ) : item.suppression.state === 'withheld' ? (
+                  <p className="text-xs italic text-muted-foreground">
+                    {t('suppressed.withheldReason')}
+                  </p>
                 ) : null}
               </li>
             ))}
@@ -90,10 +96,6 @@ export async function OutputsPanel({
   // Owner-review F-30: with no responsible role authored anywhere, this preview cannot
   // group by role — say so instead of presenting the phase partition as a distinct view.
   const allNursingUnassigned = nursingOutput.responsibilityState === 'not_recorded'
-
-  // Owner-review F-24: when the IFU flag is universal across this preview it is stated once,
-  // not repeated per line; per-line advisories remain for the discriminating case.
-  const ifuUniversal = trainingOutput.ifuScope === 'all'
 
   return (
     <section aria-label={t('heading')} className="space-y-4">
@@ -258,9 +260,13 @@ export async function OutputsPanel({
                             <span className="text-xs text-muted-foreground">
                               {line.openHoldStatus}
                             </span>
-                            {line.selectedDescription ? (
+                            {line.selection.identityState === 'visible' ? (
                               <span className="text-xs text-muted-foreground">
-                                — {line.selectedDescription}
+                                — {line.selection.description}
+                              </span>
+                            ) : line.selection.identityState === 'withheld' ? (
+                              <span className="text-xs text-muted-foreground">
+                                — {t('identity.withheld')}
                               </span>
                             ) : null}
                           </li>
@@ -293,9 +299,13 @@ export async function OutputsPanel({
                               <span className="text-xs text-muted-foreground">
                                 {line.openHoldStatus}
                               </span>
-                              {line.selectedDescription ? (
+                              {line.selection.identityState === 'visible' ? (
                                 <span className="text-xs text-muted-foreground">
-                                  — {line.selectedDescription}
+                                  — {line.selection.description}
+                                </span>
+                              ) : line.selection.identityState === 'withheld' ? (
+                                <span className="text-xs text-muted-foreground">
+                                  — {t('identity.withheld')}
                                 </span>
                               ) : null}
                             </li>
@@ -316,11 +326,6 @@ export async function OutputsPanel({
             <p className="output-print-group text-xs text-muted-foreground">
               {t('training.authoredOnlyNote')}
             </p>
-            {ifuUniversal ? (
-              <p className="output-print-group rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
-                {t('training.currentIfuUniversalNote')}
-              </p>
-            ) : null}
             {trainingOutput.groups.map((group) => (
               <Card key={group.key} className="output-print-group">
                 <CardContent className="p-5">
@@ -335,19 +340,9 @@ export async function OutputsPanel({
                         <blockquote className="mt-1 border-l-2 border-border pl-3 text-muted-foreground">
                           “{line.genericRequirement}”
                         </blockquote>
-                        {line.selectionGuidance ? (
-                          <blockquote className="mt-1 border-l-2 border-primary/50 pl-3 text-muted-foreground">
-                            “{line.selectionGuidance}”
-                          </blockquote>
-                        ) : null}
                         {line.dependencyRule ? (
                           <p className="mt-1 text-xs italic text-muted-foreground">
                             {t('training.dependencyRule')}: “{line.dependencyRule}”
-                          </p>
-                        ) : null}
-                        {line.requiresCurrentIfu && !ifuUniversal ? (
-                          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                            {t('training.currentIfuAdvisory')}
                           </p>
                         ) : null}
                       </li>

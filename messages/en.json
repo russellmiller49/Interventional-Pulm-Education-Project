@@ -8594,7 +8594,8 @@
         "catalogRelease": "Catalog release",
         "resolvedCard": "Resolved content hash",
         "outputDigest": "Deterministic output digest",
-        "projectionSource": "Projection source"
+        "projectionSource": "Projection source",
+        "withheld": "Selected identity withheld"
       },
       "card": {
         "heading": "Preference card — existing builder",
@@ -8610,7 +8611,7 @@
         "allUnassignedNote": "No resolved requirement of this procedure carries a responsible role, so this preview cannot group by role yet. Until responsible roles are authored, its line set is identical to the Training preview; the list below is shown flat, without a role grouping."
       },
       "training": {
-        "authoredOnlyNote": "Every clinical sentence below is authored text quoted from the governed catalog (generic requirement, selection guidance, dependency rule). Nothing is machine-generated.",
+        "authoredOnlyNote": "Every clinical sentence below comes from the exact release-pinned resolved card (generic requirement and dependency rule). Live role guidance is not included.",
         "dependencyRule": "Dependency rule",
         "currentIfuAdvisory": "Role flagged as requiring current instructions-for-use review before clinical use.",
         "currentIfuUniversalNote": "Every role in this preview is flagged as requiring current instructions-for-use review before clinical use — stated once here instead of repeated on every line."
@@ -8631,7 +8632,8 @@
       "demoDisclaimer": "These previews resolve the fictional \"Demo IP Program\" context. They describe no real room, no real inventory, and no real institution, and they make no procurement recommendation.",
       "suppressed": {
         "heading": "Included in a selected kit — not listed separately",
-        "note": "The resolver records these requirements as satisfied by a selected kit's bill of materials. They are suppressed from the lists above and shown here — never silently dropped."
+        "note": "The resolver records these requirements as satisfied by a selected kit's bill of materials. They are suppressed from the lists above and shown here — never silently dropped.",
+        "withheldReason": "Suppression trace withheld because it identifies a product outside this view."
       },
       "packet": {
         "heading": "Printable setup packet",
@@ -8652,6 +8654,8 @@
         "modulesHeading": "Included module manifest",
         "tableRegionLabel": "Requirement source and provenance table (scrolls horizontally)",
         "withheldEvidence": "Identity withheld from this public view",
+        "withheldSuppressionReason": "Suppression trace withheld because it identifies a product outside this view.",
+        "withheldDiagnostic": "Diagnostic text and source withheld because they identify a product outside this view.",
         "none": "None",
         "footer": "Read-only demo draft. Confirm every item against current manufacturer instructions, local policy, actual inventory, procedural conditions, and operator judgment. This packet does not establish readiness for a real case.",
         "fields": {

@@ -2,10 +2,8 @@ import 'server-only'
 
 import {
   buildOperationalOutputRegistry,
-  type GapOutputPayload,
+  type GapOutputInput,
   type OperationalOutputRegistry,
-  type OutputLine,
-  type SuppressedOutputLine,
 } from '@/features/device-intelligence/domain/operational-outputs'
 import { isExemplarProcedureCode } from '@/features/device-intelligence/domain/exemplars'
 import {
@@ -22,7 +20,7 @@ import {
 import { expandEffectiveSlots } from '@/features/preference-cards/domain/effective-slots'
 import { defaultSelectedModuleVersionIds } from '@/features/preference-cards/domain/expand-recipe-composition'
 import { resolveCard } from '@/features/preference-cards/domain/resolve-card'
-import type { BuildCardInput, ResolvedCardItem } from '@/features/preference-cards/domain/types'
+import type { BuildCardInput } from '@/features/preference-cards/domain/types'
 import {
   DEMO_LOCATION_ID,
   DEMO_ORGANIZATION_ID,
@@ -100,54 +98,17 @@ export function getProcedureOutputPreviews(
   )
   const slotById = new Map(effective.slots.map((slot) => [slot.id, slot]))
 
-  const toLine = (item: ResolvedCardItem): OutputLine => {
+  // Only fields absent from `ResolvedCardItem` are joined from the exact pinned slot expansion.
+  // Live role metadata is deliberately not consulted: selection guidance and IFU flags are not
+  // release artifacts, so they cannot affect these outputs or their deterministic digests.
+  const slotAnnotations = [...resolved.items, ...resolved.suppressedItems].map((item) => {
     const slot = slotById.get(item.id)
-    const role = store.roleByCode.get(item.roleCode)
-    const selectedProductId = item.selectedItemSnapshot?.catalogProduct?.productId ?? null
-    const selectedIdentityState: OutputLine['selectedIdentityState'] = selectedProductId
-      ? atlasStore.productById.has(selectedProductId)
-        ? 'visible'
-        : 'withheld'
-      : 'not_recorded'
     return {
       itemId: item.id,
-      sourceSlotId: item.sourceSlotId,
-      sourceModuleVersionIds: [...(item.sourceModuleVersionIds ?? [])],
-      label: item.label,
-      roleCode: item.roleCode,
-      quantityDisplay: item.quantityDisplay,
-      openHoldStatus: item.openHoldStatus,
       sterileStatus: slot?.sterileStatus ?? null,
       responsibleRole: slot?.responsibleRole ?? null,
-      setupZone: item.setupZone,
-      proceduralPhase: item.proceduralPhase,
-      requiredness: item.requiredness,
-      effectiveRequiredness: item.effectiveRequiredness,
-      conditionalState: item.conditionalState,
-      dependencyRule: item.dependencyRule,
-      resolutionState: item.resolutionState,
-      verificationState: item.verificationState,
-      compatibilityState: item.compatibilityState,
-      selectedDescription: item.selectedItemSnapshot?.localDescription ?? null,
-      selectedIdentityState,
-      genericRequirement: item.genericRequirement,
-      selectionGuidance: role?.selection_guidance ?? null,
-      requiresCurrentIfu: role?.requires_current_ifu === true,
-      whyIncluded: [...item.whyIncluded],
-      notes: item.notes,
     }
-  }
-
-  const orderedItems = [...resolved.items].sort(
-    (left, right) => left.setupSequence - right.setupSequence || left.id.localeCompare(right.id),
-  )
-  const lines = orderedItems.map(toLine)
-  const suppressedItems: SuppressedOutputLine[] = resolved.suppressedItems.map((item) => ({
-    ...toLine(item),
-    rationale: item.rationale,
-    suppressionReason:
-      item.whyIncluded.find((entry) => entry.startsWith('Suppressed because')) ?? null,
-  }))
+  })
 
   const ladder = getCoverageLadderForProcedure(procedureCode)
   const projection = buildReadinessProjection(procedureCode, resolved, ladder)
@@ -173,7 +134,7 @@ export function getProcedureOutputPreviews(
     }
   }
 
-  const gaps: GapOutputPayload = {
+  const gaps: GapOutputInput = {
     projection,
     proposalsOnlyRoles: ladder.roles
       .filter((role) => role.coverage === 'proposals_only')
@@ -197,8 +158,7 @@ export function getProcedureOutputPreviews(
     scenarioId,
     procedureStatus: procedure.status ?? 'unknown',
     card: resolved,
-    lines,
-    suppressedItems,
+    slotAnnotations,
     canonicalPhaseOrder: CANONICAL_PROCEDURAL_PHASE_ORDER,
     identifiableCatalogProductIds: new Set(atlasStore.productById.keys()),
     gaps,

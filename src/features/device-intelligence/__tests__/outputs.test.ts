@@ -14,6 +14,7 @@ import {
   getProcedureWorkspace,
 } from '@/features/device-intelligence/server/procedures.server'
 import { resolveDemoScenario } from '@/features/preference-cards/data/demo-context.server'
+import { getCatalogStore } from '@/features/preference-cards/server/catalog'
 
 describe('read-only operational output registry', () => {
   const workspace = () => getProcedureWorkspace('CHEST_TUBE')!
@@ -71,6 +72,8 @@ describe('read-only operational output registry', () => {
       expect(output.common).toEqual(outputs.roomSetup.common)
     }
     expect(outputs.gaps.definition.sourceKind).toBe('release_pinned_card_and_current_audit_data')
+    expect(outputs.training.definition.sourceKind).toBe('release_pinned_resolved_card')
+    expect(outputs.setupPacket.definition.sourceKind).toContain('atlas_cohort_filter')
   })
 
   it('keeps projectors resolver-free and the server adapter to one resolution call', () => {
@@ -79,6 +82,7 @@ describe('read-only operational output registry', () => {
     expect(domainSource).not.toMatch(/from ['"].*resolve-card/)
     expect(domainSource).not.toMatch(/\b(?:fetch|localStorage|supabase)\b/)
     expect(serverSource.match(/\bresolveCard\(/g)).toHaveLength(1)
+    expect(serverSource).not.toContain('roleByCode')
   })
 
   it('keeps print isolation and responsive-table expansion in the shared stylesheet', () => {
@@ -102,6 +106,47 @@ describe('read-only operational output registry', () => {
 
   it('is content-identical across repeated requests (determinism, no persistence)', () => {
     expect(JSON.stringify(previews())).toEqual(JSON.stringify(previews()))
+  })
+
+  it('keeps raw resolver trace, notes, local ids, and live role enrichment out of registry payloads', () => {
+    const serialized = JSON.stringify(previews())
+    expect(serialized).not.toContain('"whyIncluded"')
+    expect(serialized).not.toContain('"notes"')
+    expect(serialized).not.toContain('"selectedHospitalItemId"')
+    const trainingLines = previews().training.payload.groups.flatMap((group) => group.lines)
+    expect(trainingLines.every((line) => line.selectionGuidance === null)).toBe(true)
+    expect(trainingLines.every((line) => line.requiresCurrentIfu === null)).toBe(true)
+  })
+
+  it('is invariant to drift in live role guidance and IFU metadata', () => {
+    const store = getCatalogStore()
+    const role = store.roleByCode.get('GENERIC_SUCTION')!
+    const original = {
+      category: role.category,
+      roleName: role.role_name,
+      description: role.description,
+      selectionGuidance: role.selection_guidance,
+      requiresCurrentIfu: role.requires_current_ifu,
+    }
+    const before = previews()
+    try {
+      role.category = 'LIVE_ROLE_DRIFT'
+      role.role_name = 'LIVE ROLE NAME DRIFT'
+      role.description = 'LIVE ROLE DESCRIPTION DRIFT'
+      role.selection_guidance = 'LIVE ROLE DRIFT MUST NOT ENTER A RELEASE-PINNED OUTPUT'
+      role.requires_current_ifu = !role.requires_current_ifu
+      const after = previews()
+      expect(JSON.stringify(after)).toBe(JSON.stringify(before))
+      expect(Object.values(after).map((output) => output.digest)).toEqual(
+        Object.values(before).map((output) => output.digest),
+      )
+    } finally {
+      role.category = original.category
+      role.role_name = original.roleName
+      role.description = original.description
+      role.selection_guidance = original.selectionGuidance
+      role.requires_current_ifu = original.requiresCurrentIfu
+    }
   })
 
   it('pins every output to the workspace current release and exact card hashes', () => {
@@ -143,25 +188,36 @@ describe('read-only operational output registry', () => {
         ws.scenarioId,
         ws.formularySummary,
       )!
-      const lineById = new Map(
+      const roomLineById = new Map(
         outputs.roomSetup.payload.groups.flatMap((group) =>
           group.lines.map((line) => [line.itemId, line] as const),
         ),
       )
-      expect([...lineById.keys()].sort()).toEqual(legacy.items.map((item) => item.id).sort())
+      const packetLineById = new Map(
+        outputs.setupPacket.payload.roomSetup.flatMap((group) =>
+          group.lines.map((line) => [line.itemId, line] as const),
+        ),
+      )
+      expect([...roomLineById.keys()].sort()).toEqual(legacy.items.map((item) => item.id).sort())
       for (const item of legacy.items) {
-        expect(lineById.get(item.id)).toEqual(
+        expect(roomLineById.get(item.id)).toEqual(
+          expect.objectContaining({
+            quantityDisplay: item.quantityDisplay,
+            openHoldStatus: item.openHoldStatus,
+            verificationState: item.verificationState,
+          }),
+        )
+        expect(packetLineById.get(item.id)).toEqual(
           expect.objectContaining({
             roleCode: item.roleCode,
             quantityDisplay: item.quantityDisplay,
             openHoldStatus: item.openHoldStatus,
-            setupZone: item.setupZone,
-            proceduralPhase: item.proceduralPhase,
+            requiredness: item.requiredness,
             effectiveRequiredness: item.effectiveRequiredness,
             dependencyRule: item.dependencyRule,
             resolutionState: item.resolutionState,
             verificationState: item.verificationState,
-            selectedDescription: item.selectedItemSnapshot?.localDescription ?? null,
+            compatibilityState: item.compatibilityState,
           }),
         )
       }
@@ -177,6 +233,8 @@ describe('read-only operational output registry', () => {
       for (const line of group.lines) {
         expect(typeof line.genericRequirement).toBe('string')
         expect(line.genericRequirement.length).toBeGreaterThan(0)
+        expect(line.selectionGuidance).toBeNull()
+        expect(line.requiresCurrentIfu).toBeNull()
       }
     }
   })
@@ -193,7 +251,7 @@ describe('read-only operational output registry', () => {
 
   it('preserves requiredness, dependencies, states, and source lineage in the packet manifest', () => {
     const outputs = previews()
-    const lines = outputs.roomSetup.payload.groups.flatMap((group) => group.lines)
+    const lines = outputs.setupPacket.payload.roomSetup.flatMap((group) => group.lines)
     const manifestById = new Map(
       outputs.setupPacket.payload.provenanceAppendix.requirements.map((entry) => [
         entry.itemId,
@@ -205,8 +263,6 @@ describe('read-only operational output registry', () => {
       expect(manifestById.get(line.itemId)).toEqual(
         expect.objectContaining({
           presence: 'active',
-          sourceSlotId: line.sourceSlotId,
-          sourceModuleVersionIds: line.sourceModuleVersionIds,
           roleCode: line.roleCode,
           requiredness: line.requiredness,
           effectiveRequiredness: line.effectiveRequiredness,
@@ -218,7 +274,16 @@ describe('read-only operational output registry', () => {
         }),
       )
     }
-    expect(outputs.setupPacket.payload.roomSetup).toEqual(outputs.roomSetup.payload.groups)
+    for (const entry of manifestById.values()) {
+      expect(Array.isArray(entry?.sourceModuleVersionIds)).toBe(true)
+    }
+    const setupLine = lines[0]
+    expect(setupLine).not.toHaveProperty('genericRequirement')
+    expect(setupLine).not.toHaveProperty('selectionGuidance')
+    expect(setupLine).not.toHaveProperty('requiresCurrentIfu')
+    expect(setupLine).not.toHaveProperty('whyIncluded')
+    expect(setupLine).not.toHaveProperty('notes')
+    expect(setupLine).not.toHaveProperty('sourceModuleVersionIds')
     expect(outputs.setupPacket.payload.diagnostics).toEqual(
       outputs.provenanceManifest.payload.diagnostics,
     )
@@ -235,12 +300,12 @@ describe('read-only operational output registry', () => {
       )!
       for (const entry of outputs.provenanceManifest.payload.requirements) {
         if (entry.evidence.identityState === 'visible') {
-          expect(atlasProductIds.has(entry.evidence.catalogProductId!)).toBe(true)
+          expect(atlasProductIds.has(entry.evidence.catalogProductId)).toBe(true)
         } else {
-          expect(entry.evidence.catalogProductId).toBeNull()
-          expect(entry.evidence.sourceId).toBeNull()
-          expect(entry.evidence.sourceLocation).toBeNull()
-          expect(entry.evidence.verificationStatus).toBeNull()
+          expect(entry.evidence).not.toHaveProperty('catalogProductId')
+          expect(entry.evidence).not.toHaveProperty('sourceId')
+          expect(entry.evidence).not.toHaveProperty('sourceLocation')
+          expect(entry.evidence).not.toHaveProperty('verificationStatus')
         }
       }
     }
@@ -260,13 +325,8 @@ describe('read-only operational output registry', () => {
     expect(outputs.provenanceManifest.payload.diagnostics).toEqual(
       expect.arrayContaining(unknownDiagnostics),
     )
-    expect(outputs.gaps.payload.projection.cardDiagnostics).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          code: 'available_but_unverified',
-          sourceKind: 'compatibility_rule',
-        }),
-      ]),
+    expect(outputs.gaps.payload.projection.cardDiagnosticCodes).toContain(
+      'available_but_unverified',
     )
   })
 
@@ -275,13 +335,20 @@ describe('read-only operational output registry', () => {
     expect(outputs.roomSetup.payload.suppressedItems).toEqual([
       expect.objectContaining({
         roleCode: 'LOCAL_CHEST_TUBE_SECUREMENT',
+        requiredness: expect.any(String),
         effectiveRequiredness: expect.any(String),
         resolutionState: 'suppressed_by_kit',
-        suppressionReason: expect.stringContaining('includes this component'),
+        suppression: {
+          state: 'verbatim',
+          reason: expect.stringContaining('includes this component'),
+        },
       }),
     ])
     const suppressed = outputs.roomSetup.payload.suppressedItems[0]
-    expect(suppressed.suppressionReason).toMatch(/^Suppressed because /)
+    expect(suppressed.suppression).toEqual({
+      state: 'verbatim',
+      reason: expect.stringMatching(/^Suppressed because /),
+    })
     expect(outputs.nursing.payload.suppressedItems).toEqual(
       outputs.roomSetup.payload.suppressedItems,
     )

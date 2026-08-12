@@ -55,9 +55,11 @@ export async function PrintableSetupPacket({
         <div>
           <dt className="text-muted-foreground">{t('fields.selectedItem')}</dt>
           <dd>
-            {line.selectedIdentityState === 'withheld'
+            {line.selection.identityState === 'withheld'
               ? t('withheldEvidence')
-              : (line.selectedDescription ?? tCommon('notRecorded'))}
+              : line.selection.identityState === 'visible'
+                ? line.selection.description
+                : tCommon('notRecorded')}
           </dd>
         </div>
         <div>
@@ -88,7 +90,6 @@ export async function PrintableSetupPacket({
           {line.conditionalState ? ` · ${humanize(line.conditionalState)}` : ''}
         </p>
       ) : null}
-      {line.notes ? <p className="mt-1 text-xs text-muted-foreground">{line.notes}</p> : null}
     </li>
   )
 
@@ -186,9 +187,13 @@ export async function PrintableSetupPacket({
                     {humanize(line.effectiveRequiredness)}
                   </span>
                 </div>
-                {line.suppressionReason ? (
+                {line.suppression.state === 'verbatim' ? (
                   <p className="mt-1 text-xs italic text-muted-foreground">
-                    “{line.suppressionReason}”
+                    “{line.suppression.reason}”
+                  </p>
+                ) : line.suppression.state === 'withheld' ? (
+                  <p className="mt-1 text-xs italic text-muted-foreground">
+                    {t('withheldSuppressionReason')}
                   </p>
                 ) : null}
                 {line.dependencyRule ? (
@@ -222,7 +227,11 @@ export async function PrintableSetupPacket({
                   <span className="font-semibold uppercase">{diagnostic.severity}</span>
                   <span className="font-mono text-muted-foreground">{diagnostic.code}</span>
                 </div>
-                <p className="mt-1 leading-6">{diagnostic.message}</p>
+                <p className="mt-1 leading-6">
+                  {diagnostic.disclosureState === 'withheld'
+                    ? t('withheldDiagnostic')
+                    : diagnostic.message}
+                </p>
               </li>
             ))}
           </ul>
