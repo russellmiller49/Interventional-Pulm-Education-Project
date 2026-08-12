@@ -10,6 +10,7 @@ import {
   type DemoInventoryRecord,
   type FictionalInstitutionalOverlayBundle,
   type InstitutionalCapabilityRecord,
+  type InstitutionalAccessClassification,
   type InstitutionalInventoryRecord,
   type OverlayProjection,
 } from './contracts'
@@ -25,6 +26,20 @@ import {
 
 export interface FictionalInstitutionalOverlayReadAdapter {
   readonly project: (request: unknown) => OverlayProjection
+}
+
+export function diagnosticVisibleInProjection(
+  diagnostic: {
+    accessClassification: InstitutionalAccessClassification
+    relatedRecordId: string | null
+  },
+  projectionAccess: InstitutionalAccessClassification,
+  includedRecordIds: ReadonlySet<string>,
+): boolean {
+  return (
+    accessAllows(projectionAccess, diagnostic.accessClassification) &&
+    (diagnostic.relatedRecordId === null || includedRecordIds.has(diagnostic.relatedRecordId))
+  )
 }
 
 function deepFreeze<T>(value: T): T {
@@ -110,6 +125,19 @@ export function createFictionalInstitutionalOverlayReadAdapter(
         contextKind: 'institutional' as const,
         scope: request.scope,
       }
+      const includedRecordIds = configured
+        ? new Set(
+            [
+              ...configured.capabilities.records,
+              ...configured.formularies.records,
+              ...configured.inventories.records,
+            ]
+              .filter((record) =>
+                accessAllows(request.accessClassification, record.accessClassification),
+              )
+              .map((record) => record.recordId),
+          )
+        : new Set<string>()
       const dataset = configured
         ? {
             context: configured.context,
@@ -132,7 +160,11 @@ export function createFictionalInstitutionalOverlayReadAdapter(
               ),
             },
             diagnostics: configured.diagnostics.filter((diagnostic) =>
-              accessAllows(request.accessClassification, diagnostic.accessClassification),
+              diagnosticVisibleInProjection(
+                diagnostic,
+                request.accessClassification,
+                includedRecordIds,
+              ),
             ),
           }
         : {

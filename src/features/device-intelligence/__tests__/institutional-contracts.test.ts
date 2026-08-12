@@ -4,6 +4,7 @@ import {
   dataSourceStateSchema,
   demoCapabilityRecordSchema,
   demoFormularyRecordSchema,
+  demoOverlayDatasetSchema,
   fictionalInstitutionalOverlayBundleSchema,
   institutionScopeIdentitySchema,
   institutionalApprovalStateSchema,
@@ -17,6 +18,7 @@ import {
   FICTIONAL_HARBOR_EAST_SCOPE,
   FICTIONAL_HARBOR_WEST_SCOPE,
   FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
+  FICTIONAL_SUMMIT_SCOPE,
 } from '@/features/device-intelligence/institutional/fictional-fixtures'
 
 describe('D2A institutional overlay contracts', () => {
@@ -214,6 +216,86 @@ describe('D2A institutional overlay contracts', () => {
         },
       }).success,
     ).toBe(false)
+  })
+
+  it.each([
+    [
+      'sibling site',
+      FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets[1].inventories.records[0]
+        .recordId,
+    ],
+    [
+      'different tenant',
+      FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets[2].inventories.records[0]
+        .recordId,
+    ],
+  ])('rejects a diagnostic reference into a %s dataset', (_description, relatedRecordId) => {
+    const east = FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets[0]
+    expect(
+      institutionalOverlayDatasetSchema.safeParse({
+        ...east,
+        diagnostics: [{ ...east.diagnostics[0], relatedRecordId }],
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a public demo diagnostic that discloses an institutional record ID', () => {
+    const demo = FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.demoDatasets[0]
+    const institutionalRecordId =
+      FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets[0].capabilities.records[0]
+        .recordId
+    expect(
+      demoOverlayDatasetSchema.safeParse({
+        ...demo,
+        diagnostics: [{ ...demo.diagnostics[0], relatedRecordId: institutionalRecordId }],
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects a restricted diagnostic that references a confidential record', () => {
+    const east = FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets[0]
+    const confidentialDiagnostic = east.diagnostics.find(
+      (diagnostic) => diagnostic.relatedRecordId === 'fictional-east-capability-beta',
+    )
+    expect(confidentialDiagnostic).toBeDefined()
+    expect(
+      institutionalOverlayDatasetSchema.safeParse({
+        ...east,
+        diagnostics: [
+          {
+            ...confidentialDiagnostic,
+            accessClassification: 'institution_restricted',
+          },
+        ],
+      }).success,
+    ).toBe(false)
+  })
+
+  it('accepts a diagnostic at the same classification as its local record', () => {
+    const summit = FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets.find(
+      (dataset) => dataset.context.scope.tenantId === FICTIONAL_SUMMIT_SCOPE.tenantId,
+    )
+    expect(summit).toBeDefined()
+    expect(
+      institutionalOverlayDatasetSchema.safeParse({
+        ...summit,
+        diagnostics: [
+          {
+            diagnosticId: 'fictional-summit-inventory-diagnostic',
+            code: 'missing_inventory_record',
+            severity: 'warning',
+            message: 'Fictional local-reference validation fixture.',
+            observedAt: '2026-08-03T12:00:00.000Z',
+            relatedRecordId: 'fictional-summit-inventory-only',
+            context: {
+              contextKind: 'institutional',
+              scope: FICTIONAL_SUMMIT_SCOPE,
+            },
+            accessClassification: 'institution_restricted',
+          },
+        ],
+      }).success,
+    ).toBe(true)
   })
 
   it.each(['sourceRevision', 'provenance', 'lastVerifiedAt'] as const)(

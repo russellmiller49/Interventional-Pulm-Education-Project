@@ -256,6 +256,16 @@ const harborEastDataset = {
       context: harborEastContext,
       accessClassification: 'institution_restricted' as const,
     },
+    {
+      diagnosticId: 'fictional-east-diagnostic-confidential-capability',
+      code: 'source_unavailable' as const,
+      severity: 'warning' as const,
+      message: 'A confidential fictional diagnostic tied to a confidential record.',
+      observedAt: '2026-08-03T12:00:00.000Z',
+      relatedRecordId: 'fictional-east-capability-beta',
+      context: harborEastContext,
+      accessClassification: 'institution_confidential' as const,
+    },
   ],
 }
 
@@ -350,11 +360,24 @@ const summitDataset = {
     records: [],
   },
   inventories: {
-    sourceState: {
-      state: 'unknown' as const,
-      reason: 'The invented inventory source has not been configured.',
-    },
-    records: [],
+    sourceState: { state: 'available' as const },
+    records: [
+      {
+        recordId: 'fictional-summit-inventory-only',
+        context: summitContext,
+        accessClassification: 'institution_restricted' as const,
+        subjectId: 'fictional-summit-subject-only',
+        inventoryState: {
+          state: 'unknown' as const,
+          reason: 'not_reported' as const,
+        },
+        source: institutionalSource(
+          summitContext,
+          'fictional-summit-inventory-source',
+          'inventory',
+        ),
+      },
+    ],
   },
   diagnostics: [
     {

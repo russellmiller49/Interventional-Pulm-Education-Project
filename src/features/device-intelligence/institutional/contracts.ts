@@ -435,6 +435,12 @@ function scopeKey(scope: InstitutionScopeIdentity): string {
   return JSON.stringify([scope.tenantId, scope.institutionId, scope.siteId])
 }
 
+const accessRank: Record<z.infer<typeof accessClassificationSchema>, number> = {
+  public_unlisted: 0,
+  institution_restricted: 1,
+  institution_confidential: 2,
+}
+
 function addDatasetIntegrityIssues(
   datasetContext: OverlayContextIdentity,
   records: Array<{
@@ -449,19 +455,21 @@ function addDatasetIntegrityIssues(
   diagnostics: Array<{
     diagnosticId: string
     context: OverlayContextIdentity
+    relatedRecordId: string | null
+    accessClassification: z.infer<typeof accessClassificationSchema>
   }>,
   context: z.RefinementCtx,
 ): void {
-  const ids = new Set<string>()
+  const recordsById = new Map<string, (typeof records)[number]>()
   records.forEach((record, index) => {
-    if (ids.has(record.recordId)) {
+    if (recordsById.has(record.recordId)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['records', index, 'recordId'],
         message: 'Record IDs must be unique within one context dataset.',
       })
     }
-    ids.add(record.recordId)
+    recordsById.set(record.recordId, record)
     if (!sameOverlayContext(datasetContext, record.context)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -490,6 +498,26 @@ function addDatasetIntegrityIssues(
         code: z.ZodIssueCode.custom,
         path: ['diagnostics', index, 'context'],
         message: 'Every diagnostic must repeat the dataset exact context explicitly.',
+      })
+    }
+    if (diagnostic.relatedRecordId === null) return
+    const referencedRecord = recordsById.get(diagnostic.relatedRecordId)
+    if (!referencedRecord) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['diagnostics', index, 'relatedRecordId'],
+        message: 'A related record ID must resolve within the same exact dataset and context.',
+      })
+      return
+    }
+    if (
+      accessRank[diagnostic.accessClassification] <
+      accessRank[referencedRecord.accessClassification]
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['diagnostics', index, 'accessClassification'],
+        message: 'A diagnostic must be at least as access-restrictive as its referenced record.',
       })
     }
   })
@@ -708,12 +736,6 @@ export const demoOverlayProjectionSchema = z
       context,
     )
   })
-
-const accessRank: Record<z.infer<typeof accessClassificationSchema>, number> = {
-  public_unlisted: 0,
-  institution_restricted: 1,
-  institution_confidential: 2,
-}
 
 export function accessAllows(
   projectionAccess: z.infer<typeof accessClassificationSchema>,

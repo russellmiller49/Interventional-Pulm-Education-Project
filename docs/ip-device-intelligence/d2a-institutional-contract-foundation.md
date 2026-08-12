@@ -29,7 +29,7 @@ existing public-unlisted Device Intelligence output.
 
 Every name, identifier, statement, source, decision, and jurisdiction in the fixtures is
 invented. The fictional adapter rejects any fixture source whose provenance class is
-**fictional_fixture**.
+not **fictional_fixture**.
 
 ## 2. Context and scope contract
 
@@ -88,6 +88,8 @@ evidence.
 Every projection carries the requested projection timestamp. Validation refuses sources
 verified after that timestamp and diagnostics observed after it. Data-quality diagnostics
 are typed, scoped, access-classified records rather than unstructured log strings.
+A non-null diagnostic related-record ID must resolve inside the same exact dataset/context,
+and the diagnostic must be at least as access-restrictive as that record.
 
 ## 4. Fictional read adapter
 
@@ -104,7 +106,9 @@ Projection behavior is fail-closed:
 4. A public-unlisted request cannot be institutional.
 5. Restricted projections omit confidential rows. Confidential projections still remain
    within the exact requested tuple.
-6. Parsed projections are deeply frozen before return.
+6. A projection omits a diagnostic whenever its related record is excluded, even if another
+   check would otherwise admit the diagnostic.
+7. Parsed projections are deeply frozen before return.
 
 The fixtures intentionally include two sites within one fictional institution and a second
 fictional tenant/institution. This supports tests for site, institution, and tenant
