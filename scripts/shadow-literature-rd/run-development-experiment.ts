@@ -23,7 +23,12 @@ import {
   type ShadowCalibrationCohortRow,
   type ShadowRunArtifact,
 } from '../../src/features/literature/shadow-classifier'
-import { assertKnownArguments, numberArgument, parseCliArguments, stringArgument } from './lib/cli'
+import {
+  assertKnownArguments,
+  numberArgument,
+  parseCliArguments,
+  stringArgument,
+} from '../literature/lib/cli'
 import {
   ingestExactShadowDevelopmentWorkerResults,
   loadExactShadowDevelopmentCoordinatorTruth,
@@ -32,7 +37,7 @@ import {
   verifyExactShadowDevelopmentRunReconstitution,
   type ShadowDevelopmentWorkerFileEvidence,
   type ShadowDevelopmentPreparedExperimentArtifact,
-} from './shadow-development-experiment-contract'
+} from './development-experiment-contract'
 
 export const SHADOW_DEVELOPMENT_EXPERIMENT_OUTPUT_ROOT =
   'local-data/literature/shadow-development-experiments' as const
@@ -42,9 +47,9 @@ export const SHADOW_DEVELOPMENT_TRUTH_FILE =
   '/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/local-data/literature/gold-sets/gold-set-v1/enrichment-v3-execution-1/operator-package/conflict-quarantine-v1-post-merge/post-review-v1/post-adjudication-v1/protocol-authorization-decision-audit-v1/post-targeted-review-v1/final-authorization-and-import-package-v1/final/gold-set-v1-enrichment-v3-final-development-630.csv' as const
 
 export const SHADOW_DEVELOPMENT_EXPERIMENT_USAGE = `Usage:
-  npm run literature:shadow-rd:experiment -- prepare --created-at <ISO> --model-id <concrete-model> --reasoning-level <level> [--chunk-size 30]
-  npm run literature:shadow-rd:experiment -- ingest --prepared-directory <directory> --created-at <ISO> --run-id <id>
-  npm run literature:shadow-rd:experiment -- finalize --prepared-directory <directory>
+  npx tsx scripts/shadow-literature-rd/run-development-experiment.ts prepare --created-at <ISO> --model-id <concrete-model> --reasoning-level <level> [--chunk-size 30]
+  npx tsx scripts/shadow-literature-rd/run-development-experiment.ts ingest --prepared-directory <directory> --created-at <ISO> --run-id <id>
+  npx tsx scripts/shadow-literature-rd/run-development-experiment.ts finalize --prepared-directory <directory>
 
 This file-only development command dispatches no model, opens no database, accepts no PMID/split/
 queue/candidate list, and writes no production state. Preparation emits only modelInput JSON in

@@ -95,9 +95,9 @@ out. Brier/ECE use only valid probabilities; no operational threshold is selecte
 Commands (after commit, from a clean repository state):
 
 ```text
-npm run literature:shadow-rd:experiment -- prepare --created-at <ISO> --model-id gpt-5.6-sol --reasoning-level ultra
-npm run literature:shadow-rd:experiment -- ingest --prepared-directory <fixed output> --created-at <ISO after workers> --run-id <id>
-npm run literature:shadow-rd:experiment -- finalize --prepared-directory <fixed output>
+npx tsx scripts/shadow-literature-rd/run-development-experiment.ts prepare --created-at <ISO> --model-id gpt-5.6-sol --reasoning-level ultra
+npx tsx scripts/shadow-literature-rd/run-development-experiment.ts ingest --prepared-directory <fixed output> --created-at <ISO after workers> --run-id <id>
+npx tsx scripts/shadow-literature-rd/run-development-experiment.ts finalize --prepared-directory <fixed output>
 ```
 
 ## Scientific limitations

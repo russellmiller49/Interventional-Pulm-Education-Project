@@ -48,7 +48,7 @@ describe('shadow classifier production mutation boundary', () => {
     }
     expect(
       Object.keys(packageJson.scripts).filter((name) => name.startsWith('literature:shadow')),
-    ).toEqual(['literature:shadow-rd:inventory', 'literature:shadow-rd:experiment'])
+    ).toEqual([])
 
     const trackedProductionSurface = ['src/app/api', 'src/app', 'supabase/migrations'].flatMap(
       (path) => {

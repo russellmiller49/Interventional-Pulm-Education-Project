@@ -11,12 +11,12 @@ import {
   shadowRdCorpusInventoryArtifactSchema,
   shadowRdCorpusInventoryQueryPayloadSchema,
   type ShadowRdCorpusInventoryQueryPayload,
-} from './shadow-rd-corpus-inventory-contract'
+} from './corpus-inventory-contract'
 import {
   SHADOW_RD_CORPUS_INVENTORY_OUTPUT_ROOT,
   SHADOW_RD_CORPUS_INVENTORY_USAGE,
   validateShadowRdCorpusInventoryCliArguments,
-} from './collect-shadow-rd-corpus-inventory'
+} from './collect-corpus-inventory'
 
 function queryPayload(): ShadowRdCorpusInventoryQueryPayload {
   return {
@@ -360,7 +360,7 @@ describe('shadow-R&D corpus inventory CLI boundary', () => {
 
   test('keeps all database and filesystem capabilities private and fixed', () => {
     const source = readFileSync(
-      resolve(process.cwd(), 'scripts/literature/collect-shadow-rd-corpus-inventory.ts'),
+      resolve(process.cwd(), 'scripts/shadow-literature-rd/collect-corpus-inventory.ts'),
       'utf8',
     )
     expect(source).not.toContain('@supabase/supabase-js')

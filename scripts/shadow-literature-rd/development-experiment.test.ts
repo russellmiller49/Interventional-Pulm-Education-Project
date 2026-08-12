@@ -23,12 +23,12 @@ import {
   verifyExactShadowDevelopmentRunBinding,
   verifyExactShadowDevelopmentRunReconstitution,
   type ShadowDevelopmentWorkerFileEvidence,
-} from './shadow-development-experiment-contract'
+} from './development-experiment-contract'
 import {
   SHADOW_DEVELOPMENT_EXPERIMENT_OUTPUT_ROOT,
   SHADOW_DEVELOPMENT_SOURCE_FILE,
   validateShadowDevelopmentExperimentCli,
-} from './run-shadow-development-experiment'
+} from './run-development-experiment'
 
 const sourceBytes = readFileSync(SHADOW_DEVELOPMENT_SOURCE_FILE)
 const createdAt = '2026-08-12T12:00:00.000Z'
@@ -258,7 +258,7 @@ describe('exact file-only shadow development experiment', () => {
       expect(() => validateShadowDevelopmentExperimentCli(argv)).toThrow()
     }
     const runner = readFileSync(
-      resolve(process.cwd(), 'scripts/literature/run-shadow-development-experiment.ts'),
+      resolve(process.cwd(), 'scripts/shadow-literature-rd/run-development-experiment.ts'),
       'utf8',
     )
     expect(runner).not.toContain("'source-file'")

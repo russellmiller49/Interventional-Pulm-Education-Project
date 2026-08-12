@@ -8,18 +8,18 @@ import {
   assertExclusiveOutputDirectoryIdentity,
   createExclusiveOutputDirectory,
   writeExclusiveOutputFiles,
-} from './lib/exclusive-output'
-import { assertKnownArguments, parseCliArguments } from './lib/cli'
+} from '../literature/lib/exclusive-output'
+import { assertKnownArguments, parseCliArguments } from '../literature/lib/cli'
 import {
   SHADOW_RD_CORPUS_INVENTORY_SQL,
   assertShadowRdCorpusInventorySqlBoundary,
   parseShadowRdCorpusInventoryQueryOutput,
   renderShadowRdCorpusInventoryMarkdown,
   serializeShadowRdCorpusInventoryJson,
-} from './shadow-rd-corpus-inventory-contract'
+} from './corpus-inventory-contract'
 
 export const SHADOW_RD_CORPUS_INVENTORY_USAGE = `Usage:
-  npm run literature:shadow-rd:inventory
+  npx tsx scripts/shadow-literature-rd/collect-corpus-inventory.ts
 
 This development-only command accepts no scope, target, queue, split, PMID, or output arguments.
 It reads aggregate values from the fixed local Literature Supabase container in one repeatable-read,
@@ -83,11 +83,10 @@ const OPERATIONAL_ENVIRONMENT_PATTERN =
   /^(?:DOCKER|CONTAINER|SUPABASE|PG|POSTGRES|DATABASE(?:_|$)|DB_)/iu
 const COMMITTED_RUNTIME_PATHS = [
   'config/literature/pubmed-query-registry.v1.json',
-  'package.json',
-  'scripts/literature/collect-shadow-rd-corpus-inventory.ts',
+  'scripts/shadow-literature-rd/collect-corpus-inventory.ts',
   'scripts/literature/lib/cli.ts',
   'scripts/literature/lib/exclusive-output.ts',
-  'scripts/literature/shadow-rd-corpus-inventory-contract.ts',
+  'scripts/shadow-literature-rd/corpus-inventory-contract.ts',
 ] as const
 
 interface CommandResult {
@@ -184,7 +183,7 @@ async function assertProductionRepositoryAndEntrypoint(): Promise<string> {
   const canonicalModulePath = fileURLToPath(import.meta.url)
   if (
     invokedPath !== canonicalModulePath ||
-    canonicalModulePath !== resolve(cwd, 'scripts/literature/collect-shadow-rd-corpus-inventory.ts')
+    canonicalModulePath !== resolve(cwd, 'scripts/shadow-literature-rd/collect-corpus-inventory.ts')
   ) {
     throw new Error(
       'Corpus inventory execution requires the canonical module inside the current checkout.',
