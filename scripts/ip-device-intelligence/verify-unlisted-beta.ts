@@ -11,8 +11,8 @@ import { ROLE_CODE_ALIASES } from '../../src/features/preference-cards/domain/ro
  *
  * Two modes, matching the two states the AABIP beta launch moves between:
  *
- *   npm run ip-intel:verify-beta -- --mode=off --base-url=http://localhost:3121
- *   npm run ip-intel:verify-beta -- --mode=on  --base-url=http://localhost:3121
+ *   npx tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts --mode=off --base-url=http://localhost:3121
+ *   npx tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts --mode=on --base-url=http://localhost:3121
  *
  * `--mode=off` expects a production server running WITHOUT
  * `NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE`: every D1 route 404s (no auth redirect), the
