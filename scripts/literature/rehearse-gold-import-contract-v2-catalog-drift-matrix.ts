@@ -3,6 +3,7 @@ import { CONTRACT_DIAGNOSTICS_MARKER } from './gold-import-compensation-contract
 import { trustedLocalRoleInventoryProjection } from './gold-import-compensation-contract-expectations'
 import { createExactPackageDatabaseExecutorV2 } from './execute-exact-gold-import-compensation-package-v2'
 import type { GeneratedGoldImportCompensationPackageV2 } from './generate-gold-import-compensation-package-v2'
+import type { GoldImportCompensationV2MigrationReceiptGate } from './gold-import-compensation-v2-migration-receipt-gate'
 import {
   PROTECTED_V2_CATALOG_TABLES,
   PROTECTED_V2_COMPLETE_CATALOG_AUDIT_METHOD,
@@ -439,6 +440,7 @@ export function withTrustedLocalRoleInventoryProjection(
 }
 
 export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   package: GeneratedGoldImportCompensationPackageV2
   runDisposablePath?: DisposablePathRunner
   seed: DevelopmentDatabaseSeed
@@ -451,7 +453,10 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
   const exactReadyResult = await runDisposablePath({
     exactPackageExecutor: {
       async execute(context) {
-        const evidence = await baselineExecutor.execute(context)
+        const evidence = await baselineExecutor.execute({
+          ...context,
+          migrationReceiptGate: input.migrationReceiptGate,
+        })
         exactReadyDisposable = await collectProtectedV2CompleteCatalogAudit({
           context,
           profile: 'disposable_clone',
@@ -472,7 +477,10 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
   const localProjectionResult = await runDisposablePath({
     exactPackageExecutor: {
       async execute(context) {
-        const evidence = await baselineExecutor.execute(context)
+        const evidence = await baselineExecutor.execute({
+          ...context,
+          migrationReceiptGate: input.migrationReceiptGate,
+        })
         await context.psql(PROTECTED_V2_LOCAL_OWNER_PROJECTION_SQL)
         localOwnerProjection = await collectProtectedV2CompleteCatalogAudit({
           context: withTrustedLocalRoleInventoryProjection(context),
@@ -553,7 +561,10 @@ export async function runProtectedV2DisposableCatalogDriftMatrix(input: {
     const result = await runDisposablePath({
       exactPackageExecutor: {
         async execute(context) {
-          const evidence = await baselineExecutor.execute(context)
+          const evidence = await baselineExecutor.execute({
+            ...context,
+            migrationReceiptGate: input.migrationReceiptGate,
+          })
           await context.psql(probe.sql!)
           try {
             await collectProtectedV2CompleteCatalogAudit({

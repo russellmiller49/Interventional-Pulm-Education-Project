@@ -23,11 +23,18 @@ import {
   PROTECTED_V2_BACKUP_TRUST_MODEL,
   PROTECTED_V2_CONFIRMATION,
   PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION,
-  type ProtectedMigrationLedgerEntry,
   type ProtectedV2BackupBinding,
   type ProtectedV2OperatorAuthorization,
 } from './protected-gold-import-contract-v2'
 import type { ProtectedV2OperatorBundle } from './protected-gold-import-contract-v2-recovery-bundle'
+import {
+  validateProtectedV2DatabaseEvidence,
+  validateProtectedV2SchemaOnlyDatabaseTransition,
+  type ProtectedV2DatabaseEvidence,
+} from './protected-gold-import-contract-v2-transition-evidence'
+import type { LiteratureGoldV2SchemaOnlyTransitionProof } from './literature-gold-v2-schema-only-transition'
+
+export type { ProtectedV2DatabaseEvidence } from './protected-gold-import-contract-v2-transition-evidence'
 
 export const PROTECTED_V2_BACKUP_RECEIPT_SCHEMA_VERSION =
   'gold-import-contract-v2-preapplication-execution/2.0.0' as const
@@ -38,11 +45,11 @@ export const PROTECTED_V2_BACKUP_DUPLICATE_MARKER_SCHEMA_VERSION =
 export const PROTECTED_V2_BACKUP_DUPLICATE_MARKER_DIRECTORY =
   '.protected-v2-backup-duplicate-markers' as const
 export const PROTECTED_V2_APPLICATION_INTENT_SCHEMA_VERSION =
-  'literature-gold-protected-v2-application-intent/2.0.0' as const
+  'literature-gold-protected-v2-application-intent/3.0.0' as const
 export const PROTECTED_V2_POST_APPLICATION_AUDIT_SCHEMA_VERSION =
   'literature-gold-protected-v2-post-application-audit/2.0.0' as const
 export const PROTECTED_V2_APPLICATION_RESULT_SCHEMA_VERSION =
-  'literature-gold-protected-v2-application-result/2.0.0' as const
+  'literature-gold-protected-v2-application-result/3.0.0' as const
 export const PROTECTED_V2_APPLICATION_EXECUTION_SCHEMA_VERSION =
   'literature-gold-protected-v2-migration-application-execution/2.0.0' as const
 
@@ -102,24 +109,6 @@ export interface ProtectedV2RepositoryEvidence {
   operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   originMain: string
   statusCleanIncludingUntracked: true
-}
-
-export interface ProtectedV2DatabaseEvidence {
-  actionCount: number
-  batchId: string
-  compensationCount: number
-  developmentMembershipSha256: string
-  developmentPlanningStateSha256: string
-  effectiveStateSha256: string
-  importCount: number
-  ledgerEntries: readonly ProtectedMigrationLedgerEntry[]
-  physicalStateSha256: string
-  pointerStateSha256: string
-  readOnlyBracketMatches: true
-  revealStateSha256: string
-  reviewStateSha256: string
-  v1Occurrence: number
-  v2Occurrence: number
 }
 
 export interface ProtectedV2BackupInstanceProjection {
@@ -382,6 +371,7 @@ export interface ProtectedV2ApplicationIntent {
   backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
   backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   before: ProtectedV2DatabaseEvidence
+  beforeCaptures: readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
   confirmation: typeof PROTECTED_V2_CONFIRMATION
   createdAt: string
   expectedCatalog: ProtectedV2ExpectedCatalogBinding
@@ -407,16 +397,28 @@ export interface ProtectedV2ApplicationIntent {
 export function buildProtectedV2ApplicationIntent(input: {
   authorization: ProtectedV2OperatorAuthorization
   before: ProtectedV2DatabaseEvidence
+  beforeCaptures: readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
   outputDirectory: string
   repository: ProtectedV2RepositoryEvidence
 }): ProtectedV2ApplicationIntent {
+  const before = validateProtectedV2DatabaseEvidence(input.before, 'before_v2')
+  const beforeCaptures = input.beforeCaptures.map((capture) =>
+    validateProtectedV2DatabaseEvidence(capture, 'before_v2'),
+  ) as unknown as readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
+  if (
+    canonicalJson(before) !== canonicalJson(beforeCaptures[0]) ||
+    canonicalJson(beforeCaptures[0]) !== canonicalJson(beforeCaptures[1])
+  ) {
+    throw new Error('Protected V2 intent requires two exact pre-application database captures.')
+  }
   return {
     authorization: input.authorization,
     authorizationSha256: input.authorization.contentSha256,
     authorizedCapability: PROTECTED_V2_AUTHORIZED_CAPABILITY,
     backupInstances: input.authorization.context.backups,
     backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
-    before: input.before,
+    before,
+    beforeCaptures,
     confirmation: PROTECTED_V2_CONFIRMATION,
     createdAt: input.authorization.requestedAt,
     expectedCatalog: input.authorization.context.expectedPostApplicationAudit.expectedCatalog,
@@ -451,6 +453,7 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
       'backupInstances',
       'backupTrustModel',
       'before',
+      'beforeCaptures',
       'confirmation',
       'createdAt',
       'expectedCatalog',
@@ -519,11 +522,21 @@ export function parseProtectedV2ApplicationIntent(bytes: string): ProtectedV2App
     'application intent expected post-application audit',
   )
   const repository = record(parsed.repository, 'application intent repository')
+  const before = validateProtectedV2DatabaseEvidence(parsed.before, 'before_v2')
+  if (!Array.isArray(parsed.beforeCaptures) || parsed.beforeCaptures.length !== 2) {
+    throw new Error('Protected V2 application intent requires exactly two database captures.')
+  }
+  const beforeCaptures = parsed.beforeCaptures.map((capture) =>
+    validateProtectedV2DatabaseEvidence(capture, 'before_v2'),
+  )
   if (
     canonicalJson(expectedPostApplicationAudit.expectedCatalog) !==
       canonicalJson(expectedCatalog) ||
     canonicalJson(repository.operatorBundle) !== canonicalJson(parsed.operatorBundle) ||
-    canonicalJson(repository.operatorBundleBinding) !== canonicalJson(parsed.operatorBundleBinding)
+    canonicalJson(repository.operatorBundleBinding) !==
+      canonicalJson(parsed.operatorBundleBinding) ||
+    canonicalJson(before) !== canonicalJson(beforeCaptures[0]) ||
+    canonicalJson(beforeCaptures[0]) !== canonicalJson(beforeCaptures[1])
   ) {
     throw new Error('Protected V2 application intent catalog or bundle bindings disagree.')
   }
@@ -651,6 +664,7 @@ export interface ProtectedV2ApplicationResult {
   backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
   backupTrustModel: typeof PROTECTED_V2_BACKUP_TRUST_MODEL
   before: ProtectedV2DatabaseEvidence
+  beforeCaptures: readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
   expectedCatalog: ProtectedV2ExpectedCatalogBinding
   intentCommitIsAncestor: true
   intentRepositoryHead: string
@@ -675,6 +689,7 @@ export interface ProtectedV2ApplicationResult {
     importAuthorized: false
     remoteDatabaseAccessed: false
   }
+  schemaOnlyTransition: LiteratureGoldV2SchemaOnlyTransitionProof
   schemaVersion: typeof PROTECTED_V2_APPLICATION_RESULT_SCHEMA_VERSION
   state: 'application_receipt_finalized'
   status: 'protected_v2_migration_applied_exactly_once'
@@ -684,6 +699,7 @@ export function buildProtectedV2ApplicationResult(input: {
   after: ProtectedV2DatabaseEvidence
   backupInstances: readonly [ProtectedV2BackupBinding, ProtectedV2BackupBinding]
   before: ProtectedV2DatabaseEvidence
+  beforeCaptures: readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
   intentCommitIsAncestor: true
   intentRepositoryHead: string
   migrationApplicationCallCount: 0 | 1
@@ -717,25 +733,21 @@ export function buildProtectedV2ApplicationResult(input: {
   ) {
     throw new Error('Protected V2 finalization mode and reconciliation reason disagree.')
   }
+  const before = validateProtectedV2DatabaseEvidence(input.before, 'before_v2')
+  const after = validateProtectedV2DatabaseEvidence(input.after, 'after_v2')
+  const beforeCaptures = input.beforeCaptures.map((capture) =>
+    validateProtectedV2DatabaseEvidence(capture, 'before_v2'),
+  ) as unknown as readonly [ProtectedV2DatabaseEvidence, ProtectedV2DatabaseEvidence]
+  const schemaOnlyTransition = validateProtectedV2SchemaOnlyDatabaseTransition({
+    after,
+    beforeCaptures,
+    expectedCatalogBindingSha256: expectedCatalog.bindingSha256,
+    sourceAuthorizationSha256: input.operatorAuthorizationSha256,
+  })
   if (
-    input.before.v1Occurrence !== 1 ||
-    input.before.v2Occurrence !== 0 ||
-    input.after.v1Occurrence !== 1 ||
-    input.after.v2Occurrence !== 1 ||
-    input.before.actionCount !== 0 ||
-    input.before.importCount !== 0 ||
-    input.before.compensationCount !== 0 ||
-    input.after.actionCount !== 0 ||
-    input.after.importCount !== 0 ||
-    input.after.compensationCount !== 0 ||
-    input.before.developmentMembershipSha256 !== input.after.developmentMembershipSha256 ||
-    input.before.developmentPlanningStateSha256 !== input.after.developmentPlanningStateSha256 ||
-    input.before.effectiveStateSha256 !== input.after.effectiveStateSha256 ||
-    input.before.physicalStateSha256 !== input.after.physicalStateSha256 ||
-    input.before.pointerStateSha256 !== input.after.pointerStateSha256 ||
-    input.before.revealStateSha256 !== input.after.revealStateSha256 ||
-    input.before.reviewStateSha256 !== input.after.reviewStateSha256 ||
-    input.postApplicationAudit.databaseEvidenceSha256 !== sha256(canonicalJson(input.after)) ||
+    canonicalJson(before) !== canonicalJson(beforeCaptures[0]) ||
+    canonicalJson(beforeCaptures[0]) !== canonicalJson(beforeCaptures[1]) ||
+    input.postApplicationAudit.databaseEvidenceSha256 !== sha256(canonicalJson(after)) ||
     input.postApplicationAudit.repositoryCommitSha !== input.repository.head ||
     input.intentCommitIsAncestor !== true ||
     !COMMIT_PATTERN.test(input.intentRepositoryHead) ||
@@ -749,10 +761,11 @@ export function buildProtectedV2ApplicationResult(input: {
   requiredSha256(input.originalIntentSha256, 'result intent')
   requiredSha256(input.operatorBundleSha256, 'result operator bundle')
   return {
-    after: input.after,
+    after,
     backupInstances: input.backupInstances,
     backupTrustModel: PROTECTED_V2_BACKUP_TRUST_MODEL,
-    before: input.before,
+    before,
+    beforeCaptures,
     expectedCatalog,
     intentCommitIsAncestor: true,
     intentRepositoryHead: input.intentRepositoryHead,
@@ -777,6 +790,7 @@ export function buildProtectedV2ApplicationResult(input: {
       importAuthorized: false,
       remoteDatabaseAccessed: false,
     },
+    schemaOnlyTransition,
     schemaVersion: PROTECTED_V2_APPLICATION_RESULT_SCHEMA_VERSION,
     state: 'application_receipt_finalized',
     status: 'protected_v2_migration_applied_exactly_once',
@@ -792,6 +806,7 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
       'backupInstances',
       'backupTrustModel',
       'before',
+      'beforeCaptures',
       'expectedCatalog',
       'intentCommitIsAncestor',
       'intentRepositoryHead',
@@ -811,6 +826,7 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
       'repository',
       'separateCaptureAttestation',
       'safety',
+      'schemaOnlyTransition',
       'schemaVersion',
       'state',
       'status',
@@ -824,6 +840,10 @@ export function parseProtectedV2ApplicationResult(bytes: string): ProtectedV2App
       ProtectedV2BackupBinding,
     ],
     before: parsed.before as ProtectedV2DatabaseEvidence,
+    beforeCaptures: parsed.beforeCaptures as unknown as readonly [
+      ProtectedV2DatabaseEvidence,
+      ProtectedV2DatabaseEvidence,
+    ],
     intentCommitIsAncestor: parsed.intentCommitIsAncestor as true,
     intentRepositoryHead: String(parsed.intentRepositoryHead ?? ''),
     migrationApplicationCallCount: parsed.migrationApplicationCallCount as 0 | 1,

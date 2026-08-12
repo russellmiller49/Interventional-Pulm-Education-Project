@@ -326,7 +326,7 @@ describe('gold import contract V2 forward-repair backup', () => {
     })
   })
 
-  it('rejects a repaired source/plan/descriptor migration envelope against the committed catalog', () => {
+  it('rejects a repaired source/plan/descriptor migration envelope at the finalized receipt gate', () => {
     const files = exactPackageFiles(fixture)
     const source = JSON.parse(files.get('source-authorization-set-v4.json')!.toString('utf8')) as {
       migration: { id: string; sha256: string }
@@ -364,7 +364,7 @@ describe('gold import contract V2 forward-repair backup', () => {
     files.set('checksum-manifest-v2.sha256', manifestBytes(withoutManifest))
 
     expect(() => verifyGoldImportCompensationPackageV2IntrinsicFiles(files)).toThrow(
-      'exact catalog artifact, source authorization, descriptor, or returned bindings differ',
+      'V2 migration receipt gate does not match the authenticated package audit',
     )
   })
 

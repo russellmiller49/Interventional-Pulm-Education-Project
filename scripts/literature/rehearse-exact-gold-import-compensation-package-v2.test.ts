@@ -63,6 +63,7 @@ function result(path: 'fresh' | 'upgrade'): V2DisposablePathResult {
     migrationPath: path,
     migrationSha256: 'b'.repeat(64),
     rawReceipt: {},
+    schemaOnlyTransition: {} as V2DisposablePathResult['schemaOnlyTransition'],
   }
 }
 
@@ -127,6 +128,29 @@ describe('exact V2 package rehearsal entrypoint', () => {
     expect(direct).not.toContain('const plan = package_.importPlan')
     expect(direct).toContain('bindDisposableCompensation(privatePackage, imported)')
     expect(direct).toContain('verifyCompensationPayloadCopies(context, privatePackage)')
+    expect(bootstrap).toContain('referenceMigrationReceiptGate')
+    expect(bootstrap).toContain('migrationReceiptGate: referenceMigrationReceiptGate')
+    expect(bootstrap).toContain('referenceMigrationReceiptGate ??= generated.migrationReceiptGate')
+    expect(bootstrap).toContain('migrationReceiptGate: generated.migrationReceiptGate')
+    expect(bootstrap).not.toContain('migrationReceiptGate: privatePackage.migrationReceiptGate')
+    const rehearsalSource = await readFile(
+      resolve(
+        process.cwd(),
+        'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+      ),
+      'utf8',
+    )
+    expect(rehearsalSource).toContain(
+      'migrationReceiptGate: controller.referenceMigrationReceiptGate()',
+    )
+    const gateIndex = direct.indexOf(
+      'requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(',
+    )
+    const firstQueryIndex = direct.indexOf('context.queryJson(')
+    const firstRpcIndex = direct.indexOf('bindDisposableImportAuthorization(plan)')
+    expect(gateIndex).toBeGreaterThan(-1)
+    expect(firstQueryIndex).toBeGreaterThan(gateIndex)
+    expect(firstRpcIndex).toBeGreaterThan(gateIndex)
   })
 
   test('observes the controlled-fault journal in a command after the volatile RPC', () => {
@@ -187,6 +211,22 @@ describe('exact V2 package rehearsal entrypoint', () => {
         physicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
       }),
     ).toThrow('accepted pre-V1')
+  })
+
+  test('binds the post-schema V1 physical identity only at the ready-audit boundary', async () => {
+    const source = await readFile(
+      resolve(
+        process.cwd(),
+        'scripts/literature/execute-exact-gold-import-compensation-package-v2.ts',
+      ),
+      'utf8',
+    )
+    expect(source).toContain(
+      'physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256',
+    )
+    expect(source).toContain(
+      'currentPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256',
+    )
   })
 
   test('authenticates exact branch, clean tracked/untracked state, and origin/main ancestry', async () => {

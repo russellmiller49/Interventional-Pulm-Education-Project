@@ -32,6 +32,11 @@ import {
   validateGoldImportNoteDispositionGateV2,
 } from './gold-import-note-disposition-gate-v2'
 import {
+  buildInternalDisposableMigrationReceiptGate,
+  requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding,
+  type GoldImportCompensationV2MigrationReceiptGate,
+} from './gold-import-compensation-v2-migration-receipt-gate'
+import {
   GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
   GOLD_IMPORT_FINAL_V3_ARTIFACT_SHA256_V4,
   validateGoldImportSourceAuthorizationSetV4ForImport,
@@ -56,6 +61,7 @@ import {
 import { buildProtectedV2ExpectedCatalogBinding } from './protected-gold-import-contract-v2-bindings'
 export { renderOwnerFirstFunctionRawAclV2 } from './gold-import-contract-v2-catalog-audit'
 import {
+  GOLD_IMPORT_V2_READY_STATE_IDENTITIES,
   validateReadyGoldImportCompensationV2Audit,
   type GoldImportCompensationV2ReadyAudit,
 } from './audit-gold-import-compensation-v2'
@@ -224,11 +230,13 @@ export function assertMigrationEquivalentPostV2SeedIdentity(
 
 async function buildDisposableReadyAuditAndPackage(input: {
   context: V2DisposableDatabaseContext
+  migrationReceiptGate?: GoldImportCompensationV2MigrationReceiptGate
   sources: V2ExactPackageBootstrapSources
   state: z.infer<typeof bootstrapStateSchema>
 }): Promise<{
   audit: GoldImportCompensationV2ReadyAudit
   completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   package: GeneratedGoldImportCompensationPackageV2
 }> {
   const { context, sources, state } = input
@@ -376,7 +384,7 @@ async function buildDisposableReadyAuditAndPackage(input: {
       developmentPlanningStateSha256:
         GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256,
       effectiveStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-      physicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256,
     },
     exactExistingHeadCohort: {
       cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
@@ -419,9 +427,12 @@ async function buildDisposableReadyAuditAndPackage(input: {
       physicalStateSha256: state.physicalStateSha256,
     },
   })
+  const migrationReceiptGate =
+    input.migrationReceiptGate ?? buildInternalDisposableMigrationReceiptGate(audit)
   const generateInput = {
     audit,
     developmentPlanningState: sources.developmentPlanningState,
+    migrationReceiptGate,
     sources: sources.sources,
   }
   const independentlyDerivedPackage = verifyGeneratedGoldImportCompensationPackageV2(
@@ -453,7 +464,7 @@ async function buildDisposableReadyAuditAndPackage(input: {
     signedProtocolAuthorization: sources.sources.signedProtocolAuthorizationBytes,
     sourceAuthorizationSet: sourceAuthorizationSetBytes,
   })
-  return { audit, completeCatalogAudit, package: package_ }
+  return { audit, completeCatalogAudit, migrationReceiptGate, package: package_ }
 }
 
 export interface BootstrappedExactPackageExecutorV2 {
@@ -461,6 +472,7 @@ export interface BootstrappedExactPackageExecutorV2 {
   generatedPackageCount(): number
   referenceAudit(): GoldImportCompensationV2ReadyAudit
   referenceCompleteCatalogAudit(): ProtectedV2CompleteCatalogAuditIdentity
+  referenceMigrationReceiptGate(): GoldImportCompensationV2MigrationReceiptGate
   referencePackage(): GeneratedGoldImportCompensationPackageV2
 }
 
@@ -480,6 +492,7 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
 }): BootstrappedExactPackageExecutorV2 {
   let referenceAudit: GoldImportCompensationV2ReadyAudit | undefined
   let referenceCompleteCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity | undefined
+  let referenceMigrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate | undefined
   let referencePackage: GeneratedGoldImportCompensationPackageV2 | undefined
   let referencePostV2SeedIdentity: unknown
   let generatedPackageCount = 0
@@ -504,7 +517,12 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         referencePostV2SeedIdentity ??= postV2SeedIdentity
         // This callback is intentionally after the V2 occurrence/state probe.
         const sources = await input.readSources()
-        const generated = await buildDisposableReadyAuditAndPackage({ context, sources, state })
+        const generated = await buildDisposableReadyAuditAndPackage({
+          context,
+          migrationReceiptGate: referenceMigrationReceiptGate,
+          sources,
+          state,
+        })
         const privateAudit = canonicalDetachedClone(generated.audit)
         const privateCompleteCatalogAudit = canonicalDetachedClone(generated.completeCatalogAudit)
         const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(generated.package)
@@ -521,8 +539,16 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         if (referencePackage) {
           assertExactGeneratedPackageReferenceV2(referencePackage, privatePackage)
         }
+        if (
+          referenceMigrationReceiptGate &&
+          canonicalJson(referenceMigrationReceiptGate) !==
+            canonicalJson(generated.migrationReceiptGate)
+        ) {
+          throw new Error('Repeated disposable paths produced different migration receipt proofs.')
+        }
         referenceAudit ??= privateAudit
         referenceCompleteCatalogAudit ??= privateCompleteCatalogAudit
+        referenceMigrationReceiptGate ??= generated.migrationReceiptGate
         referencePackage ??= privatePackage
         generatedPackageCount += 1
         await input.onGenerated?.({
@@ -531,7 +557,10 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
           package: verifyGeneratedGoldImportCompensationPackageV2(privatePackage),
           path: context.migrationPath,
         })
-        return createExactPackageDatabaseExecutorV2(privatePackage).execute(context)
+        return createExactPackageDatabaseExecutorV2(privatePackage).execute({
+          ...context,
+          migrationReceiptGate: generated.migrationReceiptGate,
+        })
       },
     },
     generatedPackageCount: () => generatedPackageCount,
@@ -544,6 +573,12 @@ export function createBootstrappedExactPackageDatabaseExecutorV2(input: {
         throw new Error('The V2 complete catalog audit has not been bootstrapped.')
       }
       return canonicalDetachedClone(referenceCompleteCatalogAudit)
+    },
+    referenceMigrationReceiptGate: () => {
+      if (!referenceMigrationReceiptGate) {
+        throw new Error('The disposable migration receipt proof has not been bootstrapped.')
+      }
+      return referenceMigrationReceiptGate
     },
     referencePackage: () => {
       if (!referencePackage) throw new Error('The exact V2 package has not been bootstrapped.')
@@ -1115,6 +1150,38 @@ export function createExactPackageDatabaseExecutorV2(
   const privatePackage = verifyGeneratedGoldImportCompensationPackageV2(package_)
   return {
     async execute(context): Promise<V2ExactPackageDatabaseEvidence> {
+      const sourceAuthorization = privatePackage.sourceAuthorizationSet
+      const liveMigrationReceiptGate =
+        requireIssuedGoldImportCompensationV2MigrationReceiptGateForBinding(
+          context.migrationReceiptGate,
+          {
+            auditTarget: sourceAuthorization.auditTarget,
+            batchId: sourceAuthorization.currentDatabase.batchId,
+            completeCatalogAuditIdentitySha256:
+              sourceAuthorization.completeCatalogAudit.fullAuditIdentitySha256,
+            developmentMembershipSha256:
+              sourceAuthorization.currentDatabase.developmentMembershipSha256,
+            developmentPlanningStateSha256:
+              sourceAuthorization.currentDatabase.developmentPlanningStateSha256,
+            expectedCatalogBindingSha256: sourceAuthorization.expectedCatalog.bindingSha256,
+            migrationId: sourceAuthorization.migration.id,
+            migrationSha256: sourceAuthorization.migration.sha256,
+            preImportEffectiveStateSha256:
+              sourceAuthorization.v2PreImportState.effectiveStateSha256,
+            preImportPhysicalStateSha256: sourceAuthorization.v2PreImportState.physicalStateSha256,
+            v1Occurrence: 1,
+            v2Occurrence: 1,
+          },
+        )
+      if (
+        liveMigrationReceiptGate.auditTarget !== 'disposable_clone' ||
+        liveMigrationReceiptGate.kind !== 'disposable_rehearsal' ||
+        liveMigrationReceiptGate.productionUseAllowed !== false ||
+        canonicalJson(liveMigrationReceiptGate) !==
+          canonicalJson(privatePackage.migrationReceiptGate)
+      ) {
+        throw new Error('Exact disposable V2 executor lacks its canonical non-production proof.')
+      }
       const plan = privatePackage.importPlan
       if (
         context.batchId !== plan.batchId ||
