@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 
 import {
-  GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES,
   GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
   GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
 } from '../../src/features/literature/gold-set/import-compensation-v2'
@@ -16,16 +15,9 @@ import {
 import {
   buildContractInvariantIdentity,
   buildDeploymentProfileIdentity,
-  buildFullEnvironmentInventoryIdentity,
-  reconciliationIdentitySha256,
-  SUPPORTED_DEPLOYMENT_PROFILES,
-  type DeploymentProfileEvidence,
-  type EnrichedRpcMetadata,
-  type RpcAclEntry,
 } from './gold-import-compensation-contract-reconciliation'
 import { validateSchemaSecurityDefinitionIdentity } from './gold-import-compensation-rehearsal-evidence'
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
-import { GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 } from './gold-import-note-disposition-gate-v2'
 import { GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4 } from './gold-import-source-authorization-v4'
 import {
   validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile,
@@ -35,11 +27,36 @@ import {
   validateProtectedV2ExpectedCatalogBinding,
   type ProtectedV2ExpectedCatalogBinding,
 } from './protected-gold-import-contract-v2-bindings'
+import {
+  loadGoldImportCompensationV2LocalMigrationReceiptGate,
+  migrationReceiptGateArtifactSha256,
+  requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit,
+  type GoldImportCompensationV2MigrationReceiptGate,
+} from './gold-import-compensation-v2-migration-receipt-gate'
+import { LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY } from './literature-gold-v2-schema-only-transition'
+import { assertDerivedV2ReadinessPolicy } from './gold-import-contract-v2-readiness-policy'
+
+export { assertDerivedV2ReadinessPolicy } from './gold-import-contract-v2-readiness-policy'
 
 export const GOLD_IMPORT_COMPENSATION_V2_AUDIT_SCHEMA_VERSION =
   'gold-import-compensation-v2-package-audit/1.0.0' as const
 export const V2_MIGRATION_REQUIRED_BEFORE_SOURCE_OR_CLIENT =
   'V2 migration is absent; stop before reading source artifacts or constructing a database client.' as const
+
+/** Post-migration/pre-import identities. The older note-disposition constant remains pre-V2. */
+export const GOLD_IMPORT_V2_READY_STATE_IDENTITIES = Object.freeze({
+  developmentMembershipSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.developmentMembershipSha256,
+  developmentPlanningStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.planningStateSha256,
+  effectiveStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.effectiveStateSha256V1,
+  physicalStateSha256: LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.physicalStateSha256V1,
+  v2EffectiveStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.effectiveStateSha256V2,
+  v2PhysicalStateSha256:
+    LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY.post.physicalStateSha256V2,
+} as const)
 
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/u)
 const uuidSchema = z.string().uuid()
@@ -51,15 +68,13 @@ export const goldImportCompensationV2MigrationProbeSchema = z
       .object({
         batchId: uuidSchema,
         developmentMembershipSha256: z.literal(
-          GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentMembershipSha256,
+          GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
         ),
         developmentPlanningStateSha256: z.literal(
-          GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.developmentPlanningStateSha256,
+          GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentPlanningStateSha256,
         ),
-        effectiveStateSha256: z.literal(
-          GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.effectiveStateSha256,
-        ),
-        physicalStateSha256: z.literal(GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256),
+        effectiveStateSha256: z.literal(GOLD_IMPORT_V2_READY_STATE_IDENTITIES.effectiveStateSha256),
+        physicalStateSha256: z.literal(GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256),
       })
       .strict(),
     migration: z
@@ -131,7 +146,12 @@ export const goldImportCompensationV2ReadyAuditSchema = goldImportCompensationV2
       .strict(),
     testSplitLocked: z.literal(true),
     v2PreImportState: z
-      .object({ effectiveStateSha256: sha256Schema, physicalStateSha256: sha256Schema })
+      .object({
+        effectiveStateSha256: z.literal(
+          GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2EffectiveStateSha256,
+        ),
+        physicalStateSha256: z.literal(GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2PhysicalStateSha256),
+      })
       .strict(),
   })
   .strict()
@@ -145,239 +165,6 @@ export type GoldImportCompensationV2ReadyAudit = Omit<
 > & {
   completeCatalogAudit: ProtectedV2CompleteCatalogAuditIdentity
   expectedCatalog: ProtectedV2ExpectedCatalogBinding
-}
-
-const REQUIRED_TRANSITION_RPC_ARGUMENTS_V2 = Object.freeze({
-  apply_literature_gold_import_v1:
-    'p_operation_id uuid, p_idempotency_key text, p_batch_id uuid, p_artifact_sha256 text, p_plan_sha256 text, p_plan jsonb, p_authorization_sha256 text, p_authorization jsonb, p_actor_user_id uuid, p_actor_email text',
-  apply_literature_gold_import_v2:
-    'p_operation_id uuid, p_idempotency_key text, p_batch_id uuid, p_artifact_sha256 text, p_plan_sha256 text, p_plan jsonb, p_authorization_sha256 text, p_authorization jsonb, p_actor_user_id uuid, p_actor_email text',
-  compensate_literature_gold_import_v1:
-    'p_operation_id uuid, p_target_import_operation_id uuid, p_idempotency_key text, p_batch_id uuid, p_artifact_sha256 text, p_plan_sha256 text, p_plan jsonb, p_authorization_sha256 text, p_authorization jsonb, p_actor_user_id uuid, p_actor_email text',
-  compensate_literature_gold_import_v2:
-    'p_operation_id uuid, p_target_import_operation_id uuid, p_idempotency_key text, p_batch_id uuid, p_artifact_sha256 text, p_plan_sha256 text, p_plan jsonb, p_authorization_sha256 text, p_authorization jsonb, p_actor_user_id uuid, p_actor_email text',
-  reconcile_literature_gold_review_operation_v1:
-    'p_operation_id uuid, p_recovery_authorization_sha256 text, p_recovery_authorization jsonb',
-  reconcile_literature_gold_review_operation_v2:
-    'p_operation_id uuid, p_recovery_authorization_sha256 text, p_recovery_authorization jsonb',
-} as const)
-
-const REQUIRED_APPEND_ONLY_TRIGGERS_V2 = [
-  'enforce_literature_gold_operation_contract_v2',
-  'enforce_literature_gold_review_contract_v2',
-  'guard_literature_gold_review_chain_insert',
-  'guard_literature_gold_review_operation_actions',
-  'guard_literature_gold_review_operations',
-  'validate_literature_gold_operation_event',
-] as const
-
-function canonicalAclIdentity(entries: readonly RpcAclEntry[]): string {
-  return canonicalJson(
-    entries
-      .map((entry) => ({ ...entry }))
-      .sort((left, right) => {
-        const leftIdentity = canonicalJson(left)
-        const rightIdentity = canonicalJson(right)
-        return leftIdentity < rightIdentity ? -1 : leftIdentity > rightIdentity ? 1 : 0
-      }),
-  )
-}
-
-function aclEntriesFromSchemaRecords(
-  inventory: ReturnType<typeof buildFullEnvironmentInventoryIdentity>,
-  function_: { identityArguments: string; name: string },
-): RpcAclEntry[] {
-  return inventory.schemaSecurityDefinitionIdentity.records
-    .filter(
-      (record) =>
-        record.objectType === 'function_acl' &&
-        record.objectName === function_.name &&
-        record.state.identityArguments === function_.identityArguments,
-    )
-    .map((record) => {
-      const { grantee, grantor, isGrantable, privilegeType } = record.state
-      if (
-        typeof grantee !== 'string' ||
-        typeof grantor !== 'string' ||
-        typeof isGrantable !== 'boolean' ||
-        typeof privilegeType !== 'string'
-      ) {
-        throw new Error(`V2 schema ACL record is malformed for ${function_.name}.`)
-      }
-      return { grantee, grantor, isGrantable, privilegeType }
-    })
-}
-
-function expectedFunctionAclEntries(
-  profile: (typeof SUPPORTED_DEPLOYMENT_PROFILES)[keyof typeof SUPPORTED_DEPLOYMENT_PROFILES],
-  serviceRoleExecute: boolean,
-): RpcAclEntry[] {
-  return [
-    profile.owner,
-    ...(profile.profileId === 'supabase_admin_owner_v1' ? ['postgres'] : []),
-    ...(serviceRoleExecute ? ['service_role'] : []),
-  ].map((grantee) => ({
-    grantee,
-    grantor: profile.owner,
-    isGrantable: false,
-    privilegeType: 'EXECUTE',
-  }))
-}
-
-function assertTrustedDeploymentProfile(
-  evidence: DeploymentProfileEvidence,
-  profile: (typeof SUPPORTED_DEPLOYMENT_PROFILES)[keyof typeof SUPPORTED_DEPLOYMENT_PROFILES],
-): void {
-  const roleInventorySha256 = reconciliationIdentitySha256(evidence.roleInventory)
-  const ownerRole = evidence.roleInventory.find(({ roleName }) => roleName === profile.owner)
-  if (
-    roleInventorySha256 !== profile.roleInventorySha256 ||
-    !ownerRole ||
-    ownerRole.exists !== true ||
-    ownerRole.attributes === null ||
-    canonicalJson({ ...ownerRole.attributes, roleName: ownerRole.roleName }) !==
-      canonicalJson(profile.ownerRoleAttributes)
-  ) {
-    throw new Error('V2 deployment profile role inventory or owner attributes are not trusted.')
-  }
-}
-
-export function assertDerivedV2ReadinessPolicy(input: {
-  auditTarget: GoldImportCompensationV2ReadyAudit['target']
-  deploymentProfileEvidence: unknown
-  rpcMetadata: unknown[]
-  schemaSecurityDefinitionIdentity: unknown
-}): void {
-  const inventory = buildFullEnvironmentInventoryIdentity(
-    input.schemaSecurityDefinitionIdentity as never,
-    input.rpcMetadata as EnrichedRpcMetadata[],
-    input.deploymentProfileEvidence as never,
-  )
-  const profile = SUPPORTED_DEPLOYMENT_PROFILES[inventory.deploymentProfile.profileId]
-  const expectedProfile =
-    input.auditTarget === 'disposable_clone'
-      ? SUPPORTED_DEPLOYMENT_PROFILES.supabase_admin_owner_v1
-      : SUPPORTED_DEPLOYMENT_PROFILES.local_supabase_postgres_owner_v1
-  if (
-    profile.profileId !== expectedProfile.profileId ||
-    inventory.deploymentProfile.target !== expectedProfile.target
-  ) {
-    throw new Error('V2 deployment profile is not valid for the audited target.')
-  }
-  assertTrustedDeploymentProfile(inventory.deploymentProfile, profile)
-
-  for (const [name, expected] of Object.entries(
-    GOLD_REVIEW_IMPORT_COMPENSATION_V2_FUNCTION_IDENTITIES,
-  )) {
-    const namedFunctions = inventory.schemaSecurityDefinitionIdentity.records.filter(
-      (record) => record.objectType === 'function' && record.objectName === name,
-    )
-    const matches = namedFunctions.filter(
-      (record) => record.state.identityArguments === expected.identityArguments,
-    )
-    const serviceRoleExecute = ![
-      'enforce_literature_gold_operation_contract_v2',
-      'enforce_literature_gold_review_contract_v2',
-    ].includes(name)
-    const expectedAclEntries = expectedFunctionAclEntries(profile, serviceRoleExecute)
-    const schemaAclEntries = aclEntriesFromSchemaRecords(inventory, {
-      identityArguments: expected.identityArguments,
-      name,
-    })
-    if (
-      namedFunctions.length !== 1 ||
-      matches.length !== 1 ||
-      matches[0]?.definitionSha256 !== expected.definitionSha256 ||
-      matches[0]?.owner !== profile.owner ||
-      canonicalAclIdentity(schemaAclEntries) !== canonicalAclIdentity(expectedAclEntries)
-    ) {
-      throw new Error(`V2 semantic function definition identity drifted for ${name}.`)
-    }
-  }
-
-  const expectedNames = Object.keys(REQUIRED_TRANSITION_RPC_ARGUMENTS_V2).sort()
-  const actualNames = inventory.rpcs.map(({ name }) => name).sort()
-  if (canonicalJson(actualNames) !== canonicalJson(expectedNames)) {
-    throw new Error('V2 RPC boundary does not contain exactly the V1/V2 transition functions.')
-  }
-  for (const rpc of inventory.rpcs) {
-    const expectedArguments =
-      REQUIRED_TRANSITION_RPC_ARGUMENTS_V2[
-        rpc.name as keyof typeof REQUIRED_TRANSITION_RPC_ARGUMENTS_V2
-      ]
-    const functionRecords = inventory.schemaSecurityDefinitionIdentity.records.filter(
-      (record) => record.objectType === 'function' && record.objectName === rpc.name,
-    )
-    const functionRecord = functionRecords.find(
-      (record) => record.state.identityArguments === rpc.identityArguments,
-    )
-    const schemaAclEntries = aclEntriesFromSchemaRecords(inventory, rpc)
-    const expectedAclEntries = expectedFunctionAclEntries(profile, true)
-    // pg_proc.proacl preserves the owner-first catalog order. The schema ACL records are
-    // independently canonicalized as a set above, so reconstruct raw ACL bytes from the exact
-    // profile grant order rather than their normalized record order.
-    const expectedRawAcl = `{${expectedAclEntries
-      .map(({ grantee, grantor }) => `${grantee}=X/${grantor}`)
-      .join(',')}}`
-    if (
-      !expectedArguments ||
-      rpc.identityArguments !== expectedArguments ||
-      rpc.resultType !== 'jsonb' ||
-      rpc.routineKind !== 'function' ||
-      rpc.language !== 'plpgsql' ||
-      rpc.overloadCount !== 1 ||
-      rpc.securityDefiner !== true ||
-      rpc.owner !== profile.owner ||
-      rpc.searchPath.actual !== 'pg_catalog, public, extensions' ||
-      rpc.searchPath.matchesExpected !== true ||
-      rpc.effectiveExecute.PUBLIC ||
-      rpc.effectiveExecute.anon ||
-      rpc.effectiveExecute.authenticated ||
-      !rpc.effectiveExecute.service_role ||
-      canonicalAclIdentity(rpc.explicitGrants) !== canonicalAclIdentity(expectedAclEntries) ||
-      canonicalAclIdentity(schemaAclEntries) !== canonicalAclIdentity(expectedAclEntries) ||
-      rpc.rawAcl !== expectedRawAcl ||
-      functionRecords.length !== 1 ||
-      !functionRecord ||
-      functionRecord.owner !== rpc.owner ||
-      functionRecord.definitionSha256 !== rpc.definitionSha256 ||
-      functionRecord.normalizedDefinition !== rpc.normalizedDefinition ||
-      functionRecord.state.resultType !== rpc.resultType ||
-      functionRecord.state.securityDefiner !== true ||
-      functionRecord.state.searchPath !== rpc.searchPath.actual
-    ) {
-      throw new Error(`V2 transition RPC policy or schema binding drifted for ${rpc.name}.`)
-    }
-  }
-
-  for (const triggerName of REQUIRED_APPEND_ONLY_TRIGGERS_V2) {
-    const matches = inventory.schemaSecurityDefinitionIdentity.records.filter(
-      (record) => record.objectType === 'trigger' && record.objectName === triggerName,
-    )
-    if (
-      matches.length !== 1 ||
-      matches[0]?.state.enabled !== true ||
-      matches[0]?.state.enableMode !== 'O'
-    ) {
-      throw new Error(`V2 append-only trigger boundary drifted for ${triggerName}.`)
-    }
-  }
-  const journalTables = new Set([
-    'literature_gold_review_operation_actions',
-    'literature_gold_review_operations',
-  ])
-  const prohibitedJournalPrivileges = new Set(['DELETE', 'INSERT', 'TRUNCATE', 'UPDATE'])
-  const excessiveJournalPrivilege = inventory.schemaSecurityDefinitionIdentity.records.find(
-    (record) =>
-      record.objectType === 'effective_table_privilege' &&
-      journalTables.has(record.parentObjectName ?? '') &&
-      record.state.roleName === 'service_role' &&
-      prohibitedJournalPrivileges.has(String(record.state.privilegeName)) &&
-      record.state.granted === true,
-  )
-  if (excessiveJournalPrivilege) {
-    throw new Error('V2 service_role has a prohibited direct journal-mutation privilege.')
-  }
 }
 
 /** The only gate allowed to run before finalized-source reads or client creation. */
@@ -461,6 +248,11 @@ export function validateReadyGoldImportCompensationV2Audit(
 
 export interface V2MigrationFirstRuntimeDependencies<TSources, TValidated, TClient> {
   createDatabaseClient: () => Promise<TClient> | TClient
+  expectedMigrationReceiptGateSha256: string
+  loadDisposableMigrationReceiptGate?: (
+    audit: GoldImportCompensationV2ReadyAudit,
+  ) => Promise<unknown> | unknown
+  migrationReceiptOutputDirectory?: string
   readMigrationProbe: () => Promise<unknown> | unknown
   readSourceArtifacts: () => Promise<TSources> | TSources
   validateSourceAuthorization: (
@@ -479,6 +271,7 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
 ): Promise<{
   audit: GoldImportCompensationV2ReadyAudit
   client: TClient
+  migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   sources: TSources
   validatedSourceAuthorization: TValidated
 }> {
@@ -490,13 +283,46 @@ export async function prepareGoldImportCompensationV2Runtime<TSources, TValidate
   const audit = (
     dependencies.validateReadyAuditForTest ?? validateReadyGoldImportCompensationV2Audit
   )(probe)
+  let loadedMigrationReceiptGate: unknown
+  if (audit.target === 'local') {
+    if (
+      dependencies.loadDisposableMigrationReceiptGate ||
+      !dependencies.migrationReceiptOutputDirectory
+    ) {
+      throw new Error(
+        'Local V2 execution requires the fixed live finalized-receipt filesystem loader.',
+      )
+    }
+    loadedMigrationReceiptGate = await loadGoldImportCompensationV2LocalMigrationReceiptGate({
+      audit,
+      outputDirectory: dependencies.migrationReceiptOutputDirectory,
+    })
+  } else {
+    if (
+      dependencies.migrationReceiptOutputDirectory ||
+      !dependencies.loadDisposableMigrationReceiptGate
+    ) {
+      throw new Error('Disposable V2 execution requires its internal non-production proof loader.')
+    }
+    loadedMigrationReceiptGate = await dependencies.loadDisposableMigrationReceiptGate(audit)
+  }
+  const migrationReceiptGate = requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(
+    loadedMigrationReceiptGate,
+    audit,
+  )
+  if (
+    migrationReceiptGateArtifactSha256(migrationReceiptGate) !==
+    dependencies.expectedMigrationReceiptGateSha256
+  ) {
+    throw new Error('Live finalized V2 migration receipt differs from the packaged receipt gate.')
+  }
   const sources = await dependencies.readSourceArtifacts()
   const validatedSourceAuthorization = await dependencies.validateSourceAuthorization(
     sources,
     audit,
   )
   const client = await dependencies.createDatabaseClient()
-  return { audit, client, sources, validatedSourceAuthorization }
+  return { audit, client, migrationReceiptGate, sources, validatedSourceAuthorization }
 }
 
 const HELP = `Audit the file-only V2 package-readiness probe.

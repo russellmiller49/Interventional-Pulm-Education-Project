@@ -74,7 +74,7 @@ const MIGRATION_FILENAME = `${GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2}.s
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const PACKAGE_OUTPUT_DIRECTORY = 'exact-package-v2'
 export const V2_REHEARSAL_TASK_BRANCH =
-  'codex/ip-literature-import-contract-v2-forward-repair-v1' as const
+  'codex/ip-literature-v2-physical-hash-receipt-recovery-v1' as const
 export const GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 =
   'b509e876f48112957eda42e8ec04e92a10bc40c3217b0011d1c0d708d519ce4f' as const
 const CANONICAL_OUTPUT_NAMES = [
@@ -737,6 +737,7 @@ export async function runExactPackageRehearsalV2Cli(
     throw new Error('Observed disposable catalog audit differs from its committed expectation.')
   }
   const driftMatrix = await runProtectedV2DisposableCatalogDriftMatrix({
+    migrationReceiptGate: controller.referenceMigrationReceiptGate(),
     package: package_,
     seed,
   })
