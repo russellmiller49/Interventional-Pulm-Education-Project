@@ -37,8 +37,8 @@ Build once, then run the harness in both modes against a local production server
 
 ```bash
 npm run build
-npm run ip-intel:verify-beta -- --mode=off --start
-npm run ip-intel:verify-beta -- --mode=on --start
+npx tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts --mode=off --start --port=3210
+npx tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts --mode=on --start --port=3210
 ```
 
 `--start` launches `next start` on port 3210 with the flag set only inside that child
@@ -52,7 +52,9 @@ check that did not hold.
 ## 4. Pre-enable checks against production (flag still unset)
 
 ```bash
-npm run ip-intel:verify-beta -- --mode=off --base-url=https://<production-host>
+npx tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts \
+  --mode=off \
+  --base-url=https://interventionalpulm.org
 ```
 
 Expected: every D1 route 404s with no authentication redirect, the
@@ -68,7 +70,9 @@ semantics. This step is intentionally outside every script in this repository.
 ## 6. Post-enable checks
 
 ```bash
-npm run ip-intel:verify-beta -- --mode=on --base-url=https://<production-host>
+npx tsx scripts/ip-device-intelligence/verify-unlisted-beta.ts \
+  --mode=on \
+  --base-url=https://interventionalpulm.org
 ```
 
 What the mode-on pass verifies, in one run:
