@@ -133,6 +133,7 @@ const EXACT_PACKAGE_FILE_NAMES = [
   'boolean-normalization-ledger-v2.json',
   'checksum-manifest-v2.sha256',
   'exact-catalog-binding-v2.json',
+  'finalized-migration-receipt-gate-v2.json',
   'immutable-atomic-import-plan-v2.json',
   'journal-template-v2.json',
   'note-disposition-proof-v2.json',

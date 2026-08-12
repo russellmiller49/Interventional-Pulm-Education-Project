@@ -76,14 +76,16 @@ import {
   buildProtectedV2RuntimeBundleBinding,
   parseProtectedV2RuntimeBundleBinding,
 } from './protected-gold-import-contract-v2-bindings'
+import {
+  LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
+  LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS,
+  type LiteratureGoldV2SchemaNeutralHistoryEvidence,
+} from './literature-gold-v2-schema-neutral-history'
+import { LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY } from './literature-gold-v2-schema-only-transition'
+import { PROTECTED_V2_TRANSITION_DATABASE_EVIDENCE_SCHEMA_VERSION } from './protected-gold-import-contract-v2-transition-evidence'
 
 const HEAD = '1111111111111111111111111111111111111111'
 const NOW = new Date('2026-08-09T20:00:00.000Z')
-const ROW_IDENTITIES = {
-  pointerStateSha256: '4'.repeat(64),
-  revealStateSha256: '5'.repeat(64),
-  reviewStateSha256: '6'.repeat(64),
-}
 let BASELINE_OPERATOR_BUNDLE: ValidatedProtectedV2OperatorBundle
 
 const LOCAL_EXPECTED_CATALOG = buildProtectedV2ExpectedCatalogBinding(
@@ -103,6 +105,43 @@ const LOCAL_EXPECTED_AUDIT = validateProtectedV2CompleteCatalogAuditIdentityForE
 
 function sha256(value: string) {
   return createHash('sha256').update(value).digest('hex')
+}
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
+function history(phase: 'before_v2' | 'after_v2'): LiteratureGoldV2SchemaNeutralHistoryEvidence {
+  const authority = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY
+  const unsigned: Omit<LiteratureGoldV2SchemaNeutralHistoryEvidence, 'bindingSha256'> = {
+    batchId: authority.batchId,
+    componentIdentities: { ...authority.historyComponentIdentities },
+    counts: { ...authority.counts },
+    datasetSplit: 'development',
+    expectedPostV1PhysicalStateSha256: authority.post.physicalStateSha256V1,
+    phase,
+    physicalStateSha256V1:
+      phase === 'before_v2'
+        ? authority.pre.physicalStateSha256V1
+        : authority.post.physicalStateSha256V1,
+    schemaDerivedFields: {
+      operationFields: LITERATURE_GOLD_V2_OPERATION_SCHEMA_ONLY_EXCLUSIONS,
+      operationRowCount: authority.counts.operations,
+      operationValuesSha256:
+        phase === 'before_v2'
+          ? authority.pre.schemaDerivedOperationValuesSha256
+          : authority.postSchemaDerivedOperationValuesSha256,
+      reviewFields: LITERATURE_GOLD_V2_REVIEW_SCHEMA_ONLY_EXCLUSIONS,
+      reviewRowCount: authority.counts.reviews,
+      reviewValuesSha256:
+        phase === 'before_v2'
+          ? authority.pre.schemaDerivedReviewValuesSha256
+          : authority.postSchemaDerivedReviewValuesSha256,
+    },
+    schemaNeutralHistorySha256: authority.post.schemaNeutralHistorySha256,
+    schemaVersion: 'literature-gold-schema-neutral-physical-history-evidence/1.0.0',
+  }
+  return { ...unsigned, bindingSha256: sha256(canonicalJson(unsigned)) }
 }
 
 function repository(head = HEAD): ProtectedV2RepositoryEvidence {
@@ -129,11 +168,18 @@ function rehashOperatorBundle(repositoryEvidence: ProtectedV2RepositoryEvidence)
 }
 
 function database(applied = false): ProtectedV2DatabaseEvidence {
+  const authority = LITERATURE_GOLD_V2_INCIDENT_TRANSITION_AUTHORITY
   return {
     actionCount: 0,
-    batchId: '10000000-0000-4000-8000-000000000001',
+    batchId: authority.batchId,
     compensationCount: 0,
-    ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+    completeCatalogAudit: applied ? LOCAL_EXPECTED_AUDIT : null,
+    developmentMembershipSha256: authority.post.developmentMembershipSha256,
+    developmentPlanningStateSha256: authority.post.planningStateSha256,
+    effectiveStateSha256: authority.post.effectiveStateSha256V1,
+    effectiveStateSha256V2: applied ? authority.post.effectiveStateSha256V2 : null,
+    eventStateSha256: authority.post.eventStateSha256,
+    history: history(applied ? 'after_v2' : 'before_v2'),
     importCount: 0,
     ledgerEntries: [
       {
@@ -149,8 +195,16 @@ function database(applied = false): ProtectedV2DatabaseEvidence {
           ]
         : []),
     ],
-    ...ROW_IDENTITIES,
+    operationCount: 0,
+    physicalStateSha256: applied
+      ? authority.post.physicalStateSha256V1
+      : authority.pre.physicalStateSha256V1,
+    physicalStateSha256V2: applied ? authority.post.physicalStateSha256V2 : null,
+    pointerStateSha256: authority.post.pointerStateSha256,
     readOnlyBracketMatches: true,
+    revealStateSha256: authority.post.revealStateSha256,
+    reviewStateSha256: authority.post.reviewStateSha256,
+    schemaVersion: PROTECTED_V2_TRANSITION_DATABASE_EVIDENCE_SCHEMA_VERSION,
     v1Occurrence: 1,
     v2Occurrence: applied ? 1 : 0,
   }
@@ -274,6 +328,7 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
         after: input.after,
         backupInstances: input.intentPackage.intent.backupInstances,
         before: input.intentPackage.intent.before,
+        beforeCaptures: input.intentPackage.intent.beforeCaptures,
         intentCommitIsAncestor: input.intentCommitIsAncestor,
         intentRepositoryHead: input.intentPackage.intent.repository.head,
         migrationApplicationCallCount: input.migrationApplicationCallCount,
@@ -356,13 +411,20 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
       } satisfies ProtectedV2LoadedIntentPackage
     },
     now: () => state.now,
-    sealIntent: async ({ authorization, before, output, repository: repositoryEvidence }) => {
+    sealIntent: async ({
+      authorization,
+      before,
+      beforeCaptures,
+      output,
+      repository: repositoryEvidence,
+    }) => {
       state.events.push('seal')
       if (state.fail === 'output') throw new Error('application intent creation failed')
       state.counters.seal += 1
       const intent = buildProtectedV2ApplicationIntent({
         authorization,
         before,
+        beforeCaptures,
         outputDirectory: output,
         repository: repositoryEvidence,
       })
@@ -381,7 +443,10 @@ function operatorDependencies(state: Scenario): ProtectedV2OperatorDependencies 
     },
     verifyBackup: async ({ directory, now }) => {
       state.backupVerificationTimes.push(now.toISOString())
-      return directory.endsWith('one') ? backup(directory, 'a') : backup(directory, 'b')
+      return {
+        binding: directory.endsWith('one') ? backup(directory, 'a') : backup(directory, 'b'),
+        database: clone(database(false)),
+      }
     },
     verifyPostApplication: async ({ after, repository: repositoryEvidence }) => {
       state.events.push('audit')
@@ -427,7 +492,7 @@ async function createBackupFixture(input: { name: string; nonceCharacter: string
     [
       'pre-application-report.json',
       canonicalJson({
-        schemaVersion: 'gold-import-contract-v2-preapplication-report/1.0.0',
+        schemaVersion: 'gold-import-contract-v2-preapplication-report/2.0.0',
         repository: repository(),
         expectedCatalog: LOCAL_EXPECTED_CATALOG,
         operatorBundleBinding: repository().operatorBundleBinding,
@@ -452,7 +517,14 @@ async function createBackupFixture(input: { name: string; nonceCharacter: string
     ],
     ['pre-application-report.md', '# Read-only pre-application backup\n'],
     ['protected-migration-ledger.json', ledgerBytes],
-    ['state-hashes.json', canonicalJson(GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2)],
+    [
+      'state-hashes.json',
+      canonicalJson({
+        schemaVersion: 'literature-gold-protected-v2-state-backup/2.0.0',
+        ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
+        databaseEvidence: database(false),
+      }),
+    ],
   ])
   const manifest = [...files]
     .sort(([left], [right]) => left.localeCompare(right, 'en'))
@@ -688,7 +760,7 @@ describe('protected V2 migration operator recovery boundary', () => {
     )
   })
 
-  it('fails closed on an incomplete catalog while issuing only read-only repeatable-read audits', async () => {
+  it('seals the already bracketed complete catalog without a second database query', async () => {
     const statements: string[] = []
     const runCommand: CommandRunner = async (command, _arguments, options) => {
       expect(command).toBe('docker')
@@ -709,13 +781,12 @@ describe('protected V2 migration operator recovery boundary', () => {
         repository: repository(),
         runCommand,
       }),
-    ).rejects.toThrow()
-    expect(statements).toHaveLength(3)
-    for (const statement of statements) {
-      expect(statement).toMatch(/^begin transaction isolation level repeatable read read only;/u)
-      expect(statement).toMatch(/rollback;$/u)
-      expect(statement).not.toContain('migration up')
-    }
+    ).resolves.toMatchObject({
+      catalogAudit: LOCAL_EXPECTED_AUDIT,
+      readOnly: true,
+      repeatableRead: true,
+    })
+    expect(statements).toHaveLength(0)
   })
 
   it.each([
@@ -876,6 +947,7 @@ describe('protected V2 migration operator recovery boundary', () => {
     const intent = buildProtectedV2ApplicationIntent({
       authorization,
       before: database(false),
+      beforeCaptures: [database(false), database(false)],
       outputDirectory: '/local/receipt',
       repository: repository(),
     })
@@ -987,7 +1059,7 @@ describe('protected V2 migration operator recovery boundary', () => {
       authorization.context.backups[1].backupInstanceId,
     )
     expect(PROTECTED_V2_APPLICATION_REPORT_SCHEMA_VERSION).toBe(
-      'literature-gold-protected-v2-application-result/2.0.0',
+      'literature-gold-protected-v2-application-result/3.0.0',
     )
 
     const identicalReceiptContext = context()
@@ -1055,9 +1127,13 @@ describe('protected V2 migration operator recovery boundary', () => {
         }),
       ),
     )
-    expect(verified[0]?.canonicalManifestSha256).toBe(verified[1]?.canonicalManifestSha256)
-    expect(verified[0]?.backupInstanceId).not.toBe(verified[1]?.backupInstanceId)
-    expect(verified[0]?.executionReceiptSha256).not.toBe(verified[1]?.executionReceiptSha256)
+    expect(verified[0]?.binding.canonicalManifestSha256).toBe(
+      verified[1]?.binding.canonicalManifestSha256,
+    )
+    expect(verified[0]?.binding.backupInstanceId).not.toBe(verified[1]?.binding.backupInstanceId)
+    expect(verified[0]?.binding.executionReceiptSha256).not.toBe(
+      verified[1]?.binding.executionReceiptSha256,
+    )
   })
 
   it('rejects a capture whose local duplicate-detection marker is missing', async () => {
@@ -1200,7 +1276,7 @@ describe('protected V2 migration operator recovery boundary', () => {
         now: NOW,
         repository: repository(),
       }),
-    ).resolves.toMatchObject({ backupInstanceId: recomputed.backupInstanceId })
+    ).resolves.toMatchObject({ binding: { backupInstanceId: recomputed.backupInstanceId } })
     expect(PROTECTED_V2_BACKUP_TRUST_MODEL).toBe('trusted-local-operator-redundant-captures/1.0.0')
     expect(PROTECTED_V2_SEPARATE_CAPTURE_ATTESTATION).toBe(
       'I ATTEST THESE ARE TWO SEPARATE READ-ONLY BACKUP CAPTURES',
@@ -1255,6 +1331,7 @@ describe('protected V2 migration operator recovery boundary', () => {
     const sealed = await sealProtectedV2ApplicationIntent({
       authorization,
       before: database(false),
+      beforeCaptures: [database(false), database(false)],
       cwd,
       output,
       repository: repository(),

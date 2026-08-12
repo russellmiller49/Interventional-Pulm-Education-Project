@@ -55,9 +55,19 @@ import {
   deterministicPackageUuidV2,
 } from './generate-gold-import-compensation-package-v2'
 import {
+  buildInternalDisposableMigrationReceiptGate,
+  migrationReceiptGateArtifactBytes,
+  migrationReceiptGateArtifactSha256,
+  type GoldImportCompensationV2DisposableMigrationReceiptGate,
+} from './gold-import-compensation-v2-migration-receipt-gate'
+import {
   GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2,
   GOLD_IMPORT_NOTE_DISPOSITION_AUDIT_SHA256_V2,
 } from './gold-import-note-disposition-gate-v2'
+import {
+  GOLD_IMPORT_V2_READY_STATE_IDENTITIES,
+  validateReadyGoldImportCompensationV2Audit,
+} from './audit-gold-import-compensation-v2'
 import {
   GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
   GOLD_IMPORT_FINAL_V3_ARTIFACT_SHA256_V4,
@@ -250,7 +260,15 @@ function exactReadyAudit(repositoryHead: string) {
       schemaSecurityDefinitionIdentity: inventory.schemaSecurityDefinitionIdentity,
     },
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
-    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    database: {
+      batchId: BATCH_ID,
+      developmentMembershipSha256:
+        GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
+      developmentPlanningStateSha256:
+        GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentPlanningStateSha256,
+      effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.effectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256,
+    },
     exactExistingHeadCohort: {
       cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
       headCount: 9,
@@ -892,6 +910,7 @@ function buildOperationScenarios(plan: ImportPlanV2) {
 
 function buildExactPackage(input: {
   authorization: GoldImportContractV2BackupAuthorization
+  migrationReceiptGate: GoldImportCompensationV2DisposableMigrationReceiptGate
   plan: ImportPlanV2
   sourceAuthorization: ReturnType<typeof buildGoldImportSourceAuthorizationSetV4>
   sourceBytes: Buffer
@@ -929,6 +948,10 @@ function buildExactPackage(input: {
       expectedCatalog: input.authorization.disposableExpectedCatalog,
       schemaVersion: 'gold-import-compensation-v2-exact-catalog-binding/1.0.0',
     }),
+  )
+  files.set(
+    'finalized-migration-receipt-gate-v2.json',
+    migrationReceiptGateArtifactBytes(input.migrationReceiptGate),
   )
   files.set('immutable-atomic-import-plan-v2.json', canonicalBytes(input.plan))
   files.set(
@@ -1091,6 +1114,8 @@ function buildExactPackage(input: {
       id: input.plan.executionContext.migrationId,
       sha256: input.sourceAuthorization.migration.sha256,
     },
+    migrationReceiptGateSha256: migrationReceiptGateArtifactSha256(input.migrationReceiptGate),
+    migrationReceiptKind: input.migrationReceiptGate.source.receiptKind,
     noteDispositionAuditSha256: input.plan.noteDispositionAuditSha256,
     packageVersion: GOLD_IMPORT_COMPENSATION_PACKAGE_VERSION_V2,
     remoteAccess: false,
@@ -1440,9 +1465,13 @@ function buildPackageRehearsalFixture(input: {
 }): PackageRehearsalFixture {
   const completeCatalogAudit = exactAudit('supabase_admin_owner_v1')
   const localAudit = exactAudit('local_supabase_postgres_owner_v1')
-  const readyAudit = exactReadyAudit(input.repository.head)
+  const readyAudit = validateReadyGoldImportCompensationV2Audit(
+    exactReadyAudit(input.repository.head),
+  )
+  const migrationReceiptGate = buildInternalDisposableMigrationReceiptGate(readyAudit)
   const package_ = buildExactPackage({
     authorization: input.authorization,
+    migrationReceiptGate,
     plan: input.plan,
     sourceAuthorization: input.sourceAuthorization,
     sourceBytes: input.sourceBytes,

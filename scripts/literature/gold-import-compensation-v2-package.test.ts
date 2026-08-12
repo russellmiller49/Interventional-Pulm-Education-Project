@@ -18,6 +18,7 @@ import {
   sha256Canonical,
 } from '../../src/features/literature/gold-set/import-compensation'
 import {
+  GOLD_IMPORT_V2_READY_STATE_IDENTITIES,
   V2_MIGRATION_REQUIRED_BEFORE_SOURCE_OR_CLIENT,
   prepareGoldImportCompensationV2Runtime,
   validateReadyGoldImportCompensationV2Audit,
@@ -56,6 +57,10 @@ import {
 } from './gold-import-contract-v2-catalog-expectations'
 import { buildProtectedV2ExpectedCatalogBinding } from './protected-gold-import-contract-v2-bindings'
 import { validateProtectedV2CompleteCatalogAuditIdentityForExpectedProfile } from './gold-import-contract-v2-catalog-audit'
+import {
+  buildInternalDisposableMigrationReceiptGate,
+  migrationReceiptGateArtifactSha256,
+} from './gold-import-compensation-v2-migration-receipt-gate'
 
 const SHA_A = 'a'.repeat(64)
 const SHA_B = 'b'.repeat(64)
@@ -64,6 +69,13 @@ const ITEM_ID = '20000000-0000-4000-8000-000000000001'
 const ACTION_ID = '30000000-0000-4000-8000-000000000001'
 const REVIEW_ID = '40000000-0000-4000-8000-000000000001'
 const TIME = '2026-08-08T00:00:00.000Z'
+const V2_READY_DATABASE = {
+  developmentMembershipSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentMembershipSha256,
+  developmentPlanningStateSha256:
+    GOLD_IMPORT_V2_READY_STATE_IDENTITIES.developmentPlanningStateSha256,
+  effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.effectiveStateSha256,
+  physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.physicalStateSha256,
+}
 const LOCAL_EXPECTED_CATALOG = buildProtectedV2ExpectedCatalogBinding(
   'local_supabase_postgres_owner_v1',
   'local',
@@ -262,6 +274,18 @@ describe('V2 authenticated planning-state evidence', () => {
       'compatibilityDevelopmentPlanningStateSchema.parse(\n    input.developmentPlanningState,',
     )
     expect(generatorSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
+    expect(generatorSource).toContain(
+      'requireIssuedGoldImportCompensationV2MigrationReceiptGateForAudit(',
+    )
+    expect(generatorSource).toContain(
+      'currentPhysicalStateSha256: GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2.physicalStateSha256',
+    )
+    expect(generatorSource).not.toContain(
+      'currentPhysicalStateSha256: audit.database.physicalStateSha256',
+    )
+    expect(generatorSource).toContain("'finalized-migration-receipt-gate-v2.json'")
+    expect(generatorFileSource).toContain("'finalized-migration-receipt-gate-v2.json',")
+    expect(generatorFileSource).toContain('migrationReceiptGateSha256:')
     expect(verifierSource.match(/input\.developmentPlanningState/gu)).toHaveLength(1)
     expect(verifierSource.match(/input\.files/gu)).toHaveLength(1)
     expect(verifierSource.match(/input\.sourceArtifactBytes/gu)).toHaveLength(1)
@@ -468,7 +492,7 @@ describe('V2 review and plan contract', () => {
 function migrationProbe(v2Occurrence: number) {
   return {
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
-    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    database: { batchId: BATCH_ID, ...V2_READY_DATABASE },
     migration: {
       id: GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2,
       sha256: SHA_A,
@@ -519,7 +543,10 @@ function readyAudit() {
       reviewRowMutationCount: 0,
     },
     testSplitLocked: true,
-    v2PreImportState: { effectiveStateSha256: SHA_A, physicalStateSha256: SHA_B },
+    v2PreImportState: {
+      effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2EffectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2PhysicalStateSha256,
+    },
   }
 }
 
@@ -564,7 +591,7 @@ function exactReadyAudit(
       schemaSecurityDefinitionIdentity: fullEnvironmentInventory.schemaSecurityDefinitionIdentity,
     },
     contractVersion: GOLD_REVIEW_IMPORT_COMPENSATION_CONTRACT_VERSION_V2,
-    database: { batchId: BATCH_ID, ...GOLD_IMPORT_CURRENT_STATE_IDENTITIES_V2 },
+    database: { batchId: BATCH_ID, ...V2_READY_DATABASE },
     exactExistingHeadCohort: {
       cohortSha256: GOLD_IMPORT_EXISTING_HEAD_COHORT_SHA256_V4,
       headCount: 9,
@@ -598,7 +625,10 @@ function exactReadyAudit(
     },
     target: target === 'local' ? ('local' as const) : ('disposable_clone' as const),
     testSplitLocked: true,
-    v2PreImportState: { effectiveStateSha256: SHA_A, physicalStateSha256: SHA_B },
+    v2PreImportState: {
+      effectiveStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2EffectiveStateSha256,
+      physicalStateSha256: GOLD_IMPORT_V2_READY_STATE_IDENTITIES.v2PhysicalStateSha256,
+    },
   }
 }
 
@@ -642,6 +672,10 @@ describe('migration-first and source-authorization-before-client ordering', () =
           calls.client += 1
           return {}
         },
+        expectedMigrationReceiptGateSha256: SHA_A,
+        loadDisposableMigrationReceiptGate: () => {
+          throw new Error('receipt loader must remain unreachable')
+        },
         readMigrationProbe: () => migrationProbe(0),
         readSourceArtifacts: () => {
           calls.source += 1
@@ -658,12 +692,19 @@ describe('migration-first and source-authorization-before-client ordering', () =
 
   it('does not construct a client when source authorization revalidation fails', async () => {
     const calls = { client: 0, source: 0, validation: 0 }
+    const audit = validateReadyGoldImportCompensationV2Audit(
+      exactReadyAudit('supabase_admin_owner_v1', 'disposable'),
+    )
+    const migrationReceiptGate = buildInternalDisposableMigrationReceiptGate(audit)
     await expect(
       prepareGoldImportCompensationV2Runtime({
         createDatabaseClient: () => {
           calls.client += 1
           return {}
         },
+        expectedMigrationReceiptGateSha256:
+          migrationReceiptGateArtifactSha256(migrationReceiptGate),
+        loadDisposableMigrationReceiptGate: () => migrationReceiptGate,
         readMigrationProbe: readyAudit,
         readSourceArtifacts: () => {
           calls.source += 1
@@ -673,10 +714,66 @@ describe('migration-first and source-authorization-before-client ordering', () =
           calls.validation += 1
           throw new Error('source authorization drift')
         },
-        validateReadyAuditForTest: () => readyAudit() as never,
+        validateReadyAuditForTest: () => audit,
       }),
     ).rejects.toThrow('source authorization drift')
     expect(calls).toEqual({ client: 0, source: 1, validation: 1 })
+  })
+
+  it('loads and authenticates the finalized receipt before source reads or client creation', async () => {
+    const calls = { client: 0, receipt: 0, source: 0 }
+    const audit = validateReadyGoldImportCompensationV2Audit(
+      exactReadyAudit('supabase_admin_owner_v1', 'disposable'),
+    )
+    await expect(
+      prepareGoldImportCompensationV2Runtime({
+        createDatabaseClient: () => {
+          calls.client += 1
+          return {}
+        },
+        expectedMigrationReceiptGateSha256: SHA_A,
+        loadDisposableMigrationReceiptGate: () => {
+          calls.receipt += 1
+          throw new Error('finalized receipt unavailable')
+        },
+        readMigrationProbe: readyAudit,
+        readSourceArtifacts: () => {
+          calls.source += 1
+          return {}
+        },
+        validateReadyAuditForTest: () => audit,
+        validateSourceAuthorization: () => ({}),
+      }),
+    ).rejects.toThrow('finalized receipt unavailable')
+    expect(calls).toEqual({ client: 0, receipt: 1, source: 0 })
+  })
+
+  it('does not permit an injectable or cached gate at the local execution boundary', async () => {
+    const calls = { client: 0, receipt: 0, source: 0 }
+    const localAudit = validateReadyGoldImportCompensationV2Audit(
+      exactReadyAudit('local_supabase_postgres_owner_v1', 'local'),
+    )
+    await expect(
+      prepareGoldImportCompensationV2Runtime({
+        createDatabaseClient: () => {
+          calls.client += 1
+          return {}
+        },
+        expectedMigrationReceiptGateSha256: SHA_A,
+        loadDisposableMigrationReceiptGate: () => {
+          calls.receipt += 1
+          return {}
+        },
+        readMigrationProbe: readyAudit,
+        readSourceArtifacts: () => {
+          calls.source += 1
+          return {}
+        },
+        validateReadyAuditForTest: () => localAudit,
+        validateSourceAuthorization: () => ({}),
+      }),
+    ).rejects.toThrow('fixed live finalized-receipt filesystem loader')
+    expect(calls).toEqual({ client: 0, receipt: 0, source: 0 })
   })
 })
 
