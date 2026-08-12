@@ -32,12 +32,25 @@ export function panEnabledAtDistance(distance: number): boolean {
   return distance < PAN_UNLOCK_DISTANCE
 }
 
-/** Clamp a pan target in place; returns true when it had left the bounds. */
-export function clampPanTarget(target: THREE.Vector3): boolean {
+/**
+ * Clamp a pan target back into the fence; returns the translation applied
+ * (null when the target was already inside).
+ *
+ * The caller MUST apply the same translation to the camera position.
+ * OrbitControls pans camera and target together, so the fence has to undo the
+ * overshoot on both — the same rig-translation rule the glide-home follows.
+ * Clamping only the target changes the camera-target distance and orientation
+ * at the boundary, and repeated drags against it walk the camera away while
+ * the target stays pinned to the wall. The camera itself is deliberately not
+ * boxed: the fence constrains the point being framed, not where the camera
+ * orbits from.
+ */
+export function clampPanTarget(target: THREE.Vector3): THREE.Vector3 | null {
   const clamped = target.clone().clamp(PAN_TARGET_BOUNDS.min, PAN_TARGET_BOUNDS.max)
-  if (clamped.equals(target)) return false
+  if (clamped.equals(target)) return null
+  const shift = clamped.clone().sub(target)
   target.copy(clamped)
-  return true
+  return shift
 }
 
 /**

@@ -138,9 +138,9 @@ the unknown-license supplied console scan from the runtime.
   are perceivable.
 - Clamp rebuilt with jaws that straddle the tube OD.
 
-## Before / after
+## Before / after (Gate 2 state — superseded by the follow-up package below)
 
-| Measure                      | Before                                                 | After                                                                  |
+| Measure                      | Before                                                 | After (at Gate 2)                                                      |
 | ---------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
 | Console                      | 15,999 tris / 476 KB / 1 material, unrecognizable scan | 12,164 tris / 310 KB / 7 materials, recognizable CARDIOHELP silhouette |
 | Patient                      | 17,726 tris / 316 KB / null-slot drape, balloon limbs  | 21,860 tris / 388 KB / 4 named materials, proportioned mannequin       |
@@ -162,8 +162,9 @@ the unknown-license supplied console scan from the runtime.
   access anchors verified **against the decoded GLB vertex positions** for
   VV and VA; DPC-over-thigh corridor; console material set; clamp jaw span
   vs tube OD.
-- Full `cardiohelp-ecmo` suite green (35 suites / 1,038 tests before the new
-  file; 36 / 1,054 after).
+- Full `cardiohelp-ecmo` suite green at Gate 2 (35 suites / 1,038 tests
+  before the new file; 36 / 1,054 after). Final counts after the follow-up
+  package and the pan work are recorded in their sections below.
 
 Visual correctness was judged from renders at every step; the bounding-box
 metrics above are contracts, not proof of appearance.
@@ -206,13 +207,11 @@ as a draped supine mannequin at every size, matching the harness renders.
   sizes (documented in `constants.ts`); the real unit is 255 × 455 × 427 mm.
 - Hands are mittens with a thumb wedge; the face is deliberately featureless
   with a surgical-cap treatment (non-identifiable by design).
-- The two cannulae still cross over the abdomen en route to their hubs —
-  pre-existing topology kept to preserve the circuit-reading layout.
-- The oxygenator scan is kept as-is: illegible/mirrored label textures,
-  scan filaments near the bracket, opaque red flanks, ~2× scale, 71 % of the
-  payload. A procedural HLS module rebuild is a candidate follow-up package.
 - The sensor connector remains a generic fitting standing in for the flow /
   bubble sensor.
+- (Two limitations recorded here at Gate 2 were closed by the follow-up
+  package below: the cannula X-cross over the abdomen is re-routed, and the
+  supplied oxygenator scan is replaced by the procedural HLS module.)
 - EEVEE harness lighting approximates but does not replicate the R3F rig
   (PMREM room environment, shadow setup); browser captures are the authority
   for the shipped look.
@@ -269,11 +268,40 @@ live-browser testing, pinned by a distance-preservation test).
 
 Verified live with synthetic pointer/wheel events: pan unlock after zoom,
 right-drag panning (every world-anchored label pill shifted), pan locked at
-the default framing. The glide-home is verified by the five-test
-`bedside-panning` jest suite rather than live: injected pointers never
-register a gesture end with OrbitControls in the headless pane (the same
-end event drives the long-shipped orbit label-dimming, which recovers
-normally with real input). HUD hint updated to mention pan.
+the default framing. HUD hint updated to mention pan.
+
+### Pan-fence rig correction (final pass)
+
+The fence originally clamped only the target back into `PAN_TARGET_BOUNDS`
+while OrbitControls had panned camera and target together — breaking the
+rig-translation invariant at the boundary: each drag against the fence
+changed the camera-target distance and orientation, and repeated outward
+drags walked the camera away while the target stayed pinned. Reproduced
+first with focused tests (9 of 13 in the extended `bedside-panning` suite
+fail against the target-only clamp), then corrected: `clampPanTarget`
+returns the translation it applied and `BedsideScene` applies the same
+translation to the camera — precisely the rule the glide-home already
+follows. The suite now also proves: no translation inside the box, targets
+pushed past each of the six faces are returned inside, the reported
+translation preserves camera-target distance (so clamping can never toggle
+pan eligibility), and once pinned on every dragged axis, 25 further drags
+move neither camera nor target.
+
+Live browser evidence (synthetic pointer/wheel with pointer-capture stubbed
+at prototype level, one gesture per frame): pan locked at default framing;
+unlocked after zooming in; hard repeated drags past the boundary converge —
+after the fence is reached, further drags produce byte-identical label
+positions (no creep); an inward drag immediately moves again (eligibility
+retained); zooming out glides the whole rig back to the canonical framing
+with every label within 3 px of its home position (the residual is the
+maxDistance 7.2 vs default 7.14 zoom difference). Honest limitations of the
+pane review: reduced-motion cannot be emulated in the pane (the snap is
+jest-verified), physical mouse hardware was not used (the pane offers no
+trusted right-drag input; synthetic events drive the same OrbitControls pan
+path), and at maximum zoom a target pinned at a far fence corner can frame
+object-free floor — the rig stays intact and one inward drag or zoom-out
+restores the scene; tightening the approved bounds was deliberately not done
+in this pass.
 
 ## Owner visual approvals
 
@@ -285,8 +313,9 @@ normally with real input). HUD hint updated to mention pan.
 ## Redistribution / licensing gate
 
 The supplied source files (console scan, oxygenator, sensor, `Fem_Fem_legs`)
-carried no license metadata. This package removes the supplied console scan
-from the runtime; the oxygenator and sensor connector still derive from
-supplied files, so the README's pre-release licensing confirmation gate
-remains in force for those two. The console, patient and clamp are now
-in-repo procedural originals with no third-party content.
+carried no license metadata. This package removed the supplied console scan
+and, in the follow-up, the supplied oxygenator scan from the runtime. Only
+`hls-sensor-connector.glb` still derives from a supplied file, so the
+README's pre-release licensing confirmation gate remains in force for that
+one asset. Every other runtime asset is an in-repo procedural original with
+no third-party content.

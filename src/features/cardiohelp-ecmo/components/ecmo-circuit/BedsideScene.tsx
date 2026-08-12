@@ -137,7 +137,14 @@ export function BedsideScene({
     if (!instance) return
     const distance = instance.object.position.distanceTo(instance.target)
     instance.enablePan = panEnabledAtDistance(distance)
-    if (clampPanTarget(instance.target)) instance.update()
+    const fenceShift = clampPanTarget(instance.target)
+    if (fenceShift) {
+      // The fence is a rig correction: camera moves with the target, exactly
+      // as during a pan and the glide-home. Target-only clamping let drags
+      // against the boundary change the zoom and walk the camera off-scene.
+      instance.object.position.add(fenceShift)
+      instance.update()
+    }
     if (!instance.enablePan && !interacting.current) {
       const shift = retargetTowardDefault(instance.target, delta, reduceMotion)
       if (shift) {

@@ -46,12 +46,13 @@ Total payload ≈ 1.0 MB (budget 6 MB) — no textures in any runtime asset.
   at join — the old patient's drape rendered default-white this way. Assign
   materials before boolean cuts; `b7-asset-contracts.test.ts` guards it.
 
-## 2026-07-18 rework notes (still applicable to the supplied assets)
+## 2026-07-18 rework notes (historical — the supplied-file pipeline now covers only the sensor)
 
 - `bpy.ops.object.transform_apply` silently no-ops on glTF-imported objects
   in Blender 5.1 background mode — scripts transform mesh data directly.
-- The oxygenator's orphaned normal-map image was stripped; embedded
-  base-color/roughness textures preserved.
+- The supplied oxygenator scan had its orphaned normal-map stripped then;
+  the scan itself was replaced by the procedural HLS module in the B7
+  follow-up, so no runtime asset carries textures anymore.
 - The supplied `Fem_Fem_legs.glb` remains unused (open/cropped geometry).
 
 ## Rebuild

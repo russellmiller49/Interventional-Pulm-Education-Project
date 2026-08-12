@@ -55,15 +55,74 @@ describe('pan target fence', () => {
     }
   })
 
-  it('clamps a target that leaves the scene and leaves one inside alone', () => {
-    const outside = new THREE.Vector3(9, 4, -8)
-    expect(clampPanTarget(outside)).toBe(true)
-    expect(PAN_TARGET_BOUNDS.containsPoint(outside)).toBe(true)
-
+  it('returns no translation for a target already inside the box', () => {
     const inside = new THREE.Vector3(0.5, 0, 0.5)
     const before = inside.clone()
-    expect(clampPanTarget(inside)).toBe(false)
+    expect(clampPanTarget(inside)).toBeNull()
     expect(inside.equals(before)).toBe(true)
+  })
+
+  it.each([
+    ['+x', new THREE.Vector3(1, 0, 0)],
+    ['-x', new THREE.Vector3(-1, 0, 0)],
+    ['+y', new THREE.Vector3(0, 1, 0)],
+    ['-y', new THREE.Vector3(0, -1, 0)],
+    ['+z', new THREE.Vector3(0, 0, 1)],
+    ['-z', new THREE.Vector3(0, 0, -1)],
+  ])('returns a target pushed past the %s face and reports the translation', (_face, axis) => {
+    const center = PAN_TARGET_BOUNDS.getCenter(new THREE.Vector3())
+    const half = PAN_TARGET_BOUNDS.getSize(new THREE.Vector3()).multiplyScalar(0.5)
+    const target = center.clone().add(axis.clone().multiply(half).multiplyScalar(1.5))
+    const before = target.clone()
+    const shift = clampPanTarget(target)
+    expect(shift).not.toBeNull()
+    expect(PAN_TARGET_BOUNDS.containsPoint(target)).toBe(true)
+    // The reported translation is exactly what moved the target.
+    expect(before.add(shift!).equals(target)).toBe(true)
+  })
+
+  it('keeps the rig a translation at the fence: camera-target distance is preserved', () => {
+    // OrbitControls pans camera and target together; the fence must undo the
+    // overshoot on BOTH, or every drag against the boundary changes the zoom
+    // and orientation. This is the invariant the glide-home already holds.
+    const target = new THREE.Vector3(PAN_TARGET_BOUNDS.max.x + 0.6, 0.1, 0.4)
+    const camera = target.clone().add(new THREE.Vector3(3.2, 2.4, 3.6))
+    const distanceBefore = camera.distanceTo(target)
+    const shift = clampPanTarget(target)
+    if (shift) camera.add(shift)
+    expect(camera.distanceTo(target)).toBeCloseTo(distanceBefore, 6)
+    // Preserved distance means clamping alone can never flip pan eligibility.
+    expect(panEnabledAtDistance(camera.distanceTo(target))).toBe(
+      panEnabledAtDistance(distanceBefore),
+    )
+  })
+
+  it('repeated drags against the boundary cannot walk the camera away', () => {
+    // Each frame: OrbitControls translates the rig outward (a pan), then the
+    // fence corrects it. The camera may keep only the in-bounds component of
+    // each drag; once the target is pinned on every dragged axis, further
+    // drags must move NOTHING — under target-only clamping the camera kept
+    // leaking outward by the full drag vector every frame.
+    const outward = new THREE.Vector3(0.5, 0, 0.2)
+    const target = new THREE.Vector3(PAN_TARGET_BOUNDS.max.x - 0.05, 0, 1.0)
+    const camera = target.clone().add(new THREE.Vector3(3.2, 2.4, 3.6))
+    const distanceBefore = camera.distanceTo(target)
+
+    const drag = () => {
+      target.add(outward)
+      camera.add(outward)
+      const shift = clampPanTarget(target)
+      if (shift) camera.add(shift)
+    }
+    for (let attempt = 0; attempt < 25; attempt += 1) drag()
+    expect(PAN_TARGET_BOUNDS.containsPoint(target)).toBe(true)
+    expect(camera.distanceTo(target)).toBeCloseTo(distanceBefore, 6)
+
+    const pinnedCamera = camera.clone()
+    const pinnedTarget = target.clone()
+    for (let attempt = 0; attempt < 25; attempt += 1) drag()
+    expect(camera.equals(pinnedCamera)).toBe(true)
+    expect(target.equals(pinnedTarget)).toBe(true)
   })
 })
 
