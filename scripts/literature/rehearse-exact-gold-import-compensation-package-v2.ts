@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { realpathSync } from 'node:fs'
 import { lstat, readFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
@@ -44,7 +44,11 @@ import {
   assertExclusiveOutputDirectoryIdentity,
   assertSafeOutputPathArgument,
   createExclusiveOutputDirectory,
+  createStagedExclusiveOutputDirectory,
+  discardStagedExclusiveOutputDirectory,
+  publishStagedExclusiveOutputDirectory,
   writeExclusiveOutputFiles,
+  type StagedExclusiveOutputDirectory,
 } from './lib/exclusive-output'
 import {
   assertDeterministicV2RehearsalRuns,
@@ -78,12 +82,18 @@ import {
   inspectGoldImportV2PrimaryMainRepository,
   loadGoldImportV2FinalizedReceiptEvidence,
   type GoldImportV2RepositoryEvidence,
+  type GoldImportV2FixedLocalState,
 } from './gold-import-v2-package-readiness'
 import {
   GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
   loadGoldImportV2PreimportRuntimeBundle,
   verifyGoldImportV2PreimportCaptureDirectory,
 } from './gold-import-v2-preimport-capture'
+import {
+  buildGoldImportV2DatabasePublicationObservationBinding,
+  runGoldImportV2DatabasePublicationProtocol,
+} from './gold-import-v2-database-publication'
+import { validateGoldImportV2ExactPackageRehearsalReport21 } from './gold-import-v2-lifecycle-compatibility'
 
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const EXECUTING_MODULE_PATH = realpathSync(fileURLToPath(import.meta.url))
@@ -95,6 +105,8 @@ const MIGRATION_FILENAME = `${GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2}.s
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const COMMIT_SHA_PATTERN = /^[a-f0-9]{40}$/u
 const PACKAGE_OUTPUT_DIRECTORY = 'exact-package-v2'
+const PRODUCTION_REHEARSAL_PUBLICATION_BRACKET_FILE =
+  'database-publication-bracket-v2.json' as const
 export const EXACT_V2_PACKAGE_REHEARSAL_REPORT_SCHEMA_VERSION =
   'gold-import-compensation-exact-package-rehearsal/2.1.0' as const
 export const GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 =
@@ -304,6 +316,7 @@ function rehearsalRepositoryEvidence(
 async function loadProductionV2RehearsalReadiness(input: {
   captureDirectories: readonly [string, string]
 }): Promise<{
+  fixedLocalState: GoldImportV2FixedLocalState
   readiness: GoldImportV2PackageGenerationReadiness
   repositoryEvidence: V2RehearsalRepositoryEvidence
 }> {
@@ -329,8 +342,8 @@ async function loadProductionV2RehearsalReadiness(input: {
   })
   const databaseEvidence = await collectGoldImportV2PreimportFixedLocalState()
   assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({
-    databaseEvidence,
     expected: readiness.packageReadiness,
+    fixedLocalState: databaseEvidence,
     receipt,
     repository,
   })
@@ -361,6 +374,7 @@ async function loadProductionV2RehearsalReadiness(input: {
     )
   }
   return {
+    fixedLocalState: databaseEvidence,
     readiness: finalReadiness,
     repositoryEvidence: rehearsalRepositoryEvidence(finalRepository),
   }
@@ -591,7 +605,7 @@ function buildCanonicalOutputs(input: {
   const auditBytes = prettyCanonical(audit)
   const completeCatalogAuditBytes = prettyCanonical(input.completeCatalogAudit)
   const driftMatrixBytes = prettyCanonical(input.driftMatrix)
-  const report = {
+  const report = validateGoldImportV2ExactPackageRehearsalReport21({
     audit: {
       completeCatalogAuditIdentitySha256: input.completeCatalogAudit.fullAuditIdentitySha256,
       completeCatalogAuditModelIdentitySha256: input.completeCatalogAudit.auditModelIdentitySha256,
@@ -682,7 +696,7 @@ function buildCanonicalOutputs(input: {
     },
     schemaVersion: EXACT_V2_PACKAGE_REHEARSAL_REPORT_SCHEMA_VERSION,
     status: 'passed',
-  }
+  })
   const files = new Map<string, Buffer>([
     ['disposable-v2-catalog-drift-matrix.json', driftMatrixBytes],
     ['disposable-v2-complete-catalog-audit.json', completeCatalogAuditBytes],
@@ -703,7 +717,7 @@ function buildCanonicalOutputs(input: {
 }
 
 interface ExactV2PackageRehearsalCoreDependencies {
-  assertCurrentProductionReadiness?(): Promise<void>
+  assertCurrentProductionReadiness?(): Promise<GoldImportV2FixedLocalState>
   buildOperatorBundle(): Promise<ProtectedV2OperatorBundle>
   completeRehearsal: CompleteV2RehearsalDependencies
   loadPreMigrationBackup(
@@ -712,6 +726,7 @@ interface ExactV2PackageRehearsalCoreDependencies {
   ): Promise<LoadedPreMigrationBackup>
   readCurrentRepositoryEvidence(): Promise<V2RehearsalRepositoryEvidence>
   productionReadiness?: GoldImportV2PackageGenerationReadiness
+  productionFixedLocalState?: GoldImportV2FixedLocalState
   repositoryEvidence: V2RehearsalRepositoryEvidence
 }
 
@@ -902,11 +917,13 @@ async function runExactPackageRehearsalV2WithDependencies(
   })
   if (dependencies.productionReadiness) {
     validateGoldImportV2PackageGenerationReadiness(dependencies.productionReadiness)
-    if (!dependencies.assertCurrentProductionReadiness) {
-      throw new Error('Production rehearsal readiness lacks its final live recheck.')
+    if (!dependencies.assertCurrentProductionReadiness || !dependencies.productionFixedLocalState) {
+      throw new Error('Production rehearsal readiness lacks its live publication bracket.')
     }
-    await dependencies.assertCurrentProductionReadiness()
-  } else if (dependencies.assertCurrentProductionReadiness) {
+  } else if (
+    dependencies.assertCurrentProductionReadiness ||
+    dependencies.productionFixedLocalState
+  ) {
     throw new Error('Disposable rehearsal cannot claim a production-readiness recheck.')
   }
   const canonical = buildCanonicalOutputs({
@@ -946,24 +963,93 @@ async function runExactPackageRehearsalV2WithDependencies(
   })
 
   // Nothing is published until all four owned containers have been removed and
-  // their independent exact-name/ID absence checks have passed.
-  const output = await createExclusiveOutputDirectory({ outputDirectory, outputRoot })
-  const packageDirectory = resolve(output.outputDirectory, PACKAGE_OUTPUT_DIRECTORY)
-  const packageOutput = await createExclusiveOutputDirectory({
-    outputDirectory: packageDirectory,
-    outputRoot: output.outputDirectory,
+  // their independent exact-name/ID absence checks have passed. Every slow file
+  // is first written beneath a hidden same-parent staging directory.
+  const stageOutputs = async (): Promise<StagedExclusiveOutputDirectory> => {
+    const staged = await createStagedExclusiveOutputDirectory({
+      outputDirectory,
+      outputRoot,
+      stagingNonce: randomBytes(32).toString('hex'),
+    })
+    const stagedPackageDirectory = resolve(staged.stagingDirectory, PACKAGE_OUTPUT_DIRECTORY)
+    const packageOutput = await createExclusiveOutputDirectory({
+      outputDirectory: stagedPackageDirectory,
+      outputRoot: staged.stagingDirectory,
+    })
+    writeExclusiveOutputFiles(
+      packageOutput,
+      [...package_.files.entries()].map(([name, bytes]) => ({ bytes, name })),
+    )
+    await assertExclusiveOutputDirectoryIdentity(packageOutput)
+    writeExclusiveOutputFiles(staged.identity, [
+      ...[...canonical.files.entries()].map(([name, bytes]) => ({ bytes, name })),
+      { bytes: rawReceipt, name: 'execution-receipt-v2.json' },
+    ])
+    await assertExclusiveOutputDirectoryIdentity(staged.identity)
+    return staged
+  }
+  const stagedPayloadSha256 = sha256Canonical({
+    canonicalManifestSha256: sha256(canonical.manifest),
+    executionReceiptSha256: sha256(rawReceipt),
+    packageManifestSha256: package_.manifestSha256,
   })
-  writeExclusiveOutputFiles(
-    packageOutput,
-    [...package_.files.entries()].map(([name, bytes]) => ({ bytes, name })),
-  )
-  await assertExclusiveOutputDirectoryIdentity(packageOutput)
-  writeExclusiveOutputFiles(output, [
-    ...[...canonical.files.entries()].map(([name, bytes]) => ({ bytes, name })),
-    { bytes: canonical.manifest, name: 'canonical-manifest-v2.sha256' },
-    { bytes: rawReceipt, name: 'execution-receipt-v2.json' },
-  ])
-  await assertExclusiveOutputDirectoryIdentity(output)
+  if (dependencies.productionReadiness) {
+    const productionReadiness = dependencies.productionReadiness
+    const productionFixedLocalState = dependencies.productionFixedLocalState!
+    await runGoldImportV2DatabasePublicationProtocol<StagedExclusiveOutputDirectory, string>({
+      discard: discardStagedExclusiveOutputDirectory,
+      finalize: async (staged, bracket) => {
+        const bracketBytes = prettyCanonical(bracket)
+        const productionManifest = canonicalManifest(
+          new Map([
+            ...canonical.files,
+            [PRODUCTION_REHEARSAL_PUBLICATION_BRACKET_FILE, bracketBytes] as const,
+          ]),
+        )
+        writeExclusiveOutputFiles(staged.identity, [
+          { bytes: bracketBytes, name: PRODUCTION_REHEARSAL_PUBLICATION_BRACKET_FILE },
+          { bytes: productionManifest, name: 'canonical-manifest-v2.sha256' },
+        ])
+        await assertExclusiveOutputDirectoryIdentity(staged.identity)
+      },
+      initial: buildGoldImportV2DatabasePublicationObservationBinding({
+        packageReadiness: productionReadiness.packageReadiness,
+        targetObservation: productionFixedLocalState.targetObservation,
+      }),
+      now: () => new Date(),
+      observeFinal: async () => {
+        const finalFixedLocalState = await dependencies.assertCurrentProductionReadiness!()
+        return buildGoldImportV2DatabasePublicationObservationBinding({
+          packageReadiness: productionReadiness.packageReadiness,
+          targetObservation: finalFixedLocalState.targetObservation,
+        })
+      },
+      publish: async (staged) => {
+        await publishStagedExclusiveOutputDirectory(staged)
+        return outputDirectory
+      },
+      stage: async () => ({
+        staged: await stageOutputs(),
+        stagedAt: new Date().toISOString(),
+        stagedPayloadSha256,
+      }),
+      subject: 'production_rehearsal',
+    })
+  } else {
+    const staged = await stageOutputs()
+    try {
+      writeExclusiveOutputFiles(staged.identity, [
+        { bytes: canonical.manifest, name: 'canonical-manifest-v2.sha256' },
+      ])
+      await assertExclusiveOutputDirectoryIdentity(staged.identity)
+      await publishStagedExclusiveOutputDirectory(staged)
+    } catch (error) {
+      await discardStagedExclusiveOutputDirectory(staged)
+      throw error
+    }
+  }
+
+  const packageDirectory = resolve(outputDirectory, PACKAGE_OUTPUT_DIRECTORY)
 
   const freshEvidence = canonical.files.get('fresh-v2-rehearsal-evidence.json')!
   const upgradeEvidence = canonical.files.get('upgrade-v2-rehearsal-evidence.json')!
@@ -1013,11 +1099,13 @@ async function runExactPackageRehearsalV2Cli(
           'Post-V2 capture pair, fixed-local state, receipt, runtime, or repository changed during rehearsal.',
         )
       }
+      return current.fixedLocalState
     },
     buildOperatorBundle: () => buildProtectedV2OperatorBundle({ cwd: REPOSITORY_ROOT }),
     completeRehearsal: PRODUCTION_COMPLETE_REHEARSAL_DEPENDENCIES,
     loadPreMigrationBackup: loadAndVerifyBackup,
     productionReadiness: initial.readiness,
+    productionFixedLocalState: initial.fixedLocalState,
     readCurrentRepositoryEvidence: readProductionV2RehearsalRepositoryEvidence,
     repositoryEvidence: initial.repositoryEvidence,
   })

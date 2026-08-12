@@ -250,13 +250,19 @@ The finalized receipt now feeds the post-V2 pre-import readiness workflow only a
 historical evidence. Two new post-V2 captures are required; neither of the original V2-absent
 preapplication captures may be substituted.
 
-## Final V2 delivery backup
+## Historical PR #95 and current post-V2 delivery backups
 
-The additive Phase-10 backup command is
-`literature:backup-gold-import-contract-v2-forward-repair`. Its version-2 manifest binds both exact
-profile artifacts and the current detailed runtime-bundle identity, copies every changed tracked
-file and the exact evidence-name inventory, rejects symlinks/overlap/transient probe output, parses
-copied JSON semantically, verifies the canonical package manifest, and independently rechecks every
-copied byte before self-hashing its receipt. The older
+The former Phase-10 PR #95 command is preserved as
+`literature:backup-gold-import-contract-v2-forward-repair:historical-pr95`. Its exact backup `2.0`
+and rehearsal `2.0` tuple remains valid only for that historical delivery and cannot satisfy current
+PR #97 capture/readiness authority.
+
+Current delivery uses `literature:backup-gold-import-v2-postmigration-delivery`. Its manifest binds
+the exact PR #97 branch/frozen base/pushed HEAD, finalized receipt authority, target-observation and
+compatibility contracts, current transitive capture/readiness/package/rehearsal runtime bundle and
+all archived runtime source bytes, every changed tracked file, and the exact named correction
+evidence inventory. The verifier rebuilds the runtime identity from archived bytes and rejects a
+missing, unexpected, or modified source before authenticating its canonical manifest, checksum
+manifest, and receipt. The older
 `literature:backup-post-migration-contract-reconciliation` command is a V1-only, old-branch blocked
 reconciliation archive; it is not Phase-10 V2 delivery evidence.

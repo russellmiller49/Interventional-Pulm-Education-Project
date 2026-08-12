@@ -101,6 +101,11 @@ import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
 } from './protected-gold-import-contract-v2-source-identities'
+import { fixedLocalTargetIdentityFromObservation } from './gold-import-v2-fixed-local-target'
+import {
+  buildTestGoldImportV2FixedLocalTargetObservation,
+  buildTestGoldImportV2PublicationBracket,
+} from './gold-import-v2-lifecycle-test-fixture'
 
 const SHA_A = 'a'.repeat(64)
 const SHA_B = 'b'.repeat(64)
@@ -151,6 +156,7 @@ function packageRepository(head = PACKAGE_CAPTURE_HEAD): GoldImportV2RepositoryE
 }
 
 function packageReadinessState(): GoldImportV2PackageReadinessState {
+  const targetObservation = buildTestGoldImportV2FixedLocalTargetObservation()
   return {
     authorities: {
       expectedCatalogBindingSha256: GOLD_IMPORT_V2_EXPECTED_CATALOG_BINDING_SHA256,
@@ -158,12 +164,12 @@ function packageReadinessState(): GoldImportV2PackageReadinessState {
     },
     batch: { id: BATCH_ID, name: 'gold-set-v1', scope: 'development' },
     database: {
-      container: 'supabase_db_ip-literature-local',
-      database: 'postgres',
-      host: '127.0.0.1',
-      port: 55322,
-      profile: 'local_supabase_postgres_owner_v1',
-      project: 'ip-literature-local',
+      expectedConfiguration: {
+        database: 'postgres',
+        profile: 'local_supabase_postgres_owner_v1',
+        profileDirectlyObserved: false,
+      },
+      observedTarget: fixedLocalTargetIdentityFromObservation(targetObservation),
     },
     migrationLedger: {
       v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
@@ -254,6 +260,11 @@ function packageVerifiedCapture(input: {
   repository?: GoldImportV2RepositoryEvidence
   runtimeBundle?: GoldImportV2PreimportRuntimeBundle
 }): GoldImportV2VerifiedPreimportCapture {
+  const targetObservation = buildTestGoldImportV2FixedLocalTargetObservation({
+    observationStartedAt: input.id.startsWith('1')
+      ? '2026-08-11T04:59:50.000Z'
+      : '2026-08-11T04:59:51.000Z',
+  })
   const capture = buildGoldImportV2PreimportCapture({
     captureId: input.id,
     captureRuntimeBundle: input.runtimeBundle ?? packageRuntime(),
@@ -262,11 +273,23 @@ function packageVerifiedCapture(input: {
     outputDirectory: input.outputDirectory,
     packageReadiness: input.packageReadiness ?? packageReadinessState(),
     repository: input.repository ?? packageRepository(),
+    targetObservation,
   })
+  const publicationBracket = buildTestGoldImportV2PublicationBracket({
+    initialTarget: capture.targetObservation,
+    packageReadiness: capture.packageReadiness,
+    stagedPayloadSha256: 'e'.repeat(64),
+    subject: 'capture',
+  })
+  const publicationBracketFileSha256 = createHash('sha256')
+    .update(canonicalJson(publicationBracket))
+    .digest('hex')
   const executionReceipt = buildGoldImportV2PreimportExecutionReceipt({
     canonicalManifestSha256: 'd'.repeat(64),
     capture,
     captureFileSha256: 'e'.repeat(64),
+    publicationBracket,
+    publicationBracketFileSha256,
   })
   return {
     capture,
@@ -275,6 +298,8 @@ function packageVerifiedCapture(input: {
     executionReceiptSha256: createHash('sha256')
       .update(canonicalJson(executionReceipt))
       .digest('hex'),
+    publicationBracket,
+    publicationBracketFileSha256,
   }
 }
 

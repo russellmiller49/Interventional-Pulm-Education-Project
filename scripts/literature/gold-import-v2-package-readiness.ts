@@ -54,13 +54,25 @@ import {
 } from './protected-gold-import-contract-v2-transition-evidence'
 import { collectProtectedV2CompleteCatalogAudit } from './gold-import-contract-v2-catalog-audit'
 import {
+  collectProtectedV2FixedLocalDockerTargetSnapshot,
   PROTECTED_V2_RECOVERY_DOCKER_ARGUMENTS,
   PROTECTED_V2_RECOVERY_DOCKER_COMMAND,
   executeProtectedV2FixedLocalReadOnlyPsql,
 } from './protected-gold-import-contract-v2-recovery-evidence-adapter'
+import {
+  GOLD_IMPORT_V2_FIXED_LOCAL_TARGET,
+  GOLD_IMPORT_V2_FIXED_LOCAL_TARGET_SQL,
+  buildGoldImportV2FixedLocalTargetObservation,
+  fixedLocalTargetIdentityFromObservation,
+  goldImportV2FixedLocalTargetIdentitySchema,
+  validateGoldImportV2FixedLocalTargetIdentity,
+  validateGoldImportV2FixedLocalTargetObservation,
+  type GoldImportV2FixedLocalTargetObservation,
+  type GoldImportV2RawDatabaseTargetObservation,
+} from './gold-import-v2-fixed-local-target'
 
 export const GOLD_IMPORT_V2_PACKAGE_READINESS_SCHEMA_VERSION =
-  'literature-gold-v2-package-readiness/1.0.0' as const
+  'literature-gold-v2-package-readiness/1.1.0' as const
 export const GOLD_IMPORT_V2_REPOSITORY_EVIDENCE_SCHEMA_VERSION =
   'literature-gold-v2-primary-main-repository-evidence/1.0.0' as const
 export const GOLD_IMPORT_V2_FINALIZED_RECEIPT_EVIDENCE_SCHEMA_VERSION =
@@ -322,12 +334,14 @@ export const goldImportV2PackageReadinessStateSchema = z
       .strict(),
     database: z
       .object({
-        container: z.literal('supabase_db_ip-literature-local'),
-        database: z.literal('postgres'),
-        host: z.literal('127.0.0.1'),
-        port: z.literal(55322),
-        profile: z.literal('local_supabase_postgres_owner_v1'),
-        project: z.literal('ip-literature-local'),
+        expectedConfiguration: z
+          .object({
+            database: z.literal(GOLD_IMPORT_V2_FIXED_LOCAL_TARGET.database),
+            profile: z.literal(GOLD_IMPORT_V2_FIXED_LOCAL_TARGET.expectedProfile),
+            profileDirectlyObserved: z.literal(false),
+          })
+          .strict(),
+        observedTarget: goldImportV2FixedLocalTargetIdentitySchema,
       })
       .strict(),
     migrationLedger: z
@@ -408,18 +422,25 @@ export function validateGoldImportV2PackageReadinessState(
   input: unknown,
 ): GoldImportV2PackageReadinessState {
   const state = goldImportV2PackageReadinessStateSchema.parse(input)
+  const observedTarget = validateGoldImportV2FixedLocalTargetIdentity(state.database.observedTarget)
   if (state.receipt.finalizedLatestMtimeMs <= 0) {
     throw new Error('Finalized migration receipt observation time is invalid.')
   }
-  return Object.freeze(packageReadinessCanonicalContent(state))
+  return Object.freeze(
+    packageReadinessCanonicalContent({
+      ...state,
+      database: { ...state.database, observedTarget },
+    }),
+  )
 }
 
 export function buildGoldImportV2PackageReadinessState(input: {
-  databaseEvidence: ProtectedV2DatabaseEvidence
+  fixedLocalState: GoldImportV2FixedLocalState
   receipt: GoldImportV2FinalizedReceiptEvidence
   repository?: GoldImportV2RepositoryEvidence
 }): GoldImportV2PackageReadinessState {
-  const databaseEvidence = validateProtectedV2DatabaseEvidence(input.databaseEvidence, 'after_v2')
+  const fixedLocalState = validateGoldImportV2FixedLocalState(input.fixedLocalState)
+  const databaseEvidence = fixedLocalState.databaseEvidence
   const receipt = finalizedReceiptSchema.parse(input.receipt)
   const catalog = databaseEvidence.completeCatalogAudit
   if (input.repository) validateGoldImportV2RepositoryEvidence(input.repository)
@@ -470,12 +491,12 @@ export function buildGoldImportV2PackageReadinessState(input: {
       scope: 'development',
     },
     database: {
-      container: 'supabase_db_ip-literature-local',
-      database: 'postgres',
-      host: '127.0.0.1',
-      port: 55322,
-      profile: 'local_supabase_postgres_owner_v1',
-      project: 'ip-literature-local',
+      expectedConfiguration: {
+        database: GOLD_IMPORT_V2_FIXED_LOCAL_TARGET.database,
+        profile: GOLD_IMPORT_V2_FIXED_LOCAL_TARGET.expectedProfile,
+        profileDirectlyObserved: false,
+      },
+      observedTarget: fixedLocalTargetIdentityFromObservation(fixedLocalState.targetObservation),
     },
     migrationLedger: {
       v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
@@ -542,8 +563,25 @@ function parseSingleFixedLocalPsqlJson(stdout: string): unknown {
   }
 }
 
-/** Capability-free fixed-target collector. No URL or write-capable database client exists. */
-export async function collectGoldImportV2PreimportFixedLocalState(): Promise<ProtectedV2DatabaseEvidence> {
+export interface GoldImportV2FixedLocalState {
+  databaseEvidence: ProtectedV2DatabaseEvidence
+  targetObservation: GoldImportV2FixedLocalTargetObservation
+}
+
+export function validateGoldImportV2FixedLocalState(
+  input: GoldImportV2FixedLocalState,
+): GoldImportV2FixedLocalState {
+  return Object.freeze({
+    databaseEvidence: validateProtectedV2DatabaseEvidence(input.databaseEvidence, 'after_v2'),
+    targetObservation: validateGoldImportV2FixedLocalTargetObservation(input.targetObservation),
+  })
+}
+
+/**
+ * Capability-free fixed-target collector. The module owns every Docker/psql
+ * target argument; no URL, target fact, or write-capable database client is accepted.
+ */
+export async function collectGoldImportV2PreimportFixedLocalState(): Promise<GoldImportV2FixedLocalState> {
   const psql = async (sql: string) =>
     executeProtectedV2FixedLocalReadOnlyPsql({
       arguments: PROTECTED_V2_RECOVERY_DOCKER_ARGUMENTS,
@@ -551,7 +589,12 @@ export async function collectGoldImportV2PreimportFixedLocalState(): Promise<Pro
       sql,
     })
   const queryJson = async (sql: string) => parseSingleFixedLocalPsqlJson((await psql(sql)).stdout)
-  return collectProtectedV2ReadOnlyTransitionEvidence({
+  const observationStartedAt = new Date().toISOString()
+  const dockerBefore = await collectProtectedV2FixedLocalDockerTargetSnapshot()
+  const rawDatabaseTarget = (await queryJson(
+    GOLD_IMPORT_V2_FIXED_LOCAL_TARGET_SQL,
+  )) as GoldImportV2RawDatabaseTargetObservation
+  const databaseEvidence = await collectProtectedV2ReadOnlyTransitionEvidence({
     dependencies: {
       collectCompleteCatalogAudit: () =>
         collectProtectedV2CompleteCatalogAudit({
@@ -562,17 +605,29 @@ export async function collectGoldImportV2PreimportFixedLocalState(): Promise<Pro
     },
     phase: 'after_v2',
   })
+  const dockerAfter = await collectProtectedV2FixedLocalDockerTargetSnapshot()
+  const observationCompletedAt = new Date().toISOString()
+  return validateGoldImportV2FixedLocalState({
+    databaseEvidence,
+    targetObservation: buildGoldImportV2FixedLocalTargetObservation({
+      database: rawDatabaseTarget,
+      dockerAfter,
+      dockerBefore,
+      observationCompletedAt,
+      observationStartedAt,
+    }),
+  })
 }
 
 export function assertGoldImportV2CurrentDatabaseMatchesPackageReadiness(input: {
-  databaseEvidence: ProtectedV2DatabaseEvidence
+  fixedLocalState: GoldImportV2FixedLocalState
   expected: GoldImportV2PackageReadinessState
   receipt: GoldImportV2FinalizedReceiptEvidence
   repository: GoldImportV2RepositoryEvidence
 }): GoldImportV2PackageReadinessState {
   const expected = validateGoldImportV2PackageReadinessState(input.expected)
   const current = buildGoldImportV2PackageReadinessState({
-    databaseEvidence: input.databaseEvidence,
+    fixedLocalState: input.fixedLocalState,
     receipt: input.receipt,
     repository: input.repository,
   })

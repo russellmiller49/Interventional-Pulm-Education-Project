@@ -6,6 +6,7 @@ import {
 } from '../../src/features/literature/gold-set/import-compensation-v2'
 import {
   GOLD_IMPORT_CONTRACT_V1_MIGRATION_SHA256,
+  GOLD_IMPORT_CONTRACT_V2_BACKUP_AUTHORITY_SCOPE,
   GOLD_IMPORT_CONTRACT_V2_BACKUP_SCHEMA_VERSION,
   GOLD_IMPORT_CONTRACT_V2_BRANCH,
   REQUIRED_GOLD_IMPORT_CONTRACT_V2_BACKUP_EVIDENCE_NAMES,
@@ -203,6 +204,7 @@ describe('gold import contract V2 forward-repair backup', () => {
   })
 
   it('pins the task branch, backup schema, historical V1 bytes, and exact Phase-10 inventory', () => {
+    expect(GOLD_IMPORT_CONTRACT_V2_BACKUP_AUTHORITY_SCOPE).toBe('historical_pr95_only')
     expect(GOLD_IMPORT_CONTRACT_V2_BRANCH).toBe(
       'codex/ip-literature-import-contract-v2-forward-repair-v1',
     )

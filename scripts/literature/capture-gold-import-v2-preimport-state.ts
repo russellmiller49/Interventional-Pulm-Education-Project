@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto'
 import { realpathSync } from 'node:fs'
-import { mkdir, realpath, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, realpath, stat, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,6 +11,7 @@ import {
   inspectGoldImportV2PrimaryMainRepository,
   loadGoldImportV2FinalizedReceiptEvidence,
   sha256Bytes,
+  type GoldImportV2FixedLocalState,
   type GoldImportV2FinalizedReceiptEvidence,
   type GoldImportV2RepositoryEvidence,
 } from './gold-import-v2-package-readiness'
@@ -25,9 +26,20 @@ import {
   type GoldImportV2PreimportRuntimeBundle,
   type GoldImportV2VerifiedPreimportCapture,
 } from './gold-import-v2-preimport-capture'
-import type { ProtectedV2DatabaseEvidence } from './protected-gold-import-contract-v2-transition-evidence'
 import { assertKnownArguments, parseCliArguments } from './lib/cli'
 import { canonicalJson } from '../../src/features/literature/gold-set/import-compensation'
+import {
+  buildGoldImportV2DatabasePublicationObservationBinding,
+  runGoldImportV2DatabasePublicationProtocol,
+} from './gold-import-v2-database-publication'
+import {
+  assertExclusiveOutputDirectoryIdentity,
+  createStagedExclusiveOutputDirectory,
+  discardStagedExclusiveOutputDirectory,
+  publishStagedExclusiveOutputDirectory,
+  writeExclusiveOutputFiles,
+  type StagedExclusiveOutputDirectory,
+} from './lib/exclusive-output'
 
 export { GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT } from './gold-import-v2-preimport-capture'
 
@@ -51,7 +63,7 @@ target through repeatable-read/read-only SQL, and creates one non-authorizing ca
 Run it twice after this workflow is merged to obtain the required redundant capture pair.`
 
 interface GoldImportV2PreimportCaptureDependencies {
-  collectDatabaseEvidence: () => Promise<ProtectedV2DatabaseEvidence>
+  collectDatabaseEvidence: () => Promise<GoldImportV2FixedLocalState>
   inspectRepository: () => Promise<GoldImportV2RepositoryEvidence>
   loadFinalizedReceipt: () => Promise<GoldImportV2FinalizedReceiptEvidence>
   loadRuntimeBundle: () => Promise<GoldImportV2PreimportRuntimeBundle>
@@ -62,11 +74,19 @@ interface GoldImportV2PreimportCaptureDependencies {
     backupRoot: string
     captureId: string
     capturedAt: string
-    databaseEvidence: ProtectedV2DatabaseEvidence
+    collectFinalDatabaseEvidence: () => Promise<GoldImportV2FixedLocalState>
     executionNonce: string
+    initialDatabaseEvidence: GoldImportV2FixedLocalState
+    now: () => Date
     receipt: GoldImportV2FinalizedReceiptEvidence
+    revalidateNonDatabaseEvidence: () => Promise<{
+      receipt: GoldImportV2FinalizedReceiptEvidence
+      repository: GoldImportV2RepositoryEvidence
+      runtimeBundle: GoldImportV2PreimportRuntimeBundle
+    }>
     repository: GoldImportV2RepositoryEvidence
     runtimeBundle: GoldImportV2PreimportRuntimeBundle
+    stagingNonce: string
   }) => Promise<GoldImportV2VerifiedPreimportCapture>
 }
 
@@ -89,17 +109,25 @@ async function writeGoldImportV2PreimportCapture(input: {
   backupRoot: string
   captureId: string
   capturedAt: string
-  databaseEvidence: ProtectedV2DatabaseEvidence
+  collectFinalDatabaseEvidence: () => Promise<GoldImportV2FixedLocalState>
   executionNonce: string
+  initialDatabaseEvidence: GoldImportV2FixedLocalState
+  now: () => Date
   receipt: GoldImportV2FinalizedReceiptEvidence
+  revalidateNonDatabaseEvidence: () => Promise<{
+    receipt: GoldImportV2FinalizedReceiptEvidence
+    repository: GoldImportV2RepositoryEvidence
+    runtimeBundle: GoldImportV2PreimportRuntimeBundle
+  }>
   repository: GoldImportV2RepositoryEvidence
   runtimeBundle: GoldImportV2PreimportRuntimeBundle
+  stagingNonce: string
 }): Promise<GoldImportV2VerifiedPreimportCapture> {
   const backupRoot = await assertSafeCaptureRoot(input.backupRoot)
   const compactTimestamp = input.capturedAt.replace(/[^0-9]/gu, '')
   const outputDirectory = resolve(backupRoot, `capture-${compactTimestamp}-${input.captureId}`)
   const packageReadiness = buildGoldImportV2PackageReadinessState({
-    databaseEvidence: input.databaseEvidence,
+    fixedLocalState: input.initialDatabaseEvidence,
     receipt: input.receipt,
     repository: input.repository,
   })
@@ -111,60 +139,113 @@ async function writeGoldImportV2PreimportCapture(input: {
     outputDirectory,
     packageReadiness,
     repository: input.repository,
+    targetObservation: input.initialDatabaseEvidence.targetObservation,
   })
   const captureBytes = canonicalArtifactBytes(capture)
   const captureFileSha256 = sha256Bytes(captureBytes)
-  const manifestBytes = `${captureFileSha256}  preimport-state.json\n`
-  const executionReceipt = buildGoldImportV2PreimportExecutionReceipt({
-    canonicalManifestSha256: sha256Bytes(manifestBytes),
-    capture,
-    captureFileSha256,
+  const initialBinding = buildGoldImportV2DatabasePublicationObservationBinding({
+    packageReadiness,
+    targetObservation: input.initialDatabaseEvidence.targetObservation,
   })
-  const executionReceiptBytes = canonicalArtifactBytes(executionReceipt)
-  const marker = buildGoldImportV2PreimportDuplicateMarker({
-    capture,
-    executionReceiptSha256: sha256Bytes(executionReceiptBytes),
+  const result = await runGoldImportV2DatabasePublicationProtocol<
+    StagedExclusiveOutputDirectory,
+    GoldImportV2VerifiedPreimportCapture
+  >({
+    discard: discardStagedExclusiveOutputDirectory,
+    finalize: async (staged, bracket) => {
+      const bracketBytes = canonicalArtifactBytes(bracket)
+      const bracketFileSha256 = sha256Bytes(bracketBytes)
+      const manifestBytes = `${bracketFileSha256}  database-publication-bracket.json\n${captureFileSha256}  preimport-state.json\n`
+      const executionReceipt = buildGoldImportV2PreimportExecutionReceipt({
+        canonicalManifestSha256: sha256Bytes(manifestBytes),
+        capture,
+        captureFileSha256,
+        publicationBracket: bracket,
+        publicationBracketFileSha256: bracketFileSha256,
+      })
+      writeExclusiveOutputFiles(staged.identity, [
+        { bytes: Buffer.from(bracketBytes, 'utf8'), name: 'database-publication-bracket.json' },
+        { bytes: Buffer.from(manifestBytes, 'utf8'), name: 'checksum-manifest.sha256' },
+        {
+          bytes: Buffer.from(canonicalArtifactBytes(executionReceipt), 'utf8'),
+          name: 'execution-receipt.json',
+        },
+      ])
+      await assertExclusiveOutputDirectoryIdentity(staged.identity)
+    },
+    initial: initialBinding,
+    now: input.now,
+    observeFinal: async () => {
+      const finalFixedLocalState = await input.collectFinalDatabaseEvidence()
+      const current = await input.revalidateNonDatabaseEvidence()
+      if (
+        canonicalJson(current.repository) !== canonicalJson(input.repository) ||
+        canonicalJson(current.receipt) !== canonicalJson(input.receipt) ||
+        canonicalJson(current.runtimeBundle) !== canonicalJson(input.runtimeBundle)
+      ) {
+        throw new Error(
+          'Repository, finalized receipt, or capture runtime changed during staged publication.',
+        )
+      }
+      const finalReadiness = buildGoldImportV2PackageReadinessState({
+        fixedLocalState: finalFixedLocalState,
+        receipt: current.receipt,
+        repository: current.repository,
+      })
+      if (canonicalJson(finalReadiness) !== canonicalJson(packageReadiness)) {
+        throw new Error('Fixed-local database state changed after initial capture collection.')
+      }
+      return buildGoldImportV2DatabasePublicationObservationBinding({
+        packageReadiness: finalReadiness,
+        targetObservation: finalFixedLocalState.targetObservation,
+      })
+    },
+    publish: async (staged) => {
+      await publishStagedExclusiveOutputDirectory(staged)
+      const executionReceiptBytes = await readFile(
+        resolve(outputDirectory, 'execution-receipt.json'),
+      )
+      const marker = buildGoldImportV2PreimportDuplicateMarker({
+        capture,
+        executionReceiptSha256: sha256Bytes(executionReceiptBytes),
+      })
+      const markerDirectory = resolve(
+        backupRoot,
+        GOLD_IMPORT_V2_PREIMPORT_DUPLICATE_MARKER_DIRECTORY,
+      )
+      await mkdir(markerDirectory, { mode: 0o700, recursive: true })
+      if ((await realpath(markerDirectory)) !== markerDirectory) {
+        throw new Error('Post-V2 pre-import duplicate-marker directory is unsafe.')
+      }
+      await writeFile(
+        resolve(markerDirectory, `${input.captureId}.json`),
+        canonicalArtifactBytes(marker),
+        { encoding: 'utf8', flag: 'wx', mode: 0o400 },
+      )
+      return verifyGoldImportV2PreimportCaptureDirectory({
+        backupRoot,
+        directory: outputDirectory,
+      })
+    },
+    stage: async () => {
+      const staged = await createStagedExclusiveOutputDirectory({
+        outputDirectory,
+        outputRoot: backupRoot,
+        stagingNonce: input.stagingNonce,
+      })
+      writeExclusiveOutputFiles(staged.identity, [
+        { bytes: Buffer.from(captureBytes, 'utf8'), name: 'preimport-state.json' },
+      ])
+      await assertExclusiveOutputDirectoryIdentity(staged.identity)
+      return {
+        staged,
+        stagedAt: input.now().toISOString(),
+        stagedPayloadSha256: captureFileSha256,
+      }
+    },
+    subject: 'capture',
   })
-  const markerDirectory = resolve(backupRoot, GOLD_IMPORT_V2_PREIMPORT_DUPLICATE_MARKER_DIRECTORY)
-  await mkdir(markerDirectory, { mode: 0o700, recursive: true })
-  if ((await realpath(markerDirectory)) !== markerDirectory) {
-    throw new Error('Post-V2 pre-import duplicate-marker directory is unsafe.')
-  }
-  let outputCreated = false
-  try {
-    await mkdir(outputDirectory, { mode: 0o700 })
-    outputCreated = true
-    await Promise.all([
-      writeFile(resolve(outputDirectory, 'preimport-state.json'), captureBytes, {
-        encoding: 'utf8',
-        flag: 'wx',
-        mode: 0o400,
-      }),
-      writeFile(resolve(outputDirectory, 'checksum-manifest.sha256'), manifestBytes, {
-        encoding: 'utf8',
-        flag: 'wx',
-        mode: 0o400,
-      }),
-      writeFile(resolve(outputDirectory, 'execution-receipt.json'), executionReceiptBytes, {
-        encoding: 'utf8',
-        flag: 'wx',
-        mode: 0o400,
-      }),
-    ])
-    await writeFile(
-      resolve(markerDirectory, `${input.captureId}.json`),
-      canonicalArtifactBytes(marker),
-      {
-        encoding: 'utf8',
-        flag: 'wx',
-        mode: 0o400,
-      },
-    )
-  } catch (error) {
-    if (outputCreated) await rm(outputDirectory, { force: true, recursive: true })
-    throw error
-  }
-  return verifyGoldImportV2PreimportCaptureDirectory({ backupRoot, directory: outputDirectory })
+  return result.published
 }
 
 function defaultDependencies(): GoldImportV2PreimportCaptureDependencies {
@@ -206,30 +287,31 @@ async function runGoldImportV2PreimportCaptureWithDependencies(
     runtime.loadRuntimeBundle(),
   ])
   const databaseEvidence = await runtime.collectDatabaseEvidence()
-  const [currentRepository, currentReceipt, currentRuntimeBundle] = await Promise.all([
-    runtime.inspectRepository(),
-    runtime.loadFinalizedReceipt(),
-    runtime.loadRuntimeBundle(),
-  ])
-  if (
-    canonicalJson(currentRepository) !== canonicalJson(repository) ||
-    canonicalJson(currentReceipt) !== canonicalJson(receipt) ||
-    canonicalJson(currentRuntimeBundle) !== canonicalJson(runtimeBundle)
-  ) {
-    throw new Error(
-      'Repository, finalized receipt, or capture runtime changed during read-only collection.',
-    )
-  }
   const capturedAt = runtime.now().toISOString()
   const capture = await runtime.writeCapture({
     backupRoot: GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
     captureId: runtime.randomCaptureId(),
     capturedAt,
-    databaseEvidence,
+    collectFinalDatabaseEvidence: runtime.collectDatabaseEvidence,
     executionNonce: runtime.randomNonce(),
+    initialDatabaseEvidence: databaseEvidence,
+    now: runtime.now,
     receipt,
+    revalidateNonDatabaseEvidence: async () => {
+      const [currentRepository, currentReceipt, currentRuntimeBundle] = await Promise.all([
+        runtime.inspectRepository(),
+        runtime.loadFinalizedReceipt(),
+        runtime.loadRuntimeBundle(),
+      ])
+      return {
+        receipt: currentReceipt,
+        repository: currentRepository,
+        runtimeBundle: currentRuntimeBundle,
+      }
+    },
     repository,
     runtimeBundle,
+    stagingNonce: runtime.randomNonce(),
   })
   return { capture }
 }

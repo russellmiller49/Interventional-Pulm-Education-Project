@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { realpathSync } from 'node:fs'
 import { lstat, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
@@ -27,8 +27,12 @@ import {
 import { assertKnownArguments, parseCliArguments, stringArgument } from './lib/cli'
 import {
   assertSafeOutputPathArgument,
-  createExclusiveOutputDirectory,
+  assertExclusiveOutputDirectoryIdentity,
+  createStagedExclusiveOutputDirectory,
+  discardStagedExclusiveOutputDirectory,
+  publishStagedExclusiveOutputDirectory,
   writeExclusiveOutputFiles,
+  type StagedExclusiveOutputDirectory,
 } from './lib/exclusive-output'
 import {
   compatibilityDevelopmentPlanningStateSchema,
@@ -87,6 +91,7 @@ import {
   validateGoldImportV2PackageReadinessState,
   validateGoldImportV2RepositoryEvidence,
   type GoldImportV2FinalizedReceiptEvidence,
+  type GoldImportV2FixedLocalState,
   type GoldImportV2RepositoryEvidence,
 } from './gold-import-v2-package-readiness'
 import {
@@ -102,6 +107,13 @@ import {
   type GoldImportV2PreimportRuntimeBundle,
   type GoldImportV2VerifiedPreimportCapture,
 } from './gold-import-v2-preimport-capture'
+import {
+  buildGoldImportV2DatabasePublicationObservationBinding,
+  runGoldImportV2DatabasePublicationProtocol,
+  validateGoldImportV2DatabasePublicationBracket,
+  type GoldImportV2DatabasePublicationBracket,
+} from './gold-import-v2-database-publication'
+import { fixedLocalTargetIdentityFromObservation } from './gold-import-v2-fixed-local-target'
 
 const EXECUTING_REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const EXECUTING_MODULE_PATH = realpathSync(fileURLToPath(import.meta.url))
@@ -109,7 +121,6 @@ const EXPECTED_PRODUCTION_MODULE_PATH = resolve(
   GOLD_IMPORT_V2_PRIMARY_CHECKOUT,
   'scripts/literature/generate-gold-import-compensation-package-v2.ts',
 )
-import type { ProtectedV2DatabaseEvidence } from './protected-gold-import-contract-v2-transition-evidence'
 
 export const GOLD_IMPORT_COMPENSATION_PACKAGE_GENERATOR_SCHEMA_VERSION_V2 =
   'gold-import-compensation-package-generator/2.0.0' as const
@@ -118,7 +129,7 @@ export const GOLD_IMPORT_COMPENSATION_PACKAGE_VERSION_V2 =
 export const GOLD_IMPORT_COMPENSATION_INITIAL_REVIEW_TIMESTAMP_V2 =
   '2026-08-08T00:00:00.000Z' as const
 export const GOLD_IMPORT_V2_PACKAGE_GENERATION_READINESS_SCHEMA_VERSION =
-  'literature-gold-v2-package-generation-readiness/1.0.0' as const
+  'literature-gold-v2-package-generation-readiness/1.1.0' as const
 export const GOLD_IMPORT_V2_PACKAGE_CAPTURE_ROOT = GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT
 
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/u)
@@ -390,10 +401,12 @@ export interface GeneratedGoldImportCompensationPackageV2 {
   migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   packageDescriptor: Record<string, unknown>
   productionReadiness: GoldImportV2PackageGenerationReadiness | null
+  publicationBracket: GoldImportV2DatabasePublicationBracket | null
   sourceArtifactBytes: Buffer
   sourceAuthorizationSet: GoldImportSourceAuthorizationSetV4
   verifiedBindings: {
     completeCatalogAuditIdentitySha256: string
+    databasePublicationBracketIdentitySha256: string | null
     developmentPlanningStateSha256: string
     expectedCatalogBindingSha256: string
     migrationSha256: string
@@ -454,6 +467,8 @@ export function validateGoldImportV2PackageGenerationReadiness(
     'executionNonce',
     'executionReceiptIdentitySha256',
     'executionReceiptSha256',
+    'publicationBracketFileSha256',
+    'publicationBracketIdentitySha256',
   ] as const
   if (
     canonicalJson(readiness.finalizedReceipt) !== canonicalJson(packageReadiness.receipt) ||
@@ -1510,10 +1525,12 @@ function generateGoldImportCompensationPackageV2Internal(
     migrationReceiptGate,
     packageDescriptor,
     productionReadiness,
+    publicationBracket: null,
     sourceArtifactBytes: Buffer.from(input.sources.finalArtifactBytes),
     sourceAuthorizationSet,
     verifiedBindings: {
       completeCatalogAuditIdentitySha256: audit.completeCatalogAudit.fullAuditIdentitySha256,
+      databasePublicationBracketIdentitySha256: null,
       developmentPlanningStateSha256: rawPlanningStateSha256,
       expectedCatalogBindingSha256: audit.expectedCatalog.bindingSha256,
       migrationSha256: sourceIdentities.migrationSha256,
@@ -1521,6 +1538,36 @@ function generateGoldImportCompensationPackageV2Internal(
       packageReadinessIdentitySha256: productionReadiness?.readinessIdentitySha256 ?? null,
       sourceArtifactSha256: artifact.artifactSha256,
       sourceAuthorizationSetSha256,
+    },
+  }
+}
+
+function bindGoldImportCompensationPackageV2PublicationBracket(
+  generated: GeneratedGoldImportCompensationPackageV2,
+  bracketInput: GoldImportV2DatabasePublicationBracket,
+): GeneratedGoldImportCompensationPackageV2 {
+  const bracket = validateGoldImportV2DatabasePublicationBracket(bracketInput)
+  if (
+    !generated.productionReadiness ||
+    generated.publicationBracket !== null ||
+    bracket.subject !== 'package_readiness' ||
+    bracket.stagedPayloadSha256 !== generated.manifestSha256
+  ) {
+    throw new Error('Cannot bind an invalid publication bracket to the production V2 package.')
+  }
+  const files = new Map(generated.files)
+  files.delete('checksum-manifest-v2.sha256')
+  files.set(PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2, canonicalPretty(bracket))
+  const manifest = buildManifest(files)
+  files.set('checksum-manifest-v2.sha256', manifest)
+  return {
+    ...generated,
+    files,
+    manifestSha256: sha256Bytes(manifest),
+    publicationBracket: bracket,
+    verifiedBindings: {
+      ...generated.verifiedBindings,
+      databasePublicationBracketIdentitySha256: bracket.bracketIdentitySha256,
     },
   }
 }
@@ -1576,6 +1623,8 @@ const BASE_REQUIRED_PACKAGE_FILES_V2 = [
 ] as const
 
 const PRODUCTION_PACKAGE_READINESS_FILE_V2 = 'post-v2-preimport-package-readiness-v2.json' as const
+const PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2 =
+  'database-publication-bracket-v2.json' as const
 
 export interface VerifiedGoldImportCompensationPackageV2IntrinsicFiles {
   compensationTemplate: CompensationPlanTemplateV2
@@ -1584,6 +1633,7 @@ export interface VerifiedGoldImportCompensationPackageV2IntrinsicFiles {
   manifestSha256: string
   migrationReceiptGate: GoldImportCompensationV2MigrationReceiptGate
   packageDescriptor: PackageDescriptorV2
+  publicationBracket: GoldImportV2DatabasePublicationBracket | null
   productionReadiness: GoldImportV2PackageGenerationReadiness | null
   sourceAuthorizationSet: GoldImportSourceAuthorizationSetV4
 }
@@ -1594,9 +1644,15 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
   const files = new DetachedReadonlyBufferMap(inputFiles)
   const actualFiles = [...files.keys()].sort((left, right) => left.localeCompare(right, 'en'))
   const hasProductionReadiness = files.has(PRODUCTION_PACKAGE_READINESS_FILE_V2)
+  const hasPublicationBracket = files.has(PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2)
+  if (hasProductionReadiness !== hasPublicationBracket) {
+    throw new Error('Production V2 package readiness and publication bracket must appear together.')
+  }
   const expectedFiles = [
     ...BASE_REQUIRED_PACKAGE_FILES_V2,
-    ...(hasProductionReadiness ? [PRODUCTION_PACKAGE_READINESS_FILE_V2] : []),
+    ...(hasProductionReadiness
+      ? [PRODUCTION_PACKAGE_READINESS_FILE_V2, PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2]
+      : []),
   ].sort((left, right) => left.localeCompare(right, 'en'))
   if (canonicalJson(actualFiles) !== canonicalJson(expectedFiles)) {
     throw new Error('V2 generated package has a missing or unexpected artifact.')
@@ -1672,6 +1728,13 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
         JSON.parse(files.get(PRODUCTION_PACKAGE_READINESS_FILE_V2)!.toString('utf8')) as unknown,
       )
     : null
+  const publicationBracket = hasPublicationBracket
+    ? validateGoldImportV2DatabasePublicationBracket(
+        JSON.parse(
+          files.get(PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2)!.toString('utf8'),
+        ) as unknown,
+      )
+    : null
   if (productionReadiness) {
     const state = productionReadiness.packageReadiness
     const receipt = productionReadiness.finalizedReceipt
@@ -1710,6 +1773,28 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
       throw new Error(
         'V2 package migration gate is not bound to its exact post-V2 readiness artifact.',
       )
+    }
+    const stagedFiles = new Map(files)
+    stagedFiles.delete('checksum-manifest-v2.sha256')
+    stagedFiles.delete(PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2)
+    const initialTargetIdentity = publicationBracket
+      ? fixedLocalTargetIdentityFromObservation(publicationBracket.initial.targetObservation)
+      : null
+    const finalTargetIdentity = publicationBracket
+      ? fixedLocalTargetIdentityFromObservation(publicationBracket.final.targetObservation)
+      : null
+    if (
+      !publicationBracket ||
+      publicationBracket.subject !== 'package_readiness' ||
+      publicationBracket.stagedPayloadSha256 !== sha256Bytes(buildManifest(stagedFiles)) ||
+      publicationBracket.initial.databaseStateIdentitySha256 !==
+        packageReadinessStateIdentitySha256(state) ||
+      publicationBracket.final.databaseStateIdentitySha256 !==
+        packageReadinessStateIdentitySha256(state) ||
+      canonicalJson(initialTargetIdentity) !== canonicalJson(state.database.observedTarget) ||
+      canonicalJson(finalTargetIdentity) !== canonicalJson(state.database.observedTarget)
+    ) {
+      throw new Error('Production V2 package publication bracket is stale or cross-bound.')
     }
   }
   const unsignedAuthorization = unsignedImportAuthorizationTemplateV2Schema.parse(
@@ -1765,7 +1850,10 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
   const expectedDescriptorArtifacts = Object.fromEntries(
     [...files.entries()]
       .filter(
-        ([name]) => name !== 'checksum-manifest-v2.sha256' && name !== 'package-descriptor-v2.json',
+        ([name]) =>
+          name !== 'checksum-manifest-v2.sha256' &&
+          name !== 'package-descriptor-v2.json' &&
+          name !== PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2,
       )
       .sort(([left], [right]) => left.localeCompare(right, 'en'))
       .map(([name, bytes]) => [name, sha256Bytes(bytes)]),
@@ -2060,6 +2148,7 @@ export function verifyGoldImportCompensationPackageV2IntrinsicFiles(
     migrationReceiptGate: canonicalFrozenClone(migrationReceiptGate),
     packageDescriptor: canonicalFrozenClone(packageDescriptor),
     productionReadiness: productionReadiness ? canonicalFrozenClone(productionReadiness) : null,
+    publicationBracket: publicationBracket ? canonicalFrozenClone(publicationBracket) : null,
     sourceAuthorizationSet: canonicalFrozenClone(sourceAuthorization),
   }
 }
@@ -2074,6 +2163,8 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
   const expectedVerifiedBindings = {
     completeCatalogAuditIdentitySha256:
       intrinsic.sourceAuthorizationSet.completeCatalogAudit.fullAuditIdentitySha256,
+    databasePublicationBracketIdentitySha256:
+      intrinsic.publicationBracket?.bracketIdentitySha256 ?? null,
     developmentPlanningStateSha256: sha256Canonical(authenticatedDevelopmentPlanningState),
     expectedCatalogBindingSha256: intrinsic.sourceAuthorizationSet.expectedCatalog.bindingSha256,
     migrationSha256: intrinsic.sourceAuthorizationSet.migration.sha256,
@@ -2091,6 +2182,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     canonicalJson(intrinsic.migrationReceiptGate) !== canonicalJson(input.migrationReceiptGate) ||
     canonicalJson(intrinsic.packageDescriptor) !== canonicalJson(input.packageDescriptor) ||
     canonicalJson(intrinsic.productionReadiness) !== canonicalJson(input.productionReadiness) ||
+    canonicalJson(intrinsic.publicationBracket) !== canonicalJson(input.publicationBracket) ||
     canonicalJson(intrinsic.sourceAuthorizationSet) !==
       canonicalJson(input.sourceAuthorizationSet) ||
     canonicalJson(expectedVerifiedBindings) !== canonicalJson(input.verifiedBindings) ||
@@ -2113,6 +2205,7 @@ export function verifyGeneratedGoldImportCompensationPackageV2(
     migrationReceiptGate: intrinsic.migrationReceiptGate,
     packageDescriptor: intrinsic.packageDescriptor,
     productionReadiness: intrinsic.productionReadiness,
+    publicationBracket: intrinsic.publicationBracket,
     sourceArtifactBytes,
     sourceAuthorizationSet: intrinsic.sourceAuthorizationSet,
     verifiedBindings: canonicalFrozenClone(expectedVerifiedBindings),
@@ -2169,7 +2262,7 @@ export function validateGoldImportCompensationPackageV2CliArguments(argv: string
 }
 
 interface GenerateGoldImportCompensationPackageV2ProductionDependencies {
-  collectDatabaseEvidence(): Promise<ProtectedV2DatabaseEvidence>
+  collectDatabaseEvidence(): Promise<GoldImportV2FixedLocalState>
   inspectRepository(): Promise<GoldImportV2RepositoryEvidence>
   loadFinalizedReceipt(): Promise<GoldImportV2FinalizedReceiptEvidence>
   loadRuntimeBundle(): Promise<GoldImportV2PreimportRuntimeBundle>
@@ -2237,7 +2330,7 @@ async function runGenerateGoldImportCompensationPackageV2WithDependencies(
   })
   const currentDatabaseEvidence = await dependencies.collectDatabaseEvidence()
   assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({
-    databaseEvidence: currentDatabaseEvidence,
+    fixedLocalState: currentDatabaseEvidence,
     expected: productionReadiness.packageReadiness,
     receipt: finalizedReceipt,
     repository,
@@ -2331,63 +2424,116 @@ async function runGenerateGoldImportCompensationPackageV2WithDependencies(
       'Signed protocol authorization',
     ),
   ])
-  const generated = verifyGeneratedGoldImportCompensationPackageV2(
-    generateGoldImportCompensationPackageV2Internal({
-      audit,
-      developmentPlanningState: JSON.parse(planningStateBytes.toString('utf8')) as unknown,
-      migrationReceiptGate,
-      productionReadiness,
-      sources: {
-        amendedAuthorizationBytes,
-        amendedAuthorizationExactTextBytes,
-        authorizationManifestBytes,
-        authorizationMappingBytes,
-        authorizationMappingCorrectionBytes,
-        authorizationMappingCorrectionManifestBytes,
-        finalArtifactBytes,
-        migrationBytes,
-        noteDispositionAudit: JSON.parse(noteDispositionAuditBytes.toString('utf8')) as unknown,
-        signedProtocolAuthorizationBytes,
-      },
-    }),
-  )
-  // Recollect the slower live database evidence first. Repository, receipt,
-  // runtime, and capture bytes are then inspected after that read completes so
-  // none of their final snapshots can go stale while the collector is running.
-  const finalDatabaseEvidence = await dependencies.collectDatabaseEvidence()
-  const [finalRepository, finalReceipt, finalRuntime, finalFirstCapture, finalSecondCapture] =
-    await Promise.all([
-      dependencies.inspectRepository(),
-      dependencies.loadFinalizedReceipt(),
-      dependencies.loadRuntimeBundle(),
-      dependencies.verifyCapture(captureDirectories[0]),
-      dependencies.verifyCapture(captureDirectories[1]),
-    ])
-  const finalReadiness = buildGoldImportV2PackageGenerationReadiness({
-    captures: [finalFirstCapture, finalSecondCapture],
-    currentFinalizedReceipt: finalReceipt,
-    currentRepository: finalRepository,
-    currentRuntimeBundle: finalRuntime,
-    now: dependencies.now(),
-  })
-  if (canonicalJson(finalReadiness) !== canonicalJson(productionReadiness)) {
-    throw new Error('V2 package repository, runtime, receipt, or capture evidence changed.')
-  }
-  assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({
-    databaseEvidence: finalDatabaseEvidence,
-    expected: finalReadiness.packageReadiness,
-    receipt: finalReceipt,
-    repository: finalRepository,
+  const stagedGenerated = generateGoldImportCompensationPackageV2Internal({
+    audit,
+    developmentPlanningState: JSON.parse(planningStateBytes.toString('utf8')) as unknown,
+    migrationReceiptGate,
+    productionReadiness,
+    sources: {
+      amendedAuthorizationBytes,
+      amendedAuthorizationExactTextBytes,
+      authorizationManifestBytes,
+      authorizationMappingBytes,
+      authorizationMappingCorrectionBytes,
+      authorizationMappingCorrectionManifestBytes,
+      finalArtifactBytes,
+      migrationBytes,
+      noteDispositionAudit: JSON.parse(noteDispositionAuditBytes.toString('utf8')) as unknown,
+      signedProtocolAuthorizationBytes,
+    },
   })
   const outputRoot = resolve(requiredArgument(arguments_, 'output-root'))
   const outputDirectory = resolve(requiredArgument(arguments_, 'output'))
   assertSafeOutputPathArgument(outputRoot, 'Output root')
   assertSafeOutputPathArgument(outputDirectory, 'Output directory')
-  const output = await createExclusiveOutputDirectory({ outputDirectory, outputRoot })
-  writeExclusiveOutputFiles(
-    output,
-    [...generated.files.entries()].map(([name, bytes]) => ({ bytes, name })),
-  )
+  let generated: GeneratedGoldImportCompensationPackageV2 | undefined
+  const publication = await runGoldImportV2DatabasePublicationProtocol<
+    StagedExclusiveOutputDirectory,
+    GeneratedGoldImportCompensationPackageV2
+  >({
+    discard: discardStagedExclusiveOutputDirectory,
+    finalize: async (staged, bracket) => {
+      generated = verifyGeneratedGoldImportCompensationPackageV2(
+        bindGoldImportCompensationPackageV2PublicationBracket(stagedGenerated, bracket),
+      )
+      writeExclusiveOutputFiles(staged.identity, [
+        {
+          bytes: generated.files.get(PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2)!,
+          name: PRODUCTION_PACKAGE_PUBLICATION_BRACKET_FILE_V2,
+        },
+        {
+          bytes: generated.files.get('checksum-manifest-v2.sha256')!,
+          name: 'checksum-manifest-v2.sha256',
+        },
+      ])
+      await assertExclusiveOutputDirectoryIdentity(staged.identity)
+    },
+    initial: buildGoldImportV2DatabasePublicationObservationBinding({
+      packageReadiness: productionReadiness.packageReadiness,
+      targetObservation: currentDatabaseEvidence.targetObservation,
+    }),
+    now: dependencies.now,
+    observeFinal: async () => {
+      // The live database/target reobservation occurs after every slow source read,
+      // package construction, and staged payload write.
+      const finalDatabaseEvidence = await dependencies.collectDatabaseEvidence()
+      const [finalRepository, finalReceipt, finalRuntime, finalFirstCapture, finalSecondCapture] =
+        await Promise.all([
+          dependencies.inspectRepository(),
+          dependencies.loadFinalizedReceipt(),
+          dependencies.loadRuntimeBundle(),
+          dependencies.verifyCapture(captureDirectories[0]),
+          dependencies.verifyCapture(captureDirectories[1]),
+        ])
+      const finalReadiness = buildGoldImportV2PackageGenerationReadiness({
+        captures: [finalFirstCapture, finalSecondCapture],
+        currentFinalizedReceipt: finalReceipt,
+        currentRepository: finalRepository,
+        currentRuntimeBundle: finalRuntime,
+        now: dependencies.now(),
+      })
+      if (canonicalJson(finalReadiness) !== canonicalJson(productionReadiness)) {
+        throw new Error('V2 package repository, runtime, receipt, or capture evidence changed.')
+      }
+      assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({
+        expected: finalReadiness.packageReadiness,
+        fixedLocalState: finalDatabaseEvidence,
+        receipt: finalReceipt,
+        repository: finalRepository,
+      })
+      return buildGoldImportV2DatabasePublicationObservationBinding({
+        packageReadiness: finalReadiness.packageReadiness,
+        targetObservation: finalDatabaseEvidence.targetObservation,
+      })
+    },
+    prior: verifiedFirstCapture.publicationBracket.final,
+    publish: async (staged) => {
+      await publishStagedExclusiveOutputDirectory(staged)
+      if (!generated) throw new Error('V2 package publication was not finalized.')
+      return generated
+    },
+    stage: async () => {
+      const staged = await createStagedExclusiveOutputDirectory({
+        outputDirectory,
+        outputRoot,
+        stagingNonce: randomBytes(32).toString('hex'),
+      })
+      writeExclusiveOutputFiles(
+        staged.identity,
+        [...stagedGenerated.files.entries()]
+          .filter(([name]) => name !== 'checksum-manifest-v2.sha256')
+          .map(([name, bytes]) => ({ bytes, name })),
+      )
+      await assertExclusiveOutputDirectoryIdentity(staged.identity)
+      return {
+        staged,
+        stagedAt: dependencies.now().toISOString(),
+        stagedPayloadSha256: stagedGenerated.manifestSha256,
+      }
+    },
+    subject: 'package_readiness',
+  })
+  generated = publication.published
   return {
     actionCounts: generated.importPlan.counts,
     manifestSha256: generated.manifestSha256,

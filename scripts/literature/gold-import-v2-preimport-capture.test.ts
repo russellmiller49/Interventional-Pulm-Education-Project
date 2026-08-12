@@ -47,6 +47,11 @@ import {
   PROTECTED_GOLD_IMPORT_CONTRACT_V2,
   PROTECTED_GOLD_IMPORT_CONTRACT_V2_VERIFIER,
 } from './protected-gold-import-contract-v2-source-identities'
+import { fixedLocalTargetIdentityFromObservation } from './gold-import-v2-fixed-local-target'
+import {
+  buildTestGoldImportV2FixedLocalTargetObservation,
+  buildTestGoldImportV2PublicationBracket,
+} from './gold-import-v2-lifecycle-test-fixture'
 
 const HEAD = '1234567890abcdef1234567890abcdef12345678'
 const CAPTURED_AT = '2026-08-11T05:00:00.000Z'
@@ -72,6 +77,7 @@ function repository(head = HEAD): GoldImportV2RepositoryEvidence {
 }
 
 function readiness(): GoldImportV2PackageReadinessState {
+  const targetObservation = buildTestGoldImportV2FixedLocalTargetObservation()
   return {
     authorities: {
       expectedCatalogBindingSha256: GOLD_IMPORT_V2_EXPECTED_CATALOG_BINDING_SHA256,
@@ -83,12 +89,12 @@ function readiness(): GoldImportV2PackageReadinessState {
       scope: 'development',
     },
     database: {
-      container: 'supabase_db_ip-literature-local',
-      database: 'postgres',
-      host: '127.0.0.1',
-      port: 55322,
-      profile: 'local_supabase_postgres_owner_v1',
-      project: 'ip-literature-local',
+      expectedConfiguration: {
+        database: 'postgres',
+        profile: 'local_supabase_postgres_owner_v1',
+        profileDirectlyObserved: false,
+      },
+      observedTarget: fixedLocalTargetIdentityFromObservation(targetObservation),
     },
     migrationLedger: {
       v1: { ...PROTECTED_GOLD_IMPORT_CONTRACT_V1, occurrence: 1 },
@@ -175,6 +181,11 @@ function capture(input: {
   runtimeBundle?: GoldImportV2PreimportRuntimeBundle
   capturedAt?: string
 }): GoldImportV2PreimportCapture {
+  const targetObservation = buildTestGoldImportV2FixedLocalTargetObservation({
+    observationStartedAt: input.id.startsWith('1')
+      ? '2026-08-11T04:59:50.000Z'
+      : '2026-08-11T04:59:51.000Z',
+  })
   return buildGoldImportV2PreimportCapture({
     captureId: input.id,
     captureRuntimeBundle: input.runtimeBundle ?? runtime(),
@@ -183,6 +194,7 @@ function capture(input: {
     outputDirectory: input.outputDirectory,
     packageReadiness: input.packageReadiness ?? readiness(),
     repository: input.repository ?? repository(),
+    targetObservation,
   })
 }
 
@@ -196,16 +208,27 @@ function verifiedCapture(input: {
   capturedAt?: string
 }): GoldImportV2VerifiedPreimportCapture {
   const built = capture(input)
+  const publicationBracket = buildTestGoldImportV2PublicationBracket({
+    initialTarget: built.targetObservation,
+    packageReadiness: built.packageReadiness,
+    stagedPayloadSha256: 'e'.repeat(64),
+    subject: 'capture',
+  })
+  const publicationBracketFileSha256 = sha(canonicalJson(publicationBracket))
   const executionReceipt = buildGoldImportV2PreimportExecutionReceipt({
     canonicalManifestSha256: 'd'.repeat(64),
     capture: built,
     captureFileSha256: 'e'.repeat(64),
+    publicationBracket,
+    publicationBracketFileSha256,
   })
   return {
     capture: built,
     directoryRealpath: built.outputDirectory,
     executionReceipt,
     executionReceiptSha256: sha(canonicalJson(executionReceipt)),
+    publicationBracket,
+    publicationBracketFileSha256,
   }
 }
 
@@ -296,6 +319,36 @@ describe('post-V2 pre-import capture contract', () => {
       mutate(changed)
       expect(() => validateGoldImportV2PackageReadinessState(changed)).toThrow()
     }
+  })
+
+  it('rejects a persisted readiness target with substituted Docker identity', () => {
+    const changed = clone(readiness())
+    const docker = changed.database.observedTarget.docker as {
+      containerHostname: string
+      containerId: string
+    }
+    docker.containerId = '1'.repeat(64)
+    docker.containerHostname = '1'.repeat(12)
+
+    expect(() => validateGoldImportV2PackageReadinessState(changed)).toThrow()
+  })
+
+  it('compares the complete derived target identity across readiness and capture', () => {
+    const changed = clone(readiness())
+    changed.database.observedTarget.docker.startedAt = '2026-08-11T03:59:00.000Z'
+    const { targetIdentitySha256: _oldHash, ...body } = changed.database.observedTarget
+    void _oldHash
+    changed.database.observedTarget.targetIdentitySha256 = sha(canonicalJson(body))
+
+    expect(validateGoldImportV2PackageReadinessState(changed)).toEqual(changed)
+    expect(() =>
+      capture({
+        id: '10000000-0000-4000-8000-000000000001',
+        nonce: '1'.repeat(64),
+        outputDirectory: '/backup/substituted-target',
+        packageReadiness: changed,
+      }),
+    ).toThrow('different local targets')
   })
 
   it('binds deterministic canonical database content to distinct execution identities', () => {
@@ -401,11 +454,21 @@ describe('post-V2 pre-import capture contract', () => {
       })
       const captureBytes = canonicalJson(built)
       const captureFileSha256 = sha(captureBytes)
-      const manifestBytes = `${captureFileSha256}  preimport-state.json\n`
+      const publicationBracket = buildTestGoldImportV2PublicationBracket({
+        initialTarget: built.targetObservation,
+        packageReadiness: built.packageReadiness,
+        stagedPayloadSha256: captureFileSha256,
+        subject: 'capture',
+      })
+      const publicationBracketBytes = canonicalJson(publicationBracket)
+      const publicationBracketFileSha256 = sha(publicationBracketBytes)
+      const manifestBytes = `${publicationBracketFileSha256}  database-publication-bracket.json\n${captureFileSha256}  preimport-state.json\n`
       const executionReceipt = buildGoldImportV2PreimportExecutionReceipt({
         canonicalManifestSha256: sha(manifestBytes),
         capture: built,
         captureFileSha256,
+        publicationBracket,
+        publicationBracketFileSha256,
       })
       const executionBytes = canonicalJson(executionReceipt)
       const markerDirectory = resolve(root, GOLD_IMPORT_V2_PREIMPORT_DUPLICATE_MARKER_DIRECTORY)
@@ -416,6 +479,7 @@ describe('post-V2 pre-import capture contract', () => {
       })
       await Promise.all([
         writeFile(resolve(directory, 'preimport-state.json'), captureBytes),
+        writeFile(resolve(directory, 'database-publication-bracket.json'), publicationBracketBytes),
         writeFile(resolve(directory, 'checksum-manifest.sha256'), manifestBytes),
         writeFile(resolve(directory, 'execution-receipt.json'), executionBytes),
         writeFile(resolve(markerDirectory, `${built.captureId}.json`), canonicalJson(marker)),

@@ -21,19 +21,29 @@ import {
   type GoldImportV2PackageReadinessState,
   type GoldImportV2RepositoryEvidence,
 } from './gold-import-v2-package-readiness'
+import {
+  fixedLocalTargetIdentityFromObservation,
+  goldImportV2FixedLocalTargetObservationSchema,
+  validateGoldImportV2FixedLocalTargetObservation,
+  type GoldImportV2FixedLocalTargetObservation,
+} from './gold-import-v2-fixed-local-target'
+import {
+  validateGoldImportV2DatabasePublicationBracket,
+  type GoldImportV2DatabasePublicationBracket,
+} from './gold-import-v2-database-publication'
 
 export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_SCHEMA_VERSION =
-  'literature-gold-v2-preimport-capture/1.0.0' as const
+  'literature-gold-v2-preimport-capture/1.1.0' as const
 export const GOLD_IMPORT_V2_PREIMPORT_EXECUTION_RECEIPT_SCHEMA_VERSION =
-  'literature-gold-v2-preimport-capture-execution-receipt/1.0.0' as const
+  'literature-gold-v2-preimport-capture-execution-receipt/1.1.0' as const
 export const GOLD_IMPORT_V2_PREIMPORT_DUPLICATE_MARKER_SCHEMA_VERSION =
-  'literature-gold-v2-preimport-capture-duplicate-marker/1.0.0' as const
+  'literature-gold-v2-preimport-capture-duplicate-marker/1.1.0' as const
 export const GOLD_IMPORT_V2_PREIMPORT_RUNTIME_BUNDLE_SCHEMA_VERSION =
-  'literature-gold-v2-preimport-capture-runtime-bundle/1.0.0' as const
+  'literature-gold-v2-preimport-capture-runtime-bundle/1.1.0' as const
 export const GOLD_IMPORT_V2_PREIMPORT_PAIR_SCHEMA_VERSION =
-  'literature-gold-v2-preimport-capture-pair/1.0.0' as const
+  'literature-gold-v2-preimport-capture-pair/1.1.0' as const
 export const GOLD_IMPORT_V2_PREIMPORT_DATABASE_CONTENT_SCHEMA_VERSION =
-  'literature-gold-v2-preimport-database-content/1.0.0' as const
+  'literature-gold-v2-preimport-database-content/1.1.0' as const
 export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_PURPOSE =
   'post_v2_pre_import_package_readiness' as const
 export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_TRUST_MODEL =
@@ -46,11 +56,15 @@ export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT =
 
 export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_FILES = [
   'checksum-manifest.sha256',
+  'database-publication-bracket.json',
   'execution-receipt.json',
   'preimport-state.json',
 ] as const
 
-export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_MANIFEST_FILES = ['preimport-state.json'] as const
+export const GOLD_IMPORT_V2_PREIMPORT_CAPTURE_MANIFEST_FILES = [
+  'database-publication-bracket.json',
+  'preimport-state.json',
+] as const
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
 const COMMIT_PATTERN = /^[a-f0-9]{40}$/u
@@ -203,6 +217,7 @@ const captureBodySchema = z
       })
       .strict(),
     schemaVersion: z.literal(GOLD_IMPORT_V2_PREIMPORT_CAPTURE_SCHEMA_VERSION),
+    targetObservation: goldImportV2FixedLocalTargetObservationSchema,
   })
   .strict()
 
@@ -240,12 +255,18 @@ export function buildGoldImportV2PreimportCapture(input: {
   outputDirectory: string
   packageReadiness: GoldImportV2PackageReadinessState
   repository: GoldImportV2RepositoryEvidence
+  targetObservation: GoldImportV2FixedLocalTargetObservation
 }): GoldImportV2PreimportCapture {
   const packageReadiness = validateGoldImportV2PackageReadinessState(input.packageReadiness)
   const repository = validateGoldImportV2RepositoryEvidence(input.repository)
   const captureRuntimeBundle = validateGoldImportV2PreimportRuntimeBundle(
     input.captureRuntimeBundle,
   )
+  const targetObservation = validateGoldImportV2FixedLocalTargetObservation(input.targetObservation)
+  const targetIdentity = fixedLocalTargetIdentityFromObservation(targetObservation)
+  if (!sameCanonical(packageReadiness.database.observedTarget, targetIdentity)) {
+    throw new Error('Capture readiness and target observation identify different local targets.')
+  }
   validateCaptureTime({
     capturedAt: input.capturedAt,
     finalizedLatestMtimeMs: packageReadiness.receipt.finalizedLatestMtimeMs,
@@ -273,6 +294,7 @@ export function buildGoldImportV2PreimportCapture(input: {
       writeCapableDatabaseClientConstructed: false,
     },
     schemaVersion: GOLD_IMPORT_V2_PREIMPORT_CAPTURE_SCHEMA_VERSION,
+    targetObservation,
   })
   return goldImportV2PreimportCaptureSchema.parse({
     ...body,
@@ -299,6 +321,8 @@ const executionReceiptBodySchema = z
     capturedAt: isoTimestampSchema,
     executionNonce: sha256Schema,
     outputDirectory: absolutePathSchema,
+    publicationBracketFileSha256: sha256Schema,
+    publicationBracketIdentitySha256: sha256Schema,
     repositoryHeadSha: commitSchema,
     schemaVersion: z.literal(GOLD_IMPORT_V2_PREIMPORT_EXECUTION_RECEIPT_SCHEMA_VERSION),
   })
@@ -316,8 +340,22 @@ export function buildGoldImportV2PreimportExecutionReceipt(input: {
   canonicalManifestSha256: string
   capture: GoldImportV2PreimportCapture
   captureFileSha256: string
+  publicationBracket: GoldImportV2DatabasePublicationBracket
+  publicationBracketFileSha256: string
 }): GoldImportV2PreimportExecutionReceipt {
   const capture = validateGoldImportV2PreimportCapture(input.capture)
+  const publicationBracket = validateGoldImportV2DatabasePublicationBracket(
+    input.publicationBracket,
+  )
+  if (
+    publicationBracket.subject !== 'capture' ||
+    publicationBracket.stagedPayloadSha256 !== input.captureFileSha256 ||
+    publicationBracket.initial.databaseStateIdentitySha256 !==
+      capture.packageReadinessIdentitySha256 ||
+    !sameCanonical(publicationBracket.initial.targetObservation, capture.targetObservation)
+  ) {
+    throw new Error('Capture publication bracket does not bind the staged capture.')
+  }
   const body = executionReceiptBodySchema.parse({
     canonicalManifestSha256: input.canonicalManifestSha256,
     captureFileSha256: input.captureFileSha256,
@@ -327,6 +365,8 @@ export function buildGoldImportV2PreimportExecutionReceipt(input: {
     capturedAt: capture.capturedAt,
     executionNonce: capture.executionNonce,
     outputDirectory: capture.outputDirectory,
+    publicationBracketFileSha256: input.publicationBracketFileSha256,
+    publicationBracketIdentitySha256: publicationBracket.bracketIdentitySha256,
     repositoryHeadSha: capture.repository.headSha,
     schemaVersion: GOLD_IMPORT_V2_PREIMPORT_EXECUTION_RECEIPT_SCHEMA_VERSION,
   })
@@ -401,6 +441,8 @@ export interface GoldImportV2VerifiedPreimportCapture {
   readonly directoryRealpath: string
   readonly executionReceipt: GoldImportV2PreimportExecutionReceipt
   readonly executionReceiptSha256: string
+  readonly publicationBracket: GoldImportV2DatabasePublicationBracket
+  readonly publicationBracketFileSha256: string
 }
 
 function parseCanonicalJson(bytes: string, label: string): unknown {
@@ -467,13 +509,15 @@ export async function verifyGoldImportV2PreimportCaptureDirectory(input: {
   for (const name of names) {
     await assertRegularNonSymlink(resolve(directory, name), `Capture file ${name}`)
   }
-  const [captureBytes, manifestBytes, executionBytes] = await Promise.all([
+  const [captureBytes, manifestBytes, executionBytes, publicationBracketBytes] = await Promise.all([
     readFile(resolve(directory, 'preimport-state.json'), 'utf8'),
     readFile(resolve(directory, 'checksum-manifest.sha256'), 'utf8'),
     readFile(resolve(directory, 'execution-receipt.json'), 'utf8'),
+    readFile(resolve(directory, 'database-publication-bracket.json'), 'utf8'),
   ])
   const captureFileSha256 = sha256Bytes(captureBytes)
-  const expectedManifestBytes = `${captureFileSha256}  preimport-state.json\n`
+  const publicationBracketFileSha256 = sha256Bytes(publicationBracketBytes)
+  const expectedManifestBytes = `${publicationBracketFileSha256}  database-publication-bracket.json\n${captureFileSha256}  preimport-state.json\n`
   if (manifestBytes !== expectedManifestBytes) {
     throw new Error('Post-V2 pre-import capture manifest is invalid.')
   }
@@ -483,11 +527,16 @@ export async function verifyGoldImportV2PreimportCaptureDirectory(input: {
   const executionReceipt = validateGoldImportV2PreimportExecutionReceipt(
     parseCanonicalJson(executionBytes, 'Post-V2 pre-import execution receipt'),
   )
+  const publicationBracket = validateGoldImportV2DatabasePublicationBracket(
+    parseCanonicalJson(publicationBracketBytes, 'Post-V2 pre-import database publication bracket'),
+  )
   const executionReceiptSha256 = sha256Bytes(executionBytes)
   const expectedReceipt = buildGoldImportV2PreimportExecutionReceipt({
     canonicalManifestSha256: sha256Bytes(manifestBytes),
     capture,
     captureFileSha256,
+    publicationBracket,
+    publicationBracketFileSha256,
   })
   if (capture.outputDirectory !== directory || !sameCanonical(executionReceipt, expectedReceipt)) {
     throw new Error(
@@ -518,6 +567,8 @@ export async function verifyGoldImportV2PreimportCaptureDirectory(input: {
     directoryRealpath: directory,
     executionReceipt,
     executionReceiptSha256,
+    publicationBracket,
+    publicationBracketFileSha256,
   })
 }
 
@@ -531,6 +582,8 @@ const pairBindingSchema = z
     executionNonce: sha256Schema,
     executionReceiptIdentitySha256: sha256Schema,
     executionReceiptSha256: sha256Schema,
+    publicationBracketIdentitySha256: sha256Schema,
+    publicationBracketFileSha256: sha256Schema,
   })
   .strict()
 
@@ -576,6 +629,8 @@ function pairBinding(capture: GoldImportV2VerifiedPreimportCapture) {
     executionNonce: capture.capture.executionNonce,
     executionReceiptIdentitySha256: capture.executionReceipt.executionReceiptIdentitySha256,
     executionReceiptSha256: capture.executionReceiptSha256,
+    publicationBracketIdentitySha256: capture.publicationBracket.bracketIdentitySha256,
+    publicationBracketFileSha256: capture.publicationBracketFileSha256,
   })
 }
 
@@ -596,6 +651,7 @@ export function buildGoldImportV2PreimportCapturePair(input: {
     ...capture,
     capture: validateGoldImportV2PreimportCapture(capture.capture),
     executionReceipt: validateGoldImportV2PreimportExecutionReceipt(capture.executionReceipt),
+    publicationBracket: validateGoldImportV2DatabasePublicationBracket(capture.publicationBracket),
   }))
   const first = captures[0]!
   const second = captures[1]!
@@ -609,6 +665,10 @@ export function buildGoldImportV2PreimportCapturePair(input: {
       second.executionReceipt.executionReceiptIdentitySha256,
     ],
     [first.executionReceiptSha256, second.executionReceiptSha256],
+    [
+      first.publicationBracket.bracketIdentitySha256,
+      second.publicationBracket.bracketIdentitySha256,
+    ],
   ] as const
   if (distinctValues.some(([left, right]) => left === right)) {
     throw new Error('Capture pair must contain two distinct trusted-operator capture instances.')
@@ -617,6 +677,13 @@ export function buildGoldImportV2PreimportCapturePair(input: {
   if (!Number.isFinite(nowMs)) throw new Error('Capture-pair verification time is invalid.')
   for (const [index, verified] of captures.entries()) {
     const capture = verified.capture
+    const captureTargetIdentity = fixedLocalTargetIdentityFromObservation(capture.targetObservation)
+    const initialTargetIdentity = fixedLocalTargetIdentityFromObservation(
+      verified.publicationBracket.initial.targetObservation,
+    )
+    const finalTargetIdentity = fixedLocalTargetIdentityFromObservation(
+      verified.publicationBracket.final.targetObservation,
+    )
     validateCaptureTime({
       capturedAt: capture.capturedAt,
       finalizedLatestMtimeMs: capture.packageReadiness.receipt.finalizedLatestMtimeMs,
@@ -636,7 +703,17 @@ export function buildGoldImportV2PreimportCapturePair(input: {
         capture.captureRuntimeBundle.aggregateSha256 ||
       verified.executionReceipt.capturedAt !== capture.capturedAt ||
       verified.executionReceipt.executionNonce !== capture.executionNonce ||
-      verified.executionReceipt.repositoryHeadSha !== capture.repository.headSha
+      verified.executionReceipt.repositoryHeadSha !== capture.repository.headSha ||
+      verified.executionReceipt.publicationBracketIdentitySha256 !==
+        verified.publicationBracket.bracketIdentitySha256 ||
+      verified.executionReceipt.publicationBracketFileSha256 !==
+        verified.publicationBracketFileSha256 ||
+      verified.publicationBracket.initial.databaseStateIdentitySha256 !==
+        capture.packageReadinessIdentitySha256 ||
+      verified.publicationBracket.final.databaseStateIdentitySha256 !==
+        capture.packageReadinessIdentitySha256 ||
+      !sameCanonical(initialTargetIdentity, captureTargetIdentity) ||
+      !sameCanonical(finalTargetIdentity, captureTargetIdentity)
     ) {
       throw new Error(`Post-V2 pre-import capture ${index + 1} is stale or incompletely bound.`)
     }
@@ -695,9 +772,14 @@ export const GOLD_IMPORT_V2_PREIMPORT_RUNTIME_REQUIRED_FILES = Object.freeze([
   'package-lock.json',
   'package.json',
   'scripts/literature/capture-gold-import-v2-preimport-state.ts',
+  'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
   'scripts/literature/generate-gold-import-compensation-package-v2.ts',
+  'scripts/literature/gold-import-v2-database-publication.ts',
+  'scripts/literature/gold-import-v2-fixed-local-target.ts',
+  'scripts/literature/gold-import-v2-lifecycle-compatibility.ts',
   'scripts/literature/gold-import-v2-package-readiness.ts',
   'scripts/literature/gold-import-v2-preimport-capture.ts',
+  'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
   'scripts/require-primary-checkout.mjs',
   'tsconfig.json',
 ])

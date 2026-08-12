@@ -86,6 +86,11 @@ import {
 
 const execFileAsync = promisify(execFile)
 
+/**
+ * Historical PR #95 delivery verifier. This module intentionally preserves the
+ * exact 2.0 evidence tuple and is not a current PR #97 readiness authority.
+ */
+export const GOLD_IMPORT_CONTRACT_V2_BACKUP_AUTHORITY_SCOPE = 'historical_pr95_only' as const
 export const GOLD_IMPORT_CONTRACT_V2_BACKUP_SCHEMA_VERSION =
   'gold-import-contract-v2-forward-repair-backup/2.0.0' as const
 export const GOLD_IMPORT_CONTRACT_V2_BACKUP_RECEIPT_SCHEMA_VERSION =
@@ -1929,17 +1934,18 @@ function validateSemanticEvidenceDocuments(input: {
 
 function usage(): string {
   return `
-Create a checksum-verified additive delivery backup for the gold import contract V2 repair.
+Verify or reproduce the historical PR #95 gold import contract V2 repair backup.
 
 Usage:
-  npm run literature:backup-gold-import-contract-v2-forward-repair -- \\
+  npm run literature:backup-gold-import-contract-v2-forward-repair:historical-pr95 -- \\
     --output-root <EXISTING_BACKUP_ROOT> \\
     --output <NEW_GOLD_IMPORT_CONTRACT_V2_BACKUP_DIRECTORY> \\
     --evidence <NAME>=<FILE_OR_DIRECTORY> [--evidence ...]
 
-The command is file-only. It requires the exact clean task branch, copies every
+This historical-only command is file-only. It requires the exact PR #95 task branch, copies every
 tracked path changed from origin/main, requires the complete named evidence
-inventory, rejects symlinks and output collisions, and never contacts a database.
+inventory, rejects symlinks and output collisions, and never contacts a database. It is not a
+current post-V2 capture/readiness authority.
 
 Required evidence names:
   ${REQUIRED_GOLD_IMPORT_CONTRACT_V2_BACKUP_EVIDENCE_NAMES.join(', ')}
