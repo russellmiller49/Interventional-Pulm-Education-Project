@@ -13,11 +13,14 @@ import { z } from 'zod'
  *
  * The accepted grammar is deliberately exactly what the committed release universe uses: an
  * RFC 3339 / ISO 8601 UTC instant with a four-digit year, a calendar-valid date, a full
- * time-of-day including seconds, optional fractional seconds, and the `Z` designator —
- * `2026-07-31T00:00:00.000Z`. Offset forms (`+02:00`), timezone-less forms, date-only forms,
- * and lowercase designators are refused even when they name a real instant: no published
- * release has ever carried one, and admitting a second spelling of the same instant buys
- * nothing while multiplying the formats every downstream reader must prove it handles.
+ * time-of-day including seconds, optional fractional seconds of one to three digits, and the
+ * `Z` designator — `2026-07-31T00:00:00.000Z`. Publication timestamps have millisecond
+ * resolution, and the grammar says so: a fourth fractional digit would be precision the
+ * ordering cannot honor, so it is refused rather than accepted-and-discarded (P92-C2c).
+ * Offset forms (`+02:00`), timezone-less forms, date-only forms, and lowercase designators
+ * are refused even when they name a real instant: no published release has ever carried one,
+ * and admitting a second spelling of the same instant buys nothing while multiplying the
+ * formats every downstream reader must prove it handles.
  *
  * Validation is `z.string().datetime()` — the repository's existing strict datetime parser,
  * already calendar-aware (leap years, days-in-month, hour/minute/second ranges, anchored,
@@ -29,15 +32,19 @@ import { z } from 'zod'
  */
 
 /**
- * Shape and extraction in one expression: seconds required, `Z` required, fraction optional.
+ * Shape and extraction in one expression: seconds required, `Z` required, fraction optional
+ * at one to three digits — the millisecond resolution the derived instant actually carries.
  * Calendar validity (leap years, month lengths, field ranges) is the zod check's job — this
- * regex only pins the components zod's grammar leaves optional and captures the fields.
+ * regex pins the components zod's grammar leaves looser (optional seconds, unbounded
+ * fraction length) and captures the fields.
  */
-const PUBLISHED_INSTANT_FIELDS = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?Z$/
+const PUBLISHED_INSTANT_FIELDS =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z$/
 
 export const PUBLISHED_RELEASE_INSTANT_CONTRACT =
   'a calendar-valid RFC 3339 / ISO 8601 UTC instant with a four-digit year, seconds, ' +
-  'optional fractional seconds, and the "Z" designator — e.g. "2026-07-31T00:00:00.000Z"'
+  'optional fractional seconds of one to three digits (millisecond resolution), and the ' +
+  '"Z" designator — e.g. "2026-07-31T00:00:00.000Z"'
 
 /**
  * The one schema deciding whether a string is a canonical publication instant. Exported for
@@ -57,9 +64,10 @@ export type PublishedReleaseInstantParse =
       /** The authored string, byte-for-byte — generated output must carry it unchanged. */
       raw: string
       /**
-       * The instant as epoch milliseconds, for chronological comparison only. Fractional
-       * digits beyond milliseconds are truncated, so instants equal to the millisecond
-       * compare equal and fall to the caller's deterministic tiebreak.
+       * The instant as epoch milliseconds, for chronological comparison only. The grammar
+       * admits at most three fractional digits, so this value carries the string's full
+       * precision: only spellings of the same instant (`.1` vs `.10`) compare equal, and
+       * those fall to the caller's deterministic tiebreak.
        */
       epochMilliseconds: number
     }
@@ -128,9 +136,9 @@ export function parsePublishedReleaseInstant(value: unknown): PublishedReleaseIn
     )
   }
   const [, year, month, day, hour, minute, second, fraction] = fields
-  // Milliseconds are the first three fractional digits, right-padded — "5" is 500ms. Digits
-  // beyond milliseconds are truncated by design; see `epochMilliseconds` on the result type.
-  const milliseconds = fraction ? Number(`${fraction}000`.slice(0, 3)) : 0
+  // One to three fractional digits, right-padded to milliseconds — "5" is 500ms, "12" is
+  // 120ms. Nothing is discarded: the grammar refuses a fourth digit outright.
+  const milliseconds = fraction ? Number(fraction.padEnd(3, '0')) : 0
 
   // Arithmetic, not parsing. Every field is already range-valid (calendar-checked by the
   // schema), so nothing can roll over. `Date.UTC` is avoided for the same reason the Date

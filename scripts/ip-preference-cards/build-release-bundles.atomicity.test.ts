@@ -578,6 +578,15 @@ describe('publication instants are generator-validated before any write (P92-C2b
     setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', null)
     expectUnorderableFailure(fixture, ['records no publication instant'])
   })
+
+  it('sub-millisecond fractional precision fails the literal CLI before any write (P92-C2c)', () => {
+    const fixture = makeFixture()
+    // A real instant, spelled with a fourth fractional digit the millisecond-resolution
+    // contract cannot honor. Accepting-and-truncating it made two different instants
+    // compare equal; the grammar now refuses it before anything orders by it.
+    setSeedPublishedAt(fixture, 'release-ebus-tbna-v1-1', '2026-08-11T00:00:00.1234Z')
+    expectUnorderableFailure(fixture, ['2026-08-11T00:00:00.1234Z'])
+  })
 })
 
 describe('release generation with valid inputs still writes everything', () => {

@@ -462,16 +462,19 @@ the output).
 
 **The contract** (`domain/published-instant.ts`, `parsePublishedReleaseInstant`): a frozen
 release's `publishedAt` must be a calendar-valid RFC 3339 / ISO 8601 UTC instant — four-digit
-year, seconds required, optional fractional seconds, uppercase `T` and `Z`, anchored, no
-offset forms, no timezone-less or date-only forms, non-strings and null refused. Validation
-is the repository's `z.string().datetime()` (calendar-aware: leap years, days-in-month,
-field ranges) composed with one shape refinement requiring the seconds component; the same
-regex extracts the fields, so acceptance and extraction cannot drift. The epoch value is
-derived arithmetically from the validated fields (`setUTCFullYear`/`setUTCHours` on a zero
-date — never `Date.parse`, the `Date` string constructor, or `Date.UTC`'s 0–99 year
-remapping), and the authored string is preserved byte-for-byte in every artifact. Fractional
-digits beyond milliseconds are truncated for ordering; instants equal to the millisecond
-fall to the release-id tiebreak, deterministically.
+year, seconds required, optional fractional seconds of **one to three digits**, uppercase
+`T` and `Z`, anchored, no offset forms, no timezone-less or date-only forms, non-strings and
+null refused. Publication timestamps have millisecond resolution, and the grammar says so:
+a fourth fractional digit would be precision the ordering cannot honor, so it is refused
+rather than accepted-and-discarded (P92-C2c). Validation is the repository's
+`z.string().datetime()` (calendar-aware: leap years, days-in-month, field ranges) composed
+with one shape refinement requiring the seconds component and bounding the fraction; the
+same regex extracts the fields, so acceptance and extraction cannot drift. The epoch value
+is derived arithmetically from the validated fields (`setUTCFullYear`/`setUTCHours` on a
+zero date — never `Date.parse`, the `Date` string constructor, or `Date.UTC`'s 0–99 year
+remapping), and the authored string is preserved byte-for-byte in every artifact — `.1` and
+`.10` stay as authored while naming the same 100 ms instant, which falls to the release-id
+tiebreak, deterministically.
 
 **Where it is enforced.** `comparePublicationOrder` compares parsed instants and throws
 rather than ordering an unparseable value; `validateReleasePublicationInstants` holds every

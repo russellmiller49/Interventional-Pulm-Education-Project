@@ -61,6 +61,11 @@ describe('parsePublishedReleaseInstant', () => {
     ['an object', { publishedAt: '2026-08-11T12:00:00.000Z' }],
     ['an array', ['2026-08-11T12:00:00.000Z']],
     ['a fractional point with no digits', '2026-08-11T12:00:00.Z'],
+    [
+      'four fractional digits (precision the millisecond ordering cannot honor)',
+      '2026-08-11T00:00:00.1234Z',
+    ],
+    ['nine fractional digits', '2026-08-11T12:34:56.123456789Z'],
     ['a comma as the fraction separator', '2026-08-11T12:00:00,000Z'],
     ['a missing seconds component', '2026-08-11T12:00Z'],
     ['a lowercase time designator', '2026-08-11t12:00:00.000Z'],
@@ -91,9 +96,15 @@ describe('parsePublishedReleaseInstant', () => {
     ['2026-08-10T00:00:00.000Z', Date.UTC(2026, 7, 10, 0, 0, 0, 0)],
     // The plain UTC `Z` form without fractional seconds.
     ['2026-08-11T12:34:56Z', Date.UTC(2026, 7, 11, 12, 34, 56, 0)],
-    // Fractional-second forms: shorter and longer than milliseconds, right-padded/truncated.
+    // Every fraction length the millisecond-resolution grammar admits: one to three digits,
+    // right-padded — ".1" is 100ms, ".12" is 120ms, never re-spelled.
     ['2026-08-11T12:34:56.5Z', Date.UTC(2026, 7, 11, 12, 34, 56, 500)],
-    ['2026-08-11T12:34:56.123456789Z', Date.UTC(2026, 7, 11, 12, 34, 56, 123)],
+    ['2026-08-11T12:34:56.1Z', Date.UTC(2026, 7, 11, 12, 34, 56, 100)],
+    ['2026-08-11T12:34:56.10Z', Date.UTC(2026, 7, 11, 12, 34, 56, 100)],
+    ['2026-08-11T12:34:56.100Z', Date.UTC(2026, 7, 11, 12, 34, 56, 100)],
+    ['2026-08-11T12:34:56.12Z', Date.UTC(2026, 7, 11, 12, 34, 56, 120)],
+    ['2026-08-11T12:34:56.120Z', Date.UTC(2026, 7, 11, 12, 34, 56, 120)],
+    ['2026-08-11T12:34:56.123Z', Date.UTC(2026, 7, 11, 12, 34, 56, 123)],
     // A real leap day parses (2024 is a leap year) — the calendar check is exact, not a ban.
     ['2024-02-29T23:59:59.999Z', Date.UTC(2024, 1, 29, 23, 59, 59, 999)],
     // The epoch itself, so the derivation is pinned at zero.
@@ -153,14 +164,51 @@ describe('comparePublicationOrder over parsed instants (P92-C2b)', () => {
     expect(comparePublicationOrder(tenth, half)).toBeLessThan(0)
   })
 
-  it('truncates beyond milliseconds, so sub-millisecond differences fall to the id tiebreak', () => {
-    // Two genuinely different instants at micro precision compare equal at the contract's
-    // millisecond resolution — documented truncation, resolved deterministically by id.
-    const later = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.1239Z' }
-    const earlier = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.1234Z' }
-    expect(comparePublicationOrder(earlier, later)).toBeLessThan(0)
-    expect(comparePublicationOrder(later, earlier)).toBeGreaterThan(0)
-    expect([later, earlier].sort(comparePublicationOrder)[0].releaseBundleId).toBe('release-a-v1-0')
+  it('orders every admitted precision chronologically: .001 < .01 < .1 and .120 < .121', () => {
+    const ms1 = { releaseBundleId: 'release-ms', publishedAt: '2026-08-11T00:00:00.001Z' }
+    const ms10 = { releaseBundleId: 'release-cs', publishedAt: '2026-08-11T00:00:00.01Z' }
+    const ms100 = { releaseBundleId: 'release-ds', publishedAt: '2026-08-11T00:00:00.1Z' }
+    expect(comparePublicationOrder(ms1, ms10)).toBeLessThan(0)
+    expect(comparePublicationOrder(ms10, ms100)).toBeLessThan(0)
+    expect(comparePublicationOrder(ms1, ms100)).toBeLessThan(0)
+    const ms120 = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.120Z' }
+    const ms121 = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.121Z' }
+    // Chronology decides — the id tiebreak (which would pick release-a) never runs.
+    expect(comparePublicationOrder(ms120, ms121)).toBeLessThan(0)
+  })
+
+  it('treats .1/.10 and .12/.120 as spellings of one instant, resolved by the id tiebreak', () => {
+    const tenthLong = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.10Z' }
+    const tenthShort = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.1Z' }
+    expect(comparePublicationOrder(tenthShort, tenthLong)).toBeLessThan(0)
+    expect([tenthLong, tenthShort].sort(comparePublicationOrder)[0].releaseBundleId).toBe(
+      'release-a-v1-0',
+    )
+    const p12 = parsePublishedReleaseInstant('2026-08-11T00:00:00.12Z')
+    const p120 = parsePublishedReleaseInstant('2026-08-11T00:00:00.120Z')
+    expect(p12.ok && p120.ok && p12.epochMilliseconds === p120.epochMilliseconds).toBe(true)
+  })
+
+  it('rejects sub-millisecond precision before it can enter publication ordering', () => {
+    // The old contract accepted ".1234Z" and truncated it, so two genuinely different
+    // instants compared equal and fell to the id tiebreak (P92-C2c). The grammar now
+    // refuses a fourth digit: the comparator throws its unorderable error rather than
+    // silently tiebreaking, and the validator types the same value as unorderable.
+    const subMs = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.1234Z' }
+    const valid = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.123Z' }
+    expect(() => comparePublicationOrder(subMs, valid)).toThrow('release-b-v1-0')
+    expect(() => comparePublicationOrder(subMs, valid)).toThrow('2026-08-11T00:00:00.1234Z')
+    const messages = validateReleasePublicationInstants([
+      {
+        releaseBundleId: 'release-b-v1-0',
+        releaseState: 'published',
+        publishedAt: '2026-08-11T00:00:00.1234Z',
+      },
+    ])
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_unorderable_release',
+    ])
+    expect(messages[0].message).toContain('2026-08-11T00:00:00.1234Z')
   })
 
   it('throws on a malformed instant, naming the release and the raw value', () => {
