@@ -6,6 +6,7 @@ import {
 } from '@/features/device-intelligence/institutional/contracts'
 import {
   createFictionalInstitutionalOverlayReadAdapter,
+  diagnosticVisibleInProjection,
   lookupCapability,
   lookupInventory,
 } from '@/features/device-intelligence/institutional/fictional-readonly-adapter'
@@ -140,10 +141,35 @@ describe('D2A fictional adapter isolation and no-leak behavior', () => {
       ),
     ).toBe(true)
     expect(
+      restricted.dataset.diagnostics.some(
+        (diagnostic) =>
+          diagnostic.diagnosticId === 'fictional-east-diagnostic-confidential-capability',
+      ),
+    ).toBe(false)
+    expect(
+      confidential.dataset.diagnostics.some(
+        (diagnostic) =>
+          diagnostic.diagnosticId === 'fictional-east-diagnostic-confidential-capability',
+      ),
+    ).toBe(true)
+    expect(
       confidential.dataset.capabilities.records.every(
         (record) => record.context.scope.siteId === FICTIONAL_HARBOR_EAST_SCOPE.siteId,
       ),
     ).toBe(true)
+  })
+
+  it('defensively omits an otherwise-visible diagnostic when its target was excluded', () => {
+    expect(
+      diagnosticVisibleInProjection(
+        {
+          accessClassification: 'institution_restricted',
+          relatedRecordId: 'fictional-east-capability-beta',
+        },
+        'institution_restricted',
+        new Set(['fictional-east-capability-alpha']),
+      ),
+    ).toBe(false)
   })
 
   it('treats a missing capability as unknown, never unavailable', () => {
