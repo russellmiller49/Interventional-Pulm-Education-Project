@@ -116,6 +116,12 @@ function queryPayload(): ShadowRdCorpusInventoryQueryPayload {
         published: 400,
       },
     },
+    targetAudit: {
+      currentUser: 'postgres',
+      databaseName: 'postgres',
+      sessionUser: 'postgres',
+      unixSocketConnection: true,
+    },
     queryId: 'literature-shadow-rd-fixed-local-aggregate-inventory/1.0.0',
     schemaVersion: 'literature-shadow-rd-corpus-inventory/1.0.0',
   }
@@ -150,15 +156,17 @@ describe('shadow-R&D corpus inventory contract', () => {
     expect(SHADOW_RD_CORPUS_INVENTORY_SQL).toContain(
       'CASE WHEN count(item.id) = 630 THEN 630 ELSE NULL END',
     )
-    expect(SHADOW_RD_CORPUS_INVENTORY_SQL).toContain(
-      'public.literature_gold_development_membership_hash_v1(batch.id)',
-    )
+    expect(SHADOW_RD_CORPUS_INVENTORY_SQL).toContain('development_projection.membership_sha256')
+    expect(SHADOW_RD_CORPUS_INVENTORY_SQL).toContain('extensions.digest(')
   })
 
   test('refuses SQL substitution and mutation statements', () => {
     expect(() =>
       assertShadowRdCorpusInventorySqlBoundary(
-        SHADOW_RD_CORPUS_INVENTORY_SQL.replace('CROSS JOIN development_summary;', 'DELETE FROM x;'),
+        SHADOW_RD_CORPUS_INVENTORY_SQL.replace(
+          'CROSS JOIN development_summary\nCROSS JOIN target_audit;',
+          'DELETE FROM x;',
+        ),
       ),
     ).toThrow('exact committed aggregate SQL')
   })

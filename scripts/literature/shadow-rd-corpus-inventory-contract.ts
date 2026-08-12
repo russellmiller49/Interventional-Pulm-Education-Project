@@ -149,6 +149,14 @@ const shadowRdCorpusInventoryQueryPayloadObjectSchema = z
         conferenceAbstractCount: nonNegativeIntegerSchema,
       })
       .strict(),
+    targetAudit: z
+      .object({
+        currentUser: z.literal('postgres'),
+        databaseName: z.literal('postgres'),
+        sessionUser: z.literal('postgres'),
+        unixSocketConnection: z.literal(true),
+      })
+      .strict(),
     queryId: z.literal(SHADOW_RD_CORPUS_INVENTORY_QUERY_ID),
     schemaVersion: z.literal(SHADOW_RD_CORPUS_INVENTORY_SCHEMA_VERSION),
   })
@@ -287,6 +295,7 @@ export const shadowRdCorpusInventoryArtifactSchema = z
         rolledBack: z.literal(true),
         statementTimeout: z.literal('120s'),
         transactionReadOnly: z.literal(true),
+        targetAudit: shadowRdCorpusInventoryQueryPayloadObjectSchema.shape.targetAudit,
       })
       .strict(),
     queryId: z.literal(SHADOW_RD_CORPUS_INVENTORY_QUERY_ID),
@@ -372,6 +381,33 @@ development_membership AS (
   INNER JOIN development_batch AS batch ON batch.id = item.batch_id
   WHERE item.dataset_split = 'development'
 ),
+development_projection AS (
+  SELECT pg_catalog.encode(
+    extensions.digest(
+      pg_catalog.convert_to(
+        '{"datasetSplit":"development","items":[' || coalesce(
+          string_agg(
+            '{"itemId":' || to_jsonb(item.id::text)::text ||
+            ',"pmid":' || to_jsonb(item.pmid)::text || '}',
+            ',' ORDER BY item.id
+          ),
+          ''
+        ) || '],"projectionVersion":"literature-gold-development-membership-v1"}',
+        'UTF8'
+      ),
+      'sha256'
+    ),
+    'hex'
+  ) AS membership_sha256
+  FROM development_membership AS item
+),
+target_audit AS (
+  SELECT
+    current_database() AS database_name,
+    current_user AS current_user_name,
+    session_user AS session_user_name,
+    inet_server_addr() IS NULL AS unix_socket_connection
+),
 development_summary AS (
   SELECT
     count(item.id)::integer AS observed_count,
@@ -382,14 +418,15 @@ development_summary AS (
         AND review.id IS NOT NULL
         AND review.lifecycle_state = 'effective'
     )::integer AS physician_reviewed_count,
-    public.literature_gold_development_membership_hash_v1(batch.id) AS membership_sha256
+    development_projection.membership_sha256 AS membership_sha256
   FROM development_batch AS batch
   LEFT JOIN development_membership AS item ON true
   LEFT JOIN public.literature_articles AS article ON article.pmid = item.pmid
   LEFT JOIN public.literature_gold_set_reviews AS review
     ON review.id = item.current_review_id
    AND review.item_id = item.id
-  GROUP BY batch.id
+  CROSS JOIN development_projection
+  GROUP BY batch.id, development_projection.membership_sha256
 ),
 article_summary AS (
   SELECT
@@ -509,6 +546,12 @@ SELECT jsonb_build_object(
   'schemaVersion', 'literature-shadow-rd-corpus-inventory/1.0.0',
   'queryId', 'literature-shadow-rd-fixed-local-aggregate-inventory/1.0.0',
   'capturedAt', to_char(transaction_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+  'targetAudit', jsonb_build_object(
+    'databaseName', target_audit.database_name,
+    'currentUser', target_audit.current_user_name,
+    'sessionUser', target_audit.session_user_name,
+    'unixSocketConnection', target_audit.unix_socket_connection
+  ),
   'generalCorpus', jsonb_build_object(
     'totalArticleRows', article_summary.total_rows,
     'uniquePmidCount', article_summary.unique_pmids,
@@ -634,7 +677,8 @@ SELECT jsonb_build_object(
   )
 )
 FROM article_summary
-CROSS JOIN development_summary;
+CROSS JOIN development_summary
+CROSS JOIN target_audit;
 ROLLBACK;`
 
 function stripSqlCommentsAndLiterals(sql: string): string {
@@ -717,6 +761,7 @@ export function parseShadowRdCorpusInventoryQueryOutput(
       rolledBack: true,
       statementTimeout: '120s',
       transactionReadOnly: true,
+      targetAudit: payload.targetAudit,
     },
     queryId: payload.queryId,
     schemaVersion: payload.schemaVersion,
