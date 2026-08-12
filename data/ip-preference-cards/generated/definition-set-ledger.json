@@ -1,0 +1,3374 @@
+{
+  "formatVersion": "1.0",
+  "entries": [
+    {
+      "definitionSetId": "definition-set-compatibility-rules",
+      "definition": [
+        {
+          "id": "RULE-BALLOON-WORKING-CHANNEL",
+          "sourceRoleCode": "AIRWAY_BALLOON_DILATOR",
+          "targetRoleCode": "FLEX_SCOPE_THERAPEUTIC",
+          "sourceAttribute": "delivery_system_od_mm",
+          "targetAttribute": "min_working_channel_mm",
+          "operator": "lte",
+          "expectedValue": null,
+          "unit": "mm",
+          "severity": "blocking",
+          "message": "The selected balloon delivery-system outer diameter exceeds the selected scope working channel.",
+          "missingValueMessage": "Balloon-to-scope dimensional compatibility is unknown and requires current product/IFU review.",
+          "active": true,
+          "modifierCodes": ["BALLOON_DILATION"],
+          "evidenceSourceId": null
+        }
+      ],
+      "definitionHash": "cb817cdebf486593db1930e26bf64f30f14168336dd24976b5998c1ff7a89663",
+      "firstPublishedByReleaseBundleId": "release-bronch-ablation-v1-0"
+    },
+    {
+      "definitionSetId": "definition-set-modifiers",
+      "definition": [
+        {
+          "code": "AIRBORNE_ISOLATION",
+          "name": "Airborne isolation",
+          "groupCode": "location",
+          "description": "PPE bundle, single-use scope option, specimen transport, infection-control prompts — Local infection-control profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy",
+          "preview": [
+            "PPE bundle, single-use scope option, specimen transport, infection-control prompts"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "AIRWAY_ETT",
+          "name": "Endotracheal tube",
+          "groupCode": "anesthesia_airway",
+          "description": "Swivel adapter; scope outside-diameter and working-channel validation against ETT inside diameter — Typed compatibility rule",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy",
+          "preview": [
+            "Swivel adapter; scope outside-diameter and working-channel validation against ETT inside diameter"
+          ],
+          "conflictsWith": ["AIRWAY_LMA"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "AIRWAY_LMA",
+          "name": "Laryngeal mask airway",
+          "groupCode": "anesthesia_airway",
+          "description": "LMA-compatible bronchoscopy adapter and scope-size validation — Typed compatibility rule",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy",
+          "preview": ["LMA-compatible bronchoscopy adapter and scope-size validation"],
+          "conflictsWith": ["AIRWAY_ETT"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ANES_GENERAL",
+          "name": "General anesthesia",
+          "groupCode": "anesthesia_airway",
+          "description": "Airway device, anesthesia circuit/adapters, ventilation equipment, room readiness checks — Anesthesia profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy / thoracoscopy",
+          "preview": [
+            "Airway device, anesthesia circuit/adapters, ventilation equipment, room readiness checks"
+          ],
+          "conflictsWith": ["ANES_MOD_SED"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ANES_MOD_SED",
+          "name": "Moderate sedation",
+          "groupCode": "anesthesia_airway",
+          "description": "Oxygen delivery, bite block, monitoring, reversal/emergency readiness prompts — Medication details remain local",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Flexible bronchoscopy / pleural",
+          "preview": [
+            "Oxygen delivery, bite block, monitoring, reversal/emergency readiness prompts"
+          ],
+          "conflictsWith": ["ANES_GENERAL"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "APC",
+          "name": "Argon plasma coagulation",
+          "groupCode": "therapeutic",
+          "description": "Adds APC platform, applicators, gas, cable, and safety readiness.",
+          "appliesTo": "Therapeutic / rigid",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 6 requirements", "Adds 1 blocking compatibility check"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "apc-230",
+              "modifierCode": "APC",
+              "sequence": 230,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-PLATFORM",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-PLATFORM",
+                  "roleCode": "ENERGY_PLATFORM",
+                  "label": "APC energy platform",
+                  "genericRequirement": "Locally approved APC generator/platform.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100321,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-231",
+              "modifierCode": "APC",
+              "sequence": 231,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-PROBE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-PROBE",
+                  "roleCode": "APC_PROBE_FLEX",
+                  "label": "Flexible APC probe",
+                  "genericRequirement": "Probe compatible with the selected platform and working channel.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100322,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-232",
+              "modifierCode": "APC",
+              "sequence": 232,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-RIGID",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-RIGID",
+                  "roleCode": "APC_APPLICATOR_RIGID",
+                  "label": "Rigid APC applicator",
+                  "genericRequirement": "Applicator compatible with the selected platform and rigid system.",
+                  "requiredness": "conditional",
+                  "dependencyRule": "Rigid system in use",
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100323,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-233",
+              "modifierCode": "APC",
+              "sequence": 233,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-GAS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-GAS",
+                  "roleCode": "APC_GAS_ACCESSORY",
+                  "label": "APC gas supply and accessories",
+                  "genericRequirement": "Locally governed gas source and connections.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100324,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-234",
+              "modifierCode": "APC",
+              "sequence": 234,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-CABLE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-CABLE",
+                  "roleCode": "ENERGY_CABLE_ADAPTER",
+                  "label": "APC cable or adapter",
+                  "genericRequirement": "Matched cable or adapter for the selected platform and applicator.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100325,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-235",
+              "modifierCode": "APC",
+              "sequence": 235,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-FIRE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-FIRE",
+                  "roleCode": "LOCAL_AIRWAY_FIRE_READINESS",
+                  "label": "Airway-fire readiness line",
+                  "genericRequirement": "Local airway-fire risk readiness and equipment check.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100326,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-239",
+              "modifierCode": "APC",
+              "sequence": 239,
+              "actionType": "validate_compatibility",
+              "payload": {
+                "ruleId": "RULE-APC-PLATFORM-FAMILY"
+              }
+            }
+          ]
+        },
+        {
+          "code": "BALLOON_DILATION",
+          "name": "Balloon dilation",
+          "groupCode": "therapeutic",
+          "description": "Promotes the balloon, guidewire, and inflation requirements.",
+          "appliesTo": "Airway stenosis / CAO",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Promotes 3 requirements", "Adds 1 compatibility check"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "balloon_dilation-250",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 250,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "AIRWAY_BALLOON_DILATOR",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "balloon_dilation-251",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 251,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "PULMONARY_GUIDEWIRE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "balloon_dilation-252",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 252,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "INFLATION_DEVICE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "balloon_dilation-255",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 255,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-AIRWAY-MEASUREMENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-AIRWAY-MEASUREMENT",
+                  "roleCode": "LOCAL_AIRWAY_MEASUREMENT",
+                  "label": "Airway measurement readiness",
+                  "genericRequirement": "Local measurement workflow; this module provides no sizing recommendation.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100331,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "balloon_dilation-259",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 259,
+              "actionType": "validate_compatibility",
+              "payload": {
+                "ruleId": "RULE-BALLOON-WORKING-CHANNEL"
+              }
+            }
+          ]
+        },
+        {
+          "code": "CBCT",
+          "name": "Cone-beam CT / 3D imaging",
+          "groupCode": "imaging_navigation",
+          "description": "CBCT platform, table/room requirements, sterile draping, registration and confirmation workflow — Platform-specific profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy / ablation",
+          "preview": [
+            "CBCT platform, table/room requirements, sterile draping, registration and confirmation workflow"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "CRYOTHERAPY",
+          "name": "Cryotherapy / cryoextraction",
+          "groupCode": "therapeutic",
+          "description": "Cryosurgery unit, gas, footswitch, probe, adapters, thaw/specimen workflow — Typed platform compatibility",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Therapeutic / rigid / TBLC",
+          "preview": ["Cryosurgery unit, gas, footswitch, probe, adapters, thaw/specimen workflow"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "DIGITAL_DRAINAGE",
+          "name": "Digital pleural drainage",
+          "groupCode": "pleural",
+          "description": "Replaces the conventional drainage-system role with a digital system.",
+          "appliesTo": "Chest tube / PAL / thoracoscopy",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "preview": ["Replaces 1 drainage requirement"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "digital_drainage-420",
+              "modifierCode": "DIGITAL_DRAINAGE",
+              "sequence": 420,
+              "actionType": "replace_role",
+              "targetRoleCode": "GENERIC_DRAINAGE_UNIT",
+              "payload": {
+                "roleCode": "DIGITAL_DRAINAGE_SYSTEM",
+                "label": "Digital pleural drainage system",
+                "genericRequirement": "Local digital drainage capital asset and compatible disposable set."
+              }
+            }
+          ]
+        },
+        {
+          "code": "ELECTROCAUTERY",
+          "name": "Electrocautery",
+          "groupCode": "therapeutic",
+          "description": "Generator, probe/knife/snare/forceps, cable/adapters, return electrode if required, fire prompts — Typed platform compatibility",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Therapeutic / rigid",
+          "preview": [
+            "Generator, probe/knife/snare/forceps, cable/adapters, return electrode if required, fire prompts"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ENV_BRONCH_SUITE",
+          "name": "Bronchoscopy suite",
+          "groupCode": "location",
+          "description": "Suite-specific tower, suction, monitor, storage locations — Room profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "All",
+          "preview": ["Suite-specific tower, suction, monitor, storage locations"],
+          "conflictsWith": ["ENV_ICU_BEDSIDE", "ENV_OR"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ENV_ICU_BEDSIDE",
+          "name": "ICU / bedside",
+          "groupCode": "location",
+          "description": "Portable tower or single-use scope, bedside ultrasound, portable suction, airway adapter, transport cart — Room profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Flexible bronchoscopy, PDT, pleural drainage",
+          "preview": [
+            "Portable tower or single-use scope, bedside ultrasound, portable suction, airway adapter, transport cart"
+          ],
+          "conflictsWith": ["ENV_BRONCH_SUITE", "ENV_OR"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ENV_OR",
+          "name": "Operating room",
+          "groupCode": "location",
+          "description": "OR table/positioning, anesthesia circuit, electrosurgical safety, room-specific devices — Room profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "All bronchoscopy / pleural procedures",
+          "preview": [
+            "OR table/positioning, anesthesia circuit, electrosurgical safety, room-specific devices"
+          ],
+          "conflictsWith": ["ENV_BRONCH_SUITE", "ENV_ICU_BEDSIDE"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "FLUOROSCOPY",
+          "name": "Fluoroscopy",
+          "groupCode": "imaging_navigation",
+          "description": "Adds C-arm, sterile drape, and radiation-safety resources.",
+          "appliesTo": "Peripheral, stent, TBLC, pleural",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 3 imaging requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "fluoroscopy-310",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 310,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CARM",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CARM",
+                  "roleCode": "C_ARM_RESOURCE",
+                  "label": "C-arm resource",
+                  "genericRequirement": "Booked and ready C-arm resource.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100351,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "fluoroscopy-311",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 311,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CARM-DRAPE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CARM-DRAPE",
+                  "roleCode": "C_ARM_STERILE_DRAPE",
+                  "label": "C-arm sterile drape",
+                  "genericRequirement": "Locally compatible sterile C-arm drape.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "sterile_field",
+                  "proceduralPhase": "pre_induction_or_sedation",
+                  "setupSequence": 100352,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "fluoroscopy-312",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 312,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RADIATION",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RADIATION",
+                  "roleCode": "RADIATION_SAFETY_BUNDLE",
+                  "label": "Radiation-safety resources",
+                  "genericRequirement": "Local radiation PPE, signage, dosimetry, and readiness workflow.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100353,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "fluoroscopy-315",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 315,
+              "actionType": "require_room_capability",
+              "payload": {
+                "capability": "fluoroscopy"
+              }
+            }
+          ]
+        },
+        {
+          "code": "HIGH_BLEED_RISK",
+          "name": "High bleeding risk",
+          "groupCode": "risk_rescue",
+          "description": "Appends the major-airway-bleeding equipment-readiness module.",
+          "appliesTo": "Biopsy / tumor debulking / TBLC",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds major-airway-bleeding rescue module"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "high_bleed_risk-330",
+              "modifierCode": "HIGH_BLEED_RISK",
+              "sequence": 330,
+              "actionType": "add_rescue_module",
+              "payload": {
+                "code": "MAJOR_AIRWAY_BLEEDING"
+              }
+            }
+          ]
+        },
+        {
+          "code": "JET_VENT",
+          "name": "Jet ventilation",
+          "groupCode": "anesthesia_airway",
+          "description": "Adds jet ventilation equipment and manual-ventilation backup.",
+          "appliesTo": "Rigid bronchoscopy",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 3 ventilation requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "jet_vent-290",
+              "modifierCode": "JET_VENT",
+              "sequence": 290,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-JET-VENTILATOR",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-JET-VENTILATOR",
+                  "roleCode": "JET_VENTILATOR",
+                  "label": "Jet ventilator",
+                  "genericRequirement": "Locally approved jet-ventilation capital asset.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100341,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "jet_vent-291",
+              "modifierCode": "JET_VENT",
+              "sequence": 291,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-JET-ACCESSORY",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-JET-ACCESSORY",
+                  "roleCode": "JET_VENT_ACCESSORY",
+                  "label": "Jet-ventilation tubing and connector set",
+                  "genericRequirement": "Locally matched jet-ventilation accessories and pressure source.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100342,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "jet_vent-292",
+              "modifierCode": "JET_VENT",
+              "sequence": 292,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-MANUAL-VENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-MANUAL-VENT",
+                  "roleCode": "MANUAL_VENTILATION_BACKUP",
+                  "label": "Manual-ventilation backup",
+                  "genericRequirement": "Local manual-ventilation backup setup.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "emergency_cart",
+                  "proceduralPhase": "rescue_or_contingency",
+                  "setupSequence": 100343,
+                  "openHoldStatus": "emergency_pull",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "jet_vent-295",
+              "modifierCode": "JET_VENT",
+              "sequence": 295,
+              "actionType": "require_room_capability",
+              "payload": {
+                "capability": "jet_ventilation"
+              }
+            }
+          ]
+        },
+        {
+          "code": "LASER",
+          "name": "Laser",
+          "groupCode": "therapeutic",
+          "description": "Laser console/fiber, eyewear/signage, smoke evacuation, fire safety, credential/readiness prompt — Room credential and readiness rule",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "appliesTo": "Therapeutic / rigid",
+          "preview": [
+            "Laser console/fiber, eyewear/signage, smoke evacuation, fire safety, credential/readiness prompt"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "NAVIGATION",
+          "name": "Electromagnetic or other navigation",
+          "groupCode": "imaging_navigation",
+          "description": "Navigation workstation, field generator or patches, locatable guide/catheter, registration accessories — Platform-specific bundle",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy",
+          "preview": [
+            "Navigation workstation, field generator or patches, locatable guide/catheter, registration accessories"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "PLEURAL_MANOMETRY",
+          "name": "Pleural manometry",
+          "groupCode": "pleural",
+          "description": "Manometer or pressure-transducer system, stopcocks/tubing, measurement workflow — Local equipment profile",
+          "releaseState": "phase_2",
+          "active": true,
+          "appliesTo": "Thoracentesis / pleural drainage",
+          "preview": [
+            "Manometer or pressure-transducer system, stopcocks/tubing, measurement workflow"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "RADIAL_EBUS",
+          "name": "Radial EBUS",
+          "groupCode": "imaging_navigation",
+          "description": "Probe, drive unit, guide sheath if used, probe-protection and localization supplies — Scope/channel compatibility",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy",
+          "preview": [
+            "Probe, drive unit, guide sheath if used, probe-protection and localization supplies"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "RIGID_AIRWAY",
+          "name": "Rigid bronchoscopy",
+          "groupCode": "anesthesia_airway",
+          "description": "Adds the rigid airway system and holds the flexible scope as backup.",
+          "appliesTo": "Therapeutic bronchoscopy / stent / foreign body",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 7 rigid-airway requirements", "Changes flexible scope to backup"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "rigid_airway-200",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 200,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "FLEX_SCOPE_THERAPEUTIC",
+              "payload": {
+                "value": "backup"
+              }
+            },
+            {
+              "id": "rigid_airway-201",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 201,
+              "actionType": "set_open_hold_status",
+              "targetRoleCode": "FLEX_SCOPE_THERAPEUTIC",
+              "payload": {
+                "value": "hold_unopened"
+              }
+            },
+            {
+              "id": "rigid_airway-210",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 210,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-HEAD",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-HEAD",
+                  "roleCode": "RIGID_BRONCHOSCOPE_HEAD",
+                  "label": "Rigid bronchoscope head/base",
+                  "genericRequirement": "Hospital-local rigid bronchoscope system head or base.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100301,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-211",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 211,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-BARREL",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-BARREL",
+                  "roleCode": "RIGID_BRONCHOSCOPE_BARREL",
+                  "label": "Rigid tracheoscope/bronchoscope barrel fixture",
+                  "genericRequirement": "A locally reviewed rigid barrel configuration; no size is recommended by this module.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100302,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-212",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 212,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-ACCESSORY",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-ACCESSORY",
+                  "roleCode": "RIGID_BRONCHOSCOPE_ACCESSORY",
+                  "label": "Rigid ventilation elements, ports, and caps",
+                  "genericRequirement": "Matched accessories for the local rigid system.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100303,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-213",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 213,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-TELESCOPE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-TELESCOPE",
+                  "roleCode": "RIGID_TELESCOPE",
+                  "label": "Rigid telescope",
+                  "genericRequirement": "Locally reviewed rigid visualization telescope.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100304,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-214",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 214,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-LIGHT-CABLE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-LIGHT-CABLE",
+                  "roleCode": "ENDOSCOPY_LIGHT_CABLE",
+                  "label": "Fiber-optic light cable",
+                  "genericRequirement": "Locally compatible light cable.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100305,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-215",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 215,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-FORCEPS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-FORCEPS",
+                  "roleCode": "RIGID_FORCEPS",
+                  "label": "Rigid forceps set",
+                  "genericRequirement": "Matched rigid handle, shaft, and head set.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100306,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-216",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 216,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-SUCTION",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-SUCTION",
+                  "roleCode": "RIGID_SUCTION_CATHETER",
+                  "label": "Rigid suction catheter",
+                  "genericRequirement": "Locally reviewed rigid suction catheter.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100307,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-219",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 219,
+              "actionType": "require_room_capability",
+              "payload": {
+                "capability": "rigid_bronchoscopy"
+              }
+            }
+          ]
+        },
+        {
+          "code": "ROBOTIC",
+          "name": "Robotic bronchoscopy",
+          "groupCode": "imaging_navigation",
+          "description": "Robotic console, catheter, vision probe, platform-specific tools and drapes — Platform-specific bundle",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy",
+          "preview": [
+            "Robotic console, catheter, vision probe, platform-specific tools and drapes"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ROSE",
+          "name": "Rapid on-site evaluation",
+          "groupCode": "sampling",
+          "description": "Adds local cytology supplies, personnel, and station readiness.",
+          "appliesTo": "EBUS / peripheral / diagnostic",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 2 local cytology requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "rose-100",
+              "modifierCode": "ROSE",
+              "sequence": 100,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-ROSE-STATION",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-ROSE-STATION",
+                  "roleCode": "LOCAL_ROSE_STATION",
+                  "label": "ROSE station and personnel readiness",
+                  "genericRequirement": "Local cytology personnel, microscope or telecytology resource, and communication path.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100201,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rose-101",
+              "modifierCode": "ROSE",
+              "sequence": 101,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-ROSE-SUPPLIES",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-ROSE-SUPPLIES",
+                  "roleCode": "LOCAL_CYTOLOGY_SUPPLIES",
+                  "label": "ROSE slides, fixatives, and cell-block supplies",
+                  "genericRequirement": "Local cytology supplies and labeling workflow.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "specimen_handling",
+                  "setupSequence": 100202,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "code": "SPEC_FLOW",
+          "name": "Flow cytometry",
+          "groupCode": "sampling",
+          "description": "Flow medium/container, labels, transport-time prompt — Local laboratory profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "EBUS / pleural / biopsy",
+          "preview": ["Flow medium/container, labels, transport-time prompt"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "SPEC_MICRO",
+          "name": "Microbiology specimens",
+          "groupCode": "sampling",
+          "description": "Sterile traps/containers, transport media, labels, biosafety transport — Local laboratory profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy / pleural",
+          "preview": ["Sterile traps/containers, transport media, labels, biosafety transport"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "SPEC_MOLECULAR",
+          "name": "Molecular testing / NGS",
+          "groupCode": "sampling",
+          "description": "Adds local specimen preservation, transport, and adequacy readiness.",
+          "appliesTo": "EBUS / peripheral / biopsy",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 2 specimen-workflow requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "spec_molecular-110",
+              "modifierCode": "SPEC_MOLECULAR",
+              "sequence": 110,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-MOLECULAR-SPECIMEN",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-MOLECULAR-SPECIMEN",
+                  "roleCode": "LOCAL_MOLECULAR_SPECIMEN_BUNDLE",
+                  "label": "Molecular-testing specimen bundle",
+                  "genericRequirement": "Local preservation, container, labeling, and transport requirements for molecular testing.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "specimen_handling",
+                  "setupSequence": 100211,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "spec_molecular-111",
+              "modifierCode": "SPEC_MOLECULAR",
+              "sequence": 111,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-MOLECULAR-READINESS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-MOLECULAR-READINESS",
+                  "roleCode": "LOCAL_MOLECULAR_READINESS",
+                  "label": "Molecular-testing readiness check",
+                  "genericRequirement": "Confirm the locally governed pathology adequacy and transport workflow.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100212,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "code": "STENT_PLACE",
+          "name": "Stent placement",
+          "groupCode": "therapeutic",
+          "description": "Adds generic stent, deployment, measurement, and backup requirements.",
+          "appliesTo": "CAO / stenosis / fistula",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 3 requirements", "Promotes sizing tools", "Flags unmapped backup size"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "stent_place-270",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 270,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-STENT-CONFIG",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-STENT-CONFIG",
+                  "roleCode": "AIRWAY_STENT_CONFIGURATION",
+                  "label": "Airway stent configuration",
+                  "genericRequirement": "Locally approved stent configuration selected outside this educational prototype.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100361,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "stent_place-271",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 271,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-STENT-TOOLS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-STENT-TOOLS",
+                  "roleCode": "STENT_DEPLOYMENT_TOOLS",
+                  "label": "Stent deployment/loading and measurement tools",
+                  "genericRequirement": "Matched deployment, loading, measurement, and retrieval tools.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100362,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "stent_place-272",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 272,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-STENT-BACKUP",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-STENT-BACKUP",
+                  "roleCode": "AIRWAY_STENT_BACKUP",
+                  "label": "Backup stent size/configuration",
+                  "genericRequirement": "Locally selected backup configuration; this module provides no size guidance.",
+                  "requiredness": "backup",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "rescue_or_contingency",
+                  "setupSequence": 100363,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "stent_place-275",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 275,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "AIRWAY_STENT_SIZING_DEVICE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "stent_place-276",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 276,
+              "actionType": "raise_warning",
+              "targetSlotId": "OPS-STENT-BACKUP",
+              "payload": {
+                "code": "backup_stent_unmapped",
+                "message": "Backup stent size/configuration is not locally mapped; no clinical size is inferred."
+              }
+            }
+          ]
+        },
+        {
+          "code": "STENT_REMOVE",
+          "name": "Stent removal",
+          "groupCode": "therapeutic",
+          "description": "Rigid extraction forceps, flexible graspers, retrieval tools, granulation treatment, replacement backup — Dedicated recipe",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "appliesTo": "Airway stent procedure",
+          "preview": [
+            "Rigid extraction forceps, flexible graspers, retrieval tools, granulation treatment, replacement backup"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "TALC_POUDRAGE",
+          "name": "Talc poudrage",
+          "groupCode": "pleural",
+          "description": "Sterile graded talc, poudrage applicator/kit, documentation prompts — Medication/product verification",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "appliesTo": "Medical thoracoscopy",
+          "preview": ["Sterile graded talc, poudrage applicator/kit, documentation prompts"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "TECH_CHEST_TUBE_LARGE_BORE",
+          "name": "Large-bore technique",
+          "groupCode": "pleural",
+          "description": "Selects the large-bore branch using an explicit demo stand-in.",
+          "appliesTo": "Chest tube",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Promotes large-bore kit", "Adds one separate securement requirement"],
+          "conflictsWith": ["TECH_CHEST_TUBE_SMALL_BORE"],
+          "actions": [
+            {
+              "id": "tech_chest_tube_large_bore-410",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 410,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "CHEST_TUBE_LARGE_BORE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "tech_chest_tube_large_bore-411",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 411,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_SMALL_BORE",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_large_bore-412",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 412,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_SURGICAL",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_large_bore-413",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 413,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CHEST-SECUREMENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CHEST-SECUREMENT",
+                  "roleCode": "LOCAL_CHEST_TUBE_SECUREMENT",
+                  "label": "Chest-tube securement and dressing pack",
+                  "genericRequirement": "Local securement and dressing supplies kept separate for BOM evaluation.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "post_procedure",
+                  "setupSequence": 100401,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "code": "TECH_CHEST_TUBE_SMALL_BORE",
+          "name": "Small-bore Seldinger technique",
+          "groupCode": "pleural",
+          "description": "Selects the small-bore kit branch.",
+          "appliesTo": "Chest tube",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Promotes small-bore kit", "Adds one BOM-managed requirement"],
+          "conflictsWith": ["TECH_CHEST_TUBE_LARGE_BORE"],
+          "actions": [
+            {
+              "id": "tech_chest_tube_small_bore-400",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 400,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "CHEST_TUBE_SMALL_BORE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "tech_chest_tube_small_bore-401",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 401,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_LARGE_BORE",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_small_bore-402",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 402,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_SURGICAL",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_small_bore-403",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 403,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CHEST-SECUREMENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CHEST-SECUREMENT",
+                  "roleCode": "LOCAL_CHEST_TUBE_SECUREMENT",
+                  "label": "Chest-tube securement and dressing pack",
+                  "genericRequirement": "Local securement and dressing supplies kept separate for BOM evaluation.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "post_procedure",
+                  "setupSequence": 100401,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "definitionHash": "a9758b0b0ace11f1fd65c2695b55acf1f512c23c560cb1dfa54514e782f9c3bf",
+      "firstPublishedByReleaseBundleId": "release-rigid-bronch-v1-1"
+    },
+    {
+      "definitionSetId": "definition-set-modifiers",
+      "definition": [
+        {
+          "code": "AIRBORNE_ISOLATION",
+          "name": "Airborne isolation",
+          "groupCode": "location",
+          "description": "PPE bundle, single-use scope option, specimen transport, infection-control prompts — Local infection-control profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy",
+          "preview": [
+            "PPE bundle, single-use scope option, specimen transport, infection-control prompts"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "AIRWAY_ETT",
+          "name": "Endotracheal tube",
+          "groupCode": "anesthesia_airway",
+          "description": "Swivel adapter; scope outside-diameter and working-channel validation against ETT inside diameter — Typed compatibility rule",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy",
+          "preview": [
+            "Swivel adapter; scope outside-diameter and working-channel validation against ETT inside diameter"
+          ],
+          "conflictsWith": ["AIRWAY_LMA"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "AIRWAY_LMA",
+          "name": "Laryngeal mask airway",
+          "groupCode": "anesthesia_airway",
+          "description": "LMA-compatible bronchoscopy adapter and scope-size validation — Typed compatibility rule",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy",
+          "preview": ["LMA-compatible bronchoscopy adapter and scope-size validation"],
+          "conflictsWith": ["AIRWAY_ETT"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ANES_GENERAL",
+          "name": "General anesthesia",
+          "groupCode": "anesthesia_airway",
+          "description": "Airway device, anesthesia circuit/adapters, ventilation equipment, room readiness checks — Anesthesia profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy / thoracoscopy",
+          "preview": [
+            "Airway device, anesthesia circuit/adapters, ventilation equipment, room readiness checks"
+          ],
+          "conflictsWith": ["ANES_MOD_SED"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ANES_MOD_SED",
+          "name": "Moderate sedation",
+          "groupCode": "anesthesia_airway",
+          "description": "Oxygen delivery, bite block, monitoring, reversal/emergency readiness prompts — Medication details remain local",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Flexible bronchoscopy / pleural",
+          "preview": [
+            "Oxygen delivery, bite block, monitoring, reversal/emergency readiness prompts"
+          ],
+          "conflictsWith": ["ANES_GENERAL"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "APC",
+          "name": "Argon plasma coagulation",
+          "groupCode": "therapeutic",
+          "description": "Adds APC platform, applicators, gas, cable, and safety readiness.",
+          "appliesTo": "Therapeutic / rigid",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 6 requirements", "Adds 1 blocking compatibility check"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "apc-230",
+              "modifierCode": "APC",
+              "sequence": 230,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-PLATFORM",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-PLATFORM",
+                  "roleCode": "ENERGY_PLATFORM",
+                  "label": "APC energy platform",
+                  "genericRequirement": "Locally approved APC generator/platform.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100321,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-231",
+              "modifierCode": "APC",
+              "sequence": 231,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-PROBE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-PROBE",
+                  "roleCode": "APC_PROBE_FLEX",
+                  "label": "Flexible APC probe",
+                  "genericRequirement": "Probe compatible with the selected platform and working channel.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100322,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-232",
+              "modifierCode": "APC",
+              "sequence": 232,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-RIGID",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-RIGID",
+                  "roleCode": "APC_APPLICATOR_RIGID",
+                  "label": "Rigid APC applicator",
+                  "genericRequirement": "Applicator compatible with the selected platform and rigid system.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100323,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-233",
+              "modifierCode": "APC",
+              "sequence": 233,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-GAS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-GAS",
+                  "roleCode": "APC_GAS_ACCESSORY",
+                  "label": "APC gas supply and accessories",
+                  "genericRequirement": "Locally governed gas source and connections.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100324,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-234",
+              "modifierCode": "APC",
+              "sequence": 234,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-CABLE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-CABLE",
+                  "roleCode": "ENERGY_CABLE_ADAPTER",
+                  "label": "APC cable or adapter",
+                  "genericRequirement": "Matched cable or adapter for the selected platform and applicator.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100325,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-235",
+              "modifierCode": "APC",
+              "sequence": 235,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-APC-FIRE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-APC-FIRE",
+                  "roleCode": "LOCAL_AIRWAY_FIRE_READINESS",
+                  "label": "Airway-fire readiness line",
+                  "genericRequirement": "Local airway-fire risk readiness and equipment check.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100326,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "apc-239",
+              "modifierCode": "APC",
+              "sequence": 239,
+              "actionType": "validate_compatibility",
+              "payload": {
+                "ruleId": "RULE-APC-PLATFORM-FAMILY"
+              }
+            }
+          ]
+        },
+        {
+          "code": "BALLOON_DILATION",
+          "name": "Balloon dilation",
+          "groupCode": "therapeutic",
+          "description": "Promotes the balloon, guidewire, and inflation requirements.",
+          "appliesTo": "Airway stenosis / CAO",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Promotes 3 requirements", "Adds 1 compatibility check"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "balloon_dilation-250",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 250,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "AIRWAY_BALLOON_DILATOR",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "balloon_dilation-251",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 251,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "PULMONARY_GUIDEWIRE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "balloon_dilation-252",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 252,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "INFLATION_DEVICE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "balloon_dilation-255",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 255,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-AIRWAY-MEASUREMENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-AIRWAY-MEASUREMENT",
+                  "roleCode": "LOCAL_AIRWAY_MEASUREMENT",
+                  "label": "Airway measurement readiness",
+                  "genericRequirement": "Local measurement workflow; this module provides no sizing recommendation.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100331,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "balloon_dilation-259",
+              "modifierCode": "BALLOON_DILATION",
+              "sequence": 259,
+              "actionType": "validate_compatibility",
+              "payload": {
+                "ruleId": "RULE-BALLOON-WORKING-CHANNEL"
+              }
+            }
+          ]
+        },
+        {
+          "code": "CBCT",
+          "name": "Cone-beam CT / 3D imaging",
+          "groupCode": "imaging_navigation",
+          "description": "CBCT platform, table/room requirements, sterile draping, registration and confirmation workflow — Platform-specific profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy / ablation",
+          "preview": [
+            "CBCT platform, table/room requirements, sterile draping, registration and confirmation workflow"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "CRYOTHERAPY",
+          "name": "Cryotherapy / cryoextraction",
+          "groupCode": "therapeutic",
+          "description": "Cryosurgery unit, gas, footswitch, probe, adapters, thaw/specimen workflow — Typed platform compatibility",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Therapeutic / rigid / TBLC",
+          "preview": ["Cryosurgery unit, gas, footswitch, probe, adapters, thaw/specimen workflow"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "DIGITAL_DRAINAGE",
+          "name": "Digital pleural drainage",
+          "groupCode": "pleural",
+          "description": "Replaces the conventional drainage-system role with a digital system.",
+          "appliesTo": "Chest tube / PAL / thoracoscopy",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "preview": ["Replaces 1 drainage requirement"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "digital_drainage-420",
+              "modifierCode": "DIGITAL_DRAINAGE",
+              "sequence": 420,
+              "actionType": "replace_role",
+              "targetRoleCode": "GENERIC_DRAINAGE_UNIT",
+              "payload": {
+                "roleCode": "DIGITAL_DRAINAGE_SYSTEM",
+                "label": "Digital pleural drainage system",
+                "genericRequirement": "Local digital drainage capital asset and compatible disposable set."
+              }
+            }
+          ]
+        },
+        {
+          "code": "ELECTROCAUTERY",
+          "name": "Electrocautery",
+          "groupCode": "therapeutic",
+          "description": "Generator, probe/knife/snare/forceps, cable/adapters, return electrode if required, fire prompts — Typed platform compatibility",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Therapeutic / rigid",
+          "preview": [
+            "Generator, probe/knife/snare/forceps, cable/adapters, return electrode if required, fire prompts"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ENV_BRONCH_SUITE",
+          "name": "Bronchoscopy suite",
+          "groupCode": "location",
+          "description": "Suite-specific tower, suction, monitor, storage locations — Room profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "All",
+          "preview": ["Suite-specific tower, suction, monitor, storage locations"],
+          "conflictsWith": ["ENV_ICU_BEDSIDE", "ENV_OR"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ENV_ICU_BEDSIDE",
+          "name": "ICU / bedside",
+          "groupCode": "location",
+          "description": "Portable tower or single-use scope, bedside ultrasound, portable suction, airway adapter, transport cart — Room profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Flexible bronchoscopy, PDT, pleural drainage",
+          "preview": [
+            "Portable tower or single-use scope, bedside ultrasound, portable suction, airway adapter, transport cart"
+          ],
+          "conflictsWith": ["ENV_BRONCH_SUITE", "ENV_OR"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ENV_OR",
+          "name": "Operating room",
+          "groupCode": "location",
+          "description": "OR table/positioning, anesthesia circuit, electrosurgical safety, room-specific devices — Room profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "All bronchoscopy / pleural procedures",
+          "preview": [
+            "OR table/positioning, anesthesia circuit, electrosurgical safety, room-specific devices"
+          ],
+          "conflictsWith": ["ENV_BRONCH_SUITE", "ENV_ICU_BEDSIDE"],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "FLUOROSCOPY",
+          "name": "Fluoroscopy",
+          "groupCode": "imaging_navigation",
+          "description": "Adds C-arm, sterile drape, and radiation-safety resources.",
+          "appliesTo": "Peripheral, stent, TBLC, pleural",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 3 imaging requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "fluoroscopy-310",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 310,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CARM",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CARM",
+                  "roleCode": "C_ARM_RESOURCE",
+                  "label": "C-arm resource",
+                  "genericRequirement": "Booked and ready C-arm resource.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100351,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "fluoroscopy-311",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 311,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CARM-DRAPE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CARM-DRAPE",
+                  "roleCode": "C_ARM_STERILE_DRAPE",
+                  "label": "C-arm sterile drape",
+                  "genericRequirement": "Locally compatible sterile C-arm drape.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "sterile_field",
+                  "proceduralPhase": "pre_induction_or_sedation",
+                  "setupSequence": 100352,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "fluoroscopy-312",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 312,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RADIATION",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RADIATION",
+                  "roleCode": "RADIATION_SAFETY_BUNDLE",
+                  "label": "Radiation-safety resources",
+                  "genericRequirement": "Local radiation PPE, signage, dosimetry, and readiness workflow.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100353,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "fluoroscopy-315",
+              "modifierCode": "FLUOROSCOPY",
+              "sequence": 315,
+              "actionType": "require_room_capability",
+              "payload": {
+                "capability": "fluoroscopy"
+              }
+            }
+          ]
+        },
+        {
+          "code": "HIGH_BLEED_RISK",
+          "name": "High bleeding risk",
+          "groupCode": "risk_rescue",
+          "description": "Appends the major-airway-bleeding equipment-readiness module.",
+          "appliesTo": "Biopsy / tumor debulking / TBLC",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds major-airway-bleeding rescue module"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "high_bleed_risk-330",
+              "modifierCode": "HIGH_BLEED_RISK",
+              "sequence": 330,
+              "actionType": "add_rescue_module",
+              "payload": {
+                "code": "MAJOR_AIRWAY_BLEEDING"
+              }
+            }
+          ]
+        },
+        {
+          "code": "JET_VENT",
+          "name": "Jet ventilation",
+          "groupCode": "anesthesia_airway",
+          "description": "Adds jet ventilation equipment and manual-ventilation backup.",
+          "appliesTo": "Rigid bronchoscopy",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 3 ventilation requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "jet_vent-290",
+              "modifierCode": "JET_VENT",
+              "sequence": 290,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-JET-VENTILATOR",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-JET-VENTILATOR",
+                  "roleCode": "JET_VENTILATOR",
+                  "label": "Jet ventilator",
+                  "genericRequirement": "Locally approved jet-ventilation capital asset.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "room_capital_equipment",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100341,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "jet_vent-291",
+              "modifierCode": "JET_VENT",
+              "sequence": 291,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-JET-ACCESSORY",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-JET-ACCESSORY",
+                  "roleCode": "JET_VENT_ACCESSORY",
+                  "label": "Jet-ventilation tubing and connector set",
+                  "genericRequirement": "Locally matched jet-ventilation accessories and pressure source.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100342,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "jet_vent-292",
+              "modifierCode": "JET_VENT",
+              "sequence": 292,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-MANUAL-VENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-MANUAL-VENT",
+                  "roleCode": "MANUAL_VENTILATION_BACKUP",
+                  "label": "Manual-ventilation backup",
+                  "genericRequirement": "Local manual-ventilation backup setup.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "emergency_cart",
+                  "proceduralPhase": "rescue_or_contingency",
+                  "setupSequence": 100343,
+                  "openHoldStatus": "emergency_pull",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "jet_vent-295",
+              "modifierCode": "JET_VENT",
+              "sequence": 295,
+              "actionType": "require_room_capability",
+              "payload": {
+                "capability": "jet_ventilation"
+              }
+            }
+          ]
+        },
+        {
+          "code": "LASER",
+          "name": "Laser",
+          "groupCode": "therapeutic",
+          "description": "Laser console/fiber, eyewear/signage, smoke evacuation, fire safety, credential/readiness prompt — Room credential and readiness rule",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "appliesTo": "Therapeutic / rigid",
+          "preview": [
+            "Laser console/fiber, eyewear/signage, smoke evacuation, fire safety, credential/readiness prompt"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "NAVIGATION",
+          "name": "Electromagnetic or other navigation",
+          "groupCode": "imaging_navigation",
+          "description": "Navigation workstation, field generator or patches, locatable guide/catheter, registration accessories — Platform-specific bundle",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy",
+          "preview": [
+            "Navigation workstation, field generator or patches, locatable guide/catheter, registration accessories"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "PLEURAL_MANOMETRY",
+          "name": "Pleural manometry",
+          "groupCode": "pleural",
+          "description": "Manometer or pressure-transducer system, stopcocks/tubing, measurement workflow — Local equipment profile",
+          "releaseState": "phase_2",
+          "active": true,
+          "appliesTo": "Thoracentesis / pleural drainage",
+          "preview": [
+            "Manometer or pressure-transducer system, stopcocks/tubing, measurement workflow"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "RADIAL_EBUS",
+          "name": "Radial EBUS",
+          "groupCode": "imaging_navigation",
+          "description": "Probe, drive unit, guide sheath if used, probe-protection and localization supplies — Scope/channel compatibility",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy",
+          "preview": [
+            "Probe, drive unit, guide sheath if used, probe-protection and localization supplies"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "RIGID_AIRWAY",
+          "name": "Rigid bronchoscopy",
+          "groupCode": "anesthesia_airway",
+          "description": "Adds the rigid airway system and holds the flexible scope as backup.",
+          "appliesTo": "Therapeutic bronchoscopy / stent / foreign body",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 7 rigid-airway requirements", "Changes flexible scope to backup"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "rigid_airway-200",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 200,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "FLEX_SCOPE_THERAPEUTIC",
+              "payload": {
+                "value": "backup"
+              }
+            },
+            {
+              "id": "rigid_airway-201",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 201,
+              "actionType": "set_open_hold_status",
+              "targetRoleCode": "FLEX_SCOPE_THERAPEUTIC",
+              "payload": {
+                "value": "hold_unopened"
+              }
+            },
+            {
+              "id": "rigid_airway-210",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 210,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-HEAD",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-HEAD",
+                  "roleCode": "RIGID_BRONCHOSCOPE_HEAD",
+                  "label": "Rigid bronchoscope head/base",
+                  "genericRequirement": "Hospital-local rigid bronchoscope system head or base.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100301,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-211",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 211,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-BARREL",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-BARREL",
+                  "roleCode": "RIGID_BRONCHOSCOPE_BARREL",
+                  "label": "Rigid tracheoscope/bronchoscope barrel fixture",
+                  "genericRequirement": "A locally reviewed rigid barrel configuration; no size is recommended by this module.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100302,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-212",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 212,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-ACCESSORY",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-ACCESSORY",
+                  "roleCode": "RIGID_BRONCHOSCOPE_ACCESSORY",
+                  "label": "Rigid ventilation elements, ports, and caps",
+                  "genericRequirement": "Matched accessories for the local rigid system.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100303,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-213",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 213,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-TELESCOPE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-TELESCOPE",
+                  "roleCode": "RIGID_TELESCOPE",
+                  "label": "Rigid telescope",
+                  "genericRequirement": "Locally reviewed rigid visualization telescope.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "airway_access",
+                  "setupSequence": 100304,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-214",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 214,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-LIGHT-CABLE",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-LIGHT-CABLE",
+                  "roleCode": "ENDOSCOPY_LIGHT_CABLE",
+                  "label": "Fiber-optic light cable",
+                  "genericRequirement": "Locally compatible light cable.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "equipment_tower",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100305,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-215",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 215,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-FORCEPS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-FORCEPS",
+                  "roleCode": "RIGID_FORCEPS",
+                  "label": "Rigid forceps set",
+                  "genericRequirement": "Matched rigid handle, shaft, and head set.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100306,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-216",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 216,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-RIGID-SUCTION",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-RIGID-SUCTION",
+                  "roleCode": "RIGID_SUCTION_CATHETER",
+                  "label": "Rigid suction catheter",
+                  "genericRequirement": "Locally reviewed rigid suction catheter.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100307,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rigid_airway-219",
+              "modifierCode": "RIGID_AIRWAY",
+              "sequence": 219,
+              "actionType": "require_room_capability",
+              "payload": {
+                "capability": "rigid_bronchoscopy"
+              }
+            }
+          ]
+        },
+        {
+          "code": "ROBOTIC",
+          "name": "Robotic bronchoscopy",
+          "groupCode": "imaging_navigation",
+          "description": "Robotic console, catheter, vision probe, platform-specific tools and drapes — Platform-specific bundle",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Peripheral bronchoscopy",
+          "preview": [
+            "Robotic console, catheter, vision probe, platform-specific tools and drapes"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "ROSE",
+          "name": "Rapid on-site evaluation",
+          "groupCode": "sampling",
+          "description": "Adds local cytology supplies, personnel, and station readiness.",
+          "appliesTo": "EBUS / peripheral / diagnostic",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 2 local cytology requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "rose-100",
+              "modifierCode": "ROSE",
+              "sequence": 100,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-ROSE-STATION",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-ROSE-STATION",
+                  "roleCode": "LOCAL_ROSE_STATION",
+                  "label": "ROSE station and personnel readiness",
+                  "genericRequirement": "Local cytology personnel, microscope or telecytology resource, and communication path.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100201,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "rose-101",
+              "modifierCode": "ROSE",
+              "sequence": 101,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-ROSE-SUPPLIES",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-ROSE-SUPPLIES",
+                  "roleCode": "LOCAL_CYTOLOGY_SUPPLIES",
+                  "label": "ROSE slides, fixatives, and cell-block supplies",
+                  "genericRequirement": "Local cytology supplies and labeling workflow.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "specimen_handling",
+                  "setupSequence": 100202,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "code": "SPEC_FLOW",
+          "name": "Flow cytometry",
+          "groupCode": "sampling",
+          "description": "Flow medium/container, labels, transport-time prompt — Local laboratory profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "EBUS / pleural / biopsy",
+          "preview": ["Flow medium/container, labels, transport-time prompt"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "SPEC_MICRO",
+          "name": "Microbiology specimens",
+          "groupCode": "sampling",
+          "description": "Sterile traps/containers, transport media, labels, biosafety transport — Local laboratory profile",
+          "releaseState": "mvp",
+          "active": true,
+          "appliesTo": "Bronchoscopy / pleural",
+          "preview": ["Sterile traps/containers, transport media, labels, biosafety transport"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "SPEC_MOLECULAR",
+          "name": "Molecular testing / NGS",
+          "groupCode": "sampling",
+          "description": "Adds local specimen preservation, transport, and adequacy readiness.",
+          "appliesTo": "EBUS / peripheral / biopsy",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 2 specimen-workflow requirements"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "spec_molecular-110",
+              "modifierCode": "SPEC_MOLECULAR",
+              "sequence": 110,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-MOLECULAR-SPECIMEN",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-MOLECULAR-SPECIMEN",
+                  "roleCode": "LOCAL_MOLECULAR_SPECIMEN_BUNDLE",
+                  "label": "Molecular-testing specimen bundle",
+                  "genericRequirement": "Local preservation, container, labeling, and transport requirements for molecular testing.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "specimen_handling",
+                  "setupSequence": 100211,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "spec_molecular-111",
+              "modifierCode": "SPEC_MOLECULAR",
+              "sequence": 111,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-MOLECULAR-READINESS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-MOLECULAR-READINESS",
+                  "roleCode": "LOCAL_MOLECULAR_READINESS",
+                  "label": "Molecular-testing readiness check",
+                  "genericRequirement": "Confirm the locally governed pathology adequacy and transport workflow.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "specimen_station",
+                  "proceduralPhase": "pre_room",
+                  "setupSequence": 100212,
+                  "openHoldStatus": "have_in_room",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "code": "STENT_PLACE",
+          "name": "Stent placement",
+          "groupCode": "therapeutic",
+          "description": "Adds generic stent, deployment, measurement, and backup requirements.",
+          "appliesTo": "CAO / stenosis / fistula",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Adds 3 requirements", "Promotes sizing tools", "Flags unmapped backup size"],
+          "conflictsWith": [],
+          "actions": [
+            {
+              "id": "stent_place-270",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 270,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-STENT-CONFIG",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-STENT-CONFIG",
+                  "roleCode": "AIRWAY_STENT_CONFIGURATION",
+                  "label": "Airway stent configuration",
+                  "genericRequirement": "Locally approved stent configuration selected outside this educational prototype.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100361,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "stent_place-271",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 271,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-STENT-TOOLS",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-STENT-TOOLS",
+                  "roleCode": "STENT_DEPLOYMENT_TOOLS",
+                  "label": "Stent deployment/loading and measurement tools",
+                  "genericRequirement": "Matched deployment, loading, measurement, and retrieval tools.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "mayo_stand",
+                  "proceduralPhase": "therapeutic",
+                  "setupSequence": 100362,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "stent_place-272",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 272,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-STENT-BACKUP",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-STENT-BACKUP",
+                  "roleCode": "AIRWAY_STENT_BACKUP",
+                  "label": "Backup stent size/configuration",
+                  "genericRequirement": "Locally selected backup configuration; this module provides no size guidance.",
+                  "requiredness": "backup",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "rescue_or_contingency",
+                  "setupSequence": 100363,
+                  "openHoldStatus": "hold_unopened",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            },
+            {
+              "id": "stent_place-275",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 275,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "AIRWAY_STENT_SIZING_DEVICE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "stent_place-276",
+              "modifierCode": "STENT_PLACE",
+              "sequence": 276,
+              "actionType": "raise_warning",
+              "targetSlotId": "OPS-STENT-BACKUP",
+              "payload": {
+                "code": "backup_stent_unmapped",
+                "message": "Backup stent size/configuration is not locally mapped; no clinical size is inferred."
+              }
+            }
+          ]
+        },
+        {
+          "code": "STENT_REMOVE",
+          "name": "Stent removal",
+          "groupCode": "therapeutic",
+          "description": "Rigid extraction forceps, flexible graspers, retrieval tools, granulation treatment, replacement backup — Dedicated recipe",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "appliesTo": "Airway stent procedure",
+          "preview": [
+            "Rigid extraction forceps, flexible graspers, retrieval tools, granulation treatment, replacement backup"
+          ],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "TALC_POUDRAGE",
+          "name": "Talc poudrage",
+          "groupCode": "pleural",
+          "description": "Sterile graded talc, poudrage applicator/kit, documentation prompts — Medication/product verification",
+          "releaseState": "phase_1_1",
+          "active": true,
+          "appliesTo": "Medical thoracoscopy",
+          "preview": ["Sterile graded talc, poudrage applicator/kit, documentation prompts"],
+          "conflictsWith": [],
+          "actions": [],
+          "informational": true
+        },
+        {
+          "code": "TECH_CHEST_TUBE_LARGE_BORE",
+          "name": "Large-bore technique",
+          "groupCode": "pleural",
+          "description": "Selects the large-bore branch using an explicit demo stand-in.",
+          "appliesTo": "Chest tube",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Promotes large-bore kit", "Adds one separate securement requirement"],
+          "conflictsWith": ["TECH_CHEST_TUBE_SMALL_BORE"],
+          "actions": [
+            {
+              "id": "tech_chest_tube_large_bore-410",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 410,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "CHEST_TUBE_LARGE_BORE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "tech_chest_tube_large_bore-411",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 411,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_SMALL_BORE",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_large_bore-412",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 412,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_SURGICAL",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_large_bore-413",
+              "modifierCode": "TECH_CHEST_TUBE_LARGE_BORE",
+              "sequence": 413,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CHEST-SECUREMENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CHEST-SECUREMENT",
+                  "roleCode": "LOCAL_CHEST_TUBE_SECUREMENT",
+                  "label": "Chest-tube securement and dressing pack",
+                  "genericRequirement": "Local securement and dressing supplies kept separate for BOM evaluation.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "post_procedure",
+                  "setupSequence": 100401,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "code": "TECH_CHEST_TUBE_SMALL_BORE",
+          "name": "Small-bore Seldinger technique",
+          "groupCode": "pleural",
+          "description": "Selects the small-bore kit branch.",
+          "appliesTo": "Chest tube",
+          "releaseState": "mvp",
+          "active": true,
+          "preview": ["Promotes small-bore kit", "Adds one BOM-managed requirement"],
+          "conflictsWith": ["TECH_CHEST_TUBE_LARGE_BORE"],
+          "actions": [
+            {
+              "id": "tech_chest_tube_small_bore-400",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 400,
+              "actionType": "set_requiredness",
+              "targetRoleCode": "CHEST_TUBE_SMALL_BORE",
+              "payload": {
+                "value": "required"
+              }
+            },
+            {
+              "id": "tech_chest_tube_small_bore-401",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 401,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_LARGE_BORE",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_small_bore-402",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 402,
+              "actionType": "remove_slot",
+              "targetRoleCode": "CHEST_TUBE_SURGICAL",
+              "payload": {}
+            },
+            {
+              "id": "tech_chest_tube_small_bore-403",
+              "modifierCode": "TECH_CHEST_TUBE_SMALL_BORE",
+              "sequence": 403,
+              "actionType": "add_slot",
+              "payload": {
+                "slot": {
+                  "id": "OPS-CHEST-SECUREMENT",
+                  "sourceSlotId": null,
+                  "requirementKey": "OPS-CHEST-SECUREMENT",
+                  "roleCode": "LOCAL_CHEST_TUBE_SECUREMENT",
+                  "label": "Chest-tube securement and dressing pack",
+                  "genericRequirement": "Local securement and dressing supplies kept separate for BOM evaluation.",
+                  "requiredness": "required",
+                  "dependencyRule": null,
+                  "quantityExpression": {
+                    "op": "literal",
+                    "value": 1
+                  },
+                  "selectionMode": "single",
+                  "setupZone": "back_table",
+                  "proceduralPhase": "post_procedure",
+                  "setupSequence": 100401,
+                  "openHoldStatus": "open_or_set_up_now",
+                  "responsibleRole": null,
+                  "sterileStatus": null,
+                  "allowCustom": true,
+                  "notes": null,
+                  "includedBy": "Operational seed"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "definitionHash": "e333509636d4564b0216037d0115fd0bb7718a2527267833ad365d1dd279f165",
+      "firstPublishedByReleaseBundleId": "release-bronch-ablation-v1-0"
+    },
+    {
+      "definitionSetId": "definition-set-rescue-modules",
+      "definition": [
+        {
+          "code": "MAJOR_AIRWAY_BLEEDING",
+          "name": "Major-airway-bleeding equipment readiness",
+          "description": "Reusable equipment-readiness module; it is not a clinical management protocol.",
+          "slots": [
+            {
+              "id": "RESCUE-BLEED-SUCTION",
+              "sourceSlotId": null,
+              "requirementKey": "RESCUE-BLEED-SUCTION",
+              "roleCode": "HIGH_CAPACITY_SUCTION_BACKUP",
+              "label": "Second high-capacity suction setup",
+              "genericRequirement": "Independent second suction source, tubing, and canister readiness.",
+              "requiredness": "emergency_only",
+              "dependencyRule": null,
+              "quantityExpression": {
+                "op": "literal",
+                "value": 1
+              },
+              "selectionMode": "single",
+              "setupZone": "emergency_cart",
+              "proceduralPhase": "rescue_or_contingency",
+              "setupSequence": 100901,
+              "openHoldStatus": "emergency_pull",
+              "responsibleRole": null,
+              "sterileStatus": null,
+              "allowCustom": true,
+              "notes": null,
+              "includedBy": "Operational seed"
+            },
+            {
+              "id": "RESCUE-BLEED-SCOPE",
+              "sourceSlotId": null,
+              "requirementKey": "RESCUE-BLEED-SCOPE",
+              "roleCode": "FLEX_SCOPE_THERAPEUTIC",
+              "label": "Large-channel backup bronchoscope",
+              "genericRequirement": "Locally selected backup therapeutic bronchoscope.",
+              "requiredness": "emergency_only",
+              "dependencyRule": null,
+              "quantityExpression": {
+                "op": "literal",
+                "value": 1
+              },
+              "selectionMode": "single",
+              "setupZone": "emergency_cart",
+              "proceduralPhase": "rescue_or_contingency",
+              "setupSequence": 100902,
+              "openHoldStatus": "hold_unopened",
+              "responsibleRole": null,
+              "sterileStatus": null,
+              "allowCustom": true,
+              "notes": null,
+              "includedBy": "Operational seed"
+            },
+            {
+              "id": "RESCUE-BLEED-BALLOON",
+              "sourceSlotId": null,
+              "requirementKey": "RESCUE-BLEED-BALLOON",
+              "roleCode": "AIRWAY_TAMPONADE_BALLOON_CAPABILITY",
+              "label": "Blocker/tamponade balloon capability",
+              "genericRequirement": "Locally mapped blocker or tamponade balloon capability.",
+              "requiredness": "emergency_only",
+              "dependencyRule": null,
+              "quantityExpression": {
+                "op": "literal",
+                "value": 1
+              },
+              "selectionMode": "single",
+              "setupZone": "emergency_cart",
+              "proceduralPhase": "rescue_or_contingency",
+              "setupSequence": 100903,
+              "openHoldStatus": "emergency_pull",
+              "responsibleRole": null,
+              "sterileStatus": null,
+              "allowCustom": true,
+              "notes": null,
+              "includedBy": "Operational seed"
+            },
+            {
+              "id": "RESCUE-BLEED-RIGID",
+              "sourceSlotId": null,
+              "requirementKey": "RESCUE-BLEED-RIGID",
+              "roleCode": "RIGID_BRONCHOSCOPY_BACKUP",
+              "label": "Rigid bronchoscopy backup readiness",
+              "genericRequirement": "Local rigid bronchoscopy backup tray and team readiness.",
+              "requiredness": "emergency_only",
+              "dependencyRule": null,
+              "quantityExpression": {
+                "op": "literal",
+                "value": 1
+              },
+              "selectionMode": "single",
+              "setupZone": "emergency_cart",
+              "proceduralPhase": "rescue_or_contingency",
+              "setupSequence": 100904,
+              "openHoldStatus": "emergency_pull",
+              "responsibleRole": null,
+              "sterileStatus": null,
+              "allowCustom": true,
+              "notes": null,
+              "includedBy": "Operational seed"
+            },
+            {
+              "id": "RESCUE-BLEED-VENT",
+              "sourceSlotId": null,
+              "requirementKey": "RESCUE-BLEED-VENT",
+              "roleCode": "MANUAL_VENTILATION_BACKUP",
+              "label": "Ventilation/lung-isolation backup",
+              "genericRequirement": "Locally mapped ventilation and lung-isolation backup readiness.",
+              "requiredness": "emergency_only",
+              "dependencyRule": null,
+              "quantityExpression": {
+                "op": "literal",
+                "value": 1
+              },
+              "selectionMode": "single",
+              "setupZone": "emergency_cart",
+              "proceduralPhase": "rescue_or_contingency",
+              "setupSequence": 100905,
+              "openHoldStatus": "emergency_pull",
+              "responsibleRole": null,
+              "sterileStatus": null,
+              "allowCustom": true,
+              "notes": null,
+              "includedBy": "Operational seed"
+            }
+          ]
+        }
+      ],
+      "definitionHash": "6e928845dcc74aa79f32de1a6c8b29a429aa0b5a592a68059019b93d853915b8",
+      "firstPublishedByReleaseBundleId": "release-bronch-ablation-v1-0"
+    },
+    {
+      "definitionSetId": "definition-set-role-taxonomy",
+      "definition": {
+        "categories": [
+          "Flexible bronchoscopy",
+          "Endoscopy platform",
+          "Rigid bronchoscopy",
+          "Peripheral & robotic bronchoscopy",
+          "EBUS",
+          "Tissue sampling",
+          "Therapeutic bronchoscopy",
+          "Energy platforms",
+          "Laser",
+          "Photodynamic therapy",
+          "Airway stents",
+          "Airway isolation & tracheostomy",
+          "Bronchoscopic lung volume reduction",
+          "Medical thoracoscopy",
+          "Pleural drainage",
+          "Whole lung lavage",
+          "Procedural imaging",
+          "Reprocessing",
+          "Room & generic supply"
+        ],
+        "legacyCategoryMap": {
+          "Airway dilation": "Therapeutic bronchoscopy",
+          "Airway isolation": "Airway isolation & tracheostomy",
+          "Airway stent": "Airway stents",
+          "Airway stent accessory": "Airway stents",
+          "Airway stenting": "Airway stents",
+          "Bronchoscopy accessory": "Flexible bronchoscopy",
+          "Bronchoscopy platform": "Flexible bronchoscopy",
+          "Bronchoscopy sampling": "Tissue sampling",
+          "EBUS accessory": "EBUS",
+          "EBUS platform": "EBUS",
+          "Endobronchial occlusion": "Bronchoscopic lung volume reduction",
+          "Endobronchial valve": "Bronchoscopic lung volume reduction",
+          "Endoscopy platform": "Endoscopy platform",
+          "Generic equipment": "Room & generic supply",
+          "Generic supply": "Room & generic supply",
+          "Guidewire": "Tissue sampling",
+          "Imaging platform": "Endoscopy platform",
+          "Medical thoracoscopy": "Medical thoracoscopy",
+          "Percutaneous tracheostomy": "Airway isolation & tracheostomy",
+          "Peripheral bronchoscopy": "Peripheral & robotic bronchoscopy",
+          "Pleural procedures": "Pleural drainage",
+          "Pleurodesis": "Medical thoracoscopy",
+          "Reprocessing": "Reprocessing",
+          "Retrieval": "Therapeutic bronchoscopy",
+          "Rigid bronchoscopy": "Rigid bronchoscopy",
+          "Robotic bronchoscopy": "Peripheral & robotic bronchoscopy",
+          "Sampling": "Tissue sampling",
+          "Sampling accessory": "Tissue sampling",
+          "Specimen management": "Tissue sampling",
+          "Therapeutic bronchoscopy": "Therapeutic bronchoscopy",
+          "Thoracoscopy platform": "Medical thoracoscopy",
+          "Tracheostomy": "Airway isolation & tracheostomy",
+          "Whole lung lavage": "Whole lung lavage"
+        },
+        "categoryOverrides": {
+          "ENERGY_PLATFORM": "Energy platforms"
+        },
+        "roleCodeAliases": {
+          "PLEUROSCOPE": "THORACOSCOPE_SEMIRIGID",
+          "THORACOSCOPY_TELESCOPE": "THORACOSCOPE_RIGID",
+          "PLEUROSCOPY_TROCAR": "THORACOSCOPY_TROCAR",
+          "PLEURAL_BIOPSY_FORCEPS": "THORACOSCOPY_BIOPSY_FORCEPS",
+          "PDT_KIT": "PERC_TRACH_KIT",
+          "GENERIC_ENERGY_PLATFORM": "ENERGY_PLATFORM",
+          "GENERIC_COLLATERAL_VENT": "COLLATERAL_VENTILATION_SYSTEM",
+          "GENERIC_WLL_LAVAGE": "WLL_LAVAGE_CIRCUIT"
+        }
+      },
+      "definitionHash": "e1eeb4e3ad9eb847f0c9c929d126daecbc2d9d6ba1149d38cbee6a31c0b1e82b",
+      "firstPublishedByReleaseBundleId": "release-bronch-ablation-v1-0"
+    }
+  ]
+}

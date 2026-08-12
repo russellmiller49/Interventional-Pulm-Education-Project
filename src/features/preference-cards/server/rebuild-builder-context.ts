@@ -12,7 +12,7 @@ import { withEquipmentSets, type EquipmentSet } from '../domain/equipment-set'
 import { withFamilyPicks, type FamilyPick } from '../domain/family-pick'
 import type { HistoricalCatalog } from '../domain/historical-catalog'
 import { LEGACY_FAMILY_IDENTITY_MESSAGE } from '../domain/product-family'
-import { canonicalRoleCode } from '../domain/role-taxonomy'
+import { roleCanonicalizerFor } from '../domain/role-taxonomy'
 import type { BuildContext, ScenarioDefinition } from '../domain/types'
 import {
   carriesUnreconcilableFamilyIdentity,
@@ -150,6 +150,12 @@ export function rebuildBuilderContext(
   if (!released.ok) return released
   const { scenario, context, bundle: releaseBundle } = released
 
+  // Every role code below — stored picks, family pins, set members, custom lines — is
+  // canonicalized with the *release's* resolved alias table, carried on the context it was
+  // built from. The live table never participates: a role's meaning inside this card is part
+  // of what its release pin froze (P92-C1).
+  const canonicalRoleCode = roleCanonicalizerFor(context.roleCodeAliases)
+
   if (context.recipe.id !== inputs.input.recipeVersionId) {
     return {
       ok: false,
@@ -203,6 +209,7 @@ export function rebuildBuilderContext(
       requested.productId,
       requested.roleCode,
       isProductCurrentlyUnselectable,
+      canonicalRoleCode,
     )
     if (!result.ok) {
       return {
@@ -224,7 +231,7 @@ export function rebuildBuilderContext(
     }
     // Every part of the pin is re-verified: which family, which catalog release, which membership
     // hash, which role. A client that altered any of them gets this, not a card.
-    const resolved = resolveProductFamilyPin(requested)
+    const resolved = resolveProductFamilyPin(requested, canonicalRoleCode)
     if (!resolved.ok) {
       return { ok: false, code: 'product_family_unavailable', message: resolved.message }
     }
@@ -238,7 +245,12 @@ export function rebuildBuilderContext(
         message: `Product family ${resolved.version.productFamilyVersionId} was reviewed against catalog release ${resolved.version.catalogReleaseId}, which is not the release ${releaseBundle.id} pins.`,
       }
     }
-    const pick = historicalFamilyPick(historical, resolved.version, requested.roleCode)
+    const pick = historicalFamilyPick(
+      historical,
+      resolved.version,
+      requested.roleCode,
+      canonicalRoleCode,
+    )
     if (!pick.ok) {
       return { ok: false, code: 'product_family_unavailable', message: pick.message }
     }
@@ -258,6 +270,7 @@ export function rebuildBuilderContext(
         member.productId,
         member.roleCode,
         isProductCurrentlyUnselectable,
+        canonicalRoleCode,
       )
       if (!result.ok) {
         return {

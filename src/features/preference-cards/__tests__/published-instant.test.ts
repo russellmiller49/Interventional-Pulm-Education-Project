@@ -1,0 +1,325 @@
+import generatedReleaseBundlesJson from '../../../../data/ip-preference-cards/generated/release-bundles.json'
+import seedReleaseBundlesJson from '../../../../data/ip-preference-cards/seed/release-bundles.json'
+
+import {
+  comparePublicationOrder,
+  validateReleasePublicationInstants,
+} from '../domain/definition-set-ledger'
+import { parsePublishedReleaseInstant } from '../domain/published-instant'
+
+/**
+ * The canonical publication-instant contract (P92-C2b).
+ *
+ * Before this contract, publication order was a `localeCompare` over raw strings guarded
+ * only by a null check: `"zzzz-not-a-date"` on a published release was accepted, sorted
+ * after every real timestamp, participated in first-publisher attribution, and was written
+ * into the generated bundle file by a zero-exit release generation. These tests pin the
+ * whole grammar — what parses, what every rejection class looks like, that the valid string
+ * survives byte-for-byte, and that ordering is chronological over parsed instants with the
+ * release id as the deterministic tiebreak — plus the committed-data invariant that every
+ * frozen release in the repository actually satisfies the contract.
+ */
+
+describe('parsePublishedReleaseInstant', () => {
+  const REJECTED: Array<[label: string, value: unknown]> = [
+    ['null', null],
+    ['undefined', undefined],
+    ['the empty string', ''],
+    ['a whitespace-only string', ' '],
+    ['unparseable text (the Codex reproduction)', 'zzzz-not-a-date'],
+    ['a date-only value', '2026-08-11'],
+    ['a timezone-less datetime', '2026-08-11T12:00:00'],
+    ['an impossible month', '2026-13-01T00:00:00.000Z'],
+    ['month zero', '2026-00-10T00:00:00.000Z'],
+    ['an impossible day', '2026-04-31T00:00:00.000Z'],
+    ['day zero', '2026-01-00T00:00:00.000Z'],
+    ['an impossible leap day (2026 is not a leap year)', '2026-02-29T00:00:00.000Z'],
+    ['a century non-leap day (2100 is not a leap year)', '2100-02-29T00:00:00.000Z'],
+    ['a century non-leap day (1900 is not a leap year)', '1900-02-29T00:00:00.000Z'],
+    ['hour 24', '2026-08-11T24:00:00.000Z'],
+    ['minute 60', '2026-08-11T12:60:00.000Z'],
+    ['second 60 (leap seconds are outside the contract)', '2026-08-11T12:00:60.000Z'],
+    ['an impossible offset', '2026-08-11T12:00:00.000+99:99'],
+    [
+      'a valid-looking offset form (the contract is UTC-designated only)',
+      '2026-08-11T12:00:00.000+01:00',
+    ],
+    ['a negative offset form', '2026-08-11T12:00:00.000-05:00'],
+    [
+      'the +00:00 spelling of UTC (the contract is Z-designated only)',
+      '2026-08-11T12:00:00.000+00:00',
+    ],
+    ['the -00:00 spelling of UTC', '2026-08-11T12:00:00.000-00:00'],
+    ['trailing text', '2026-08-11T12:00:00.000Z (frozen)'],
+    ['leading whitespace', ' 2026-08-11T12:00:00.000Z'],
+    ['trailing whitespace', '2026-08-11T12:00:00.000Z '],
+    ['a trailing newline (non-multiline anchors must not admit it)', '2026-08-11T12:00:00.000Z\n'],
+    ['full-width unicode digits', '２０２６-08-11T12:00:00.000Z'],
+    ['an Arabic-Indic zero in the year', '٠026-08-11T12:00:00.000Z'],
+    ['a number', 1785456000000],
+    ['a boolean', true],
+    ['an object', { publishedAt: '2026-08-11T12:00:00.000Z' }],
+    ['an array', ['2026-08-11T12:00:00.000Z']],
+    ['a fractional point with no digits', '2026-08-11T12:00:00.Z'],
+    [
+      'four fractional digits (precision the millisecond ordering cannot honor)',
+      '2026-08-11T00:00:00.1234Z',
+    ],
+    ['nine fractional digits', '2026-08-11T12:34:56.123456789Z'],
+    ['a comma as the fraction separator', '2026-08-11T12:00:00,000Z'],
+    ['a missing seconds component', '2026-08-11T12:00Z'],
+    ['a lowercase time designator', '2026-08-11t12:00:00.000Z'],
+    ['a lowercase UTC designator', '2026-08-11T12:00:00.000z'],
+    ['a space in place of the T designator', '2026-08-11 12:00:00.000Z'],
+    ['a two-digit year', '26-08-11T12:00:00.000Z'],
+    ['a five-digit year', '02026-08-11T12:00:00.000Z'],
+  ]
+
+  it.each(REJECTED)('rejects %s', (_label, value) => {
+    const parsed = parsePublishedReleaseInstant(value)
+    expect(parsed.ok).toBe(false)
+    if (parsed.ok) return
+    // Every failure carries the raw value and a reason precise enough to act on.
+    expect(parsed.raw).toBe(value)
+    expect(parsed.reason.length).toBeGreaterThan(0)
+    // Whitespace-only strings are excluded from the containment check: every reason contains
+    // spaces, so the assertion would be vacuously true for them.
+    if (typeof value === 'string' && value.trim().length > 0) {
+      expect(parsed.reason).toContain(value)
+    }
+  })
+
+  const ACCEPTED: Array<[value: string, epochMilliseconds: number]> = [
+    // The three exact forms the committed release universe uses.
+    ['2026-07-31T00:00:00.000Z', Date.UTC(2026, 6, 31, 0, 0, 0, 0)],
+    ['2026-08-09T00:00:00.000Z', Date.UTC(2026, 7, 9, 0, 0, 0, 0)],
+    ['2026-08-10T00:00:00.000Z', Date.UTC(2026, 7, 10, 0, 0, 0, 0)],
+    // The plain UTC `Z` form without fractional seconds.
+    ['2026-08-11T12:34:56Z', Date.UTC(2026, 7, 11, 12, 34, 56, 0)],
+    // Every fraction length the millisecond-resolution grammar admits: one to three digits,
+    // right-padded — ".1" is 100ms, ".12" is 120ms, never re-spelled.
+    ['2026-08-11T12:34:56.5Z', Date.UTC(2026, 7, 11, 12, 34, 56, 500)],
+    ['2026-08-11T12:34:56.1Z', Date.UTC(2026, 7, 11, 12, 34, 56, 100)],
+    ['2026-08-11T12:34:56.10Z', Date.UTC(2026, 7, 11, 12, 34, 56, 100)],
+    ['2026-08-11T12:34:56.100Z', Date.UTC(2026, 7, 11, 12, 34, 56, 100)],
+    ['2026-08-11T12:34:56.12Z', Date.UTC(2026, 7, 11, 12, 34, 56, 120)],
+    ['2026-08-11T12:34:56.120Z', Date.UTC(2026, 7, 11, 12, 34, 56, 120)],
+    ['2026-08-11T12:34:56.123Z', Date.UTC(2026, 7, 11, 12, 34, 56, 123)],
+    // A real leap day parses (2024 is a leap year) — the calendar check is exact, not a ban.
+    ['2024-02-29T23:59:59.999Z', Date.UTC(2024, 1, 29, 23, 59, 59, 999)],
+    // The epoch itself, so the derivation is pinned at zero.
+    ['1970-01-01T00:00:00Z', 0],
+    ['1970-01-01T00:00:00.001Z', 1],
+  ]
+
+  it.each(ACCEPTED)('accepts %s at the exact instant', (value, epochMilliseconds) => {
+    const parsed = parsePublishedReleaseInstant(value)
+    expect(parsed).toEqual({ ok: true, raw: value, epochMilliseconds })
+  })
+
+  it('preserves the authored string byte-for-byte', () => {
+    const value = '2026-07-31T00:00:00.000Z'
+    const parsed = parsePublishedReleaseInstant(value)
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    // `toBe` on purpose: the raw field is the same string, not a normalization of it.
+    expect(parsed.raw).toBe(value)
+  })
+
+  it('derives four-digit years below 100 without the Date constructor 1900 remapping', () => {
+    const parsed = parsePublishedReleaseInstant('0026-01-01T00:00:00Z')
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(new Date(parsed.epochMilliseconds).getUTCFullYear()).toBe(26)
+  })
+})
+
+describe('comparePublicationOrder over parsed instants (P92-C2b)', () => {
+  it('orders chronologically, not lexicographically', () => {
+    const releases = [
+      { releaseBundleId: 'release-later', publishedAt: '2026-08-10T00:00:00.000Z' },
+      { releaseBundleId: 'release-earlier', publishedAt: '2026-08-09T00:00:00.000Z' },
+      { releaseBundleId: 'release-earliest', publishedAt: '2026-07-31T00:00:00.000Z' },
+    ]
+    expect([...releases].sort(comparePublicationOrder).map((r) => r.releaseBundleId)).toEqual([
+      'release-earliest',
+      'release-earlier',
+      'release-later',
+    ])
+  })
+
+  it('compares two formats of the same instant as equal and breaks the tie by release id', () => {
+    // Raw-string comparison would put release-b first ("." sorts before "Z"); the canonical
+    // ordering parses both to the same instant and falls to the id tiebreak.
+    const left = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.000Z' }
+    const right = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00Z' }
+    expect(comparePublicationOrder(left, right)).toBeGreaterThan(0)
+    expect(comparePublicationOrder(right, left)).toBeLessThan(0)
+    expect([left, right].sort(comparePublicationOrder)[0].releaseBundleId).toBe('release-a-v1-0')
+  })
+
+  it('orders sub-second precision chronologically across different fraction lengths', () => {
+    const half = { releaseBundleId: 'release-half', publishedAt: '2026-08-11T00:00:00.5Z' }
+    const tenth = { releaseBundleId: 'release-tenth', publishedAt: '2026-08-11T00:00:00.10Z' }
+    expect(comparePublicationOrder(tenth, half)).toBeLessThan(0)
+  })
+
+  it('orders every admitted precision chronologically: .001 < .01 < .1 and .120 < .121', () => {
+    const ms1 = { releaseBundleId: 'release-ms', publishedAt: '2026-08-11T00:00:00.001Z' }
+    const ms10 = { releaseBundleId: 'release-cs', publishedAt: '2026-08-11T00:00:00.01Z' }
+    const ms100 = { releaseBundleId: 'release-ds', publishedAt: '2026-08-11T00:00:00.1Z' }
+    expect(comparePublicationOrder(ms1, ms10)).toBeLessThan(0)
+    expect(comparePublicationOrder(ms10, ms100)).toBeLessThan(0)
+    expect(comparePublicationOrder(ms1, ms100)).toBeLessThan(0)
+    const ms120 = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.120Z' }
+    const ms121 = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.121Z' }
+    // Chronology decides — the id tiebreak (which would pick release-a) never runs.
+    expect(comparePublicationOrder(ms120, ms121)).toBeLessThan(0)
+  })
+
+  it('treats .1/.10 and .12/.120 as spellings of one instant, resolved by the id tiebreak', () => {
+    const tenthLong = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.10Z' }
+    const tenthShort = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.1Z' }
+    expect(comparePublicationOrder(tenthShort, tenthLong)).toBeLessThan(0)
+    expect([tenthLong, tenthShort].sort(comparePublicationOrder)[0].releaseBundleId).toBe(
+      'release-a-v1-0',
+    )
+    const p12 = parsePublishedReleaseInstant('2026-08-11T00:00:00.12Z')
+    const p120 = parsePublishedReleaseInstant('2026-08-11T00:00:00.120Z')
+    expect(p12.ok && p120.ok && p12.epochMilliseconds === p120.epochMilliseconds).toBe(true)
+  })
+
+  it('rejects sub-millisecond precision before it can enter publication ordering', () => {
+    // The old contract accepted ".1234Z" and truncated it, so two genuinely different
+    // instants compared equal and fell to the id tiebreak (P92-C2c). The grammar now
+    // refuses a fourth digit: the comparator throws its unorderable error rather than
+    // silently tiebreaking, and the validator types the same value as unorderable.
+    const subMs = { releaseBundleId: 'release-b-v1-0', publishedAt: '2026-08-11T00:00:00.1234Z' }
+    const valid = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-08-11T00:00:00.123Z' }
+    expect(() => comparePublicationOrder(subMs, valid)).toThrow('release-b-v1-0')
+    expect(() => comparePublicationOrder(subMs, valid)).toThrow('2026-08-11T00:00:00.1234Z')
+    const messages = validateReleasePublicationInstants([
+      {
+        releaseBundleId: 'release-b-v1-0',
+        releaseState: 'published',
+        publishedAt: '2026-08-11T00:00:00.1234Z',
+      },
+    ])
+    expect(messages.map((message) => message.code)).toEqual([
+      'definition_set_attribution_unorderable_release',
+    ])
+    expect(messages[0].message).toContain('2026-08-11T00:00:00.1234Z')
+  })
+
+  it('throws on a malformed instant, naming the release and the raw value', () => {
+    const malformed = { releaseBundleId: 'release-ebus-tbna-v1-1', publishedAt: 'zzzz-not-a-date' }
+    const valid = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-07-31T00:00:00.000Z' }
+    for (const [left, right] of [
+      [malformed, valid],
+      [valid, malformed],
+    ] as const) {
+      expect(() => comparePublicationOrder(left, right)).toThrow('release-ebus-tbna-v1-1')
+      expect(() => comparePublicationOrder(left, right)).toThrow('zzzz-not-a-date')
+    }
+  })
+
+  it('throws on a null instant rather than ordering it', () => {
+    const missing = { releaseBundleId: 'release-undated', publishedAt: null }
+    const valid = { releaseBundleId: 'release-a-v1-0', publishedAt: '2026-07-31T00:00:00.000Z' }
+    expect(() => comparePublicationOrder(missing, valid)).toThrow('release-undated')
+  })
+})
+
+describe('validateReleasePublicationInstants', () => {
+  it('passes a fully orderable frozen universe', () => {
+    expect(
+      validateReleasePublicationInstants([
+        {
+          releaseBundleId: 'release-a-v1-0',
+          releaseState: 'published',
+          publishedAt: '2026-07-31T00:00:00.000Z',
+        },
+        {
+          releaseBundleId: 'release-b-v1-0',
+          releaseState: 'retired',
+          publishedAt: '2026-08-09T00:00:00Z',
+        },
+      ]),
+    ).toEqual([])
+  })
+
+  it.each([
+    ['a malformed value', 'zzzz-not-a-date'],
+    ['a timezone-less value', '2026-08-09T00:00:00'],
+    ['an impossible date', '2026-02-29T00:00:00.000Z'],
+    ['null', null],
+  ] as Array<[string, string | null]>)(
+    'fails %s with the typed unorderable code naming release and value',
+    (_label, publishedAt) => {
+      const messages = validateReleasePublicationInstants([
+        { releaseBundleId: 'release-broken-v1-0', releaseState: 'published', publishedAt },
+      ])
+      expect(messages.map((message) => message.code)).toEqual([
+        'definition_set_attribution_unorderable_release',
+      ])
+      expect(messages[0].message).toContain('release-broken-v1-0')
+      if (publishedAt !== null) expect(messages[0].message).toContain(publishedAt)
+      expect(messages[0].message).toContain('publication order')
+    },
+  )
+
+  it('reports one failure per unorderable release, alongside orderable ones', () => {
+    const messages = validateReleasePublicationInstants([
+      {
+        releaseBundleId: 'release-fine-v1-0',
+        releaseState: 'published',
+        publishedAt: '2026-07-31T00:00:00.000Z',
+      },
+      { releaseBundleId: 'release-null-v1-0', releaseState: 'published', publishedAt: null },
+      {
+        releaseBundleId: 'release-junk-v1-0',
+        releaseState: 'retired',
+        publishedAt: 'zzzz-not-a-date',
+      },
+    ])
+    expect(messages).toHaveLength(2)
+    expect(messages[0].message).toContain('release-null-v1-0')
+    expect(messages[1].message).toContain('release-junk-v1-0')
+  })
+})
+
+describe('committed frozen releases satisfy the publication-instant contract', () => {
+  interface ReleaseLifecycleRecord {
+    id: string
+    releaseState: string
+    publishedAt: string | null
+  }
+
+  const seedReleases = (seedReleaseBundlesJson as unknown as { releases: ReleaseLifecycleRecord[] })
+    .releases
+  const generatedBundles = (
+    generatedReleaseBundlesJson as unknown as { bundles: ReleaseLifecycleRecord[] }
+  ).bundles
+
+  it('every frozen release in the authored seed carries a valid publication instant', () => {
+    const frozen = seedReleases.filter((release) => release.releaseState !== 'draft')
+    expect(frozen.length).toBeGreaterThan(0)
+    for (const release of frozen) {
+      const parsed = parsePublishedReleaseInstant(release.publishedAt)
+      expect(`${release.id}: ${parsed.ok ? 'ok' : parsed.reason}`).toBe(`${release.id}: ok`)
+    }
+  })
+
+  it('every frozen release in the generated bundles carries the identical valid instant', () => {
+    const frozen = generatedBundles.filter((bundle) => bundle.releaseState !== 'draft')
+    expect(frozen.length).toBeGreaterThan(0)
+    const seedById = new Map(seedReleases.map((release) => [release.id, release]))
+    for (const bundle of frozen) {
+      const parsed = parsePublishedReleaseInstant(bundle.publishedAt)
+      expect(`${bundle.id}: ${parsed.ok ? 'ok' : parsed.reason}`).toBe(`${bundle.id}: ok`)
+      // The generated file carries the authored value byte-for-byte — generation validates
+      // publication instants, it never rewrites them.
+      expect(bundle.publishedAt).toBe(seedById.get(bundle.id)?.publishedAt)
+    }
+  })
+})

@@ -100,7 +100,16 @@ export const RUNTIME_RESOLVER_CONTRACT = {
 }
 
 function loadSources(bundle: PreferenceCardReleaseBundle): ReleaseDefinitionSources | null {
-  return getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT)
+  // The bundle's own pins drive resolution: each whole set is supplied from the live source
+  // when its hash matches the pin, and from the definition-set ledger otherwise. A pin that
+  // matches neither yields null here and a typed release_pin_missing to the caller — never a
+  // silent substitution of the current set.
+  return getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT, {
+    modifierSetHash: bundle.modifierSetPin.definitionHash,
+    rescueModuleSetHash: bundle.rescueModuleSetPin.definitionHash,
+    compatibilityRuleSetHash: bundle.compatibilityRuleSetPin.definitionHash,
+    roleTaxonomyHash: bundle.roleTaxonomyPin.definitionHash,
+  })
 }
 
 export function getReleaseBundle(releaseBundleId: string): PreferenceCardReleaseBundle | null {
@@ -210,19 +219,30 @@ export function buildReleaseContext(
     }
   }
 
-  // Every pin verified above, so the current definitions *are* the published ones and the
-  // ordinary context builder reconstructs them. If any had moved, we would not be here.
+  // The sources above were resolved by this bundle's exact pins and every pin verified, so
+  // handing the same object to the context builder is what makes validation and
+  // reconstruction one story: the content `pinDiff` just hashed is the content the card
+  // resolves against, whether it came from the live sources or the retention ledger.
   return {
     ok: true,
     bundle,
     scenario,
-    context: buildContextForRecipe(sources.recipe, {
-      releaseBundleId: bundle.id,
-      releaseDefinitionHash: bundle.definitionHash,
-      // The bundle's `catalogImportId` is the catalog *release* digest — the one the retained
-      // catalog manifests are addressed by — not the source workbook digest a card prints.
-      catalogReleaseId: bundle.catalogImportId,
-    }),
+    context: buildContextForRecipe(
+      sources.recipe,
+      {
+        releaseBundleId: bundle.id,
+        releaseDefinitionHash: bundle.definitionHash,
+        // The bundle's `catalogImportId` is the catalog *release* digest — the one the retained
+        // catalog manifests are addressed by — not the source workbook digest a card prints.
+        catalogReleaseId: bundle.catalogImportId,
+      },
+      {
+        modifiers: sources.modifiers,
+        rescueModules: sources.rescueModules,
+        compatibilityRules: sources.compatibilityRules,
+        roleTaxonomy: sources.roleTaxonomy,
+      },
+    ),
   }
 }
 

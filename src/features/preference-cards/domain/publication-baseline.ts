@@ -1,4 +1,5 @@
 import type { CompositionLedger } from './composition-ledger'
+import type { DefinitionSetLedger } from './definition-set-ledger'
 import type { HistoricalCatalogReleaseFile } from './historical-catalog'
 import type { ModuleLedger } from './module-ledger'
 import type { ProductFamilyLedger } from './product-family'
@@ -44,6 +45,7 @@ export type PublicationEntryKind =
   | 'recipe-version'
   | 'catalog-release'
   | 'product-family-version'
+  | 'definition-set'
 
 /**
  * One immutable published definition, projected to exactly what may not change.
@@ -89,6 +91,7 @@ export interface PublicationArtifacts {
   } | null
   moduleLedger: ModuleLedger | null
   compositionLedger: CompositionLedger | null
+  definitionSetLedger: DefinitionSetLedger | null
   catalogReleases: HistoricalCatalogReleaseFile | null
   productFamilies: ProductFamilyLedger | null
 }
@@ -164,6 +167,26 @@ export function buildPublicationBaselineSnapshot(
       semanticVersion: versionSuffix(entry.recipeVersionId),
       dependencies: [],
       lifecycle: {},
+    })
+  }
+
+  // Retained whole definition sets are content-addressed, so the id carries the hash: a
+  // "consistent rewrite" — new content with a matching new hash — changes the id itself,
+  // which this comparison reads as removing a published entry. The complementary case — the
+  // stored content edited while the recorded hash field is left intact — is deliberately NOT
+  // this check's job: the baseline never re-hashes content, and that tampering is caught by
+  // `validateDefinitionSetLedger`'s re-hash (in the build gate and the committed-data suite).
+  // The provenance field rides in `lifecycle` with no mutable-field rule declared for it, so
+  // any later change to it is `publication_lifecycle_field_rewritten`.
+  for (const entry of artifacts.definitionSetLedger?.entries ?? []) {
+    entries.push({
+      kind: 'definition-set',
+      id: `${entry.definitionSetId}@${entry.definitionHash}`,
+      definitionHash: entry.definitionHash,
+      lineage: entry.definitionSetId,
+      semanticVersion: null,
+      dependencies: [],
+      lifecycle: { firstPublishedByReleaseBundleId: entry.firstPublishedByReleaseBundleId },
     })
   }
 

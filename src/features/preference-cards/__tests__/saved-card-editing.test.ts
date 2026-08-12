@@ -829,3 +829,93 @@ describe('modifier authorization', () => {
     expect(resolveForSave(request, '2026-07-30T12:00:00.000Z').ok).toBe(true)
   })
 })
+
+describe('a new card originates only on the current release', () => {
+  // Definition-set retention made superseded releases resolvable by design — a card pinned
+  // to one must keep reopening — so the create path is where currency is enforced. Without
+  // this, a crafted create request naming release-ebus-tbna-v1-0 would originate a NEW card
+  // on clinical semantics the published corrections replaced.
+  it('refuses a crafted create request naming a superseded release, writing nothing', async () => {
+    const request = {
+      ...ebusEditFixture(),
+      releaseBundleId: 'release-ebus-tbna-v1-0',
+    }
+    const writesBefore = tables.writes.length
+    const result = await saveUserCard(request)
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('current release')
+    expect(result.error).toContain('release-ebus-tbna-v1-1')
+    expect(tables.writes).toHaveLength(writesBefore)
+  })
+
+  it('keeps accepting the current release, and keeps an existing card on its own pin', async () => {
+    const created = await saveUserCard(ebusEditFixture())
+    expect(created.ok).toBe(true)
+    // Editing the stored card re-saves at the card's own pin without a currency complaint —
+    // the guard is about originating cards, not about keeping them openable.
+    const cardId = created.data as string
+    const row = tables.cards.find((candidate) => candidate.id === cardId)!
+    const edited = await saveUserCard({
+      ...ebusEditFixture(),
+      cardId,
+      expectedUpdatedAt: row.updated_at,
+      title: 'Renamed after the pointer stayed put',
+    })
+    expect(edited.ok).toBe(true)
+  })
+})
+
+describe('an edit keeps the card’s own pin', () => {
+  // The create guard alone is circumventable: originate a card on the current release, then
+  // edit it while naming a retained release — the retention ledger resolves superseded
+  // releases by design, so without a server-side check the edit lands the card on exactly
+  // the semantics the create guard refused. The pin comparison in `saveUserCard`'s edit
+  // branch is what closes the two-step.
+  it('refuses an edit that re-pins the card to a superseded release, writing nothing', async () => {
+    const created = await saveUserCard(ebusEditFixture())
+    expect(created.ok).toBe(true)
+    const cardId = created.data as string
+    const row = tables.cards.find((candidate) => candidate.id === cardId)!
+    const before = { ...row }
+
+    const writesBefore = tables.writes.length
+    const crafted = saveCardRequestSchema.parse({
+      ...ebusEditFixture(),
+      cardId,
+      expectedUpdatedAt: row.updated_at,
+      releaseBundleId: 'release-ebus-tbna-v1-0',
+      title: 'Re-pinned sideways',
+    })
+    const result = await saveUserCard(crafted)
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('release-ebus-tbna-v1-1')
+    expect(result.error).toContain('release-ebus-tbna-v1-0')
+    expect(result.error).toContain('rebuild')
+    expect(tables.writes).toHaveLength(writesBefore)
+    const after = tables.cards.find((candidate) => candidate.id === cardId)!
+    expect(after).toEqual(before)
+  })
+
+  it('refuses an edit that strips the pin from a pinned card', async () => {
+    const created = await saveUserCard(ebusEditFixture())
+    expect(created.ok).toBe(true)
+    const cardId = created.data as string
+    const row = tables.cards.find((candidate) => candidate.id === cardId)!
+
+    // schemaVersion 2 is the only shape the schema accepts without a release pin, and a
+    // v2 request cannot carry the v3 input the card stores — so the unpinned probe goes
+    // through the server function's own contract with a hand-built request object.
+    const withoutPin = { ...ebusEditFixture() } as { releaseBundleId?: string }
+    delete withoutPin.releaseBundleId
+    const result = await saveUserCard({
+      ...withoutPin,
+      cardId,
+      expectedUpdatedAt: row.updated_at,
+      title: 'Pin stripped',
+    } as Parameters<typeof saveUserCard>[0])
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('no release')
+  })
+})

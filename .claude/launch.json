@@ -38,6 +38,39 @@
       "runtimeArgs": ["next", "dev", "--port", "3010", "--webpack"],
       "port": 3010,
       "autoPort": false
+    },
+    {
+      "name": "claude-b-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3121", "--webpack"],
+      "port": 3121,
+      "autoPort": false
+    },
+    {
+      "name": "claude-b-beta-on",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "scripts/ip-device-intelligence/verify-unlisted-beta.ts",
+        "--mode=on",
+        "--start",
+        "--port=3213"
+      ],
+      "port": 3213,
+      "autoPort": false
+    },
+    {
+      "name": "claude-b-beta-off",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "scripts/ip-device-intelligence/verify-unlisted-beta.ts",
+        "--mode=off",
+        "--start",
+        "--port=3214"
+      ],
+      "port": 3214,
+      "autoPort": false
     }
   ]
 }

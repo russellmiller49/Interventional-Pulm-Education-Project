@@ -31,7 +31,7 @@ import {
   type PreferenceCardReleaseBundle,
   type ReleaseDefinitionSources,
 } from '../domain/release-bundle'
-import { canonicalRoleCode } from '../domain/role-taxonomy'
+import { roleCanonicalizerFor } from '../domain/role-taxonomy'
 import { stableSnapshotHash } from '../domain/stable-hash'
 import type { BuildContext, RecipeSlot } from '../domain/types'
 import {
@@ -218,6 +218,9 @@ function createProbe(
     members: readonly { productId: string; roleCode: string }[]
   }[],
 ): RebuildProbe {
+  // Every availability answer speaks the target release's vocabulary: its resolved alias
+  // table rides on the context it was built from. The live table is never consulted (P92-C1).
+  const canonicalRoleCode = roleCanonicalizerFor(targetContext.roleCodeAliases)
   const activeItemIds = new Set(
     targetContext.hospitalItems.filter((item) => item.active).map((item) => item.id),
   )
@@ -250,6 +253,7 @@ function createProbe(
             member.productId,
             member.roleCode,
             isProductCurrentlyUnselectable,
+            canonicalRoleCode,
           ).ok,
       )
     },
@@ -263,6 +267,7 @@ function createProbe(
         productId,
         roleCode,
         isProductCurrentlyUnselectable,
+        canonicalRoleCode,
       ).ok
     },
     reviewedFamilyAvailable(ref: ReviewedFamilyPickRef) {
@@ -282,7 +287,7 @@ function createProbe(
       if (!version.roleCodes.some((role) => canonicalRoleCode(role) === wanted)) {
         return { ok: false, reason: 'family_role_not_covered' }
       }
-      if (!historicalFamilyPick(historical, version, ref.roleCode).ok) {
+      if (!historicalFamilyPick(historical, version, ref.roleCode, canonicalRoleCode).ok) {
         return { ok: false, reason: 'family_version_unavailable' }
       }
       return {
@@ -384,6 +389,9 @@ export async function prepareCardRebuild(
   const targetShape = {
     slots: [] as RecipeSlot[],
     releaseBundle: target,
+    // The plan's one role vocabulary: the target release's resolved alias table, from the same
+    // verified context every other pinned input comes from.
+    roleCodeAliases: targetContext.context.roleCodeAliases,
     offeredModules: modules,
     allowedModifierCodes: targetContext.context.recipe.allowedModifierCodes,
     modifierDefinitionHashes: modifierDefinitionHashes(targetDefinitions.sources),

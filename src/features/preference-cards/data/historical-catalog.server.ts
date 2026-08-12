@@ -14,7 +14,7 @@ import {
   type HistoricalCatalogValidationMessage,
   type HistoricalProductRow,
 } from '../domain/historical-catalog'
-import { canonicalRoleCode } from '../domain/role-taxonomy'
+import type { RoleCodeCanonicalizer } from '../domain/role-taxonomy'
 import { catalogVerificationTier, isUsStatusPending } from '../domain/verification'
 import { canonicalManufacturer } from '../server/manufacturer-aliases'
 
@@ -120,12 +120,18 @@ export function historicalProductToPick(row: HistoricalProductRow, roleCode: str
  * renamed carries the old code and the retained mapping carries the old code; a card saved after
  * carries the new one. Aliases are permanent so that both keep matching, and comparing raw strings
  * would make a rename look like a product that no longer serves the requirement.
+ *
+ * The canonicalizer is a required argument, not a module import: this function reconstructs a
+ * pick inside one release's semantics, so the alias table must be the one that release resolved
+ * by its pin. Reaching for the live table here is exactly how a live alias added later would
+ * reinterpret a historical role (P92-C1).
  */
 export function resolveHistoricalCatalogPick(
   historical: HistoricalCatalog,
   requestedProductId: string,
   requestedRoleCode: string,
   isCurrentlyUnselectable: (productId: string) => boolean,
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): HistoricalPickResult {
   const roleCode = canonicalRoleCode(requestedRoleCode)
   const row = historical.productById.get(requestedProductId)
@@ -172,6 +178,7 @@ export function historicalFamilyPick(
   historical: HistoricalCatalog,
   version: ReviewedProductFamilyVersion,
   requestedRoleCode: string,
+  canonicalRoleCode: RoleCodeCanonicalizer,
 ): HistoricalFamilyPickResult {
   const roleCode = canonicalRoleCode(requestedRoleCode)
   const rows = version.memberProductIds.map((productId) => historical.productById.get(productId))

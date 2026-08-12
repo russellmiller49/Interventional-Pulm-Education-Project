@@ -107,7 +107,7 @@ describe('permanent role-code aliases', () => {
         const historical = getHistoricalCatalog(version.catalogReleaseId)
         expect(historical.ok).toBe(true)
         if (!historical.ok) continue
-        const pick = historicalFamilyPick(historical, version, oldCode)
+        const pick = historicalFamilyPick(historical, version, oldCode, canonicalRoleCode)
         expect(pick.ok).toBe(true)
         if (pick.ok) expect(pick.pick.roleCode).toBe(newCode)
         checked.push(oldCode)

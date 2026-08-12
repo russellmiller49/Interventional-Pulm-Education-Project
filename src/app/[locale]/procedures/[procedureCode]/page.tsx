@@ -98,7 +98,16 @@ export default async function ProcedureWorkspacePage({ params, searchParams }: P
             <li>
               {t('effects.adds', { count: modifier.effects.addedRequirements.length })}:{' '}
               {modifier.effects.addedRequirements
-                .map((requirement) => requirement.label)
+                // A conditional addition names its authored dependency rule inline, for any
+                // modifier and any slot — the data decides which rows carry one (F-09).
+                .map((requirement) =>
+                  requirement.requiredness === 'conditional' && requirement.dependencyRule
+                    ? t('effects.addedConditional', {
+                        label: requirement.label,
+                        rule: requirement.dependencyRule,
+                      })
+                    : requirement.label,
+                )
                 .join('; ')}
             </li>
           ) : null}

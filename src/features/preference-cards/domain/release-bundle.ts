@@ -186,6 +186,10 @@ export const RELEASE_PINNED_CONTEXT_FIELDS = [
   'modifiers',
   'rescueModules',
   'compatibilityRules',
+  // The resolved role taxonomy's alias table. Pinned-side because a role's meaning inside a
+  // release is part of what the release froze: canonicalizing a stored code with a table the
+  // live taxonomy grew later would silently re-aim the requirement it serves (P92-C1).
+  'roleCodeAliases',
 ] as const
 
 export const HOSPITAL_LOCAL_CURRENT_CONTEXT_FIELDS = [

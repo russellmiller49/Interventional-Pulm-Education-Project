@@ -5,7 +5,10 @@ import { getReleaseDefinitionSources } from '../../src/features/preference-cards
 import { PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION } from '../../src/features/preference-cards/domain/resolve-card'
 import { RUNTIME_RESOLVER_CONTRACT } from '../../src/features/preference-cards/data/release-bundles.server'
 
-import { buildReleaseBundles } from './build-release-bundles'
+import type { ReleaseDefinitionSetPins } from '../../src/features/preference-cards/data/demo-context.server'
+import type { PreferenceCardReleaseBundle } from '../../src/features/preference-cards/domain/release-bundle'
+
+import { buildReleaseBundles, setPinsOfBundle } from './build-release-bundles'
 
 /**
  * The release build is the gate that makes "published definitions are immutable" true rather
@@ -16,13 +19,24 @@ import { buildReleaseBundles } from './build-release-bundles'
  * like one that had always said that.
  */
 
-const loadSources = (recipeVersionId: string) =>
-  getReleaseDefinitionSources(recipeVersionId, RUNTIME_RESOLVER_CONTRACT)
+const loadSources = (recipeVersionId: string, setPins?: ReleaseDefinitionSetPins) =>
+  getReleaseDefinitionSources(recipeVersionId, RUNTIME_RESOLVER_CONTRACT, setPins)
+
+// Frozen releases resolve through the whole-set pins the generated bundles recorded — the
+// same record the script itself reads back — so this test keeps reproducing committed output
+// after a live definition set moves on from what an old release pinned.
+const recordedSetPinsByReleaseId = new Map<string, ReleaseDefinitionSetPins>(
+  (generatedReleasesJson as { bundles: PreferenceCardReleaseBundle[] }).bundles.map((bundle) => [
+    bundle.id,
+    setPinsOfBundle(bundle),
+  ]),
+)
 
 const baseInput = () => ({
   seed: JSON.parse(JSON.stringify(seedReleasesJson)) as never,
   resolverContractVersion: PREFERENCE_CARD_RESOLVER_CONTRACT_VERSION,
   loadSources,
+  recordedSetPinsByReleaseId,
 })
 
 type SeedRelease = {
@@ -98,6 +112,50 @@ describe('release bundle build', () => {
     expect(result.messages.map((message) => message.code)).toContain('release_pointer_retired')
   })
 
+  it('resolves a draft through the live sets even when stale pins were recorded for its id', () => {
+    // The two-pass freeze writes drafts into the generated file, so a draft's id can carry
+    // recorded pins from before a live-set edit. Those pins must not be honoured: a draft's
+    // whole point is to publish the CURRENT content, and resolving it through stale retained
+    // sets would silently freeze the pre-edit semantics under a release note describing the
+    // edit. Fixture: a new draft whose recorded pins name the superseded modifier set.
+    const input = baseInput()
+    const releases = seedReleases(input)
+    const template = releases.find(
+      (release) => release.id === 'release-therapeutic-bronch-v1-2',
+    ) as SeedRelease & Record<string, unknown>
+    releases.push({
+      ...template,
+      id: 'release-therapeutic-bronch-v9-9',
+      releaseState: 'draft',
+      supersedesReleaseBundleId: 'release-therapeutic-bronch-v1-2',
+      definitionHash: undefined,
+      publishedAt: null,
+      catalogImportId: undefined,
+      resolverContractVersion: undefined,
+      resolverImplementationHash: undefined,
+    } as SeedRelease)
+
+    const staleBundle = (
+      generatedReleasesJson as { bundles: PreferenceCardReleaseBundle[] }
+    ).bundles.find(
+      (bundle) => bundle.id === 'release-therapeutic-bronch-v1-1',
+    ) as PreferenceCardReleaseBundle
+    const withStaleDraftPins = new Map(recordedSetPinsByReleaseId)
+    withStaleDraftPins.set('release-therapeutic-bronch-v9-9', setPinsOfBundle(staleBundle))
+
+    const result = buildReleaseBundles({ ...input, recordedSetPinsByReleaseId: withStaleDraftPins })
+    const draft = result.bundles.find(
+      (bundle) => bundle.id === 'release-therapeutic-bronch-v9-9',
+    ) as PreferenceCardReleaseBundle
+    const current = result.bundles.find(
+      (bundle) => bundle.id === 'release-therapeutic-bronch-v1-2',
+    ) as PreferenceCardReleaseBundle
+    // The draft pins what is live NOW — the same set the current published release pins —
+    // not the stale set its recorded pins named.
+    expect(draft.modifierSetPin.definitionHash).toBe(current.modifierSetPin.definitionHash)
+    expect(draft.modifierSetPin.definitionHash).not.toBe(staleBundle.modifierSetPin.definitionHash)
+  })
+
   it('keeps every retained release addressed by a unique id', () => {
     const ids = generatedReleasesJson.bundles.map((bundle) => bundle.id)
     expect(ids).toEqual([...new Set(ids)])
@@ -119,8 +177,8 @@ describe('release bundle build', () => {
     // poisoned action rides the *next* side of the med-thoracoscopy v1-1 → v1-2
     // supersession, on a modifier that recipe actually offers — everything else about the
     // build is the committed baseline.
-    const poisonedLoad = (recipeVersionId: string) => {
-      const sources = loadSources(recipeVersionId)
+    const poisonedLoad = (recipeVersionId: string, setPins?: ReleaseDefinitionSetPins) => {
+      const sources = loadSources(recipeVersionId, setPins)
       if (!sources || recipeVersionId !== 'recipe-med-thoracoscopy-v0-3') return sources
       const offeredCode = sources.recipe.allowedModifierCodes[0]
       expect(offeredCode).toBeDefined()

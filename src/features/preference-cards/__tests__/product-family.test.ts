@@ -1,3 +1,4 @@
+import { canonicalRoleCode } from '../domain/role-taxonomy'
 import {
   getApprovedProductFamiliesForRole,
   getReviewedProductFamiliesForRole,
@@ -259,12 +260,15 @@ describe('a draft family is identified but not selectable', () => {
 
   it('produces no valid version-4 family pick', () => {
     const version = draftStentFamily()
-    const resolved = resolveProductFamilyPin({
-      productFamilyVersionId: version.productFamilyVersionId,
-      catalogReleaseId: version.catalogReleaseId,
-      definitionHash: version.definitionHash,
-      roleCode: STENT_ROLE,
-    })
+    const resolved = resolveProductFamilyPin(
+      {
+        productFamilyVersionId: version.productFamilyVersionId,
+        catalogReleaseId: version.catalogReleaseId,
+        definitionHash: version.definitionHash,
+        roleCode: STENT_ROLE,
+      },
+      canonicalRoleCode,
+    )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_unpublished')
   })
@@ -341,6 +345,7 @@ describe('a reviewed pin is verified in every part', () => {
         roleCode: STENT_ROLE,
       },
       versions,
+      canonicalRoleCode,
     )
     expect(resolved.ok).toBe(true)
   })
@@ -354,6 +359,7 @@ describe('a reviewed pin is verified in every part', () => {
         roleCode: STENT_ROLE,
       },
       versions,
+      canonicalRoleCode,
     )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_definition_mutated')
@@ -368,6 +374,7 @@ describe('a reviewed pin is verified in every part', () => {
         roleCode: 'CHEST_TUBE_SURGICAL',
       },
       versions,
+      canonicalRoleCode,
     )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_role_not_covered')
@@ -382,6 +389,7 @@ describe('a reviewed pin is verified in every part', () => {
         roleCode: STENT_ROLE,
       },
       versions,
+      canonicalRoleCode,
     )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_catalog_release_mismatch')
@@ -389,12 +397,15 @@ describe('a reviewed pin is verified in every part', () => {
 
   it('refuses a pin naming a family that is not retained', () => {
     expect(getReviewedProductFamilyVersion('family-does-not-exist-v1-0')).toBeNull()
-    const resolved = resolveProductFamilyPin({
-      productFamilyVersionId: 'family-does-not-exist-v1-0',
-      catalogReleaseId: 'a'.repeat(64),
-      definitionHash: 'b'.repeat(64),
-      roleCode: STENT_ROLE,
-    })
+    const resolved = resolveProductFamilyPin(
+      {
+        productFamilyVersionId: 'family-does-not-exist-v1-0',
+        catalogReleaseId: 'a'.repeat(64),
+        definitionHash: 'b'.repeat(64),
+        roleCode: STENT_ROLE,
+      },
+      canonicalRoleCode,
+    )
     expect(resolved.ok).toBe(false)
     if (!resolved.ok) expect(resolved.code).toBe('product_family_unknown')
   })
@@ -491,6 +502,7 @@ describe('retirement', () => {
         roleCode: STENT_ROLE,
       },
       new Map([[retired.productFamilyVersionId, retired]]),
+      canonicalRoleCode,
     )
     expect(resolved.ok).toBe(true)
   })

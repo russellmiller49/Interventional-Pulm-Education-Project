@@ -71,6 +71,24 @@ describe('the committed release set', () => {
     }
   })
 
+  it('never lets the live scenario list narrow a pinned recipe’s modifier offer', () => {
+    // The reopen path is pinned for all four definition sets, but the wizard's modifier
+    // picker intersects the pinned context with the *live* scenario's
+    // `availableModifierCodes` (an intersection can only narrow, never widen — the pinned
+    // recipe's permission stays the authorization boundary either way). If a scenario
+    // regeneration ever drops a code a retained release still grants, a modifier the
+    // release legitimately offers would silently vanish from a reopened card's picker.
+    // This pins the pairing so that narrowing forces a review instead of shipping.
+    for (const bundle of getRetainedReleaseBundles()) {
+      const result = buildReleaseContext(bundle.id)
+      if (!result.ok) continue
+      const scenarioCodes = new Set(result.scenario.availableModifierCodes)
+      for (const code of result.context.recipe.allowedModifierCodes) {
+        expect(`${bundle.id}:${code}:${scenarioCodes.has(code)}`).toBe(`${bundle.id}:${code}:true`)
+      }
+    }
+  })
+
   it('points only at releases that belong to the procedure named', () => {
     for (const [procedureCode, releaseBundleId] of Object.entries(getReleasePointers())) {
       const bundle = getReleaseBundle(releaseBundleId)
@@ -125,8 +143,15 @@ describe('tampering with the committed release set', () => {
     const result = resolvePinnedRelease(
       tampered.id,
       new Map([[tampered.id, tampered]]),
+      // Sources resolve through the candidate's own set pins, exactly as the runtime
+      // loadSources does — so the only mismatch left to detect is the tampered module pin.
       (candidate) =>
-        getReleaseDefinitionSources(candidate.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
+        getReleaseDefinitionSources(candidate.recipeVersionId, RUNTIME_RESOLVER_CONTRACT, {
+          modifierSetHash: candidate.modifierSetPin.definitionHash,
+          rescueModuleSetHash: candidate.rescueModuleSetPin.definitionHash,
+          compatibilityRuleSetHash: candidate.compatibilityRuleSetPin.definitionHash,
+          roleTaxonomyHash: candidate.roleTaxonomyPin.definitionHash,
+        }),
     )
     expect(result.ok).toBe(false)
     if (result.ok) return
@@ -223,7 +248,12 @@ describe('the resolver contract and the build that implements it', () => {
       sourcesByBundleId: new Map(
         bundles.map((bundle) => [
           bundle.id,
-          getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT),
+          getReleaseDefinitionSources(bundle.recipeVersionId, RUNTIME_RESOLVER_CONTRACT, {
+            modifierSetHash: bundle.modifierSetPin.definitionHash,
+            rescueModuleSetHash: bundle.rescueModuleSetPin.definitionHash,
+            compatibilityRuleSetHash: bundle.compatibilityRuleSetPin.definitionHash,
+            roleTaxonomyHash: bundle.roleTaxonomyPin.definitionHash,
+          }),
         ]),
       ),
     })

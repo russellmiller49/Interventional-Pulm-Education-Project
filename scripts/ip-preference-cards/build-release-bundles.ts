@@ -2,8 +2,10 @@ import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
+  getLiveDefinitionSets,
   getLiveRecipeVersions,
   getReleaseDefinitionSources,
+  type ReleaseDefinitionSetPins,
 } from '../../src/features/preference-cards/data/demo-context.server'
 import {
   emptyCompositionLedger,
@@ -11,6 +13,21 @@ import {
   withPublishedRecipes,
   type CompositionLedger,
 } from '../../src/features/preference-cards/domain/composition-ledger'
+import {
+  comparePublicationOrder,
+  emptyDefinitionSetLedger,
+  validateDefinitionSetAttribution,
+  validateDefinitionSetLedger,
+  validateReleasePublicationInstants,
+  withPublishedDefinitionSets,
+  COMPATIBILITY_RULE_SET_DEFINITION_ID as COMPAT_SET_ID,
+  MODIFIER_SET_DEFINITION_ID as MODIFIER_SET_ID,
+  RESCUE_MODULE_SET_DEFINITION_ID as RESCUE_SET_ID,
+  ROLE_TAXONOMY_DEFINITION_ID as TAXONOMY_SET_ID,
+  type DefinitionSetContent,
+  type DefinitionSetLedger,
+  type PublishedSetPinRecord,
+} from '../../src/features/preference-cards/domain/definition-set-ledger'
 import {
   computeReleaseBundle,
   diffReleaseBundles,
@@ -123,11 +140,27 @@ interface SeedReleaseFile {
   releases: SeedRelease[]
 }
 
+/** The shape of the previously generated bundle file, read back as the record of pins. */
+interface GeneratedReleaseFile {
+  pointers: Record<string, string>
+  bundles: PreferenceCardReleaseBundle[]
+}
+
 export interface BuildReleaseBundlesResult {
   bundles: PreferenceCardReleaseBundle[]
   pointers: ReleasePointerMap
   impact: ReleaseImpactReport[]
   messages: ReleaseValidationMessage[]
+}
+
+/** A bundle's four whole-set pins, in the shape `getReleaseDefinitionSources` resolves. */
+export function setPinsOfBundle(bundle: PreferenceCardReleaseBundle): ReleaseDefinitionSetPins {
+  return {
+    modifierSetHash: bundle.modifierSetPin.definitionHash,
+    rescueModuleSetHash: bundle.rescueModuleSetPin.definitionHash,
+    compatibilityRuleSetHash: bundle.compatibilityRuleSetPin.definitionHash,
+    roleTaxonomyHash: bundle.roleTaxonomyPin.definitionHash,
+  }
 }
 
 function fail(message: string): never {
@@ -139,13 +172,25 @@ function fail(message: string): never {
  *
  * Exported so `build-release-bundles.test.ts` can feed it a mutated seed and assert the
  * failure rather than trusting that the failure exists.
+ *
+ * `recordedSetPinsByReleaseId` carries the four whole-set pins each frozen release recorded
+ * in the previously generated bundles. A frozen release resolves its sets through those
+ * pins — live content when the hash still matches, the retention ledger otherwise — so
+ * editing a live definition set moves only the releases that have not yet been frozen. The
+ * frozen `definitionHash` still guards the pins themselves: recorded pins that disagree with
+ * what was frozen recompute to a different bundle hash and fail as `release_definition_mutated`.
  */
 export function buildReleaseBundles(input: {
   seed: SeedReleaseFile
   resolverContractVersion: string
-  loadSources: (recipeVersionId: string) => ReleaseDefinitionSources | null
+  loadSources: (
+    recipeVersionId: string,
+    setPins?: ReleaseDefinitionSetPins,
+  ) => ReleaseDefinitionSources | null
+  recordedSetPinsByReleaseId?: ReadonlyMap<string, ReleaseDefinitionSetPins>
 }): BuildReleaseBundlesResult {
   const { seed, loadSources } = input
+  const recordedSetPins = input.recordedSetPinsByReleaseId ?? new Map<string, never>()
 
   const bundles: PreferenceCardReleaseBundle[] = []
   const sourcesByBundleId = new Map<string, ReleaseDefinitionSources | null>()
@@ -173,10 +218,19 @@ export function buildReleaseBundles(input: {
       )
     }
 
-    const sources = loadSources(release.recipeVersionId)
+    // A frozen release resolves through the whole-set pins it recorded when generated; a
+    // draft resolves the live sets, because a draft's pins are still being computed. The
+    // gate on `frozen` is load-bearing: a draft's id can already appear in the previously
+    // generated file (the two-pass freeze writes drafts too), and resolving it through those
+    // recorded pins would silently freeze the pre-edit content — the exact substitution this
+    // ledger exists to prevent, pointed the other way.
+    const sources = loadSources(
+      release.recipeVersionId,
+      frozen ? recordedSetPins.get(release.id) : undefined,
+    )
     if (!sources) {
       fail(
-        `Release ${release.id} pins recipe version ${release.recipeVersionId}, which the generated data no longer publishes. A retained release must stay reconstructable: restore the composition, or the cards pinned to it cannot be rebuilt.`,
+        `Release ${release.id} pins definitions the generated data no longer supplies — the recipe version ${release.recipeVersionId} is not retained, or a pinned definition set is in neither the live sources nor the definition-set ledger. A retained release must stay reconstructable.`,
       )
     }
 
@@ -239,12 +293,22 @@ async function readJson<T>(directory: string, filename: string): Promise<T> {
   return JSON.parse(await readFile(path.join(directory, filename), 'utf8')) as T
 }
 
-/** The ledger starts empty on the first run; after that it is only ever added to. */
+/**
+ * The ledger starts empty on the first run; after that it is only ever added to.
+ *
+ * Only a genuinely missing file takes the fallback. A file that exists but does not parse is
+ * corruption, and degrading it to the default would convert "your retained history is
+ * damaged" into a cascade of misleading downstream retention errors (or, for the recorded
+ * set pins, into frozen releases quietly re-resolving live sets).
+ */
 async function readJsonOrDefault<T>(directory: string, filename: string, fallback: T): Promise<T> {
   try {
     return await readJson<T>(directory, filename)
-  } catch {
-    return fallback
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return fallback
+    throw new Error(
+      `${path.join(directory, filename)} exists but could not be read as JSON: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
 
@@ -389,6 +453,7 @@ export const RELEASE_GENERATION_TARGET_FILENAMES = [
   'product-family-versions.json',
   'module-ledger.json',
   'composition-ledger.json',
+  'definition-set-ledger.json',
   'release-bundles.json',
   'release-impact-report.json',
 ] as const
@@ -402,6 +467,7 @@ interface BuiltReleaseArtifacts {
   productFamilyVersions: ProductFamilyLedger
   moduleLedger: ModuleLedger
   compositionLedger: CompositionLedger
+  definitionSetLedger: DefinitionSetLedger
   releaseBundles: { pointers: ReleasePointerMap; bundles: PreferenceCardReleaseBundle[] }
   releaseImpactReport: ReleaseImpactReport[]
 }
@@ -426,6 +492,11 @@ async function writeReleaseArtifacts(artifacts: BuiltReleaseArtifacts, generated
     generatedDirectory,
     'composition-ledger.json',
     artifacts.compositionLedger,
+  )
+  await writeJsonWhenChanged(
+    generatedDirectory,
+    'definition-set-ledger.json',
+    artifacts.definitionSetLedger,
   )
   await writeJsonWhenChanged(generatedDirectory, 'release-bundles.json', artifacts.releaseBundles)
   await writeJsonWhenChanged(
@@ -456,6 +527,7 @@ export async function runBuildReleaseBundles(input: {
   loadSources?: (
     recipeVersionId: string,
     resolverContract: { version: string; implementationHash: string },
+    setPins?: ReleaseDefinitionSetPins,
   ) => ReleaseDefinitionSources | null
 }): Promise<boolean> {
   const { generatedDirectory, seedDirectory, reviewedDirectory } = input
@@ -483,11 +555,81 @@ export async function runBuildReleaseBundles(input: {
   }
 
   const seed = await readJson<SeedReleaseFile>(seedDirectory, 'release-bundles.json')
+
+  // The whole-set pins each already-generated bundle recorded, keyed by release id — the
+  // retained record that lets a frozen release keep resolving the sets it actually pinned
+  // after the live sources move on. Absent on the very first generation, in which case every
+  // release resolves the live sets, exactly as before retention existed.
+  const generatedBefore = await readJsonOrDefault<GeneratedReleaseFile | null>(
+    generatedDirectory,
+    'release-bundles.json',
+    null,
+  )
+  // Wrong-shape JSON is as corrupt as unparseable JSON: degrading it to an empty pin map
+  // would quietly re-resolve every frozen release against the live sets — the exact
+  // misleading cascade the hardened reader exists to refuse.
+  if (generatedBefore !== null && !Array.isArray(generatedBefore.bundles)) {
+    throw new Error(
+      `${path.join(generatedDirectory, 'release-bundles.json')} parsed but does not carry a bundles array — the recorded whole-set pins are unreadable. Restore the file; frozen releases must resolve the sets they recorded.`,
+    )
+  }
+  const recordedSetPinsByReleaseId = new Map<string, ReleaseDefinitionSetPins>(
+    (generatedBefore?.bundles ?? []).map((bundle) => [bundle.id, setPinsOfBundle(bundle)]),
+  )
+
   const result = buildReleaseBundles({
     seed,
     resolverContractVersion: resolverContract.version,
-    loadSources: (recipeVersionId) => loadSources(recipeVersionId, resolverContract),
+    loadSources: (recipeVersionId, setPins) =>
+      loadSources(recipeVersionId, resolverContract, setPins),
+    recordedSetPinsByReleaseId,
   })
+
+  // Every frozen release's lifecycle facts and whole-set pins, as attribution consumes them.
+  // Built before anything orders by publication, because the very first thing to check is
+  // whether a publication order exists at all.
+  const frozenReleaseRecords: PublishedSetPinRecord[] = result.bundles
+    .filter((bundle) => bundle.releaseState !== 'draft')
+    .map((bundle) => ({
+      releaseBundleId: bundle.id,
+      releaseState: bundle.releaseState,
+      publishedAt: bundle.publishedAt,
+      pins: [
+        {
+          definitionSetId: bundle.modifierSetPin.id,
+          definitionHash: bundle.modifierSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.rescueModuleSetPin.id,
+          definitionHash: bundle.rescueModuleSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.compatibilityRuleSetPin.id,
+          definitionHash: bundle.compatibilityRuleSetPin.definitionHash,
+        },
+        {
+          definitionSetId: bundle.roleTaxonomyPin.id,
+          definitionHash: bundle.roleTaxonomyPin.definitionHash,
+        },
+      ],
+    }))
+
+  // P92-C2b — publication instants are validated before anything sorts or attributes by
+  // them. A frozen release whose publishedAt does not parse under the canonical contract
+  // (`parsePublishedReleaseInstant`) makes the whole publication order undefined; the run
+  // refuses it here, before the first-publisher fold below and long before phase B, rather
+  // than writing the malformed value into the generated bundle file the way the raw-string
+  // ordering used to.
+  const publicationInstantProblems = validateReleasePublicationInstants(frozenReleaseRecords)
+  if (publicationInstantProblems.length > 0) {
+    console.log('')
+    console.error(`${publicationInstantProblems.length} publication-instant problem(s):`)
+    for (const problem of publicationInstantProblems) {
+      console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    }
+    // Nothing has been written — phase B never runs.
+    return false
+  }
 
   // Every module version a published release pins is copied into the retention ledger, once,
   // verbatim. That is what lets the composition build stop producing a version without taking
@@ -507,17 +649,123 @@ export async function runBuildReleaseBundles(input: {
     releaseBundleId: string
   }> = []
   const pinnedRecipeVersionIds = new Set<string>()
+  // Every whole set a published release pins, retained the same way — see
+  // `definition-set-ledger.ts` for why the sets need a ledger of their own. Collected with
+  // each bundle's publication facts so the fold below can run in canonical publication
+  // order: the release that becomes a new entry's `firstPublishedByReleaseBundleId` must be
+  // the publication-order-first one, which id-ordered iteration does not guarantee (P92-C2).
+  const publishedDefinitionSets: Array<{
+    content: DefinitionSetContent
+    releaseBundleId: string
+    publishedAt: string | null
+  }> = []
+  const pinnedSetHashes = new Map<string, Set<string>>()
   for (const bundle of result.bundles) {
     if (bundle.releaseState === 'draft') continue
-    const sources = loadSources(bundle.recipeVersionId, resolverContract)
+    const sources = loadSources(bundle.recipeVersionId, resolverContract, setPinsOfBundle(bundle))
     for (const moduleVersion of sources?.modules ?? []) {
       pinnedModuleVersionIds.add(moduleVersion.id)
       publishedModules.push({ moduleVersion, releaseBundleId: bundle.id })
     }
     pinnedRecipeVersionIds.add(bundle.recipeVersionId)
-    if (sources) publishedRecipes.push({ recipe: sources.recipe, releaseBundleId: bundle.id })
+    if (sources) {
+      publishedRecipes.push({ recipe: sources.recipe, releaseBundleId: bundle.id })
+      publishedDefinitionSets.push(
+        {
+          content: { definitionSetId: MODIFIER_SET_ID, definition: sources.modifiers },
+          releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
+        },
+        {
+          content: { definitionSetId: RESCUE_SET_ID, definition: sources.rescueModules },
+          releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
+        },
+        {
+          content: { definitionSetId: COMPAT_SET_ID, definition: sources.compatibilityRules },
+          releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
+        },
+        {
+          content: { definitionSetId: TAXONOMY_SET_ID, definition: sources.roleTaxonomy },
+          releaseBundleId: bundle.id,
+          publishedAt: bundle.publishedAt,
+        },
+      )
+    }
+    for (const [setId, hash] of [
+      [bundle.modifierSetPin.id, bundle.modifierSetPin.definitionHash],
+      [bundle.rescueModuleSetPin.id, bundle.rescueModuleSetPin.definitionHash],
+      [bundle.compatibilityRuleSetPin.id, bundle.compatibilityRuleSetPin.definitionHash],
+      [bundle.roleTaxonomyPin.id, bundle.roleTaxonomyPin.definitionHash],
+    ] as const) {
+      const existing = pinnedSetHashes.get(setId) ?? new Set<string>()
+      existing.add(hash)
+      pinnedSetHashes.set(setId, existing)
+    }
   }
   const ledger = withPublishedModules(ledgerBefore, publishedModules)
+
+  const definitionSetLedgerBefore = await readJsonOrDefault<DefinitionSetLedger>(
+    generatedDirectory,
+    'definition-set-ledger.json',
+    emptyDefinitionSetLedger(),
+  )
+  // Wrong-shape retained history is refused the same way release-bundles.json is: an
+  // `entries` that is not an array would otherwise surface as a raw TypeError three calls
+  // deep instead of naming the corruption.
+  if (!Array.isArray(definitionSetLedgerBefore.entries)) {
+    throw new Error(
+      `${path.join(generatedDirectory, 'definition-set-ledger.json')} parsed but does not carry an entries array — the retained definition sets are unreadable. Restore the file; published releases must resolve the sets they recorded.`,
+    )
+  }
+  // Duplicate keys are refused on the raw on-disk ledger, before the fold: the fold indexes
+  // by (set, hash) and would otherwise collapse a duplicate last-wins — silently normalizing
+  // corrupt retained history, and silently choosing between two conflicting attribution
+  // claims, where the contract requires a refusal (P92-C2).
+  const rawLedgerDuplicates: ReturnType<typeof validateDefinitionSetLedger> = []
+  {
+    const seenRawKeys = new Set<string>()
+    for (const entry of definitionSetLedgerBefore.entries) {
+      const key = `${entry.definitionSetId}@${entry.definitionHash}`
+      if (seenRawKeys.has(key)) {
+        rawLedgerDuplicates.push({
+          code: 'definition_set_ledger_duplicate_entry',
+          definitionSetId: entry.definitionSetId,
+          definitionHash: entry.definitionHash,
+          message: `The on-disk definition-set ledger records ${key} more than once (one of them attributed to "${entry.firstPublishedByReleaseBundleId}"). A (set, hash) pair must identify exactly one frozen definition set; regenerating would silently keep one of the copies, which is a rewrite of retained history, not a repair.`,
+        })
+      }
+      seenRawKeys.add(key)
+    }
+  }
+  const definitionSetLedger = withPublishedDefinitionSets(
+    definitionSetLedgerBefore,
+    // Publication order, not id order: the first release naming a new (set, hash) pair in
+    // this list becomes the entry's first publisher, and the attribution validation below
+    // holds the whole ledger — new entries and retained ones alike — to exactly that.
+    [...publishedDefinitionSets].sort(comparePublicationOrder),
+  )
+  const definitionSetLedgerProblems = [
+    ...rawLedgerDuplicates,
+    ...validateDefinitionSetLedger({
+      ledger: definitionSetLedger,
+      pinnedSetHashes,
+      live: getLiveDefinitionSets(),
+    }),
+    // The generator certifies attribution itself, before any write — it must not trust the
+    // ledger's own firstPublishedByReleaseBundleId field, and it must not rely on the
+    // separately-run publication-baseline command to catch a rewrite (P92-C2).
+    ...validateDefinitionSetAttribution({
+      ledger: definitionSetLedger,
+      frozenReleases: frozenReleaseRecords,
+      draftReleaseIds: new Set(
+        result.bundles
+          .filter((bundle) => bundle.releaseState === 'draft')
+          .map((bundle) => bundle.id),
+      ),
+    }),
+  ]
 
   const compositionLedgerBefore = await readJsonOrDefault<CompositionLedger>(
     generatedDirectory,
@@ -629,6 +877,21 @@ export async function runBuildReleaseBundles(input: {
   console.log(
     `${families.versions.length} reviewed product family version(s): ${families.versions.filter((version) => version.governanceState === 'approved').length} approved, ${families.versions.filter((version) => version.governanceState === 'draft').length} draft, ${families.versions.filter((version) => version.governanceState === 'retired').length} retired.`,
   )
+  console.log(
+    `Definition-set ledger retains ${definitionSetLedger.entries.length} set(s): ${(
+      [
+        [MODIFIER_SET_ID, 'modifier'],
+        [RESCUE_SET_ID, 'rescue-module'],
+        [COMPAT_SET_ID, 'compatibility-rule'],
+        [TAXONOMY_SET_ID, 'role-taxonomy'],
+      ] as const
+    )
+      .map(
+        ([setId, label]) =>
+          `${definitionSetLedger.entries.filter((entry) => entry.definitionSetId === setId).length} ${label}`,
+      )
+      .join(', ')}.`,
+  )
   for (const version of families.versions.filter(
     (candidate) => candidate.governanceState === 'draft',
   )) {
@@ -655,6 +918,15 @@ export async function runBuildReleaseBundles(input: {
     console.log('')
     console.error(`${compositionLedgerProblems.length} composition retention problem(s):`)
     for (const problem of compositionLedgerProblems) {
+      console.error(`  ✗ ${problem.code}: ${problem.message}`)
+    }
+    return false
+  }
+
+  if (definitionSetLedgerProblems.length > 0) {
+    console.log('')
+    console.error(`${definitionSetLedgerProblems.length} definition-set retention problem(s):`)
+    for (const problem of definitionSetLedgerProblems) {
       console.error(`  ✗ ${problem.code}: ${problem.message}`)
     }
     return false
@@ -695,6 +967,7 @@ export async function runBuildReleaseBundles(input: {
       productFamilyVersions: familyLedger,
       moduleLedger: ledger,
       compositionLedger,
+      definitionSetLedger,
       releaseBundles: { pointers: result.pointers, bundles: result.bundles },
       releaseImpactReport: result.impact,
     },

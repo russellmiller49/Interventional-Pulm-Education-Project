@@ -508,6 +508,16 @@ export interface BuildContext {
   recipeModules: RecipeModuleVersion[]
   modifiers: ModifierDefinition[]
   rescueModules: RescueModule[]
+  /**
+   * The role-code alias table everything resolving through this context canonicalizes with.
+   *
+   * For a release-pinned context this is the alias table of the release's *resolved* role
+   * taxonomy — retained from the ledger when the pin no longer matches the live set — so a
+   * role's meaning inside the release is frozen with the release. The live table is only
+   * supplied here for the current-by-design contexts (demo, authoring preview), where it is
+   * the current taxonomy rather than a fallback.
+   */
+  roleCodeAliases: Readonly<Record<string, string>>
   hospitalItems: HospitalItem[]
   hospitalRoleOptions: HospitalRoleOption[]
   compatibilityRules: TypedCompatibilityRule[]

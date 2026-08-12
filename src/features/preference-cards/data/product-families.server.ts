@@ -8,7 +8,7 @@ import {
   type ReviewedProductFamilyPin,
   type ReviewedProductFamilyVersion,
 } from '../domain/product-family'
-import { canonicalRoleCode } from '../domain/role-taxonomy'
+import { canonicalRoleCode, type RoleCodeCanonicalizer } from '../domain/role-taxonomy'
 
 /**
  * The retained reviewed product families, and the only route by which one becomes a card selection.
@@ -141,10 +141,17 @@ export function getReviewedProductFamiliesForRole(
 
 export function resolveProductFamilyPin(
   pin: ReviewedProductFamilyPin,
+  /**
+   * The alias table of the release the pin is reconstructed under. The pin's stored role is
+   * pre-canonicalized with the same table the domain check uses, so both hops speak the pinned
+   * release's vocabulary — never the live table's (P92-C1).
+   */
+  canonicalize: RoleCodeCanonicalizer,
 ): ProductFamilyResolutionResult {
   return resolveReviewedProductFamily(
-    { ...pin, roleCode: canonicalRoleCode(pin.roleCode) },
+    { ...pin, roleCode: canonicalize(pin.roleCode) },
     versionById,
+    canonicalize,
   )
 }
 

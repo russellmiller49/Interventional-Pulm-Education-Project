@@ -559,6 +559,7 @@ describe('the composition manifest is part of the card identity', () => {
       hospitalItems: [],
       hospitalRoleOptions: [],
       compatibilityRules: [],
+      roleCodeAliases: {},
       preferenceOverlays: [],
     }
   }
