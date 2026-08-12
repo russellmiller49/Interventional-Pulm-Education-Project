@@ -11,9 +11,13 @@ import {
 import {
   GOVERNED_CLAIM_FORMAT_VERSION,
   appendClaimReview,
+  appendImplementationStatus,
+  appendReleaseImpactAssessment,
   assessGovernedClaimStaleness,
   assessRuntimeIngestionEligibility,
   buildGovernedClaimImpactReport,
+  compatibilityEligiblePrimarySourceTypes,
+  governedClaimContentHash,
   governedClaimEvidenceSetHash,
   transitionGovernedClaim,
   validateGovernedClaim,
@@ -42,6 +46,18 @@ function rebindEvidence(
     evidenceSetHash,
     reviews: claim.reviews.map((review) => ({ ...review, evidenceSetHash })),
     transitions: claim.transitions.map((transition) => ({ ...transition, evidenceSetHash })),
+  }
+}
+
+/** Simulate a fresh content signoff so prose rules are tested, not stale hashes. */
+function rebindClaimStatement(claim: GovernedClaim, claimStatement: string): GovernedClaim {
+  const rebound = { ...claim, claimStatement }
+  const claimContentHash = governedClaimContentHash(rebound)
+  return {
+    ...rebound,
+    claimContentHash,
+    reviews: rebound.reviews.map((review) => ({ ...review, claimContentHash })),
+    transitions: rebound.transitions.map((transition) => ({ ...transition, claimContentHash })),
   }
 }
 
@@ -155,20 +171,274 @@ describe('governed claim lifecycle foundation', () => {
 
   it('rejects compatibility approval without explicit applicable primary evidence', () => {
     const approved = createFictionalApprovedClaim()
-    const secondary: ClaimEvidence = {
-      ...approved.evidence[0],
-      evidenceClass: 'secondary',
+    for (const evidenceClass of ['secondary', 'contextual'] as const) {
+      const nonPrimary: ClaimEvidence = {
+        ...approved.evidence[0],
+        evidenceClass,
+      }
+      expect(codes(rebindEvidence(approved, [nonPrimary]))).toContain(
+        'compatibility_approval_without_primary_evidence',
+      )
     }
-    expect(codes(rebindEvidence(approved, [secondary]))).toContain(
+  })
+
+  it('allows only explicit exact-model primary source types to support compatibility approval', () => {
+    expect(compatibilityEligiblePrimarySourceTypes).toEqual([
+      'manufacturer_labeling',
+      'manufacturer_ifu',
+      'manufacturer_manual',
+      'regulator_record',
+    ])
+
+    const approved = createFictionalApprovedClaim()
+    for (const sourceType of compatibilityEligiblePrimarySourceTypes) {
+      const eligibleExactModelEvidence: ClaimEvidence = {
+        ...approved.evidence[0],
+        sourceType,
+      }
+      expect(codes(rebindEvidence(approved, [eligibleExactModelEvidence]))).not.toContain(
+        'compatibility_approval_without_primary_evidence',
+      )
+    }
+    for (const sourceType of [
+      'professional_society_guidance',
+      'regulator_guidance',
+      'peer_reviewed_literature',
+      'internal_review_record',
+    ] as const) {
+      const relabeledGuidance: ClaimEvidence = {
+        ...approved.evidence[0],
+        sourceType,
+        evidenceClass: 'primary',
+        decisionUse: 'primary_claim_support',
+      }
+      expect(codes(rebindEvidence(approved, [relabeledGuidance]))).toContain(
+        'compatibility_approval_without_primary_evidence',
+      )
+    }
+  })
+
+  it('requires exact product/model scope for primary compatibility evidence', () => {
+    const approved = createFictionalApprovedClaim()
+    const wrongModel: ClaimEvidence = {
+      ...approved.evidence[0],
+      applicability: { kind: 'exact_model', productId: 'FICT-PRODUCT-MODEL-Y' },
+    }
+    expect(codes(rebindEvidence(approved, [wrongModel]))).toContain(
+      'compatibility_approval_without_primary_evidence',
+    )
+
+    const qualifiedFamilyOnly: ClaimEvidence = {
+      ...approved.evidence[0],
+      applicability: {
+        kind: 'family_evidence',
+        productFamilyVersionId: 'FICT-FAMILY-V1',
+        qualification: {
+          qualifiedProductIds: [FICTIONAL_PRODUCT_ID],
+          basis: 'Fictional reviewer qualification for the model-approval gate only.',
+          reviewedBy: {
+            personId: fictionalPhysicianOwner.personId,
+            displayName: fictionalPhysicianOwner.displayName,
+          },
+          reviewedAt: '2026-02-02T12:00:00.000Z',
+        },
+      },
+    }
+    expect(codes(rebindEvidence(approved, [qualifiedFamilyOnly]))).toContain(
       'compatibility_approval_without_primary_evidence',
     )
   })
 
-  it('rejects generic equivalence, substitution, and interchangeability claim types', () => {
-    for (const claimType of ['generic_equivalence', 'substitution', 'interchangeability']) {
+  it('rejects generic relationship-decision claim types', () => {
+    for (const claimType of [
+      'generic_equivalence',
+      'substitution',
+      'interchangeability',
+      'replacement',
+      'alternative_product',
+    ]) {
       const raw = { ...createFictionalResearchCandidate(), claimType }
       expect(codes(raw)).toContain('generic_equivalence_or_substitution_claim_type')
     }
+  })
+
+  it.each([
+    'Fictional Model X is clinically equivalent to Fictional Model Y.',
+    'Fictional Model X can be substituted for Fictional Model Y.',
+    'Fictional Model X is interchangeable with Fictional Model Y.',
+    'Fictional Model X is a replacement for Fictional Model Y.',
+    'Fictional Model X is an alternative product to Fictional Model Y.',
+    'Fictional Model X may be used interchangeably with Fictional Model Y.',
+    'Fictional Model X may be used as an alternative product to Fictional Model Y.',
+    'Fictional Model X is a replacement device for Fictional Model Y.',
+    'Fictional Model X is a viable alternative to Fictional Model Y.',
+  ])('rejects forbidden relationship decisions in claim prose: %s', (claimStatement) => {
+    const claim = rebindClaimStatement(createFictionalResearchCandidate(), claimStatement)
+    expect(codes(claim)).toContain('forbidden_relationship_decision_language')
+  })
+
+  it('rejects forbidden relationship decisions hidden in decision-bearing rationale', () => {
+    const claim = cloneClaim(createFictionalApprovedClaim())
+    claim.reviews[0].rationale = 'Fictional Model X is clinically equivalent to Fictional Model Y.'
+    expect(codes(claim)).toContain('forbidden_relationship_decision_language')
+  })
+
+  it('rejects forbidden relationship decisions hidden in an evidence-conflict summary', () => {
+    const candidate = createFictionalResearchCandidate()
+    const secondEvidence: ClaimEvidence = {
+      ...candidate.evidence[0],
+      evidenceId: 'FICT-EVIDENCE-SECOND-002',
+    }
+    const claim = rebindEvidence(
+      candidate,
+      [candidate.evidence[0], secondEvidence],
+      [
+        {
+          conflictId: 'FICT-CONFLICT-DECISION-001',
+          evidenceIds: [candidate.evidence[0].evidenceId, secondEvidence.evidenceId],
+          summary: 'Fictional Model X is interchangeable with Fictional Model Y.',
+          status: 'unresolved',
+          resolutionRationale: null,
+          resolvedByReviewId: null,
+        },
+      ],
+    )
+    expect(codes(claim)).toContain('forbidden_relationship_decision_language')
+  })
+
+  it.each([
+    'This claim does not establish equivalence, substitution, interchangeability, replacement, or an alternative-product relationship.',
+    'There is no evidence that Fictional Model X is equivalent to Fictional Model Y.',
+    'Whether Fictional Model X is interchangeable with Fictional Model Y remains unresolved.',
+    'Fictional Model X must not be treated as clinically equivalent to Fictional Model Y.',
+    'Replacement connector packaging must remain sealed during this fictional setup.',
+  ])('does not reject explicit limitations or incidental terminology: %s', (claimStatement) => {
+    const claim = rebindClaimStatement(createFictionalResearchCandidate(), claimStatement)
+    expect(codes(claim)).not.toContain('forbidden_relationship_decision_language')
+  })
+
+  it('enforces the cross-history partial order on retained records', () => {
+    const reviewRequiredBeforeCreation = cloneClaim(createFictionalApprovedClaim())
+    reviewRequiredBeforeCreation.transitions[1].occurredAt = '2000-01-01T00:00:00.000Z'
+    expect(codes(reviewRequiredBeforeCreation)).toContain('history_partial_order_invalid')
+
+    const reviewBeforeClaim = cloneClaim(createFictionalApprovedClaim())
+    reviewBeforeClaim.reviews[0].reviewedAt = '2000-01-01T00:00:00.000Z'
+    expect(codes(reviewBeforeClaim)).toContain('history_partial_order_invalid')
+
+    const reviewAfterApproval = cloneClaim(createFictionalApprovedClaim())
+    reviewAfterApproval.reviews[0].reviewedAt = '2030-01-01T00:00:00.000Z'
+    expect(codes(reviewAfterApproval)).toContain('history_partial_order_invalid')
+
+    const approved = createFictionalApprovedClaim()
+    const futureEvidence: ClaimEvidence = {
+      ...approved.evidence[0],
+      sourceRevision: {
+        ...approved.evidence[0].sourceRevision,
+        accessedAt: '2030-01-01T00:00:00.000Z',
+      },
+    }
+    expect(codes(rebindEvidence(approved, [futureEvidence]))).toContain(
+      'history_partial_order_invalid',
+    )
+
+    const implementationBeforeClaim = cloneClaim(createFictionalPublishedClaim())
+    implementationBeforeClaim.implementationHistory[1].recordedAt = '2000-01-01T00:00:00.000Z'
+    expect(codes(implementationBeforeClaim)).toContain('history_partial_order_invalid')
+
+    const initialImplementationBeforeClaim = cloneClaim(createFictionalResearchCandidate())
+    initialImplementationBeforeClaim.implementationHistory[0].recordedAt =
+      '2000-01-01T00:00:00.000Z'
+    expect(codes(initialImplementationBeforeClaim)).toContain('history_partial_order_invalid')
+
+    const impactBeforeClaim = cloneClaim(createFictionalPublishedClaim())
+    impactBeforeClaim.affectedReleaseAssessments[0].assessedAt = '2000-01-01T00:00:00.000Z'
+    expect(codes(impactBeforeClaim)).toContain('history_partial_order_invalid')
+
+    const verificationAfterPublication = cloneClaim(createFictionalPublishedClaim())
+    verificationAfterPublication.implementationHistory[3].recordedAt = '2030-01-01T00:00:00.000Z'
+    expect(codes(verificationAfterPublication)).toContain('history_partial_order_invalid')
+
+    const publicationAssessmentAfterPublication = cloneClaim(createFictionalPublishedClaim())
+    publicationAssessmentAfterPublication.affectedReleaseAssessments[0].assessedAt =
+      '2030-01-01T00:00:00.000Z'
+    expect(codes(publicationAssessmentAfterPublication)).toContain('history_partial_order_invalid')
+  })
+
+  it('refuses append operations that would violate the cross-history partial order', () => {
+    expect(() =>
+      transitionGovernedClaim(createFictionalResearchCandidate(), {
+        toState: 'physician_review_required',
+        occurredAt: '2000-01-01T00:00:00.000Z',
+        actor: fictionalResearcher,
+        rationale: 'Deliberately invalid fictional review-required transition time.',
+      }),
+    ).toThrow('history_partial_order_invalid')
+
+    const reviewRequired = transitionGovernedClaim(createFictionalResearchCandidate(), {
+      toState: 'physician_review_required',
+      occurredAt: '2026-02-03T00:00:00.000Z',
+      actor: fictionalResearcher,
+      rationale: 'Fictional packet ready for review.',
+    })
+    expect(() =>
+      appendClaimReview(reviewRequired, {
+        reviewId: 'FICT-REVIEW-BEFORE-CREATION',
+        reviewer: {
+          personId: fictionalPhysicianOwner.personId,
+          displayName: fictionalPhysicianOwner.displayName,
+          reviewerRole: 'physician',
+        },
+        reviewedAt: '2000-01-01T00:00:00.000Z',
+        decision: 'approved',
+        rationale: 'Deliberately invalid fictional review time.',
+      }),
+    ).toThrow('history_partial_order_invalid')
+
+    const futureEvidence: ClaimEvidence = {
+      ...reviewRequired.evidence[0],
+      sourceRevision: {
+        ...reviewRequired.evidence[0].sourceRevision,
+        accessedAt: '2030-01-01T00:00:00.000Z',
+      },
+    }
+    const reviewRequiredWithFutureEvidence = rebindEvidence(reviewRequired, [futureEvidence])
+    expect(() =>
+      appendClaimReview(reviewRequiredWithFutureEvidence, {
+        reviewId: 'FICT-REVIEW-BEFORE-EVIDENCE-ACCESS',
+        reviewer: {
+          personId: fictionalPhysicianOwner.personId,
+          displayName: fictionalPhysicianOwner.displayName,
+          reviewerRole: 'physician',
+        },
+        reviewedAt: '2026-02-04T00:00:00.000Z',
+        decision: 'approved',
+        rationale: 'Deliberately invalid fictional evidence-access order.',
+      }),
+    ).toThrow('history_partial_order_invalid')
+
+    const approved = createFictionalApprovedClaim()
+    expect(() =>
+      appendImplementationStatus(approved, {
+        status: 'governed_authoring_ready',
+        recordedAt: '2000-01-01T00:00:00.000Z',
+        recordedBy: fictionalResearcher,
+        releaseBundleId: null,
+        artifactPaths: [],
+        rationale: 'Deliberately invalid fictional implementation time.',
+      }),
+    ).toThrow('history_partial_order_invalid')
+    expect(() =>
+      appendReleaseImpactAssessment(approved, {
+        assessmentId: 'FICT-IMPACT-BEFORE-CREATION',
+        releaseBundleId: FICTIONAL_RELEASE_ID,
+        relationship: 'planned_forward_release',
+        impact: 'review_only',
+        assessedAt: '2000-01-01T00:00:00.000Z',
+        assessedBy: fictionalResearcher,
+        rationale: 'Deliberately invalid fictional release-impact time.',
+      }),
+    ).toThrow('history_partial_order_invalid')
   })
 
   it('retains unresolved evidence conflicts and blocks approval', () => {

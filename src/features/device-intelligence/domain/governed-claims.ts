@@ -48,7 +48,65 @@ const publishedOrHistoricalStates = new Set<GovernedClaimLifecycleState>([
   'historical_retained',
 ])
 
-const forbiddenGenericClaimTypePattern = /equival|substitut|interchange|alternative[_ -]?product/iu
+const forbiddenGenericClaimTypePattern =
+  /equival|substitut|interchange|replacement|alternative[_ -]?product/iu
+const relationshipDecisionTerm = String.raw`(?:equival\w*|substitut\w*|interchange\w*|replacement|alternative(?:[_ -]?product)?)`
+const affirmativeRelationshipAuxiliary = String.raw`(?:is|are|was|were|may\s+be|can\s+be|could\s+be|should\s+be|must\s+be|has\s+been|have\s+been)`
+/**
+ * Narrow, affirmative product-relationship predicates. These are intentionally not keyword
+ * filters: relationship nouns used for packaging/setup and explicit uncertainty/negation stay
+ * valid under the limitation patterns below.
+ */
+const forbiddenRelationshipDecisionPatterns = [
+  new RegExp(
+    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:considered|deemed)\s+)?(?:(?:clinically|functionally)\s+)?equivalent(?:\s+products?)?(?:\s+to\b|\b)`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+as\s+)?(?:an?\s+)?(?:(?:direct|clinical)\s+)?substitute(?:\s+(?:product|device|model))?\s+(?:for|of)\b`,
+    'iu',
+  ),
+  /\b(?:may|can|could|should|must)\s+be\s+substituted\s+(?:for|with)\b/iu,
+  new RegExp(
+    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+)?(?:(?:clinically|functionally)\s+)?interchangeabl(?:e|y)\s+with\b`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+as\s+)?(?:an?\s+)?(?:(?:direct|drop-in|clinical)\s+)?replacement(?:\s+(?:product|device|model))?\s+(?:for|of)\b`,
+    'iu',
+  ),
+  /\b(?:may|can|could|should|must)\s+(?:directly\s+)?replace\b/iu,
+  new RegExp(
+    String.raw`\b${affirmativeRelationshipAuxiliary}\s+(?:(?:used|treated)\s+as\s+)?(?:an?\s+)?(?:(?:direct|clinical|viable|acceptable|approved)\s+)?alternative(?:\s+(?:product|device|model))?\s+(?:to|for)\b`,
+    'iu',
+  ),
+] as const
+const explicitRelationshipLimitationPatterns = [
+  new RegExp(
+    String.raw`\b(?:does?|did|can|could|may|might|must|should|would|will|has|have|had)\s+(?:not|never)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b(?:cannot|can't|couldn't|shouldn't|wouldn't|mustn't)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b(?:no|insufficient|inadequate|absent|lacking)\s+(?:\w+\s+){0,3}(?:evidence|basis|support)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b(?:evidence|basis|support)\s+(?:is|are|was|were|remains?)\s+(?:absent|insufficient|inadequate|lacking|unresolved)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b(?:unknown|unresolved|undetermined|not\s+established)\b[^.!?;]*\b${relationshipDecisionTerm}\b`,
+    'iu',
+  ),
+  new RegExp(
+    String.raw`\b(?:whether|if)\b[^.!?;]*\b${relationshipDecisionTerm}\b[^.!?;]*\b(?:unknown|unresolved|undetermined|not\s+established)\b`,
+    'iu',
+  ),
+] as const
 const nonBlankStringSchema = z.string().trim().min(1)
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/u)
 const instantSchema = z.string().datetime({ offset: true })
@@ -171,6 +229,21 @@ export const claimEvidenceSchema = z
     applicability: evidenceApplicabilitySchema,
   })
   .strict()
+
+/**
+ * Source types allowed to serve as primary compatibility evidence after exact-model scope checks.
+ * A caller cannot promote guidance or literature merely by labeling its evidence class `primary`.
+ */
+export const compatibilityEligiblePrimarySourceTypes = [
+  'manufacturer_labeling',
+  'manufacturer_ifu',
+  'manufacturer_manual',
+  'regulator_record',
+] as const satisfies ReadonlyArray<ClaimEvidence['sourceType']>
+
+const compatibilityEligiblePrimarySourceTypeSet = new Set<ClaimEvidence['sourceType']>(
+  compatibilityEligiblePrimarySourceTypes,
+)
 
 export const evidenceConflictSchema = z
   .object({
@@ -524,7 +597,7 @@ export function createResearchCandidate(input: CreateResearchCandidateInput): Go
       },
     ],
   }
-  return governedClaimSchema.parse(candidate)
+  return assertValidClaim(governedClaimSchema.parse(candidate), 'Research-candidate creation')
 }
 
 export interface GovernanceValidationMessage {
@@ -537,6 +610,7 @@ export interface GovernanceValidationMessage {
 export type GovernanceValidationCode =
   | 'claim_schema_invalid'
   | 'generic_equivalence_or_substitution_claim_type'
+  | 'forbidden_relationship_decision_language'
   | 'claim_content_hash_mismatch'
   | 'evidence_set_hash_mismatch'
   | 'claim_target_missing'
@@ -564,6 +638,7 @@ export type GovernanceValidationCode =
   | 'release_assessment_id_duplicate'
   | 'implementation_history_invalid'
   | 'history_timestamp_invalid'
+  | 'history_partial_order_invalid'
   | 'published_without_forward_release_evidence'
   | 'silent_supersession'
   | 'historical_retention_missing'
@@ -604,6 +679,15 @@ function rawClaimId(input: unknown): string {
   return '<unknown-claim>'
 }
 
+function hasForbiddenRelationshipDecision(text: string): boolean {
+  const clauses = text.split(/[.!?;\n]+|,\s*|\s+\b(?:but|however)\b\s+/iu)
+  return clauses.some(
+    (clause) =>
+      !explicitRelationshipLimitationPatterns.some((pattern) => pattern.test(clause)) &&
+      forbiddenRelationshipDecisionPatterns.some((pattern) => pattern.test(clause)),
+  )
+}
+
 function preSchemaMessages(input: unknown): GovernanceValidationMessage[] {
   if (!input || typeof input !== 'object') return []
   const record = input as Record<string, unknown>
@@ -617,7 +701,19 @@ function preSchemaMessages(input: unknown): GovernanceValidationMessage[] {
       message(
         'generic_equivalence_or_substitution_claim_type',
         claimId,
-        `Claim type "${record.claimType}" is forbidden. Equivalence, substitution, interchangeability, and alternative-product decisions require a separately designed governed contract; a generic claim cannot approve them.`,
+        `Claim type "${record.claimType}" is forbidden. Equivalence, substitution, interchangeability, replacement, and alternative-product decisions require a separately designed governed contract; a generic claim cannot approve them.`,
+      ),
+    )
+  }
+  if (
+    typeof record.claimStatement === 'string' &&
+    hasForbiddenRelationshipDecision(record.claimStatement)
+  ) {
+    messages.push(
+      message(
+        'forbidden_relationship_decision_language',
+        claimId,
+        'claimStatement contains an affirmative equivalence, substitution, interchangeability, replacement, or alternative-product decision. This generic governed-claim contract cannot approve that relationship.',
       ),
     )
   }
@@ -642,6 +738,56 @@ function preSchemaMessages(input: unknown): GovernanceValidationMessage[] {
     }
   }
   return messages
+}
+
+function decisionBearingProse(claim: GovernedClaim): Array<{ location: string; text: string }> {
+  const prose: Array<{ location: string; text: string }> = []
+  if (claim.scope.kind === 'non_product') {
+    prose.push({ location: 'scope.rationale', text: claim.scope.rationale })
+  }
+  prose.push(
+    { location: 'stalenessPolicy.rationale', text: claim.stalenessPolicy.rationale },
+    { location: 'historicalRetention.rationale', text: claim.historicalRetention.rationale },
+  )
+  for (const evidence of claim.evidence) {
+    if (evidence.applicability.kind === 'family_evidence' && evidence.applicability.qualification) {
+      prose.push({
+        location: `evidence.${evidence.evidenceId}.qualification.basis`,
+        text: evidence.applicability.qualification.basis,
+      })
+    }
+  }
+  for (const conflict of claim.evidenceConflicts) {
+    if (conflict.resolutionRationale) {
+      prose.push({
+        location: `evidenceConflicts.${conflict.conflictId}.resolutionRationale`,
+        text: conflict.resolutionRationale,
+      })
+    }
+  }
+  prose.push(
+    ...claim.reviews.map((review) => ({
+      location: `reviews.${review.reviewId}.rationale`,
+      text: review.rationale,
+    })),
+    ...claim.evidenceConflicts.map((conflict) => ({
+      location: `evidenceConflicts.${conflict.conflictId}.summary`,
+      text: conflict.summary,
+    })),
+    ...claim.transitions.map((transition) => ({
+      location: `transitions.${transition.transitionId}.rationale`,
+      text: transition.rationale,
+    })),
+    ...claim.affectedReleaseAssessments.map((assessment) => ({
+      location: `affectedReleaseAssessments.${assessment.assessmentId}.rationale`,
+      text: assessment.rationale,
+    })),
+    ...claim.implementationHistory.map((implementation) => ({
+      location: `implementationHistory.${implementation.sequence}.rationale`,
+      text: implementation.rationale,
+    })),
+  )
+  return prose
 }
 
 function duplicates(values: readonly string[]): string[] {
@@ -689,23 +835,30 @@ function primaryEvidenceCoversReviewedFamily(
 }
 
 function primaryEvidenceCoversClaimScope(claim: GovernedClaim): boolean {
-  const primary = claim.evidence.filter(
-    (entry) => entry.evidenceClass === 'primary' && entry.decisionUse === 'primary_claim_support',
+  const compatibilityPrimary = claim.evidence.filter(
+    (entry) =>
+      entry.evidenceClass === 'primary' &&
+      entry.decisionUse === 'primary_claim_support' &&
+      compatibilityEligiblePrimarySourceTypeSet.has(entry.sourceType) &&
+      entry.applicability.kind === 'exact_model',
   )
   if (claim.scope.kind === 'exact_model') {
     const exactModelProductId = claim.scope.productId
-    return primary.some((entry) => scopeSupportsExactModel(entry, exactModelProductId))
+    return compatibilityPrimary.some(
+      (entry) =>
+        entry.applicability.kind === 'exact_model' &&
+        entry.applicability.productId === exactModelProductId,
+    )
   }
   if (claim.scope.kind === 'reviewed_family') {
-    return primaryEvidenceCoversReviewedFamily(primary, claim.scope)
+    const coveredProductIds = new Set(
+      compatibilityPrimary.flatMap((entry) =>
+        entry.applicability.kind === 'exact_model' ? [entry.applicability.productId] : [],
+      ),
+    )
+    return claim.scope.memberProductIds.every((productId) => coveredProductIds.has(productId))
   }
-  return primary.some(
-    (entry) =>
-      (entry.applicability.kind === 'role' &&
-        claim.targets.affectedRoleCodes.includes(entry.applicability.roleCode)) ||
-      (entry.applicability.kind === 'procedure' &&
-        claim.targets.affectedProcedureCodes.includes(entry.applicability.procedureCode)),
-  )
+  return false
 }
 
 function validateTransitionHistory(claim: GovernedClaim): GovernanceValidationMessage[] {
@@ -799,6 +952,123 @@ function validateTimestampOrder<Entry>(
   return messages
 }
 
+function validateCrossHistoryPartialOrder(claim: GovernedClaim): GovernanceValidationMessage[] {
+  const messages: GovernanceValidationMessage[] = []
+  const transition = (state: GovernedClaimLifecycleState) =>
+    claim.transitions.find((entry) => entry.toState === state)
+  const creation = transition('research_candidate')
+  const reviewRequired = transition('physician_review_required')
+  const approval = transition('approved_for_governed_authoring')
+  const publication = transition('published_in_forward_release')
+  const before = (left: string, right: string) => Date.parse(left) <= Date.parse(right)
+  const violation = (detail: string) =>
+    message('history_partial_order_invalid', claim.claimId, detail)
+
+  if (creation && reviewRequired && !before(creation.occurredAt, reviewRequired.occurredAt)) {
+    messages.push(
+      violation('Claim creation must occur before or at the physician-review-required transition.'),
+    )
+  }
+  const initialImplementation = claim.implementationHistory[0]
+  if (
+    creation &&
+    initialImplementation &&
+    !before(creation.occurredAt, initialImplementation.recordedAt)
+  ) {
+    messages.push(
+      violation('The initial not-started implementation record cannot predate claim creation.'),
+    )
+  }
+
+  for (const review of claim.reviews) {
+    if (!reviewRequired || !before(reviewRequired.occurredAt, review.reviewedAt)) {
+      messages.push(
+        violation(
+          `Review ${review.reviewId} must occur on or after the physician-review-required transition.`,
+        ),
+      )
+    }
+    if (approval && !before(review.reviewedAt, approval.occurredAt)) {
+      messages.push(
+        violation(
+          `Review ${review.reviewId} must occur before or at the governed-authoring approval transition.`,
+        ),
+      )
+    }
+    if (review.decision === 'approved') {
+      for (const evidence of claim.evidence) {
+        if (!before(evidence.sourceRevision.accessedAt, review.reviewedAt)) {
+          messages.push(
+            violation(
+              `Evidence ${evidence.evidenceId} was accessed after approving review ${review.reviewId}; an approval cannot bind evidence the reviewer did not yet have.`,
+            ),
+          )
+        }
+      }
+    }
+  }
+
+  if (approval) {
+    for (const implementation of claim.implementationHistory) {
+      if (
+        implementation.status !== 'not_started' &&
+        !before(approval.occurredAt, implementation.recordedAt)
+      ) {
+        messages.push(
+          violation(
+            `Implementation status ${implementation.status} at sequence ${implementation.sequence} predates governed-authoring approval.`,
+          ),
+        )
+      }
+    }
+    for (const assessment of claim.affectedReleaseAssessments) {
+      if (!before(approval.occurredAt, assessment.assessedAt)) {
+        messages.push(
+          violation(
+            `Release-impact assessment ${assessment.assessmentId} predates governed-authoring approval.`,
+          ),
+        )
+      }
+    }
+  } else if (
+    claim.implementationHistory.some((entry) => entry.status !== 'not_started') ||
+    claim.affectedReleaseAssessments.length > 0
+  ) {
+    messages.push(
+      violation(
+        'Governed implementation and release-impact events require a retained governed-authoring approval transition.',
+      ),
+    )
+  }
+
+  if (publication) {
+    for (const implementation of claim.implementationHistory.filter(
+      (entry) => entry.status === 'verified_in_forward_release',
+    )) {
+      if (!before(implementation.recordedAt, publication.occurredAt)) {
+        messages.push(
+          violation(
+            `Verified implementation at sequence ${implementation.sequence} must precede the publication transition.`,
+          ),
+        )
+      }
+    }
+    for (const assessment of claim.affectedReleaseAssessments.filter(
+      (entry) => entry.relationship === 'published_forward_release',
+    )) {
+      if (!before(assessment.assessedAt, publication.occurredAt)) {
+        messages.push(
+          violation(
+            `Published-forward-release assessment ${assessment.assessmentId} must precede the publication transition.`,
+          ),
+        )
+      }
+    }
+  }
+
+  return messages
+}
+
 function latestImplementation(claim: GovernedClaim): ImplementationRecord {
   return claim.implementationHistory[claim.implementationHistory.length - 1]
 }
@@ -822,6 +1092,16 @@ function validateTypedClaim(claim: GovernedClaim): GovernanceValidationMessage[]
         'evidence_set_hash_mismatch',
         claim.claimId,
         `Evidence no longer hashes to its recorded set (${claim.evidenceSetHash} → ${expectedEvidenceHash}). A revised evidence set requires a new review-bound claim record.`,
+      ),
+    )
+  }
+  for (const prose of decisionBearingProse(claim)) {
+    if (!hasForbiddenRelationshipDecision(prose.text)) continue
+    messages.push(
+      message(
+        'forbidden_relationship_decision_language',
+        claim.claimId,
+        `${prose.location} contains an affirmative equivalence, substitution, interchangeability, replacement, or alternative-product decision that this generic claim contract cannot approve.`,
       ),
     )
   }
@@ -1028,6 +1308,7 @@ function validateTypedClaim(claim: GovernedClaim): GovernanceValidationMessage[]
       'Implementation history',
     ),
   )
+  messages.push(...validateCrossHistoryPartialOrder(claim))
   for (const [index, entry] of claim.implementationHistory.entries()) {
     const previous =
       index === 0
@@ -1152,7 +1433,7 @@ function validateTypedClaim(claim: GovernedClaim): GovernanceValidationMessage[]
         message(
           'compatibility_approval_without_primary_evidence',
           claim.claimId,
-          'Compatibility approval requires explicit primary evidence used as primary claim support and applicable to the approved scope.',
+          `Compatibility approval requires exact-model primary support from an eligible source type (${compatibilityEligiblePrimarySourceTypes.join(', ')}). Guidance, literature, internal review, contextual evidence, and family-only scope cannot become compatibility evidence merely by being labeled primary.`,
         ),
       )
     }
@@ -1310,27 +1591,30 @@ export function appendClaimReview(
   if (claim.reviews.some((review) => review.reviewId === input.reviewId)) {
     throw new Error(`Review id ${input.reviewId} is already retained.`)
   }
-  return governedClaimSchema.parse({
-    ...claim,
-    reviews: [
-      ...claim.reviews,
-      {
-        reviewId: input.reviewId,
-        claimId: claim.claimId,
-        claimContentHash: claim.claimContentHash,
-        evidenceSetHash: claim.evidenceSetHash,
-        physicianOwnerId: claim.physicianOwner?.personId ?? null,
-        reviewer: {
-          personId: input.reviewer.personId,
-          displayName: input.reviewer.displayName,
-          reviewerRole: input.reviewer.reviewerRole,
+  return assertValidClaim(
+    governedClaimSchema.parse({
+      ...claim,
+      reviews: [
+        ...claim.reviews,
+        {
+          reviewId: input.reviewId,
+          claimId: claim.claimId,
+          claimContentHash: claim.claimContentHash,
+          evidenceSetHash: claim.evidenceSetHash,
+          physicianOwnerId: claim.physicianOwner?.personId ?? null,
+          reviewer: {
+            personId: input.reviewer.personId,
+            displayName: input.reviewer.displayName,
+            reviewerRole: input.reviewer.reviewerRole,
+          },
+          reviewedAt: input.reviewedAt,
+          decision: input.decision,
+          rationale: input.rationale,
         },
-        reviewedAt: input.reviewedAt,
-        decision: input.decision,
-        rationale: input.rationale,
-      },
-    ],
-  })
+      ],
+    }),
+    `Append review ${input.reviewId}`,
+  )
 }
 
 export interface AppendReleaseImpactInput extends Omit<
@@ -1346,18 +1630,21 @@ export function appendReleaseImpactAssessment(
 ): GovernedClaim {
   governedClaimSchema.parse(claim)
   const sequence = claim.affectedReleaseAssessments.length + 1
-  return governedClaimSchema.parse({
-    ...claim,
-    affectedReleaseAssessments: [
-      ...claim.affectedReleaseAssessments,
-      {
-        ...input,
-        assessedBy: canonicalPerson(input.assessedBy),
-        sequence,
-        assessmentId: input.assessmentId ?? `${claim.claimId}:release-impact:${sequence}`,
-      },
-    ],
-  })
+  return assertValidClaim(
+    governedClaimSchema.parse({
+      ...claim,
+      affectedReleaseAssessments: [
+        ...claim.affectedReleaseAssessments,
+        {
+          ...input,
+          assessedBy: canonicalPerson(input.assessedBy),
+          sequence,
+          assessmentId: input.assessmentId ?? `${claim.claimId}:release-impact:${sequence}`,
+        },
+      ],
+    }),
+    `Append release-impact assessment ${input.assessmentId ?? sequence}`,
+  )
 }
 
 export type AppendImplementationInput = Omit<ImplementationRecord, 'sequence'>
@@ -1374,17 +1661,20 @@ export function appendImplementationStatus(
       `Implementation status ${input.status} refused for ${claim.claimId}; the next append-only status is ${expected ?? 'none'}.`,
     )
   }
-  return governedClaimSchema.parse({
-    ...claim,
-    implementationHistory: [
-      ...claim.implementationHistory,
-      {
-        ...input,
-        recordedBy: canonicalPerson(input.recordedBy),
-        sequence: claim.implementationHistory.length + 1,
-      },
-    ],
-  })
+  return assertValidClaim(
+    governedClaimSchema.parse({
+      ...claim,
+      implementationHistory: [
+        ...claim.implementationHistory,
+        {
+          ...input,
+          recordedBy: canonicalPerson(input.recordedBy),
+          sequence: claim.implementationHistory.length + 1,
+        },
+      ],
+    }),
+    `Append implementation status ${input.status}`,
+  )
 }
 
 export interface TransitionGovernedClaimInput {

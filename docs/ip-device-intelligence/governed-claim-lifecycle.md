@@ -52,6 +52,12 @@ and exact evidence-set hash. Publication additionally names the forward release.
 additionally names the successor. No skip, reversal, repeated state, or transition beyond
 `historical_retained` is valid.
 
+The retained timestamps also form one cross-history partial order: creation precedes the
+review-required transition; that transition precedes every review; evidence access precedes an
+approving review; reviews precede the approval transition; approval precedes governed-authoring,
+implementation, and release-impact events; and verified implementation plus the publication
+assessment precede publication. Append helpers reject an event that would violate this order.
+
 `approved_for_governed_authoring` is permission to use the signed claim in a later, separately
 reviewed authoring change. It is not publication. `published_in_forward_release` requires a
 matching release-impact assessment and verified implementation history, but this module cannot
@@ -77,8 +83,10 @@ perform either action.
 Claim types are intentionally narrow: identity, manufacturer specification, regulatory status,
 compatibility, clinical-role mapping, procedure requirement, setup instruction, and evidence
 limitation. Generic equivalence, substitution, interchangeability, or "alternative product"
-types are rejected. D5A does not define the stronger governed contract those decisions would
-need.
+types are rejected. Affirmative equivalence, substitution, interchangeability, replacement, and
+alternative-product decisions are also rejected when embedded in a claim statement or retained
+decision rationale; explicit limitations and incidental uses of those words remain valid. D5A
+does not define the stronger governed contract those decisions would need.
 
 ## 4. Exact signoff binding
 
@@ -91,8 +99,9 @@ Two independent SHA-256 identities use the repository's canonical `stableSnapsho
 
 An approving review records both hashes, the claim id, and the physician-owner id. Promotion
 requires an `approved` review whose reviewer role is `physician` and whose four bindings match the
-current record exactly. Better or newer evidence therefore does not edit an approval in place: it
-creates a new review-bound claim record and, when appropriate, an explicit supersession chain.
+current record exactly. Every retained evidence access instant must be at or before that approving
+review. Better or newer evidence therefore does not edit an approval in place: it creates a new
+review-bound claim record and, when appropriate, an explicit supersession chain.
 
 Lifecycle fields such as publication instant, release-impact history, and implementation history
 remain outside the content hash. They are append-only acts, mirroring the release-bundle rule that
@@ -108,10 +117,17 @@ Cross-field validation rejects:
 - exact-model approval whose primary-support evidence is neither exact-model evidence nor family
   evidence with an explicit reviewer-qualified member list containing that model;
 - compatibility approval without applicable, explicit primary evidence used as primary claim
-  support;
-- a generic equivalence/substitution/interchangeability claim type;
+  support from an exact-model `manufacturer_labeling`, `manufacturer_ifu`,
+  `manufacturer_manual`, or `regulator_record`; guidance, literature, internal review, contextual
+  evidence, and family-only applicability cannot qualify merely by being labeled primary;
+- a generic equivalence/substitution/interchangeability/replacement claim type, or an affirmative
+  equivalence, substitution, interchangeability, replacement, or alternative-product decision in
+  claim or decision-bearing prose;
 - absent source revision, in-place source revision changes, or removal of retained source identity;
 - rewritten transition, review, release-impact, or implementation history;
+- a cross-history timestamp that puts review before the review-required transition, evidence
+  access after approval review, implementation or release impact before authoring approval, or
+  publication before its verification and publication assessment;
 - publication without the exact forward release, matching release assessment, and verified
   implementation record;
 - supersession without a named successor, a missing successor, a missing reverse link, or a cycle;
