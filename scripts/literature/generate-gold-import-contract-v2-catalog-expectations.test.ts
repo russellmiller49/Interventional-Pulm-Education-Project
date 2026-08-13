@@ -1,13 +1,14 @@
 /** @jest-environment node */
 
-import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { mkdtemp } from 'node:fs/promises'
 
 import type { ProtectedV2CompleteCatalogObservation } from './gold-import-contract-v2-catalog-audit'
 import { reconciliationIdentitySha256 } from './gold-import-compensation-contract-reconciliation'
 import {
+  PROTECTED_V2_EXPECTED_CATALOG_PROFILE_IDS,
   committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
   decodeProtectedV2CatalogExpectedInventories,
   expectedObservedAuditIdentityFromArtifact,
@@ -71,6 +72,55 @@ const OBSERVATIONS = {
   supabase_admin_owner_v1: observation(adminArtifact),
 }
 
+/**
+ * Hung-operation ceiling for the two tests that execute real
+ * `generateProtectedV2CatalogExpectationProposals` proposal work. One full
+ * generator pass performs four observation captures, four complete artifact
+ * constructions (canonical clone, level-9 deflate, exact reparse), and two
+ * committed-artifact comparisons over the ~540 KB committed inventories —
+ * measured 2.0-2.1 s alone on the pinned `.nvmrc` runtime and 5.5 s+ under
+ * default-worker full-suite contention, where Jest's implicit 5 s default
+ * repeatedly killed a healthy run. The ceiling is about three times the
+ * estimated natural worst contended duration; it exists to fail a hung
+ * generator, not to assert a speed. The fast rejection, sentinel, and
+ * source-inspection tests in this file stay on the implicit default.
+ */
+const CATALOG_GENERATOR_TEST_TIMEOUT_MS = 20_000
+
+const generatorOutputRoots: string[] = []
+const generatorOutputRootCleanups: Array<Promise<void>> = []
+
+/**
+ * Every generator test writes only beneath its own fresh temporary root and
+ * removes that root in `finally`, which runs only after the test's generator
+ * promise has settled — the generator's output writes are synchronous, so
+ * removal cannot race an in-flight write. Cleanup completion is registered
+ * even when a timed-out case settles late, so the `afterAll` guard can wait
+ * for every registered cleanup before proving no root survived.
+ */
+async function withGeneratorOutputRoot<T>(
+  prefix: string,
+  run: (root: string) => Promise<T>,
+): Promise<T> {
+  const root = await mkdtemp(join(tmpdir(), prefix))
+  generatorOutputRoots.push(root)
+  let markCleanupSettled = () => {}
+  generatorOutputRootCleanups.push(
+    new Promise<void>((cleanupSettled) => {
+      markCleanupSettled = cleanupSettled
+    }),
+  )
+  try {
+    return await run(root)
+  } finally {
+    try {
+      await rm(root, { force: true, maxRetries: 3, recursive: true })
+    } finally {
+      markCleanupSettled()
+    }
+  }
+}
+
 function fakeContext() {
   return {
     batchId: '00000000-0000-4000-8000-000000000001',
@@ -99,6 +149,21 @@ async function actualRuntimeBytes(path: string): Promise<Uint8Array> {
 }
 
 describe('protected V2 catalog expectation proposal generator', () => {
+  afterAll(async () => {
+    await Promise.all(generatorOutputRootCleanups)
+    expect(generatorOutputRoots.filter((root) => existsSync(root))).toEqual([])
+  })
+
+  it('drives the exact production catalog profile inventory', () => {
+    expect(PROTECTED_V2_EXPECTED_CATALOG_PROFILE_IDS).toEqual([
+      'local_supabase_postgres_owner_v1',
+      'supabase_admin_owner_v1',
+    ])
+    expect(Object.keys(OBSERVATIONS).sort()).toEqual(
+      [...PROTECTED_V2_EXPECTED_CATALOG_PROFILE_IDS].sort(),
+    )
+  })
+
   it('accepts the private sentinel only by exact reference after observation capture', async () => {
     const collector = async () => OBSERVATIONS.supabase_admin_owner_v1
     await expect(
@@ -172,69 +237,101 @@ describe('protected V2 catalog expectation proposal generator', () => {
     expect(context.psql).toHaveBeenCalledWith(PROTECTED_V2_LOCAL_OWNER_PROJECTION_SQL)
   })
 
-  it('runs exactly two independent captures per profile and writes exact committed proposals', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'protected-v2-catalog-generator-'))
-    const calls: string[] = []
-    const result = await generateProtectedV2CatalogExpectationProposals({
-      dependencies: {
-        captureProfile: async (profileId) => {
-          calls.push(profileId)
-          return clone(OBSERVATIONS[profileId])
-        },
-        environment: { NODE_ENV: 'test' },
-        readRuntimeFile: actualRuntimeBytes,
-      },
-      output: resolve(root, 'proposal'),
-      outputRoot: root,
-    })
-    expect(calls).toEqual([
-      'local_supabase_postgres_owner_v1',
-      'local_supabase_postgres_owner_v1',
-      'supabase_admin_owner_v1',
-      'supabase_admin_owner_v1',
-    ])
-    expect(result.committedExpectationsExact).toBe(true)
-  })
-
-  it('rejects nondeterministic repeated observations', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'protected-v2-catalog-drift-'))
-    let localCall = 0
-    await expect(
-      generateProtectedV2CatalogExpectationProposals({
-        dependencies: {
-          captureProfile: async (profileId) => {
-            if (profileId === 'supabase_admin_owner_v1') {
-              return clone(OBSERVATIONS.supabase_admin_owner_v1)
-            }
-            localCall += 1
-            return localCall === 1
-              ? clone(OBSERVATIONS.local_supabase_postgres_owner_v1)
-              : driftedObservation(OBSERVATIONS.local_supabase_postgres_owner_v1)
+  it(
+    'runs exactly two independent captures per profile and writes exact committed proposals',
+    async () => {
+      await withGeneratorOutputRoot('protected-v2-catalog-generator-', async (root) => {
+        const calls: string[] = []
+        const returnedObservations = new Set<ProtectedV2CompleteCatalogObservation>()
+        const result = await generateProtectedV2CatalogExpectationProposals({
+          dependencies: {
+            captureProfile: async (profileId) => {
+              calls.push(profileId)
+              const captured = clone(OBSERVATIONS[profileId])
+              returnedObservations.add(captured)
+              return captured
+            },
+            environment: { NODE_ENV: 'test' },
+            readRuntimeFile: actualRuntimeBytes,
           },
-          environment: { NODE_ENV: 'test' },
-          readRuntimeFile: actualRuntimeBytes,
-        },
-        output: resolve(root, 'proposal'),
-        outputRoot: root,
-      }),
-    ).rejects.toThrow('were not byte-identical')
-  })
+          output: resolve(root, 'proposal'),
+          outputRoot: root,
+        })
+        expect(calls).toEqual([
+          'local_supabase_postgres_owner_v1',
+          'local_supabase_postgres_owner_v1',
+          'supabase_admin_owner_v1',
+          'supabase_admin_owner_v1',
+        ])
+        expect(returnedObservations.size).toBe(4)
+        expect(result.committedExpectationsExact).toBe(true)
+        expect(result.profiles).toEqual({
+          local_supabase_postgres_owner_v1: {
+            artifactContentSha256: localArtifact.artifactContentSha256,
+            fullAuditIdentitySha256: localArtifact.fullAuditIdentitySha256,
+          },
+          supabase_admin_owner_v1: {
+            artifactContentSha256: adminArtifact.artifactContentSha256,
+            fullAuditIdentitySha256: adminArtifact.fullAuditIdentitySha256,
+          },
+        })
+        for (const proposalFilename of [
+          'local_supabase_postgres_owner_v1.json',
+          'supabase_admin_owner_v1.json',
+          'comparison-report.json',
+        ]) {
+          expect(existsSync(resolve(root, 'proposal', proposalFilename))).toBe(true)
+        }
+      })
+    },
+    CATALOG_GENERATOR_TEST_TIMEOUT_MS,
+  )
+
+  it(
+    'rejects nondeterministic repeated observations',
+    async () => {
+      await withGeneratorOutputRoot('protected-v2-catalog-drift-', async (root) => {
+        let localCall = 0
+        await expect(
+          generateProtectedV2CatalogExpectationProposals({
+            dependencies: {
+              captureProfile: async (profileId) => {
+                if (profileId === 'supabase_admin_owner_v1') {
+                  return clone(OBSERVATIONS.supabase_admin_owner_v1)
+                }
+                localCall += 1
+                return localCall === 1
+                  ? clone(OBSERVATIONS.local_supabase_postgres_owner_v1)
+                  : driftedObservation(OBSERVATIONS.local_supabase_postgres_owner_v1)
+              },
+              environment: { NODE_ENV: 'test' },
+              readRuntimeFile: actualRuntimeBytes,
+            },
+            output: resolve(root, 'proposal'),
+            outputRoot: root,
+          }),
+        ).rejects.toThrow('were not byte-identical')
+      })
+    },
+    CATALOG_GENERATOR_TEST_TIMEOUT_MS,
+  )
 
   it('rejects unpinned runtime bytes before any disposable capture', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'protected-v2-catalog-pins-'))
-    const captureProfile = jest.fn()
-    await expect(
-      generateProtectedV2CatalogExpectationProposals({
-        dependencies: {
-          captureProfile,
-          environment: { NODE_ENV: 'test' },
-          readRuntimeFile: async () => Buffer.from('tampered'),
-        },
-        output: resolve(root, 'proposal'),
-        outputRoot: root,
-      }),
-    ).rejects.toThrow('unpinned migration or verifier bytes')
-    expect(captureProfile).not.toHaveBeenCalled()
+    await withGeneratorOutputRoot('protected-v2-catalog-pins-', async (root) => {
+      const captureProfile = jest.fn()
+      await expect(
+        generateProtectedV2CatalogExpectationProposals({
+          dependencies: {
+            captureProfile,
+            environment: { NODE_ENV: 'test' },
+            readRuntimeFile: async () => Buffer.from('tampered'),
+          },
+          output: resolve(root, 'proposal'),
+          outputRoot: root,
+        }),
+      ).rejects.toThrow('unpinned migration or verifier bytes')
+      expect(captureProfile).not.toHaveBeenCalled()
+    })
   })
 
   it('rejects programmatic dependency injection outside tests', async () => {
