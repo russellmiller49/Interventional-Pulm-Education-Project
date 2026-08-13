@@ -211,6 +211,22 @@ describe('gold import contract V2 real-local pre-application diagnostic', () => 
     ).not.toThrow()
   })
 
+  it('retains its historical boundary by rejecting an already-applied V2 ledger', () => {
+    const historical = preV2StateHashCapture().databaseEvidence
+    const postV2Ledger = {
+      ...historical,
+      ledgerEntries: [
+        ...historical.ledgerEntries,
+        {
+          name: PROTECTED_GOLD_IMPORT_CONTRACT_V2.migrationName,
+          version: PROTECTED_GOLD_IMPORT_CONTRACT_V2.version,
+        },
+      ],
+      v2Occurrence: 1,
+    }
+    expect(() => validateProtectedV2DatabaseEvidence(postV2Ledger, 'before_v2')).toThrow()
+  })
+
   it('derives a path-, state-, ledger-, nonce-, and manifest-bound backup instance identity', () => {
     const base = {
       backupRoot: '/backup-root',

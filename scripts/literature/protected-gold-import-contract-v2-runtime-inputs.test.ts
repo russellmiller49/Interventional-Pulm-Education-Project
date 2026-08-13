@@ -26,13 +26,28 @@ describe('protected V2 non-module runtime-input declarations', () => {
     await Promise.all(cleanup.splice(0).map((directory) => rm(directory, { recursive: true })))
   })
 
-  it('pins the five file-only forward-backup semantic evidence call sites', () => {
+  it('pins the current PR #97 backup file/runtime evidence call sites', () => {
     const fingerprints = new Set([
-      '72f1da6ed0d0c9baf72a08046dc862b07ba5766a452e38ad9c18b5992700f6e5',
-      'feef94a5ae4700a87c23f2a544389632b8e0cf6eb9d39b7364ac4ba14cf852ae',
-      'd0074148acb59e5314eb1911f5f083d721f6ed4066d3def7aba5be1a336cc44d',
-      '5ce51debfac8d02d25367d0f54db31c1ac25c9384528ec4a1a27ab7cf5aadbf7',
-      'f76c9604ed837b26a375b737ddefe6817ab0693febf13526f76c0184e290aade',
+      'df0e471a668e29785a6625df51cdc1bf992c38436ae77f37c05a26273bb488a6',
+      'd369a94583ca236b62da4e16e03fbe3c675f1731703757069fb5c5b091de11d7',
+      '7bd82d90664766c7f954cce3d67805598eebdc0a12bc65957c2ef4f848a70aac',
+      '3037831f0d0d1c22bab8689991bb994394b02c9abb84a589d16742cdb2cb4e39',
+      'ab773e4503b53e1f701f5ab26fbcc0a094beb6e21e63b882f10fec82b2e085db',
+      '9f16daaae3502a48131eace86c7bb3d9109d619314d0671dce2161a4d887d066',
+      'c7b79b6137cd071126c297a9875cf3b446d9a2f7a52e157e2164bcf55cdaec10',
+      '1afacdeea9d5c7568710ed4dcd26e8f6309731fd61f652fd2f4beb9b5cfc21d6',
+      '738e8a4f1fe28744dd53f222af5c3b0e6c61bf2eb6f306369d7f2e85e6ee287c',
+      '8ef81688d72d9897c0ac5094e6ef28b31e7d1a353e1defe4c030de679f982e73',
+      '4f2a6c54c33d8ca4724b5e8b4d4c21b6ebc8b9a7fab861425c870a6f577171b5',
+      '665bd4e3ca49af68c6897cd38b9e031ef9e956ac1733563ba7a8ed03c0413036',
+      '32d10f03e830cd38806be1c3a9c48bd682fd0426ddb115e850f74e1b3509d68e',
+      'babff8aa9ccc6c58de9f32ff402739f90e5ea9c898a95b8e9a27021b23ddb684',
+      'fb7aa482d940a3aeebe8bf6dfab948f2b1572e66e8a9eb1b4726b984830ad2f0',
+      '321a94827ea18c4493eec6db048905fa2ffa22ed1e08614b0f34c1c81ab4a8cb',
+      '93aabd16058c3a16ba4bcf87fd5c2052a009cba754ac9017ff028c63a0649e1b',
+      '818fbe4b144bada0c84eef29fd5aee08265eddc1e27d82041064c1e2fdebfa41',
+      '2e72262e4d22607a75e01ed4c7f1eff63a33fccb4da90e6adc05cec997306fc9',
+      '5631206b033dcf51a921f87b6ecd21e9253338ca857832813a6617d3b383a078',
     ])
     const declarations = PROTECTED_V2_RUNTIME_CALL_SITE_DECLARATIONS.filter(({ fingerprint }) =>
       fingerprints.has(fingerprint),
@@ -42,13 +57,10 @@ describe('protected V2 non-module runtime-input declarations', () => {
       expect.arrayContaining(
         [...fingerprints].map((fingerprint) =>
           expect.objectContaining({
-            disposition: 'operator_evidence',
-            executables: [],
             fingerprint,
             packages: [],
             repositoryInputs: [],
-            sourcePath:
-              'scripts/literature/create-gold-import-contract-v2-forward-repair-backup.ts',
+            sourcePath: 'scripts/literature/create-gold-import-v2-postmigration-backup.ts',
           }),
         ),
       ),

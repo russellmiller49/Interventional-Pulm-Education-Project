@@ -113,14 +113,47 @@ export function parseProtectedV2ReceiptRecoveryCommittedAmendment(input: {
   correctedRecoveryToolBundle: ProtectedV2ReceiptRecoveryBundle
   correctedTransitionPolicyIdentitySha256: string
 }): ProtectedV2ReceiptRecoveryAmendment {
+  const committed = parseImmutableProtectedV2ReceiptRecoveryCommittedAmendment({
+    amendmentBytes: input.amendmentBytes,
+    authorityBytes: input.authorityBytes,
+  })
   const expected = buildProtectedV2ReceiptRecoveryAmendmentFromAuthority(input).amendment
-  const parsed = parseCanonicalJson(input.amendmentBytes)
   if (
-    canonicalProtectedV2ReceiptRecoveryJson(parsed) !==
+    canonicalProtectedV2ReceiptRecoveryJson(committed) !==
     canonicalProtectedV2ReceiptRecoveryJson(expected)
   ) {
     throw new Error(
       'Committed Protected V2 recovery amendment does not bind the exact current policy and recovery-tool bundle.',
+    )
+  }
+  return expected
+}
+
+/**
+ * Downstream receipt consumers authenticate the exact historical amendment bytes without
+ * rebuilding today's recovery runtime. Recovery execution still uses the stricter current-runtime
+ * parser above; this capability-free parser cannot authorize or execute receipt recovery.
+ */
+export function parseImmutableProtectedV2ReceiptRecoveryCommittedAmendment(input: {
+  amendmentBytes: string
+  authorityBytes: string
+}): ProtectedV2ReceiptRecoveryAmendment {
+  const parsed = parseCanonicalJson(input.amendmentBytes)
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Committed Protected V2 recovery amendment must be an object.')
+  }
+  const candidate = parsed as ProtectedV2ReceiptRecoveryAmendment
+  const expected = buildProtectedV2ReceiptRecoveryAmendmentFromAuthority({
+    authorityBytes: input.authorityBytes,
+    correctedRecoveryToolBundle: candidate.correctedRecoveryToolBundle,
+    correctedTransitionPolicyIdentitySha256: candidate.correctedTransitionPolicyIdentitySha256,
+  }).amendment
+  if (
+    canonicalProtectedV2ReceiptRecoveryJson(candidate) !==
+    canonicalProtectedV2ReceiptRecoveryJson(expected)
+  ) {
+    throw new Error(
+      'Committed Protected V2 recovery amendment does not match its immutable historical authority.',
     )
   }
   return expected

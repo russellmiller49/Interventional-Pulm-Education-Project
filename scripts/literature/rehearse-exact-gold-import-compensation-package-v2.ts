@@ -1,8 +1,7 @@
-import { execFile } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
+import { realpathSync } from 'node:fs'
 import { lstat, readFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
-import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
 import {
@@ -29,7 +28,12 @@ import {
   committedProtectedV2CatalogExpectedArtifactForValidatedProfile,
   expectedObservedAuditIdentityFromArtifact,
 } from './gold-import-contract-v2-catalog-expectations'
-import type { GeneratedGoldImportCompensationPackageV2 } from './generate-gold-import-compensation-package-v2'
+import {
+  buildGoldImportV2PackageGenerationReadiness,
+  validateGoldImportV2PackageGenerationReadiness,
+  type GeneratedGoldImportCompensationPackageV2,
+  type GoldImportV2PackageGenerationReadiness,
+} from './generate-gold-import-compensation-package-v2'
 import {
   loadAndVerifyBackup,
   type LoadedPreMigrationBackup,
@@ -40,7 +44,11 @@ import {
   assertExclusiveOutputDirectoryIdentity,
   assertSafeOutputPathArgument,
   createExclusiveOutputDirectory,
+  createStagedExclusiveOutputDirectory,
+  discardStagedExclusiveOutputDirectory,
+  publishStagedExclusiveOutputDirectory,
   writeExclusiveOutputFiles,
+  type StagedExclusiveOutputDirectory,
 } from './lib/exclusive-output'
 import {
   assertDeterministicV2RehearsalRuns,
@@ -67,14 +75,40 @@ import {
   type ProtectedV2RuntimeBundleBinding,
 } from './protected-gold-import-contract-v2-bindings'
 import type { V2CanonicalAuthorizationBindings } from './gold-import-compensation-rehearsal-evidence-v2'
+import {
+  GOLD_IMPORT_V2_PRIMARY_CHECKOUT,
+  assertGoldImportV2CurrentDatabaseMatchesPackageReadiness,
+  collectGoldImportV2PreimportFixedLocalState,
+  inspectGoldImportV2PrimaryMainRepository,
+  loadGoldImportV2FinalizedReceiptEvidence,
+  type GoldImportV2RepositoryEvidence,
+  type GoldImportV2FixedLocalState,
+} from './gold-import-v2-package-readiness'
+import {
+  GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
+  loadGoldImportV2PreimportRuntimeBundle,
+  verifyGoldImportV2PreimportCaptureDirectory,
+} from './gold-import-v2-preimport-capture'
+import {
+  buildGoldImportV2DatabasePublicationObservationBinding,
+  runGoldImportV2DatabasePublicationProtocol,
+} from './gold-import-v2-database-publication'
+import { validateGoldImportV2ExactPackageRehearsalReport21 } from './gold-import-v2-lifecycle-compatibility'
 
-const execFileAsync = promisify(execFile)
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const EXECUTING_MODULE_PATH = realpathSync(fileURLToPath(import.meta.url))
+const EXPECTED_PRODUCTION_MODULE_PATH = resolve(
+  GOLD_IMPORT_V2_PRIMARY_CHECKOUT,
+  'scripts/literature/rehearse-exact-gold-import-compensation-package-v2.ts',
+)
 const MIGRATION_FILENAME = `${GOLD_REVIEW_IMPORT_COMPENSATION_MIGRATION_ID_V2}.sql`
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u
+const COMMIT_SHA_PATTERN = /^[a-f0-9]{40}$/u
 const PACKAGE_OUTPUT_DIRECTORY = 'exact-package-v2'
-export const V2_REHEARSAL_TASK_BRANCH =
-  'codex/ip-literature-v2-physical-hash-receipt-recovery-v1' as const
+const PRODUCTION_REHEARSAL_PUBLICATION_BRACKET_FILE =
+  'database-publication-bracket-v2.json' as const
+export const EXACT_V2_PACKAGE_REHEARSAL_REPORT_SCHEMA_VERSION =
+  'gold-import-compensation-exact-package-rehearsal/2.1.0' as const
 export const GOLD_IMPORT_PRE_V1_BACKUP_PHYSICAL_STATE_SHA256_V2 =
   'b509e876f48112957eda42e8ec04e92a10bc40c3217b0011d1c0d708d519ce4f' as const
 const CANONICAL_OUTPUT_NAMES = [
@@ -102,6 +136,8 @@ const CLI_ARGUMENTS = [
   'output',
   'output-root',
   'planning-state',
+  'preimport-capture-one',
+  'preimport-capture-two',
   'pre-migration-backup',
   'pre-migration-backup-manifest-sha256',
   'protocol-authorization',
@@ -120,14 +156,17 @@ projection of the same seed. Their post-V2 schema and clinical identities must
 match before package generation or RPC execution. Every run uses the pinned
 local Docker image and must prove cleanup. No database URL, host, SQL, remote
 target, or held-out input is accepted. Canonical generation additionally
-requires the exact ${V2_REHEARSAL_TASK_BRANCH} branch, a completely clean
-tracked/untracked worktree, and origin/main ancestry, so run it only after the
-reviewed repair is committed.
+requires the exact primary checkout on attached main, a completely clean
+tracked/untracked worktree, and HEAD exactly equal to origin/main. The exported
+helpers are pure validators and cannot accept database, filesystem, Docker, or
+production-readiness capabilities.
 
 Usage:
   npm run literature:rehearse-exact-gold-import-compensation-package-v2 -- \\
     --pre-migration-backup <checksum-bound-v1-backup-directory> \\
     --pre-migration-backup-manifest-sha256 <reviewed-sha256> \\
+    --preimport-capture-one <first-post-v2-capture-directory> \\
+    --preimport-capture-two <second-post-v2-capture-directory> \\
     --planning-state <development-planning-state.json> \\
     --artifact <gold-set-v1-enrichment-v3-final-development-630.csv> \\
     --migration <${MIGRATION_FILENAME}> \\
@@ -141,6 +180,19 @@ Usage:
     --note-disposition-audit <accepted-note-audit.json> \\
     --output-root <existing-local-root> --output <new-evidence-directory>
 `.trim()
+
+function parseExactV2PackageRehearsalCliArguments(argv: readonly string[]) {
+  const arguments_ = parseCliArguments([...argv])
+  assertKnownArguments(arguments_, CLI_ARGUMENTS)
+  return arguments_
+}
+
+export function validateExactV2PackageRehearsalCliArguments(argv: readonly string[]): {
+  help: boolean
+} {
+  const arguments_ = parseExactV2PackageRehearsalCliArguments(argv)
+  return { help: arguments_.flags.has('help') }
+}
 
 function sha256(value: Uint8Array | string): string {
   return createHash('sha256').update(value).digest('hex')
@@ -198,58 +250,154 @@ function parseJson(bytes: Buffer, label: string): unknown {
   }
 }
 
-export interface V2RehearsalRepositoryGit {
-  run(arguments_: readonly string[]): Promise<{ stdout: string }>
+export interface V2RehearsalRepositoryEvidence {
+  branch: string
+  cleanTrackedAndUntrackedWorktree: true
+  headSha: string
+  originMainIsAncestor: true
+  originMainSha: string
+  primaryCheckout: boolean
+  repositoryRoot: string
 }
 
-const PRODUCTION_REPOSITORY_GIT: V2RehearsalRepositoryGit = {
-  run: async (arguments_) =>
-    execFileAsync('git', [...arguments_], {
-      cwd: REPOSITORY_ROOT,
-      encoding: 'utf8',
-    }),
-}
-
-export async function authenticateV2RehearsalRepositoryHead(
-  git: V2RehearsalRepositoryGit = PRODUCTION_REPOSITORY_GIT,
-): Promise<string> {
-  const branch = (await git.run(['symbolic-ref', '--short', 'HEAD'])).stdout.trim()
-  if (branch !== V2_REHEARSAL_TASK_BRANCH) {
-    throw new Error(`V2 rehearsal requires exact task branch ${V2_REHEARSAL_TASK_BRANCH}.`)
-  }
-  const statusArguments = ['status', '--porcelain=v1', '--untracked-files=all'] as const
-  const firstStatus = (await git.run(statusArguments)).stdout
-  if (firstStatus.trim().length > 0) {
-    throw new Error('V2 rehearsal requires a completely clean tracked and untracked worktree.')
-  }
-  try {
-    await git.run(['merge-base', '--is-ancestor', 'origin/main', 'HEAD'])
-  } catch {
-    throw new Error('V2 rehearsal requires origin/main to be an ancestor of task-branch HEAD.')
-  }
-  const head = (await git.run(['rev-parse', 'HEAD'])).stdout.trim()
-  if (!/^[a-f0-9]{40}$/u.test(head)) throw new Error('Repository HEAD is not a full commit SHA.')
-  const finalBranch = (await git.run(['symbolic-ref', '--short', 'HEAD'])).stdout.trim()
-  const finalHead = (await git.run(['rev-parse', 'HEAD'])).stdout.trim()
-  const finalStatus = (await git.run(statusArguments)).stdout
+function validateV2RehearsalRepositoryEvidence(
+  input: V2RehearsalRepositoryEvidence,
+): V2RehearsalRepositoryEvidence {
   if (
-    finalBranch !== V2_REHEARSAL_TASK_BRANCH ||
-    finalHead !== head ||
-    finalStatus.trim().length > 0
+    !input.branch.trim() ||
+    input.branch !== input.branch.trim() ||
+    !COMMIT_SHA_PATTERN.test(input.headSha) ||
+    !COMMIT_SHA_PATTERN.test(input.originMainSha) ||
+    input.cleanTrackedAndUntrackedWorktree !== true ||
+    input.originMainIsAncestor !== true ||
+    typeof input.primaryCheckout !== 'boolean' ||
+    !input.repositoryRoot.trim()
   ) {
-    throw new Error('Repository branch, HEAD, or worktree changed during V2 authentication.')
+    throw new Error('Injected V2 rehearsal repository evidence is incomplete or unsafe.')
   }
-  return head
+  return Object.freeze({ ...input, repositoryRoot: resolve(input.repositoryRoot) })
 }
 
-export async function assertV2RehearsalRepositoryUnchanged(
-  expectedHead: string,
-  readAuthenticatedHead: () => Promise<string>,
-): Promise<void> {
-  const finalHead = await readAuthenticatedHead()
-  if (finalHead !== expectedHead) {
-    throw new Error('Repository HEAD changed during the four-run V2 rehearsal.')
+export function validateV2RehearsalCoreRepositoryEvidence(
+  input: V2RehearsalRepositoryEvidence,
+): V2RehearsalRepositoryEvidence {
+  const evidence = validateV2RehearsalRepositoryEvidence(input)
+  if (
+    evidence.primaryCheckout ||
+    evidence.branch === 'main' ||
+    evidence.repositoryRoot === GOLD_IMPORT_V2_PRIMARY_CHECKOUT
+  ) {
+    throw new Error(
+      'Exported V2 rehearsal evidence must describe a non-primary disposable context.',
+    )
   }
+  return evidence
+}
+
+async function readProductionV2RehearsalRepositoryEvidence(): Promise<V2RehearsalRepositoryEvidence> {
+  const repository = await inspectGoldImportV2PrimaryMainRepository({ cwd: REPOSITORY_ROOT })
+  return rehearsalRepositoryEvidence(repository)
+}
+
+function rehearsalRepositoryEvidence(
+  repository: GoldImportV2RepositoryEvidence,
+): V2RehearsalRepositoryEvidence {
+  return validateV2RehearsalRepositoryEvidence({
+    branch: repository.branch,
+    cleanTrackedAndUntrackedWorktree: true,
+    headSha: repository.headSha,
+    originMainIsAncestor: true,
+    originMainSha: repository.originMainSha,
+    primaryCheckout: true,
+    repositoryRoot: repository.repositoryRoot,
+  })
+}
+
+async function loadProductionV2RehearsalReadiness(input: {
+  captureDirectories: readonly [string, string]
+}): Promise<{
+  fixedLocalState: GoldImportV2FixedLocalState
+  readiness: GoldImportV2PackageGenerationReadiness
+  repositoryEvidence: V2RehearsalRepositoryEvidence
+}> {
+  const repository = await inspectGoldImportV2PrimaryMainRepository({ cwd: REPOSITORY_ROOT })
+  const [receipt, runtimeBundle, firstCapture, secondCapture] = await Promise.all([
+    loadGoldImportV2FinalizedReceiptEvidence(),
+    loadGoldImportV2PreimportRuntimeBundle(GOLD_IMPORT_V2_PRIMARY_CHECKOUT),
+    verifyGoldImportV2PreimportCaptureDirectory({
+      backupRoot: GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
+      directory: input.captureDirectories[0],
+    }),
+    verifyGoldImportV2PreimportCaptureDirectory({
+      backupRoot: GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
+      directory: input.captureDirectories[1],
+    }),
+  ])
+  const readiness = buildGoldImportV2PackageGenerationReadiness({
+    captures: [firstCapture, secondCapture],
+    currentFinalizedReceipt: receipt,
+    currentRepository: repository,
+    currentRuntimeBundle: runtimeBundle,
+    now: new Date(),
+  })
+  const databaseEvidence = await collectGoldImportV2PreimportFixedLocalState()
+  assertGoldImportV2CurrentDatabaseMatchesPackageReadiness({
+    expected: readiness.packageReadiness,
+    fixedLocalState: databaseEvidence,
+    receipt,
+    repository,
+  })
+  const [finalRepository, finalReceipt, finalRuntimeBundle, finalFirstCapture, finalSecondCapture] =
+    await Promise.all([
+      inspectGoldImportV2PrimaryMainRepository({ cwd: REPOSITORY_ROOT }),
+      loadGoldImportV2FinalizedReceiptEvidence(),
+      loadGoldImportV2PreimportRuntimeBundle(GOLD_IMPORT_V2_PRIMARY_CHECKOUT),
+      verifyGoldImportV2PreimportCaptureDirectory({
+        backupRoot: GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
+        directory: input.captureDirectories[0],
+      }),
+      verifyGoldImportV2PreimportCaptureDirectory({
+        backupRoot: GOLD_IMPORT_V2_PREIMPORT_CAPTURE_ROOT,
+        directory: input.captureDirectories[1],
+      }),
+    ])
+  const finalReadiness = buildGoldImportV2PackageGenerationReadiness({
+    captures: [finalFirstCapture, finalSecondCapture],
+    currentFinalizedReceipt: finalReceipt,
+    currentRepository: finalRepository,
+    currentRuntimeBundle: finalRuntimeBundle,
+    now: new Date(),
+  })
+  if (canonicalJson(finalReadiness) !== canonicalJson(readiness)) {
+    throw new Error(
+      'Post-V2 capture pair, receipt, runtime, or repository changed during fixed-local verification.',
+    )
+  }
+  return {
+    fixedLocalState: databaseEvidence,
+    readiness: finalReadiness,
+    repositoryEvidence: rehearsalRepositoryEvidence(finalRepository),
+  }
+}
+
+function assertV2RehearsalRepositoryEvidenceUnchangedInternal(
+  expected: V2RehearsalRepositoryEvidence,
+  currentInput: V2RehearsalRepositoryEvidence,
+): void {
+  const authenticatedExpected = validateV2RehearsalRepositoryEvidence(expected)
+  const current = validateV2RehearsalRepositoryEvidence(currentInput)
+  if (canonicalJson(current) !== canonicalJson(authenticatedExpected)) {
+    throw new Error('Repository evidence changed during the four-run V2 rehearsal.')
+  }
+}
+
+export function assertV2RehearsalRepositoryEvidenceUnchanged(
+  expected: V2RehearsalRepositoryEvidence,
+  current: V2RehearsalRepositoryEvidence,
+): void {
+  validateV2RehearsalCoreRepositoryEvidence(expected)
+  validateV2RehearsalCoreRepositoryEvidence(current)
+  assertV2RehearsalRepositoryEvidenceUnchangedInternal(expected, current)
 }
 
 export function assertAuthenticatedPreV1BackupIdentityV2(input: {
@@ -303,13 +451,13 @@ function authenticatedSeedFromBackup(
   return seed
 }
 
-export interface CompleteV2RehearsalResults {
+interface CompleteV2RehearsalResults {
   bootstrapUpgrade: V2DisposablePathResult
   fresh: readonly [V2DisposablePathResult, V2DisposablePathResult]
   upgrade: readonly [V2DisposablePathResult, V2DisposablePathResult]
 }
 
-export interface CompleteV2RehearsalDependencies {
+interface CompleteV2RehearsalDependencies {
   executePath(input: ExecuteV2DisposablePathInput): Promise<V2DisposablePathResult>
 }
 
@@ -318,7 +466,9 @@ const PRODUCTION_COMPLETE_REHEARSAL_DEPENDENCIES: CompleteV2RehearsalDependencie
 }
 
 /** Bootstrap in upgrade run one, then require a second upgrade and two fresh runs. */
-export async function executeCompleteV2Rehearsal(input: {
+export const EXACT_V2_REHEARSAL_PATH_ORDER = ['upgrade', 'upgrade', 'fresh', 'fresh'] as const
+
+async function executeCompleteV2Rehearsal(input: {
   dependencies?: CompleteV2RehearsalDependencies
   evidenceBindings: V2CanonicalAuthorizationBindings
   exactPackageExecutor: V2ExactPackageDatabaseExecutor
@@ -332,10 +482,10 @@ export async function executeCompleteV2Rehearsal(input: {
       migrationPath,
       seed: input.seed,
     })
-  const bootstrapUpgrade = await run('upgrade')
-  const upgradeSecond = await run('upgrade')
-  const freshFirst = await run('fresh')
-  const freshSecond = await run('fresh')
+  const bootstrapUpgrade = await run(EXACT_V2_REHEARSAL_PATH_ORDER[0])
+  const upgradeSecond = await run(EXACT_V2_REHEARSAL_PATH_ORDER[1])
+  const freshFirst = await run(EXACT_V2_REHEARSAL_PATH_ORDER[2])
+  const freshSecond = await run(EXACT_V2_REHEARSAL_PATH_ORDER[3])
   assertDeterministicV2RehearsalRuns(bootstrapUpgrade, upgradeSecond)
   assertDeterministicV2RehearsalRuns(freshFirst, freshSecond)
   if (
@@ -417,9 +567,12 @@ function buildCanonicalOutputs(input: {
   operatorBundle: ProtectedV2OperatorBundle
   operatorBundleBinding: ProtectedV2RuntimeBundleBinding
   package: GeneratedGoldImportCompensationPackageV2
+  productionReadiness?: GoldImportV2PackageGenerationReadiness
+  repositoryEvidence: V2RehearsalRepositoryEvidence
   results: CompleteV2RehearsalResults
 }) {
   const audit = validateReadyGoldImportCompensationV2Audit(input.audit)
+  const repositoryEvidence = validateV2RehearsalRepositoryEvidence(input.repositoryEvidence)
   const operatorBundleBinding = validateProtectedV2RuntimeBundleBinding(
     input.operatorBundleBinding,
     input.operatorBundle,
@@ -442,16 +595,17 @@ function buildCanonicalOutputs(input: {
     input.package.verifiedBindings.completeCatalogAuditIdentitySha256 !==
       input.completeCatalogAudit.fullAuditIdentitySha256 ||
     input.package.verifiedBindings.expectedCatalogBindingSha256 !==
-      input.expectedCatalog.bindingSha256
+      input.expectedCatalog.bindingSha256 ||
+    input.package.importPlan.executionContext.repositoryCommitSha !== repositoryEvidence.headSha
   ) {
     throw new Error(
-      'Ready audit, package, source authorization, and exact catalog bindings differ.',
+      'Ready audit, package, source authorization, repository, and exact catalog bindings differ.',
     )
   }
   const auditBytes = prettyCanonical(audit)
   const completeCatalogAuditBytes = prettyCanonical(input.completeCatalogAudit)
   const driftMatrixBytes = prettyCanonical(input.driftMatrix)
-  const report = {
+  const report = validateGoldImportV2ExactPackageRehearsalReport21({
     audit: {
       completeCatalogAuditIdentitySha256: input.completeCatalogAudit.fullAuditIdentitySha256,
       completeCatalogAuditModelIdentitySha256: input.completeCatalogAudit.auditModelIdentitySha256,
@@ -494,12 +648,22 @@ function buildCanonicalOutputs(input: {
         input.package.verifiedBindings.completeCatalogAuditIdentitySha256,
       expectedCatalogBindingSha256: input.package.verifiedBindings.expectedCatalogBindingSha256,
     },
+    ...(input.productionReadiness
+      ? {
+          postV2PreImportReadiness: {
+            capturePairIdentitySha256: input.productionReadiness.capturePair.pairIdentitySha256,
+            compensationAuthorized: false,
+            importAuthorized: false,
+            packageReadinessIdentitySha256: input.productionReadiness.readinessIdentitySha256,
+          },
+        }
+      : {}),
     protectedRuntimeBundle: operatorBundleBinding,
     repository: {
-      branch: V2_REHEARSAL_TASK_BRANCH,
-      cleanTrackedAndUntrackedWorktree: true,
-      headSha: input.package.importPlan.executionContext.repositoryCommitSha,
-      originMainIsAncestor: true,
+      branch: repositoryEvidence.branch,
+      cleanTrackedAndUntrackedWorktree: repositoryEvidence.cleanTrackedAndUntrackedWorktree,
+      headSha: repositoryEvidence.headSha,
+      originMainIsAncestor: repositoryEvidence.originMainIsAncestor,
     },
     rehearsals: {
       bootstrap: {
@@ -525,13 +689,14 @@ function buildCanonicalOutputs(input: {
       allFourContainersRemovedAndVerifiedAbsent: true,
       callerDatabaseTargetAccepted: false,
       heldOutIdentitiesAccessed: false,
-      realLocalDatabaseTouched: false,
+      realLocalDatabaseMutated: false,
+      realLocalReadOnlyVerified: input.productionReadiness !== undefined,
       remoteDatabaseTouched: false,
       sourceReadOnlyAfterV2BootstrapProbe: true,
     },
-    schemaVersion: 'gold-import-compensation-exact-package-rehearsal/2.0.0',
+    schemaVersion: EXACT_V2_PACKAGE_REHEARSAL_REPORT_SCHEMA_VERSION,
     status: 'passed',
-  }
+  })
   const files = new Map<string, Buffer>([
     ['disposable-v2-catalog-drift-matrix.json', driftMatrixBytes],
     ['disposable-v2-complete-catalog-audit.json', completeCatalogAuditBytes],
@@ -551,46 +716,55 @@ function buildCanonicalOutputs(input: {
   return { files, manifest: canonicalManifest(files), report }
 }
 
-export interface ExactV2PackageRehearsalCliDependencies {
-  buildOperatorBundle?(): Promise<ProtectedV2OperatorBundle>
-  completeRehearsal?: CompleteV2RehearsalDependencies
+interface ExactV2PackageRehearsalCoreDependencies {
+  assertCurrentProductionReadiness?(): Promise<GoldImportV2FixedLocalState>
+  buildOperatorBundle(): Promise<ProtectedV2OperatorBundle>
+  completeRehearsal: CompleteV2RehearsalDependencies
   loadPreMigrationBackup(
     directory: string,
     trustedManifestSha256: string,
   ): Promise<LoadedPreMigrationBackup>
-  readRepositoryHead(): Promise<string>
+  readCurrentRepositoryEvidence(): Promise<V2RehearsalRepositoryEvidence>
+  productionReadiness?: GoldImportV2PackageGenerationReadiness
+  productionFixedLocalState?: GoldImportV2FixedLocalState
+  repositoryEvidence: V2RehearsalRepositoryEvidence
 }
 
-const PRODUCTION_CLI_DEPENDENCIES: ExactV2PackageRehearsalCliDependencies = {
-  buildOperatorBundle: () => buildProtectedV2OperatorBundle({ cwd: REPOSITORY_ROOT }),
-  loadPreMigrationBackup: loadAndVerifyBackup,
-  readRepositoryHead: authenticateV2RehearsalRepositoryHead,
-}
-
-export async function runExactPackageRehearsalV2Cli(
-  argv: readonly string[],
-  dependencies: ExactV2PackageRehearsalCliDependencies = PRODUCTION_CLI_DEPENDENCIES,
-): Promise<{
+export interface ExactV2PackageRehearsalResult {
   freshEvidenceSha256: string
   migrationSha256: string
   outputDirectory: string
   packageDirectory: string
   packageManifestSha256: string
   upgradeEvidenceSha256: string
-}> {
-  const arguments_ = parseCliArguments([...argv])
-  assertKnownArguments(arguments_, CLI_ARGUMENTS)
+}
+
+function emptyExactV2PackageRehearsalResult(): ExactV2PackageRehearsalResult {
+  return {
+    freshEvidenceSha256: '',
+    migrationSha256: '',
+    outputDirectory: '',
+    packageDirectory: '',
+    packageManifestSha256: '',
+    upgradeEvidenceSha256: '',
+  }
+}
+
+/**
+ * Branch-agnostic orchestration core. Every repository and disposable-execution
+ * capability is explicit; production callers must use runExactPackageRehearsalV2Cli.
+ */
+async function runExactPackageRehearsalV2WithDependencies(
+  argv: readonly string[],
+  dependencies: ExactV2PackageRehearsalCoreDependencies,
+): Promise<ExactV2PackageRehearsalResult> {
+  const arguments_ = parseExactV2PackageRehearsalCliArguments(argv)
   if (arguments_.flags.has('help')) {
     console.log(HELP)
-    return {
-      freshEvidenceSha256: '',
-      migrationSha256: '',
-      outputDirectory: '',
-      packageDirectory: '',
-      packageManifestSha256: '',
-      upgradeEvidenceSha256: '',
-    }
+    return emptyExactV2PackageRehearsalResult()
   }
+  const repositoryEvidence = validateV2RehearsalRepositoryEvidence(dependencies.repositoryEvidence)
+  const commitSha = repositoryEvidence.headSha
   const rawOutputRoot = requiredArgument(arguments_, 'output-root')
   const rawOutputDirectory = requiredArgument(arguments_, 'output')
   assertSafeOutputPathArgument(rawOutputRoot, '--output-root')
@@ -611,10 +785,7 @@ export async function runExactPackageRehearsalV2Cli(
     trustedBackupManifestSha256,
   )
   const seed = authenticatedSeedFromBackup(backup, trustedBackupManifestSha256)
-  const commitSha = await dependencies.readRepositoryHead()
-  const operatorBundle = await (
-    dependencies.buildOperatorBundle ?? PRODUCTION_CLI_DEPENDENCIES.buildOperatorBundle!
-  )()
+  const operatorBundle = await dependencies.buildOperatorBundle()
   const operatorBundleBinding = buildProtectedV2RuntimeBundleBinding(operatorBundle)
   const expectedCatalog = buildProtectedV2ExpectedCatalogBinding(
     'supabase_admin_owner_v1',
@@ -729,7 +900,10 @@ export async function runExactPackageRehearsalV2Cli(
   if (controller.generatedPackageCount() !== 4 || sourceReadCount !== 4) {
     throw new Error('Every bootstrap/repetition did not independently regenerate the V2 package.')
   }
-  await assertV2RehearsalRepositoryUnchanged(commitSha, dependencies.readRepositoryHead)
+  assertV2RehearsalRepositoryEvidenceUnchangedInternal(
+    repositoryEvidence,
+    await dependencies.readCurrentRepositoryEvidence(),
+  )
   const package_ = controller.referencePackage()
   const audit = controller.referenceAudit()
   const completeCatalogAudit = controller.referenceCompleteCatalogAudit()
@@ -741,6 +915,17 @@ export async function runExactPackageRehearsalV2Cli(
     package: package_,
     seed,
   })
+  if (dependencies.productionReadiness) {
+    validateGoldImportV2PackageGenerationReadiness(dependencies.productionReadiness)
+    if (!dependencies.assertCurrentProductionReadiness || !dependencies.productionFixedLocalState) {
+      throw new Error('Production rehearsal readiness lacks its live publication bracket.')
+    }
+  } else if (
+    dependencies.assertCurrentProductionReadiness ||
+    dependencies.productionFixedLocalState
+  ) {
+    throw new Error('Disposable rehearsal cannot claim a production-readiness recheck.')
+  }
   const canonical = buildCanonicalOutputs({
     audit,
     backupManifestSha256: trustedBackupManifestSha256,
@@ -750,6 +935,8 @@ export async function runExactPackageRehearsalV2Cli(
     operatorBundle,
     operatorBundleBinding,
     package: package_,
+    productionReadiness: dependencies.productionReadiness,
+    repositoryEvidence,
     results,
   })
   const executionPathReceipt = (result: V2DisposablePathResult) => ({
@@ -776,24 +963,93 @@ export async function runExactPackageRehearsalV2Cli(
   })
 
   // Nothing is published until all four owned containers have been removed and
-  // their independent exact-name/ID absence checks have passed.
-  const output = await createExclusiveOutputDirectory({ outputDirectory, outputRoot })
-  const packageDirectory = resolve(output.outputDirectory, PACKAGE_OUTPUT_DIRECTORY)
-  const packageOutput = await createExclusiveOutputDirectory({
-    outputDirectory: packageDirectory,
-    outputRoot: output.outputDirectory,
+  // their independent exact-name/ID absence checks have passed. Every slow file
+  // is first written beneath a hidden same-parent staging directory.
+  const stageOutputs = async (): Promise<StagedExclusiveOutputDirectory> => {
+    const staged = await createStagedExclusiveOutputDirectory({
+      outputDirectory,
+      outputRoot,
+      stagingNonce: randomBytes(32).toString('hex'),
+    })
+    const stagedPackageDirectory = resolve(staged.stagingDirectory, PACKAGE_OUTPUT_DIRECTORY)
+    const packageOutput = await createExclusiveOutputDirectory({
+      outputDirectory: stagedPackageDirectory,
+      outputRoot: staged.stagingDirectory,
+    })
+    writeExclusiveOutputFiles(
+      packageOutput,
+      [...package_.files.entries()].map(([name, bytes]) => ({ bytes, name })),
+    )
+    await assertExclusiveOutputDirectoryIdentity(packageOutput)
+    writeExclusiveOutputFiles(staged.identity, [
+      ...[...canonical.files.entries()].map(([name, bytes]) => ({ bytes, name })),
+      { bytes: rawReceipt, name: 'execution-receipt-v2.json' },
+    ])
+    await assertExclusiveOutputDirectoryIdentity(staged.identity)
+    return staged
+  }
+  const stagedPayloadSha256 = sha256Canonical({
+    canonicalManifestSha256: sha256(canonical.manifest),
+    executionReceiptSha256: sha256(rawReceipt),
+    packageManifestSha256: package_.manifestSha256,
   })
-  writeExclusiveOutputFiles(
-    packageOutput,
-    [...package_.files.entries()].map(([name, bytes]) => ({ bytes, name })),
-  )
-  await assertExclusiveOutputDirectoryIdentity(packageOutput)
-  writeExclusiveOutputFiles(output, [
-    ...[...canonical.files.entries()].map(([name, bytes]) => ({ bytes, name })),
-    { bytes: canonical.manifest, name: 'canonical-manifest-v2.sha256' },
-    { bytes: rawReceipt, name: 'execution-receipt-v2.json' },
-  ])
-  await assertExclusiveOutputDirectoryIdentity(output)
+  if (dependencies.productionReadiness) {
+    const productionReadiness = dependencies.productionReadiness
+    const productionFixedLocalState = dependencies.productionFixedLocalState!
+    await runGoldImportV2DatabasePublicationProtocol<StagedExclusiveOutputDirectory, string>({
+      discard: discardStagedExclusiveOutputDirectory,
+      finalize: async (staged, bracket) => {
+        const bracketBytes = prettyCanonical(bracket)
+        const productionManifest = canonicalManifest(
+          new Map([
+            ...canonical.files,
+            [PRODUCTION_REHEARSAL_PUBLICATION_BRACKET_FILE, bracketBytes] as const,
+          ]),
+        )
+        writeExclusiveOutputFiles(staged.identity, [
+          { bytes: bracketBytes, name: PRODUCTION_REHEARSAL_PUBLICATION_BRACKET_FILE },
+          { bytes: productionManifest, name: 'canonical-manifest-v2.sha256' },
+        ])
+        await assertExclusiveOutputDirectoryIdentity(staged.identity)
+      },
+      initial: buildGoldImportV2DatabasePublicationObservationBinding({
+        packageReadiness: productionReadiness.packageReadiness,
+        targetObservation: productionFixedLocalState.targetObservation,
+      }),
+      now: () => new Date(),
+      observeFinal: async () => {
+        const finalFixedLocalState = await dependencies.assertCurrentProductionReadiness!()
+        return buildGoldImportV2DatabasePublicationObservationBinding({
+          packageReadiness: productionReadiness.packageReadiness,
+          targetObservation: finalFixedLocalState.targetObservation,
+        })
+      },
+      publish: async (staged) => {
+        await publishStagedExclusiveOutputDirectory(staged)
+        return outputDirectory
+      },
+      stage: async () => ({
+        staged: await stageOutputs(),
+        stagedAt: new Date().toISOString(),
+        stagedPayloadSha256,
+      }),
+      subject: 'production_rehearsal',
+    })
+  } else {
+    const staged = await stageOutputs()
+    try {
+      writeExclusiveOutputFiles(staged.identity, [
+        { bytes: canonical.manifest, name: 'canonical-manifest-v2.sha256' },
+      ])
+      await assertExclusiveOutputDirectoryIdentity(staged.identity)
+      await publishStagedExclusiveOutputDirectory(staged)
+    } catch (error) {
+      await discardStagedExclusiveOutputDirectory(staged)
+      throw error
+    }
+  }
+
+  const packageDirectory = resolve(outputDirectory, PACKAGE_OUTPUT_DIRECTORY)
 
   const freshEvidence = canonical.files.get('fresh-v2-rehearsal-evidence.json')!
   const upgradeEvidence = canonical.files.get('upgrade-v2-rehearsal-evidence.json')!
@@ -805,6 +1061,54 @@ export async function runExactPackageRehearsalV2Cli(
     packageManifestSha256: package_.manifestSha256,
     upgradeEvidenceSha256: sha256(upgradeEvidence),
   }
+}
+
+/** Production-only wrapper: exact primary checkout, clean main, HEAD === origin/main. */
+async function runExactPackageRehearsalV2Cli(
+  argv: readonly string[],
+): Promise<ExactV2PackageRehearsalResult> {
+  if (
+    REPOSITORY_ROOT !== GOLD_IMPORT_V2_PRIMARY_CHECKOUT ||
+    EXECUTING_MODULE_PATH !== EXPECTED_PRODUCTION_MODULE_PATH ||
+    realpathSync(process.cwd()) !== REPOSITORY_ROOT ||
+    !process.argv[1] ||
+    realpathSync(resolve(process.argv[1])) !== EXECUTING_MODULE_PATH
+  ) {
+    throw new Error(
+      'V2 rehearsal must execute directly from its exact primary-checkout entrypoint.',
+    )
+  }
+  const arguments_ = parseExactV2PackageRehearsalCliArguments(argv)
+  if (arguments_.flags.has('help')) {
+    console.log(HELP)
+    return emptyExactV2PackageRehearsalResult()
+  }
+  const captureDirectories = [
+    requiredArgument(arguments_, 'preimport-capture-one'),
+    requiredArgument(arguments_, 'preimport-capture-two'),
+  ] as const
+  const initial = await loadProductionV2RehearsalReadiness({ captureDirectories })
+  return runExactPackageRehearsalV2WithDependencies(argv, {
+    assertCurrentProductionReadiness: async () => {
+      const current = await loadProductionV2RehearsalReadiness({ captureDirectories })
+      if (
+        canonicalJson(current.readiness) !== canonicalJson(initial.readiness) ||
+        canonicalJson(current.repositoryEvidence) !== canonicalJson(initial.repositoryEvidence)
+      ) {
+        throw new Error(
+          'Post-V2 capture pair, fixed-local state, receipt, runtime, or repository changed during rehearsal.',
+        )
+      }
+      return current.fixedLocalState
+    },
+    buildOperatorBundle: () => buildProtectedV2OperatorBundle({ cwd: REPOSITORY_ROOT }),
+    completeRehearsal: PRODUCTION_COMPLETE_REHEARSAL_DEPENDENCIES,
+    loadPreMigrationBackup: loadAndVerifyBackup,
+    productionReadiness: initial.readiness,
+    productionFixedLocalState: initial.fixedLocalState,
+    readCurrentRepositoryEvidence: readProductionV2RehearsalRepositoryEvidence,
+    repositoryEvidence: initial.repositoryEvidence,
+  })
 }
 
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : ''

@@ -21,13 +21,11 @@ import {
   type ProtectedV2FinalizedRecoveryReceiptAuthority,
   type ProtectedV2FinalizedRecoveryReceiptReference,
 } from './protected-gold-import-contract-v2-receipt-recovery-core'
-import { LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256 } from './literature-gold-v2-schema-only-transition'
 import {
   PROTECTED_V2_RECEIPT_RECOVERY_COMMITTED_AMENDMENT_PATH,
   PROTECTED_V2_RECEIPT_RECOVERY_INCIDENT_AUTHORITY_PATH,
-  parseProtectedV2ReceiptRecoveryCommittedAmendment,
+  parseImmutableProtectedV2ReceiptRecoveryCommittedAmendment,
 } from './protected-gold-import-contract-v2-receipt-recovery-authority'
-import { buildCurrentProtectedV2ReceiptRecoveryToolBundle } from './protected-gold-import-contract-v2-receipt-recovery-tool-bundle'
 
 export const GOLD_IMPORT_COMPENSATION_V2_MIGRATION_RECEIPT_GATE_SCHEMA_VERSION =
   'gold-import-compensation-v2-finalized-migration-receipt-gate/1.0.0' as const
@@ -824,15 +822,9 @@ export async function loadCommittedProtectedV2RecoveryReceiptAuthority(
     'Committed protected V2 recovery incident authority',
   )
   await assertRegularNonSymlink(amendmentPath, 'Committed protected V2 recovery amendment')
-  const currentRecoveryToolBundle = await buildCurrentProtectedV2ReceiptRecoveryToolBundle({
-    cwd: root,
-  })
-  const amendment = parseProtectedV2ReceiptRecoveryCommittedAmendment({
+  const amendment = parseImmutableProtectedV2ReceiptRecoveryCommittedAmendment({
     amendmentBytes: await readFile(amendmentPath, 'utf8'),
     authorityBytes: await readFile(incidentAuthorityPath, 'utf8'),
-    correctedRecoveryToolBundle: currentRecoveryToolBundle,
-    correctedTransitionPolicyIdentitySha256:
-      LITERATURE_GOLD_V2_SCHEMA_ONLY_TRANSITION_POLICY_IDENTITY_SHA256,
   })
   if (
     reference.amendmentIdentitySha256 !== amendment.amendmentIdentitySha256 ||
