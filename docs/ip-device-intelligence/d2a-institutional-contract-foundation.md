@@ -16,8 +16,8 @@ D2A adds only:
 
 - strict domain schemas and inferred TypeScript types;
 - pure scope, access, and lookup helpers;
-- invented fixtures;
-- a frozen in-memory adapter with one read operation;
+- a sealed, deep-frozen canonical fictional corpus checked into this repository;
+- a frozen in-memory adapter with one read operation and no runtime dataset input;
 - validation and isolation tests; and
 - requirements for a later, separately authorized migration and row-level-security phase.
 
@@ -27,9 +27,11 @@ real capability/formulary/inventory facts, public indexing, or institutional rea
 claims. It does not alter the D1 demo-readiness resolver or project these fixtures into any
 existing public-unlisted Device Intelligence output.
 
-Every name, identifier, statement, source, decision, and jurisdiction in the fixtures is
-invented. The fictional adapter rejects any fixture source whose provenance class is
-not **fictional_fixture**.
+Every name, identifier, source, decision, and jurisdiction in the fixtures is invented.
+The fictional adapter constructs only from the canonical in-repository corpus, and the
+corpus schema rejects any fixture source whose provenance class is not
+**fictional_fixture**. Fictionality is structural, not self-asserted: there is no public
+API through which a caller can supply a bundle at all (section 6).
 
 ## 2. Context and scope contract
 
@@ -59,10 +61,12 @@ Capability, formulary, and inventory records each carry:
 
 - a source ID and typed source kind;
 - an explicit source revision;
-- provenance ID, label, locator, jurisdiction, and provenance class;
+- a provenance ID and provenance class, with label, locator, and jurisdiction prose held
+  in an internal-only authoring block that never enters a returned projection;
 - last-verified timestamp;
 - exact context and access classification; and
-- a record-specific state.
+- a record-specific state whose explanatory content is a controlled code, never free
+  text.
 
 The source collection state is separately represented as available, unknown, or
 unavailable. An unknown or unavailable source is forbidden from carrying asserted
@@ -101,8 +105,10 @@ resolve, and the comparison treats an unreadable instant as a failure in its own
 
 ## 4. Fictional read adapter
 
-The **createFictionalInstitutionalOverlayReadAdapter** function validates and freezes the
-complete bundle when constructed. Its public surface contains only **project**.
+The **createFictionalInstitutionalOverlayReadAdapter** function takes **no arguments**: it
+parses, deep-freezes, and projection-safety-checks the canonical in-repository corpus at
+construction and rejects any runtime argument loudly. Its public surface contains only
+**project**, and every request passes a plain own-property boundary before Zod parses it.
 
 Projection behavior is fail-closed:
 
@@ -119,9 +125,12 @@ Projection behavior is fail-closed:
 7. Parsed projections are deeply frozen before return.
 
 **accessAllows** is the exported access gate, so it denies on its own rather than assuming
-its arguments were already parsed. An unrecognized classification is refused explicitly
-instead of being used as an object key, where a name inherited from `Object.prototype` would
-have compared two functions and read as allowed.
+its arguments were already parsed. Both arguments are re-parsed through the classification
+schema before any comparison, so a coercible object — an array, a boxed string, a
+`toString`/`Symbol.toPrimitive` carrier, a proxy — is denied outright rather than being
+used as a property key, where key coercion would have invoked its conversion methods and a
+name inherited from `Object.prototype` would have compared two functions and read as
+allowed.
 
 The fixtures intentionally include two sites within one fictional institution and a second
 fictional tenant/institution. This supports tests for site, institution, and tenant
@@ -154,10 +163,114 @@ The focused suites cover:
   institution left present so the scan cannot pass vacuously;
 - refusal errors and unconfigured-scope projections naming no other scope;
 - projection-time refusal for an instant that cannot resolve, alongside the honest stale
-  timestamp it already refused; and
-- access-gate denial for an unrecognized classification.
+  timestamp it already refused;
+- access-gate denial for an unrecognized classification and for every coercible
+  non-string;
+- the preserved 27 × 6 forbidden-identifier matrix, refused 162/162;
+- the sealed zero-input factory, its export surface, and module-isolation construction
+  refusals;
+- the closed identifier grammar and the bundle-wide identifier registry;
+- own-property request and nested-scope boundaries, including polluted prototypes;
+- the free-text boundary: no internal authoring text in any reachable projection; and
+- the static runtime import boundary.
 
-## 6. Requirements for a later migration phase
+## 6. Codex correction pass (2026-08-13): D2A-C1 through D2A-C4
+
+An independent Codex review of the initial D2A commits confirmed four MEDIUM findings.
+Each was reproduced at head `f6b725e9` before correction; the corrections below are
+structural, and every reproduction now fails closed.
+
+### D2A-C1 — arbitrary projection strings
+
+**Pre-correction reproduction (27 fields × 6 forbidden identifiers):** 153/162 injection
+cases validated, projected, and serialized the forbidden identifier into a permitted
+projection; the other 9 were refused only by incidental pre-existing rules (3
+intra-dataset recordId duplicates, 6 dataset-context echoes), not by any identifier
+defense. The six forbidden identifiers are a sibling-site siteId, a sibling-site recordId,
+a sibling-site sourceId, a cross-tenant tenantId, a confidential-tier recordId, and a
+confidential-tier sourceId.
+
+**Correction — a controlled projection DTO.** The returned projection is a separate set
+of `projected*` schemas; the authoring bundle and the projection no longer share a shape.
+Every formerly projection-visible string field now has exactly one classification:
+
+| Field                                                       | Classification                                                 |
+| ----------------------------------------------------------- | -------------------------------------------------------------- |
+| diagnostic message                                          | internal-only; projection carries a controlled template key    |
+| source label / source locator / jurisdiction                | internal-only authoring block, omitted from projection         |
+| source-state reason                                         | controlled code (`sourceStateReasonSchema`)                    |
+| capability statement                                        | removed; unavailable carries a controlled reason code          |
+| inventory absent statement                                  | controlled reason code (`inventoryAbsentReasonSchema`)         |
+| formulary not-listed statement                              | controlled reason code (`formularyNotListedReasonSchema`)      |
+| quantity unit                                               | closed vocabulary (`each`, `box`, `kit`, `case`)               |
+| pending-review reference                                    | scope-validated identifier                                     |
+| record / source / provenance / decision / entry / diag. IDs | scope-validated identifiers (bundle registry)                  |
+| capability code / subject ID / source revision              | global governed codes (may not embed any scope identity or ID) |
+| tenant / institution / site / demo IDs                      | scope components (closed grammar, cross-position rules)        |
+
+**Scope-validated identifiers.** Every scope-local identifier registers at bundle
+validation to exactly one scope, access tier, and identifier kind. The registry refuses
+duplicates across the bundle, identifiers equal to any scope component, identifiers
+containing another scope's distinctive component or identifier, lower-tier identifiers
+containing same-scope higher-tier identifiers, governed codes containing any scope
+component or identifier, and internal authoring text containing another scope's — or a
+higher tier's — component or identifier. All identifiers use a closed lowercase grammar
+(ASCII letters/digits with single hyphen/underscore separators, bounded length) that
+explicitly refuses every `Object.prototype` name plus `prototype` and `__proto__`.
+
+**Defense in depth.** Because the corpus is finite and sealed, adapter construction also
+enumerates every projection any caller could receive (each demo context at public tier;
+each institutional scope at both tiers), serializes it, and refuses to construct if any
+identifier forbidden for that scope and tier appears anywhere in the output. This backs up
+the DTO and registry; it substitutes for neither.
+
+**Post-correction matrix result: 162/162 refused at the schema or sealing layer, 0/162
+serialized** (`institutional-projection-matrix.test.ts`).
+
+### D2A-C2 — self-asserted fictionality
+
+**Pre-correction reproduction:** a generic real-shaped bundle with arbitrary source
+labels, locators, jurisdiction, statements, and identifiers was accepted and served merely
+because it supplied `provenanceClass: 'fictional_fixture'`.
+
+**Correction — a sealed corpus.** The public factory is now zero-argument: it imports the
+canonical in-repository fixture directly, parses and deep-freezes it, runs the
+projection-safety validator, and rejects unexpected runtime arguments loudly. There is no
+production export that accepts a bundle, no self-asserted fixture policy or foundation
+label, and no path by which caller-supplied provenance proves fictionality. Tests that
+need malformed bundles substitute the canonical fixture module through Jest module
+isolation; no production factory exists for that purpose, and a static import-boundary
+test pins that no route, component, API, action, or analytics surface imports the
+institutional modules and that only the sealed adapter imports the fixture.
+
+### D2A-C3 — coercible access-gate inputs
+
+**Pre-correction reproduction:** `accessAllows` allowed arrays, boxed strings, and
+`toString`/`Symbol.toPrimitive` carriers that coerced to a valid classification, because
+`hasOwnProperty` key coercion invoked their conversion methods.
+
+**Correction:** both arguments are explicitly `safeParse`d against the classification
+schema; either failure denies, and only parsed enum strings are compared. The full
+coercible matrix (arrays, boxed strings, Date, number, boolean, null, undefined, symbol,
+converter objects, proxies, `Object.prototype` keys, empty/unknown/case-variant strings)
+is pinned to deny, and the nine-pair valid access matrix is pinned unchanged.
+
+### D2A-C4 — inherited request properties and reserved identifiers
+
+**Pre-correction reproduction:** `Object.create(validRequest)` — owning no property at
+all — was accepted, as were nested scopes with inherited fields and reserved names
+(`toString`, `constructor`, `valueOf`, `__proto__`, `hasOwnProperty`) as identifiers, which
+the projection then echoed.
+
+**Correction:** `parseOverlayProjectionRequest` verifies the original runtime value before
+Zod sees it: a request must be a plain data object (prototype exactly `Object.prototype`,
+or `null`, which cannot inherit anything), with no symbol keys, no accessor properties,
+and no non-enumerable properties; its own enumerable data properties are copied exactly
+once into a fresh object, and the nested scope is independently checked the same way.
+Reserved property names are refused as identifiers by the closed grammar itself, at the
+request boundary and in the corpus.
+
+## 7. Requirements for a later migration phase
 
 No migration is included here. A later migration requires explicit authorization and an
 independent data-model/security review. At minimum, its design must satisfy all of the
@@ -220,7 +333,7 @@ following:
 - Define a reversible migration and independent rollback that cannot delete retained
   historical evidence.
 
-## 7. Epistemic status
+## 8. Epistemic status
 
 Architecture conclusions from source, security, database, and regulatory research are
 contextual guidance and design inference until reviewed and adopted through this
@@ -228,7 +341,7 @@ repository's governance process. They do not automatically create a binding regu
 privacy, security, clinical, or institutional requirement. D2A contains no clinical facts,
 no institution facts, and no physician decision.
 
-## 8. Review classification
+## 9. Review classification
 
 Proposed checkpoint classification before independent adversarial review:
 **SAFE AFTER TARGETED REVIEW**.
