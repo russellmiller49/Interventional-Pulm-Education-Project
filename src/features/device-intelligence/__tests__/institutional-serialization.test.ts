@@ -2,6 +2,7 @@ import {
   type InstitutionScopeIdentity,
   type InstitutionalAccessClassification,
   type InstitutionalOverlayDataset,
+  accessAllows,
   institutionalOverlayDatasetSchema,
 } from '@/features/device-intelligence/institutional/contracts'
 import { createFictionalInstitutionalOverlayReadAdapter } from '@/features/device-intelligence/institutional/fictional-readonly-adapter'
@@ -262,5 +263,125 @@ describe('D2A serialization scans — no identifier crosses a scope boundary', (
       ...scopeDistinctiveIdentifiers(summitDataset),
       ...scopeDistinctiveIdentifiers(eastDataset),
     ].forEach((value) => expect(message).not.toContain(value))
+  })
+})
+
+describe('D2A projection-time guard fails closed on an unreadable instant', () => {
+  // `z.string().datetime({ offset: true })` accepts offsets that `Date.parse` returns NaN
+  // for. Because the guard is a `>` against a parsed instant, and every comparison with NaN
+  // is false, such a timestamp would otherwise switch the whole evidence-time check off.
+  const UNREADABLE = '2026-08-01T00:00:00+99:99'
+
+  it('confirms the primitive divergence this guard exists for', () => {
+    expect(Date.parse(UNREADABLE)).toBeNaN()
+  })
+
+  it('refuses a projection request whose timestamp cannot resolve to an instant', () => {
+    expect(() =>
+      adapter.project({
+        contextKind: 'institutional',
+        scope: FICTIONAL_HARBOR_EAST_SCOPE,
+        accessClassification: 'institution_restricted',
+        projectionTimestamp: UNREADABLE,
+      }),
+    ).toThrow()
+    expect(() =>
+      adapter.project({
+        contextKind: 'demo',
+        demoContextId: FICTIONAL_DEMO_CONTEXT.demoContextId,
+        accessClassification: 'public_unlisted',
+        projectionTimestamp: UNREADABLE,
+      }),
+    ).toThrow()
+  })
+
+  it('still refuses a real timestamp that predates its evidence', () => {
+    // the control: the guard was never merely disabled, it rejects for the right reason
+    expect(() =>
+      adapter.project({
+        contextKind: 'institutional',
+        scope: FICTIONAL_HARBOR_EAST_SCOPE,
+        accessClassification: 'institution_restricted',
+        projectionTimestamp: '2026-08-01T00:00:00.000Z',
+      }),
+    ).toThrow()
+    expect(() =>
+      adapter.project({
+        contextKind: 'institutional',
+        scope: FICTIONAL_HARBOR_EAST_SCOPE,
+        accessClassification: 'institution_restricted',
+        projectionTimestamp: PROJECTION_TIMESTAMP,
+      }),
+    ).not.toThrow()
+  })
+
+  it('refuses a bundle whose evidence or diagnostic instant cannot resolve', () => {
+    const withUnreadableVerification = {
+      ...FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
+      institutionalDatasets: [
+        {
+          ...eastDataset,
+          capabilities: {
+            ...eastDataset.capabilities,
+            records: [
+              {
+                ...eastDataset.capabilities.records[0],
+                source: {
+                  ...eastDataset.capabilities.records[0].source,
+                  lastVerifiedAt: UNREADABLE,
+                },
+              },
+              ...eastDataset.capabilities.records.slice(1),
+            ],
+          },
+        },
+        westDataset,
+        summitDataset,
+      ],
+    }
+    expect(() =>
+      createFictionalInstitutionalOverlayReadAdapter(withUnreadableVerification),
+    ).toThrow()
+
+    const withUnreadableObservation = {
+      ...FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
+      institutionalDatasets: [
+        {
+          ...eastDataset,
+          diagnostics: [{ ...eastDataset.diagnostics[0], observedAt: UNREADABLE }],
+        },
+        westDataset,
+        summitDataset,
+      ],
+    }
+    expect(() =>
+      createFictionalInstitutionalOverlayReadAdapter(withUnreadableObservation),
+    ).toThrow()
+  })
+})
+
+describe('D2A access gate denies an unrecognized classification', () => {
+  // accessAllows is exported, so later phases will call it directly. It must deny on its own
+  // rather than assume its arguments were parsed, including for keys that exist on
+  // Object.prototype and would otherwise compare two inherited functions as "allowed".
+  it.each(['toString', 'constructor', 'valueOf', '__proto__', 'hasOwnProperty', ''])(
+    'denies the unclassified value %p in either position',
+    (value) => {
+      const unclassified = value as unknown as InstitutionalAccessClassification
+      expect(accessAllows(unclassified, unclassified)).toBe(false)
+      expect(accessAllows(unclassified, 'institution_confidential')).toBe(false)
+      expect(accessAllows('institution_confidential', unclassified)).toBe(false)
+      expect(accessAllows('public_unlisted', unclassified)).toBe(false)
+    },
+  )
+
+  it('still permits exactly the intended classification pairs', () => {
+    expect(accessAllows('public_unlisted', 'public_unlisted')).toBe(true)
+    expect(accessAllows('institution_restricted', 'institution_restricted')).toBe(true)
+    expect(accessAllows('institution_confidential', 'institution_restricted')).toBe(true)
+    expect(accessAllows('institution_confidential', 'institution_confidential')).toBe(true)
+    expect(accessAllows('institution_restricted', 'institution_confidential')).toBe(false)
+    expect(accessAllows('public_unlisted', 'institution_restricted')).toBe(false)
+    expect(accessAllows('institution_restricted', 'public_unlisted')).toBe(false)
   })
 })

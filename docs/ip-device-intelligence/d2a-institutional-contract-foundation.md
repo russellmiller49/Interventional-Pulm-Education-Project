@@ -91,6 +91,14 @@ are typed, scoped, access-classified records rather than unstructured log string
 A non-null diagnostic related-record ID must resolve inside the same exact dataset/context,
 and the diagnostic must be at least as access-restrictive as that record.
 
+Timestamps must resolve to a real instant, not merely match a datetime pattern. Zod's
+`datetime({ offset: true })` accepts offsets it does not range-check, so a value such as
+`2026-08-12T12:00:00+99:99` validates while `Date.parse` returns NaN. Because each
+projection-time rule is a `>` against a parsed instant, and every comparison with NaN is
+false, one unreadable timestamp would have switched the whole evidence-time guard off
+instead of failing closed. The instant schema now rejects any value `Date.parse` cannot
+resolve, and the comparison treats an unreadable instant as a failure in its own right.
+
 ## 4. Fictional read adapter
 
 The **createFictionalInstitutionalOverlayReadAdapter** function validates and freezes the
@@ -109,6 +117,11 @@ Projection behavior is fail-closed:
 6. A projection omits a diagnostic whenever its related record is excluded, even if another
    check would otherwise admit the diagnostic.
 7. Parsed projections are deeply frozen before return.
+
+**accessAllows** is the exported access gate, so it denies on its own rather than assuming
+its arguments were already parsed. An unrecognized classification is refused explicitly
+instead of being used as an object key, where a name inherited from `Object.prototype` would
+have compared two functions and read as allowed.
 
 The fixtures intentionally include two sites within one fictional institution and a second
 fictional tenant/institution. This supports tests for site, institution, and tenant
@@ -132,8 +145,17 @@ The focused suites cover:
 - confidential-row filtering;
 - unknown-scope fail-closed behavior with no demo fallback;
 - projection-time consistency;
-- deterministic, deeply frozen output; and
-- absence of write operations.
+- deterministic, deeply frozen output;
+- absence of write operations;
+- the exact cross-reference leak shape, asserted end to end against the serialized
+  projection rather than a display component, in both its cross-site and cross-tier forms;
+- serialization scans proving no tenant, institution, site, record, source, provenance,
+  entry, or decision identifier crosses a scope boundary, with the shared tenant and
+  institution left present so the scan cannot pass vacuously;
+- refusal errors and unconfigured-scope projections naming no other scope;
+- projection-time refusal for an instant that cannot resolve, alongside the honest stale
+  timestamp it already refused; and
+- access-gate denial for an unrecognized classification.
 
 ## 6. Requirements for a later migration phase
 

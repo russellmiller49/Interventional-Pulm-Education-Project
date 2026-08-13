@@ -18,7 +18,19 @@ export const institutionalContractFoundationLabelsSchema = z.tuple([
 
 const identifierSchema = z.string().trim().min(1).max(160)
 const explanatoryTextSchema = z.string().trim().min(1).max(1_000)
-const isoInstantSchema = z.string().datetime({ offset: true })
+/**
+ * `z.string().datetime({ offset: true })` accepts an offset zod's own pattern allows but
+ * `Date.parse` cannot resolve — `2026-08-12T12:00:00+99:99` validates yet parses to NaN.
+ * Every projection-time comparison below is a `>` against a parsed instant, and NaN makes
+ * that comparison false, so a single unreadable timestamp would silently switch the
+ * evidence-time guard off rather than fail closed. Require a real resolvable instant.
+ */
+const isoInstantSchema = z
+  .string()
+  .datetime({ offset: true })
+  .refine((value) => Number.isFinite(Date.parse(value)), {
+    message: 'A timestamp must resolve to a real instant.',
+  })
 
 export const institutionScopeIdentitySchema = z
   .object({
@@ -696,8 +708,14 @@ function addProjectionTimeIssues(
   context: z.RefinementCtx,
 ): void {
   const projectedAt = Date.parse(projectionTimestamp)
+  // A NaN on either side would make every `>` below false and quietly disable the guard, so
+  // an unreadable instant is treated as a failure rather than as "not after".
+  const isAfter = (instant: string): boolean => {
+    const at = Date.parse(instant)
+    return !Number.isFinite(at) || !Number.isFinite(projectedAt) || at > projectedAt
+  }
   sources.forEach((source, index) => {
-    if (Date.parse(source.lastVerifiedAt) > projectedAt) {
+    if (isAfter(source.lastVerifiedAt)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['dataset', 'sources', index, 'lastVerifiedAt'],
@@ -706,7 +724,7 @@ function addProjectionTimeIssues(
     }
   })
   diagnostics.forEach((diagnostic, index) => {
-    if (Date.parse(diagnostic.observedAt) > projectedAt) {
+    if (isAfter(diagnostic.observedAt)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['dataset', 'diagnostics', index, 'observedAt'],
@@ -737,13 +755,26 @@ export const demoOverlayProjectionSchema = z
     )
   })
 
+/**
+ * This is the exported access gate, so it fails closed on its own rather than trusting every
+ * caller to have parsed its arguments first. Indexing `accessRank` with an unclassified value
+ * would otherwise reach `Object.prototype` — `accessAllows('toString', 'toString')` compares
+ * two functions and returns true — so an unrecognized classification is denied here instead.
+ */
 export function accessAllows(
   projectionAccess: z.infer<typeof accessClassificationSchema>,
   recordAccess: z.infer<typeof accessClassificationSchema>,
 ): boolean {
+  const rankOf = (value: string): number | null =>
+    Object.prototype.hasOwnProperty.call(accessRank, value)
+      ? accessRank[value as z.infer<typeof accessClassificationSchema>]
+      : null
+  const projectionRank = rankOf(projectionAccess)
+  const recordRank = rankOf(recordAccess)
+  if (projectionRank === null || recordRank === null) return false
   if (projectionAccess === 'public_unlisted') return recordAccess === 'public_unlisted'
   if (recordAccess === 'public_unlisted') return false
-  return accessRank[recordAccess] <= accessRank[projectionAccess]
+  return recordRank <= projectionRank
 }
 
 export const institutionalOverlayProjectionSchema = z
