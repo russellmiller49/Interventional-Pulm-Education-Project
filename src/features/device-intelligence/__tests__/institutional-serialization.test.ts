@@ -1,8 +1,10 @@
 import {
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE,
   type InstitutionScopeIdentity,
   type InstitutionalAccessClassification,
-  type InstitutionalOverlayDataset,
+  type ProjectedInstitutionalOverlayDataset,
   accessAllows,
+  fictionalInstitutionalOverlayBundleSchema,
   institutionalOverlayDatasetSchema,
 } from '@/features/device-intelligence/institutional/contracts'
 import { createFictionalInstitutionalOverlayReadAdapter } from '@/features/device-intelligence/institutional/fictional-readonly-adapter'
@@ -19,16 +21,15 @@ import {
  *
  * Regression coverage for the exact cross-reference leak shape closed by the D2A
  * correction commit, plus serialization scans asserting that a permitted projection's
- * JSON never carries an identifier belonging to a scope the caller cannot read.
+ * JSON never carries an identifier belonging to a scope the caller cannot read, and —
+ * since the D2A Codex correction — never carries internal authoring text at all.
  *
  * These assertions run against the serialized projection rather than a display component,
  * so a future change that filters only in JSX still fails here.
  */
 
 const PROJECTION_TIMESTAMP = '2026-08-12T12:00:00.000Z'
-const adapter = createFictionalInstitutionalOverlayReadAdapter(
-  FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
-)
+const adapter = createFictionalInstitutionalOverlayReadAdapter()
 
 const [eastDataset, westDataset, summitDataset] =
   FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets
@@ -71,7 +72,7 @@ function scopeDistinctiveIdentifiers(dataset: AnyDataset | typeof demoDataset): 
   const values: string[] = []
   records.forEach((record) => {
     values.push(record.recordId, record.source.sourceId, record.source.provenance.provenanceId)
-    values.push(record.source.provenance.sourceLocator)
+    values.push(record.source.provenance.internalAuthoring.sourceLocator)
     if ('formularyEvidence' in record && record.formularyEvidence.state === 'listed') {
       values.push(record.formularyEvidence.formularyEntryId)
     }
@@ -79,9 +80,38 @@ function scopeDistinctiveIdentifiers(dataset: AnyDataset | typeof demoDataset): 
       values.push(record.approvalState.decisionId)
       values.push(record.approvalState.decisionSource.sourceId)
       values.push(record.approvalState.decisionSource.provenance.provenanceId)
+      values.push(record.approvalState.decisionSource.provenance.internalAuthoring.sourceLocator)
+    }
+    if ('approvalState' in record && 'reviewReference' in record.approvalState) {
+      const { reviewReference } = record.approvalState
+      if (typeof reviewReference === 'string') values.push(reviewReference)
     }
   })
   dataset.diagnostics.forEach((diagnostic) => values.push(diagnostic.diagnosticId))
+  return Array.from(new Set(values))
+}
+
+/** Every free authoring string the fixture carries; none may reach any projection. */
+function internalAuthoringTexts(dataset: AnyDataset | typeof demoDataset): string[] {
+  const records = [
+    ...dataset.capabilities.records,
+    ...dataset.formularies.records,
+    ...dataset.inventories.records,
+  ]
+  const values: string[] = []
+  records.forEach((record) => {
+    const authoring = record.source.provenance.internalAuthoring
+    values.push(authoring.sourceLabel, authoring.sourceLocator, authoring.jurisdiction)
+    if ('approvalState' in record && 'decisionSource' in record.approvalState) {
+      const decisionAuthoring = record.approvalState.decisionSource.provenance.internalAuthoring
+      values.push(
+        decisionAuthoring.sourceLabel,
+        decisionAuthoring.sourceLocator,
+        decisionAuthoring.jurisdiction,
+      )
+    }
+  })
+  dataset.diagnostics.forEach((diagnostic) => values.push(diagnostic.message))
   return Array.from(new Set(values))
 }
 
@@ -99,7 +129,7 @@ describe('D2A regression — the exact original cross-reference leak shape', () 
         summitDataset,
       ],
     }
-    expect(() => createFictionalInstitutionalOverlayReadAdapter(leaking)).toThrow()
+    expect(fictionalInstitutionalOverlayBundleSchema.safeParse(leaking).success).toBe(false)
     expect(
       institutionalOverlayDatasetSchema.safeParse({
         ...eastDataset,
@@ -139,7 +169,7 @@ describe('D2A regression — the exact original cross-reference leak shape', () 
     // The excluded diagnostic is absent from the parsed data structure itself, so no
     // consumer — JSX, analytics, logging, or RSC payload — can reach it.
     const restricted = projectInstitution(FICTIONAL_HARBOR_EAST_SCOPE, 'institution_restricted')
-    const dataset = restricted.dataset as InstitutionalOverlayDataset
+    const dataset = restricted.dataset as ProjectedInstitutionalOverlayDataset
     expect(dataset.diagnostics.map((diagnostic) => diagnostic.relatedRecordId)).not.toContain(
       'fictional-east-capability-beta',
     )
@@ -154,6 +184,47 @@ describe('D2A regression — the exact original cross-reference leak shape', () 
             ].some((record) => record.recordId === diagnostic.relatedRecordId),
       ),
     ).toBe(true)
+  })
+})
+
+describe('D2A free-text boundary — no authoring prose reaches any projection', () => {
+  const allProjections = () => [
+    ['demo public', JSON.stringify(projectDemo())] as const,
+    [
+      'east restricted',
+      JSON.stringify(projectInstitution(FICTIONAL_HARBOR_EAST_SCOPE, 'institution_restricted')),
+    ] as const,
+    [
+      'east confidential',
+      JSON.stringify(projectInstitution(FICTIONAL_HARBOR_EAST_SCOPE, 'institution_confidential')),
+    ] as const,
+    ['west restricted', JSON.stringify(projectInstitution(FICTIONAL_HARBOR_WEST_SCOPE))] as const,
+    ['summit restricted', JSON.stringify(projectInstitution(FICTIONAL_SUMMIT_SCOPE))] as const,
+  ]
+
+  it('serializes no internal authoring text into any reachable projection', () => {
+    const authoringTexts = [
+      ...internalAuthoringTexts(demoDataset),
+      ...internalAuthoringTexts(eastDataset),
+      ...internalAuthoringTexts(westDataset),
+      ...internalAuthoringTexts(summitDataset),
+    ]
+    expect(authoringTexts.length).toBeGreaterThan(5)
+    allProjections().forEach(([, serialized]) => {
+      authoringTexts.forEach((text) => expect(serialized).not.toContain(text))
+      expect(serialized).not.toContain('internalAuthoring')
+      expect(serialized).not.toContain('"message"')
+      expect(serialized).not.toContain('sourceLabel')
+      expect(serialized).not.toContain('sourceLocator')
+      expect(serialized).not.toContain('jurisdiction')
+      expect(serialized).not.toContain('fixture://')
+    })
+  })
+
+  it('serializes diagnostics as controlled template keys drawn from the frozen map', () => {
+    const east = JSON.stringify(projectInstitution(FICTIONAL_HARBOR_EAST_SCOPE))
+    expect(east).toContain(DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.approval_unverified)
+    expect(Object.isFrozen(DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE)).toBe(true)
   })
 })
 
@@ -295,6 +366,34 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
     ).toThrow()
   })
 
+  it('refuses further malformed instants at the request boundary', () => {
+    for (const timestamp of [
+      '2026-02-30T12:00:00.000Z', // impossible calendar day
+      '2026-08-12T12:00:00', // timezone-less
+      '2026-08-12T12:00:00.Z', // malformed fractional seconds
+      '2026-08-12 12:00:00Z', // missing separator
+    ]) {
+      expect(() =>
+        adapter.project({
+          contextKind: 'institutional',
+          scope: FICTIONAL_HARBOR_EAST_SCOPE,
+          accessClassification: 'institution_restricted',
+          projectionTimestamp: timestamp,
+        }),
+      ).toThrow()
+    }
+  })
+
+  it('treats an equivalent valid offset as the same instant', () => {
+    const projection = adapter.project({
+      contextKind: 'institutional',
+      scope: FICTIONAL_HARBOR_EAST_SCOPE,
+      accessClassification: 'institution_restricted',
+      projectionTimestamp: '2026-08-12T14:00:00.000+02:00',
+    })
+    expect(projection.dataset.capabilities.records.length).toBeGreaterThan(0)
+  })
+
   it('still refuses a real timestamp that predates its evidence', () => {
     // the control: the guard was never merely disabled, it rejects for the right reason
     expect(() =>
@@ -339,9 +438,9 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
         summitDataset,
       ],
     }
-    expect(() =>
-      createFictionalInstitutionalOverlayReadAdapter(withUnreadableVerification),
-    ).toThrow()
+    expect(
+      fictionalInstitutionalOverlayBundleSchema.safeParse(withUnreadableVerification).success,
+    ).toBe(false)
 
     const withUnreadableObservation = {
       ...FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
@@ -354,9 +453,9 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
         summitDataset,
       ],
     }
-    expect(() =>
-      createFictionalInstitutionalOverlayReadAdapter(withUnreadableObservation),
-    ).toThrow()
+    expect(
+      fictionalInstitutionalOverlayBundleSchema.safeParse(withUnreadableObservation).success,
+    ).toBe(false)
   })
 })
 
@@ -367,11 +466,10 @@ describe('D2A access gate denies an unrecognized classification', () => {
   it.each(['toString', 'constructor', 'valueOf', '__proto__', 'hasOwnProperty', ''])(
     'denies the unclassified value %p in either position',
     (value) => {
-      const unclassified = value as unknown as InstitutionalAccessClassification
-      expect(accessAllows(unclassified, unclassified)).toBe(false)
-      expect(accessAllows(unclassified, 'institution_confidential')).toBe(false)
-      expect(accessAllows('institution_confidential', unclassified)).toBe(false)
-      expect(accessAllows('public_unlisted', unclassified)).toBe(false)
+      expect(accessAllows(value, value)).toBe(false)
+      expect(accessAllows(value, 'institution_confidential')).toBe(false)
+      expect(accessAllows('institution_confidential', value)).toBe(false)
+      expect(accessAllows('public_unlisted', value)).toBe(false)
     },
   )
 

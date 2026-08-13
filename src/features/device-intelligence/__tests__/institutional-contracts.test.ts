@@ -314,12 +314,21 @@ describe('D2A institutional overlay contracts', () => {
   )
 
   it('models source unknown and source unavailable as separate first-class states', () => {
-    expect(dataSourceStateSchema.parse({ state: 'unknown', reason: 'Not checked' }).state).toBe(
+    expect(dataSourceStateSchema.parse({ state: 'unknown', reason: 'not_verified' }).state).toBe(
       'unknown',
     )
     expect(
-      dataSourceStateSchema.parse({ state: 'unavailable', reason: 'Source offline' }).state,
+      dataSourceStateSchema.parse({ state: 'unavailable', reason: 'source_offline' }).state,
     ).toBe('unavailable')
+  })
+
+  it('refuses a free-text source-state reason in favor of the controlled vocabulary', () => {
+    expect(
+      dataSourceStateSchema.safeParse({ state: 'unknown', reason: 'Not checked yet' }).success,
+    ).toBe(false)
+    expect(
+      dataSourceStateSchema.safeParse({ state: 'unavailable', reason: 'Source offline' }).success,
+    ).toBe(false)
   })
 
   it('refuses asserted records when their source is unknown or unavailable', () => {
@@ -329,7 +338,7 @@ describe('D2A institutional overlay contracts', () => {
         institutionalOverlayDatasetSchema.safeParse({
           ...east,
           capabilities: {
-            sourceState: { state, reason: 'Fictional test reason' },
+            sourceState: { state, reason: 'not_verified' },
             records: east.capabilities.records,
           },
         }).success,

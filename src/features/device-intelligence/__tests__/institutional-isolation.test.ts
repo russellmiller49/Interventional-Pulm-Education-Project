@@ -1,4 +1,5 @@
 import {
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE,
   type DemoOverlayProjection,
   type InstitutionScopeIdentity,
   type InstitutionalAccessClassification,
@@ -14,14 +15,11 @@ import {
   FICTIONAL_DEMO_CONTEXT,
   FICTIONAL_HARBOR_EAST_SCOPE,
   FICTIONAL_HARBOR_WEST_SCOPE,
-  FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
   FICTIONAL_SUMMIT_SCOPE,
 } from '@/features/device-intelligence/institutional/fictional-fixtures'
 
 const PROJECTION_TIMESTAMP = '2026-08-12T12:00:00.000Z'
-const adapter = createFictionalInstitutionalOverlayReadAdapter(
-  FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE,
-)
+const adapter = createFictionalInstitutionalOverlayReadAdapter()
 
 function projectInstitution(
   scope: InstitutionScopeIdentity,
@@ -215,6 +213,28 @@ describe('D2A fictional adapter isolation and no-leak behavior', () => {
     const row = projection.dataset.formularies.records[0]
     expect(row.formularyEvidence.state).toBe('listed')
     expect(row.approvalState.state).toBe('unknown')
+  })
+
+  it('preserves pending review as a scoped reference, not prose', () => {
+    const projection = projectInstitution(FICTIONAL_HARBOR_EAST_SCOPE)
+    const pending = projection.dataset.formularies.records.find(
+      (record) => record.recordId === 'fictional-east-formulary-pending',
+    )
+    expect(pending).toBeDefined()
+    if (!pending || pending.approvalState.state !== 'pending_review') {
+      throw new Error('Expected the explicit fictional pending-review fixture.')
+    }
+    expect(pending.approvalState.reviewReference).toBe('fictional-east-review-entry')
+    expect(pending.formularyEvidence.state).toBe('unknown')
+  })
+
+  it('projects diagnostics as controlled template keys without authoring messages', () => {
+    const projection = projectInstitution(FICTIONAL_HARBOR_EAST_SCOPE)
+    const diagnostic = projection.dataset.diagnostics[0]
+    expect(diagnostic.messageTemplateKey).toBe(
+      DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE[diagnostic.code],
+    )
+    expect('message' in diagnostic).toBe(false)
   })
 
   it('preserves revision, provenance, verification, projection time, and diagnostics', () => {
