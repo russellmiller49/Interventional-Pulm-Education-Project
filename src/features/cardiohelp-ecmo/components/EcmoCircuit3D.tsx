@@ -10,6 +10,7 @@ import { CanvasErrorBoundary } from '@/components/airway-anatomy-lesson/CanvasEr
 
 import type { EcmoSimulationState, GuidedControlId, SimulationAction } from '../engine'
 import {
+  BLENDER_ASSET,
   CAMERA_FOV,
   CAMERA_POSITION,
   CLAMP_ASSET,
@@ -28,6 +29,7 @@ useGLTF.preload(CONSOLE_ASSET)
 useGLTF.preload(OXYGENATOR_ASSET)
 useGLTF.preload(CLAMP_ASSET)
 useGLTF.preload(SENSOR_ASSET)
+useGLTF.preload(BLENDER_ASSET)
 
 interface EcmoCircuit3DProps {
   state: EcmoSimulationState
@@ -163,7 +165,15 @@ export function EcmoCircuit3D({
 
   return (
     <div className={styles.circuit3dShell}>
-      <div ref={viewportRef} className={styles.circuit3dViewport} aria-hidden="true">
+      {/* Decorative only while the canvas is live (text equivalents live in the
+          HUD-adjacent DOM); when WebGL is missing or the context is lost the
+          viewport holds real text and a focusable reload button, and hiding a
+          focusable control inside aria-hidden is a WCAG failure. */}
+      <div
+        ref={viewportRef}
+        className={styles.circuit3dViewport}
+        aria-hidden={webglReady && !contextLost ? true : undefined}
+      >
         {webglReady && contextLost ? (
           <div className={styles.circuit3dFallback}>
             The 3D view paused after a graphics interruption. The clamp controls below remain fully
@@ -225,7 +235,10 @@ export function EcmoCircuit3D({
           <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
           {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
           <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
-          <small>Drag to orbit · scroll to zoom · select a clamp or use the controls below</small>
+          <small>
+            Drag to orbit · scroll to zoom · zoom in to pan (right-drag or two-finger drag) · select
+            a clamp or use the controls below
+          </small>
         </div>
         {compactViewport ? (
           <div className={styles.circuit3dLabels} aria-hidden="true">

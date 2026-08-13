@@ -11,8 +11,10 @@ function AccessDressing({ site }: { site: AccessSite }) {
   const ringColor = PALETTE[site.ringColorKey]
   return (
     <group position={site.position} userData={{ site: site.site }}>
+      {/* Film radius fits inside the drape's access window (r ≈ 0.082 local);
+          the old 0.105 disc clipped through the window's raised rim. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]} receiveShadow>
-        <circleGeometry args={[0.105, 32]} />
+        <circleGeometry args={[0.078, 32]} />
         <meshPhysicalMaterial
           color={PALETTE.dressingFilm}
           transparent

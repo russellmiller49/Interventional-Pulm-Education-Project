@@ -142,9 +142,10 @@ describe('the console model and its placement', () => {
   })
 
   it("puts the asset's authored base on the floor", () => {
-    // The physical claim, not the raw number: the model's +Y face is the one that touches the
-    // ground. As shipped the unit rested on −Y — its top — with the pump drive facing the sky.
-    const down = new THREE.Vector3(0, 1, 0).applyEuler(
+    // The physical claim, not the raw number: the model's authored base faces the ground. The B7
+    // console (build_fidelity_assets.py) is authored upright — base on local −Y — so the placement
+    // must keep −Y pointing down; the legacy scan was authored base-up and needed a flip about X.
+    const down = new THREE.Vector3(0, -1, 0).applyEuler(
       new THREE.Euler(...CONSOLE_PLACEMENT.rotation),
     )
     expect(down.y).toBeLessThan(-0.99)
@@ -155,11 +156,15 @@ describe('the console model and its placement', () => {
   })
 
   it('stands taller than it is wide, and clears the bed', () => {
+    // Upright: the 0.945 m axis is the height. Compared against the MODEL's own footprint, not the
+    // yawed world AABB — a yaw inflates the axis-aligned depth (0.786 m becomes ~0.97 m at 20°),
+    // which says nothing about which way up the unit stands.
     const size = consolePlacement.worldBounds.getSize(new THREE.Vector3())
-    // Upright: the 0.95 m axis is the height. It is also the tallest thing at the bedside, which is
-    // what a console standing beside a supine patient should be.
-    expect(size.y).toBeGreaterThan(size.x)
-    expect(size.y).toBeGreaterThan(size.z)
+    const modelExtent = (axis: number) =>
+      CONSOLE_MODEL_BOUNDS.max[axis] - CONSOLE_MODEL_BOUNDS.min[axis]
+    expect(size.y).toBeCloseTo(modelExtent(1), 3)
+    expect(modelExtent(1)).toBeGreaterThan(modelExtent(0))
+    expect(modelExtent(1)).toBeGreaterThan(modelExtent(2))
     expect(consolePlacement.worldBounds.max.y).toBeGreaterThan(-0.56)
   })
 
@@ -207,8 +212,11 @@ describe.each(['vv', 'va'] as const)('%s scene labels name what they point at', 
     const sweepLabel = layout.labels.find((label) => label.id === 'sweep')
     expect(consoleLabel?.text).toBe('CARDIOHELP console')
     expect(consoleLabel?.text).not.toMatch(/sweep|gas/i)
-    // No modelled blender or wall outlet, so the label names the line and its connection.
-    expect(sweepLabel?.text).toBe('Sweep-gas line / source connection')
+    // The pole-mounted air/O2 blender is modelled now (B7 follow-up), so the
+    // label names the device. Before it existed the label deliberately named
+    // only "the line and its connection" — naming a device that was not there
+    // was this suite's original defect.
+    expect(sweepLabel?.text).toBe('Air–O₂ blender — sweep-gas source')
   })
 
   it('keeps the console and sweep labels apart', () => {
