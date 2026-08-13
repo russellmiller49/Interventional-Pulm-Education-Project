@@ -12,6 +12,10 @@ import {
  *
  * Every name and identifier in this file is invented. Nothing here describes a real
  * institution, site, formulary, inventory system, capability, product, or approval.
+ *
+ * This module is the canonical sealed corpus: the fictional read adapter imports it
+ * directly and accepts no runtime dataset input. Adding or changing fictional data means
+ * editing this file and passing the sealed-bundle registry and projection-safety checks.
  */
 
 export const FICTIONAL_DEMO_CONTEXT: DemoContextIdentity = {
@@ -53,10 +57,12 @@ const summitContext: InstitutionalContextIdentity = {
 function fictionalProvenance(id: string, label: string) {
   return {
     provenanceId: id,
-    sourceLabel: label,
-    sourceLocator: 'fixture://device-intelligence/' + id,
-    jurisdiction: 'Fictional jurisdiction for contract testing only',
     provenanceClass: 'fictional_fixture' as const,
+    internalAuthoring: {
+      sourceLabel: label,
+      sourceLocator: 'fixture://device-intelligence/' + id,
+      jurisdiction: 'Fictional jurisdiction for contract testing only',
+    },
   }
 }
 
@@ -101,10 +107,7 @@ const demoDataset = {
         context: FICTIONAL_DEMO_CONTEXT,
         accessClassification: 'public_unlisted' as const,
         capabilityCode: 'fictional-capability-training-room',
-        capabilityState: {
-          state: 'available' as const,
-          statement: 'Invented capability used only to exercise the demo contract.',
-        },
+        capabilityState: { state: 'available' as const },
         source: demoSource('fictional-demo-capability-source', 'capability'),
       },
     ],
@@ -169,10 +172,7 @@ const harborEastDataset = {
         context: harborEastContext,
         accessClassification: 'institution_restricted' as const,
         capabilityCode: 'fictional-capability-alpha',
-        capabilityState: {
-          state: 'available' as const,
-          statement: 'Invented east-site capability assertion.',
-        },
+        capabilityState: { state: 'available' as const },
         source: institutionalSource(
           harborEastContext,
           'fictional-east-capability-source',
@@ -186,7 +186,7 @@ const harborEastDataset = {
         capabilityCode: 'fictional-capability-beta',
         capabilityState: {
           state: 'unavailable' as const,
-          statement: 'Invented explicit unavailability assertion.',
+          reason: 'not_offered' as const,
         },
         source: institutionalSource(
           harborEastContext,
@@ -219,6 +219,25 @@ const harborEastDataset = {
           'formulary',
         ),
       },
+      {
+        recordId: 'fictional-east-formulary-pending',
+        context: harborEastContext,
+        accessClassification: 'institution_restricted' as const,
+        subjectId: 'fictional-subject-gamma',
+        formularyEvidence: {
+          state: 'unknown' as const,
+          reason: 'not_verified' as const,
+        },
+        approvalState: {
+          state: 'pending_review' as const,
+          reviewReference: 'fictional-east-review-entry',
+        },
+        source: institutionalSource(
+          harborEastContext,
+          'fictional-east-formulary-pending-source',
+          'formulary',
+        ),
+      },
     ],
   },
   inventories: {
@@ -234,7 +253,7 @@ const harborEastDataset = {
           quantity: {
             state: 'known' as const,
             value: 4,
-            unit: 'fictional-units',
+            unit: 'each' as const,
           },
         },
         source: institutionalSource(
@@ -301,7 +320,7 @@ const harborWestDataset = {
         subjectId: 'fictional-subject-alpha',
         formularyEvidence: {
           state: 'not_listed' as const,
-          statement: 'Invented explicit not-listed observation.',
+          reason: 'confirmed_not_listed' as const,
         },
         approvalState: {
           state: 'not_approved' as const,
@@ -330,7 +349,7 @@ const harborWestDataset = {
         subjectId: 'fictional-subject-alpha',
         inventoryState: {
           state: 'absent' as const,
-          statement: 'Invented explicit zero-presence observation.',
+          reason: 'stock_zero_confirmed' as const,
         },
         source: institutionalSource(
           harborWestContext,
@@ -348,14 +367,14 @@ const summitDataset = {
   capabilities: {
     sourceState: {
       state: 'unavailable' as const,
-      reason: 'The invented capability source is unavailable in this fixture.',
+      reason: 'source_offline' as const,
     },
     records: [],
   },
   formularies: {
     sourceState: {
       state: 'unknown' as const,
-      reason: 'The invented formulary source has not been configured.',
+      reason: 'source_not_configured' as const,
     },
     records: [],
   },
@@ -366,7 +385,7 @@ const summitDataset = {
         recordId: 'fictional-summit-inventory-only',
         context: summitContext,
         accessClassification: 'institution_restricted' as const,
-        subjectId: 'fictional-summit-subject-only',
+        subjectId: 'fictional-subject-summit-only',
         inventoryState: {
           state: 'unknown' as const,
           reason: 'not_reported' as const,
@@ -393,9 +412,17 @@ const summitDataset = {
   ],
 }
 
-export const FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE = {
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value as Record<string, unknown>).forEach((child) => deepFreeze(child))
+    Object.freeze(value)
+  }
+  return value
+}
+
+export const FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE = deepFreeze({
   foundationLabels: [...INSTITUTIONAL_CONTRACT_FOUNDATION_LABELS],
   fixturePolicy: 'fictional_only' as const,
   demoDatasets: [demoDataset],
   institutionalDatasets: [harborEastDataset, harborWestDataset, summitDataset],
-}
+})
