@@ -12,7 +12,7 @@ import {
   writeFileSync,
   type BigIntStats,
 } from 'node:fs'
-import { lstat, realpath } from 'node:fs/promises'
+import { lstat, realpath, rename, rm } from 'node:fs/promises'
 import { basename, dirname, normalize, relative, resolve, sep } from 'node:path'
 
 interface DirectoryAncestorIdentity {
@@ -40,6 +40,12 @@ interface InternalExclusiveOutputDirectoryIdentity extends ExclusiveOutputDirect
 export interface ExclusiveOutputFile {
   bytes: Buffer
   name: string
+}
+
+export interface StagedExclusiveOutputDirectory {
+  readonly finalOutputDirectory: string
+  readonly identity: ExclusiveOutputDirectoryIdentity
+  readonly stagingDirectory: string
 }
 
 function internalIdentity(
@@ -264,6 +270,70 @@ export async function assertExclusiveOutputDirectoryIdentity(
   ) {
     throw new Error('Output directory identity changed during publication.')
   }
+}
+
+async function assertPathAbsent(path: string, label: string): Promise<void> {
+  try {
+    await lstat(path)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+    throw error
+  }
+  throw new Error(`${label} already exists.`)
+}
+
+/**
+ * Creates a hidden same-parent staging directory. A verifier for the eventual
+ * output path cannot accept this directory, and installation is one rename.
+ */
+export async function createStagedExclusiveOutputDirectory(input: {
+  outputDirectory: string
+  outputRoot: string
+  stagingNonce: string
+}): Promise<StagedExclusiveOutputDirectory> {
+  if (!/^[a-f0-9]{32,128}$/u.test(input.stagingNonce)) {
+    throw new Error('Output staging nonce is invalid.')
+  }
+  const finalOutputDirectory = resolve(input.outputDirectory)
+  const stagingDirectory = resolve(
+    dirname(finalOutputDirectory),
+    `.${basename(finalOutputDirectory)}.staging-${input.stagingNonce}`,
+  )
+  await assertPathAbsent(finalOutputDirectory, 'Final output directory')
+  const identity = await createExclusiveOutputDirectory({
+    outputDirectory: stagingDirectory,
+    outputRoot: input.outputRoot,
+  })
+  return Object.freeze({ finalOutputDirectory, identity, stagingDirectory })
+}
+
+export async function publishStagedExclusiveOutputDirectory(
+  staged: StagedExclusiveOutputDirectory,
+): Promise<ExclusiveOutputDirectoryIdentity> {
+  await assertExclusiveOutputDirectoryIdentity(staged.identity)
+  await assertPathAbsent(staged.finalOutputDirectory, 'Final output directory')
+  const identity = internalIdentity(staged.identity)
+  await rename(staged.stagingDirectory, staged.finalOutputDirectory)
+  const finalOutputDirectoryRealPath = await realpath(staged.finalOutputDirectory)
+  Object.assign(identity, {
+    outputDirectory: staged.finalOutputDirectory,
+    outputDirectoryRealPath: finalOutputDirectoryRealPath,
+  })
+  await assertExclusiveOutputDirectoryIdentity(identity)
+  return identity
+}
+
+export async function discardStagedExclusiveOutputDirectory(
+  staged: StagedExclusiveOutputDirectory,
+): Promise<void> {
+  const identity = internalIdentity(staged.identity)
+  try {
+    await assertExclusiveOutputDirectoryIdentity(identity)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+    throw error
+  }
+  await rm(identity.outputDirectory, { recursive: true })
 }
 
 function safeFilename(name: string): void {

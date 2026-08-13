@@ -1,11 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Clone, OrbitControls, useGLTF } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import type { EcmoSimulationState, SimulationAction } from '../../engine'
 import {
+  BLENDER_ASSET,
+  BLENDER_MODEL_BOUNDS,
+  BLENDER_PLACEMENT,
   bloodColor,
   CAMERA_TARGET,
   CONSOLE_ASSET,
@@ -20,6 +25,7 @@ import {
   TUBE_RADII,
 } from './constants'
 import { drainageChatterActive } from './chatter'
+import { clampPanTarget, panEnabledAtDistance, retargetTowardDefault } from './panning'
 import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
@@ -113,6 +119,41 @@ export function BedsideScene({
 }: BedsideSceneProps) {
   const layout = useMemo(() => buildCircuitLayout(state.supportMode), [state.supportMode])
   const [orbiting, setOrbiting] = useState(false)
+  const controls = useRef<OrbitControlsImpl>(null)
+  const interacting = useRef(false)
+
+  /*
+   * Pan unlocks with zoom, and the target stays fenced to the scene.
+   *
+   * Mutated directly on the controls instance rather than through state: the
+   * distance changes every zoom frame, and a React round-trip per frame would
+   * buy nothing. Once the user zooms back out past the unlock distance the
+   * target glides home (snaps under reduced motion), so the default framing
+   * every guided lesson references is restored instead of staying wherever
+   * the last pan ended.
+   */
+  useFrame((_, delta) => {
+    const instance = controls.current
+    if (!instance) return
+    const distance = instance.object.position.distanceTo(instance.target)
+    instance.enablePan = panEnabledAtDistance(distance)
+    const fenceShift = clampPanTarget(instance.target)
+    if (fenceShift) {
+      // The fence is a rig correction: camera moves with the target, exactly
+      // as during a pan and the glide-home. Target-only clamping let drags
+      // against the boundary change the zoom and walk the camera off-scene.
+      instance.object.position.add(fenceShift)
+      instance.update()
+    }
+    if (!instance.enablePan && !interacting.current) {
+      const shift = retargetTowardDefault(instance.target, delta, reduceMotion)
+      if (shift) {
+        // Camera moves with the target — undoing a pan is a rig translation.
+        instance.object.position.add(shift)
+        instance.update()
+      }
+    }
+  })
   const patient = useGLTF(PATIENT_ASSET)
   const sensor = useGLTF(SENSOR_ASSET)
   const sensorAlignment = useMemo(
@@ -152,7 +193,9 @@ export function BedsideScene({
   return (
     <>
       <color attach="background" args={[PALETTE.background]} />
-      <fog attach="fog" args={[PALETTE.background, 5.8, 9]} />
+      {/* Fog opens at 6.6 so the patient (≈6.3 m from the default camera) sits
+          in front of the band instead of dimmed inside it. */}
+      <fog attach="fog" args={[PALETTE.background, 6.6, 10]} />
       <ambientLight intensity={0.25} />
       <hemisphereLight args={['#b5e6e8', '#0c191c', 0.45]} />
       <directionalLight
@@ -189,6 +232,11 @@ export function BedsideScene({
         url={CONSOLE_ASSET}
         bounds={CONSOLE_MODEL_BOUNDS}
         placement={CONSOLE_PLACEMENT}
+      />
+      <GroundedAsset
+        url={BLENDER_ASSET}
+        bounds={BLENDER_MODEL_BOUNDS}
+        placement={BLENDER_PLACEMENT}
       />
       <HlsModule
         layout={layout}
@@ -297,8 +345,14 @@ export function BedsideScene({
         radius={0.5}
         opacity={0.45}
       />
+      <ContactShadow
+        position={[BLENDER_PLACEMENT.x, FLOOR_Y + 0.012, BLENDER_PLACEMENT.z]}
+        radius={0.3}
+        opacity={0.4}
+      />
 
       <OrbitControls
+        ref={controls}
         makeDefault
         target={CAMERA_TARGET}
         enablePan={false}
@@ -306,8 +360,14 @@ export function BedsideScene({
         maxDistance={7.2}
         minPolarAngle={0.65}
         maxPolarAngle={1.38}
-        onStart={() => setOrbiting(true)}
-        onEnd={() => setOrbiting(false)}
+        onStart={() => {
+          interacting.current = true
+          setOrbiting(true)
+        }}
+        onEnd={() => {
+          interacting.current = false
+          setOrbiting(false)
+        }}
       />
     </>
   )

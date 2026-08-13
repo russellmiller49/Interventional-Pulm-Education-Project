@@ -5,7 +5,7 @@ import { Clone, useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-import { OXYGENATOR_ASSET, PALETTE } from './constants'
+import { OXYGENATOR_ASSET, OXYGENATOR_ROTATION, PALETTE } from './constants'
 import type { CircuitLayout } from './layout'
 
 // The CARDIOHELP disposable is an integrated HLS module: the centrifugal pump
@@ -92,7 +92,7 @@ export function HlsModule({
   return (
     <group>
       <group position={layout.hlsModulePosition}>
-        <group position={[0, 0.2, 0]} rotation={[0.02, -0.55, 0]}>
+        <group position={[0, 0.2, 0]} rotation={OXYGENATOR_ROTATION}>
           <Clone object={scene} castShadow receiveShadow />
         </group>
         <group position={[0, -0.16, 0]}>

@@ -20,6 +20,8 @@ import {
   type CircuitLayout,
 } from '../../src/features/cardiohelp-ecmo/components/ecmo-circuit/layout.ts'
 import {
+  BLENDER_PLACEMENT,
+  OXYGENATOR_ROTATION,
   bloodColor,
   CAMERA_FOV,
   CAMERA_POSITION,
@@ -67,11 +69,18 @@ function exportLayout(layout: CircuitLayout) {
       rotation: CONSOLE_PLACEMENT.rotation,
       scale: CONSOLE_PLACEMENT.scale,
     },
+    blenderPlacement: {
+      x: BLENDER_PLACEMENT.x,
+      z: BLENDER_PLACEMENT.z,
+      rotation: BLENDER_PLACEMENT.rotation,
+      scale: BLENDER_PLACEMENT.scale,
+    },
     hlsModule: [
       layout.hlsModulePosition.x,
       layout.hlsModulePosition.y,
       layout.hlsModulePosition.z,
     ],
+    oxygenatorRotation: OXYGENATOR_ROTATION,
     sensor: {
       position: [layout.sensorPosition.x, layout.sensorPosition.y, layout.sensorPosition.z],
       tangent: [layout.sensorTangent.x, layout.sensorTangent.y, layout.sensorTangent.z],

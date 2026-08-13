@@ -270,14 +270,23 @@ claimed here. Migration application still authorizes neither import nor compensa
 Package generation is likewise file-only evidence and does not authorize execution. Compensation
 remains separately authorized after a committed import receipt and fresh state observation.
 
-Final delivery uses only the additive V2 forward-repair backup. Its manifest embeds both exact
+The operational exact-package rehearsal is authorized only from the exact primary checkout on a
+clean attached `main` whose `HEAD` equals `origin/main`; that repository evidence is authenticated
+before backup or source reads and checked again after the four disposable runs. Capability-taking
+rehearsal orchestration is private; exported rehearsal surfaces are pure non-primary
+validators/data, and the exported package generator is restricted to disposable-clone evidence.
+None can act as a production feature-branch escape hatch.
+
+Historical PR #95 delivery uses only the additive V2 forward-repair backup. Its manifest embeds both exact
 catalog bindings and the detailed runtime-bundle binding; its fixed evidence groups preserve the
 catalog proposal/comparison, exact drift matrix, bundle/module/runtime audits, recovery/trust tests,
 canonical package/rehearsal artifacts, two real-local captures, validation/build evidence, critic,
 merge readiness, and final PR body. It re-parses copied bytes, verifies the exact package manifest,
 rejects transient probe/proposal authority, and self-hashes its receipt. The historical
 post-migration-reconciliation backup remains a branch-pinned V1 archive and is not V2 delivery
-evidence.
+evidence. Current PR #97 postmigration delivery is a separate authority. It additionally requires
+external frozen branch/base/head/changed-path and authority-identity expectations and does not route
+historical PR #95 artifacts through the current verifier.
 
 ## Verification obligations
 
@@ -300,9 +309,12 @@ Focused implementation validation must prove at least:
 
 ## Current terminal
 
-The forward repair is implemented, but implementation is not execution authority. The pinned real
-local database remains V1-only with V2 absent and unarmed until a separately authorized protected
-migration session. No import or compensation is authorized by this specification, a generated
-package, rehearsal evidence, or a migration receipt. The operational terminal is:
+The forward repair was applied exactly once and its migration receipt is finalized. That historical
+completion is not package, import, or compensation authority. Current work proceeds only through
+the separately versioned
+[`gold-import-v2-post-migration-preimport-capture.md`](./gold-import-v2-post-migration-preimport-capture.md)
+contract, which requires two fresh post-V2 captures on merged clean primary `main`. The original
+V2-absent captures remain historical and cannot satisfy package readiness. No real package, import,
+or compensation is authorized by this specification or the finalized migration receipt.
 
-`IMPLEMENTATION READY — REAL-LOCAL V2 MIGRATION SEPARATELY REQUIRED`
+`V2 APPLIED ONCE — POST-V2 PRE-IMPORT CAPTURE PAIR SEPARATELY REQUIRED`

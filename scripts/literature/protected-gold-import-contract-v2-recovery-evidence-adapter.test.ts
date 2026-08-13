@@ -218,6 +218,7 @@ describe('protected V2 fixed-local recovery evidence adapter', () => {
         'scripts/literature/gold-import-contract-v2-catalog-audit.ts',
         'scripts/literature/gold-import-contract-v2-catalog-expectations.ts',
         'scripts/literature/gold-import-contract-v2-readiness-policy.ts',
+        'scripts/literature/gold-import-v2-fixed-local-target.ts',
         'scripts/literature/lib/cli.ts',
         'scripts/literature/literature-gold-v2-schema-neutral-history.ts',
         'scripts/literature/literature-gold-v2-schema-only-transition.ts',
@@ -226,6 +227,7 @@ describe('protected V2 fixed-local recovery evidence adapter', () => {
         'scripts/literature/protected-gold-import-contract-v2-source-identities.ts',
         'scripts/literature/protected-gold-import-contract-v2-transition-evidence.ts',
         'src/features/literature/gold-set/import-compensation-v2-identities.ts',
+        'src/features/literature/gold-set/import-compensation.ts',
       ].sort((left, right) => left.localeCompare(right)),
     )
   })
