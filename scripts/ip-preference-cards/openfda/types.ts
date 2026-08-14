@@ -64,6 +64,7 @@ export interface OpenFdaIdentifier {
   unit_of_use_id?: string
   quantity_per_package?: string
   package_status?: string
+  package_discontinue_date?: string
   package_type?: string
   [key: string]: unknown
 }

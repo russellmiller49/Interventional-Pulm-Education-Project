@@ -38,6 +38,7 @@ pids
 
 # Local openFDA UDI request cache and opt-in bulk partitions
 /local-data/ip-preference-cards/openfda/
+/local-data/ip-preference-cards/us-status/
 /data/ip-preference-cards/openfda-bulk/
 
 # FluoroView raw source data and VM transfer bundles

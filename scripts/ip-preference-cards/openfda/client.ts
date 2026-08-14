@@ -11,7 +11,9 @@ const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 export interface OpenFdaClientOptions {
   apiKey: string
   cacheDir: string
+  cacheReferencePrefix?: string
   endpoint?: string
+  apiSchemaVersion?: string
   requestsPerSecond?: number
   maxAttempts?: number
   timeoutMs?: number
@@ -24,18 +26,42 @@ export interface OpenFdaClientOptions {
 export interface OpenFdaClientRequest {
   search: string
   limit: number
+  skip?: number
   refresh?: boolean
 }
 
 export interface OpenFdaClientResult {
   records: OpenFdaRecord[]
+  datasetLastUpdated: string | null
+  resultTotal: number | null
   retrievedAt: string
   fromCache: boolean
   httpStatus: number
   attemptCount: number
   apiRequestsMade: number
   retryCount: number
+  requestUrl: string
+  requestSearch: string
+  requestLimit: number
+  requestSkip: number
+  responseSha256: string
   rawCacheReference: string
+}
+
+function responseMetadata(response: { meta?: Record<string, unknown> }): {
+  datasetLastUpdated: string | null
+  resultTotal: number | null
+} {
+  const lastUpdated = response.meta?.last_updated
+  const results = response.meta?.results
+  const total =
+    results && typeof results === 'object' && 'total' in results
+      ? (results as { total?: unknown }).total
+      : null
+  return {
+    datasetLastUpdated: typeof lastUpdated === 'string' ? lastUpdated : null,
+    resultTotal: typeof total === 'number' && Number.isFinite(total) ? total : null,
+  }
 }
 
 export class OpenFdaClientError extends Error {
@@ -62,16 +88,19 @@ export function buildOpenFdaRequestUrl({
   apiKey,
   search,
   limit,
+  skip = 0,
 }: {
   endpoint?: string
   apiKey: string
   search: string
   limit: number
+  skip?: number
 }): URL {
   const url = new URL(endpoint)
   if (apiKey) url.searchParams.set('api_key', apiKey)
   url.searchParams.set('search', normalizeSearchExpression(search))
   url.searchParams.set('limit', String(limit))
+  if (skip > 0) url.searchParams.set('skip', String(skip))
   return url
 }
 
@@ -79,10 +108,14 @@ export function computeOpenFdaCacheKey({
   endpoint = OPENFDA_ENDPOINT,
   search,
   limit,
+  skip = 0,
+  apiSchemaVersion = OPENFDA_API_SCHEMA_VERSION,
 }: {
   endpoint?: string
   search: string
   limit: number
+  skip?: number
+  apiSchemaVersion?: string
 }): string {
   return createHash('sha256')
     .update(
@@ -90,7 +123,8 @@ export function computeOpenFdaCacheKey({
         endpoint,
         search: normalizeSearchExpression(search),
         limit,
-        api_schema_version: OPENFDA_API_SCHEMA_VERSION,
+        api_schema_version: apiSchemaVersion,
+        skip,
       }),
     )
     .digest('hex')
@@ -109,7 +143,9 @@ class InvalidOpenFdaResponseError extends Error {}
 export class OpenFdaClient {
   private readonly apiKey: string
   private readonly cacheDir: string
+  private readonly cacheReferencePrefix: string
   private readonly endpoint: string
+  private readonly apiSchemaVersion: string
   private readonly intervalMs: number
   private readonly maxAttempts: number
   private readonly timeoutMs: number
@@ -124,7 +160,9 @@ export class OpenFdaClient {
   constructor({
     apiKey,
     cacheDir,
+    cacheReferencePrefix = 'openfda-cache:',
     endpoint = OPENFDA_ENDPOINT,
+    apiSchemaVersion = OPENFDA_API_SCHEMA_VERSION,
     requestsPerSecond = 3,
     maxAttempts = 5,
     timeoutMs = 30_000,
@@ -135,7 +173,9 @@ export class OpenFdaClient {
   }: OpenFdaClientOptions) {
     this.apiKey = apiKey
     this.cacheDir = cacheDir
+    this.cacheReferencePrefix = cacheReferencePrefix
     this.endpoint = endpoint
+    this.apiSchemaVersion = apiSchemaVersion
     this.intervalMs = 1_000 / Math.max(0.1, requestsPerSecond)
     this.maxAttempts = Math.max(1, Math.trunc(maxAttempts))
     this.timeoutMs = Math.max(1, Math.trunc(timeoutMs))
@@ -161,10 +201,28 @@ export class OpenFdaClient {
     }
   }
 
+  private cacheReference(cachePath: string): string {
+    const filename = path.basename(cachePath)
+    return this.cacheReferencePrefix.endsWith(':')
+      ? `${this.cacheReferencePrefix}${filename}`
+      : `${this.cacheReferencePrefix.replace(/[\\/]+$/, '')}/${filename}`.split(path.sep).join('/')
+  }
+
+  private publicRequestUrl(search: string, limit: number, skip: number): string {
+    return buildOpenFdaRequestUrl({
+      endpoint: this.endpoint,
+      apiKey: '',
+      search,
+      limit,
+      skip,
+    }).toString()
+  }
+
   private async readCache(
     cachePath: string,
     search: string,
     limit: number,
+    skip: number,
   ): Promise<OpenFdaClientResult | null> {
     try {
       const parsed = openFdaCacheEntrySchema.safeParse(
@@ -172,22 +230,29 @@ export class OpenFdaClient {
       )
       if (
         !parsed.success ||
-        parsed.data.api_schema_version !== OPENFDA_API_SCHEMA_VERSION ||
+        parsed.data.api_schema_version !== this.apiSchemaVersion ||
         parsed.data.request_search !== search ||
         parsed.data.limit !== limit ||
+        (parsed.data.request_skip ?? 0) !== skip ||
         sha256(JSON.stringify(parsed.data.response)) !== parsed.data.response_sha256
       ) {
         return null
       }
       return {
         records: parsed.data.response.results,
+        ...responseMetadata(parsed.data.response),
         retrievedAt: parsed.data.retrieved_at,
         fromCache: true,
         httpStatus: parsed.data.http_status,
         attemptCount: parsed.data.attempt_count,
         apiRequestsMade: 0,
         retryCount: 0,
-        rawCacheReference: `openfda-cache:${path.basename(cachePath)}`,
+        requestUrl: this.publicRequestUrl(search, limit, skip),
+        requestSearch: search,
+        requestLimit: limit,
+        requestSkip: skip,
+        responseSha256: parsed.data.response_sha256,
+        rawCacheReference: this.cacheReference(cachePath),
       }
     } catch {
       return null
@@ -212,18 +277,22 @@ export class OpenFdaClient {
   async request({
     search: rawSearch,
     limit: rawLimit,
+    skip: rawSkip = 0,
     refresh = false,
   }: OpenFdaClientRequest): Promise<OpenFdaClientResult> {
     const search = normalizeSearchExpression(rawSearch)
     const limit = Math.max(1, Math.min(100, Math.trunc(rawLimit)))
+    const skip = Math.max(0, Math.min(25_000, Math.trunc(rawSkip)))
     const cacheKey = computeOpenFdaCacheKey({
       endpoint: this.endpoint,
       search,
       limit,
+      skip,
+      apiSchemaVersion: this.apiSchemaVersion,
     })
     const cachePath = path.join(this.cacheDir, `${cacheKey}.json`)
     if (!refresh) {
-      const cached = await this.readCache(cachePath, search, limit)
+      const cached = await this.readCache(cachePath, search, limit, skip)
       if (cached) return cached
     }
 
@@ -232,6 +301,7 @@ export class OpenFdaClient {
       apiKey: this.apiKey,
       search,
       limit,
+      skip,
     })
     let lastStatus: number | null = null
     let lastError: unknown = null
@@ -255,27 +325,36 @@ export class OpenFdaClient {
 
         if (response.status === 404) {
           const normalizedResponse = { results: [] }
+          const responseSha256 = sha256(JSON.stringify(normalizedResponse))
           const retrievedAt = new Date(this.now()).toISOString()
           await this.writeCache(cachePath, {
             format_version: 1,
-            api_schema_version: OPENFDA_API_SCHEMA_VERSION,
+            api_schema_version: this.apiSchemaVersion,
             retrieved_at: retrievedAt,
             request_search: search,
             limit,
+            request_skip: skip,
             http_status: 404,
             attempt_count: attempt,
-            response_sha256: sha256(JSON.stringify(normalizedResponse)),
+            response_sha256: responseSha256,
             response: normalizedResponse,
           })
           return {
             records: [],
+            datasetLastUpdated: null,
+            resultTotal: 0,
             retrievedAt,
             fromCache: false,
             httpStatus: 404,
             attemptCount: attempt,
             apiRequestsMade: attempt,
             retryCount: attempt - 1,
-            rawCacheReference: `openfda-cache:${cacheKey}.json`,
+            requestUrl: this.publicRequestUrl(search, limit, skip),
+            requestSearch: search,
+            requestLimit: limit,
+            requestSkip: skip,
+            responseSha256,
+            rawCacheReference: this.cacheReference(cachePath),
           }
         }
 
@@ -300,26 +379,34 @@ export class OpenFdaClient {
           }
           const retrievedAt = new Date(this.now()).toISOString()
           const normalizedBody = JSON.stringify(parsed.data)
+          const responseSha256 = sha256(normalizedBody)
           await this.writeCache(cachePath, {
             format_version: 1,
-            api_schema_version: OPENFDA_API_SCHEMA_VERSION,
+            api_schema_version: this.apiSchemaVersion,
             retrieved_at: retrievedAt,
             request_search: search,
             limit,
+            request_skip: skip,
             http_status: response.status,
             attempt_count: attempt,
-            response_sha256: sha256(normalizedBody),
+            response_sha256: responseSha256,
             response: parsed.data,
           })
           return {
             records: parsed.data.results,
+            ...responseMetadata(parsed.data),
             retrievedAt,
             fromCache: false,
             httpStatus: response.status,
             attemptCount: attempt,
             apiRequestsMade: attempt,
             retryCount: attempt - 1,
-            rawCacheReference: `openfda-cache:${cacheKey}.json`,
+            requestUrl: this.publicRequestUrl(search, limit, skip),
+            requestSearch: search,
+            requestLimit: limit,
+            requestSkip: skip,
+            responseSha256,
+            rawCacheReference: this.cacheReference(cachePath),
           }
         }
       } catch (error) {

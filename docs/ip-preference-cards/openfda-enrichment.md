@@ -71,16 +71,25 @@ Supported selection and execution options:
 --refresh
 --exhaustive
 --dry-run
+--anonymous
 --concurrency 3
 ```
 
-Generate the checked-in 25-product calibration audit after the documented initial, final, cached, and targeted-refresh outputs exist:
+`--anonymous` is an explicit low-quota fallback. Authenticated batch execution remains the
+default and fails closed when the local key is absent.
+
+Generate the checked-in historical 25-product calibration audit after the documented initial,
+final, cached, and targeted-refresh outputs exist:
 
 ```bash
 npm run ip-cards:openfda:calibrate
 ```
 
-The calibration definition is schema-checked for exactly 25 unique products and its intended challenge-category counts. Query output directories are restricted to `data/ip-preference-cards/generated/openfda/`.
+The calibration definition is schema-checked for exactly 25 unique products and its intended
+challenge-category counts. Query output directories are restricted to
+`data/ip-preference-cards/generated/openfda/`. That calibration and its report preserve the
+earlier 1,474-product identity-enrichment snapshot; they are historical evidence, not the current
+catalog baseline.
 
 Regenerate CSV reports from an existing validated proposal file:
 
@@ -93,6 +102,76 @@ Inspect the current bulk-download manifest without downloading ZIPs:
 ```bash
 npm run ip-cards:openfda:download
 ```
+
+## Dated current U.S. status research (proposal only)
+
+The current normalized catalog contains 1,532 products: 779 are hidden and 753 are
+prototype-visible. The deterministic research cohort includes all 779 hidden products and keeps
+their reasons separate: 578 hidden `verified_source` products are specification-sourced with
+current U.S. status pending, while 200 hidden `candidate` products and one hidden `unknown`
+product still require identity or specification work.
+
+The current U.S. status research package builds on the existing exact-query, local-filtering,
+cache, retry, and alias infrastructure without writing to the ordinary
+`generated/openfda/` proposal queue. Use a new explicit snapshot date for each evidence pass:
+
+```bash
+research_snapshot=2026-08-13
+research_root="data/ip-preference-cards/research/us-status/${research_snapshot}"
+
+npm run ip-cards:us-status:cohort -- \
+  --output "${research_root}/cohort-manifest.json"
+npm run ip-cards:us-status:calibration-cohort -- \
+  --manifest "${research_root}/cohort-manifest.json" \
+  --output "${research_root}/calibration-cohort.json"
+npm run ip-cards:us-status:manufacturer-sources -- \
+  --snapshot "${research_snapshot}" \
+  --output "${research_root}/manufacturer-source-snapshot.json"
+
+# Run the stratified calibration selection first.
+npm run ip-cards:us-status:research -- \
+  --snapshot "${research_snapshot}" \
+  --cohort "${research_root}/cohort-manifest.json" \
+  --manufacturer-source-manifest "${research_root}/manufacturer-source-snapshot.json" \
+  --selection "${research_root}/calibration-cohort.json" \
+  --output-dir "${research_root}/calibration/status-50"
+npm run ip-cards:us-status:calibration-review -- \
+  --cohort "${research_root}/calibration-cohort.json" \
+  --proposals "${research_root}/calibration/status-50/us-status-evidence-proposals.json" \
+  --output-dir "${research_root}/calibration/status-50"
+
+# After calibration review gates pass, process the full computed hidden cohort.
+npm run ip-cards:us-status:research -- \
+  --snapshot "${research_snapshot}" \
+  --cohort "${research_root}/cohort-manifest.json" \
+  --manufacturer-source-manifest "${research_root}/manufacturer-source-snapshot.json" \
+  --output-dir "${research_root}"
+```
+
+Compact, schema-validated proposals, review CSVs, source manifests, run summaries, and methodology
+files stay under `data/ip-preference-cards/research/us-status/<YYYY-MM-DD>/`. Raw openFDA responses,
+manufacturer page/document bodies, extracted text, and cache metadata stay in the ignored
+`local-data/ip-preference-cards/us-status/` tree. A refresh must use a new dated snapshot rather
+than silently replacing historical evidence.
+
+The evidence layers remain independent:
+
+1. exact identity and UDI/GUDID configuration/distribution evidence;
+2. FDA registration and listing;
+3. marketing authorization or classification/exemption evidence;
+4. exact official manufacturer U.S. pages or documents; and
+5. recall information as separate safety context.
+
+Registration/listing is not approval, historical authorization is not current distribution, a
+recall is not evidence of discontinuation, and website absence is not a negative finding. Exact
+positive and negative current-status proposals require the package's independent invariants and
+remain recommendations for human review.
+
+Every research artifact records `canonical_change_applied: false`. These commands have no apply
+endpoint or importer and cannot change catalog visibility, verification grade, selectability,
+roles, compatibility, formulary state, release pointers, ledgers, or feature flags. They are local
+research commands only: no current U.S. status script or openFDA endpoint is invoked from CI,
+build, postinstall, application startup, a route, a server action, or a client component.
 
 ## Ordered query plan
 
@@ -160,6 +239,10 @@ Files:
 - `unmatched-products.csv`;
 - `query-errors.csv`;
 - `manifest-snapshot.json`.
+
+The top-level checked-in run and the named 25-product calibration artifacts preserve the earlier
+1,474-product catalog era. Keep them as historical retrieval evidence; use the dated current U.S.
+status research root for the 1,532-product baseline.
 
 Calibration artifacts additionally include:
 

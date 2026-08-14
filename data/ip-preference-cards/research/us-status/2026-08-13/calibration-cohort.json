@@ -1,0 +1,928 @@
+{
+  "format_version": 1,
+  "generated_by": "scripts/ip-preference-cards/us-status/build-calibration-cohort.ts",
+  "source_manifest_sha256": "5fdcecf3bec186496fd7346284d69965a5802188d994256c4c33de905cc88402",
+  "minimum_product_count": 50,
+  "product_count": 50,
+  "challenge_counts": {
+    "exact_di_candidate": 27,
+    "exact_manufacturer_catalog_candidate": 12,
+    "manufacturer_model_candidate": 3,
+    "reviewed_manufacturer_alias": 17,
+    "multiple_package_configurations": 9,
+    "conflicting_distribution_states": 4,
+    "legacy_product": 5,
+    "capital_equipment": 7,
+    "disposable_device": 18,
+    "premarket_exempt_candidate": 20,
+    "discontinued_candidate": 4,
+    "no_udi_candidate": 38,
+    "candidate_or_unknown_verification_grade": 8,
+    "adjacent_sku_trap": 24,
+    "broad_line_manufacturer": 22,
+    "device_intelligence_exemplar": 38,
+    "noncommercial_or_local_candidate": 1
+  },
+  "products": [
+    {
+      "product_id": "PRD-00C13A59AA",
+      "manufacturer": "Richard Wolf",
+      "product_name": "TEXAS Tracheoscope Tube ID 17.1 mm",
+      "catalog_number": "82520.1441",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "discontinued_candidate",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-019030A1C7",
+      "manufacturer": "Karl Storz",
+      "product_name": "Aspirator for Collecting Secretions with Cut-Off Hole",
+      "catalog_number": "10432N",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "legacy_product",
+        "no_udi_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-0410844D48",
+      "manufacturer": "Cook Medical",
+      "product_name": "Fuhrman Pleural/Pneumopericardial Drainage Set and Tray",
+      "catalog_number": "G55713",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-070884900C",
+      "manufacturer": "Cook Medical",
+      "product_name": "Multipurpose Plastic Tubing Adapter",
+      "catalog_number": "G05302",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-075C3EC5EE",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite L13-6 Transducer",
+      "catalog_number": "L13-6",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-0A2ABE77F9",
+      "manufacturer": "Karl Storz",
+      "product_name": "Aspirator for Collecting Secretions without Cut-Off Hole",
+      "catalog_number": "10432T",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "legacy_product",
+        "no_udi_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-0D6E4DB711",
+      "manufacturer": "Olympus",
+      "product_name": "ViziShot 2 FLEX EBUS FNA/FNB Needle",
+      "catalog_number": "NA-U403SX-4019",
+      "verification_grade": "unknown",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-129E6C270A",
+      "manufacturer": "Karl Storz",
+      "product_name": "Single-Use Plastic Collection Device, Pack of 100",
+      "catalog_number": "10432ED",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "device_intelligence_exemplar",
+        "legacy_product",
+        "no_udi_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-16096E045B",
+      "manufacturer": "Verathon",
+      "product_name": "BFlex 2 Slim 3.8 Single-Use Bronchoscope",
+      "catalog_number": "BFlex 2 Slim 3.8",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": ["disposable_device", "exact_di_candidate", "no_udi_candidate"],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-1708F37D2C",
+      "manufacturer": "ERBE",
+      "product_name": "APCapplicator, Rigid, 100 mm, Spatula Electrode",
+      "catalog_number": "20132-252",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "conflicting_distribution_states",
+        "disposable_device",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-18D62EB4E8",
+      "manufacturer": "Richard Wolf",
+      "product_name": "Fiber Light Cable Bundle, 2.5 mm x 2.3 m",
+      "catalog_number": "806625231",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "no_udi_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-19DEF7AEC5",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite L15-4 Transducer",
+      "catalog_number": "L15-4",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-1A152615A0",
+      "manufacturer": "VisionAir Solutions",
+      "product_name": "Patient-Specific Airway Stent Design and Manufacturing Service",
+      "catalog_number": "CUSTOM-SERVICE",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 0,
+      "challenge_categories": [
+        "candidate_or_unknown_verification_grade",
+        "no_udi_candidate",
+        "noncommercial_or_local_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-1CCEDCCC76",
+      "manufacturer": "Cook Medical",
+      "product_name": "Simple Pneumothorax Aspiration Accessory Set",
+      "catalog_number": "G05297",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-1D87D6EA1E",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Percutaneous Cavity Drainage Kit – Curved",
+      "catalog_number": "AK-01600",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 6,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-1F48992C6C",
+      "manufacturer": "Cardinal Health",
+      "product_name": "Argyle PVC Thoracic Catheter – Straight, 20 Fr × 20 in",
+      "catalog_number": "8888570523",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "conflicting_distribution_states",
+        "device_intelligence_exemplar",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-2A9D06CF51",
+      "manufacturer": "Verathon",
+      "product_name": "GlideScope Video Monitor",
+      "catalog_number": "GlideScope Video Monitor",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 10,
+      "challenge_categories": [
+        "capital_equipment",
+        "device_intelligence_exemplar",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-2B5C4C6CB3",
+      "manufacturer": "Verathon",
+      "product_name": "BFlex 2 Ultraslim 2.8 Single-Use Bronchoscope",
+      "catalog_number": "BFlex 2 Ultraslim 2.8",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": ["disposable_device", "exact_di_candidate", "no_udi_candidate"],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-2B8AACAB67",
+      "manufacturer": "Olympus",
+      "product_name": "EVIS EUS Endoscopic Ultrasound Center EU-ME3",
+      "catalog_number": "EU-ME3",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "capital_equipment",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-2C4537F4D4",
+      "manufacturer": "Olympus",
+      "product_name": "Peripheral Biopsy Forceps",
+      "catalog_number": "FB-433D",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "discontinued_candidate",
+        "disposable_device",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-2D687D6E32",
+      "manufacturer": "Verathon",
+      "product_name": "BFlex 2 Regular 5.0 Single-Use Bronchoscope",
+      "catalog_number": "BFlex 2 Regular 5.0",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 8,
+      "challenge_categories": [
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-2FAFEA973E",
+      "manufacturer": "Verathon",
+      "product_name": "GlideScope Core 15",
+      "catalog_number": "GlideScope Core 15",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 10,
+      "challenge_categories": [
+        "capital_equipment",
+        "device_intelligence_exemplar",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-3A27A7B76D",
+      "manufacturer": "Cardinal Health",
+      "product_name": "Argyle PVC Thoracic Catheter – Straight, 24 Fr × 20 in",
+      "catalog_number": "8888570531",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "conflicting_distribution_states",
+        "device_intelligence_exemplar",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-3EDAA08D62",
+      "manufacturer": "Cardinal Health",
+      "product_name": "Argyle PVC Thoracic Catheter – Straight, 16 Fr × 20 in",
+      "catalog_number": "8888570515",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "conflicting_distribution_states",
+        "device_intelligence_exemplar",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-425DB43083",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite L12-3 Transducer",
+      "catalog_number": "L12-3",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-427A070734",
+      "manufacturer": "Karl Storz",
+      "product_name": "Autoclavable Plastic Cannula, Pack of 5",
+      "catalog_number": "30120X",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "legacy_product",
+        "multiple_package_configurations",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-448C184685",
+      "manufacturer": "Cook Medical",
+      "product_name": "Cohen Endobronchial Blocker Set",
+      "catalog_number": "G44122",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "disposable_device",
+        "exact_di_candidate",
+        "manufacturer_model_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-4A04124FF2",
+      "manufacturer": "Olympus",
+      "product_name": "BF-1TH190 Video Bronchoscope",
+      "catalog_number": "BF-1TH190",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 3,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-4CC32EE889",
+      "manufacturer": "Olympus",
+      "product_name": "Spiration Valve System Air Leak Procedure Kit",
+      "catalog_number": "SVS-C26N-9-VSK",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 3,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "disposable_device",
+        "no_udi_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-5543746F59",
+      "manufacturer": "Olympus",
+      "product_name": "Olympus OER-Pro Automated Endoscope Reprocessor",
+      "catalog_number": "OER-Pro",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 0,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "capital_equipment",
+        "discontinued_candidate",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-59D02C1811",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite PX Ultrasound System",
+      "catalog_number": "SonoSite PX",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "capital_equipment",
+        "device_intelligence_exemplar",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-629828B799",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite LX Ultrasound System",
+      "catalog_number": "SonoSite LX",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "capital_equipment",
+        "device_intelligence_exemplar",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-6C9FB1DC9F",
+      "manufacturer": "Cardinal Health",
+      "product_name": "Argyle PVC Thoracic Catheter – Straight, 36 Fr × 20 in",
+      "catalog_number": "8888570564",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 1,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "device_intelligence_exemplar",
+        "discontinued_candidate",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-6CF2953F5E",
+      "manufacturer": "Cook Medical",
+      "product_name": "Arndt Endobronchial Blocker Set",
+      "catalog_number": "G44109",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "disposable_device",
+        "exact_di_candidate",
+        "manufacturer_model_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-85248E91BA",
+      "manufacturer": "Cook Medical",
+      "product_name": "Arndt Endobronchial Blocker Set",
+      "catalog_number": "G44120",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 2,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "disposable_device",
+        "exact_di_candidate",
+        "manufacturer_model_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-8ACE654E89",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite P11-3 Transducer",
+      "catalog_number": "P11-3",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-9143E639BA",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Percutaneous Cavity Drainage Kit – Straight",
+      "catalog_number": "AK-01601",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 6,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-993A6272DD",
+      "manufacturer": "Verathon",
+      "product_name": "GlideScope Core 10",
+      "catalog_number": "GlideScope Core 10",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 10,
+      "challenge_categories": [
+        "capital_equipment",
+        "device_intelligence_exemplar",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-9E24CD4C73",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite L19-5 Transducer",
+      "catalog_number": "L19-5",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-A5EE9A7377",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite UHF46-20 Transducer",
+      "catalog_number": "UHF46-20",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-A88AEE6442",
+      "manufacturer": "Karl Storz",
+      "product_name": "Application Cannula for Thoracic Drainage",
+      "catalog_number": "10995",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "legacy_product",
+        "no_udi_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-AB6D9F097B",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite C10-3 Transducer",
+      "catalog_number": "C10-3",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-AE9BC99FAA",
+      "manufacturer": "Olympus",
+      "product_name": "EVIS EXERA III Video System Center",
+      "catalog_number": "CV-190",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 10,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-B258E8E859",
+      "manufacturer": "Verathon",
+      "product_name": "BFlex 2 Large 5.8 Single-Use Bronchoscope",
+      "catalog_number": "BFlex 2 Large 5.8",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 7,
+      "challenge_categories": [
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-BDA5B2EF14",
+      "manufacturer": "Cook Medical",
+      "product_name": "Thal-Quick Chest Tube Set and Tray",
+      "catalog_number": "G06786",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 4,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "no_udi_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-BF8CA98FF8",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite C5-1 Transducer",
+      "catalog_number": "C5-1",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-C79EA91A93",
+      "manufacturer": "FUJIFILM SonoSite",
+      "product_name": "SonoSite P5-1 Transducer",
+      "catalog_number": "P5-1",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 5,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-CE23D2A34E",
+      "manufacturer": "Richard Wolf",
+      "product_name": "ENDOCAM Logic 4K Camera Control Unit Bundle",
+      "catalog_number": "55253011",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 10,
+      "challenge_categories": [
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "premarket_exempt_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-CEED2FDA83",
+      "manufacturer": "Olympus",
+      "product_name": "EVIS X1 Video System Center",
+      "catalog_number": "CV-1500",
+      "verification_grade": "candidate",
+      "authored_slot_use_count": 10,
+      "challenge_categories": [
+        "adjacent_sku_trap",
+        "broad_line_manufacturer",
+        "candidate_or_unknown_verification_grade",
+        "device_intelligence_exemplar",
+        "no_udi_candidate",
+        "reviewed_manufacturer_alias"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    },
+    {
+      "product_id": "PRD-FB3438BD7A",
+      "manufacturer": "Teleflex",
+      "product_name": "Arrow Percutaneous Cavity Drainage Set – Curved",
+      "catalog_number": "AI-01600",
+      "verification_grade": "verified_source",
+      "authored_slot_use_count": 6,
+      "challenge_categories": [
+        "broad_line_manufacturer",
+        "device_intelligence_exemplar",
+        "disposable_device",
+        "exact_di_candidate",
+        "exact_manufacturer_catalog_candidate",
+        "multiple_package_configurations"
+      ],
+      "manual_review_status": "pending",
+      "manual_review_notes": "",
+      "canonical_change_applied": false
+    }
+  ],
+  "canonical_change_applied": false
+}

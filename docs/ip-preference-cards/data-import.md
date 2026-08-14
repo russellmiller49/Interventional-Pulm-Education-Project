@@ -44,11 +44,13 @@ fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf
 | Modifier catalog              |    30 |
 | Verification backlog          | 1,221 |
 
-The importer then merges 253 reviewed rows from `seed/catalog-additions.json`, producing
-1,474 products in `generated/catalog-products.json`. The workbook-backed verification
-backlog and formulary staging remain 1,221 rows; additions do not fabricate local decisions.
-The full count reconciliation and duplicate audit are in
-[`openfda-live-calibration-report.md`](./openfda-live-calibration-report.md).
+The importer then merges 311 reviewed rows from `seed/catalog-additions.json`, producing 1,532
+products in `generated/catalog-products.json`: 779 are hidden and 753 are prototype-visible. The
+workbook-backed verification backlog and formulary staging remain 1,221 rows; additions do not
+fabricate local decisions. The linked
+[`openfda-live-calibration-report.md`](./openfda-live-calibration-report.md) preserves the earlier
+1,221 + 253 = 1,474 calibration snapshot and its duplicate audit as historical evidence; it is
+not the current catalog reconciliation.
 
 The current supplied workbook has 80 non-null GTIN values, and all 80 are already represented as 14-character strings. This differs from the older measured pattern quoted in the build brief. The importer validates the file actually supplied: it preserves leading zeros, reports non-14-digit values, and never truncates or rounds. The regression fixture confirms `08714729986225` and leading-zero catalog number `02841S` survive exactly.
 
@@ -70,19 +72,19 @@ The current supplied workbook has 80 non-null GTIN values, and all 80 are alread
 The source workbook carries 2,080 `Slot_Product_Options` rows. The governed proposal overlay
 removes 31 semantically invalid relationships and adds ten reviewed installed-base alternatives.
 The completed-review implementation then removes four reviewer-rejected generic options and
-adds 18 clinician-reviewed drainage options, producing 2,073 current canonical exact-slot
-options. Import does not promote every product sharing the slot's broad role into that file.
-Instead,
+adds 18 clinician-reviewed drainage options, producing 2,073 options at that historical
+milestone. Later owner-review corrections removed 38 duplicate IPC assignments while retaining
+the corresponding IPC-placement sets, producing 2,035 current canonical exact-slot options.
+Import does not promote every product sharing the slot's broad role into that file. Instead,
 `derive-slot-option-proposals.ts` writes a separate deterministic review artifact:
 
 ```text
 data/ip-preference-cards/generated/slot-product-option-proposals.json
 ```
 
-The current artifact has 429 unreviewed pairs and zero exclusions. The pre-remediation queue
-had 475; 28 broad-role candidates no longer qualify after the proposal-level role migrations,
-and the completed focused review promoted exactly 18 drainage pairs. Every remaining proposal
-is nonselectable and hidden by default. Exceptions in
+The current artifact has 831 unreviewed pairs and zero exclusions. The pre-remediation 475-row
+queue and the earlier 429-row completed-review queue are historical snapshots. Every current
+proposal is nonselectable and hidden by default. Exceptions in
 `seed/slot-option-exceptions.json` are Zod-validated, exact, proposal-only suppressions; stale
 or contradictory exceptions fail generation. See
 [`catalog-role-and-slot-semantics.md`](./catalog-role-and-slot-semantics.md).
@@ -139,15 +141,17 @@ Cardinal Health would otherwise contribute hundreds of thousands of unrelated re
 
 ### Curated catalog additions
 
-`seed/catalog-additions.json` carries products the workbook does not: Getinge/Atrium and
+`seed/catalog-additions.json` carries 311 products the workbook does not: Getinge/Atrium and
 Teleflex thoracic drainage, FUJIFILM bronchoscopy/ultrasound equipment, Auris and Noah
-robotic-bronchoscopy equipment, Olympus scope additions, and ICU Medical tracheostomy
-products. Identity, DI/GTIN, distribution status, sterility, and single-use come from GUDID;
-manufacturer sources support product family naming, part numbers, dimensions, and
-configuration. Only devices the seed-generation review found in commercial distribution
-are emitted. `apply-catalog-additions.ts` merges them at import time and validates them
-against the workbook's own vocabularies — unknown role codes or source ids, or a colliding
-product id, fail the import.
+robotic-bronchoscopy equipment, Olympus scope additions, ICU Medical tracheostomy products, and
+reviewed taxonomy-v2 energy, imaging, ablation, laser, photodynamic, and emerging-device cohorts.
+Each product retains its source-specific evidence: GUDID supports identity, DI/GTIN, distribution,
+sterility, and single-use fields when available, while manufacturer sources support family naming,
+part numbers, dimensions, and configuration. The earlier GUDID-derived cohort emitted only devices
+reported in commercial distribution; later reviewed cohorts keep their own conservative
+verification and visibility grades rather than inferring current U.S. distribution.
+`apply-catalog-additions.ts` merges them at import time and validates them against the workbook's
+own vocabularies — unknown role codes or source ids, or a colliding product id, fail the import.
 
 ### Brand-level discovery
 
@@ -176,7 +180,7 @@ badge. A product is flagged only when _every_ strong match says the device is ou
 commercial distribution, so a product that is discontinued in one package configuration but
 still active in another is not mislabeled.
 
-## openFDA enrichment is a separate proposal layer
+## openFDA enrichment and current U.S. status research are separate proposal layers
 
 The optional openFDA pipeline documented in
 [`openfda-enrichment.md`](./openfda-enrichment.md) reads the normalized catalog and existing
@@ -191,3 +195,15 @@ selectable, clinically ready, compatible, locally available, or orderable.
 OpenFDA/GUDID identity enrichment also does not create `Product_Roles`, canonical
 `Slot_Product_Options`, or accepted slot-option proposals, and it does not affect either
 coverage metric.
+
+The dated current U.S. status workflow builds a hidden-product cohort and combines exact identity,
+UDI/GUDID distribution, registration/listing, authorization or exemption, official manufacturer
+U.S. evidence, and separate recall context. Its compact artifacts stay under
+`data/ip-preference-cards/research/us-status/<YYYY-MM-DD>/`; raw API and manufacturer-source data
+stay in ignored `local-data/ip-preference-cards/us-status/`. Every result is a nonapplying research
+proposal with `canonical_change_applied: false`.
+
+Neither proposal layer runs during import, CI, build, postinstall, application startup, a public
+route, or a server action. Neither has an apply endpoint or changes generated catalog data,
+visibility, verification grade, selectability, role/slot assignments, compatibility, formulary
+state, release pointers, or ledgers.
