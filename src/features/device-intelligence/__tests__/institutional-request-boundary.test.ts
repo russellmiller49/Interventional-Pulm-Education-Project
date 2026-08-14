@@ -225,3 +225,108 @@ describe('D2A-C4 — projection requests must be plain own-property data objects
     expect(JSON.stringify(third)).toBe(JSON.stringify(first))
   })
 })
+
+/**
+ * D2A-R2-C4-001. A JSON payload whose only own key is `__proto__` reaches the plain-data
+ * boundary legitimately: its prototype is `Object.prototype` and the key is an own,
+ * enumerable data property. Copying it into a `{}` destination with `copy[key] = value`
+ * routed that key through the setter inherited from `Object.prototype`, installing the
+ * supplied request as the snapshot's prototype. The snapshot then had no own keys — so
+ * strict unknown-key checking saw nothing — while every required field resolved through
+ * the prototype, and a confidential projection was returned.
+ */
+describe('D2A-R2-C4-001 — __proto__ carriers cannot mutate the validation snapshot', () => {
+  const CONFIDENTIAL_OR_FOREIGN = [
+    'fictional-east-capability-beta',
+    'fictional-east-capability-confidential-source',
+    'fictional-east-diagnostic-confidential-capability',
+    'fictional-site-west',
+    'fictional-tenant-summit',
+  ]
+
+  function refusalText(run: () => unknown): string {
+    try {
+      run()
+    } catch (error) {
+      return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
+    }
+    throw new Error('Expected the request to be refused.')
+  }
+
+  it('refuses a top-level JSON __proto__ carrier through both entry points', () => {
+    const payload = JSON.parse(`{"__proto__":${JSON.stringify(validInstitutionalRequest())}}`)
+
+    // The payload genuinely satisfies the advertised plain-data-object contract.
+    expect(Object.getPrototypeOf(payload)).toBe(Object.prototype)
+    expect(Reflect.ownKeys(payload)).toEqual(['__proto__'])
+    expect(Object.prototype.hasOwnProperty.call(payload, '__proto__')).toBe(true)
+
+    expect(() => parseOverlayProjectionRequest(payload)).toThrow()
+    expect(() => adapter.project(payload)).toThrow()
+
+    const message = refusalText(() => adapter.project(payload))
+    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+  })
+
+  it('refuses a nested-scope JSON __proto__ carrier through both entry points', () => {
+    const request = {
+      ...validInstitutionalRequest(),
+      scope: JSON.parse(`{"__proto__":${JSON.stringify(FICTIONAL_HARBOR_EAST_SCOPE)}}`),
+    }
+    expect(Reflect.ownKeys(request.scope)).toEqual(['__proto__'])
+
+    expect(() => parseOverlayProjectionRequest(request)).toThrow()
+    expect(() => adapter.project(request)).toThrow()
+
+    const message = refusalText(() => adapter.project(request))
+    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+  })
+
+  it('refuses a null-prototype carrier whose defined __proto__ holds the request', () => {
+    const payload = Object.create(null) as Record<string, unknown>
+    Object.defineProperty(payload, '__proto__', {
+      value: validInstitutionalRequest(),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
+    expect(Reflect.ownKeys(payload)).toEqual(['__proto__'])
+
+    expect(() => parseOverlayProjectionRequest(payload)).toThrow()
+    expect(() => adapter.project(payload)).toThrow()
+
+    const nestedPayload = Object.create(null) as Record<string, unknown>
+    Object.defineProperty(nestedPayload, '__proto__', {
+      value: { ...FICTIONAL_HARBOR_EAST_SCOPE },
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
+    expect(() =>
+      adapter.project({ ...validInstitutionalRequest(), scope: nestedPayload }),
+    ).toThrow()
+  })
+
+  it('leaves Object.prototype unpolluted after every refused carrier', () => {
+    const probe = {} as Record<string, unknown>
+    expect(probe.contextKind).toBeUndefined()
+    expect(probe.scope).toBeUndefined()
+    expect(probe.accessClassification).toBeUndefined()
+    expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'contextKind')).toBe(false)
+    expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'scope')).toBe(false)
+  })
+
+  it('still accepts a valid request and a valid scope built on a null prototype', () => {
+    // The correction must not close the hole by rejecting null-prototype data objects,
+    // which the boundary contract explicitly accepts.
+    const nullProtoRequest = Object.assign(Object.create(null), validInstitutionalRequest())
+    expect(() => adapter.project(nullProtoRequest)).not.toThrow()
+
+    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
+    const projection = adapter.project({
+      ...validInstitutionalRequest(),
+      scope: nullProtoScope,
+    })
+    expect(projection.dataset.context.contextKind).toBe('institutional')
+  })
+})

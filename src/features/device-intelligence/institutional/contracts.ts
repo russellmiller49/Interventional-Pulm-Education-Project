@@ -1406,6 +1406,15 @@ export const overlayProjectionRequestSchema = z.discriminatedUnion('contextKind'
  * accessor or non-enumerable properties — and then copies its own enumerable data
  * properties exactly once into a fresh object before zod sees it, so nothing the caller
  * controls is re-read after validation begins.
+ *
+ * The snapshot is built on a null prototype and every key is installed with
+ * `Object.defineProperty`. Plain assignment into a `{}` destination would route the
+ * attacker-controlled key `__proto__` through the setter inherited from
+ * `Object.prototype`: a JSON payload whose single own key is `__proto__` would then
+ * install its value as the snapshot's prototype instead of as data, leaving a snapshot
+ * with no own keys whose inherited properties satisfy every required field. Defining the
+ * property on a prototype-less destination keeps `__proto__` an ordinary own data key, so
+ * the strict schema rejects it as unrecognized rather than reading through it.
  */
 function plainOwnDataCopy(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -1415,7 +1424,7 @@ function plainOwnDataCopy(value: unknown, label: string): Record<string, unknown
   if (prototype !== Object.prototype && prototype !== null) {
     throw new Error(`${label} must not carry a custom prototype.`)
   }
-  const copy: Record<string, unknown> = {}
+  const copy = Object.create(null) as Record<string, unknown>
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== 'string') {
       throw new Error(`${label} must not carry symbol-keyed properties.`)
@@ -1427,14 +1436,21 @@ function plainOwnDataCopy(value: unknown, label: string): Record<string, unknown
     if (!descriptor.enumerable) {
       throw new Error(`${label} must not carry non-enumerable properties.`)
     }
-    copy[key] = descriptor.value
+    Object.defineProperty(copy, key, {
+      value: descriptor.value,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
   }
   return copy
 }
 
 export function parseOverlayProjectionRequest(input: unknown): OverlayProjectionRequest {
   const copy = plainOwnDataCopy(input, 'A projection request')
-  if ('scope' in copy) {
+  // `in` would traverse a prototype chain; the snapshot has none, but an own-property
+  // check states the intent and cannot be satisfied by anything the caller inherited.
+  if (Object.hasOwn(copy, 'scope')) {
     copy.scope = plainOwnDataCopy(copy.scope, 'A projection request scope')
   }
   return overlayProjectionRequestSchema.parse(copy)

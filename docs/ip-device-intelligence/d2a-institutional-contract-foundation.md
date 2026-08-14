@@ -171,6 +171,10 @@ The focused suites cover:
   refusals;
 - the closed identifier grammar and the bundle-wide identifier registry;
 - own-property request and nested-scope boundaries, including polluted prototypes;
+- `__proto__` carriers at the request boundary — a top-level JSON carrier, a nested-scope
+  JSON carrier, and a null-prototype object with `__proto__` defined as an own enumerable
+  data property — refused through both the parser and the sealed adapter, alongside
+  controls proving valid null-prototype requests and scopes are still accepted;
 - the free-text boundary: no internal authoring text in any reachable projection; and
 - the static runtime import boundary.
 
@@ -235,9 +239,16 @@ because it supplied `provenanceClass: 'fictional_fixture'`.
 
 **Correction — a sealed corpus.** The public factory is now zero-argument: it imports the
 canonical in-repository fixture directly, parses and deep-freezes it, runs the
-projection-safety validator, and rejects unexpected runtime arguments loudly. There is no
-production export that accepts a bundle, no self-asserted fixture policy or foundation
-label, and no path by which caller-supplied provenance proves fictionality. Tests that
+projection-safety validator, and rejects unexpected runtime arguments loudly. No
+production adapter or adapter factory accepts an arbitrary institutional bundle, there is
+no self-asserted fixture policy or foundation label, and no path by which caller-supplied
+provenance proves fictionality.
+
+`assertFictionalCorpusProjectionSafe(bundle)` is exported and does take a bundle
+parameter, but it is **validation-only**: it inspects the bundle it is handed and either
+returns or throws. It cannot supply, replace, construct, or mutate the sealed corpus the
+adapter serves, and the adapter never consults a caller-provided bundle, so passing a
+real-shaped bundle to the validator cannot cause that bundle to be projected. Tests that
 need malformed bundles substitute the canonical fixture module through Jest module
 isolation; no production factory exists for that purpose, and a static import-boundary
 test pins that no route, component, API, action, or analytics surface imports the
@@ -269,6 +280,45 @@ and no non-enumerable properties; its own enumerable data properties are copied 
 once into a fresh object, and the nested scope is independently checked the same way.
 Reserved property names are refused as identifiers by the closed grammar itself, at the
 request boundary and in the corpus.
+
+## 6a. Second Codex review (2026-08-13): D2A-R2-C4-001
+
+The second independent review confirmed C1, C2, and C3 as corrected and found one
+remaining medium request-boundary bypass in the C4 correction itself.
+
+**Reproduction.** A JSON payload whose single own key is `__proto__` satisfies the
+advertised plain-data contract honestly — its prototype is `Object.prototype`, and the key
+is an own, enumerable data property:
+
+```js
+const payload = JSON.parse(`{"__proto__":${JSON.stringify(validInstitutionalRequest)}}`)
+```
+
+The snapshot was built as a normal `{}` and populated with `copy[key] = descriptor.value`.
+For the key `__proto__` that assignment does not create a data property: it invokes the
+setter inherited from `Object.prototype` and installs the supplied request as the
+snapshot's **prototype**. The snapshot was then left with no own keys, so strict
+unknown-key checking saw nothing to reject, while every required field resolved through
+the prototype chain. Both `parseOverlayProjectionRequest` and the sealed adapter's public
+`project` accepted it and returned a confidential East projection carrying two capability
+records. The same bypass reproduced when only the nested `scope` value was such a carrier,
+and when the carrier was a null-prototype object with `__proto__` defined as an own
+enumerable data property.
+
+**Correction.** The snapshot is now created with `Object.create(null)` and every key is
+installed with `Object.defineProperty`. A prototype-less destination inherits no
+`__proto__` setter, and defining a property never invokes a setter in any case, so
+`__proto__` stays an ordinary own data key in the snapshot. The strict request schema then
+rejects it: for a top-level carrier the discriminated union finds no `contextKind` and
+refuses, and any surviving `__proto__` key is an unrecognized key under `.strict()`. The
+nested scope passes through the same boundary independently, and the scope check uses
+`Object.hasOwn` rather than `in`, so it cannot be satisfied by anything inherited.
+
+The one-read snapshot semantics are unchanged — descriptors are still inspected once,
+accessors, symbol keys, and non-enumerable properties are still refused, and the copied
+value still comes from the descriptor rather than a second property read. Null-prototype
+plain data objects remain an accepted input prototype for both the request and its nested
+scope; the bypass was not closed by narrowing that contract.
 
 ## 7. Requirements for a later migration phase
 
