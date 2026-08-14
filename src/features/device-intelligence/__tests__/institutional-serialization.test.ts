@@ -1,3 +1,10 @@
+/**
+ * @jest-environment node
+ *
+ * The request boundary's Proxy-rejection gate uses the host `structuredClone`, which the
+ * jsdom test sandbox does not provide; this suite exercises `adapter.project`, so it runs
+ * in the Node environment where `structuredClone` is present.
+ */
 import {
   DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE,
   type InstitutionScopeIdentity,

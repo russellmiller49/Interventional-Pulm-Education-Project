@@ -1446,6 +1446,45 @@ function plainOwnDataCopy(value: unknown, label: string): Record<string, unknown
   return copy
 }
 
+/**
+ * Structural non-Proxy admission gate.
+ *
+ * {@link plainOwnDataCopy} interrogates the input only through reflection —
+ * `Object.getPrototypeOf`, `Reflect.ownKeys`, `Object.getOwnPropertyDescriptor` — and every
+ * one of those operations is itself controlled by a Proxy's traps. A Proxy over an empty
+ * target can therefore report `Object.prototype`, report the four keys of a valid request,
+ * and hand back enumerable data descriptors carrying the corresponding values, so it passes
+ * the reflection-only snapshot and the strict schema while owning no data at all. A coherent
+ * Proxy can satisfy any finite reflection-only interrogation, so no amount of re-reading or
+ * cross-checking descriptors can distinguish it from a plain object; the boundary needs a
+ * check the request cannot influence.
+ *
+ * The structured-clone algorithm is that check. It is a host primitive that walks the input
+ * graph and refuses Proxy exotic objects with a `DataCloneError`, at the top level or nested
+ * anywhere inside it, and it cannot be intercepted by a trap. It is not a substitute for the
+ * descriptor snapshot: structured cloning silently resolves an ordinary getter into a data
+ * value, so accessor, symbol, non-enumerable, unknown-key, and type failures must still be
+ * caught by {@link plainOwnDataCopy} and the schema first. Only a candidate that has already
+ * passed those structural checks reaches this gate, whose sole job is to establish that the
+ * original input graph is composed of serializable ordinary data rather than Proxy exotic
+ * objects. A clone failure becomes a generic refusal that names no field value, and the
+ * clone result is discarded — the authoritative parsed request is still the snapshot.
+ *
+ * If the host lacks `structuredClone` the gate fails closed: without it the boundary cannot
+ * prove the input is not a Proxy, and admitting an unprovable input would reopen the bypass.
+ * Every browser and every Node runtime this contract targets provides it.
+ */
+function assertNonProxyStructuredData(value: unknown, label: string): void {
+  if (typeof structuredClone !== 'function') {
+    throw new Error(`${label} could not be admitted as plain structured data.`)
+  }
+  try {
+    structuredClone(value)
+  } catch {
+    throw new Error(`${label} could not be admitted as plain structured data.`)
+  }
+}
+
 export function parseOverlayProjectionRequest(input: unknown): OverlayProjectionRequest {
   const copy = plainOwnDataCopy(input, 'A projection request')
   // `in` would traverse a prototype chain; the snapshot has none, but an own-property
@@ -1453,7 +1492,14 @@ export function parseOverlayProjectionRequest(input: unknown): OverlayProjection
   if (Object.hasOwn(copy, 'scope')) {
     copy.scope = plainOwnDataCopy(copy.scope, 'A projection request scope')
   }
-  return overlayProjectionRequestSchema.parse(copy)
+  const parsed = overlayProjectionRequestSchema.parse(copy)
+  // Final gate: the reflection-only snapshot above cannot tell a plain object from a Proxy
+  // that synthesizes one through its traps, so refuse any input the structured-clone
+  // algorithm rejects as a Proxy exotic object before returning the parsed request. This
+  // runs only after the structural and schema checks have passed, and no projection is
+  // built from the result until it does.
+  assertNonProxyStructuredData(input, 'A projection request')
+  return parsed
 }
 
 const projectionFields = {

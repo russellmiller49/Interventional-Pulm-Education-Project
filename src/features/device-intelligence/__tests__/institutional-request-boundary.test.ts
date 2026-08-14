@@ -1,3 +1,12 @@
+/**
+ * @jest-environment node
+ *
+ * The request boundary's Proxy-rejection gate uses the host `structuredClone`, which the
+ * jsdom test sandbox does not provide; these suites exercise `parseOverlayProjectionRequest`
+ * and `adapter.project`, so they run in the Node environment where `structuredClone` is
+ * present. Node 20 (the repository's pinned runtime) rejects Proxy exotic objects with a
+ * `DataCloneError`, which is the structural boundary this file pins.
+ */
 import {
   accessAllows,
   parseOverlayProjectionRequest,
@@ -328,5 +337,261 @@ describe('D2A-R2-C4-001 — __proto__ carriers cannot mutate the validation snap
       scope: nullProtoScope,
     })
     expect(projection.dataset.context.contextKind).toBe('institutional')
+  })
+})
+
+/**
+ * D2A-R3-C4-001. The plain-data snapshot is built entirely from reflection —
+ * `Object.getPrototypeOf`, `Reflect.ownKeys`, `Object.getOwnPropertyDescriptor` — and every
+ * one of those operations is controlled by a Proxy's traps. A Proxy over an empty target can
+ * therefore report `Object.prototype`, report the four keys of a valid confidential East
+ * request, and return enumerable data descriptors carrying the corresponding values: it
+ * passes the reflection-only snapshot and the strict schema while its underlying target owns
+ * nothing. Before the correction both `parseOverlayProjectionRequest` and the sealed
+ * adapter's `project` accepted such a Proxy — top level and nested — and returned the
+ * confidential East projection with two capability records.
+ *
+ * A coherent Proxy can satisfy any finite reflection-only interrogation, so the correction
+ * adds a structural non-Proxy gate: the request must survive `structuredClone`, which walks
+ * the whole graph and refuses Proxy exotic objects with a `DataCloneError` no trap can
+ * intercept. It runs only after the descriptor and schema checks, so ordinary getters are
+ * still rejected as accessors rather than silently resolved into accepted data.
+ */
+describe('D2A-R3-C4-001 — Proxy carriers cannot synthesize a request accepted as plain data', () => {
+  const CONFIDENTIAL_OR_FOREIGN = [
+    'fictional-east-capability-beta',
+    'fictional-east-capability-confidential-source',
+    'fictional-east-diagnostic-confidential-capability',
+    'fictional-site-west',
+    'fictional-tenant-summit',
+  ]
+
+  const confidentialEastRequest = () => ({
+    contextKind: 'institutional' as const,
+    scope: { ...FICTIONAL_HARBOR_EAST_SCOPE },
+    accessClassification: 'institution_confidential' as const,
+    projectionTimestamp: PROJECTION_TIMESTAMP,
+  })
+
+  function refusalText(run: () => unknown): string {
+    try {
+      run()
+    } catch (error) {
+      return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
+    }
+    throw new Error('Expected the request to be refused.')
+  }
+
+  function expectRefusedThroughBothEntryPoints(build: () => unknown): void {
+    // A fresh carrier per entry point: a revoked or single-use vector cannot be replayed.
+    expect(() => parseOverlayProjectionRequest(build())).toThrow()
+    expect(() => adapter.project(build())).toThrow()
+    const message = refusalText(() => adapter.project(build()))
+    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+  }
+
+  const dataDescriptor = (value: unknown): PropertyDescriptor => ({
+    value,
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  })
+
+  const descriptorSynthesizingProxy = (source: Record<string, unknown>, target: object = {}) =>
+    new Proxy(target, {
+      getPrototypeOf: () => Object.prototype,
+      ownKeys: () => Reflect.ownKeys(source),
+      getOwnPropertyDescriptor: (_target, key) => dataDescriptor(Reflect.get(source, key)),
+    })
+
+  it('A. refuses a descriptor-synthesizing top-level Proxy over an empty target', () => {
+    const target = {}
+    // The underlying target owns nothing; only the traps synthesize the request shape.
+    expect(Reflect.ownKeys(target)).toEqual([])
+    expectRefusedThroughBothEntryPoints(() =>
+      descriptorSynthesizingProxy(confidentialEastRequest(), target),
+    )
+    // Interrogation must not have populated the target either.
+    expect(Reflect.ownKeys(target)).toEqual([])
+  })
+
+  it('B. refuses a transparent top-level Proxy around a valid request', () => {
+    expectRefusedThroughBothEntryPoints(() => new Proxy(confidentialEastRequest(), {}))
+    // The same holds for a transparent Proxy around a valid demo request.
+    expectRefusedThroughBothEntryPoints(() => new Proxy(validDemoRequest(), {}))
+  })
+
+  it('C. refuses a descriptor-synthesizing nested-scope Proxy over an empty target', () => {
+    const scopeTarget = {}
+    expect(Reflect.ownKeys(scopeTarget)).toEqual([])
+    expectRefusedThroughBothEntryPoints(() => ({
+      ...confidentialEastRequest(),
+      scope: descriptorSynthesizingProxy({ ...FICTIONAL_HARBOR_EAST_SCOPE }, scopeTarget),
+    }))
+    expect(Reflect.ownKeys(scopeTarget)).toEqual([])
+  })
+
+  it('D. refuses a transparent nested-scope Proxy around a valid scope', () => {
+    expectRefusedThroughBothEntryPoints(() => ({
+      ...confidentialEastRequest(),
+      scope: new Proxy({ ...FICTIONAL_HARBOR_EAST_SCOPE }, {}),
+    }))
+  })
+
+  it('E. refuses a descriptor-synthesizing Proxy over a null-prototype target', () => {
+    // A Proxy that reports a null prototype is still a Proxy exotic object; the null-proto
+    // acceptance contract is for genuine Object.create(null) data, not for a Proxy claiming
+    // to be one.
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(Object.create(null) as object, {
+          getPrototypeOf: () => null,
+          ownKeys: () => Reflect.ownKeys(confidentialEastRequest()),
+          getOwnPropertyDescriptor: (_target, key) =>
+            dataDescriptor(Reflect.get(confidentialEastRequest(), key)),
+        }),
+    )
+  })
+
+  it('refuses a revoked Proxy through both entry points', () => {
+    expect(() => {
+      const { proxy, revoke } = Proxy.revocable(confidentialEastRequest(), {})
+      revoke()
+      return parseOverlayProjectionRequest(proxy)
+    }).toThrow()
+    expect(() => {
+      const { proxy, revoke } = Proxy.revocable(confidentialEastRequest(), {})
+      revoke()
+      return adapter.project(proxy)
+    }).toThrow()
+  })
+
+  it('refuses Proxies whose getPrototypeOf, ownKeys, or getOwnPropertyDescriptor traps throw', () => {
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf: () => {
+              throw new Error('trap-refused-get-prototype-of')
+            },
+          },
+        ),
+    )
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf: () => Object.prototype,
+            ownKeys: () => {
+              throw new Error('trap-refused-own-keys')
+            },
+          },
+        ),
+    )
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf: () => Object.prototype,
+            ownKeys: () => ['contextKind'],
+            getOwnPropertyDescriptor: () => {
+              throw new Error('trap-refused-get-own-property-descriptor')
+            },
+          },
+        ),
+    )
+  })
+
+  it('refuses a Proxy that returns accessor descriptors', () => {
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf: () => Object.prototype,
+            ownKeys: () => ['contextKind'],
+            getOwnPropertyDescriptor: () => ({
+              get: () => 'demo',
+              enumerable: true,
+              configurable: true,
+            }),
+          },
+        ),
+    )
+  })
+
+  it('refuses a Proxy that returns non-enumerable descriptors', () => {
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf: () => Object.prototype,
+            ownKeys: () => ['contextKind'],
+            getOwnPropertyDescriptor: () => ({
+              value: 'demo',
+              enumerable: false,
+              configurable: true,
+              writable: true,
+            }),
+          },
+        ),
+    )
+  })
+
+  it('refuses a Proxy that returns symbol keys', () => {
+    const symbolKey = Symbol('contextKind')
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf: () => Object.prototype,
+            ownKeys: () => [symbolKey],
+            getOwnPropertyDescriptor: () => dataDescriptor('demo'),
+          },
+        ),
+    )
+  })
+
+  it('refuses a Proxy whose reported key set violates Proxy invariants', () => {
+    // A non-extensible target forces ownKeys to report exactly the target's keys; reporting
+    // extra keys makes the engine itself throw a TypeError when the trap result is read.
+    expectRefusedThroughBothEntryPoints(
+      () =>
+        new Proxy(Object.preventExtensions({ contextKind: 'institutional' }), {
+          ownKeys: () => ['contextKind', 'scope', 'accessClassification', 'projectionTimestamp'],
+        }),
+    )
+  })
+
+  it('still accepts ordinary valid requests and genuine null-prototype data', () => {
+    // The gate must not narrow the accepted contract: plain and Object.create(null) data,
+    // top level and nested scope, remain accepted.
+    expect(() => adapter.project(validInstitutionalRequest())).not.toThrow()
+    expect(() => adapter.project(validDemoRequest())).not.toThrow()
+
+    const nullProtoRequest = Object.assign(Object.create(null), validInstitutionalRequest())
+    expect(() => adapter.project(nullProtoRequest)).not.toThrow()
+
+    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
+    const projection = adapter.project({ ...validInstitutionalRequest(), scope: nullProtoScope })
+    expect(projection.dataset.context.contextKind).toBe('institutional')
+
+    const parsedDemo = parseOverlayProjectionRequest(validDemoRequest())
+    expect(parsedDemo.contextKind).toBe('demo')
+  })
+
+  it('leaves adapter state unperturbed after a refused Proxy request', () => {
+    const baseline = JSON.stringify(adapter.project(validInstitutionalRequest()))
+    expect(() => adapter.project(new Proxy(confidentialEastRequest(), {}))).toThrow()
+    expect(() =>
+      adapter.project(descriptorSynthesizingProxy(confidentialEastRequest(), {})),
+    ).toThrow()
+    const after = JSON.stringify(adapter.project(validInstitutionalRequest()))
+    expect(after).toBe(baseline)
   })
 })

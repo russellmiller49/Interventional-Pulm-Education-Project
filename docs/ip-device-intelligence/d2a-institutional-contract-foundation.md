@@ -175,6 +175,12 @@ The focused suites cover:
   JSON carrier, and a null-prototype object with `__proto__` defined as an own enumerable
   data property — refused through both the parser and the sealed adapter, alongside
   controls proving valid null-prototype requests and scopes are still accepted;
+- `Proxy` carriers at the request boundary — descriptor-synthesizing and transparent
+  proxies at both the top level and the nested scope, a proxy over a null-prototype target,
+  a revoked proxy, proxies whose traps throw or violate Proxy invariants, and proxies
+  returning accessor, non-enumerable, or symbol-keyed descriptors — refused through both
+  entry points with no fixture identifier in any refusal error, alongside controls proving
+  valid plain and null-prototype requests and scopes are still accepted;
 - the free-text boundary: no internal authoring text in any reachable projection; and
 - the static runtime import boundary.
 
@@ -319,6 +325,89 @@ accessors, symbol keys, and non-enumerable properties are still refused, and the
 value still comes from the descriptor rather than a second property read. Null-prototype
 plain data objects remain an accepted input prototype for both the request and its nested
 scope; the bypass was not closed by narrowing that contract.
+
+## 6b. Third Codex review (2026-08-13): D2A-R3-C4-001
+
+The third independent review confirmed the `__proto__` correction as fixed and found one
+remaining medium request-boundary bypass: an actual `Proxy` can synthesize a request the
+reflection-only snapshot accepts as plain data.
+
+**Reproduction.** A `Proxy` over an empty target can trap `getPrototypeOf`, `ownKeys`, and
+`getOwnPropertyDescriptor` to report `Object.prototype`, report the four keys of a valid
+confidential East request, and return enumerable data descriptors carrying the
+corresponding values:
+
+```js
+const target = {}
+const proxy = new Proxy(target, {
+  getPrototypeOf: () => Object.prototype,
+  ownKeys: () => Reflect.ownKeys(validInstitutionalRequest),
+  getOwnPropertyDescriptor: (_t, key) => ({
+    value: Reflect.get(validInstitutionalRequest, key),
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  }),
+})
+// Reflect.ownKeys(target) === []   — the underlying target owns nothing
+```
+
+The snapshot builder inspected the request only through `Object.getPrototypeOf`,
+`Reflect.ownKeys`, and `Object.getOwnPropertyDescriptor`, and every one of those operations
+is controlled by the Proxy's traps. The Proxy therefore passed the snapshot and the strict
+schema while owning no data, and both `parseOverlayProjectionRequest` and the sealed
+adapter's `project` returned the confidential East projection with two capability records.
+Measured pre-fix, the bypass reproduced for a descriptor-synthesizing top-level Proxy, a
+transparent Proxy around a valid request, a descriptor-synthesizing nested-`scope` Proxy, a
+transparent nested-`scope` Proxy, and a descriptor-synthesizing Proxy over a null-prototype
+target — through both entry points.
+
+**Why reflection-only validation was insufficient.** A coherent Proxy can satisfy any
+finite reflection-only interrogation and return a self-consistent result no matter how many
+times, or in what order, its prototype, keys, and descriptors are read. No sequence of
+`Object.getPrototypeOf` / `Reflect.ownKeys` / `Object.getOwnPropertyDescriptor` calls, and
+no comparison between two such sequences, can distinguish a Proxy from the plain object it
+impersonates, because the Proxy controls every answer. The boundary needed a structural
+check the request cannot influence.
+
+**Correction — a structural non-Proxy admission gate.** After the descriptor snapshot and
+the strict schema have accepted a candidate, and before the parsed request is returned, the
+request boundary submits the original input to the host `structuredClone`. The
+structured-clone algorithm walks the whole input graph and refuses Proxy exotic objects
+with a `DataCloneError` that no trap can intercept, at the top level or nested anywhere
+inside. A clone failure becomes a generic request-boundary refusal that names no field
+value, and the clone result is discarded — the authoritative parsed request is still the
+snapshot, so this adds no dependency on structured cloning's field semantics.
+
+The gate runs only after the descriptor and schema checks, which is essential:
+structured cloning silently resolves an ordinary getter into a data value, so accessor,
+symbol, non-enumerable, unknown-key, and type failures must still be caught first by the
+snapshot and the schema, exactly as before. The gate's sole job is to establish that the
+original graph is composed of serializable ordinary data rather than Proxy exotic objects.
+It introduces no import: `structuredClone` is a host global present in every browser and in
+Node, so the module still imports only `zod` and its own relative files and remains valid
+in both browser and Node environments. If the host lacks `structuredClone` the gate fails
+closed, because an input whose Proxy-freeness cannot be proven must not be admitted.
+
+**Results.** Every Proxy carrier above is now refused through both
+`parseOverlayProjectionRequest` and `adapter.project` — 0 accepted, 0 projections returned,
+and no confidential, sibling-site, or cross-tenant identifier in any refusal error. A
+descriptor-synthesizing valid Proxy and a transparent Proxy both reach and are refused by
+the gate; a Proxy at an unrecognized position is refused earlier by the strict schema; and
+a Proxy's fields cannot occupy a primitive request position, so no Proxy placement in the
+input graph both survives the schema and escapes the gate. Ordinary valid demo and
+institutional requests, and genuine `Object.create(null)` requests and scopes, remain
+accepted; the one-read snapshot semantics, deep-frozen deterministic projections, and
+no-mutation-after-failure behavior are unchanged. Revoked Proxies and Proxies whose traps
+throw or violate Proxy invariants are refused, as are Proxies returning accessor,
+non-enumerable, or symbol-keyed descriptors — the last three by the existing snapshot
+checks, ahead of the gate.
+
+Because the request boundary now depends on the host `structuredClone`, which the jsdom
+test sandbox does not provide, the four D2A suites that exercise `project` or
+`parseOverlayProjectionRequest` (`institutional-request-boundary`,
+`institutional-serialization`, `institutional-isolation`, `institutional-fixture-seal`) run
+under the Node test environment, where the pinned Node 20 runtime supplies it.
 
 ## 7. Requirements for a later migration phase
 
