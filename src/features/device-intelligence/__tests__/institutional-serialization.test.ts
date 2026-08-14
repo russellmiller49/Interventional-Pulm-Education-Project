@@ -1,10 +1,3 @@
-/**
- * @jest-environment node
- *
- * The request boundary's Proxy-rejection gate uses the host `structuredClone`, which the
- * jsdom test sandbox does not provide; this suite exercises `adapter.project`, so it runs
- * in the Node environment where `structuredClone` is present.
- */
 import {
   DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE,
   type InstitutionScopeIdentity,
@@ -38,6 +31,12 @@ import {
 const PROJECTION_TIMESTAMP = '2026-08-12T12:00:00.000Z'
 const adapter = createFictionalInstitutionalOverlayReadAdapter()
 
+// D2A-C4: the public boundary admits serialized JSON text only. These suites exercise the
+// projection *semantics* with valid request objects, so they serialize each request and call
+// the JSON entry point. The request object itself never reaches the adapter; a request with a
+// bad timestamp or scope is still refused by the schema, not by the string-type check.
+const projectViaJson = (request: unknown) => adapter.projectJson(JSON.stringify(request))
+
 const [eastDataset, westDataset, summitDataset] =
   FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.institutionalDatasets
 const demoDataset = FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE.demoDatasets[0]
@@ -46,7 +45,7 @@ function projectInstitution(
   scope: InstitutionScopeIdentity,
   accessClassification: InstitutionalAccessClassification = 'institution_restricted',
 ) {
-  return adapter.project({
+  return projectViaJson({
     contextKind: 'institutional',
     scope,
     accessClassification,
@@ -55,7 +54,7 @@ function projectInstitution(
 }
 
 function projectDemo() {
-  return adapter.project({
+  return projectViaJson({
     contextKind: 'demo',
     demoContextId: FICTIONAL_DEMO_CONTEXT.demoContextId,
     accessClassification: 'public_unlisted',
@@ -323,7 +322,7 @@ describe('D2A serialization scans — no identifier crosses a scope boundary', (
   it('names no inaccessible scope in a refusal error', () => {
     let message = ''
     try {
-      adapter.project({
+      projectViaJson({
         contextKind: 'institutional',
         scope: FICTIONAL_HARBOR_EAST_SCOPE,
         accessClassification: 'public_unlisted',
@@ -356,7 +355,7 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
 
   it('refuses a projection request whose timestamp cannot resolve to an instant', () => {
     expect(() =>
-      adapter.project({
+      projectViaJson({
         contextKind: 'institutional',
         scope: FICTIONAL_HARBOR_EAST_SCOPE,
         accessClassification: 'institution_restricted',
@@ -364,7 +363,7 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
       }),
     ).toThrow()
     expect(() =>
-      adapter.project({
+      projectViaJson({
         contextKind: 'demo',
         demoContextId: FICTIONAL_DEMO_CONTEXT.demoContextId,
         accessClassification: 'public_unlisted',
@@ -381,7 +380,7 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
       '2026-08-12 12:00:00Z', // missing separator
     ]) {
       expect(() =>
-        adapter.project({
+        projectViaJson({
           contextKind: 'institutional',
           scope: FICTIONAL_HARBOR_EAST_SCOPE,
           accessClassification: 'institution_restricted',
@@ -392,7 +391,7 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
   })
 
   it('treats an equivalent valid offset as the same instant', () => {
-    const projection = adapter.project({
+    const projection = projectViaJson({
       contextKind: 'institutional',
       scope: FICTIONAL_HARBOR_EAST_SCOPE,
       accessClassification: 'institution_restricted',
@@ -404,7 +403,7 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
   it('still refuses a real timestamp that predates its evidence', () => {
     // the control: the guard was never merely disabled, it rejects for the right reason
     expect(() =>
-      adapter.project({
+      projectViaJson({
         contextKind: 'institutional',
         scope: FICTIONAL_HARBOR_EAST_SCOPE,
         accessClassification: 'institution_restricted',
@@ -412,7 +411,7 @@ describe('D2A projection-time guard fails closed on an unreadable instant', () =
       }),
     ).toThrow()
     expect(() =>
-      adapter.project({
+      projectViaJson({
         contextKind: 'institutional',
         scope: FICTIONAL_HARBOR_EAST_SCOPE,
         accessClassification: 'institution_restricted',

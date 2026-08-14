@@ -8,7 +8,7 @@ import {
   fictionalInstitutionalOverlayBundleSchema,
   institutionScopeKey,
   institutionalOverlayProjectionSchema,
-  parseOverlayProjectionRequest,
+  parseOverlayProjectionRequestJson,
   sameInstitutionScope,
   type DemoOverlayDataset,
   type FictionalInstitutionalOverlayBundle,
@@ -34,10 +34,16 @@ import { FICTIONAL_INSTITUTIONAL_OVERLAY_BUNDLE } from './fictional-fixtures'
  * user-metadata, or institutional-inference path, and — since the D2A Codex correction —
  * no runtime dataset input of any kind: the canonical fixture is imported directly, so no
  * caller can present a real-shaped bundle as fictional by labeling it.
+ *
+ * The single operation is `projectJson`, which admits a serialized JSON **string** request
+ * and nothing else. It does not accept a caller-supplied request object: object admission was
+ * replaced by the serialized boundary in {@link parseOverlayProjectionRequestJson} because an
+ * object-inspection gate cannot make hostile same-realm code inert. A future route must hand
+ * this method the raw request text — never `await request.json()` and then some object parser.
  */
 
 export interface FictionalInstitutionalOverlayReadAdapter {
-  readonly project: (request: unknown) => OverlayProjection
+  readonly projectJson: (requestJson: unknown) => OverlayProjection
 }
 
 export function diagnosticVisibleInProjection(
@@ -350,8 +356,8 @@ function buildSealedAdapter(): FictionalInstitutionalOverlayReadAdapter {
   assertFictionalCorpusProjectionSafe(bundle)
 
   const adapter: FictionalInstitutionalOverlayReadAdapter = {
-    project(requestInput: unknown): OverlayProjection {
-      const request = parseOverlayProjectionRequest(requestInput)
+    projectJson(requestJson: unknown): OverlayProjection {
+      const request = parseOverlayProjectionRequestJson(requestJson)
 
       if (request.contextKind === 'demo') {
         const configured = bundle.demoDatasets.find(

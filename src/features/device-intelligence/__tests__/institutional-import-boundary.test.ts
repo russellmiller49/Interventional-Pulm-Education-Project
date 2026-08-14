@@ -81,4 +81,35 @@ describe('D2A runtime import boundary', () => {
     ])
     expect(source).toMatch(/export function createFictionalInstitutionalOverlayReadAdapter\(\)/)
   })
+
+  it('exposes only the serialized JSON request boundary — no object-input parser survives', async () => {
+    const contractsSource = await fs.readFile(path.join(INSTITUTIONAL_DIR, 'contracts.ts'), 'utf8')
+    const adapterSource = await fs.readFile(
+      path.join(INSTITUTIONAL_DIR, 'fictional-readonly-adapter.ts'),
+      'utf8',
+    )
+
+    // The one public request boundary is the JSON parser; the object parser is gone.
+    expect(contractsSource).toMatch(/export function parseOverlayProjectionRequestJson\(/)
+    expect(contractsSource).not.toMatch(/export function parseOverlayProjectionRequest\b(?!Json)/)
+
+    // The object-reading request schemas are internal, not exported admission paths.
+    expect(contractsSource).not.toMatch(
+      /export const (demo|institutional)?[Pp]rojectionRequestSchema/,
+    )
+    expect(contractsSource).not.toMatch(/export const overlayProjectionRequestSchema/)
+
+    // The removed executable-object gate leaves no residue.
+    expect(contractsSource).not.toContain('plainOwnDataCopy')
+    expect(contractsSource).not.toContain('captureCloneIntrinsic')
+    expect(contractsSource).not.toContain('assertNonProxyStructuredData')
+    expect(contractsSource).not.toMatch(/\bstructuredClone\s*\(/)
+
+    // The adapter interface admits serialized JSON text, not a caller-supplied object.
+    expect(adapterSource).toMatch(
+      /readonly projectJson: \(requestJson: unknown\) => OverlayProjection/,
+    )
+    expect(adapterSource).not.toMatch(/readonly project:\s*\(/)
+    expect(adapterSource).not.toMatch(/\bproject\(requestInput/)
+  })
 })

@@ -1,10 +1,3 @@
-/**
- * @jest-environment node
- *
- * The request boundary's Proxy-rejection gate uses the host `structuredClone`, which the
- * jsdom test sandbox does not provide; this suite exercises `adapter.project`, so it runs
- * in the Node environment where `structuredClone` is present.
- */
 import * as adapterModule from '@/features/device-intelligence/institutional/fictional-readonly-adapter'
 import {
   assertFictionalCorpusProjectionSafe,
@@ -136,7 +129,7 @@ describe('D2A-C2 — the fictional corpus is sealed', () => {
     const adapter = createFictionalInstitutionalOverlayReadAdapter()
     expect(createFictionalInstitutionalOverlayReadAdapter()).toBe(adapter)
     expect(Object.isFrozen(adapter)).toBe(true)
-    expect(Object.keys(adapter)).toEqual(['project'])
+    expect(Object.keys(adapter)).toEqual(['projectJson'])
   })
 
   it('keeps the canonical fixture itself deeply frozen', () => {
@@ -152,7 +145,10 @@ describe('D2A-C2 — the fictional corpus is sealed', () => {
 
   it('refuses the real-shaped bundle as a request too', () => {
     const adapter = createFictionalInstitutionalOverlayReadAdapter()
-    expect(() => adapter.project(realLikeBundle())).toThrow()
+    // As a live object it is refused by the serialized boundary's string check; even as
+    // serialized JSON text it is refused, because it is not a projection request.
+    expect(() => adapter.projectJson(realLikeBundle())).toThrow()
+    expect(() => adapter.projectJson(JSON.stringify(realLikeBundle()))).toThrow()
   })
 
   it('rejects the real-shaped bundle at the schema even with the fictional label', () => {

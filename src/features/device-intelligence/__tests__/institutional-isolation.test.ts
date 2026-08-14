@@ -1,10 +1,3 @@
-/**
- * @jest-environment node
- *
- * The request boundary's Proxy-rejection gate uses the host `structuredClone`, which the
- * jsdom test sandbox does not provide; this suite exercises `adapter.project`, so it runs
- * in the Node environment where `structuredClone` is present.
- */
 import {
   DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE,
   type DemoOverlayProjection,
@@ -28,11 +21,16 @@ import {
 const PROJECTION_TIMESTAMP = '2026-08-12T12:00:00.000Z'
 const adapter = createFictionalInstitutionalOverlayReadAdapter()
 
+// D2A-C4: the public boundary admits serialized JSON text only. These suites exercise the
+// projection semantics with valid request objects, so they serialize each request and call
+// the JSON entry point rather than passing a live object.
+const projectViaJson = (request: unknown) => adapter.projectJson(JSON.stringify(request))
+
 function projectInstitution(
   scope: InstitutionScopeIdentity,
   accessClassification: InstitutionalAccessClassification = 'institution_restricted',
 ) {
-  const projection = adapter.project({
+  const projection = projectViaJson({
     contextKind: 'institutional',
     scope,
     accessClassification,
@@ -45,7 +43,7 @@ function projectInstitution(
 }
 
 function projectDemo() {
-  const projection = adapter.project({
+  const projection = projectViaJson({
     contextKind: 'demo',
     demoContextId: FICTIONAL_DEMO_CONTEXT.demoContextId,
     accessClassification: 'public_unlisted',
@@ -123,7 +121,7 @@ describe('D2A fictional adapter isolation and no-leak behavior', () => {
 
   it('refuses an institutional request for a public-unlisted projection', () => {
     expect(() =>
-      adapter.project({
+      projectViaJson({
         contextKind: 'institutional',
         scope: FICTIONAL_HARBOR_EAST_SCOPE,
         accessClassification: 'public_unlisted',
@@ -263,13 +261,13 @@ describe('D2A fictional adapter isolation and no-leak behavior', () => {
     expect(Object.isFrozen(first)).toBe(true)
     expect(Object.isFrozen(first.dataset)).toBe(true)
     expect(Object.isFrozen(first.dataset.capabilities.records)).toBe(true)
-    expect(Object.keys(adapter)).toEqual(['project'])
+    expect(Object.keys(adapter)).toEqual(['projectJson'])
     expect(Object.isFrozen(adapter)).toBe(true)
   })
 
   it('rejects evidence or diagnostics from after the projection timestamp', () => {
     expect(() =>
-      adapter.project({
+      projectViaJson({
         contextKind: 'institutional',
         scope: FICTIONAL_HARBOR_EAST_SCOPE,
         accessClassification: 'institution_restricted',

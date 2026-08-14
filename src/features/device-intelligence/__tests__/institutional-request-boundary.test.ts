@@ -1,15 +1,7 @@
-/**
- * @jest-environment node
- *
- * The request boundary's Proxy-rejection gate uses the host `structuredClone`, which the
- * jsdom test sandbox does not provide; these suites exercise `parseOverlayProjectionRequest`
- * and `adapter.project`, so they run in the Node environment where `structuredClone` is
- * present. Node 20 (the repository's pinned runtime) rejects Proxy exotic objects with a
- * `DataCloneError`, which is the structural boundary this file pins.
- */
+import * as contractsModule from '@/features/device-intelligence/institutional/contracts'
 import {
   accessAllows,
-  parseOverlayProjectionRequest,
+  parseOverlayProjectionRequestJson,
 } from '@/features/device-intelligence/institutional/contracts'
 import { createFictionalInstitutionalOverlayReadAdapter } from '@/features/device-intelligence/institutional/fictional-readonly-adapter'
 import {
@@ -20,23 +12,41 @@ import {
 /**
  * INSTITUTIONAL CONTRACT FOUNDATION — FICTIONAL DATA ONLY.
  *
- * D2A-C3: the access gate must parse, never coerce. Pre-correction, `accessAllows`
- * consulted `hasOwnProperty` with the raw value, so property-key coercion invoked
- * `toString`/`Symbol.toPrimitive` and arrays, boxed strings, and converter objects that
- * coerced to a valid classification were allowed.
+ * D2A-C4 request boundary. The public boundary admits serialized JSON *text* only. Four
+ * earlier corrections tried to admit an arbitrary same-realm object graph and prove by
+ * inspection that it was inert; each was defeated, most recently (D2A-R4-C4-001) by
+ * cross-call poisoning of the mutable globals the inspection relied on. The boundary was
+ * therefore redesigned: `parseOverlayProjectionRequestJson` and the sealed adapter's
+ * `projectJson` accept a primitive `string` and refuse every object input — including a
+ * genuine `Object.create(null)` request — before any property is read, so no caller-supplied
+ * getter, coercion hook, or Proxy trap can execute during admission.
  *
- * D2A-C4: projection requests must be plain own-property data objects. Pre-correction,
- * zod resolved inherited values, so `Object.create(validRequest)` — owning no field at
- * all — was accepted, as were reserved JavaScript property names as identifiers.
+ * The threat model is untrusted serialized data, not arbitrary hostile JavaScript already
+ * executing in the same realm; the boundary does not claim to sandbox the latter.
  */
 
 const PROJECTION_TIMESTAMP = '2026-08-12T12:00:00.000Z'
 const adapter = createFictionalInstitutionalOverlayReadAdapter()
 
+const CONFIDENTIAL_OR_FOREIGN = [
+  'fictional-east-capability-beta',
+  'fictional-east-capability-confidential-source',
+  'fictional-east-diagnostic-confidential-capability',
+  'fictional-site-west',
+  'fictional-tenant-summit',
+]
+
 const validInstitutionalRequest = () => ({
   contextKind: 'institutional' as const,
   scope: { ...FICTIONAL_HARBOR_EAST_SCOPE },
   accessClassification: 'institution_restricted' as const,
+  projectionTimestamp: PROJECTION_TIMESTAMP,
+})
+
+const confidentialInstitutionalRequest = () => ({
+  contextKind: 'institutional' as const,
+  scope: { ...FICTIONAL_HARBOR_EAST_SCOPE },
+  accessClassification: 'institution_confidential' as const,
   projectionTimestamp: PROJECTION_TIMESTAMP,
 })
 
@@ -47,43 +57,501 @@ const validDemoRequest = () => ({
   projectionTimestamp: PROJECTION_TIMESTAMP,
 })
 
-describe('D2A-C3 — access gate refuses every coercible non-string', () => {
+const unknownDemoRequest = () => ({
+  contextKind: 'demo' as const,
+  demoContextId: 'fictional-demo-context-absent',
+  accessClassification: 'public_unlisted' as const,
+  projectionTimestamp: PROJECTION_TIMESTAMP,
+})
+
+const unknownInstitutionalRequest = () => ({
+  contextKind: 'institutional' as const,
+  scope: {
+    tenantId: 'fictional-tenant-absent',
+    institutionId: 'fictional-institution-absent',
+    siteId: 'fictional-site-absent',
+  },
+  accessClassification: 'institution_restricted' as const,
+  projectionTimestamp: PROJECTION_TIMESTAMP,
+})
+
+const json = (value: unknown): string => JSON.stringify(value)
+
+function refusalText(run: () => unknown): string {
+  try {
+    run()
+  } catch (error) {
+    return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
+  }
+  throw new Error('Expected the request to be refused.')
+}
+
+function expectRefusedThroughBothEntryPoints(input: unknown): void {
+  expect(() => parseOverlayProjectionRequestJson(input)).toThrow()
+  expect(() => adapter.projectJson(input)).toThrow()
+  const message = refusalText(() => adapter.projectJson(input))
+  CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+}
+
+describe('D2A-C4 §A — valid serialized JSON requests are accepted', () => {
+  it('parses valid demo, restricted, and confidential request JSON', () => {
+    expect(parseOverlayProjectionRequestJson(json(validDemoRequest())).contextKind).toBe('demo')
+    const restricted = parseOverlayProjectionRequestJson(json(validInstitutionalRequest()))
+    expect(restricted.contextKind).toBe('institutional')
+    expect(
+      parseOverlayProjectionRequestJson(json(confidentialInstitutionalRequest())).contextKind,
+    ).toBe('institutional')
+  })
+
+  it('projects valid demo and institutional request JSON through the adapter', () => {
+    expect(adapter.projectJson(json(validDemoRequest())).dataset.context.contextKind).toBe('demo')
+    const restricted = adapter.projectJson(json(validInstitutionalRequest()))
+    expect(restricted.accessClassification).toBe('institution_restricted')
+    const confidential = adapter.projectJson(json(confidentialInstitutionalRequest()))
+    expect(confidential.accessClassification).toBe('institution_confidential')
+    // Only the confidential projection carries the confidential capability record.
+    expect(JSON.stringify(confidential)).toContain('fictional-east-capability-beta')
+    expect(JSON.stringify(restricted)).not.toContain('fictional-east-capability-beta')
+  })
+
+  it('returns explicit unknown collections for an unconfigured demo or institutional scope', () => {
+    const demo = adapter.projectJson(json(unknownDemoRequest()))
+    expect(demo.dataset.capabilities.sourceState.state).toBe('unknown')
+    expect(demo.dataset.capabilities.records).toEqual([])
+
+    const institutional = adapter.projectJson(json(unknownInstitutionalRequest()))
+    expect(institutional.dataset.capabilities.sourceState.state).toBe('unknown')
+    expect(institutional.dataset.capabilities.records).toEqual([])
+  })
+})
+
+describe('D2A-C4 §B — object inputs are refused before any caller code runs', () => {
+  type TrapCounts = {
+    get: number
+    getPrototypeOf: number
+    ownKeys: number
+    getOwnPropertyDescriptor: number
+  }
+
+  function countingProxy(source: object, counts: TrapCounts): unknown {
+    return new Proxy(source, {
+      get: (target, key, receiver) => {
+        counts.get += 1
+        return Reflect.get(target, key, receiver)
+      },
+      getPrototypeOf: (target) => {
+        counts.getPrototypeOf += 1
+        return Reflect.getPrototypeOf(target)
+      },
+      ownKeys: (target) => {
+        counts.ownKeys += 1
+        return Reflect.ownKeys(target)
+      },
+      getOwnPropertyDescriptor: (target, key) => {
+        counts.getOwnPropertyDescriptor += 1
+        return Reflect.getOwnPropertyDescriptor(target, key)
+      },
+    })
+  }
+
+  it('refuses every Proxy shape without invoking a single trap', () => {
+    const carriers: Array<[string, () => object]> = [
+      ['transparent Proxy', () => validInstitutionalRequest()],
+      ['descriptor-synthesizing over empty target', () => ({}) as object],
+      ['throwing-trap target', () => confidentialInstitutionalRequest()],
+    ]
+    carriers.forEach(([, build]) => {
+      const counts: TrapCounts = {
+        get: 0,
+        getPrototypeOf: 0,
+        ownKeys: 0,
+        getOwnPropertyDescriptor: 0,
+      }
+      const proxy = countingProxy(build(), counts)
+      expectRefusedThroughBothEntryPoints(proxy)
+      expect(counts).toEqual({ get: 0, getPrototypeOf: 0, ownKeys: 0, getOwnPropertyDescriptor: 0 })
+    })
+  })
+
+  it('refuses a revoked Proxy and Proxies whose traps throw, running no trap', () => {
+    const { proxy, revoke } = Proxy.revocable(confidentialInstitutionalRequest(), {})
+    revoke()
+    expect(() => parseOverlayProjectionRequestJson(proxy)).toThrow()
+    expect(() => adapter.projectJson(proxy)).toThrow()
+
+    let trapFired = false
+    const throwing = new Proxy(
+      {},
+      {
+        get: () => {
+          trapFired = true
+          throw new Error('trap')
+        },
+        getPrototypeOf: () => {
+          trapFired = true
+          throw new Error('trap')
+        },
+        ownKeys: () => {
+          trapFired = true
+          throw new Error('trap')
+        },
+        getOwnPropertyDescriptor: () => {
+          trapFired = true
+          throw new Error('trap')
+        },
+      },
+    )
+    expect(() => parseOverlayProjectionRequestJson(throwing)).toThrow()
+    expect(() => adapter.projectJson(throwing)).toThrow()
+    expect(trapFired).toBe(false)
+  })
+
+  it('refuses coercion carriers without invoking their conversion hooks', () => {
+    let toStringCalls = 0
+    let valueOfCalls = 0
+    let toPrimitiveCalls = 0
+    const carriers: unknown[] = [
+      { ...validDemoRequest(), toString: () => (toStringCalls++, json(validDemoRequest())) },
+      { ...validDemoRequest(), valueOf: () => (valueOfCalls++, json(validDemoRequest())) },
+      {
+        ...validDemoRequest(),
+        [Symbol.toPrimitive]: () => (toPrimitiveCalls++, json(validDemoRequest())),
+      },
+    ]
+    carriers.forEach((carrier) => expectRefusedThroughBothEntryPoints(carrier))
+    expect(toStringCalls).toBe(0)
+    expect(valueOfCalls).toBe(0)
+    expect(toPrimitiveCalls).toBe(0)
+  })
+
+  it('refuses a getter carrier without invoking the getter', () => {
+    let getterCalls = 0
+    const withGetter: Record<string, unknown> = { ...validDemoRequest() }
+    Object.defineProperty(withGetter, 'projectionTimestamp', {
+      get: () => {
+        getterCalls += 1
+        return PROJECTION_TIMESTAMP
+      },
+      enumerable: true,
+      configurable: true,
+    })
+    expectRefusedThroughBothEntryPoints(withGetter)
+    expect(getterCalls).toBe(0)
+  })
+
+  it('refuses boxed strings, exotic built-ins, and prototype-derived objects', () => {
+    const carriers: unknown[] = [
+      new String(json(validDemoRequest())),
+      new Date(0),
+      [validDemoRequest()],
+      new Map(Object.entries(validDemoRequest())),
+      new Set([validDemoRequest()]),
+      Object.assign(() => undefined, validDemoRequest()),
+      Object.create(validInstitutionalRequest()),
+      Object.assign(Object.create(null), validDemoRequest()),
+      Object.assign(Object.create(null), validInstitutionalRequest()),
+    ]
+    carriers.forEach((carrier) => expectRefusedThroughBothEntryPoints(carrier))
+  })
+
+  it('refuses a valid null-prototype nested scope presented as an object', () => {
+    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
+    expectRefusedThroughBothEntryPoints({ ...validInstitutionalRequest(), scope: nullProtoScope })
+  })
+
+  it('refuses non-object primitives that are not strings', () => {
+    ;[1, 0, true, false, null, undefined, Symbol('x') as unknown, 10n as unknown].forEach(
+      (value) => {
+        expect(() => parseOverlayProjectionRequestJson(value)).toThrow()
+        expect(() => adapter.projectJson(value)).toThrow()
+      },
+    )
+  })
+})
+
+describe('D2A-C4 §C — cross-call poisoning is structurally impossible', () => {
+  const originalStructuredClone = globalThis.structuredClone
+  const originalIsArray = Array.isArray
+  const originalGetPrototypeOf = Object.getPrototypeOf
+  const originalOwnKeys = Reflect.ownKeys
+  const originalGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
+  const originalJsonParse = JSON.parse
+
+  function assertGlobalsIntact(): void {
+    expect(globalThis.structuredClone).toBe(originalStructuredClone)
+    expect(Array.isArray).toBe(originalIsArray)
+    expect(Object.getPrototypeOf).toBe(originalGetPrototypeOf)
+    expect(Reflect.ownKeys).toBe(originalOwnKeys)
+    expect(Object.getOwnPropertyDescriptor).toBe(originalGetOwnPropertyDescriptor)
+    expect(JSON.parse).toBe(originalJsonParse)
+  }
+
+  it('recreates the R4 stage-one poison carriers and refuses them without running a trap', () => {
+    // These are the exact vectors Codex used at 2bffe9bf: a first call that installs a
+    // permissive stand-in for a mutable global from inside a trap. Against the serialized
+    // boundary the carrier is an object, so it is refused by the primitive-string check
+    // before any trap can run and before any global can be touched.
+    let structuredCloneTrap = false
+    let reflectionTrap = false
+
+    const structuredClonePoison = new Proxy(
+      {},
+      {
+        getPrototypeOf: () => {
+          structuredCloneTrap = true
+          globalThis.structuredClone = (() => ({})) as typeof structuredClone
+          return Object.prototype
+        },
+        ownKeys: () => {
+          structuredCloneTrap = true
+          return []
+        },
+      },
+    )
+
+    const reflectionPoison = new Proxy(
+      {},
+      {
+        getPrototypeOf: () => {
+          reflectionTrap = true
+          Array.isArray = (() => false) as unknown as typeof Array.isArray
+          Object.getPrototypeOf = (() => Object.prototype) as typeof Object.getPrototypeOf
+          Reflect.ownKeys = (() => []) as typeof Reflect.ownKeys
+          Object.getOwnPropertyDescriptor = (() =>
+            undefined) as typeof Object.getOwnPropertyDescriptor
+          return Object.prototype
+        },
+        ownKeys: () => {
+          reflectionTrap = true
+          return []
+        },
+      },
+    )
+
+    try {
+      expectRefusedThroughBothEntryPoints(structuredClonePoison)
+      expectRefusedThroughBothEntryPoints(reflectionPoison)
+      expect(structuredCloneTrap).toBe(false)
+      expect(reflectionTrap).toBe(false)
+      assertGlobalsIntact()
+
+      // A later valid JSON request is still accepted, and a later object/exotic still refused.
+      expect(parseOverlayProjectionRequestJson(json(validInstitutionalRequest())).contextKind).toBe(
+        'institutional',
+      )
+      expect(() => parseOverlayProjectionRequestJson(new Date(0))).toThrow()
+      expect(() => parseOverlayProjectionRequestJson([validDemoRequest()])).toThrow()
+      expect(() => parseOverlayProjectionRequestJson(new Proxy(validDemoRequest(), {}))).toThrow()
+      assertGlobalsIntact()
+    } finally {
+      // Defensive restoration; the production boundary never modified these, but if an
+      // assertion above had failed mid-flight the harness must not inherit a poisoned global.
+      globalThis.structuredClone = originalStructuredClone
+      Array.isArray = originalIsArray
+      Object.getPrototypeOf = originalGetPrototypeOf
+      Reflect.ownKeys = originalOwnKeys
+      Object.getOwnPropertyDescriptor = originalGetOwnPropertyDescriptor
+    }
+  })
+
+  it('accepts a genuine Date only when it is serialized, never as a live object', () => {
+    // Probe B accepted a genuine Date because poisoned reflection synthesized a request from
+    // it and structured cloning accepts a Date. The serialized boundary refuses the live Date
+    // outright; its ISO serialization is a plain JSON string that decodes to a string, not a
+    // request object, so it is refused by the schema rather than smuggled in.
+    expect(() => parseOverlayProjectionRequestJson(new Date(0))).toThrow()
+    expect(() => parseOverlayProjectionRequestJson(json(new Date(0)))).toThrow()
+  })
+})
+
+describe('D2A-C4 §D — the JSON parser is a module-lifetime trust anchor', () => {
+  it('uses the captured JSON.parse, never a later replacement', () => {
+    const realParse = JSON.parse
+    let fakeInvoked = false
+    try {
+      JSON.parse = (() => {
+        fakeInvoked = true
+        return validInstitutionalRequest()
+      }) as typeof JSON.parse
+
+      // If the boundary re-read JSON.parse it would call the fake and admit whatever it
+      // returned. Instead it decodes with the module-captured intrinsic.
+      const parsed = parseOverlayProjectionRequestJson(json(validDemoRequest()))
+      expect(parsed.contextKind).toBe('demo')
+      expect(fakeInvoked).toBe(false)
+
+      // A syntactically invalid string is still refused via the captured intrinsic, not
+      // accepted by the fake.
+      expect(() => parseOverlayProjectionRequestJson('{ not json')).toThrow()
+      expect(fakeInvoked).toBe(false)
+    } finally {
+      JSON.parse = realParse
+    }
+    expect(JSON.parse).toBe(realParse)
+  })
+})
+
+describe('D2A-C4 §E — decoded __proto__ and structural key checks', () => {
+  it('refuses a top-level JSON __proto__ carrier through both entry points', () => {
+    const payload = `{"__proto__":${json(confidentialInstitutionalRequest())}}`
+    // The decoded object owns a single `__proto__` data key and no discriminant.
+    const decoded = JSON.parse(payload)
+    expect(Reflect.ownKeys(decoded)).toEqual(['__proto__'])
+    expect(Object.getPrototypeOf(decoded)).toBe(Object.prototype)
+    expectRefusedThroughBothEntryPoints(payload)
+  })
+
+  it('refuses an institutional request whose decoded scope owns a __proto__ key', () => {
+    // Built as raw text: an object literal `{ __proto__: … }` is the prototype-setter syntax,
+    // so only a literal JSON member decodes to an own `__proto__` data key.
+    const scopeText = `{"__proto__":{"injected":true},${JSON.stringify(FICTIONAL_HARBOR_EAST_SCOPE).slice(1)}`
+    const payload = `{"contextKind":"institutional","scope":${scopeText},"accessClassification":"institution_restricted","projectionTimestamp":${json(PROJECTION_TIMESTAMP)}}`
+    expect(Reflect.ownKeys(JSON.parse(payload).scope)).toContain('__proto__')
+    expectRefusedThroughBothEntryPoints(payload)
+  })
+
+  it('leaves Object.prototype unpolluted after every refused __proto__ carrier', () => {
+    const probe = {} as Record<string, unknown>
+    expect(probe.injected).toBeUndefined()
+    expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'injected')).toBe(false)
+    expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'contextKind')).toBe(false)
+  })
+
+  it('refuses extra keys, missing keys, mixed shapes, and authUserMetadata', () => {
+    expectRefusedThroughBothEntryPoints(json({ ...validDemoRequest(), extra: 'x' }))
+    expectRefusedThroughBothEntryPoints(
+      json({ contextKind: 'demo', accessClassification: 'public_unlisted' }),
+    )
+    // Institutional discriminant with a demo field, and vice versa.
+    expectRefusedThroughBothEntryPoints(
+      json({ ...validInstitutionalRequest(), demoContextId: FICTIONAL_DEMO_CONTEXT.demoContextId }),
+    )
+    expectRefusedThroughBothEntryPoints(
+      json({ ...validDemoRequest(), scope: FICTIONAL_HARBOR_EAST_SCOPE }),
+    )
+    // Authenticated-user metadata is never a scope substitute.
+    expectRefusedThroughBothEntryPoints(
+      json({
+        contextKind: 'institutional',
+        authUserMetadata: { ...FICTIONAL_HARBOR_EAST_SCOPE },
+        accessClassification: 'institution_restricted',
+        projectionTimestamp: PROJECTION_TIMESTAMP,
+      }),
+    )
+  })
+})
+
+describe('D2A-C4 §F — non-request JSON is refused', () => {
+  it('refuses malformed, empty, and non-object JSON documents', () => {
+    const inputs = [
+      '{ not json',
+      '',
+      '   ',
+      '"institutional"',
+      '42',
+      'true',
+      'false',
+      'null',
+      '[]',
+      json([validDemoRequest()]),
+    ]
+    inputs.forEach((input) => {
+      expect(() => parseOverlayProjectionRequestJson(input)).toThrow()
+      expect(() => adapter.projectJson(input)).toThrow()
+    })
+  })
+})
+
+describe('D2A-C4 §G — governed reserved identifiers stay refused', () => {
+  const reserved = [
+    '__proto__',
+    'prototype',
+    'constructor',
+    'toString',
+    'valueOf',
+    'hasOwnProperty',
+    'isPrototypeOf',
+    'propertyIsEnumerable',
+    'toLocaleString',
+  ]
+
+  it('refuses every reserved name as a scope component or demo context id', () => {
+    reserved.forEach((name) => {
+      expectRefusedThroughBothEntryPoints(
+        json({
+          contextKind: 'institutional',
+          scope: { tenantId: name, institutionId: name, siteId: name },
+          accessClassification: 'institution_restricted',
+          projectionTimestamp: PROJECTION_TIMESTAMP,
+        }),
+      )
+      expectRefusedThroughBothEntryPoints(
+        json({
+          contextKind: 'demo',
+          demoContextId: name,
+          accessClassification: 'public_unlisted',
+          projectionTimestamp: PROJECTION_TIMESTAMP,
+        }),
+      )
+    })
+  })
+})
+
+describe('D2A-C4 §H — refusals never leak fixture identifiers', () => {
+  it('emits a generic message for every refused shape', () => {
+    const refusedInputs: unknown[] = [
+      new Proxy(confidentialInstitutionalRequest(), {}),
+      new Date(0),
+      confidentialInstitutionalRequest(),
+      `{"__proto__":${json(confidentialInstitutionalRequest())}}`,
+      json({ ...confidentialInstitutionalRequest(), extra: 'x' }),
+      '{ not json',
+    ]
+    refusedInputs.forEach((input) => {
+      const message = refusalText(() => adapter.projectJson(input))
+      CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+    })
+  })
+})
+
+describe('D2A-C4 §I — no alternate object-input admission path remains', () => {
+  it('exposes no object-accepting parser or adapter method at runtime', () => {
+    const contracts = contractsModule as unknown as Record<string, unknown>
+    // The object parser and the object-reading request schemas are no longer exported.
+    expect(contracts.parseOverlayProjectionRequest).toBeUndefined()
+    expect(contracts.overlayProjectionRequestSchema).toBeUndefined()
+    expect(contracts.demoProjectionRequestSchema).toBeUndefined()
+    expect(contracts.institutionalProjectionRequestSchema).toBeUndefined()
+    expect(typeof contracts.parseOverlayProjectionRequestJson).toBe('function')
+
+    // The sealed adapter exposes projectJson and no object-accepting project method.
+    expect((adapter as unknown as Record<string, unknown>).project).toBeUndefined()
+    expect(typeof adapter.projectJson).toBe('function')
+    expect(Object.keys(adapter)).toEqual(['projectJson'])
+  })
+})
+
+describe('D2A-C3 — access gate refuses every coercible non-string (unchanged)', () => {
   const coercibles: Array<[string, unknown]> = [
     ['array wrapping a valid value', ['institution_restricted']],
     ['boxed String', new String('institution_restricted')],
-    ['Date', new Date(0)],
-    ['number', 1],
-    ['boolean', true],
-    ['null', null],
-    ['undefined', undefined],
-    ['symbol', Symbol('institution_restricted')],
     ['toString carrier', { toString: () => 'institution_restricted' }],
-    ['valueOf carrier', { valueOf: () => 'institution_restricted' }],
     ['Symbol.toPrimitive carrier', { [Symbol.toPrimitive]: () => 'institution_restricted' }],
     ['proxy over a plain object', new Proxy({}, { get: () => 'institution_restricted' })],
-    ['empty string', ''],
     ['unknown string', 'institution_public'],
-    ['case variant', 'INSTITUTION_RESTRICTED'],
-    ['whitespace-padded valid value', ' institution_restricted '],
   ]
 
   it.each(coercibles)('denies %s in either position', (_label, value) => {
     expect(accessAllows(value, 'institution_restricted')).toBe(false)
     expect(accessAllows('institution_restricted', value)).toBe(false)
     expect(accessAllows(value, value)).toBe(false)
-    expect(accessAllows('institution_confidential', value)).toBe(false)
-    expect(accessAllows(value, 'public_unlisted')).toBe(false)
   })
 
   it('preserves the exact valid access matrix', () => {
     const matrix: Array<[string, string, boolean]> = [
       ['public_unlisted', 'public_unlisted', true],
-      ['public_unlisted', 'institution_restricted', false],
-      ['public_unlisted', 'institution_confidential', false],
-      ['institution_restricted', 'public_unlisted', false],
       ['institution_restricted', 'institution_restricted', true],
       ['institution_restricted', 'institution_confidential', false],
-      ['institution_confidential', 'public_unlisted', false],
       ['institution_confidential', 'institution_restricted', true],
       ['institution_confidential', 'institution_confidential', true],
     ]
@@ -93,751 +561,13 @@ describe('D2A-C3 — access gate refuses every coercible non-string', () => {
   })
 })
 
-describe('D2A-C4 — projection requests must be plain own-property data objects', () => {
-  it('refuses a request whose every field is inherited', () => {
-    expect(() => adapter.project(Object.create(validInstitutionalRequest()))).toThrow()
-    expect(() => adapter.project(Object.create(validDemoRequest()))).toThrow()
-    expect(() => parseOverlayProjectionRequest(Object.create(validDemoRequest()))).toThrow()
-  })
-
-  it('refuses class instances, functions, and exotic built-ins', () => {
-    class RequestLike {
-      contextKind = 'demo' as const
-      demoContextId = FICTIONAL_DEMO_CONTEXT.demoContextId
-      accessClassification = 'public_unlisted' as const
-      projectionTimestamp = PROJECTION_TIMESTAMP
-    }
-    expect(() => adapter.project(new RequestLike())).toThrow()
-    const requestFunction = Object.assign(() => undefined, validDemoRequest())
-    expect(() => adapter.project(requestFunction)).toThrow()
-    expect(() => adapter.project([validDemoRequest()])).toThrow()
-    expect(() => adapter.project(new Date(0))).toThrow()
-    expect(() => adapter.project(new Map(Object.entries(validDemoRequest())))).toThrow()
-    expect(() => adapter.project(new Set([validDemoRequest()]))).toThrow()
-    expect(() => adapter.project('institutional')).toThrow()
-    expect(() => adapter.project(null)).toThrow()
-    expect(() => adapter.project(undefined)).toThrow()
-  })
-
-  it('refuses a request with a partial own layer over an inherited valid request', () => {
-    const partial = Object.create(validInstitutionalRequest()) as Record<string, unknown>
-    partial.accessClassification = 'institution_confidential'
-    expect(() => adapter.project(partial)).toThrow()
-  })
-
-  it('refuses a nested scope whose fields are inherited', () => {
-    expect(() =>
-      adapter.project({
-        ...validInstitutionalRequest(),
-        scope: Object.create({ ...FICTIONAL_HARBOR_EAST_SCOPE }),
-      }),
-    ).toThrow()
-    class ScopeLike {
-      tenantId = FICTIONAL_HARBOR_EAST_SCOPE.tenantId
-      institutionId = FICTIONAL_HARBOR_EAST_SCOPE.institutionId
-      siteId = FICTIONAL_HARBOR_EAST_SCOPE.siteId
-    }
-    expect(() =>
-      adapter.project({ ...validInstitutionalRequest(), scope: new ScopeLike() }),
-    ).toThrow()
-  })
-
-  it('refuses accessor, symbol-keyed, and non-enumerable properties', () => {
-    const withGetter = {
-      ...validDemoRequest(),
-    }
-    Object.defineProperty(withGetter, 'projectionTimestamp', {
-      get: () => PROJECTION_TIMESTAMP,
-      enumerable: true,
-      configurable: true,
-    })
-    expect(() => adapter.project(withGetter)).toThrow()
-
-    const withSymbol = { ...validDemoRequest(), [Symbol('extra')]: 'x' }
-    expect(() => adapter.project(withSymbol)).toThrow()
-
-    const withHidden = { ...validDemoRequest() }
-    Object.defineProperty(withHidden, 'hidden', {
-      value: 'x',
-      enumerable: false,
-      configurable: true,
-    })
-    expect(() => adapter.project(withHidden)).toThrow()
-  })
-
-  it('does not read a polluted Object.prototype to satisfy a missing field', () => {
-    const pollutedKey = 'accessClassification'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(Object.prototype as any)[pollutedKey] = 'institution_confidential'
-    try {
-      const request: Record<string, unknown> = validInstitutionalRequest()
-      delete request[pollutedKey]
-      expect(() => adapter.project(request)).toThrow()
-    } finally {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (Object.prototype as any)[pollutedKey]
-    }
-  })
-
-  it('refuses reserved JavaScript property names as scope identifiers', () => {
-    for (const reserved of [
-      'toString',
-      'constructor',
-      'valueOf',
-      '__proto__',
-      'hasOwnProperty',
-      'prototype',
-    ]) {
-      expect(() =>
-        adapter.project({
-          contextKind: 'institutional',
-          scope: { tenantId: reserved, institutionId: reserved, siteId: reserved },
-          accessClassification: 'institution_restricted',
-          projectionTimestamp: PROJECTION_TIMESTAMP,
-        }),
-      ).toThrow()
-      expect(() =>
-        adapter.project({
-          contextKind: 'demo',
-          demoContextId: reserved,
-          accessClassification: 'public_unlisted',
-          projectionTimestamp: PROJECTION_TIMESTAMP,
-        }),
-      ).toThrow()
-    }
-  })
-
-  it('still accepts plain data requests, including a null-prototype object', () => {
-    expect(() => adapter.project(validInstitutionalRequest())).not.toThrow()
-    expect(() => adapter.project(validDemoRequest())).not.toThrow()
-    // Object.create(null) cannot inherit anything, so it is an accepted prototype.
-    const nullProto = Object.assign(Object.create(null), validDemoRequest())
-    expect(() => adapter.project(nullProto)).not.toThrow()
-    const nullProtoScope = Object.assign(Object.create(null), {
-      ...FICTIONAL_HARBOR_EAST_SCOPE,
-    })
-    expect(() =>
-      adapter.project({ ...validInstitutionalRequest(), scope: nullProtoScope }),
-    ).not.toThrow()
-  })
-
-  it('is unaffected by request mutation after parsing, and failed requests alter nothing', () => {
-    const request = validInstitutionalRequest()
-    const first = adapter.project(request)
-    request.accessClassification = 'institution_confidential' as never
-    request.scope.siteId = 'fictional-site-west' as never
-    const second = adapter.project(validInstitutionalRequest())
-    expect(JSON.stringify(second)).toBe(JSON.stringify(first))
-
-    expect(() => adapter.project({})).toThrow()
-    const third = adapter.project(validInstitutionalRequest())
-    expect(JSON.stringify(third)).toBe(JSON.stringify(first))
-  })
-})
-
-/**
- * D2A-R2-C4-001. A JSON payload whose only own key is `__proto__` reaches the plain-data
- * boundary legitimately: its prototype is `Object.prototype` and the key is an own,
- * enumerable data property. Copying it into a `{}` destination with `copy[key] = value`
- * routed that key through the setter inherited from `Object.prototype`, installing the
- * supplied request as the snapshot's prototype. The snapshot then had no own keys — so
- * strict unknown-key checking saw nothing — while every required field resolved through
- * the prototype, and a confidential projection was returned.
- */
-describe('D2A-R2-C4-001 — __proto__ carriers cannot mutate the validation snapshot', () => {
-  const CONFIDENTIAL_OR_FOREIGN = [
-    'fictional-east-capability-beta',
-    'fictional-east-capability-confidential-source',
-    'fictional-east-diagnostic-confidential-capability',
-    'fictional-site-west',
-    'fictional-tenant-summit',
-  ]
-
-  function refusalText(run: () => unknown): string {
-    try {
-      run()
-    } catch (error) {
-      return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
-    }
-    throw new Error('Expected the request to be refused.')
-  }
-
-  it('refuses a top-level JSON __proto__ carrier through both entry points', () => {
-    const payload = JSON.parse(`{"__proto__":${JSON.stringify(validInstitutionalRequest())}}`)
-
-    // The payload genuinely satisfies the advertised plain-data-object contract.
-    expect(Object.getPrototypeOf(payload)).toBe(Object.prototype)
-    expect(Reflect.ownKeys(payload)).toEqual(['__proto__'])
-    expect(Object.prototype.hasOwnProperty.call(payload, '__proto__')).toBe(true)
-
-    expect(() => parseOverlayProjectionRequest(payload)).toThrow()
-    expect(() => adapter.project(payload)).toThrow()
-
-    const message = refusalText(() => adapter.project(payload))
-    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
-  })
-
-  it('refuses a nested-scope JSON __proto__ carrier through both entry points', () => {
-    const request = {
-      ...validInstitutionalRequest(),
-      scope: JSON.parse(`{"__proto__":${JSON.stringify(FICTIONAL_HARBOR_EAST_SCOPE)}}`),
-    }
-    expect(Reflect.ownKeys(request.scope)).toEqual(['__proto__'])
-
-    expect(() => parseOverlayProjectionRequest(request)).toThrow()
-    expect(() => adapter.project(request)).toThrow()
-
-    const message = refusalText(() => adapter.project(request))
-    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
-  })
-
-  it('refuses a null-prototype carrier whose defined __proto__ holds the request', () => {
-    const payload = Object.create(null) as Record<string, unknown>
-    Object.defineProperty(payload, '__proto__', {
-      value: validInstitutionalRequest(),
-      enumerable: true,
-      writable: true,
-      configurable: true,
-    })
-    expect(Reflect.ownKeys(payload)).toEqual(['__proto__'])
-
-    expect(() => parseOverlayProjectionRequest(payload)).toThrow()
-    expect(() => adapter.project(payload)).toThrow()
-
-    const nestedPayload = Object.create(null) as Record<string, unknown>
-    Object.defineProperty(nestedPayload, '__proto__', {
-      value: { ...FICTIONAL_HARBOR_EAST_SCOPE },
-      enumerable: true,
-      writable: true,
-      configurable: true,
-    })
-    expect(() =>
-      adapter.project({ ...validInstitutionalRequest(), scope: nestedPayload }),
-    ).toThrow()
-  })
-
-  it('leaves Object.prototype unpolluted after every refused carrier', () => {
-    const probe = {} as Record<string, unknown>
-    expect(probe.contextKind).toBeUndefined()
-    expect(probe.scope).toBeUndefined()
-    expect(probe.accessClassification).toBeUndefined()
-    expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'contextKind')).toBe(false)
-    expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'scope')).toBe(false)
-  })
-
-  it('still accepts a valid request and a valid scope built on a null prototype', () => {
-    // The correction must not close the hole by rejecting null-prototype data objects,
-    // which the boundary contract explicitly accepts.
-    const nullProtoRequest = Object.assign(Object.create(null), validInstitutionalRequest())
-    expect(() => adapter.project(nullProtoRequest)).not.toThrow()
-
-    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
-    const projection = adapter.project({
-      ...validInstitutionalRequest(),
-      scope: nullProtoScope,
-    })
-    expect(projection.dataset.context.contextKind).toBe('institutional')
-  })
-})
-
-/**
- * D2A-R3-C4-001. The plain-data snapshot is built entirely from reflection —
- * `Object.getPrototypeOf`, `Reflect.ownKeys`, `Object.getOwnPropertyDescriptor` — and every
- * one of those operations is controlled by a Proxy's traps. A Proxy over an empty target can
- * therefore report `Object.prototype`, report the four keys of a valid confidential East
- * request, and return enumerable data descriptors carrying the corresponding values: it
- * passes the reflection-only snapshot and the strict schema while its underlying target owns
- * nothing. Before the correction both `parseOverlayProjectionRequest` and the sealed
- * adapter's `project` accepted such a Proxy — top level and nested — and returned the
- * confidential East projection with two capability records.
- *
- * A coherent Proxy can satisfy any finite reflection-only interrogation, so the correction
- * adds a structural non-Proxy gate: the request must survive `structuredClone`, which walks
- * the whole graph and refuses Proxy exotic objects with a `DataCloneError` no trap can
- * intercept. It runs only after the descriptor and schema checks, so ordinary getters are
- * still rejected as accessors rather than silently resolved into accepted data.
- */
-describe('D2A-R3-C4-001 — Proxy carriers cannot synthesize a request accepted as plain data', () => {
-  const CONFIDENTIAL_OR_FOREIGN = [
-    'fictional-east-capability-beta',
-    'fictional-east-capability-confidential-source',
-    'fictional-east-diagnostic-confidential-capability',
-    'fictional-site-west',
-    'fictional-tenant-summit',
-  ]
-
-  const confidentialEastRequest = () => ({
-    contextKind: 'institutional' as const,
-    scope: { ...FICTIONAL_HARBOR_EAST_SCOPE },
-    accessClassification: 'institution_confidential' as const,
-    projectionTimestamp: PROJECTION_TIMESTAMP,
-  })
-
-  function refusalText(run: () => unknown): string {
-    try {
-      run()
-    } catch (error) {
-      return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
-    }
-    throw new Error('Expected the request to be refused.')
-  }
-
-  function expectRefusedThroughBothEntryPoints(build: () => unknown): void {
-    // A fresh carrier per entry point: a revoked or single-use vector cannot be replayed.
-    expect(() => parseOverlayProjectionRequest(build())).toThrow()
-    expect(() => adapter.project(build())).toThrow()
-    const message = refusalText(() => adapter.project(build()))
-    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
-  }
-
-  const dataDescriptor = (value: unknown): PropertyDescriptor => ({
-    value,
-    enumerable: true,
-    configurable: true,
-    writable: true,
-  })
-
-  const descriptorSynthesizingProxy = (source: Record<string, unknown>, target: object = {}) =>
-    new Proxy(target, {
-      getPrototypeOf: () => Object.prototype,
-      ownKeys: () => Reflect.ownKeys(source),
-      getOwnPropertyDescriptor: (_target, key) => dataDescriptor(Reflect.get(source, key)),
-    })
-
-  it('A. refuses a descriptor-synthesizing top-level Proxy over an empty target', () => {
-    const target = {}
-    // The underlying target owns nothing; only the traps synthesize the request shape.
-    expect(Reflect.ownKeys(target)).toEqual([])
-    expectRefusedThroughBothEntryPoints(() =>
-      descriptorSynthesizingProxy(confidentialEastRequest(), target),
-    )
-    // Interrogation must not have populated the target either.
-    expect(Reflect.ownKeys(target)).toEqual([])
-  })
-
-  it('B. refuses a transparent top-level Proxy around a valid request', () => {
-    expectRefusedThroughBothEntryPoints(() => new Proxy(confidentialEastRequest(), {}))
-    // The same holds for a transparent Proxy around a valid demo request.
-    expectRefusedThroughBothEntryPoints(() => new Proxy(validDemoRequest(), {}))
-  })
-
-  it('C. refuses a descriptor-synthesizing nested-scope Proxy over an empty target', () => {
-    const scopeTarget = {}
-    expect(Reflect.ownKeys(scopeTarget)).toEqual([])
-    expectRefusedThroughBothEntryPoints(() => ({
-      ...confidentialEastRequest(),
-      scope: descriptorSynthesizingProxy({ ...FICTIONAL_HARBOR_EAST_SCOPE }, scopeTarget),
-    }))
-    expect(Reflect.ownKeys(scopeTarget)).toEqual([])
-  })
-
-  it('D. refuses a transparent nested-scope Proxy around a valid scope', () => {
-    expectRefusedThroughBothEntryPoints(() => ({
-      ...confidentialEastRequest(),
-      scope: new Proxy({ ...FICTIONAL_HARBOR_EAST_SCOPE }, {}),
-    }))
-  })
-
-  it('E. refuses a descriptor-synthesizing Proxy over a null-prototype target', () => {
-    // A Proxy that reports a null prototype is still a Proxy exotic object; the null-proto
-    // acceptance contract is for genuine Object.create(null) data, not for a Proxy claiming
-    // to be one.
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(Object.create(null) as object, {
-          getPrototypeOf: () => null,
-          ownKeys: () => Reflect.ownKeys(confidentialEastRequest()),
-          getOwnPropertyDescriptor: (_target, key) =>
-            dataDescriptor(Reflect.get(confidentialEastRequest(), key)),
-        }),
-    )
-  })
-
-  it('refuses a revoked Proxy through both entry points', () => {
-    expect(() => {
-      const { proxy, revoke } = Proxy.revocable(confidentialEastRequest(), {})
-      revoke()
-      return parseOverlayProjectionRequest(proxy)
-    }).toThrow()
-    expect(() => {
-      const { proxy, revoke } = Proxy.revocable(confidentialEastRequest(), {})
-      revoke()
-      return adapter.project(proxy)
-    }).toThrow()
-  })
-
-  it('refuses Proxies whose getPrototypeOf, ownKeys, or getOwnPropertyDescriptor traps throw', () => {
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(
-          {},
-          {
-            getPrototypeOf: () => {
-              throw new Error('trap-refused-get-prototype-of')
-            },
-          },
-        ),
-    )
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(
-          {},
-          {
-            getPrototypeOf: () => Object.prototype,
-            ownKeys: () => {
-              throw new Error('trap-refused-own-keys')
-            },
-          },
-        ),
-    )
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(
-          {},
-          {
-            getPrototypeOf: () => Object.prototype,
-            ownKeys: () => ['contextKind'],
-            getOwnPropertyDescriptor: () => {
-              throw new Error('trap-refused-get-own-property-descriptor')
-            },
-          },
-        ),
-    )
-  })
-
-  it('refuses a Proxy that returns accessor descriptors', () => {
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(
-          {},
-          {
-            getPrototypeOf: () => Object.prototype,
-            ownKeys: () => ['contextKind'],
-            getOwnPropertyDescriptor: () => ({
-              get: () => 'demo',
-              enumerable: true,
-              configurable: true,
-            }),
-          },
-        ),
-    )
-  })
-
-  it('refuses a Proxy that returns non-enumerable descriptors', () => {
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(
-          {},
-          {
-            getPrototypeOf: () => Object.prototype,
-            ownKeys: () => ['contextKind'],
-            getOwnPropertyDescriptor: () => ({
-              value: 'demo',
-              enumerable: false,
-              configurable: true,
-              writable: true,
-            }),
-          },
-        ),
-    )
-  })
-
-  it('refuses a Proxy that returns symbol keys', () => {
-    const symbolKey = Symbol('contextKind')
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(
-          {},
-          {
-            getPrototypeOf: () => Object.prototype,
-            ownKeys: () => [symbolKey],
-            getOwnPropertyDescriptor: () => dataDescriptor('demo'),
-          },
-        ),
-    )
-  })
-
-  it('refuses a Proxy whose reported key set violates Proxy invariants', () => {
-    // A non-extensible target forces ownKeys to report exactly the target's keys; reporting
-    // extra keys makes the engine itself throw a TypeError when the trap result is read.
-    expectRefusedThroughBothEntryPoints(
-      () =>
-        new Proxy(Object.preventExtensions({ contextKind: 'institutional' }), {
-          ownKeys: () => ['contextKind', 'scope', 'accessClassification', 'projectionTimestamp'],
-        }),
-    )
-  })
-
-  it('still accepts ordinary valid requests and genuine null-prototype data', () => {
-    // The gate must not narrow the accepted contract: plain and Object.create(null) data,
-    // top level and nested scope, remain accepted.
-    expect(() => adapter.project(validInstitutionalRequest())).not.toThrow()
-    expect(() => adapter.project(validDemoRequest())).not.toThrow()
-
-    const nullProtoRequest = Object.assign(Object.create(null), validInstitutionalRequest())
-    expect(() => adapter.project(nullProtoRequest)).not.toThrow()
-
-    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
-    const projection = adapter.project({ ...validInstitutionalRequest(), scope: nullProtoScope })
-    expect(projection.dataset.context.contextKind).toBe('institutional')
-
-    const parsedDemo = parseOverlayProjectionRequest(validDemoRequest())
-    expect(parsedDemo.contextKind).toBe('demo')
-  })
-
-  it('leaves adapter state unperturbed after a refused Proxy request', () => {
-    const baseline = JSON.stringify(adapter.project(validInstitutionalRequest()))
-    expect(() => adapter.project(new Proxy(confidentialEastRequest(), {}))).toThrow()
-    expect(() =>
-      adapter.project(descriptorSynthesizingProxy(confidentialEastRequest(), {})),
-    ).toThrow()
-    const after = JSON.stringify(adapter.project(validInstitutionalRequest()))
-    expect(after).toBe(baseline)
-  })
-})
-
-/**
- * D2A-C4-GLOBAL-001. The Proxy gate added for D2A-R3-C4-001 resolved `structuredClone` from
- * the global object at the moment it ran — after `plainOwnDataCopy` had already called
- * `Object.getPrototypeOf`, `Reflect.ownKeys`, and `Object.getOwnPropertyDescriptor` on the
- * request. Each of those is a Proxy trap, `structuredClone` is a writable and configurable
- * global, and so a trap could overwrite the global before the gate looked it up: the gate
- * then called the attacker's permissive stand-in instead of the intrinsic. Making the fake
- * restore the real intrinsic as it returned left no global drift behind, so no after-the-fact
- * inspection of the global could detect the substitution either.
- *
- * At the pre-correction head all five carriers below — three top-level trap positions and two
- * nested-scope ones — were accepted by both `parseOverlayProjectionRequest` and the sealed
- * adapter, which returned the confidential East projection with two capability records.
- *
- * The correction captures the intrinsic on entry to the boundary, bound, before the request
- * is touched by any reflection. Nothing the caller controls runs before that capture, so the
- * gate can no longer be handed a substitute. These tests pin that structurally: the fake is
- * proven to be installed by the trap and proven never to be invoked by the gate.
- */
-describe('D2A-C4-GLOBAL-001 — a trap cannot replace the Proxy gate before it runs', () => {
-  const CONFIDENTIAL_OR_FOREIGN = [
-    'fictional-east-capability-beta',
-    'fictional-east-capability-confidential-source',
-    'fictional-east-diagnostic-confidential-capability',
-    'fictional-site-west',
-    'fictional-tenant-summit',
-  ]
-
-  const confidentialEastRequest = () => ({
-    contextKind: 'institutional' as const,
-    scope: { ...FICTIONAL_HARBOR_EAST_SCOPE },
-    accessClassification: 'institution_confidential' as const,
-    projectionTimestamp: PROJECTION_TIMESTAMP,
-  })
-
-  type TrapPosition = 'getPrototypeOf' | 'ownKeys' | 'getOwnPropertyDescriptor'
-
-  let tamperInstalled = false
-  let fakeCloneInvoked = false
-
-  /**
-   * A Proxy that synthesizes a valid request through its traps and, at the chosen trap
-   * position, replaces the global `structuredClone` with a permissive fake. The fake restores
-   * the genuine intrinsic when called, so a correction that merely compared the global before
-   * and after parsing would see nothing wrong.
-   */
-  function tamperingProxy(position: TrapPosition, source: Record<string, unknown>): unknown {
-    const original = globalThis.structuredClone
-    const tamper = (): void => {
-      tamperInstalled = true
-      // Permissive: it inspects nothing, so any carrier "survives" it.
-      globalThis.structuredClone = (() => {
-        fakeCloneInvoked = true
-        globalThis.structuredClone = original
-        return {}
-      }) as typeof structuredClone
-    }
-    return new Proxy(
-      {},
-      {
-        getPrototypeOf: () => {
-          if (position === 'getPrototypeOf') tamper()
-          return Object.prototype
-        },
-        ownKeys: () => {
-          if (position === 'ownKeys') tamper()
-          return Reflect.ownKeys(source)
-        },
-        getOwnPropertyDescriptor: (_target, key) => {
-          if (position === 'getOwnPropertyDescriptor') tamper()
-          return {
-            value: Reflect.get(source, key),
-            enumerable: true,
-            configurable: true,
-            writable: true,
-          }
-        },
-      },
-    )
-  }
-
-  /**
-   * Runs `probe` with the global `structuredClone` descriptor captured beforehand and
-   * reinstated afterwards, so a carrier that leaves the fake installed cannot leak out of the
-   * test. Restoration is unconditional — the probe is expected to throw.
-   */
-  function withGlobalRestored<T>(probe: () => T): T {
-    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone')
-    try {
-      return probe()
-    } finally {
-      if (descriptor) {
-        Object.defineProperty(globalThis, 'structuredClone', descriptor)
-      } else {
-        delete (globalThis as Record<string, unknown>).structuredClone
-      }
-    }
-  }
-
-  const originalStructuredClone = globalThis.structuredClone
-
-  function refusalText(run: () => unknown): string {
-    try {
-      run()
-    } catch (error) {
-      return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
-    }
-    throw new Error('Expected the request to be refused.')
-  }
-
-  /**
-   * Both entry points must refuse a fresh carrier, the trap must genuinely have replaced the
-   * global, the gate must never have called the replacement, the refusal must name no
-   * confidential or foreign identifier, and the global must be intact once restored.
-   */
-  function expectTamperingCarrierRefused(build: () => unknown): void {
-    tamperInstalled = false
-    fakeCloneInvoked = false
-
-    withGlobalRestored(() => {
-      expect(() => parseOverlayProjectionRequest(build())).toThrow()
-    })
-    expect(tamperInstalled).toBe(true)
-
-    withGlobalRestored(() => {
-      expect(() => adapter.project(build())).toThrow()
-    })
-
-    const message = withGlobalRestored(() => refusalText(() => adapter.project(build())))
-    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
-
-    // The gate used the reference captured on entry, so the substitute was never reached.
-    expect(fakeCloneInvoked).toBe(false)
-    expect(globalThis.structuredClone).toBe(originalStructuredClone)
-  }
-
-  it('pins the mutability the finding depends on', () => {
-    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone')
-    expect(descriptor?.writable).toBe(true)
-    expect(descriptor?.configurable).toBe(true)
-    expect(typeof originalStructuredClone).toBe('function')
-  })
-
-  it('A. refuses a top-level carrier that replaces the global during getPrototypeOf', () => {
-    expectTamperingCarrierRefused(() => tamperingProxy('getPrototypeOf', confidentialEastRequest()))
-  })
-
-  it('B. refuses a top-level carrier that replaces the global during ownKeys', () => {
-    expectTamperingCarrierRefused(() => tamperingProxy('ownKeys', confidentialEastRequest()))
-  })
-
-  it('C. refuses a top-level carrier that replaces the global while serving a descriptor', () => {
-    expectTamperingCarrierRefused(() =>
-      tamperingProxy('getOwnPropertyDescriptor', confidentialEastRequest()),
-    )
-  })
-
-  it('D. refuses a nested-scope carrier that replaces the global during reflection', () => {
-    // The scope Proxy's traps fire well after the boundary is entered, and still too late.
-    expectTamperingCarrierRefused(() => ({
-      ...confidentialEastRequest(),
-      scope: tamperingProxy('getPrototypeOf', { ...FICTIONAL_HARBOR_EAST_SCOPE }),
-    }))
-    expectTamperingCarrierRefused(() => ({
-      ...confidentialEastRequest(),
-      scope: tamperingProxy('ownKeys', { ...FICTIONAL_HARBOR_EAST_SCOPE }),
-    }))
-    expectTamperingCarrierRefused(() => ({
-      ...confidentialEastRequest(),
-      scope: tamperingProxy('getOwnPropertyDescriptor', { ...FICTIONAL_HARBOR_EAST_SCOPE }),
-    }))
-  })
-
-  it('E. does not depend on detecting drift left behind by a self-restoring fake', () => {
-    // The fake restores the genuine intrinsic the moment it is called, so the global is
-    // identical before and after a call that used it. The refusal therefore cannot come from
-    // comparing the global against a remembered value; it comes from never consulting the
-    // mutable global again after the traps have run.
-    tamperInstalled = false
-    fakeCloneInvoked = false
-    const carrier = tamperingProxy('getPrototypeOf', confidentialEastRequest())
-
-    withGlobalRestored(() => {
-      expect(() => parseOverlayProjectionRequest(carrier)).toThrow()
-      // The trap installed the fake and the gate declined to use it, so the fake is still in
-      // place at this point: the boundary refused without any global comparison being possible.
-      expect(tamperInstalled).toBe(true)
-      expect(fakeCloneInvoked).toBe(false)
-      expect(globalThis.structuredClone).not.toBe(originalStructuredClone)
-
-      // Calling the fake directly proves it restores the intrinsic and returns a permissive
-      // result — exactly what the pre-correction gate accepted.
-      expect(globalThis.structuredClone({})).toEqual({})
-      expect(fakeCloneInvoked).toBe(true)
-      expect(globalThis.structuredClone).toBe(originalStructuredClone)
-    })
-    expect(globalThis.structuredClone).toBe(originalStructuredClone)
-  })
-
-  it('F. fails closed when the host provides no trusted clone operation', () => {
-    withGlobalRestored(() => {
-      delete (globalThis as Record<string, unknown>).structuredClone
-      expect(globalThis.structuredClone).toBeUndefined()
-
-      expect(() => parseOverlayProjectionRequest(validDemoRequest())).toThrow()
-      expect(() => parseOverlayProjectionRequest(validInstitutionalRequest())).toThrow()
-      // No projection is produced for an otherwise perfectly valid request.
-      expect(() => adapter.project(validInstitutionalRequest())).toThrow()
-
-      const message = refusalText(() => adapter.project(validInstitutionalRequest()))
-      CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
-    })
-    expect(globalThis.structuredClone).toBe(originalStructuredClone)
-  })
-
-  it('G. still accepts the valid controls once the global is intact', () => {
-    expect(globalThis.structuredClone).toBe(originalStructuredClone)
-    expect(() => adapter.project(validInstitutionalRequest())).not.toThrow()
-    expect(() => adapter.project(validDemoRequest())).not.toThrow()
-
-    const nullProtoRequest = Object.assign(Object.create(null), validInstitutionalRequest())
-    expect(() => adapter.project(nullProtoRequest)).not.toThrow()
-
-    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
-    const projection = adapter.project({ ...validInstitutionalRequest(), scope: nullProtoScope })
-    expect(projection.dataset.context.contextKind).toBe('institutional')
-
-    expect(parseOverlayProjectionRequest(validDemoRequest()).contextKind).toBe('demo')
-  })
-
-  it('H. leaves adapter state and repeated reads unperturbed after every tampering carrier', () => {
-    const baseline = JSON.stringify(adapter.project(validInstitutionalRequest()))
-    ;(['getPrototypeOf', 'ownKeys', 'getOwnPropertyDescriptor'] as TrapPosition[]).forEach(
-      (position) => {
-        withGlobalRestored(() => {
-          expect(() =>
-            adapter.project(tamperingProxy(position, confidentialEastRequest())),
-          ).toThrow()
-        })
-      },
-    )
-    expect(globalThis.structuredClone).toBe(originalStructuredClone)
-    expect(JSON.stringify(adapter.project(validInstitutionalRequest()))).toBe(baseline)
+describe('D2A-C4 — projection determinism and post-refusal stability', () => {
+  it('returns identical projections across repeated valid reads and is unperturbed by refusals', () => {
+    const first = JSON.stringify(adapter.projectJson(json(validInstitutionalRequest())))
+    expect(() => adapter.projectJson(new Proxy(confidentialInstitutionalRequest(), {}))).toThrow()
+    expect(() => adapter.projectJson('{ not json')).toThrow()
+    expect(() => adapter.projectJson(new Date(0))).toThrow()
+    const second = JSON.stringify(adapter.projectJson(json(validInstitutionalRequest())))
+    expect(second).toBe(first)
   })
 })

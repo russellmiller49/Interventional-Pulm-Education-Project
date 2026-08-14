@@ -10,8 +10,8 @@ import {
   institutionalApprovalStateSchema,
   institutionalCapabilityRecordSchema,
   institutionalOverlayDatasetSchema,
-  institutionalProjectionRequestSchema,
   institutionalSourceReferenceSchema,
+  parseOverlayProjectionRequestJson,
 } from '@/features/device-intelligence/institutional/contracts'
 import {
   FICTIONAL_DEMO_CONTEXT,
@@ -114,39 +114,47 @@ describe('D2A institutional overlay contracts', () => {
         accessClassification: 'public_unlisted',
       }).success,
     ).toBe(false)
-    expect(
-      institutionalProjectionRequestSchema.safeParse({
-        contextKind: 'institutional',
-        scope: FICTIONAL_HARBOR_EAST_SCOPE,
-        accessClassification: 'public_unlisted',
-        projectionTimestamp: '2026-08-12T12:00:00.000Z',
-      }).success,
-    ).toBe(false)
+    // The request boundary admits serialized JSON only; a public-unlisted institutional
+    // request is refused through it.
+    expect(() =>
+      parseOverlayProjectionRequestJson(
+        JSON.stringify({
+          contextKind: 'institutional',
+          scope: FICTIONAL_HARBOR_EAST_SCOPE,
+          accessClassification: 'public_unlisted',
+          projectionTimestamp: '2026-08-12T12:00:00.000Z',
+        }),
+      ),
+    ).toThrow()
     expect(accessAllows('public_unlisted', 'institution_restricted')).toBe(false)
   })
 
   it('rejects authenticated-user metadata as a substitute for explicit scope', () => {
-    expect(
-      institutionalProjectionRequestSchema.safeParse({
-        contextKind: 'institutional',
-        authUserMetadata: {
-          tenantId: FICTIONAL_HARBOR_EAST_SCOPE.tenantId,
-          institutionId: FICTIONAL_HARBOR_EAST_SCOPE.institutionId,
-          siteId: FICTIONAL_HARBOR_EAST_SCOPE.siteId,
-        },
-        accessClassification: 'institution_restricted',
-        projectionTimestamp: '2026-08-12T12:00:00.000Z',
-      }).success,
-    ).toBe(false)
-    expect(
-      institutionalProjectionRequestSchema.safeParse({
-        contextKind: 'institutional',
-        scope: FICTIONAL_HARBOR_EAST_SCOPE,
-        authUserMetadata: { institutionId: FICTIONAL_HARBOR_WEST_SCOPE.institutionId },
-        accessClassification: 'institution_restricted',
-        projectionTimestamp: '2026-08-12T12:00:00.000Z',
-      }).success,
-    ).toBe(false)
+    expect(() =>
+      parseOverlayProjectionRequestJson(
+        JSON.stringify({
+          contextKind: 'institutional',
+          authUserMetadata: {
+            tenantId: FICTIONAL_HARBOR_EAST_SCOPE.tenantId,
+            institutionId: FICTIONAL_HARBOR_EAST_SCOPE.institutionId,
+            siteId: FICTIONAL_HARBOR_EAST_SCOPE.siteId,
+          },
+          accessClassification: 'institution_restricted',
+          projectionTimestamp: '2026-08-12T12:00:00.000Z',
+        }),
+      ),
+    ).toThrow()
+    expect(() =>
+      parseOverlayProjectionRequestJson(
+        JSON.stringify({
+          contextKind: 'institutional',
+          scope: FICTIONAL_HARBOR_EAST_SCOPE,
+          authUserMetadata: { institutionId: FICTIONAL_HARBOR_WEST_SCOPE.institutionId },
+          accessClassification: 'institution_restricted',
+          projectionTimestamp: '2026-08-12T12:00:00.000Z',
+        }),
+      ),
+    ).toThrow()
   })
 
   it('rejects a row whose exact site scope differs from its dataset scope', () => {

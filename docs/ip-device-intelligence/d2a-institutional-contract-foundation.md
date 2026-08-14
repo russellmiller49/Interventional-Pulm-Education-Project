@@ -108,7 +108,9 @@ resolve, and the comparison treats an unreadable instant as a failure in its own
 The **createFictionalInstitutionalOverlayReadAdapter** function takes **no arguments**: it
 parses, deep-freezes, and projection-safety-checks the canonical in-repository corpus at
 construction and rejects any runtime argument loudly. Its public surface contains only
-**project**, and every request passes a plain own-property boundary before Zod parses it.
+**projectJson**, which admits a serialized JSON **string** request and refuses every object
+input; the request is decoded and validated by **parseOverlayProjectionRequestJson** before
+any projection is built (see §6d for why object admission was removed).
 
 Projection behavior is fail-closed:
 
@@ -170,22 +172,21 @@ The focused suites cover:
 - the sealed zero-input factory, its export surface, and module-isolation construction
   refusals;
 - the closed identifier grammar and the bundle-wide identifier registry;
-- own-property request and nested-scope boundaries, including polluted prototypes;
-- `__proto__` carriers at the request boundary — a top-level JSON carrier, a nested-scope
-  JSON carrier, and a null-prototype object with `__proto__` defined as an own enumerable
-  data property — refused through both the parser and the sealed adapter, alongside
-  controls proving valid null-prototype requests and scopes are still accepted;
-- `Proxy` carriers at the request boundary — descriptor-synthesizing and transparent
-  proxies at both the top level and the nested scope, a proxy over a null-prototype target,
-  a revoked proxy, proxies whose traps throw or violate Proxy invariants, and proxies
-  returning accessor, non-enumerable, or symbol-keyed descriptors — refused through both
-  entry points with no fixture identifier in any refusal error, alongside controls proving
-  valid plain and null-prototype requests and scopes are still accepted;
-- `Proxy` carriers that overwrite the global `structuredClone` from inside a trap — at the
-  top level and in the nested scope, in each of the `getPrototypeOf`, `ownKeys`, and
-  `getOwnPropertyDescriptor` positions, including a self-restoring replacement that leaves
-  no global drift — refused through both entry points, with the replacement proven installed
-  and proven never invoked, plus a fail-closed proof for a host with no clone primitive;
+- the serialized-JSON request boundary (§6d): valid demo, restricted, and confidential
+  request JSON accepted through the parser and `projectJson`, and every non-string object
+  input refused before any caller code runs — transparent and descriptor-synthesizing
+  Proxies, revoked and throwing-trap Proxies, coercion carriers (`toString`, `valueOf`,
+  `Symbol.toPrimitive`), getter carriers, boxed `String`, `Date`, array, `Map`, `Set`,
+  function, class instance, prototype-derived objects, and genuine `Object.create(null)`
+  requests and scopes — with Proxy trap counters proving no trap fired, `__proto__` members
+  in decoded JSON rejected as unrecognized keys, malformed and non-object JSON refused,
+  governed reserved names refused, and a module-lifetime `JSON.parse` capture that a later
+  global replacement cannot supplant;
+- the R4 cross-call vectors: the stage-one poison carriers that defeated the object boundary
+  are refused before any trap runs, leaving `structuredClone`, `Array.isArray`,
+  `Object.getPrototypeOf`, `Reflect.ownKeys`, `Object.getOwnPropertyDescriptor`, and
+  `JSON.parse` unchanged, so a later valid request is still accepted and a later exotic still
+  refused;
 - the free-text boundary: no internal authoring text in any reachable projection; and
 - the static runtime import boundary.
 
@@ -409,15 +410,16 @@ throw or violate Proxy invariants are refused, as are Proxies returning accessor
 non-enumerable, or symbol-keyed descriptors — the last three by the existing snapshot
 checks, ahead of the gate.
 
-Because the request boundary now depends on the host `structuredClone`, which the jsdom
-test sandbox does not provide, the four D2A suites that exercise `project` or
+Because the third-correction request boundary depended on the host `structuredClone`, which
+the jsdom test sandbox does not provide, the four D2A suites that exercised `project` or
 `parseOverlayProjectionRequest` (`institutional-request-boundary`,
-`institutional-serialization`, `institutional-isolation`, `institutional-fixture-seal`) run
-under the Node test environment, where the pinned Node 20 runtime supplies it. None of the
-four asserts on DOM behavior — they exercise the pure contract, adapter, and serialization
-layers only — so the environment change removes no coverage. The production module target is
-unchanged and still type-checks and builds for both browser and Node; the boundary's
-dependency on the primitive is a runtime fail-closed check, not a build-time constraint.
+`institutional-serialization`, `institutional-isolation`, `institutional-fixture-seal`) were
+moved to the Node test environment at this point, where the pinned Node 20 runtime supplies
+it. (These pragmas were removed again in §6d, once the serialized boundary reduced the
+dependency to `JSON.parse`, which jsdom provides.) None of the four asserts on DOM behavior —
+they exercise the pure contract, adapter, and serialization layers only — so neither the
+addition nor the later removal of the pragma changes coverage. The production module target is
+unchanged and type-checks and builds for both browser and Node.
 
 ## 6c. Pre-independent-review inspection (2026-08-14): D2A-C4-GLOBAL-001
 
@@ -549,6 +551,96 @@ projection matrix remains 162/162 refused, 0/162 serialized.
 
 **Independent review of this correction is still pending.** PR #102 remains a draft and is
 unmerged.
+
+## 6d. Independent review (2026-08-14): D2A-R4-C4-001 and the serialized redesign
+
+The fourth-correction head `2bffe9bf` failed independent Codex review with a BLOCKER,
+`D2A-R4-C4-001`: failed calls poison later admission checks. The prior sections corrected
+D2A-C1, C2, and C3, which the review confirmed as PASS; only the C4 object boundary failed.
+
+**Reproduced at `2bffe9bf`.** Two cross-call classes were confirmed, a representative subset
+of each against this exact head.
+
+_Probe A — cross-call `structuredClone` poisoning._ A first `Proxy` call replaces
+`globalThis.structuredClone` from inside a trap and then throws before the final clone gate,
+so the fake remains installed. A second, independent call captures that fake at entry (the
+fourth correction's "capture before reflection" reads the _already-poisoned_ global), a fresh
+descriptor-synthesizing `Proxy` passes the reflection snapshot and schema, the fake returns a
+permissive result and restores the genuine intrinsic, and both `parseOverlayProjectionRequest`
+and `adapter.project` return the confidential East projection with two capability records.
+Confirmed from all three stage-one trap positions and with top-level and nested carriers.
+
+_Probe B — cross-call reflection-intrinsic poisoning._ A first call replaces `Array.isArray`,
+`Object.getPrototypeOf`, `Reflect.ownKeys`, and `Object.getOwnPropertyDescriptor` and throws,
+leaving them modified. A second call presents a genuine `Date`; the poisoned reflection
+synthesizes a valid demo request from it, the genuine `structuredClone` accepts the
+non-`Proxy` exotic, and the parser and adapter both return the fictional demo projection. The
+fourth correction captured only `structuredClone`, not the reflection intrinsics, and read
+those fresh on every call.
+
+**Why this was not patched again.** Each of four corrections made the object boundary harder
+to fool and each was defeated. The pattern is structural: accepting an arbitrary same-realm
+object graph and proving by inspection that it is inert is not achievable, because any request
+whose traps run during inspection can mutate the very globals the inspection depends on, for
+this call or a later one. Code that already executes in the realm has already won; an
+object-inspection helper cannot make it inert.
+
+**Correction — a serialized JSON-text boundary.** The public boundary no longer accepts an
+object. `parseOverlayProjectionRequestJson(input: unknown)` admits a primitive `string` and
+nothing else, decodes it with a module-captured `JSON.parse`, and validates the decoded plain
+object with the strict schema. The sealed adapter's sole method is `projectJson(requestJson:
+unknown)`. The supported threat model is **untrusted serialized JSON data**, not arbitrary
+hostile same-realm JavaScript; the boundary does not claim to sandbox the latter, and a future
+route must hand `projectJson` the raw request text rather than call `request.json()` and pass
+the resulting arbitrary object into another parser.
+
+A primitive `typeof input === 'string'` check invokes no coercion hook and no `Proxy` trap: a
+string cannot carry a getter, a `toString`/`Symbol.toPrimitive` converter, a symbol key, a
+custom prototype, or a trap. Every non-string input is refused before a property is read and
+before any caller code runs, so both cross-call poisoning classes are structurally
+impossible — the malicious carrier never executes. Decoding then yields ordinary own-property
+data by construction; inherited fields, accessors, symbol keys, custom prototypes, and `Proxy`
+exotics cannot survive serialization, and a `__proto__` member decodes to an ordinary own data
+key (via `[[DefineOwnProperty]]`, not the prototype setter) that the strict schema rejects as
+unrecognized. `JSON.parse` is captured once at module load as
+`const JSON_PARSE_INTRINSIC = JSON.parse.bind(JSON)` and never re-read, so no request, and no
+earlier failed request, can substitute a permissive stand-in. Refusals — non-string input,
+malformed JSON, or a schema mismatch — are a single generic message (via `safeParse`, so a
+`ZodError`'s embedded values never surface) that carries no caller value or fixture identifier.
+
+**Intentional contract narrowing.** The old object boundary accepted `Object.create(null)`
+requests and nested scopes; the serialized boundary refuses all object inputs, including those.
+This is deliberate, not a regression: their semantic content is fully representable in JSON,
+and JSON decoding produces ordinary own-property data, so nothing legitimate is lost while the
+executable-input attack surface is removed entirely. The removed helpers — `plainOwnDataCopy`,
+`captureCloneIntrinsic`, `assertNonProxyStructuredData`, and the `structuredClone` gate — are
+gone, and the object-reading request schemas are now module-internal rather than exported
+admission paths. The exported `OverlayProjectionRequest` type is unchanged.
+
+**Node-environment pragmas removed.** The four suites (`institutional-request-boundary`,
+`institutional-serialization`, `institutional-isolation`, `institutional-fixture-seal`) were
+moved to `@jest-environment node` in §6b only because the boundary depended on
+`structuredClone`, absent in jsdom. The serialized boundary depends only on `JSON.parse`,
+which jsdom provides, so all four pragmas were removed and the suites run under the repository
+default (jsdom). None asserts on DOM behavior, so no coverage is lost; the production module
+target is unchanged and still type-checks and builds for both browser and Node.
+
+**Results.** Both R4 probes are structurally closed: the stage-one carriers are refused before
+any trap runs, and `structuredClone`, `Array.isArray`, `Object.getPrototypeOf`,
+`Reflect.ownKeys`, `Object.getOwnPropertyDescriptor`, and `JSON.parse` are all verified
+unchanged after the attempt, with a later valid request still accepted and a later exotic still
+refused. Object inputs — Proxies (transparent, descriptor-synthesizing, revoked,
+throwing-trap), coercion and getter carriers, boxed `String`, `Date`, array, `Map`, `Set`,
+function, class instance, and genuine null-prototype requests and scopes — are all refused with
+Proxy trap counters proving no trap fired. Valid demo and institutional requests, unknown
+scopes, decoded `__proto__` carriers, malformed and non-object JSON, and governed reserved
+names all behave as specified, and refusals leak no fixture identifier. D2A-C1's matrix remains
+162/162 refused, 0/162 serialized; the sealed factory, controlled provenance, deep freeze,
+deterministic reads, isolation, timestamp fail-closed behavior, and the runtime/import/exposure
+boundaries are unchanged.
+
+**Independent review of this fifth correction is still pending.** PR #102 remains a draft and
+is unmerged.
 
 ## 7. Requirements for a later migration phase
 

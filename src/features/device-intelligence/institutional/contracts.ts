@@ -1369,7 +1369,16 @@ export const fictionalInstitutionalOverlayBundleSchema = z
     addSealedBundleRegistryIssues(bundle, context)
   })
 
-export const demoProjectionRequestSchema = z
+/**
+ * Request schemas are intentionally module-internal, not exported. They read whatever
+ * object they are handed the way zod does — resolving getters and inherited values — so
+ * exposing one would be an alternate caller-facing admission path that bypasses the
+ * serialized boundary below. The only public request entry point is
+ * {@link parseOverlayProjectionRequestJson}, which decodes untrusted JSON *text* and hands
+ * these schemas the ordinary own-property object that decoding produces. The exported
+ * TypeScript request type ({@link OverlayProjectionRequest}) still derives from the union.
+ */
+const demoProjectionRequestSchema = z
   .object({
     contextKind: z.literal('demo'),
     demoContextId: scopeComponentIdentifierSchema,
@@ -1378,7 +1387,7 @@ export const demoProjectionRequestSchema = z
   })
   .strict()
 
-export const institutionalProjectionRequestSchema = z
+const institutionalProjectionRequestSchema = z
   .object({
     contextKind: z.literal('institutional'),
     scope: institutionScopeIdentitySchema,
@@ -1387,151 +1396,68 @@ export const institutionalProjectionRequestSchema = z
   })
   .strict()
 
-/**
- * Direct schema use reads properties the way zod does and therefore resolves inherited
- * values. Runtime callers must go through {@link parseOverlayProjectionRequest}, which
- * verifies the original value is a plain own-property data object first.
- */
-export const overlayProjectionRequestSchema = z.discriminatedUnion('contextKind', [
+const overlayProjectionRequestSchema = z.discriminatedUnion('contextKind', [
   demoProjectionRequestSchema,
   institutionalProjectionRequestSchema,
 ])
 
-/**
- * Pre-parse boundary for runtime request objects. Zod reads `data[key]`, which resolves
- * getters and prototype-inherited values, so a request built with
- * `Object.create(validRequest)` would otherwise satisfy every field without owning any of
- * them. This boundary accepts only a plain data object — prototype exactly
- * `Object.prototype` (or `null`, which cannot inherit anything), no symbol keys, no
- * accessor or non-enumerable properties — and then copies its own enumerable data
- * properties exactly once into a fresh object before zod sees it, so nothing the caller
- * controls is re-read after validation begins.
- *
- * The snapshot is built on a null prototype and every key is installed with
- * `Object.defineProperty`. Plain assignment into a `{}` destination would route the
- * attacker-controlled key `__proto__` through the setter inherited from
- * `Object.prototype`: a JSON payload whose single own key is `__proto__` would then
- * install its value as the snapshot's prototype instead of as data, leaving a snapshot
- * with no own keys whose inherited properties satisfy every required field. Defining the
- * property on a prototype-less destination keeps `__proto__` an ordinary own data key, so
- * the strict schema rejects it as unrecognized rather than reading through it.
- */
-function plainOwnDataCopy(value: unknown, label: string): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error(`${label} must be a plain object.`)
-  }
-  const prototype = Object.getPrototypeOf(value)
-  if (prototype !== Object.prototype && prototype !== null) {
-    throw new Error(`${label} must not carry a custom prototype.`)
-  }
-  const copy = Object.create(null) as Record<string, unknown>
-  for (const key of Reflect.ownKeys(value)) {
-    if (typeof key !== 'string') {
-      throw new Error(`${label} must not carry symbol-keyed properties.`)
-    }
-    const descriptor = Object.getOwnPropertyDescriptor(value, key)
-    if (!descriptor || !('value' in descriptor)) {
-      throw new Error(`${label} must not carry accessor properties.`)
-    }
-    if (!descriptor.enumerable) {
-      throw new Error(`${label} must not carry non-enumerable properties.`)
-    }
-    Object.defineProperty(copy, key, {
-      value: descriptor.value,
-      enumerable: true,
-      writable: true,
-      configurable: true,
-    })
-  }
-  return copy
-}
+const REQUEST_REFUSAL_MESSAGE = 'A projection request must be supplied as serialized JSON text.'
 
 /**
- * Structural non-Proxy admission gate.
- *
- * {@link plainOwnDataCopy} interrogates the input only through reflection —
- * `Object.getPrototypeOf`, `Reflect.ownKeys`, `Object.getOwnPropertyDescriptor` — and every
- * one of those operations is itself controlled by a Proxy's traps. A Proxy over an empty
- * target can therefore report `Object.prototype`, report the four keys of a valid request,
- * and hand back enumerable data descriptors carrying the corresponding values, so it passes
- * the reflection-only snapshot and the strict schema while owning no data at all. A coherent
- * Proxy can satisfy any finite reflection-only interrogation, so no amount of re-reading or
- * cross-checking descriptors can distinguish it from a plain object; the boundary needs a
- * check the request cannot influence.
- *
- * The structured-clone algorithm is that check. It is a host primitive that walks the input
- * graph and refuses Proxy exotic objects with a `DataCloneError`, at the top level or nested
- * anywhere inside it, and it cannot be intercepted by a trap. It is not a substitute for the
- * descriptor snapshot: structured cloning silently resolves an ordinary getter into a data
- * value, so accessor, symbol, non-enumerable, unknown-key, and type failures must still be
- * caught by {@link plainOwnDataCopy} and the schema first. Only a candidate that has already
- * passed those structural checks reaches this gate, whose sole job is to establish that the
- * original input graph is composed of serializable ordinary data rather than Proxy exotic
- * objects. A clone failure becomes a generic refusal that names no field value, and the
- * clone result is discarded — the authoritative parsed request is still the snapshot.
- *
- * The clone operation is supplied by the caller as an already-captured reference rather than
- * resolved here. `structuredClone` is a writable, configurable property of the global object,
- * and every reflection operation in {@link plainOwnDataCopy} runs before this gate, so a
- * Proxy trap firing during the snapshot could otherwise overwrite the global and hand this
- * gate a permissive stand-in — one that can even restore the real intrinsic as it returns,
- * leaving no lasting global drift to detect afterwards. Resolving the intrinsic before any
- * attacker-controlled trap can execute is what makes the check unforgeable; see
- * {@link captureCloneIntrinsic}.
- *
- * If the host lacks `structuredClone` the gate fails closed: without it the boundary cannot
- * prove the input is not a Proxy, and admitting an unprovable input would reopen the bypass.
- * The repository's supported production runtimes provide it.
+ * Module-lifetime trust anchor for the request boundary. `JSON.parse` is captured and bound
+ * once, at module initialization, before any request is admitted, and the boundary uses this
+ * reference — never a fresh `JSON.parse` lookup — for every decode. It is the only primitive
+ * the boundary depends on, and it is read exactly once, so no request, and no earlier failed
+ * request, can substitute a permissive stand-in for it.
  */
-function assertNonProxyStructuredData(
-  value: unknown,
-  cloneIntrinsic: (value: unknown) => unknown,
-  label: string,
-): void {
+const JSON_PARSE_INTRINSIC = JSON.parse.bind(JSON)
+
+/**
+ * The one public request boundary. It admits a serialized JSON **string** and nothing else.
+ *
+ * The earlier boundary accepted an arbitrary same-realm object graph and tried to prove, by
+ * inspection, that the graph was inert. Four successive corrections showed that goal is
+ * unreachable: a `Proxy` synthesizes any shape its traps choose, and a request whose traps
+ * run during inspection can poison the mutable globals a later request depends on — cross-call
+ * `structuredClone` poisoning and cross-call reflection-intrinsic poisoning both defeated the
+ * per-call capture. An object-inspection helper cannot make hostile same-realm code inert;
+ * code that already runs in the realm has already won.
+ *
+ * A serialized boundary removes the premise. The supported threat model is **untrusted
+ * serialized JSON data**, not arbitrary same-realm JavaScript. A primitive `string` type
+ * check runs no coercion hook and no Proxy trap: a string cannot carry a getter, a
+ * `toString`/`Symbol.toPrimitive` converter, a symbol key, a custom prototype, or a trap, so
+ * every non-string input — boxed `String`, `Date`, array, `Map`, `Set`, function, class
+ * instance, `Proxy`, plain or null-prototype object, number, boolean, `null`, `undefined` —
+ * is refused here, before a single property is read and before any caller code can run.
+ *
+ * Decoding then yields ordinary own-property data by construction: inherited fields,
+ * accessors, symbol keys, custom prototypes, and `Proxy` exotics cannot survive
+ * serialization, and a `__proto__` member decodes to an ordinary own data key (via
+ * `[[DefineOwnProperty]]`, not the prototype setter) that the strict schema rejects as
+ * unrecognized rather than installing as a prototype. The strict discriminated union does the
+ * rest of the validation on that plain object. A refusal — non-string input, malformed JSON,
+ * or a schema mismatch — is a single generic message that carries no caller value or fixture
+ * identifier. No coercion, no reflection on the input, no `structuredClone`, and no dynamic
+ * `JSON.parse` lookup are ever performed.
+ */
+export function parseOverlayProjectionRequestJson(input: unknown): OverlayProjectionRequest {
+  if (typeof input !== 'string') {
+    throw new Error(REQUEST_REFUSAL_MESSAGE)
+  }
+  let decoded: unknown
   try {
-    cloneIntrinsic(value)
+    decoded = JSON_PARSE_INTRINSIC(input)
   } catch {
-    throw new Error(`${label} could not be admitted as plain structured data.`)
+    throw new Error(REQUEST_REFUSAL_MESSAGE)
   }
-}
-
-/**
- * Resolves the host structured-clone primitive once, bound to the global object, returning
- * `null` when the host does not provide it so the caller can fail closed.
- *
- * This must be called before the request is touched by reflection. Nothing the caller
- * controls runs between entering the boundary and this capture — receiving a reference to
- * the input executes no trap — so the reference obtained here is the genuine intrinsic even
- * when the request later replaces the global. Binding keeps the call independent of how the
- * host expects the primitive to be invoked.
- */
-function captureCloneIntrinsic(): ((value: unknown) => unknown) | null {
-  const candidate = globalThis.structuredClone
-  return typeof candidate === 'function' ? candidate.bind(globalThis) : null
-}
-
-export function parseOverlayProjectionRequest(input: unknown): OverlayProjectionRequest {
-  // Captured first, before any reflection below can run a Proxy trap that would replace the
-  // mutable global the final gate depends on.
-  const cloneIntrinsic = captureCloneIntrinsic()
-  if (!cloneIntrinsic) {
-    throw new Error('A projection request could not be admitted as plain structured data.')
+  // `safeParse`, not `parse`: a thrown `ZodError` would embed the received values in its
+  // issues, so the boundary converts any failure into the generic refusal itself.
+  const result = overlayProjectionRequestSchema.safeParse(decoded)
+  if (!result.success) {
+    throw new Error(REQUEST_REFUSAL_MESSAGE)
   }
-  const copy = plainOwnDataCopy(input, 'A projection request')
-  // `in` would traverse a prototype chain; the snapshot has none, but an own-property
-  // check states the intent and cannot be satisfied by anything the caller inherited.
-  if (Object.hasOwn(copy, 'scope')) {
-    copy.scope = plainOwnDataCopy(copy.scope, 'A projection request scope')
-  }
-  const parsed = overlayProjectionRequestSchema.parse(copy)
-  // Final gate: the reflection-only snapshot above cannot tell a plain object from a Proxy
-  // that synthesizes one through its traps, so refuse any input the structured-clone
-  // algorithm rejects as a Proxy exotic object before returning the parsed request. This
-  // runs only after the structural and schema checks have passed, and no projection is
-  // built from the result until it does. The clone reference was captured on entry, so the
-  // traps that just ran could not have substituted it.
-  assertNonProxyStructuredData(input, cloneIntrinsic, 'A projection request')
-  return parsed
+  return result.data
 }
 
 const projectionFields = {
