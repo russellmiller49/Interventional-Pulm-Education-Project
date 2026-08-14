@@ -469,6 +469,9 @@ describe('D2A access gate denies an unrecognized classification', () => {
   // accessAllows is exported, so later phases will call it directly. It must deny on its own
   // rather than assume its arguments were parsed, including for keys that exist on
   // Object.prototype and would otherwise compare two inherited functions as "allowed".
+  // The complete invalid-input matrix — non-strings, coercion carriers, and hostile Proxies
+  // rejected by typeof before Zod, object inspection, or coercion — lives in
+  // institutional-request-boundary.test.ts (D2A-C3 §A/§C).
   it.each(['toString', 'constructor', 'valueOf', '__proto__', 'hasOwnProperty', ''])(
     'denies the unclassified value %p in either position',
     (value) => {
@@ -480,12 +483,15 @@ describe('D2A access gate denies an unrecognized classification', () => {
   )
 
   it('still permits exactly the intended classification pairs', () => {
+    // All nine ordered pairs, so no row can be silently dropped.
     expect(accessAllows('public_unlisted', 'public_unlisted')).toBe(true)
+    expect(accessAllows('public_unlisted', 'institution_restricted')).toBe(false)
+    expect(accessAllows('public_unlisted', 'institution_confidential')).toBe(false)
+    expect(accessAllows('institution_restricted', 'public_unlisted')).toBe(false)
     expect(accessAllows('institution_restricted', 'institution_restricted')).toBe(true)
+    expect(accessAllows('institution_restricted', 'institution_confidential')).toBe(false)
+    expect(accessAllows('institution_confidential', 'public_unlisted')).toBe(false)
     expect(accessAllows('institution_confidential', 'institution_restricted')).toBe(true)
     expect(accessAllows('institution_confidential', 'institution_confidential')).toBe(true)
-    expect(accessAllows('institution_restricted', 'institution_confidential')).toBe(false)
-    expect(accessAllows('public_unlisted', 'institution_restricted')).toBe(false)
-    expect(accessAllows('institution_restricted', 'public_unlisted')).toBe(false)
   })
 })

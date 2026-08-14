@@ -531,33 +531,222 @@ describe('D2A-C4 §I — no alternate object-input admission path remains', () =
   })
 })
 
-describe('D2A-C3 — access gate refuses every coercible non-string (unchanged)', () => {
-  const coercibles: Array<[string, unknown]> = [
-    ['array wrapping a valid value', ['institution_restricted']],
-    ['boxed String', new String('institution_restricted')],
-    ['toString carrier', { toString: () => 'institution_restricted' }],
-    ['Symbol.toPrimitive carrier', { [Symbol.toPrimitive]: () => 'institution_restricted' }],
-    ['proxy over a plain object', new Proxy({}, { get: () => 'institution_restricted' })],
-    ['unknown string', 'institution_public'],
+/**
+ * D2A-C3. `accessAllows` accepts `unknown` and promises a boolean, so it must be total for
+ * every runtime input. Every row below is asserted against the real production export — not
+ * a copied helper — in both argument positions.
+ *
+ * The gate rejects non-strings by `typeof` *before* Zod, before any property read, and
+ * before any coercion. `safeParse` converts a Zod validation failure into `{success: false}`
+ * but does not contain an arbitrary exception thrown by the value under examination: it
+ * reads the candidate's `then` property, so a Proxy with a throwing `get` trap propagated
+ * its own error out of the gate (D2A-R5-C3-001, reproduced at d5ecfed9). §C pins that no
+ * caller-controlled code runs at all during a denial.
+ */
+describe('D2A-C3 §A — the access gate is total over every invalid input', () => {
+  // Factories, so each case gets a fresh carrier and jest never formats a hostile value
+  // into a test title (pretty-printing a Proxy would itself fire its traps).
+  const invalidInputs: Array<[string, () => unknown]> = [
+    ['array wrapping a valid classification', () => ['institution_restricted']],
+    ['boxed String', () => new String('institution_restricted')],
+    ['Date', () => new Date(0)],
+    ['number', () => 1],
+    ['boolean', () => true],
+    ['null', () => null],
+    ['undefined', () => undefined],
+    ['symbol', () => Symbol('institution_restricted')],
+    ['empty string', () => ''],
+    ['unknown string', () => 'institution_public'],
+    ['case variant', () => 'INSTITUTION_RESTRICTED'],
+    ['whitespace-padded valid value', () => ' institution_restricted '],
+    ['toString carrier', () => ({ toString: () => 'institution_restricted' })],
+    ['valueOf carrier', () => ({ valueOf: () => 'institution_restricted' })],
+    [
+      'Symbol.toPrimitive carrier',
+      () => ({ [Symbol.toPrimitive]: () => 'institution_restricted' }),
+    ],
+    ['non-throwing Proxy', () => new Proxy({}, { get: () => 'institution_restricted' })],
+    [
+      'throwing Proxy',
+      () =>
+        new Proxy(
+          {},
+          {
+            get() {
+              throw new Error('D2A-C3 trap sentinel')
+            },
+          },
+        ),
+    ],
+    [
+      'object whose property access throws',
+      () => ({
+        get then(): never {
+          throw new Error('D2A-C3 getter sentinel')
+        },
+        get accessClassification(): never {
+          throw new Error('D2A-C3 getter sentinel')
+        },
+      }),
+    ],
+    [
+      'object whose conversion methods throw',
+      () => ({
+        toString(): never {
+          throw new Error('D2A-C3 toString sentinel')
+        },
+        valueOf(): never {
+          throw new Error('D2A-C3 valueOf sentinel')
+        },
+        [Symbol.toPrimitive](): never {
+          throw new Error('D2A-C3 toPrimitive sentinel')
+        },
+      }),
+    ],
+    ['null-prototype object', () => Object.create(null)],
   ]
 
-  it.each(coercibles)('denies %s in either position', (_label, value) => {
+  it.each(invalidInputs)('denies %s in every position without throwing', (_label, make) => {
+    const value = make()
+    expect(() => accessAllows(value, 'institution_restricted')).not.toThrow()
+    expect(() => accessAllows('institution_restricted', value)).not.toThrow()
+    expect(() => accessAllows(value, value)).not.toThrow()
     expect(accessAllows(value, 'institution_restricted')).toBe(false)
     expect(accessAllows('institution_restricted', value)).toBe(false)
     expect(accessAllows(value, value)).toBe(false)
+    expect(accessAllows('institution_confidential', value)).toBe(false)
+    expect(accessAllows(value, 'institution_confidential')).toBe(false)
+    expect(accessAllows('public_unlisted', value)).toBe(false)
+    expect(accessAllows(value, 'public_unlisted')).toBe(false)
   })
 
-  it('preserves the exact valid access matrix', () => {
-    const matrix: Array<[string, string, boolean]> = [
-      ['public_unlisted', 'public_unlisted', true],
-      ['institution_restricted', 'institution_restricted', true],
-      ['institution_restricted', 'institution_confidential', false],
-      ['institution_confidential', 'institution_restricted', true],
-      ['institution_confidential', 'institution_confidential', true],
-    ]
-    matrix.forEach(([projection, record, expected]) => {
-      expect(accessAllows(projection, record)).toBe(expected)
+  // Derived, not hand-listed, so a future engine cannot add an inherited name this misses.
+  // Each would otherwise resolve to an inherited `Object.prototype` value used as a rank key.
+  it.each(Object.getOwnPropertyNames(Object.prototype).map((name) => [name] as [string]))(
+    'denies the Object.prototype property name %p in every position',
+    (name) => {
+      expect(accessAllows(name, name)).toBe(false)
+      expect(accessAllows(name, 'institution_restricted')).toBe(false)
+      expect(accessAllows('institution_restricted', name)).toBe(false)
+      expect(accessAllows('institution_confidential', name)).toBe(false)
+      expect(accessAllows('public_unlisted', name)).toBe(false)
+    },
+  )
+})
+
+describe('D2A-C3 §B — the exact 3x3 valid classification matrix', () => {
+  const matrix: Array<[string, string, boolean]> = [
+    ['public_unlisted', 'public_unlisted', true],
+    ['public_unlisted', 'institution_restricted', false],
+    ['public_unlisted', 'institution_confidential', false],
+    ['institution_restricted', 'public_unlisted', false],
+    ['institution_restricted', 'institution_restricted', true],
+    ['institution_restricted', 'institution_confidential', false],
+    ['institution_confidential', 'public_unlisted', false],
+    ['institution_confidential', 'institution_restricted', true],
+    ['institution_confidential', 'institution_confidential', true],
+  ]
+
+  it('covers all nine ordered pairs exactly once', () => {
+    expect(matrix).toHaveLength(9)
+    expect(new Set(matrix.map(([projection, record]) => `${projection}>${record}`)).size).toBe(9)
+  })
+
+  it.each(matrix)('projection %s over record %s is %p', (projection, record, expected) => {
+    expect(accessAllows(projection, record)).toBe(expected)
+  })
+})
+
+describe('D2A-C3 §C — a denial runs no caller-controlled code', () => {
+  it('denies the throwing Proxy that escaped the gate at d5ecfed9 without firing a trap', () => {
+    const traps = { get: 0, has: 0, getOwnPropertyDescriptor: 0, ownKeys: 0, getPrototypeOf: 0 }
+    const carrier = new Proxy(
+      {},
+      {
+        get() {
+          traps.get += 1
+          throw new Error('D2A-C3 trap sentinel')
+        },
+        has() {
+          traps.has += 1
+          throw new Error('D2A-C3 trap sentinel')
+        },
+        getOwnPropertyDescriptor() {
+          traps.getOwnPropertyDescriptor += 1
+          throw new Error('D2A-C3 trap sentinel')
+        },
+        ownKeys() {
+          traps.ownKeys += 1
+          throw new Error('D2A-C3 trap sentinel')
+        },
+        getPrototypeOf() {
+          traps.getPrototypeOf += 1
+          throw new Error('D2A-C3 trap sentinel')
+        },
+      },
+    )
+
+    expect(accessAllows(carrier, 'institution_restricted')).toBe(false)
+    expect(accessAllows('institution_restricted', carrier)).toBe(false)
+    expect(accessAllows(carrier, carrier)).toBe(false)
+    expect(accessAllows(carrier, 'public_unlisted')).toBe(false)
+    expect(accessAllows('institution_confidential', carrier)).toBe(false)
+    expect(traps).toEqual({
+      get: 0,
+      has: 0,
+      getOwnPropertyDescriptor: 0,
+      ownKeys: 0,
+      getPrototypeOf: 0,
     })
+  })
+
+  it('reads no property of an object carrying a throwing getter on every inherited name', () => {
+    const reads: string[] = []
+    const carrier: Record<string, unknown> = {}
+    // `then` is the property Zod reads during safeParse; the inherited names are the ones a
+    // rank lookup would otherwise resolve against.
+    for (const name of [
+      'then',
+      'accessClassification',
+      ...Object.getOwnPropertyNames(Object.prototype),
+    ]) {
+      Object.defineProperty(carrier, name, {
+        configurable: true,
+        enumerable: true,
+        get(): never {
+          reads.push(name)
+          throw new Error('D2A-C3 getter sentinel')
+        },
+      })
+    }
+
+    expect(accessAllows(carrier, 'institution_restricted')).toBe(false)
+    expect(accessAllows('institution_restricted', carrier)).toBe(false)
+    expect(accessAllows(carrier, carrier)).toBe(false)
+    expect(reads).toEqual([])
+  })
+
+  it('invokes no conversion hook on a carrier that counts them', () => {
+    const hooks = { toString: 0, valueOf: 0, toPrimitive: 0 }
+    const carrier = {
+      toString() {
+        hooks.toString += 1
+        return 'institution_confidential'
+      },
+      valueOf() {
+        hooks.valueOf += 1
+        return 'institution_confidential'
+      },
+      [Symbol.toPrimitive]() {
+        hooks.toPrimitive += 1
+        return 'institution_confidential'
+      },
+    }
+
+    expect(accessAllows(carrier, 'institution_restricted')).toBe(false)
+    expect(accessAllows('institution_restricted', carrier)).toBe(false)
+    expect(accessAllows(carrier, carrier)).toBe(false)
+    expect(hooks).toEqual({ toString: 0, valueOf: 0, toPrimitive: 0 })
   })
 })
 

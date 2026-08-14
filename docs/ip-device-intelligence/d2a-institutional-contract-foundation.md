@@ -126,13 +126,19 @@ Projection behavior is fail-closed:
    check would otherwise admit the diagnostic.
 7. Parsed projections are deeply frozen before return.
 
-**accessAllows** is the exported access gate, so it denies on its own rather than assuming
-its arguments were already parsed. Both arguments are re-parsed through the classification
-schema before any comparison, so a coercible object — an array, a boxed string, a
-`toString`/`Symbol.toPrimitive` carrier, a proxy — is denied outright rather than being
-used as a property key, where key coercion would have invoked its conversion methods and a
-name inherited from `Object.prototype` would have compared two functions and read as
-allowed.
+**accessAllows** is the exported access gate. It accepts `unknown` and promises a boolean, so
+it is **total**: it denies on its own rather than assuming its arguments were already parsed,
+and it never throws for any caller-supplied value.
+
+A non-string argument is rejected by `typeof` **before Zod, before any property of it is read,
+and before any coercion**. Only primitive strings reach the classification schema, so no
+`Proxy` trap, getter, or conversion hook (`toString`/`valueOf`/`Symbol.toPrimitive`) can run
+inside the gate. Arrays, boxed strings, `Date`s, numbers, booleans, `null`, `undefined`,
+symbols, null-prototype objects, and every carrier shape are denied on that one line. Strings
+are then schema-parsed before comparison, so an unrecognized string — including a name
+inherited from `Object.prototype` such as `toString` or `__proto__` — is denied rather than
+used as a rank-lookup key, where the inherited value would otherwise have compared as allowed.
+Invalid input yields exactly `false`, never an error carrying a caller value.
 
 The fixtures intentionally include two sites within one fictional institution and a second
 fictional tenant/institution. This supports tests for site, institution, and tenant
@@ -166,8 +172,14 @@ The focused suites cover:
 - refusal errors and unconfigured-scope projections naming no other scope;
 - projection-time refusal for an instant that cannot resolve, alongside the honest stale
   timestamp it already refused;
-- access-gate denial for an unrecognized classification and for every coercible
-  non-string;
+- access-gate totality (§6e): the complete invalid-input matrix — array, boxed `String`,
+  `Date`, number, boolean, `null`, `undefined`, symbol, empty/unknown/case-variant/
+  whitespace-padded strings, every `Object.prototype` property name (derived, not
+  hand-listed), `toString`/`valueOf`/`Symbol.toPrimitive` carriers, non-throwing and
+  throwing `Proxy`s, throwing-getter and throwing-conversion carriers, and null-prototype
+  objects — each asserted `false` and non-throwing in both argument positions against the
+  real `accessAllows` export, with trap, getter, and conversion-hook counters proving no
+  caller-controlled code ran; plus all nine ordered pairs of the valid 3 × 3 matrix;
 - the preserved 27 × 6 forbidden-identifier matrix, refused 162/162;
 - the sealed zero-input factory, its export surface, and module-isolation construction
   refusals;
@@ -278,6 +290,9 @@ coercible matrix (arrays, boxed strings, Date, number, boolean, null, undefined,
 converter objects, proxies, `Object.prototype` keys, empty/unknown/case-variant strings)
 is pinned to deny, and the nine-pair valid access matrix is pinned unchanged.
 
+**Superseded by §6e.** This correction relied on `safeParse` alone. That was insufficient for
+an input that throws while being examined; see §6e for the totality correction.
+
 ### D2A-C4 — inherited request properties and reserved identifiers
 
 **Pre-correction reproduction:** `Object.create(validRequest)` — owning no property at
@@ -285,15 +300,25 @@ all — was accepted, as were nested scopes with inherited fields and reserved n
 (`toString`, `constructor`, `valueOf`, `__proto__`, `hasOwnProperty`) as identifiers, which
 the projection then echoed.
 
-**Correction:** `parseOverlayProjectionRequest` verifies the original runtime value before
-Zod sees it: a request must be a plain data object (prototype exactly `Object.prototype`,
-or `null`, which cannot inherit anything), with no symbol keys, no accessor properties,
-and no non-enumerable properties; its own enumerable data properties are copied exactly
-once into a fresh object, and the nested scope is independently checked the same way.
-Reserved property names are refused as identifiers by the closed grammar itself, at the
+**Correction (superseded by §6d — historical):** `parseOverlayProjectionRequest` verified the
+original runtime value before Zod saw it: a request had to be a plain data object (prototype
+exactly `Object.prototype`, or `null`, which cannot inherit anything), with no symbol keys, no
+accessor properties, and no non-enumerable properties; its own enumerable data properties were
+copied exactly once into a fresh object, and the nested scope was independently checked the
+same way. This object-admission path — and the exported `parseOverlayProjectionRequest` itself
+— **no longer exists**; §6d replaced it with the serialized JSON-text boundary
+(`parseOverlayProjectionRequestJson` / `projectJson`), which refuses every object input.
+Reserved property names are still refused as identifiers by the closed grammar itself, at the
 request boundary and in the corpus.
 
 ## 6a. Second Codex review (2026-08-13): D2A-R2-C4-001
+
+> **Historical — superseded behavior.** Sections 6a, 6b, and 6c record the object-accepting
+> request boundary and its corrections. That boundary no longer exists: `§6d` replaced it
+> with a serialized JSON-text boundary. Every mention below of `parseOverlayProjectionRequest`
+> or the adapter's `project` method describes the **superseded** surface as it behaved at the
+> head named in that section. The current surface is `parseOverlayProjectionRequestJson` and
+> `projectJson`; neither `parseOverlayProjectionRequest` nor `project` is exported today.
 
 The second independent review confirmed C1, C2, and C3 as corrected and found one
 remaining medium request-boundary bypass in the C4 correction itself.
@@ -396,7 +421,8 @@ files and remains valid in both browser and Node environments. If the host lacks
 `structuredClone` the gate fails closed, because an input whose Proxy-freeness cannot be
 proven must not be admitted.
 
-**Results.** Every Proxy carrier above is now refused through both
+**Results (as measured at this superseded head; both entry points named here were later
+removed by §6d).** Every Proxy carrier above was refused through both
 `parseOverlayProjectionRequest` and `adapter.project` — 0 accepted, 0 projections returned,
 and no confidential, sibling-site, or cross-tenant identifier in any refusal error. A
 descriptor-synthesizing valid Proxy and a transparent Proxy both reach and are refused by
@@ -538,7 +564,8 @@ without `structuredClone` still fails closed, now at the capture instead of insi
 with the identical generic message and no projection produced for even a perfectly valid
 request.
 
-**Results.** All five previously-accepted carriers are now refused through both
+**Results (as measured at this superseded head; both entry points named here were later
+removed by §6d).** All five previously-accepted carriers were refused through both
 `parseOverlayProjectionRequest` and `adapter.project`, with no confidential, sibling-site, or
 cross-tenant identifier in any refusal. Nine regressions pin this in
 `institutional-request-boundary`: the three top-level trap positions, all three nested-`scope`
@@ -639,8 +666,91 @@ names all behave as specified, and refusals leak no fixture identifier. D2A-C1's
 deterministic reads, isolation, timestamp fail-closed behavior, and the runtime/import/exposure
 boundaries are unchanged.
 
-**Independent review of this fifth correction is still pending.** PR #102 remains a draft and
-is unmerged.
+**Transport note — duplicate JSON members.** ECMAScript `JSON.parse` resolves a duplicate
+object member to its **final** occurrence; the effective decoded object is then strictly
+validated, so a duplicate cannot smuggle an extra or conflicting field past the schema. No
+duplicate-member bypass was reproduced. Separately, the parser is synchronous and unbounded:
+**a future HTTP route must enforce an explicit request-body byte limit before calling it.**
+No current route imports D2A, so this is a requirement on a future transport, not a property
+of anything that runs today. No parser change and no in-parser size constant were added here.
+
+## 6e. Fifth Codex review (2026-08-14): D2A-R5-C3-001 — access-gate totality
+
+The fifth independent review confirmed **D2A-C1, C2, and C4 as PASS** and returned one
+remaining **MEDIUM, merge-blocking** finding against C3, at head `d5ecfed9`.
+
+**Reproduced at `d5ecfed9`.** A `Proxy` whose `get` trap throws escaped the access gate
+entirely instead of being denied:
+
+```js
+const carrier = new Proxy(
+  {},
+  {
+    get() {
+      throw new Error('D2A-C3 trap sentinel')
+    },
+  },
+)
+
+accessAllows(carrier, 'institution_restricted')
+accessAllows('institution_restricted', carrier)
+```
+
+Both calls **threw** `Error: D2A-C3 trap sentinel` rather than returning `false`, from both
+argument positions, with the trap fired once per call. Instrumenting the trap identified the
+probed key as `then`: Zod's `getParsedType` (`zod/v3/helpers/util.cjs:120`) reads `then` on
+the candidate during `ZodEnum.safeParse` to detect a thenable. A plain object with a throwing
+`then` getter reproduced identically. Coercion-only carriers (`toString`/`valueOf`/
+`Symbol.toPrimitive` throwers), symbols, and null-prototype objects already returned `false`,
+so the escape was specific to **property reads**, not coercion.
+
+**Why the fourth correction was insufficient.** `safeParse` converts a _Zod validation
+failure_ into `{success: false}`. It does not contain an arbitrary exception thrown by the
+value being examined, so a value that attacks the inspection propagates its own error out of a
+function whose signature promises a boolean.
+
+**Correction — a primitive-string prefilter, before any inspection.**
+
+```ts
+if (typeof projectionAccess !== 'string' || typeof recordAccess !== 'string') {
+  return false
+}
+```
+
+This runs before Zod, before any property read, and before any coercion, so no `Proxy` trap,
+getter, or conversion hook executes at all. A catch-only fix would have been insufficient: it
+would still have run caller-controlled code inside the gate before catching. The schema parse
+that follows is additionally wrapped in a narrow `try/catch` returning `false`, so the
+function's totality is explicit at the call site rather than inherited from Zod's internals;
+the prefilter, not the catch, is the correction.
+
+**Coverage restored.** The fifth correction's serialized redesign removed the obsolete
+object-admission tests wholesale, and in doing so **accidentally removed C3 coverage that was
+not obsolete**: the invalid-input table fell from 16 rows to 6 (losing `Date`, number,
+boolean, `null`, `undefined`, symbol, `valueOf` carrier, empty string, case variant, and
+whitespace-padded value), and the valid matrix fell from all nine ordered pairs to a five-row
+sample that was still described as "the exact valid access matrix". Both are restored and
+extended here: 20 invalid-input rows plus every `Object.prototype` property name derived from
+`Object.getOwnPropertyNames` rather than hand-listed, each asserted `false` **and**
+non-throwing in both argument positions; all nine ordered valid pairs pinned individually with
+a guard asserting the table holds exactly nine distinct pairs; and three counter-instrumented
+carriers (throwing `Proxy` across five traps, throwing getters installed on every inherited
+name plus `then`, and a counting conversion carrier) proving zero trap, getter, and hook
+invocations. Every assertion calls the real `accessAllows` export, not a copy.
+
+**Results.** The reproduction is closed: both calls return `false`, and the trap counter is
+`0` — the escape is not caught, it never fires. The `institutional-request-boundary` suite goes
+29 → 67 tests (+38) and the eight D2A suites 163 → 201 (+38); no test was removed. The
+serialized JSON boundary of §6d is untouched and re-verified: `parseOverlayProjectionRequestJson`
+and `projectJson` remain the only admission path, object inputs (including genuine
+`Object.create(null)`) are still refused before any caller code runs, the module-captured
+`JSON.parse` is unchanged, and D2A-C4's determinism and post-refusal stability still hold.
+D2A-C1's matrix remains 162/162 refused; the sealed factory, controlled provenance, deep
+freeze, deterministic reads, isolation, timestamp fail-closed behavior, and the
+runtime/import/exposure boundaries are unchanged, with 0 D2A symbols in the production build.
+
+**Independent review of this sixth correction is still pending.** PR #102 remains a draft and
+is unmerged. No independent PASS is claimed for the correction described in this section.
 
 ## 7. Requirements for a later migration phase
 

@@ -676,15 +676,41 @@ const accessRank: Record<AccessClassification, number> = {
 
 /**
  * This is the exported access gate, so it fails closed on its own rather than trusting
- * every caller to have parsed its arguments first. Both arguments are re-parsed through
- * the classification schema before any comparison: a coercible object (array, boxed
- * string, `toString`/`Symbol.toPrimitive` carrier, proxy) is denied outright rather than
- * being used as a property key, where key coercion would invoke its conversion methods
- * and an `Object.prototype` name would compare two inherited functions as "allowed".
+ * every caller to have parsed its arguments first. It accepts `unknown` and promises a
+ * boolean, so it must be total for every runtime input — including a hostile one.
+ *
+ * A non-string argument is rejected by `typeof` *before* Zod, before any property of it is
+ * read, and before any coercion. That ordering is the correction, not an optimization:
+ * `safeParse` converts a Zod validation failure into `{ success: false }`, but it does not
+ * contain arbitrary exceptions thrown by the value being examined. It reads the candidate's
+ * `then` property, so a `Proxy` with a throwing `get` trap — or a plain object with a
+ * throwing getter — used to propagate its own exception out of this gate instead of being
+ * denied (D2A-R5-C3-001, reproduced at d5ecfed9). Catching that exception afterwards would
+ * still have run caller-controlled code inside the gate; the `typeof` prefilter means the
+ * trap never fires at all.
+ *
+ * Only primitive strings reach the schema, so nothing here can invoke a Proxy trap, a
+ * getter, or a conversion hook (`toString`/`valueOf`/`Symbol.toPrimitive`). Arrays, boxed
+ * `String`s, `Date`s, symbols, and null-prototype objects are all non-strings and are denied
+ * on the same line. Strings are still schema-parsed before comparison, so an unrecognized
+ * string — including an `Object.prototype` property name such as `'toString'` or
+ * `'__proto__'` — is denied rather than used as a property key, where the inherited value
+ * would otherwise compare as "allowed". The schema parse is wrapped so that the function's
+ * totality is explicit at the call site rather than inherited from Zod's internals; invalid
+ * input yields exactly `false`, never an error carrying a caller value.
  */
 export function accessAllows(projectionAccess: unknown, recordAccess: unknown): boolean {
-  const projection = accessClassificationSchema.safeParse(projectionAccess)
-  const record = accessClassificationSchema.safeParse(recordAccess)
+  if (typeof projectionAccess !== 'string' || typeof recordAccess !== 'string') {
+    return false
+  }
+  let projection: ReturnType<typeof accessClassificationSchema.safeParse>
+  let record: ReturnType<typeof accessClassificationSchema.safeParse>
+  try {
+    projection = accessClassificationSchema.safeParse(projectionAccess)
+    record = accessClassificationSchema.safeParse(recordAccess)
+  } catch {
+    return false
+  }
   if (!projection.success || !record.success) return false
   if (projection.data === 'public_unlisted') return record.data === 'public_unlisted'
   if (record.data === 'public_unlisted') return false
