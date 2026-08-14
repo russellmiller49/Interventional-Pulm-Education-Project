@@ -181,6 +181,11 @@ The focused suites cover:
   returning accessor, non-enumerable, or symbol-keyed descriptors — refused through both
   entry points with no fixture identifier in any refusal error, alongside controls proving
   valid plain and null-prototype requests and scopes are still accepted;
+- `Proxy` carriers that overwrite the global `structuredClone` from inside a trap — at the
+  top level and in the nested scope, in each of the `getPrototypeOf`, `ownKeys`, and
+  `getOwnPropertyDescriptor` positions, including a self-restoring replacement that leaves
+  no global drift — refused through both entry points, with the replacement proven installed
+  and proven never invoked, plus a fail-closed proof for a host with no clone primitive;
 - the free-text boundary: no internal authoring text in any reachable projection; and
 - the static runtime import boundary.
 
@@ -384,10 +389,11 @@ structured cloning silently resolves an ordinary getter into a data value, so ac
 symbol, non-enumerable, unknown-key, and type failures must still be caught first by the
 snapshot and the schema, exactly as before. The gate's sole job is to establish that the
 original graph is composed of serializable ordinary data rather than Proxy exotic objects.
-It introduces no import: `structuredClone` is a host global present in every browser and in
-Node, so the module still imports only `zod` and its own relative files and remains valid
-in both browser and Node environments. If the host lacks `structuredClone` the gate fails
-closed, because an input whose Proxy-freeness cannot be proven must not be admitted.
+It introduces no import: `structuredClone` is a host global provided by the repository's
+supported production runtimes, so the module still imports only `zod` and its own relative
+files and remains valid in both browser and Node environments. If the host lacks
+`structuredClone` the gate fails closed, because an input whose Proxy-freeness cannot be
+proven must not be admitted.
 
 **Results.** Every Proxy carrier above is now refused through both
 `parseOverlayProjectionRequest` and `adapter.project` — 0 accepted, 0 projections returned,
@@ -407,7 +413,142 @@ Because the request boundary now depends on the host `structuredClone`, which th
 test sandbox does not provide, the four D2A suites that exercise `project` or
 `parseOverlayProjectionRequest` (`institutional-request-boundary`,
 `institutional-serialization`, `institutional-isolation`, `institutional-fixture-seal`) run
-under the Node test environment, where the pinned Node 20 runtime supplies it.
+under the Node test environment, where the pinned Node 20 runtime supplies it. None of the
+four asserts on DOM behavior — they exercise the pure contract, adapter, and serialization
+layers only — so the environment change removes no coverage. The production module target is
+unchanged and still type-checks and builds for both browser and Node; the boundary's
+dependency on the primitive is a runtime fail-closed check, not a build-time constraint.
+
+## 6c. Pre-independent-review inspection (2026-08-14): D2A-C4-GLOBAL-001
+
+A code-inspection pass before independent review found that the gate added in 6b, while
+structurally correct in principle, resolved its clone operation too late to be trusted.
+
+**The defect.** `assertNonProxyStructuredData` read the global twice — `typeof
+structuredClone !== 'function'`, then `structuredClone(value)` — and both reads happened
+_after_ `plainOwnDataCopy` had already called `Object.getPrototypeOf`, `Reflect.ownKeys`,
+and `Object.getOwnPropertyDescriptor` on the request. Each of those is a Proxy trap, and
+`structuredClone` is a writable, configurable property of the global object. A trap could
+therefore overwrite `globalThis.structuredClone` while the snapshot was being built, and the
+gate would then dynamically resolve and call the attacker's replacement instead of the host
+intrinsic. The gate was checking a function the request itself had installed.
+
+Making the replacement restore the genuine intrinsic as it returned defeated any
+after-the-fact detection as well: once parsing finished, the global was byte-identical to
+what it had been before the call, so no before/after comparison of global state could have
+caught the substitution.
+
+**Reproduction.** A descriptor-synthesizing Proxy over an empty target, synthesizing the
+confidential East request, with the substitution performed inside a trap:
+
+```js
+const original = globalThis.structuredClone
+new Proxy(
+  {},
+  {
+    getPrototypeOf: () => {
+      globalThis.structuredClone = () => {
+        globalThis.structuredClone = original // self-restoring: leaves no drift
+        return {}
+      }
+      return Object.prototype
+    },
+    ownKeys: () => Reflect.ownKeys(confidentialEastRequest),
+    getOwnPropertyDescriptor: (_t, key) => ({
+      value: Reflect.get(confidentialEastRequest, key),
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    }),
+  },
+)
+```
+
+Measured at head `82aaaace`, with the global descriptor confirmed `writable: true,
+configurable: true` beforehand, this was **accepted** by both `parseOverlayProjectionRequest`
+and `adapter.project`, which returned the confidential East projection with two capability
+records. The same held for the substitution performed in `ownKeys` and in
+`getOwnPropertyDescriptor`, and for a nested-`scope` Proxy performing it in any of the three
+trap positions — five carriers, all accepted through both entry points, and in every case the
+fake clone restored the original global when called. A correction that only reordered
+operations would have left the remaining trap positions exploitable.
+
+**Correction — capture the trusted intrinsic before any reflection.** The boundary now
+resolves the clone operation once, on entry, bound to the global object, before the request
+is touched:
+
+```ts
+function captureCloneIntrinsic(): ((value: unknown) => unknown) | null {
+  const candidate = globalThis.structuredClone
+  return typeof candidate === 'function' ? candidate.bind(globalThis) : null
+}
+
+export function parseOverlayProjectionRequest(input: unknown): OverlayProjectionRequest {
+  const cloneIntrinsic = captureCloneIntrinsic()
+  if (!cloneIntrinsic) {
+    throw new Error('A projection request could not be admitted as plain structured data.')
+  }
+  const copy = plainOwnDataCopy(input, 'A projection request')
+  // …snapshot, nested scope snapshot, strict schema…
+  assertNonProxyStructuredData(input, cloneIntrinsic, 'A projection request')
+  return parsed
+}
+```
+
+`assertNonProxyStructuredData` no longer performs any global lookup; it receives the
+captured reference as a parameter and calls it directly. Nothing the caller controls executes
+between entering the boundary and the capture — receiving a reference to the request runs no
+trap — so the reference is the genuine intrinsic even when the request later replaces the
+global. Because the gate never rereads the mutable global after traps have run, no trap
+position can substitute it, which is why all three positions close together rather than one
+at a time.
+
+Per-call capture was chosen over a module-initialization constant. Both satisfy
+"captured before reflection", but capturing at module load would couple the boundary to
+import order and to any host that installs the primitive after the module is first
+evaluated, and it would make the missing-host path testable only through module isolation.
+Per-call capture is the smaller architecture and matches the module's runtime contract: the
+primitive is needed per request, not per import.
+
+**Other intrinsics were deliberately not captured.** `Object.getPrototypeOf`,
+`Reflect.ownKeys`, `Object.getOwnPropertyDescriptor`, `Object.create`,
+`Object.defineProperty`, and `Object.hasOwn` were assessed as defense-in-depth candidates and
+left as-is. Only a Proxy somewhere in the input graph can execute code during the boundary,
+and any graph containing a Proxy is now refused by the trusted gate regardless of what its
+traps did to those globals; substituting them also gains an attacker nothing the traps do not
+already grant, since the snapshot's contents are attacker-supplied by construction and the
+strict schema is the filter. Capturing them would add churn without closing a demonstrable
+vector. This assessment is recorded so a future refactor that moves or removes the clone gate
+knows the reflection path is only safe because that gate backstops it.
+
+**Threat-model note.** This boundary defends against a _request object_ whose traps execute
+during the boundary's own interrogation. It does not, and cannot, defend against an attacker
+who already runs arbitrary code in the realm before the call — such an attacker can replace
+`parseOverlayProjectionRequest` itself.
+
+**Behavior preserved.** The gate still runs last, after the descriptor snapshot and the
+strict schema, so accessors, symbols, non-enumerable properties, and unknown keys are still
+refused ahead of it rather than silently resolved by structured cloning. The clone result is
+still discarded and the snapshot remains authoritative; one-read caller semantics, accepted
+`Object.create(null)` requests and scopes, post-parse caller-mutation harmlessness, and
+generic refusals that name no field value or fixture identifier are all unchanged. A host
+without `structuredClone` still fails closed, now at the capture instead of inside the gate,
+with the identical generic message and no projection produced for even a perfectly valid
+request.
+
+**Results.** All five previously-accepted carriers are now refused through both
+`parseOverlayProjectionRequest` and `adapter.project`, with no confidential, sibling-site, or
+cross-tenant identifier in any refusal. Nine regressions pin this in
+`institutional-request-boundary`: the three top-level trap positions, all three nested-`scope`
+trap positions, the self-restoring fake, the missing-host fail-closed path, and the valid
+controls. The regressions assert both that the trap genuinely installed its replacement and
+that the gate never invoked it — so they fail if the correction is reverted rather than
+passing vacuously; six of the nine fail against the pre-correction module. The thirteen
+existing ordinary-Proxy regressions and the `__proto__` regressions remain green, and the
+projection matrix remains 162/162 refused, 0/162 serialized.
+
+**Independent review of this correction is still pending.** PR #102 remains a draft and is
+unmerged.
 
 ## 7. Requirements for a later migration phase
 

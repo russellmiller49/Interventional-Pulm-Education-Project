@@ -595,3 +595,249 @@ describe('D2A-R3-C4-001 — Proxy carriers cannot synthesize a request accepted 
     expect(after).toBe(baseline)
   })
 })
+
+/**
+ * D2A-C4-GLOBAL-001. The Proxy gate added for D2A-R3-C4-001 resolved `structuredClone` from
+ * the global object at the moment it ran — after `plainOwnDataCopy` had already called
+ * `Object.getPrototypeOf`, `Reflect.ownKeys`, and `Object.getOwnPropertyDescriptor` on the
+ * request. Each of those is a Proxy trap, `structuredClone` is a writable and configurable
+ * global, and so a trap could overwrite the global before the gate looked it up: the gate
+ * then called the attacker's permissive stand-in instead of the intrinsic. Making the fake
+ * restore the real intrinsic as it returned left no global drift behind, so no after-the-fact
+ * inspection of the global could detect the substitution either.
+ *
+ * At the pre-correction head all five carriers below — three top-level trap positions and two
+ * nested-scope ones — were accepted by both `parseOverlayProjectionRequest` and the sealed
+ * adapter, which returned the confidential East projection with two capability records.
+ *
+ * The correction captures the intrinsic on entry to the boundary, bound, before the request
+ * is touched by any reflection. Nothing the caller controls runs before that capture, so the
+ * gate can no longer be handed a substitute. These tests pin that structurally: the fake is
+ * proven to be installed by the trap and proven never to be invoked by the gate.
+ */
+describe('D2A-C4-GLOBAL-001 — a trap cannot replace the Proxy gate before it runs', () => {
+  const CONFIDENTIAL_OR_FOREIGN = [
+    'fictional-east-capability-beta',
+    'fictional-east-capability-confidential-source',
+    'fictional-east-diagnostic-confidential-capability',
+    'fictional-site-west',
+    'fictional-tenant-summit',
+  ]
+
+  const confidentialEastRequest = () => ({
+    contextKind: 'institutional' as const,
+    scope: { ...FICTIONAL_HARBOR_EAST_SCOPE },
+    accessClassification: 'institution_confidential' as const,
+    projectionTimestamp: PROJECTION_TIMESTAMP,
+  })
+
+  type TrapPosition = 'getPrototypeOf' | 'ownKeys' | 'getOwnPropertyDescriptor'
+
+  let tamperInstalled = false
+  let fakeCloneInvoked = false
+
+  /**
+   * A Proxy that synthesizes a valid request through its traps and, at the chosen trap
+   * position, replaces the global `structuredClone` with a permissive fake. The fake restores
+   * the genuine intrinsic when called, so a correction that merely compared the global before
+   * and after parsing would see nothing wrong.
+   */
+  function tamperingProxy(position: TrapPosition, source: Record<string, unknown>): unknown {
+    const original = globalThis.structuredClone
+    const tamper = (): void => {
+      tamperInstalled = true
+      // Permissive: it inspects nothing, so any carrier "survives" it.
+      globalThis.structuredClone = (() => {
+        fakeCloneInvoked = true
+        globalThis.structuredClone = original
+        return {}
+      }) as typeof structuredClone
+    }
+    return new Proxy(
+      {},
+      {
+        getPrototypeOf: () => {
+          if (position === 'getPrototypeOf') tamper()
+          return Object.prototype
+        },
+        ownKeys: () => {
+          if (position === 'ownKeys') tamper()
+          return Reflect.ownKeys(source)
+        },
+        getOwnPropertyDescriptor: (_target, key) => {
+          if (position === 'getOwnPropertyDescriptor') tamper()
+          return {
+            value: Reflect.get(source, key),
+            enumerable: true,
+            configurable: true,
+            writable: true,
+          }
+        },
+      },
+    )
+  }
+
+  /**
+   * Runs `probe` with the global `structuredClone` descriptor captured beforehand and
+   * reinstated afterwards, so a carrier that leaves the fake installed cannot leak out of the
+   * test. Restoration is unconditional — the probe is expected to throw.
+   */
+  function withGlobalRestored<T>(probe: () => T): T {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone')
+    try {
+      return probe()
+    } finally {
+      if (descriptor) {
+        Object.defineProperty(globalThis, 'structuredClone', descriptor)
+      } else {
+        delete (globalThis as Record<string, unknown>).structuredClone
+      }
+    }
+  }
+
+  const originalStructuredClone = globalThis.structuredClone
+
+  function refusalText(run: () => unknown): string {
+    try {
+      run()
+    } catch (error) {
+      return error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)
+    }
+    throw new Error('Expected the request to be refused.')
+  }
+
+  /**
+   * Both entry points must refuse a fresh carrier, the trap must genuinely have replaced the
+   * global, the gate must never have called the replacement, the refusal must name no
+   * confidential or foreign identifier, and the global must be intact once restored.
+   */
+  function expectTamperingCarrierRefused(build: () => unknown): void {
+    tamperInstalled = false
+    fakeCloneInvoked = false
+
+    withGlobalRestored(() => {
+      expect(() => parseOverlayProjectionRequest(build())).toThrow()
+    })
+    expect(tamperInstalled).toBe(true)
+
+    withGlobalRestored(() => {
+      expect(() => adapter.project(build())).toThrow()
+    })
+
+    const message = withGlobalRestored(() => refusalText(() => adapter.project(build())))
+    CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+
+    // The gate used the reference captured on entry, so the substitute was never reached.
+    expect(fakeCloneInvoked).toBe(false)
+    expect(globalThis.structuredClone).toBe(originalStructuredClone)
+  }
+
+  it('pins the mutability the finding depends on', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone')
+    expect(descriptor?.writable).toBe(true)
+    expect(descriptor?.configurable).toBe(true)
+    expect(typeof originalStructuredClone).toBe('function')
+  })
+
+  it('A. refuses a top-level carrier that replaces the global during getPrototypeOf', () => {
+    expectTamperingCarrierRefused(() => tamperingProxy('getPrototypeOf', confidentialEastRequest()))
+  })
+
+  it('B. refuses a top-level carrier that replaces the global during ownKeys', () => {
+    expectTamperingCarrierRefused(() => tamperingProxy('ownKeys', confidentialEastRequest()))
+  })
+
+  it('C. refuses a top-level carrier that replaces the global while serving a descriptor', () => {
+    expectTamperingCarrierRefused(() =>
+      tamperingProxy('getOwnPropertyDescriptor', confidentialEastRequest()),
+    )
+  })
+
+  it('D. refuses a nested-scope carrier that replaces the global during reflection', () => {
+    // The scope Proxy's traps fire well after the boundary is entered, and still too late.
+    expectTamperingCarrierRefused(() => ({
+      ...confidentialEastRequest(),
+      scope: tamperingProxy('getPrototypeOf', { ...FICTIONAL_HARBOR_EAST_SCOPE }),
+    }))
+    expectTamperingCarrierRefused(() => ({
+      ...confidentialEastRequest(),
+      scope: tamperingProxy('ownKeys', { ...FICTIONAL_HARBOR_EAST_SCOPE }),
+    }))
+    expectTamperingCarrierRefused(() => ({
+      ...confidentialEastRequest(),
+      scope: tamperingProxy('getOwnPropertyDescriptor', { ...FICTIONAL_HARBOR_EAST_SCOPE }),
+    }))
+  })
+
+  it('E. does not depend on detecting drift left behind by a self-restoring fake', () => {
+    // The fake restores the genuine intrinsic the moment it is called, so the global is
+    // identical before and after a call that used it. The refusal therefore cannot come from
+    // comparing the global against a remembered value; it comes from never consulting the
+    // mutable global again after the traps have run.
+    tamperInstalled = false
+    fakeCloneInvoked = false
+    const carrier = tamperingProxy('getPrototypeOf', confidentialEastRequest())
+
+    withGlobalRestored(() => {
+      expect(() => parseOverlayProjectionRequest(carrier)).toThrow()
+      // The trap installed the fake and the gate declined to use it, so the fake is still in
+      // place at this point: the boundary refused without any global comparison being possible.
+      expect(tamperInstalled).toBe(true)
+      expect(fakeCloneInvoked).toBe(false)
+      expect(globalThis.structuredClone).not.toBe(originalStructuredClone)
+
+      // Calling the fake directly proves it restores the intrinsic and returns a permissive
+      // result — exactly what the pre-correction gate accepted.
+      expect(globalThis.structuredClone({})).toEqual({})
+      expect(fakeCloneInvoked).toBe(true)
+      expect(globalThis.structuredClone).toBe(originalStructuredClone)
+    })
+    expect(globalThis.structuredClone).toBe(originalStructuredClone)
+  })
+
+  it('F. fails closed when the host provides no trusted clone operation', () => {
+    withGlobalRestored(() => {
+      delete (globalThis as Record<string, unknown>).structuredClone
+      expect(globalThis.structuredClone).toBeUndefined()
+
+      expect(() => parseOverlayProjectionRequest(validDemoRequest())).toThrow()
+      expect(() => parseOverlayProjectionRequest(validInstitutionalRequest())).toThrow()
+      // No projection is produced for an otherwise perfectly valid request.
+      expect(() => adapter.project(validInstitutionalRequest())).toThrow()
+
+      const message = refusalText(() => adapter.project(validInstitutionalRequest()))
+      CONFIDENTIAL_OR_FOREIGN.forEach((value) => expect(message).not.toContain(value))
+    })
+    expect(globalThis.structuredClone).toBe(originalStructuredClone)
+  })
+
+  it('G. still accepts the valid controls once the global is intact', () => {
+    expect(globalThis.structuredClone).toBe(originalStructuredClone)
+    expect(() => adapter.project(validInstitutionalRequest())).not.toThrow()
+    expect(() => adapter.project(validDemoRequest())).not.toThrow()
+
+    const nullProtoRequest = Object.assign(Object.create(null), validInstitutionalRequest())
+    expect(() => adapter.project(nullProtoRequest)).not.toThrow()
+
+    const nullProtoScope = Object.assign(Object.create(null), { ...FICTIONAL_HARBOR_EAST_SCOPE })
+    const projection = adapter.project({ ...validInstitutionalRequest(), scope: nullProtoScope })
+    expect(projection.dataset.context.contextKind).toBe('institutional')
+
+    expect(parseOverlayProjectionRequest(validDemoRequest()).contextKind).toBe('demo')
+  })
+
+  it('H. leaves adapter state and repeated reads unperturbed after every tampering carrier', () => {
+    const baseline = JSON.stringify(adapter.project(validInstitutionalRequest()))
+    ;(['getPrototypeOf', 'ownKeys', 'getOwnPropertyDescriptor'] as TrapPosition[]).forEach(
+      (position) => {
+        withGlobalRestored(() => {
+          expect(() =>
+            adapter.project(tamperingProxy(position, confidentialEastRequest())),
+          ).toThrow()
+        })
+      },
+    )
+    expect(globalThis.structuredClone).toBe(originalStructuredClone)
+    expect(JSON.stringify(adapter.project(validInstitutionalRequest()))).toBe(baseline)
+  })
+})

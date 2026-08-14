@@ -1470,22 +1470,53 @@ function plainOwnDataCopy(value: unknown, label: string): Record<string, unknown
  * objects. A clone failure becomes a generic refusal that names no field value, and the
  * clone result is discarded — the authoritative parsed request is still the snapshot.
  *
+ * The clone operation is supplied by the caller as an already-captured reference rather than
+ * resolved here. `structuredClone` is a writable, configurable property of the global object,
+ * and every reflection operation in {@link plainOwnDataCopy} runs before this gate, so a
+ * Proxy trap firing during the snapshot could otherwise overwrite the global and hand this
+ * gate a permissive stand-in — one that can even restore the real intrinsic as it returns,
+ * leaving no lasting global drift to detect afterwards. Resolving the intrinsic before any
+ * attacker-controlled trap can execute is what makes the check unforgeable; see
+ * {@link captureCloneIntrinsic}.
+ *
  * If the host lacks `structuredClone` the gate fails closed: without it the boundary cannot
  * prove the input is not a Proxy, and admitting an unprovable input would reopen the bypass.
- * Every browser and every Node runtime this contract targets provides it.
+ * The repository's supported production runtimes provide it.
  */
-function assertNonProxyStructuredData(value: unknown, label: string): void {
-  if (typeof structuredClone !== 'function') {
-    throw new Error(`${label} could not be admitted as plain structured data.`)
-  }
+function assertNonProxyStructuredData(
+  value: unknown,
+  cloneIntrinsic: (value: unknown) => unknown,
+  label: string,
+): void {
   try {
-    structuredClone(value)
+    cloneIntrinsic(value)
   } catch {
     throw new Error(`${label} could not be admitted as plain structured data.`)
   }
 }
 
+/**
+ * Resolves the host structured-clone primitive once, bound to the global object, returning
+ * `null` when the host does not provide it so the caller can fail closed.
+ *
+ * This must be called before the request is touched by reflection. Nothing the caller
+ * controls runs between entering the boundary and this capture — receiving a reference to
+ * the input executes no trap — so the reference obtained here is the genuine intrinsic even
+ * when the request later replaces the global. Binding keeps the call independent of how the
+ * host expects the primitive to be invoked.
+ */
+function captureCloneIntrinsic(): ((value: unknown) => unknown) | null {
+  const candidate = globalThis.structuredClone
+  return typeof candidate === 'function' ? candidate.bind(globalThis) : null
+}
+
 export function parseOverlayProjectionRequest(input: unknown): OverlayProjectionRequest {
+  // Captured first, before any reflection below can run a Proxy trap that would replace the
+  // mutable global the final gate depends on.
+  const cloneIntrinsic = captureCloneIntrinsic()
+  if (!cloneIntrinsic) {
+    throw new Error('A projection request could not be admitted as plain structured data.')
+  }
   const copy = plainOwnDataCopy(input, 'A projection request')
   // `in` would traverse a prototype chain; the snapshot has none, but an own-property
   // check states the intent and cannot be satisfied by anything the caller inherited.
@@ -1497,8 +1528,9 @@ export function parseOverlayProjectionRequest(input: unknown): OverlayProjection
   // that synthesizes one through its traps, so refuse any input the structured-clone
   // algorithm rejects as a Proxy exotic object before returning the parsed request. This
   // runs only after the structural and schema checks have passed, and no projection is
-  // built from the result until it does.
-  assertNonProxyStructuredData(input, 'A projection request')
+  // built from the result until it does. The clone reference was captured on entry, so the
+  // traps that just ran could not have substituted it.
+  assertNonProxyStructuredData(input, cloneIntrinsic, 'A projection request')
   return parsed
 }
 
