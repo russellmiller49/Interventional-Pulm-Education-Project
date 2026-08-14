@@ -77,10 +77,12 @@ import { classifyLiteratureRollout, resolveLostAcknowledgement } from './lib/rec
 import {
   LITERATURE_FOUNDATION_TABLE_EXISTENCE_STATEMENT,
   LITERATURE_HISTORY_TABLE_EXISTENCE_STATEMENT,
+  LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256,
   LITERATURE_PREFLIGHT_QUERY_PLAN,
   LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
   LITERATURE_READ_ONLY_PREREQUISITE_STATEMENT,
 } from './lib/target-observation'
+import { parseLiteraturePostflightEvidence } from './lib/evidence-schema'
 import type { LiteraturePreflightEvidenceDocument } from './lib/evidence-schema'
 
 const ROOT = process.cwd()
@@ -90,6 +92,7 @@ const VIEW_PROBE_DATABASE = 'literature_rollback_probe'
 const INDEX_PROBE_DATABASE = 'literature_index_collision_probe'
 const TRGM_PROBE_DATABASE = 'literature_trgm_schema_probe'
 const BARE_PROBE_DATABASE = 'literature_bare_probe'
+const UNRELATED_PROBE_DATABASE = 'literature_unrelated_object_probe'
 const CONTAINER_READY_TIMEOUT_MS = 90_000
 const CONTAINER_READY_POLL_MS = 500
 
@@ -955,10 +958,143 @@ async function main() {
         `history=${trgmProbeHistory}`,
     )
 
+    // ---- 12d. Third review, finding 3: unrelated public objects are not foundation drift --------
+    // An unrelated table (with its implicit sequence), an unrelated standalone enum, and an
+    // unrelated view are planted BEFORE the apply. Preflight must pass, the apply must succeed,
+    // and the exact foundation-owned comparison must match the committed artifact even though the
+    // observed `public` namespace now holds more relations and more types than the foundation
+    // creates. Before the correction this reported drift.
+    await establishBaseline(container, UNRELATED_PROBE_DATABASE)
+    await psql(
+      container,
+      [
+        'create table public.unrelated_reference_notes (id bigserial primary key, body text);',
+        "create type public.unrelated_workflow_state as enum ('draft', 'final');",
+        'create view public.unrelated_summary_view as select 1 as sentinel;',
+      ].join('\n'),
+      { database: UNRELATED_PROBE_DATABASE },
+    )
+    const unrelatedPreCatalog = await readCatalog(container, UNRELATED_PROBE_DATABASE)
+    const unrelatedPreChecks = evaluateEvidenceContentPreflight(
+      preflightEvidenceFrom(unrelatedPreCatalog, { tableExists: true, versions: [] }),
+    )
+    record(
+      'R38-unrelated-objects-preflight-passes',
+      'unrelated public relations, a sequence, a view, and a standalone enum all pass every ' +
+        'preflight content check',
+      allChecksPassed(unrelatedPreChecks) &&
+        unrelatedPreCatalog.relations.length >= 3 &&
+        unrelatedPreCatalog.types.length === 1,
+      `relations=${unrelatedPreCatalog.relations.length} types=${unrelatedPreCatalog.types.length} ` +
+        (unrelatedPreChecks
+          .filter((entry) => !entry.passed)
+          .map((entry) => `${entry.id}: ${entry.detail}`)
+          .join('; ') || 'all checks passed'),
+    )
+
+    const unrelatedApply = await psql(container, migrationSql, {
+      database: UNRELATED_PROBE_DATABASE,
+      singleTransaction: true,
+      allowFailure: true,
+    })
+    const unrelatedAfterCatalog = await readCatalog(container, UNRELATED_PROBE_DATABASE)
+    const unrelatedComparison = compareLiteratureCatalog(unrelatedAfterCatalog, artifact)
+    const survivingUnrelated = unrelatedAfterCatalog.relations.filter((relation) =>
+      relation.name.startsWith('unrelated_'),
+    )
+    const survivingUnrelatedType = unrelatedAfterCatalog.types.filter(
+      (entry) => entry.name === 'unrelated_workflow_state',
+    )
+    record(
+      'R39-unrelated-objects-are-not-drift',
+      'the exact foundation-owned catalog matches the committed artifact even though public ' +
+        'holds unrelated relations and an unrelated standalone type, which all survive the apply',
+      unrelatedApply.code === 0 &&
+        unrelatedComparison.matches &&
+        unrelatedAfterCatalog.relations.length > LITERATURE_FOUNDATION_TABLES.length &&
+        survivingUnrelated.length >= 3 &&
+        survivingUnrelatedType.length === 1,
+      `applyExit=${unrelatedApply.code} observedRelations=${unrelatedAfterCatalog.relations.length} ` +
+        `foundationTables=${LITERATURE_FOUNDATION_TABLES.length} ` +
+        `unrelatedSurvived=${survivingUnrelated.length} ` +
+        `unrelatedTypeSurvived=${survivingUnrelatedType.length} ` +
+        (unrelatedComparison.failures.join('; ') || 'exact match'),
+    )
+
+    // ...and the narrowed scope must still stop a prohibited extra inside the reserved Literature
+    // namespace. (A *colliding* Literature name is proven separately by R32–R37.)
+    const reservedExtraRun = await psql(
+      container,
+      [
+        'begin;',
+        'create table public.literature_extra_notes (id bigint);',
+        LITERATURE_CATALOG_INSPECTION_SQL,
+        'rollback;',
+      ].join('\n'),
+      { database: UNRELATED_PROBE_DATABASE },
+    )
+    const reservedExtraSnapshot = JSON.parse(
+      reservedExtraRun.stdout.trim(),
+    ) as LiteratureCatalogSnapshot
+    const reservedExtraComparison = compareLiteratureCatalog(reservedExtraSnapshot, artifact)
+    const reservedExtraPresence = summarizeCatalogPresence(reservedExtraSnapshot)
+    record(
+      'R40-reserved-namespace-extra-still-stops',
+      'an extra Literature-named table is still reported as drift and as an unexpected ' +
+        'Literature object, while unrelated names are not',
+      !reservedExtraComparison.matches &&
+        reservedExtraPresence.unexpectedLiteratureObjects.includes('r:literature_extra_notes'),
+      `unexpected=[${reservedExtraPresence.unexpectedLiteratureObjects.join(', ')}] ` +
+        (reservedExtraComparison.failures.join('; ') || 'NOT DETECTED'),
+    )
+
+    // ---- 12e. Third review, finding 2: path-aware screening admits real catalog content ---------
+    // The parser is the surface the preflight and postflight actually use, so the genuine
+    // post-apply catalog — real function ACL arrays, real service_role privilege rows — must round
+    // trip through it. This is the false-positive half of the position-specific allowance; the
+    // rejection half lives in evidence-schema.test.ts.
+    const realPostflightDocument = JSON.stringify({
+      schemaVersion: 'literature-dedicated-postflight-observation/3.0.0',
+      queryPlanSha256: LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256,
+      existenceProbe: {
+        migrationHistoryTableExists: true,
+        presentLiteratureTables: [...LITERATURE_FOUNDATION_TABLES],
+      },
+      migrationVersions: [LITERATURE_FOUNDATION_MIGRATION.version],
+      catalog: afterCatalog,
+      prerequisites: {
+        availableExtensions: ['pg_trgm'],
+        roles: ['anon', 'authenticated', 'service_role'],
+        schemas: ['extensions', 'public'],
+      },
+      totalRowCount: 0,
+    })
+    let parsedRealDocument: ReturnType<typeof parseLiteraturePostflightEvidence> | null = null
+    let parseFailure = ''
+    try {
+      parsedRealDocument = parseLiteraturePostflightEvidence(realPostflightDocument)
+    } catch (error) {
+      parseFailure = error instanceof Error ? error.message : String(error)
+    }
+    const realAclEntries = (parsedRealDocument?.catalog.functions ?? []).flatMap(
+      (entry) => entry.acl ?? [],
+    )
+    const realServiceRoleRows = (parsedRealDocument?.catalog.tablePrivileges ?? []).filter(
+      (entry) => entry.role === 'service_role',
+    )
+    record(
+      'R41-real-catalog-parses-under-path-aware-screening',
+      'the genuine post-apply catalog — real function ACL arrays and real service_role privilege ' +
+        'rows — parses cleanly under position-specific secret screening',
+      parsedRealDocument !== null && realAclEntries.length > 0 && realServiceRoleRows.length > 0,
+      parseFailure ||
+        `aclEntries=${realAclEntries.length} serviceRolePrivilegeRows=${realServiceRoleRows.length}`,
+    )
+
     // ---- 13. Lost acknowledgement never retries -------------------------------------------------
     const lostAck = resolveLostAcknowledgement()
     record(
-      'R38-lost-ack-no-retry',
+      'R42-lost-ack-no-retry',
       'an ambiguous acknowledgement transitions to read-only reconciliation and never retries',
       lostAck.automaticRetryPermitted === false &&
         lostAck.nextAction === 'stop_read_only_reconciliation',
@@ -970,7 +1106,7 @@ async function main() {
     const targetGone = !(await containerExists(container))
     const sentinelSurvived = await containerExists(sentinel)
     record(
-      'R39-cleanup-is-operation-owned',
+      'R43-cleanup-is-operation-owned',
       'cleanup removed the rehearsal target and left an unrelated same-prefix sentinel running',
       targetGone && sentinelSurvived,
       `targetRemoved=${targetGone} sentinelSurvived=${sentinelSurvived}`,
@@ -978,7 +1114,7 @@ async function main() {
     cleanupVerified = true
 
     record(
-      'R40-protected-database-untouched',
+      'R44-protected-database-untouched',
       'the protected real-local Literature database is still present and was never contacted',
       await containerExists('supabase_db_ip-literature-local'),
       'present',
@@ -991,7 +1127,7 @@ async function main() {
   const leftoverTarget = await containerExists(container)
   const leftoverSentinel = await containerExists(sentinel)
   record(
-    'R41-no-leftovers',
+    'R45-no-leftovers',
     'no rehearsal container remains after the run',
     !leftoverTarget && !leftoverSentinel,
     `target=${leftoverTarget} sentinel=${leftoverSentinel}`,

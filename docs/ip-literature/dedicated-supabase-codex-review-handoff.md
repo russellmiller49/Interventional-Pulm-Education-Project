@@ -1,4 +1,4 @@
-# Independent review handoff — dedicated Literature Supabase bootstrap (second correction pass)
+# Independent review handoff — dedicated Literature Supabase bootstrap (third correction pass)
 
 For a fresh reviewer with no context from the implementing sessions.
 
@@ -6,10 +6,15 @@ A first independent review returned **BLOCKED** (one blocking, five high, four m
 correction pass followed. A **second** independent review of that correction again returned
 **BLOCKED**, with the central architectural finding that a structurally typed attestation object
 can never be made unforgeable while the real provider adapter is absent — plus scoping, collision,
-parser, URL, query-plan, screening, and runtime-type findings. This document lists the second
-correction and asks you to **re-run the exact reproductions**. The goal is to decide whether the
-PR is safe to merge — **not** whether the migration should be applied, which is separately gated
-and, in this PR, structurally impossible.
+parser, URL, query-plan, screening, and runtime-type findings.
+
+A **third** independent review confirmed the authority lockdown holds and returned **BLOCKED** on
+six remaining findings: a CLI exit-status hole, non-position-specific ACL allowances, an exact
+catalog comparison that included unrelated public objects, a production runtime that variables
+alone could activate, an exact URL missing its trailing slash in prose, and stale documentation
+states. This document lists **all three** corrections and asks you to **re-run the exact
+reproductions**. The goal is to decide whether the PR is safe to merge — **not** whether the
+migration should be applied, which is separately gated and, in this PR, structurally impossible.
 
 ## Setup
 
@@ -31,8 +36,8 @@ project; mutate the protected real-local database (container `supabase_db_ip-lit
 compensation; or access the held-out set.
 
 `npm run literature:dedicated:rehearse` creates and destroys its own throwaway container. It
-publishes no port and cannot reach 55322. Running it is safe and is the single most useful check
-(41 scenarios).
+publishes no port and cannot reach 55322. Running it is safe and is the single most useful check;
+it prints its own `N/N scenarios passed` line.
 
 ## The central correction — authority was removed, not hardened (B-1 / M-3)
 
@@ -153,13 +158,13 @@ future authoritative gate is documented as coming from provider `list_migrations
 ## M-2 — complete decoded-value vocabulary
 
 `assertDecodedEvidenceCarriesNoSecret` scans decoded keys **and decoded string values**,
-case-insensitively, for: secret, token, password/passwd, credential, authorization, bearer,
-api key/api*key/apikey, private key, connection string, database URL, service role, `sb_secret*`,
-`sb*publishable*`, JWT-shaped values, and inline-credential connection strings. `"password"`and`"Authorization"`as decoded values are rejected. Rejected content is never echoed (offending path
-segments are`[redacted-key]`). Legitimate catalog content is admitted through typed exact
-allowances rather than weakened screening: the exact role name `service_role`in role positions,
-PostgreSQL ACL grammar entries, and the contract's own`serviceRoleExecute` key — free text
-containing those tokens is still rejected.
+case-insensitively, for: secret, token, password/passwd, credential, authorization, bearer, api
+key, private key, connection string, database URL, service role, the Supabase key prefixes,
+JWT-shaped values, and inline-credential connection strings. The decoded values `"password"` and
+`"Authorization"` are rejected. Rejected content is never echoed — offending path segments render
+as `[redacted-key]`. Legitimate catalog content is admitted through typed exact allowances rather
+than weakened screening, and since the third correction those allowances are **position-specific**
+(see finding 2 below); free text containing the tokens is still rejected everywhere.
 
 ## H-5 — total runtime input handling
 
@@ -168,10 +173,112 @@ containing those tokens is still rejected.
 `application_mechanism_not_approved` rejection — never a `TypeError`. The closed enum is retained:
 only the exact string `supabase_connector_apply_migration_v1` passes.
 
-## Documentation corrections
+## Third correction pass — the six findings above
 
-- The architecture note names the actual flag (`--print-query-plans`), the actual scenario count
-  (41), and the split catalog scopes.
+### 1. Every CLI invocation exits nonzero
+
+Your reproduction: `npx tsx scripts/literature-dedicated-supabase/preflight.ts --print-query-plans`
+printed the plans and exited **0**, because the early return happened before
+`process.exitCode = 1`.
+
+**Correction.** Both CLIs call `blockExitStatus()` at main entry — before any argument-dependent
+branch — and re-assert it in `.finally(blockExitStatus)`. The plans are still printed; printing
+them is simply not a success. Re-run every invocation: no arguments, `--print-query-plans`,
+`--print-query-plans` combined with a full argument set, valid evidence, invalid evidence, an
+unreadable evidence path, an unknown flag, a repeated flag — for both CLIs. Each must exit nonzero
+and contain no `ready_to_apply` / `applied_correct` / `attested` / proceed-next-action text.
+`scripts/literature-dedicated-supabase/cli-exit-status.test.ts` spawns real subprocesses for all of
+these.
+
+### 2. Secret-screening allowances are position-specific
+
+Your reproduction: `{owner: "password=foo/grantor"}` and `{definition: "token=abc/grantor"}`
+matched the ACL grammar and survived screening anywhere in the document.
+
+**Correction.** `assertDecodedEvidenceCarriesNoSecret` threads the decoded structural path through
+its recursion, and each allowance is bound to exact paths: ACL grammar only in
+`catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`; the literal `service_role`
+only in `catalog.{tablePrivileges,schemaPrivileges,roleAttributes}[*].role` and
+`prerequisites.roles[*]`; the `serviceRoleExecute` **key** only on a `catalog.functions[*]` row.
+`LITERATURE_ACL_BEARING_CATALOG_SECTIONS` and `LITERATURE_ROLE_BEARING_CATALOG_SECTIONS` are
+derived from `LITERATURE_CATALOG_ROW_SCHEMAS` by a test, so a schema change cannot widen them
+silently.
+
+Re-run through the **full parser**: those two values in `owner`, `definition`, `name`, `type`,
+`schema`, a function body, an index/trigger definition, `migrationVersions`, and
+`existenceProbe.presentLiteratureTables`; the same values inside real `acl` arrays (must pass);
+malformed ACL values inside `acl` arrays (must fail); `sb_secret_…` inside an `acl` array (must
+fail); mixed-case and `\u`-escaped variants. Rehearsal `R41` additionally round-trips the genuine
+post-apply catalog — real function ACL arrays, real `service_role` privilege rows — through
+`parseLiteraturePostflightEvidence` to prove the allowance is not too narrow.
+
+### 3. The exact catalog scope is foundation-owned only
+
+Your reproduction: create an unrelated public table, preflight passes, apply the migration,
+postflight sees 9 public relations against the artifact's 8 and reports drift.
+
+**Correction.** Broad observation and exact comparison are separated.
+`collectCatalogCollisionInventory` keeps the unfiltered public inventory for `E05`;
+`projectFoundationOwnedSection` narrows the exact comparison to the eight foundation relations and
+to `LITERATURE_FOUNDATION_OWNED_TYPES` (empty — the migration defines no standalone type). Every
+other exact section was already SQL-scoped to `literature%`. The committed artifact is unchanged:
+it already held 8 relations and 0 types, which is why the projection is a no-op on the rehearsal
+snapshot and a fix on a real project.
+
+Re-run your reproduction against rehearsal `R38`–`R40`: an unrelated table (plus its implicit
+sequence), an unrelated view, and an unrelated enum are planted before the apply; preflight passes;
+the apply succeeds; the exact comparison matches; all survive; and an extra `literature_`-named
+table is still reported as drift and as an unexpected Literature object. Confirm that a colliding
+Literature name of any relkind still stops the preflight (`R32`–`R37`, plus `catalog-scope.test.ts`).
+
+### 4. No production Literature client is constructed
+
+Your reproduction: the runtime validated the dedicated project and then called
+`createClient(url, secretKey)`, which existing curation and gold-set callers use for mutating RPCs.
+
+**Correction.** `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a **source constant** set to
+`not_activated`. Strict mode validates everything and then returns the typed state `not_activated`
+/ `dedicated_runtime_not_activated`, which carries no `secretKey`. `createLiteratureAdmin()`
+reaches `createClient` only when the binding is `bound` **and** the mode is exactly `local`
+**and** the URL is on the loopback allowlist. No environment variable introduced by this PR can
+activate the remote client; activation requires a code change in the future capability-gating /
+cutover PR.
+
+Re-run: set the three documented production variables exactly, in every combination, and confirm
+`createLiteratureAdmin()` returns `null`, `createClient` is never called, and
+`searchLiterature` / `getLiteratureArticle` / `loadLiteratureAdminStats` /
+`curateLiteratureArticle` / `listLiteratureGoldSetBatches` all return
+`"The literature database is not configured."` without invoking `.rpc()` or `.from()`. Then confirm
+a loopback local configuration still constructs exactly its intended client.
+`src/features/literature/server/runtime-activation.test.ts` mocks `@supabase/supabase-js` and
+asserts all of this.
+
+### 5. The exact URL includes the trailing slash
+
+`LITERATURE_CANONICAL_PRODUCTION_URL_EXACT` = `https://itcttmkxdxvwmwcmzmey.supabase.co/`. The
+architecture note and the runbook now show that exact value wherever they present a configuration
+value, and label the bare host as a host/ref description where they mean one.
+`docs-consistency.test.ts` asserts the runbook's `LITERATURE_SUPABASE_URL=` line equals the
+executable constant.
+
+### 6. Documentation states match the code
+
+The threat model's threat-shaped check IDs (which were never check IDs), its two misnumbered
+repository-rule references, and three outcome names left over from superseded iterations are gone.
+Brittle counts — a per-layer check count in the runbook, a rehearsal scenario count in the
+architecture note — are removed from prose rather than corrected, so they cannot go stale again.
+
+`docs-consistency.test.ts` binds what remains to production exports and fails on the _shape_ of the
+old mistakes: every backticked `P`/`E`/`Q` check ID across the five documents must be produced by
+the real evaluators; the runbook's content-assessment table must equal
+`LITERATURE_CONTENT_ASSESSMENTS` exactly; no superseded outcome name, threat-shaped check ID,
+per-layer check count, or scenario count may appear anywhere; every documented CLI flag must exist
+in a CLI source; and the exact URL must carry its trailing slash in all five documents and
+`.env.example`.
+
+## Earlier documentation corrections
+
+- The architecture note names the actual flag (`--print-query-plans`) and the split catalog scopes.
 - The threat model names the actual function `assertDecodedEvidenceCarriesNoSecret()`.
 - The runbook and provenance notes state that no success verdict exists in this PR and describe
   the non-authoritative content assessments.
@@ -184,11 +291,15 @@ npm run lint
 npx eslint scripts/literature-dedicated-supabase src/features/literature
 npx prettier --check .
 npx jest scripts/literature-dedicated-supabase src/features/literature
+npx jest scripts/literature-dedicated-supabase/cli-exit-status.test.ts   # spawns real subprocesses
+npx jest scripts/literature-dedicated-supabase/catalog-scope.test.ts
+npx jest scripts/literature-dedicated-supabase/docs-consistency.test.ts
+npx jest src/features/literature/server/runtime-activation.test.ts
 npx jest scripts/literature --maxWorkers=2
 npx jest --maxWorkers=2
 npm run build
 git diff --check
-npm run literature:dedicated:rehearse   # repeat three times; 41/41 each
+npm run literature:dedicated:rehearse   # repeat three times; all scenarios must pass each time
 ```
 
 ## The protected catalog-expectation suite
@@ -202,9 +313,11 @@ PR #104 caused a failure.
 
 ## What a good review returns
 
-For each finding — B-1/M-3, H-1, H-2 (collisions), H-2 (schemas), H-3, H-5, L-1, M-2, docs —
-corrected, or a specific counter-example. Flag anything that would let _any_ input produce a
-success verdict from production code while the provider adapter is absent; let a hand-authored
-file authorize a migration; let Literature data reach `tqnhxlwvkkswuckszlee`; let more than one
-migration be selected; let a credential escape; let semantic drift pass; or let an ambiguous
-acknowledgement become a retry.
+For each finding — B-1/M-3, H-1, H-2 (collisions), H-2 (schemas), H-3, H-5, L-1, M-2, and the six
+third-review findings above — corrected, or a specific counter-example. Flag anything that would
+let _any_ input produce a success verdict or a zero exit status from production code while the
+provider adapter is absent; let a hand-authored file authorize a migration; let an environment
+variable construct a production Literature client or reach a mutating RPC; let Literature data
+reach `tqnhxlwvkkswuckszlee`; let more than one migration be selected; let a credential escape at
+any document position; let semantic drift pass; let an unrelated public object read as drift; or
+let an ambiguous acknowledgement become a retry.

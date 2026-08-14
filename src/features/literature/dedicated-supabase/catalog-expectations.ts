@@ -3,9 +3,13 @@
  *
  * These are the *reviewable* invariants — the names and counts a human can check by eye. The
  * byte-exact semantic contract (function definitions, owners, column defaults, constraint and
- * trigger and index definitions, complete ACL grids, role attributes) lives in the generated
- * artifact `foundation-catalog-expectations.json`, which the disposable rehearsal produces and the
+ * trigger and index definitions, complete ACL grids) lives in the generated artifact
+ * `foundation-catalog-expectations.json`, which the disposable rehearsal produces and the
  * comparator in `scripts/literature-dedicated-supabase/lib/foundation-catalog.ts` enforces.
+ *
+ * Role attributes are deliberately **not** in that artifact: the v3 catalog scope treats `pg_trgm`
+ * and the three API roles as *scoped managed prerequisites*, checked semantically by
+ * `evaluateManagedPrerequisiteState`, because they are platform state this repository does not own.
  *
  * Keeping both matters: the artifact catches drift a human would never spot, and these hand-written
  * counts catch a bad artifact regeneration that silently "expects" the drift.
@@ -31,6 +35,19 @@ export const LITERATURE_FOUNDATION_TABLES: readonly string[] = [
   'literature_journals',
   'literature_topics',
 ]
+
+/**
+ * Standalone types the foundation migration defines, and therefore the only entries that belong in
+ * the exact `types` section of the expectations artifact.
+ *
+ * The foundation migration creates **no** enum, domain, or standalone composite type — it is
+ * deliberately empty. That emptiness is the contract: an unrelated public enum planted by another
+ * workload, and the row type PostgreSQL generates for a table, are *not* foundation drift. (The
+ * inspection SQL already excludes table row types; this list excludes everything else that is not
+ * ours.) If a future foundation migration adds a type, adding its name here brings it into the
+ * exact comparison.
+ */
+export const LITERATURE_FOUNDATION_OWNED_TYPES: readonly string[] = []
 
 /**
  * RLS is enabled on every table and **no policies are created**. That is the fail-closed posture:

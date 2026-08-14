@@ -75,8 +75,10 @@ Merge this PR only after the independent review in
 [`dedicated-supabase-codex-review-handoff.md`](./dedicated-supabase-codex-review-handoff.md)
 completes. Record the resulting `main` commit — it becomes the owner-approved commit.
 
-> After this merges and before step 12, production Literature reports _not configured_ rather than
-> silently reading `Endoreels`. Both render no articles; the new behaviour is the honest one.
+> After this merges and until the capability-gating package of step 12 ships, production Literature
+> reports _not configured_ rather than silently reading `Endoreels` — and it reports that even if
+> the step-13 variables are set, because the production runtime is not activated. Both render no
+> articles; the new behaviour is the honest one.
 
 ### 2. Implement Layer 3
 
@@ -122,12 +124,15 @@ npm run literature:dedicated:preflight -- \
   --evidence <path.json>
 ```
 
-Layer 1 (11 checks) and Layer 2 (13 checks) can pass **non-authoritatively**. While the
-provider-bound Layer-3 adapter is unimplemented, the best reachable verdict is
-`provider_attestation_required`, the command always exits nonzero, and **no migration may be
-applied on the strength of this repository's output**. The success verdict does not exist in this
-PR; the future, separately reviewed provider-adapter PR introduces the first one. The preflight
-applies nothing.
+Every Layer 1 (repository) and Layer 2 (evidence content) check can pass **non-authoritatively**.
+While the provider-bound Layer-3 adapter is unimplemented, the best reachable verdict is
+`provider_attestation_required`, and **no migration may be applied on the strength of this
+repository's output**. The success verdict does not exist in this PR; the future, separately
+reviewed provider-adapter PR introduces the first one. The preflight applies nothing.
+
+**Every invocation of both CLIs exits nonzero** — including
+`--print-query-plans`, which still prints the plans but is not a success. Do not chain either
+command with `&&`; there is no passing exit status to chain on.
 
 ### 7. Obtain the migration authorization
 
@@ -176,6 +181,13 @@ re-ingested to authorize anything.**
 
 ### 12. Stop. The foundation migration does NOT authorize Railway cutover.
 
+> The runtime enforces this, not just the runbook. While
+> `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is `not_activated`, a valid strict configuration
+> resolves to `not_activated` / `dedicated_runtime_not_activated` and **no Supabase client is
+> constructed**. Setting the variables in step 13 before the capability-gating package ships
+> changes nothing at runtime: the Literature module keeps reporting "not configured" and no
+> mutating RPC is reachable. Activation is a reviewed code change, not a variable.
+
 This is the M-4 correction. Cutting Railway over immediately after the migration would expose the
 admin gold-set route, whose RPCs the foundation migration does not create — it would render raw
 errors and a `literature:local:start` instruction in production.
@@ -187,18 +199,27 @@ Before any Railway change:
 2. That package must hide or type-gate the gold-set destination while the nine deferred Literature
    migrations are absent, and must never show local-development instructions in production. It
    should adopt the typed `resolveLiteratureDatabaseBinding()` result rather than the nullable
-   helper.
+   helper, and it is the **first change permitted to set
+   `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` to `activated_by_reviewed_cutover`** — the source
+   constant that lets a production Literature client be constructed at all.
 3. Merge and deploy it.
 
 Keep the dedicated Railway variables **unset** until that is done.
 
 ### 13. Obtain a separate Railway authorization, then set the variables
 
+The exact raw values, byte for byte — the URL includes the **trailing slash**, which the strict
+contract requires:
+
 ```
-LITERATURE_SUPABASE_URL=https://itcttmkxdxvwmwcmzmey.supabase.co
+LITERATURE_SUPABASE_URL=https://itcttmkxdxvwmwcmzmey.supabase.co/
 LITERATURE_SUPABASE_SECRET_KEY=<sb_secret_… from the IP_Literature project>
 LITERATURE_SUPABASE_EXPECTED_PROJECT_REF=itcttmkxdxvwmwcmzmey
 ```
+
+These variables are **reserved for this cutover**. Setting them at any earlier point validates
+them and nothing more — no client is constructed and no remote RPC becomes reachable until the
+capability-gating package has flipped the activation constant.
 
 Leave `LITERATURE_SUPABASE_RUNTIME_MODE` **unset** — absent means the strict hosted contract, which
 is what production wants. Do **not** change `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_URL`, or

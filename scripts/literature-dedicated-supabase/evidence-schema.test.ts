@@ -3,6 +3,9 @@
 import { LITERATURE_CATALOG_SECTIONS } from './lib/foundation-catalog'
 import type { LiteratureCatalogSection } from './lib/foundation-catalog'
 import {
+  LITERATURE_ACL_BEARING_CATALOG_SECTIONS,
+  LITERATURE_CATALOG_ROW_SCHEMAS,
+  LITERATURE_ROLE_BEARING_CATALOG_SECTIONS,
   LiteratureEvidenceError,
   assertDecodedEvidenceCarriesNoSecret,
   parseLiteraturePostflightEvidence,
@@ -532,20 +535,29 @@ describe('post-decode credential screening (M-2)', () => {
   describe('typed non-secret allowances instead of weakened screening', () => {
     it('permits the exact role name service_role in role positions', () => {
       expect(() =>
-        assertDecodedEvidenceCarriesNoSecret({ role: 'service_role', granted: true }),
+        assertDecodedEvidenceCarriesNoSecret(
+          { role: 'service_role', granted: true },
+          '$.catalog.tablePrivileges[0]',
+        ),
       ).not.toThrow()
     })
 
     it('permits PostgreSQL ACL grammar entries', () => {
       expect(() =>
-        assertDecodedEvidenceCarriesNoSecret({
-          acl: ['service_role=arwdDxt/supabase_admin', '=X/supabase_admin'],
-        }),
+        assertDecodedEvidenceCarriesNoSecret(
+          { acl: ['service_role=arwdDxt/supabase_admin', '=X/supabase_admin'] },
+          '$.catalog.functions[0]',
+        ),
       ).not.toThrow()
     })
 
     it('permits the contract-owned serviceRoleExecute field name', () => {
-      expect(() => assertDecodedEvidenceCarriesNoSecret({ serviceRoleExecute: true })).not.toThrow()
+      expect(() =>
+        assertDecodedEvidenceCarriesNoSecret(
+          { serviceRoleExecute: true },
+          '$.catalog.functions[0]',
+        ),
+      ).not.toThrow()
     })
 
     it('still rejects service_role embedded in free text or padded forms', () => {
@@ -557,6 +569,184 @@ describe('post-decode credential screening (M-2)', () => {
         () => assertDecodedEvidenceCarriesNoSecret({ x: ' service_role ' }),
         'credential_shaped_value',
       )
+    })
+  })
+
+  /**
+   * Third review, finding 2. The allowances above used to apply wherever a string appeared, so an
+   * ACL-shaped string in `owner` or `definition` — `password=foo/grantor`, `token=abc/grantor` —
+   * passed screening inside otherwise valid evidence. Position is now part of the allowance.
+   *
+   * These run through the **full parser**, not only the scanner, because that is the surface the
+   * preflight and postflight actually use.
+   */
+  describe('allowances are position-specific (third review, finding 2)', () => {
+    /** A postflight document with one catalog row field overridden. */
+    function postflightWith(
+      section: LiteratureCatalogSection,
+      field: string,
+      value: unknown,
+      extraRow: Record<string, unknown> = {},
+    ) {
+      const catalog = populatedCatalog()
+      catalog[section] = [{ ...VALID_ROWS[section], ...extraRow, [field]: value }]
+      return validPostflight({ catalog })
+    }
+
+    it.each([
+      ['relations', 'owner', 'password=foo/grantor'],
+      ['relations', 'name', 'authorization=abc/grantor'],
+      ['relations', 'schema', 'token=abc/grantor'],
+      ['constraints', 'definition', 'token=abc/grantor'],
+      ['constraints', 'type', 'secret=x/grantor'],
+      ['functions', 'owner', 'password=foo/grantor'],
+      ['functions', 'definition', 'token=abc/grantor'],
+      ['functions', 'returnType', 'authorization=abc/grantor'],
+      ['indexes', 'definition', 'password=foo/grantor'],
+      ['triggers', 'definition', 'token=abc/grantor'],
+      ['policies', 'name', 'authorization=abc/grantor'],
+      ['types', 'name', 'password=foo/grantor'],
+      ['extensions', 'version', 'token=abc/grantor'],
+      ['indexNames', 'name', 'password=foo/grantor'],
+    ] as [LiteratureCatalogSection, string, string][])(
+      'rejects an ACL-shaped secret in catalog.%s[0].%s',
+      (section, field, value) => {
+        const error = expectCode(
+          () => parsePost(postflightWith(section, field, value)),
+          'credential_shaped_value',
+        )
+        expect(error.message).not.toContain(value)
+      },
+    )
+
+    it('rejects an ACL-shaped secret outside the catalog entirely', () => {
+      expectCode(
+        () => parsePost(validPostflight({ migrationVersions: ['password=foo/grantor'] })),
+        'credential_shaped_value',
+      )
+      expectCode(
+        () =>
+          parsePost(
+            validPostflight({
+              existenceProbe: {
+                migrationHistoryTableExists: true,
+                presentLiteratureTables: ['token=abc/grantor'],
+              },
+            }),
+          ),
+        'credential_shaped_value',
+      )
+    })
+
+    it('accepts the same values inside the actual ACL arrays', () => {
+      expect(() =>
+        parsePost(
+          postflightWith('functions', 'acl', ['password=foo/grantor', 'token=abc/grantor']),
+        ),
+      ).not.toThrow()
+      expect(() =>
+        parsePost(postflightWith('defaultPrivileges', 'acl', ['authorization=abc/grantor'])),
+      ).not.toThrow()
+    })
+
+    it('rejects a malformed ACL value inside an ACL array', () => {
+      // Vocabulary matches but the ACL grammar does not, so the position allowance does not apply.
+      for (const malformed of [
+        'password=foo/grantor extra',
+        'password=foo',
+        'token/grantor',
+        'password = foo/grantor',
+        ' password=foo/grantor',
+      ]) {
+        expectCode(
+          () => parsePost(postflightWith('functions', 'acl', [malformed])),
+          'credential_shaped_value',
+        )
+      }
+    })
+
+    it('rejects a credential shape inside an ACL array, which has no position allowance', () => {
+      expectCode(
+        () => parsePost(postflightWith('functions', 'acl', ['sb_secret_planted'])),
+        'credential_shaped_value',
+      )
+    })
+
+    it('rejects the literal service_role outside a role position', () => {
+      expectCode(
+        () => parsePost(postflightWith('relations', 'owner', 'service_role')),
+        'credential_shaped_value',
+      )
+      expectCode(
+        () => parsePost(postflightWith('defaultPrivileges', 'owner', 'service_role')),
+        'credential_shaped_value',
+      )
+    })
+
+    it('accepts the literal service_role in every real role position', () => {
+      for (const section of ['tablePrivileges', 'schemaPrivileges', 'roleAttributes'] as const) {
+        expect(() => parsePost(postflightWith(section, 'role', 'service_role'))).not.toThrow()
+      }
+      expect(() =>
+        parsePost(
+          validPostflight({
+            prerequisites: {
+              availableExtensions: ['pg_trgm'],
+              roles: ['anon', 'authenticated', 'service_role'],
+              schemas: ['extensions', 'public'],
+            },
+          }),
+        ),
+      ).not.toThrow()
+    })
+
+    it('rejects a serviceRoleExecute key outside a functions row', () => {
+      expectCode(
+        () => assertDecodedEvidenceCarriesNoSecret({ serviceRoleExecute: true }),
+        'credential_shaped_value',
+      )
+      expectCode(
+        () =>
+          assertDecodedEvidenceCarriesNoSecret(
+            { serviceRoleExecute: true },
+            '$.catalog.relations[0]',
+          ),
+        'credential_shaped_value',
+      )
+    })
+
+    it.each([
+      ['mixed case', 'PassWord=Foo/Grantor'],
+      ['escaped', '\\u0070assword=foo/grantor'],
+    ])('rejects the %s variant in a non-ACL position', (_label, value) => {
+      const raw = JSON.stringify(postflightWith('relations', 'owner', 'PLACEHOLDER')).replace(
+        '"PLACEHOLDER"',
+        `"${value}"`,
+      )
+      expectCode(() => parseLiteraturePostflightEvidence(raw), 'credential_shaped_value')
+    })
+
+    it('accepts a nested-array escaped ACL entry in the real ACL position', () => {
+      const raw = JSON.stringify(postflightWith('functions', 'acl', ['PLACEHOLDER'])).replace(
+        '"PLACEHOLDER"',
+        '"\\u0070assword=foo/grantor"',
+      )
+      expect(() => parseLiteraturePostflightEvidence(raw)).not.toThrow()
+    })
+
+    it('derives the allowed ACL and role positions from the row schemas themselves', () => {
+      const fieldsOf = (section: LiteratureCatalogSection) =>
+        Object.keys(
+          (LITERATURE_CATALOG_ROW_SCHEMAS[section] as unknown as { shape: Record<string, unknown> })
+            .shape,
+        )
+
+      expect(LITERATURE_CATALOG_SECTIONS.filter((s) => fieldsOf(s).includes('acl')).sort()).toEqual(
+        [...LITERATURE_ACL_BEARING_CATALOG_SECTIONS].sort(),
+      )
+      expect(
+        LITERATURE_CATALOG_SECTIONS.filter((s) => fieldsOf(s).includes('role')).sort(),
+      ).toEqual([...LITERATURE_ROLE_BEARING_CATALOG_SECTIONS].sort())
     })
   })
 

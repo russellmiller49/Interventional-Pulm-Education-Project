@@ -14,6 +14,11 @@
  *
  * There is no flag, argument, or code path here that applies, retries, reapplies, compensates, or
  * edits migration history.
+ *
+ * The nonzero exit status is set at main entry — before any argument-dependent branch — and
+ * re-asserted at finalization, so no invocation, early return, or thrown error can leave this
+ * preparation-only command exiting 0. (The third review found exactly that hole in the sibling
+ * preflight's `--print-query-plans` path; both CLIs now guarantee the status the same way.)
  */
 
 import { readFile } from 'node:fs/promises'
@@ -44,7 +49,14 @@ function flagValue(name: string) {
   return index >= 0 ? process.argv[index + 1] : undefined
 }
 
+/** See the module header: the exit status is guaranteed at entry and at finalization. */
+function blockExitStatus() {
+  process.exitCode = 1
+}
+
 async function main() {
+  blockExitStatus()
+
   process.stdout.write('Dedicated Literature foundation rollout — read-only postflight\n')
 
   const evidencePath = flagValue('--evidence')
@@ -153,10 +165,11 @@ async function main() {
 
   // The classification is provider_attestation_required by construction, so the exit status is
   // unconditionally nonzero: no automation can chain a success path off this command.
-  process.exitCode = 1
+  blockExitStatus()
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
-  process.exitCode = 1
-})
+main()
+  .catch((error: unknown) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+  })
+  .finally(blockExitStatus)

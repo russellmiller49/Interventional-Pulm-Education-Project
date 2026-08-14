@@ -27,6 +27,29 @@
  *      relation name in `public`, observed independently of its owning table so a same-name index
  *      on an *unrelated* table is visible to the preflight collision check (H-2).
  *
+ * The third review found a fifth distinction that scope (1) was missing. The inspection must see
+ * **every** public relation and type to detect collisions, but the *exact* comparison must not
+ * freeze them: an unrelated, non-colliding public table planted by another workload made the
+ * observed `relations` section 9 rows where the artifact expects 8, and the postflight reported
+ * drift for an object the foundation neither owns nor forbids. Observation breadth and comparison
+ * scope are now separated explicitly:
+ *
+ *   - **Broad observation inventory** (`collectCatalogCollisionInventory`): every public relation
+ *     name and kind, every public standalone type name, and every public index relation name.
+ *     Feeds occupied-name, reserved-namespace, and collision detection. It is never compared
+ *     wholesale to the artifact.
+ *   - **Exact foundation-owned projection** (`projectFoundationOwnedSection`): the same sections,
+ *     narrowed to what the migration itself creates. `relations` is narrowed to the eight
+ *     foundation tables by name; `types` is narrowed to `LITERATURE_FOUNDATION_OWNED_TYPES`, which
+ *     is empty because the migration defines no standalone type. Every other exact section is
+ *     already scoped in SQL to `literature%` objects, so a reserved-namespace extra still shows up
+ *     as drift while an unrelated public object never does.
+ *
+ * What that preserves: expected-name collisions (broad inventory), altered expected relation or
+ * type semantics (checksum over the projection), missing expected objects (row count over the
+ * projection), and prohibited extras inside the reserved Literature namespace (SQL-scoped
+ * sections plus `summarizeCatalogPresence`).
+ *
  * Every query here is `SELECT`-only against `pg_catalog`. Nothing in this file writes.
  *
  * The comparator is deliberately **not** self-authorizing. It proves the observed catalog equals
@@ -38,6 +61,7 @@
 import { createHash } from 'node:crypto'
 
 import {
+  LITERATURE_FOUNDATION_OWNED_TYPES,
   LITERATURE_FOUNDATION_TABLES,
   LITERATURE_PROBED_TABLE_PRIVILEGES,
   LITERATURE_PROBED_ROLES,
@@ -439,6 +463,44 @@ export const LITERATURE_OBSERVATION_ONLY_CATALOG_SECTIONS = [
 ] as const satisfies readonly LiteratureCatalogSection[]
 
 /**
+ * Exact sections whose captured rows are broader than what the foundation owns, and therefore need
+ * an explicit name projection before comparison. Every other exact section is already narrowed by
+ * the inspection SQL itself (`relname like 'literature%'` / `proname like '%literature%'`).
+ */
+export const LITERATURE_NAME_SCOPED_EXACT_SECTIONS = [
+  'relations',
+  'types',
+] as const satisfies readonly LiteratureExactCatalogSection[]
+
+/**
+ * The broad, observation-only inventory used for collision and reserved-namespace detection.
+ *
+ * Deliberately unfiltered: an unrelated public object is *not* drift, but it is exactly what has to
+ * be visible when deciding whether a name the migration creates is already occupied.
+ */
+export interface LiteratureCollisionInventory {
+  /** Every public relation, as `{name, relkind}`. */
+  relations: { name: string; relkind: string }[]
+  /** Every public standalone type name (table row types are excluded by the inspection SQL). */
+  typeNames: string[]
+  /** Every public index relation name, independent of its owning table. */
+  indexNames: string[]
+}
+
+export function collectCatalogCollisionInventory(
+  snapshot: LiteratureCatalogSnapshot,
+): LiteratureCollisionInventory {
+  return {
+    relations: (snapshot.relations ?? []).map((relation) => ({
+      name: relation.name,
+      relkind: relation.relkind,
+    })),
+    typeNames: (snapshot.types ?? []).map((entry) => entry.name),
+    indexNames: (snapshot.indexNames ?? []).map((entry) => entry.name),
+  }
+}
+
+/**
  * The reviewed expectations artifact. Function definitions are bound by SHA-256 rather than stored
  * verbatim, so a same-signature function with a tampered body fails while the artifact stays
  * reviewable. Everything else in the exact scope is stored in full. Version 3.0.0 narrowed the
@@ -472,15 +534,46 @@ export function normalizeCatalogSection(
   return Array.isArray(value) ? (value as unknown[]) : []
 }
 
+/**
+ * Narrow a normalized exact section to the objects the foundation migration owns.
+ *
+ * `relations` and `types` are captured across the whole `public` namespace so collisions are
+ * visible; comparing them wholesale would make any unrelated public table or enum read as
+ * foundation drift. The projection keeps only the eight foundation relation names and the
+ * (currently empty) list of foundation-owned standalone types. Matching is by **name only**: a row
+ * carrying an expected name with an unexpected schema, relkind, owner, or RLS flag stays in the
+ * projection and fails the checksum, which is a more precise failure than dropping it.
+ *
+ * Every other exact section passes through unchanged — the inspection SQL already scoped it to
+ * `literature%` objects, so a prohibited extra in the reserved namespace still surfaces as drift.
+ */
+export function projectFoundationOwnedSection(
+  section: LiteratureExactCatalogSection,
+  snapshot: LiteratureCatalogSnapshot,
+): unknown[] {
+  const normalized = normalizeCatalogSection(section, snapshot)
+  if (section === 'relations') {
+    return normalized.filter((row) =>
+      LITERATURE_FOUNDATION_TABLES.includes(String((row as CatalogRelation).name)),
+    )
+  }
+  if (section === 'types') {
+    return normalized.filter((row) =>
+      LITERATURE_FOUNDATION_OWNED_TYPES.includes(String((row as { name: string }).name)),
+    )
+  }
+  return normalized
+}
+
 export function buildCatalogExpectationArtifact(
   snapshot: LiteratureCatalogSnapshot,
 ): LiteratureCatalogExpectationArtifact {
   const sectionCounts = {} as Record<LiteratureExactCatalogSection, number>
   const sectionSha256 = {} as Record<LiteratureExactCatalogSection, string>
   for (const section of LITERATURE_EXACT_CATALOG_SECTIONS) {
-    const normalized = normalizeCatalogSection(section, snapshot)
-    sectionCounts[section] = normalized.length
-    sectionSha256[section] = sha256(canonicalJson(normalized))
+    const projected = projectFoundationOwnedSection(section, snapshot)
+    sectionCounts[section] = projected.length
+    sectionSha256[section] = sha256(canonicalJson(projected))
   }
   return {
     schemaVersion: 'literature-foundation-catalog-expectations/3.0.0',
@@ -501,8 +594,15 @@ export interface CatalogComparison {
  * Fail-closed: a missing section, a wrong row count, or any checksum difference fails. Because the
  * checksum covers function owners, ACL rows, column defaults, constraint definitions, trigger and
  * index definitions, and forced-RLS state, any material semantic drift fails even when signatures
- * and grants are untouched. A match is a *content* fact only; it says nothing about which database
- * was observed and never authorizes anything.
+ * and grants are untouched.
+ *
+ * Each section is compared through `projectFoundationOwnedSection`, so unrelated public relations
+ * and types in the observed catalog are outside the comparison entirely rather than counted as
+ * drift. Collision detection over those same unrelated objects is a *separate* concern and lives
+ * in the preflight content rules over the broad inventory.
+ *
+ * A match is a *content* fact only; it says nothing about which database was observed and never
+ * authorizes anything.
  */
 export function compareLiteratureCatalog(
   snapshot: LiteratureCatalogSnapshot,
@@ -523,14 +623,15 @@ export function compareLiteratureCatalog(
       failures.push(`catalog section ${section} is missing or is not an array`)
       continue
     }
-    const normalized = normalizeCatalogSection(section, snapshot)
+    const projected = projectFoundationOwnedSection(section, snapshot)
     const expectedCount = artifact.sectionCounts[section]
-    if (normalized.length !== expectedCount) {
+    if (projected.length !== expectedCount) {
       failures.push(
-        `catalog section ${section} has ${normalized.length} rows, expected ${expectedCount}`,
+        `catalog section ${section} has ${projected.length} foundation-owned rows, expected ` +
+          `${expectedCount}`,
       )
     }
-    const observed = sha256(canonicalJson(normalized))
+    const observed = sha256(canonicalJson(projected))
     if (observed !== artifact.sectionSha256[section]) {
       failures.push(`catalog section ${section} checksum ${observed} does not match the artifact`)
     }

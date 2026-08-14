@@ -14,6 +14,12 @@
  * type itself has no success member. The future provider-adapter PR, separately reviewed, will be
  * the first change that can introduce one.
  *
+ * The third review found the one hole in that claim: `--print-query-plans` returned from `main()`
+ * *before* the trailing `process.exitCode = 1`, so that single invocation exited 0 and a shell
+ * `&&` chain could read it as success. The failure status is now set at main entry — before any
+ * argument-dependent branch — and re-asserted at finalization, so every supported invocation of
+ * this preparation-only command exits nonzero regardless of which branch it takes or how it ends.
+ *
  *   npx tsx scripts/literature-dedicated-supabase/preflight.ts --print-query-plans
  *   npx tsx scripts/literature-dedicated-supabase/preflight.ts \
  *     --owner-approved-commit <sha> \
@@ -81,8 +87,23 @@ function report(title: string, checks: readonly PreflightCheck[]) {
   }
 }
 
+/**
+ * The single statement that makes this command's exit status honest.
+ *
+ * Called at main entry *before* any argument-dependent branch, and again at finalization, so no
+ * early return, thrown error, or unusual flag combination can leave the process exiting 0 while the
+ * provider-bound Layer-3 adapter is absent.
+ */
+function blockExitStatus() {
+  process.exitCode = 1
+}
+
 async function main() {
+  blockExitStatus()
+
   if (process.argv.includes('--print-query-plans')) {
+    // The plans themselves are still printed — they are read-only SQL an operator needs — but
+    // printing them is not a success, and the exit status already says so.
     process.stdout.write(renderLiteratureQueryPlans())
     return
   }
@@ -137,10 +158,11 @@ async function main() {
   )
   // Both reachable verdicts block; the exit status is unconditionally nonzero while Layer 3 is
   // absent so no automation can chain a success path off this command.
-  process.exitCode = 1
+  blockExitStatus()
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
-  process.exitCode = 1
-})
+main()
+  .catch((error: unknown) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+  })
+  .finally(blockExitStatus)

@@ -22,14 +22,20 @@ describe('literature database configuration', () => {
     )
   })
 
-  it('resolves the dedicated strict configuration', () => {
-    expect(
-      resolveLiteratureDatabaseConfiguration({
-        LITERATURE_SUPABASE_URL: APPROVED_URL,
-        LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
-        LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-      }),
-    ).toEqual({ url: APPROVED_URL, secretKey: SECRET_KEY, projectRef: APPROVED_REF })
+  it('validates the dedicated strict configuration but yields no connectable configuration', () => {
+    // Third review, finding 4: an exactly valid production configuration is validated in full and
+    // then withheld. Only the future capability-gating / cutover PR may turn it into a client.
+    const environment = {
+      LITERATURE_SUPABASE_URL: APPROVED_URL,
+      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    }
+    expect(resolveLiteratureDatabaseConfiguration(environment)).toBeNull()
+    expect(describeLiteratureDatabaseBinding(environment)).toMatchObject({
+      status: 'not_activated',
+      reason: 'dedicated_runtime_not_activated',
+      projectRef: APPROVED_REF,
+    })
   })
 
   it('uses the dedicated local database for the existing local workflow', () => {

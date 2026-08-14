@@ -7,8 +7,11 @@ the repository today plus the ones the runbook requires of a human operator.
 Legend for **Status**: _code_ — enforced by a test-covered code path; _procedure_ — enforced by the
 runbook and requires operator discipline; _open_ — accepted residual risk.
 
-> Revised after an independent review returned BLOCKED. The blocking finding (evidence provenance)
-> and nine further findings are addressed below; T19–T22 are new.
+> Revised after three independent reviews, each of which returned BLOCKED. The first review's
+> blocking finding (evidence provenance) and nine further findings produced T19–T22; the third
+> review's runtime-activation and catalog-scope findings produced T23–T24. Check IDs and outcome
+> names in this document are bound to the exported production names by
+> `scripts/literature-dedicated-supabase/docs-consistency.test.ts`.
 
 ## T1 — The Literature client falls back to the main application project
 
@@ -35,10 +38,12 @@ the URL hostname and the two must match; in production the result must be
 migration manifest binds the same ref, and the preflight refuses any other target. Reason codes
 `project_ref_mismatch`, `unapproved_production_project_ref`, `prohibited_project_ref`.
 
-The strict contract goes further: it accepts only the canonical origin
-`https://itcttmkxdxvwmwcmzmey.supabase.co`. Plaintext http, a non-default port, userinfo, a query,
-a fragment, an unexpected path, a trailing-dot host, an alternate project host, and any custom host
-are each refused with their own reason code (H-3).
+The strict contract goes further: it accepts only the exact raw value
+`https://itcttmkxdxvwmwcmzmey.supabase.co/`, trailing slash included, compared byte for byte before
+any parsing. (`itcttmkxdxvwmwcmzmey.supabase.co` is the host/ref, not the configuration value.)
+Plaintext http, a non-default port, userinfo, a query, a fragment, an unexpected path, a
+trailing-dot host, an alternate project host, and any custom host are each refused with their own
+reason code (H-3).
 
 **Residual.** Prefix validation of `sb_secret_` is a credential-_class_ check only. Real acceptance
 happens when the provider validates the credential.
@@ -50,7 +55,9 @@ Variables set on the wrong Railway service, or on preview instead of production.
 **Controls (procedure).** The runbook requires the operator to name the service and environment in
 the authorization record and to re-read the variables back after setting them. **Controls (code).**
 If the variables land somewhere that is not the approved project, the resolver fails closed rather
-than reading it; a preview or branch hostname is refused by preflight check `T03`.
+than reading it; a preview or branch hostname is not the byte-exact approved value and is refused
+with `noncanonical_production_url`. While the production runtime is not activated (T23), variables
+on the wrong service cannot activate a client anywhere.
 
 **Residual (open).** Nothing in this repository can observe Railway. Setting the right values on the
 wrong service produces a Literature module that is _not configured_ on the intended service — a
@@ -90,7 +97,21 @@ case-insensitively, with a closed allowance list for the exact role name `servic
 positions, PostgreSQL ACL grammar entries, and the contract's own `serviceRoleExecute` field.
 Rejected content is never echoed into an error message; legitimate catalog content that would
 otherwise trip the vocabulary is represented as a typed, exact value rather than by weakening the
-screening. Rehearsal child processes are spawned with every
+screening.
+
+Each allowance is **position-specific** (third review). The scanner carries the decoded structural
+path, and a vocabulary match is admitted only at the exact path where that content is legitimate:
+ACL grammar in `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`, the literal
+`service_role` in the three catalog `role` positions and `prerequisites.roles[*]`, and the
+`serviceRoleExecute` key on a `catalog.functions[*]` row. The same byte sequence in `owner`,
+`definition`, `name`, `type`, `schema`, a function body, an index or trigger definition, or
+anywhere else is rejected — closing `{owner: "password=foo/grantor"}` and
+`{definition: "token=abc/grantor"}`. A malformed ACL value inside a real ACL array is still
+rejected, and credential _shapes_ (`sb_secret_…`, JWTs, inline-credential connection strings) have
+no allowance at any path. The section lists are derived from the row schemas themselves by a test,
+so a schema change cannot silently widen the allowance.
+
+Rehearsal child processes are spawned with every
 `LITERATURE_SUPABASE_*`, `SUPABASE_*`, `PG*`, `POSTGRES_*`, `DOCKER_*`, `DATABASE_URL`, and
 `NEXT_PUBLIC_SUPABASE_URL` variable stripped. Test fixtures use self-describing placeholders; the
 JWTs the classifier tests are constructed at runtime, so no credential-shaped literal is committed.
@@ -103,7 +124,7 @@ read during this work.
 The Literature secret reaching a client bundle.
 
 **Controls (code).** The primary guarantee is naming: Next.js exposes only `NEXT_PUBLIC_*` to the
-browser, and none of the four dedicated variables carries that prefix. A test asserts that a
+browser, and none of the dedicated variables carries that prefix. A test asserts that a
 `NEXT_PUBLIC_*`-only environment resolves to `null` for the privileged client. `database-client.ts`
 additionally throws if it is ever evaluated where `window` is defined. A production bundle scan
 confirms `.next/static/` contains zero `LITERATURE_SUPABASE` occurrences while the secret variable
@@ -118,8 +139,8 @@ what carries the property.
 A different migration, or a migration the rollout was never authorized to include.
 
 **Controls (code).** The manifest binds one path. The preflight rejects a deferred Literature
-migration (`P09`), an unrelated application migration (`P10`), zero migrations (`P07`), and more
-than one (`P07`). The nine deferred migrations are enumerated explicitly — including the three
+migration (`P08`), an unrelated application migration (`P09`), and anything other than exactly one
+selection (`P06`), with the selected path itself bound by `P07`. The nine deferred migrations are enumerated explicitly — including the three
 whose filenames do not contain "literature" — and a test re-derives the Literature migration set by
 grepping the SQL so a new one cannot be added without the manifest noticing.
 
@@ -145,30 +166,36 @@ not connected to GitHub, so no merge can trigger a deployment.
 
 An interrupted apply leaving some objects present.
 
-**Controls (code).** The preflight refuses a target holding any Literature object (`T06`) or a
-partial table set (`T08`). The postflight classifies a partial object set as `partial_incident`
-rather than as drift or success. The rehearsal proves this end to end: it drops one table inside a
-transaction, confirms the comparison fails and the classifier returns `partial_incident`, then rolls
-back and confirms the catalog is intact.
+**Controls (code).** The preflight refuses a target holding any Literature object (`E02`) or a
+partial table set (`E06`). The postflight assesses a partial object set as
+`content_partial_incident_nonauthoritative` rather than as drift or as a content match. The
+rehearsal proves this end to end: it drops one table inside a transaction, confirms the comparison
+fails and the classifier returns that assessment, then rolls back and confirms the catalog is
+intact.
 
 ## T12 — Same-name collision
 
 An unrelated object already occupying a name the migration creates.
 
-**Controls (code).** Preflight check `T07` compares present tables and functions against the
-expected inventory and refuses any collision. The rehearsal separately proves that a second
-application is rejected by PostgreSQL and leaves the catalog unchanged.
+**Controls (code).** Preflight check `E05-no-name-collision` compares the **broad** observation
+inventory — every public relation and kind, every public standalone type, every public index
+relation name — against the expected inventory and refuses any collision, whatever object class
+occupies the name. That breadth is deliberately separate from the exact catalog comparison, which
+is narrowed to foundation-owned objects so an unrelated, non-colliding public object is not drift
+(T24). The rehearsal separately proves that a second application is rejected by PostgreSQL and
+leaves the catalog unchanged.
 
 ## T13 — Lost acknowledgement
 
 The apply is sent, the connection drops, and the operator does not learn whether it committed.
 
 **Controls (code).** `resolveLostAcknowledgement()` returns
-`stop_read_only_reconciliation` with `automaticRetryPermitted: false`. The postflight classifies a
-missing or incomplete observation as `ambiguous`, never as success or failure. Every classification
-carries `automaticRetryPermitted`, `automaticReapplicationPermitted`,
-`automaticCompensationPermitted`, and `migrationHistoryEditPermitted` — all four hard-coded `false`
-and asserted across six observation shapes.
+`stop_read_only_reconciliation` with `automaticRetryPermitted: false`. The postflight assesses a
+missing or incomplete observation as `content_observation_incomplete_nonauthoritative`, never as
+success or failure. Every verdict carries `automaticRetryPermitted`,
+`automaticReapplicationPermitted`, `automaticCompensationPermitted`, and
+`migrationHistoryEditPermitted` — all four hard-coded `false` and asserted across every observation
+shape the reconciliation suite exercises.
 
 ## T14 — Automatic retry
 
@@ -195,8 +222,9 @@ comparison against the real target.
 A rollout that also imports data.
 
 **Controls (code).** The rehearsal asserts every Literature table holds zero rows after the
-migration, and the postflight classifies any non-zero row count as `applied_drifted`. **Controls
-(procedure).** Ingestion is a separately authorized step; the runbook stops before it.
+migration, and the postflight assesses any non-zero row count as
+`content_drifted_nonauthoritative`. **Controls (procedure).** Ingestion is a separately authorized
+step; the runbook stops before it.
 
 ## T17 — Protected local mutation
 
@@ -255,7 +283,7 @@ the migration cannot be applied. That is the intended state.
 A function whose signature and ACLs are untouched but whose body was replaced; a changed owner,
 column default, constraint, trigger or index definition; a flipped forced-RLS flag.
 
-**Controls (code).** The comparator binds a generated, committed artifact covering the 9
+**Controls (code).** The comparator binds a generated, committed artifact covering the
 foundation-owned catalog sections with an exact row count and checksum each — including function
 definitions (by SHA-256), owners, strictness, parallel safety, leakproof state, full `proconfig`,
 raw ACL rows, columns with defaults and identity/generated state, constraint definitions, trigger
@@ -304,6 +332,63 @@ forged plain object, a bare attested-status literal, an `as any` cast, or a dese
 has nothing to flip — the adversarial `authority-lockdown` suite replays every bypass shape from
 the review against every exported symbol and asserts no success token can appear.
 
+The third review found the one remaining hole in the exit-status half of that claim:
+`--print-query-plans` returned from `main()` before the trailing `process.exitCode = 1`, so a
+query-plan dump exited 0 and a shell `&&` chain could read it as a passing preflight. The status is
+now set at main entry — before any argument-dependent branch — and re-asserted at finalization, and
+`cli-exit-status.test.ts` spawns both CLIs as **subprocesses** across every supported invocation
+(no arguments, `--print-query-plans`, valid evidence, invalid evidence, an unreadable path, unknown
+flags, repeated flags) asserting a nonzero status and no authoritative-success text in the real
+output. The plans are still printed; printing them is simply not a success.
+
+## T23 — A privileged remote client activated by setting variables alone
+
+The runtime binding validated the dedicated project and then constructed a Supabase client from it.
+Existing callers use that client for mutating RPCs — `curate_literature_article_v1` and the
+gold-set operations — so setting the documented Railway variables would have activated remote
+mutation against `IP_Literature` before the separately reviewed capability-gating / cutover package
+exists. Railway variables being unset today is a fact about the environment, not a control.
+
+**Controls (code).** Validation and activation are separated. `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`
+is a source constant currently set to `not_activated`; while it holds that value, a strict
+configuration that passes every check resolves to the typed state `not_activated` /
+`dedicated_runtime_not_activated` instead of `bound`, and carries **no** `secretKey` field for a
+caller to misuse. `createLiteratureAdmin()` reaches `createClient` only when the binding is `bound`,
+the mode is exactly `local`, and the URL is on the explicit loopback allowlist — three agreeing
+gates, none of which any environment variable can satisfy for a remote host. A test suite mocks
+Supabase client construction and asserts, across no-variable / partial / exactly-valid / invalid
+configurations, that `createClient` is never called, that the existing read and mutating server
+functions all return "not configured", and that `.rpc()` and `.from()` are never invoked — while a
+loopback local configuration still constructs exactly its intended client.
+
+Activation is deliberately **not** an environment variable: a second variable would have recreated
+the same defect one level down. Only a reviewed code change in the capability-gating / cutover PR
+can flip it.
+
+**Residual.** Until that package ships, production Literature reports "not configured" even with
+correct variables set. That is the intended state and is recorded in the runbook.
+
+## T24 — Unrelated public objects read as foundation drift
+
+The exact catalog comparison covered every public relation and every public type, because the
+inspection must see them all to detect collisions. An unrelated, non-colliding public table planted
+by another workload therefore made the observed `relations` section one row larger than the
+artifact expects, and the postflight reported drift for an object the foundation neither owns nor
+forbids. A false drift signal on a real rollout is not a safe failure: it invites an operator to
+regenerate the artifact against whatever the target happens to hold.
+
+**Controls (code).** Observation breadth and comparison scope are separate.
+`collectCatalogCollisionInventory` keeps the unfiltered public inventory that `E05` needs, and
+`projectFoundationOwnedSection` narrows the exact comparison to foundation-owned objects —
+`relations` to the eight foundation tables, `types` to `LITERATURE_FOUNDATION_OWNED_TYPES` (empty:
+the migration defines no standalone type), with every other exact section already SQL-scoped to
+`literature%`. Detection is preserved on all four axes: expected-name collisions of any object
+class, altered semantics of an expected relation, a missing expected object, and a prohibited extra
+inside the reserved Literature namespace. Rehearsal `R38`–`R40` prove it against a real PostgreSQL
+17 target: an unrelated table, its implicit sequence, an unrelated view, and an unrelated enum are
+planted before the apply, preflight passes, the apply succeeds, the exact comparison matches, all
+of them survive, and an extra `literature_`-named table is still reported as drift.
+
 ## Residual risks accepted
 
 1. **Layer 3 is unimplemented** (T19). Production migration is blocked until a project-scoped
@@ -317,3 +402,6 @@ the review against every exported symbol and asserts no success token can appear
    evidence rather than assuming the filename version.
 5. **Admin gold-set surfaces would error against a foundation-only database.** This is why the
    runbook gates Railway cutover behind a separate capability-gating package (M-4).
+6. **The production Literature runtime is disabled** (T23). Correct variables produce no client
+   until the capability-gating / cutover package flips the activation constant, so production
+   Literature stays "not configured" in the meantime.

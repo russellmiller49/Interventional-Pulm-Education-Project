@@ -63,24 +63,52 @@ The contract is **strict by default**. The mode comes from `LITERATURE_SUPABASE_
 closed enum, and **not** from `NODE_ENV`: only the exact string `local` relaxes anything, so an
 absent, misspelled, or unexpected value in a deployed environment fails safe rather than open.
 
-Under the strict contract the URL must be exactly the canonical origin
-`https://itcttmkxdxvwmwcmzmey.supabase.co` — https only, default port, no userinfo, no query, no
-fragment, root path only, no trailing-dot host — and the credential must be a current-model
-`sb_secret_…` key. Local mode permits a loopback target **and only a loopback target**; it never
-accepts an arbitrary remote host.
+Under the strict contract the raw `LITERATURE_SUPABASE_URL` value must be exactly
+
+```
+https://itcttmkxdxvwmwcmzmey.supabase.co/
+```
+
+byte for byte, **trailing slash included** — https only, default port, no userinfo, no query, no
+fragment, root path only, no trailing-dot host. (The host/ref itself is
+`itcttmkxdxvwmwcmzmey.supabase.co`; that form is a description of the target, never the
+configuration value.) The credential must be a current-model `sb_secret_…` key. Local mode permits
+a loopback target **and only a loopback target**; it never accepts an arbitrary remote host.
 
 A `secret` classification is a credential-_class_ check, not authentication. The credential is only
 truly accepted when the Supabase provider validates it.
 
 `tqnhxlwvkkswuckszlee` is rejected as a Literature target in **every** mode, not only production.
 
+### The production runtime is validated, not activated
+
+`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a **source constant**, currently `not_activated`.
+While it holds that value, a strict configuration that passes every check resolves to the typed
+state `not_activated` / `dedicated_runtime_not_activated` rather than `bound`, and
+`createLiteratureAdmin()` returns `null`. `createClient` is reachable only for a `local`-mode URL
+on the explicit loopback allowlist, so:
+
+- setting the three documented production variables validates them and constructs nothing;
+- no privileged remote Literature client exists in this PR, and no mutating RPC
+  (`curate_literature_article_v1`, the gold-set RPCs) is reachable;
+- the existing list, detail, curation, and gold-set callers receive the same `null` they already
+  handle as "not configured".
+
+Activation is deliberately _not_ another environment variable — a deployment must not be able to
+switch on remote mutation without a reviewed change. The separate capability-gating / cutover
+package is the first change permitted to flip the constant, after the foundation migration, the
+Layer-3 provider work, capability gating, independent review, and an explicit Railway
+authorization.
+
 ### Failure states are typed, not collapsed
 
-`resolveLiteratureDatabaseBinding()` returns a discriminated union carrying one of twenty-one reason
-codes — `not_configured`, `partial_configuration`, `ambiguous_credentials`, `project_ref_mismatch`,
-`prohibited_project_ref`, `loopback_not_permitted_in_production`, and so on. This exists so the
-later unavailable-versus-empty UI work can distinguish "misconfigured" from "no articles yet"
-without guessing. That UI package is **not** implemented here; only the typed state it needs is.
+`resolveLiteratureDatabaseBinding()` returns a discriminated union over three statuses — `bound`,
+`not_activated`, and `unbound` — where `unbound` carries a specific reason code
+(`not_configured`, `partial_configuration`, `ambiguous_credentials`, `project_ref_mismatch`,
+`prohibited_project_ref`, `loopback_not_permitted_in_production`, and so on). This exists so the
+later unavailable-versus-empty UI work can distinguish "misconfigured" from "valid but not yet
+activated" from "no articles yet" without guessing. That UI package is **not** implemented here;
+only the typed state it needs is.
 
 `describeLiteratureDatabaseBinding()` returns a redacted view safe to log. No function in the
 contract ever puts a credential into a message, an error, or a diagnostics payload.
@@ -173,9 +201,18 @@ the SQL. The catalog contract is split by ownership so the disposable baseline i
 as the managed-project baseline (review finding H-1):
 
 - **Exact, foundation-owned** — the generated artifact `foundation-catalog-expectations.json`
-  binds the 9 catalog sections the migration itself creates or alters (relations, columns,
-  constraints, functions by definition SHA-256, triggers, indexes, policies, the full 224-row
-  table-privilege grid, and types), each with an exact row count and checksum.
+  binds the catalog sections the migration itself creates or alters (relations, columns,
+  constraints, functions by definition SHA-256, triggers, indexes, policies, the full
+  table-privilege grid, and types), each with an exact row count and checksum. The comparison is
+  narrowed to foundation-_owned_ objects: `relations` to the eight foundation tables and `types` to
+  `LITERATURE_FOUNDATION_OWNED_TYPES` (empty — the migration defines no standalone type), while
+  every other exact section is already scoped in SQL to `literature%` objects. An unrelated,
+  non-colliding public table or enum is therefore **not** drift.
+- **Broad, observation-only** — the inspection still captures every public relation and kind, every
+  public standalone type, and every public index relation name. That breadth feeds collision and
+  reserved-namespace detection (`collectCatalogCollisionInventory`), and is deliberately never
+  compared wholesale to the artifact. Separating the two is what keeps "an unrelated table exists"
+  from reading as "the foundation drifted".
 - **Scoped managed prerequisites** — checked semantically, never byte-exactly: `pg_trgm` must be
   absent or installed in exactly the `extensions` schema before the apply (installed anywhere else
   is rejected — `CREATE EXTENSION IF NOT EXISTS` would not relocate it), installed in exactly
@@ -200,12 +237,15 @@ The foundation-owned invariants:
 
 ## Verification tooling
 
-| Command                                   | What it does                                                                         |
-| ----------------------------------------- | ------------------------------------------------------------------------------------ |
-| `npm run literature:dedicated:rehearse`   | Applies the migration to a throwaway PostgreSQL 17 container and proves 41 scenarios |
-| `npm run literature:dedicated:preflight`  | Read-only. Proves repository and target state before anything is applied             |
-| `npm run literature:dedicated:postflight` | Read-only. Classifies the target after an attempt, including a lost acknowledgement  |
-| `npm run literature:dedicated:test`       | The unit and contract suites                                                         |
+| Command                                   | What it does                                                                                   |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm run literature:dedicated:rehearse`   | Applies the migration to a throwaway PostgreSQL 17 container and proves every tracked scenario |
+| `npm run literature:dedicated:preflight`  | Read-only. Proves repository and target state before anything is applied                       |
+| `npm run literature:dedicated:postflight` | Read-only. Classifies the target after an attempt, including a lost acknowledgement            |
+| `npm run literature:dedicated:test`       | The unit and contract suites                                                                   |
+
+The rehearsal prints its own `N/N scenarios passed` line; that count is deliberately not repeated
+here, so growing the rehearsal cannot make this note stale.
 
 The preflight and postflight **hold no credential and open no connection.** The operator captures a
 read-only observation separately (`npm run literature:dedicated:preflight -- --print-query-plans`
@@ -214,7 +254,8 @@ complete — each statement wrapped in `BEGIN READ ONLY` and each plan carrying 
 identity) and the verifiers evaluate that JSON document offline. This means no code path in this
 repository can log, store, or transmit the Literature secret. While the provider-bound Layer-3
 adapter is unimplemented, both commands terminate at `provider_attestation_required` and exit
-nonzero for every input: there is no success verdict in this PR.
+nonzero for **every** invocation — `--print-query-plans` included, which prints the plans and still
+exits nonzero — so there is no success verdict and no zero exit status to chain on in this PR.
 
 The rehearsal container publishes **no port**, so it has no TCP surface and cannot collide with the
 protected real-local database on 55322.

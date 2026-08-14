@@ -18,6 +18,19 @@
  * positions, PostgreSQL ACL grammar entries, and this contract's own `serviceRoleExecute` field).
  * Rejected content is never echoed into an error message.
  *
+ * **M-2, third correction — the allowances are position-specific.** The allowance list was applied
+ * wherever a string appeared, so `{owner: "password=foo/grantor"}` and
+ * `{definition: "token=abc/grantor"}` matched the ACL grammar and survived screening inside
+ * otherwise valid evidence. The scanner now carries the decoded structural path through the
+ * recursion, and each allowance is bound to the exact path(s) at which that content is legitimate:
+ * ACL grammar only inside `catalog.functions[*].acl[*]` / `catalog.defaultPrivileges[*].acl[*]`,
+ * the literal `service_role` only in the three `role` positions and `prerequisites.roles[*]`, and
+ * the `serviceRoleExecute` key only on a `catalog.functions[*]` row. An ACL-shaped or
+ * vocabulary-matching string anywhere else — `owner`, `definition`, `name`, `type`, `schema`, a
+ * function body, an index or trigger definition, or any other position — is rejected. The section
+ * lists are asserted against the row schemas themselves by the evidence-schema suite, so adding or
+ * removing an `acl`/`role` field cannot silently widen or narrow the allowance.
+ *
  * **L-1** — evidence is phase-specific. The preflight document carries existence-safe facts only
  * and has **no** `totalRowCount`; the postflight document carries the existence probe, migration
  * versions, the complete catalog, and the row count. Each binds the identity of the query plan
@@ -245,19 +258,54 @@ const SECRET_VOCABULARY_PATTERN =
   /(secret|passwd|password|token|credential|authorization|bearer|api[\s_.-]?key|private[\s_.-]?key|connection[\s_.-]?string|database[\s_.-]?url|service[\s_.-]?role)/iu
 
 /**
- * Closed allowances for legitimate catalog content that would otherwise trip the vocabulary.
- * Rather than weakening the screening, each allowance admits one *typed, exact* representation:
- *
- *   - the literal role name `service_role`, exactly, as emitted by role and privilege probes;
- *   - a single PostgreSQL ACL-grammar entry (`grantee=privileges/grantor`), the only shape the
- *     `acl` arrays contain;
- *   - this contract's own `serviceRoleExecute` field name.
- *
- * Anything else that matches the vocabulary — including free text containing these tokens — is
- * rejected.
+ * Catalog sections whose row schema declares an `acl: string[]` field — the only positions where a
+ * PostgreSQL ACL-grammar string is legitimate content rather than a hiding place. The
+ * evidence-schema suite derives the same list from `LITERATURE_CATALOG_ROW_SCHEMAS` and asserts
+ * equality, so a schema change cannot silently widen or narrow the allowance.
  */
-const EXACT_ALLOWED_KEYS: ReadonlySet<string> = new Set(['serviceRoleExecute'])
-const EXACT_ALLOWED_VALUES: ReadonlySet<string> = new Set(['service_role'])
+export const LITERATURE_ACL_BEARING_CATALOG_SECTIONS = ['defaultPrivileges', 'functions'] as const
+
+/** Catalog sections whose row schema declares a `role: string` field. Same derivation and test. */
+export const LITERATURE_ROLE_BEARING_CATALOG_SECTIONS = [
+  'roleAttributes',
+  'schemaPrivileges',
+  'tablePrivileges',
+] as const
+
+/** The one role name the probes legitimately emit that collides with the secret vocabulary. */
+export const LITERATURE_EXACT_ROLE_NAME_ALLOWANCE = 'service_role'
+
+/**
+ * Closed, **position-specific** allowances for legitimate catalog content that would otherwise
+ * trip the vocabulary. Each admits one *typed, exact* representation at one *exact decoded path*:
+ *
+ *   - `catalog.{functions,defaultPrivileges}[*].acl[*]` — a single PostgreSQL ACL-grammar entry
+ *     (`grantee=privileges/grantor`), the only shape those arrays contain;
+ *   - `catalog.{roleAttributes,schemaPrivileges,tablePrivileges}[*].role` and
+ *     `prerequisites.roles[*]` — the literal role name `service_role`, exactly;
+ *   - `catalog.functions[*].serviceRoleExecute` — this contract's own field name, as a key.
+ *
+ * Anything else that matches the vocabulary is rejected: free text containing these tokens, an
+ * ACL-shaped string in `owner`/`definition`/`name`/`type`/`schema`/a function body/an index or
+ * trigger definition, a `service_role` value outside a role position, and a `serviceRoleExecute`
+ * key outside a function row.
+ */
+const ACL_MEMBER_PATH_PATTERN = new RegExp(
+  String.raw`^\$\.catalog\.(?:${LITERATURE_ACL_BEARING_CATALOG_SECTIONS.join(
+    '|',
+  )})\[\d+\]\.acl\[\d+\]$`,
+  'u',
+)
+
+const ROLE_NAME_PATH_PATTERN = new RegExp(
+  String.raw`^\$\.(?:catalog\.(?:${LITERATURE_ROLE_BEARING_CATALOG_SECTIONS.join(
+    '|',
+  )})\[\d+\]\.role|prerequisites\.roles\[\d+\])$`,
+  'u',
+)
+
+const SERVICE_ROLE_EXECUTE_KEY_PATH_PATTERN = /^\$\.catalog\.functions\[\d+\]\.serviceRoleExecute$/u
+
 const ACL_ENTRY_PATTERN =
   /^(?:"?[A-Za-z_][A-Za-z0-9_]*"?)?=[A-Za-z*]*\/"?[A-Za-z_][A-Za-z0-9_]*"?$/u
 
@@ -266,14 +314,28 @@ function redactedKeyPath(parentPath: string): string {
 }
 
 /**
+ * Whether a vocabulary-matching string is admissible **at this exact path**.
+ *
+ * Position is part of the allowance, not an afterthought: the same byte sequence that is a valid
+ * grant inside an `acl` array is a rejected secret in `owner` or `definition`.
+ */
+function allowedAtPath(path: string, value: string): boolean {
+  if (ROLE_NAME_PATH_PATTERN.test(path)) return value === LITERATURE_EXACT_ROLE_NAME_ALLOWANCE
+  if (ACL_MEMBER_PATH_PATTERN.test(path)) return ACL_ENTRY_PATTERN.test(value)
+  return false
+}
+
+/**
  * Recursively screen decoded evidence for anything credential-shaped, in keys and values.
  *
  * Runs after decoding, so `sb_secret_…`, `SB_SECRET_…`, and `sb_secret_…` are caught
- * identically. Never echoes the offending key or value: messages carry only a path whose
- * offending segment is redacted.
+ * identically. The `path` parameter is the decoded structural path of `value`; it is threaded
+ * through every recursion so allowances stay position-specific. Never echoes the offending key or
+ * value: messages carry only a path whose offending segment is redacted.
  */
 export function assertDecodedEvidenceCarriesNoSecret(value: unknown, path = '$'): void {
   if (typeof value === 'string') {
+    // Credential *shapes* have no allowance anywhere, including inside an ACL array.
     for (const pattern of CREDENTIAL_VALUE_PATTERNS) {
       if (pattern.test(value)) {
         throw new LiteratureEvidenceError(
@@ -283,11 +345,7 @@ export function assertDecodedEvidenceCarriesNoSecret(value: unknown, path = '$')
         )
       }
     }
-    if (
-      SECRET_VOCABULARY_PATTERN.test(value) &&
-      !EXACT_ALLOWED_VALUES.has(value) &&
-      !ACL_ENTRY_PATTERN.test(value)
-    ) {
+    if (SECRET_VOCABULARY_PATTERN.test(value) && !allowedAtPath(path, value)) {
       throw new LiteratureEvidenceError(
         'credential_shaped_value',
         `The evidence document contains prohibited secret vocabulary in the value at ${path}. ` +
@@ -305,7 +363,8 @@ export function assertDecodedEvidenceCarriesNoSecret(value: unknown, path = '$')
   }
   if (value && typeof value === 'object') {
     for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-      if (!EXACT_ALLOWED_KEYS.has(key)) {
+      const childPath = `${path}.${key}`
+      if (!SERVICE_ROLE_EXECUTE_KEY_PATH_PATTERN.test(childPath)) {
         if (CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(key))) {
           throw new LiteratureEvidenceError(
             'credential_shaped_value',
@@ -319,7 +378,7 @@ export function assertDecodedEvidenceCarriesNoSecret(value: unknown, path = '$')
           )
         }
       }
-      assertDecodedEvidenceCarriesNoSecret(entry, `${path}.${key}`)
+      assertDecodedEvidenceCarriesNoSecret(entry, childPath)
     }
   }
 }
@@ -477,7 +536,11 @@ const roleAttributeRow = z
   })
   .strict()
 
-const CATALOG_ROW_SCHEMAS = {
+/**
+ * The strict row schema per section. Exported so the secret-screening allowance lists above can be
+ * *derived from the schema* in a test rather than hand-maintained beside it.
+ */
+export const LITERATURE_CATALOG_ROW_SCHEMAS = {
   extensions: extensionRow,
   relations: relationRow,
   indexNames: indexNameRow,
@@ -499,10 +562,12 @@ const catalogSchema = z
     Object.fromEntries(
       LITERATURE_CATALOG_SECTIONS.map((section) => [
         section,
-        z.array(CATALOG_ROW_SCHEMAS[section]),
+        z.array(LITERATURE_CATALOG_ROW_SCHEMAS[section]),
       ]),
     ) as {
-      [Section in LiteratureCatalogSection]: z.ZodArray<(typeof CATALOG_ROW_SCHEMAS)[Section]>
+      [Section in LiteratureCatalogSection]: z.ZodArray<
+        (typeof LITERATURE_CATALOG_ROW_SCHEMAS)[Section]
+      >
     },
   )
   .strict()

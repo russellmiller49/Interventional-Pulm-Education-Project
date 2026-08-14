@@ -46,18 +46,26 @@ export type LiteratureRolloutNextAction = 'stop_read_only_reconciliation'
 /**
  * What the observed *content* looks like. Every member is explicitly non-authoritative: these
  * describe a document, not a proven database, and none of them unlocks any action.
+ *
+ * Declared as a runtime array so documentation can be bound to it. The rollout runbook's content
+ * assessment table is asserted equal to this list by `docs-consistency.test.ts`, which is how the
+ * third review's stale outcome names (`partial_incident`, `ambiguous`, `applied_drifted`) are kept
+ * from reappearing.
  */
-export type LiteratureContentAssessment =
+export const LITERATURE_CONTENT_ASSESSMENTS = [
   /** The observation did not complete; nothing may be concluded even about the content. */
-  | 'content_observation_incomplete_nonauthoritative'
+  'content_observation_incomplete_nonauthoritative',
   /** No history and no Literature objects appear in the evidence. */
-  | 'content_absent_nonauthoritative'
+  'content_absent_nonauthoritative',
   /** The content shows a state no single successful transaction produces. */
-  | 'content_partial_incident_nonauthoritative'
+  'content_partial_incident_nonauthoritative',
   /** History and inventory are complete, but something about the objects drifted. */
-  | 'content_drifted_nonauthoritative'
+  'content_drifted_nonauthoritative',
   /** The catalog content matches the expected foundation state exactly. Still not permission. */
-  | 'catalog_matches_expected_nonauthoritative'
+  'catalog_matches_expected_nonauthoritative',
+] as const
+
+export type LiteratureContentAssessment = (typeof LITERATURE_CONTENT_ASSESSMENTS)[number]
 
 export interface LiteratureRolloutObservation {
   /** Whether the read-only observation completed. False means the target could not be inspected. */

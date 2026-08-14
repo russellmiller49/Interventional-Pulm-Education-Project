@@ -21,6 +21,22 @@
  * closed, server-only opt-in: only the exact string `local` in
  * `LITERATURE_SUPABASE_RUNTIME_MODE` relaxes anything. Everything else — absent, empty,
  * `Local`, `production`, `LOCAL `, an unknown word — resolves to the strict hosted contract.
+ *
+ * ## The production runtime is validated here and activated nowhere
+ *
+ * The third independent review found that a fully valid strict configuration still produced a
+ * `bound` result, which `createLiteratureAdmin()` turned into a privileged remote client that the
+ * existing curation and gold-set callers use for mutating RPCs. Setting the documented Railway
+ * variables would therefore have activated remote mutation *before* the separately reviewed
+ * capability-gating / cutover package exists.
+ *
+ * So strict mode now validates everything and then stops: an exactly valid production URL, ref,
+ * and secret key resolve to the typed state `not_activated` / `dedicated_runtime_not_activated`,
+ * never to `bound`. The switch is `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`, a **source
+ * constant** — deliberately not another environment variable, so no value an operator can set
+ * turns the production client on. Flipping it is a code change belonging to the future
+ * capability-gating / cutover PR, after the foundation migration, the Layer-3 provider work,
+ * capability gating, independent review, and an explicit Railway authorization.
  */
 
 /** The approved dedicated Literature production project (`IP_Literature`). */
@@ -101,6 +117,25 @@ export type LiteratureRuntimeMode = 'production_strict' | 'local'
 
 /** The only value that selects the relaxed local contract. Compared exactly, byte for byte. */
 export const LITERATURE_LOCAL_RUNTIME_MODE_VALUE = 'local'
+
+/**
+ * Whether the dedicated **production** Literature runtime is activated in this build.
+ *
+ * A source constant on purpose. Introducing another environment variable here would recreate the
+ * defect the third review found: a deployment could activate a privileged remote Literature client
+ * — reachable by the existing curation and gold-set mutating RPCs — simply by setting variables,
+ * with no reviewed change in between. Activation must be a code change, and the future
+ * capability-gating / cutover PR is the first one permitted to make it.
+ *
+ * The annotation widens the type past the assigned literal deliberately: the comparison below is a
+ * real runtime branch and a future flip needs no other edit.
+ */
+export type LiteratureProductionRuntimeActivation =
+  | 'not_activated'
+  | 'activated_by_reviewed_cutover'
+
+export const LITERATURE_PRODUCTION_RUNTIME_ACTIVATION: LiteratureProductionRuntimeActivation =
+  'not_activated'
 
 export interface LiteratureRuntimeModeEnvironment {
   LITERATURE_SUPABASE_RUNTIME_MODE?: string
@@ -185,8 +220,31 @@ export interface LiteratureDatabaseBindingFailure {
   message: string
 }
 
+/**
+ * The reason a *valid* configuration still yields no client. Distinct from every failure reason:
+ * nothing is misconfigured, the runtime is simply not activated in this build.
+ */
+export type LiteratureBindingWithheldReason = 'dedicated_runtime_not_activated'
+
+/**
+ * A fully validated production configuration whose client is deliberately withheld.
+ *
+ * It carries the diagnostics the later capability-gating UI needs — mode, resolved ref, credential
+ * class — and, pointedly, **no `secretKey` field**: there is nothing here for a caller to
+ * construct a remote client from, by mistake or by cast.
+ */
+export interface LiteratureDatabaseBindingWithheld {
+  status: 'not_activated'
+  mode: LiteratureRuntimeMode
+  projectRef: string
+  credentialClass: LiteratureCredentialClass
+  reason: LiteratureBindingWithheldReason
+  message: string
+}
+
 export type LiteratureDatabaseBinding =
   | LiteratureDatabaseBindingSuccess
+  | LiteratureDatabaseBindingWithheld
   | LiteratureDatabaseBindingFailure
 
 /** The dedicated Literature variables. Deliberately excludes every `NEXT_PUBLIC_*` name. */
@@ -288,6 +346,23 @@ export function parseLiteratureTargetUrl(url: string): ParsedLiteratureTarget | 
 
 export function isWellFormedProjectRef(value: string): boolean {
   return PROJECT_REF_PATTERN.test(value.trim())
+}
+
+/**
+ * The explicit loopback allowlist that the single client-constructing path checks.
+ *
+ * `resolveLiteratureDedicatedBinding` already refuses a remote host in local mode, so this is a
+ * second, independent statement of the same rule at the point of construction: while the
+ * production runtime is not activated, a Supabase client may only ever be built for a loopback
+ * target. Two agreeing gates are what makes "no remote client exists in this PR" checkable rather
+ * than inferred from control flow.
+ */
+export function isPermittedLocalRuntimeUrl(url: string): boolean {
+  const target = parseLiteratureTargetUrl(url)
+  if (!target) return false
+  if (target.protocol !== 'http:' && target.protocol !== 'https:') return false
+  if (target.hasUserInfo) return false
+  return target.isLoopback
 }
 
 function failure(
@@ -560,6 +635,27 @@ export function resolveLiteratureDedicatedBinding(
     )
   }
 
+  // Everything above has validated the strict configuration completely — canonical byte-exact URL,
+  // approved ref, secret-key credential class. This is where validation stops and activation would
+  // begin, and activation is deliberately absent: the production runtime is switched by a source
+  // constant, not by any variable, so a valid configuration yields diagnostics and no client.
+  if (strict && LITERATURE_PRODUCTION_RUNTIME_ACTIVATION !== 'activated_by_reviewed_cutover') {
+    return {
+      status: 'not_activated',
+      mode,
+      projectRef: resolvedRef,
+      credentialClass,
+      reason: 'dedicated_runtime_not_activated',
+      message:
+        `The dedicated Literature configuration for project ${resolvedRef} is valid, but the ` +
+        'production Literature runtime is not activated in this build. No Supabase client is ' +
+        'constructed and no remote RPC is reachable. Activation is a reviewed code change in the ' +
+        'capability-gating / cutover package, not an environment variable: setting ' +
+        'LITERATURE_SUPABASE_URL, LITERATURE_SUPABASE_SECRET_KEY, and ' +
+        'LITERATURE_SUPABASE_EXPECTED_PROJECT_REF does not enable it.',
+    }
+  }
+
   return {
     status: 'bound',
     mode,
@@ -581,7 +677,7 @@ export interface LiteratureBindingDiagnostics {
   mode: LiteratureRuntimeMode
   projectRef: string | null
   credentialClass: LiteratureCredentialClass | null
-  reason: LiteratureBindingFailureReason | null
+  reason: LiteratureBindingFailureReason | LiteratureBindingWithheldReason | null
   message: string | null
   usedLegacyCredentialVariable: boolean
 }
@@ -598,6 +694,19 @@ export function describeLiteratureBinding(
       reason: null,
       message: null,
       usedLegacyCredentialVariable: binding.usedLegacyCredentialVariable,
+    }
+  }
+  if (binding.status === 'not_activated') {
+    // Valid but withheld. The later capability-gating UI needs to tell this apart from both
+    // "misconfigured" and "no articles yet", so it keeps its ref and credential class.
+    return {
+      status: 'not_activated',
+      mode: binding.mode,
+      projectRef: binding.projectRef,
+      credentialClass: binding.credentialClass,
+      reason: binding.reason,
+      message: binding.message,
+      usedLegacyCredentialVariable: false,
     }
   }
   return {

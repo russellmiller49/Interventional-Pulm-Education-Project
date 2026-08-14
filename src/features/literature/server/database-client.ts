@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 import {
   describeLiteratureBinding,
+  isPermittedLocalRuntimeUrl,
   resolveLiteratureDedicatedBinding,
   resolveLiteratureRuntimeMode,
   type LiteratureBindingDiagnostics,
@@ -22,6 +23,18 @@ import {
  * The contract in force is decided by `LITERATURE_SUPABASE_RUNTIME_MODE`, not by `NODE_ENV`.
  * Anything other than the exact string `local` gets the strict hosted contract, so an unset or
  * misspelled variable in a deployed environment fails safe rather than open.
+ *
+ * ## No production client is constructed in this PR
+ *
+ * `createLiteratureAdmin()` is the only place in the repository that calls `createClient` for
+ * Literature, and while the production runtime is not activated it can only reach that call for an
+ * exact local-mode loopback target. Strict mode never resolves to `bound` (see
+ * `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`), and two further guards here refuse anything that is
+ * not `mode === 'local'` with a URL on the loopback allowlist. So the existing list, detail,
+ * curation, and gold-set callers receive `null` in every deployed configuration — the same "not
+ * configured" path they already handle — and no privileged remote RPC is reachable. Setting the
+ * documented Railway variables changes none of that; only the future capability-gating / cutover
+ * PR can.
  */
 type LiteratureDatabaseEnvironment = LiteratureDedicatedEnvironment
 
@@ -62,6 +75,14 @@ export function describeLiteratureDatabaseBinding(
   return describeLiteratureBinding(resolveLiteratureDatabaseBinding(environment))
 }
 
+/**
+ * The connectable configuration, or `null`.
+ *
+ * Only a `bound` binding yields one, so in strict mode this returns `null` for *every* input while
+ * the production runtime is not activated — including an exactly valid production configuration,
+ * which resolves to `not_activated`. Use `describeLiteratureDatabaseBinding()` when you need to
+ * tell "valid but withheld" from "misconfigured".
+ */
 export function resolveLiteratureDatabaseConfiguration(
   environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): LiteratureDatabaseConfiguration | null {
@@ -92,15 +113,32 @@ function assertServerOnly() {
   }
 }
 
+/**
+ * The privileged Literature client, or `null`.
+ *
+ * Three independent conditions must all hold before `createClient` is reached, and no environment
+ * variable can satisfy the first one outside local development:
+ *
+ *   1. the binding resolved to `bound` — impossible in strict mode while the production runtime is
+ *      not activated, because strict resolves to `not_activated` instead;
+ *   2. the resolved mode is exactly `local`;
+ *   3. the URL is on the explicit loopback allowlist.
+ *
+ * Callers already treat `null` as "the literature database is not configured", so a deployed
+ * environment degrades to that honest state rather than to a remote client.
+ */
 export function createLiteratureAdmin() {
   assertServerOnly()
 
-  const configuration = resolveLiteratureDatabaseConfiguration()
-  if (!configuration) {
+  const binding = resolveLiteratureDatabaseBinding()
+  if (binding.status !== 'bound') {
+    return null
+  }
+  if (binding.mode !== 'local' || !isPermittedLocalRuntimeUrl(binding.url)) {
     return null
   }
 
-  return createClient(configuration.url, configuration.secretKey, {
+  return createClient(binding.url, binding.secretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

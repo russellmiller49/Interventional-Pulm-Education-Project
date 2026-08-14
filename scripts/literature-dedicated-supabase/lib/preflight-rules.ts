@@ -36,7 +36,10 @@ import {
   LITERATURE_FOUNDATION_INDEXES,
   LITERATURE_FOUNDATION_TABLES,
 } from '../../../src/features/literature/dedicated-supabase/catalog-expectations'
-import { evaluateManagedPrerequisiteState } from './foundation-catalog'
+import {
+  collectCatalogCollisionInventory,
+  evaluateManagedPrerequisiteState,
+} from './foundation-catalog'
 import type { LiteratureCatalogSnapshot } from './foundation-catalog'
 import { LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256 } from './target-observation'
 import type { LiteraturePreflightEvidenceDocument } from './evidence-schema'
@@ -286,11 +289,19 @@ export function evaluateEvidenceContentPreflight(
   // H-2: collision detection across every object class that can block or alter the migration,
   // not just tables. A view named public.literature_journals previously passed here and then
   // broke the apply.
+  //
+  // This runs over the **broad observation inventory** — every public relation, standalone type,
+  // and index relation name, unrelated ones included. That breadth is exactly what collision
+  // detection needs, and it is deliberately *not* the scope the exact catalog comparison uses: an
+  // unrelated, non-colliding public object must be visible here and invisible there.
+  const inventory = collectCatalogCollisionInventory(
+    catalog as unknown as LiteratureCatalogSnapshot,
+  )
   const expectedNames = new Set<string>([
     ...LITERATURE_FOUNDATION_TABLES,
     ...LITERATURE_FOUNDATION_INDEXES,
   ])
-  const relationCollisions = relations
+  const relationCollisions = inventory.relations
     .filter(
       (relation) =>
         expectedNames.has(relation.name) &&
@@ -303,9 +314,9 @@ export function evaluateEvidenceContentPreflight(
       return `${label} ${relation.name}`
     })
 
-  const typeCollisions = catalog.types
-    .filter((entry) => expectedNames.has(entry.name))
-    .map((entry) => `type ${entry.name}`)
+  const typeCollisions = inventory.typeNames
+    .filter((name) => expectedNames.has(name))
+    .map((name) => `type ${name}`)
 
   const functionCollisions = catalog.functions
     .filter((entry) => LITERATURE_FOUNDATION_FUNCTION_NAMES.includes(entry.name))
@@ -315,9 +326,9 @@ export function evaluateEvidenceContentPreflight(
   // literature_articles_search_vector_idx on an *unrelated* table is a collision here even though
   // no Literature table exists yet. Relation names in pg_class share one namespace; the migration
   // would fail with "relation already exists".
-  const indexNameCollisions = catalog.indexNames
-    .filter((entry) => expectedNames.has(entry.name))
-    .map((entry) => `index ${entry.schema}.${entry.name} (owning table irrelevant)`)
+  const indexNameCollisions = inventory.indexNames
+    .filter((name) => expectedNames.has(name))
+    .map((name) => `index ${name} (owning table irrelevant)`)
 
   const scopedIndexCollisions = catalog.indexes
     .filter((entry) => expectedNames.has(entry.name))
