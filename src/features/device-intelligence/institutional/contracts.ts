@@ -1,0 +1,1628 @@
+import { z } from 'zod'
+
+/**
+ * Phase D2A is a contract exercise only. These labels travel with every fictional bundle
+ * and projection so a caller cannot accidentally present the fixtures as deployed data.
+ */
+export const INSTITUTIONAL_CONTRACT_FOUNDATION_LABELS = [
+  'INSTITUTIONAL CONTRACT FOUNDATION',
+  'FICTIONAL DATA ONLY',
+  'NOT A DEPLOYED INSTITUTION MODEL',
+] as const
+
+export const institutionalContractFoundationLabelsSchema = z.tuple([
+  z.literal('INSTITUTIONAL CONTRACT FOUNDATION'),
+  z.literal('FICTIONAL DATA ONLY'),
+  z.literal('NOT A DEPLOYED INSTITUTION MODEL'),
+])
+
+/**
+ * Closed identifier grammar. Domain identifiers are data that later phases will use as
+ * lookup keys, so they must never collide with JavaScript property-lookup behavior:
+ * lowercase ASCII letters/digits with single hyphen/underscore separators, bounded length,
+ * and an explicit refusal of every `Object.prototype` name. `constructor` and `prototype`
+ * satisfy the lowercase pattern, so the reserved-name check is not redundant with it.
+ */
+const IDENTIFIER_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/
+
+export const RESERVED_IDENTIFIER_NAMES: ReadonlySet<string> = new Set([
+  '__proto__',
+  'prototype',
+  'constructor',
+  ...Object.getOwnPropertyNames(Object.prototype),
+])
+
+function closedIdentifierSchema(label: string) {
+  return z
+    .string()
+    .max(72, { message: `${label} must stay within the bounded identifier length.` })
+    .regex(IDENTIFIER_PATTERN, {
+      message: `${label} must match the closed lowercase identifier grammar.`,
+    })
+    .refine((value) => !RESERVED_IDENTIFIER_NAMES.has(value), {
+      message: `${label} must not be a reserved JavaScript property name.`,
+    })
+}
+
+/** Identifies a tenant, institution, site, or demo context. */
+export const scopeComponentIdentifierSchema = closedIdentifierSchema('A scope component')
+/** Names one record, source, provenance row, decision, entry, review, or diagnostic. */
+export const scopeLocalIdentifierSchema = closedIdentifierSchema('A scope-local identifier')
+/** Names a bundle-wide governed vocabulary value (capability code, subject, revision). */
+export const globalGovernedCodeSchema = closedIdentifierSchema('A governed code')
+
+/**
+ * Free authoring text. It exists only inside the sealed fixture bundle and is never part
+ * of a returned projection, so it tolerates prose while still refusing control characters.
+ */
+export const internalAuthoringTextSchema = z
+  .string()
+  .min(1)
+  .max(1_000)
+  .refine((value) => value === value.trim(), {
+    message: 'Internal authoring text must not carry leading or trailing whitespace.',
+  })
+  .refine((value) => !/[\u0000-\u001f\u007f]/.test(value), {
+    message: 'Internal authoring text must not contain control characters.',
+  })
+
+/**
+ * `z.string().datetime({ offset: true })` accepts an offset zod's own pattern allows but
+ * `Date.parse` cannot resolve — `2026-08-12T12:00:00+99:99` validates yet parses to NaN.
+ * Every projection-time comparison below is a `>` against a parsed instant, and NaN makes
+ * that comparison false, so a single unreadable timestamp would silently switch the
+ * evidence-time guard off rather than fail closed. Require a real resolvable instant.
+ */
+const isoInstantSchema = z
+  .string()
+  .datetime({ offset: true })
+  .refine((value) => Number.isFinite(Date.parse(value)), {
+    message: 'A timestamp must resolve to a real instant.',
+  })
+
+export const institutionScopeIdentitySchema = z
+  .object({
+    tenantId: scopeComponentIdentifierSchema,
+    institutionId: scopeComponentIdentifierSchema,
+    siteId: scopeComponentIdentifierSchema,
+  })
+  .strict()
+
+export const demoContextIdentitySchema = z
+  .object({
+    contextKind: z.literal('demo'),
+    demoContextId: scopeComponentIdentifierSchema,
+  })
+  .strict()
+
+export const institutionalContextIdentitySchema = z
+  .object({
+    contextKind: z.literal('institutional'),
+    scope: institutionScopeIdentitySchema,
+  })
+  .strict()
+
+export const overlayContextIdentitySchema = z.discriminatedUnion('contextKind', [
+  demoContextIdentitySchema,
+  institutionalContextIdentitySchema,
+])
+
+export const accessClassificationSchema = z.enum([
+  'public_unlisted',
+  'institution_restricted',
+  'institution_confidential',
+])
+
+export const institutionalAccessClassificationSchema = z.enum([
+  'institution_restricted',
+  'institution_confidential',
+])
+
+export const sourceKindSchema = z.enum([
+  'capability',
+  'formulary',
+  'inventory',
+  'institutional_approval',
+])
+
+/**
+ * Controlled vocabularies. Every projection-visible explanatory value is a member of one
+ * of these closed enums; the projection carries no arbitrary source-authored prose.
+ */
+export const unknownReasonSchema = z.enum([
+  'not_reported',
+  'not_verified',
+  'stale_source',
+  'source_unavailable',
+  'no_matching_record',
+])
+
+export const sourceStateReasonSchema = z.enum([
+  'scope_not_configured',
+  'source_not_configured',
+  'source_offline',
+  'not_reported',
+  'not_verified',
+  'stale_source',
+])
+
+export const capabilityUnavailableReasonSchema = z.enum([
+  'not_offered',
+  'decommissioned',
+  'service_suspended',
+])
+
+export const inventoryAbsentReasonSchema = z.enum(['stock_zero_confirmed', 'not_stocked'])
+
+export const formularyNotListedReasonSchema = z.enum([
+  'confirmed_not_listed',
+  'removed_from_formulary',
+])
+
+export const inventoryUnitSchema = z.enum(['each', 'box', 'kit', 'case'])
+
+export const dataQualityDiagnosticCodeSchema = z.enum([
+  'scope_not_configured',
+  'missing_capability_record',
+  'missing_inventory_record',
+  'source_unavailable',
+  'stale_source',
+  'approval_unverified',
+])
+
+/**
+ * Controlled diagnostic templates. A projected diagnostic carries a template key drawn
+ * from this frozen map instead of its authoring message, so display copy is resolved from
+ * repository-controlled templates rather than from data.
+ */
+export const DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE = Object.freeze({
+  scope_not_configured: 'device-intelligence.institutional.diagnostic.scope-not-configured',
+  missing_capability_record:
+    'device-intelligence.institutional.diagnostic.missing-capability-record',
+  missing_inventory_record: 'device-intelligence.institutional.diagnostic.missing-inventory-record',
+  source_unavailable: 'device-intelligence.institutional.diagnostic.source-unavailable',
+  stale_source: 'device-intelligence.institutional.diagnostic.stale-source',
+  approval_unverified: 'device-intelligence.institutional.diagnostic.approval-unverified',
+} as const) satisfies Record<z.infer<typeof dataQualityDiagnosticCodeSchema>, string>
+
+export const diagnosticMessageTemplateKeySchema = z.enum([
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.scope_not_configured,
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.missing_capability_record,
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.missing_inventory_record,
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.source_unavailable,
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.stale_source,
+  DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE.approval_unverified,
+])
+
+export const provenanceClassSchema = z.enum([
+  'fictional_fixture',
+  'institution_record',
+  'system_export',
+  'official_document',
+])
+
+/**
+ * Authoring provenance. The raw label, locator, and jurisdiction prose live inside an
+ * explicit internal-only block that no projected schema admits; the projection carries the
+ * provenance identifier and class only.
+ */
+export const sourceProvenanceSchema = z
+  .object({
+    provenanceId: scopeLocalIdentifierSchema,
+    provenanceClass: provenanceClassSchema,
+    internalAuthoring: z
+      .object({
+        sourceLabel: internalAuthoringTextSchema,
+        sourceLocator: internalAuthoringTextSchema,
+        jurisdiction: internalAuthoringTextSchema,
+      })
+      .strict(),
+  })
+  .strict()
+
+export const projectedSourceProvenanceSchema = z
+  .object({
+    provenanceId: scopeLocalIdentifierSchema,
+    provenanceClass: provenanceClassSchema,
+  })
+  .strict()
+
+const sourceReferenceFields = {
+  sourceId: scopeLocalIdentifierSchema,
+  sourceKind: sourceKindSchema,
+  sourceRevision: globalGovernedCodeSchema,
+  lastVerifiedAt: isoInstantSchema,
+}
+
+export const demoSourceReferenceSchema = z
+  .object({
+    ...sourceReferenceFields,
+    provenance: sourceProvenanceSchema,
+    context: demoContextIdentitySchema,
+    accessClassification: z.literal('public_unlisted'),
+  })
+  .strict()
+
+export const institutionalSourceReferenceSchema = z
+  .object({
+    ...sourceReferenceFields,
+    provenance: sourceProvenanceSchema,
+    context: institutionalContextIdentitySchema,
+    accessClassification: institutionalAccessClassificationSchema,
+  })
+  .strict()
+
+export const projectedDemoSourceReferenceSchema = z
+  .object({
+    ...sourceReferenceFields,
+    provenance: projectedSourceProvenanceSchema,
+    context: demoContextIdentitySchema,
+    accessClassification: z.literal('public_unlisted'),
+  })
+  .strict()
+
+export const projectedInstitutionalSourceReferenceSchema = z
+  .object({
+    ...sourceReferenceFields,
+    provenance: projectedSourceProvenanceSchema,
+    context: institutionalContextIdentitySchema,
+    accessClassification: institutionalAccessClassificationSchema,
+  })
+  .strict()
+
+export const dataSourceStateSchema = z.discriminatedUnion('state', [
+  z.object({ state: z.literal('available') }).strict(),
+  z
+    .object({
+      state: z.literal('unknown'),
+      reason: sourceStateReasonSchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('unavailable'),
+      reason: sourceStateReasonSchema,
+    })
+    .strict(),
+])
+
+export const capabilityStateSchema = z.discriminatedUnion('state', [
+  z.object({ state: z.literal('available') }).strict(),
+  z
+    .object({
+      state: z.literal('unavailable'),
+      reason: capabilityUnavailableReasonSchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('unknown'),
+      reason: unknownReasonSchema,
+    })
+    .strict(),
+])
+
+export const inventoryQuantitySchema = z.discriminatedUnion('state', [
+  z
+    .object({
+      state: z.literal('known'),
+      value: z.number().int().min(0),
+      unit: inventoryUnitSchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('unknown'),
+      reason: unknownReasonSchema,
+    })
+    .strict(),
+])
+
+export const inventoryStateSchema = z.discriminatedUnion('state', [
+  z
+    .object({
+      state: z.literal('present'),
+      quantity: inventoryQuantitySchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('absent'),
+      reason: inventoryAbsentReasonSchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('unknown'),
+      reason: unknownReasonSchema,
+    })
+    .strict(),
+])
+
+export const formularyEvidenceStateSchema = z.discriminatedUnion('state', [
+  z
+    .object({
+      state: z.literal('listed'),
+      formularyEntryId: scopeLocalIdentifierSchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('not_listed'),
+      reason: formularyNotListedReasonSchema,
+    })
+    .strict(),
+  z
+    .object({
+      state: z.literal('unknown'),
+      reason: unknownReasonSchema,
+    })
+    .strict(),
+])
+
+const institutionalApprovalSourceSchema = institutionalSourceReferenceSchema
+  .extend({ sourceKind: z.literal('institutional_approval') })
+  .strict()
+
+const projectedInstitutionalApprovalSourceSchema = projectedInstitutionalSourceReferenceSchema
+  .extend({ sourceKind: z.literal('institutional_approval') })
+  .strict()
+
+export const demoInstitutionApprovalStateSchema = z
+  .object({
+    state: z.literal('not_applicable_demo'),
+    reason: z.literal('demo_context'),
+  })
+  .strict()
+
+function institutionalApprovalStateSchemaWith<SourceSchema extends z.ZodTypeAny>(
+  decisionSourceSchema: SourceSchema,
+) {
+  return z.discriminatedUnion('state', [
+    z
+      .object({
+        state: z.literal('approved'),
+        decisionId: scopeLocalIdentifierSchema,
+        decisionSource: decisionSourceSchema,
+      })
+      .strict(),
+    z
+      .object({
+        state: z.literal('not_approved'),
+        decisionId: scopeLocalIdentifierSchema,
+        decisionSource: decisionSourceSchema,
+      })
+      .strict(),
+    z
+      .object({
+        state: z.literal('pending_review'),
+        reviewReference: scopeLocalIdentifierSchema,
+      })
+      .strict(),
+    z
+      .object({
+        state: z.literal('unknown'),
+        reason: unknownReasonSchema,
+      })
+      .strict(),
+  ])
+}
+
+export const institutionalApprovalStateSchema = institutionalApprovalStateSchemaWith(
+  institutionalApprovalSourceSchema,
+)
+export const projectedInstitutionalApprovalStateSchema = institutionalApprovalStateSchemaWith(
+  projectedInstitutionalApprovalSourceSchema,
+)
+
+function bySourceKind<
+  Shape extends z.ZodRawShape,
+  Kind extends 'capability' | 'formulary' | 'inventory',
+>(schema: z.ZodObject<Shape, 'strict'>, sourceKind: Kind) {
+  return schema.extend({ sourceKind: z.literal(sourceKind) }).strict()
+}
+
+const demoRecordIdentityFields = {
+  recordId: scopeLocalIdentifierSchema,
+  context: demoContextIdentitySchema,
+  accessClassification: z.literal('public_unlisted'),
+}
+const institutionalRecordIdentityFields = {
+  recordId: scopeLocalIdentifierSchema,
+  context: institutionalContextIdentitySchema,
+  accessClassification: institutionalAccessClassificationSchema,
+}
+
+function capabilityRecordSchemaWith<
+  IdentityFields extends z.ZodRawShape,
+  SourceSchema extends z.ZodTypeAny,
+>(identityFields: IdentityFields, sourceSchema: SourceSchema) {
+  return z
+    .object({
+      ...identityFields,
+      capabilityCode: globalGovernedCodeSchema,
+      capabilityState: capabilityStateSchema,
+      source: sourceSchema,
+    })
+    .strict()
+}
+
+function inventoryRecordSchemaWith<
+  IdentityFields extends z.ZodRawShape,
+  SourceSchema extends z.ZodTypeAny,
+>(identityFields: IdentityFields, sourceSchema: SourceSchema) {
+  return z
+    .object({
+      ...identityFields,
+      subjectId: globalGovernedCodeSchema,
+      inventoryState: inventoryStateSchema,
+      source: sourceSchema,
+    })
+    .strict()
+}
+
+export const demoCapabilityRecordSchema = capabilityRecordSchemaWith(
+  demoRecordIdentityFields,
+  bySourceKind(demoSourceReferenceSchema, 'capability'),
+)
+export const institutionalCapabilityRecordSchema = capabilityRecordSchemaWith(
+  institutionalRecordIdentityFields,
+  bySourceKind(institutionalSourceReferenceSchema, 'capability'),
+)
+export const projectedDemoCapabilityRecordSchema = capabilityRecordSchemaWith(
+  demoRecordIdentityFields,
+  bySourceKind(projectedDemoSourceReferenceSchema, 'capability'),
+)
+export const projectedInstitutionalCapabilityRecordSchema = capabilityRecordSchemaWith(
+  institutionalRecordIdentityFields,
+  bySourceKind(projectedInstitutionalSourceReferenceSchema, 'capability'),
+)
+
+export const demoFormularyRecordSchema = z
+  .object({
+    ...demoRecordIdentityFields,
+    subjectId: globalGovernedCodeSchema,
+    formularyEvidence: formularyEvidenceStateSchema,
+    approvalState: demoInstitutionApprovalStateSchema,
+    source: bySourceKind(demoSourceReferenceSchema, 'formulary'),
+  })
+  .strict()
+
+export const institutionalFormularyRecordSchema = z
+  .object({
+    ...institutionalRecordIdentityFields,
+    subjectId: globalGovernedCodeSchema,
+    formularyEvidence: formularyEvidenceStateSchema,
+    approvalState: institutionalApprovalStateSchema,
+    source: bySourceKind(institutionalSourceReferenceSchema, 'formulary'),
+  })
+  .strict()
+
+export const projectedDemoFormularyRecordSchema = z
+  .object({
+    ...demoRecordIdentityFields,
+    subjectId: globalGovernedCodeSchema,
+    formularyEvidence: formularyEvidenceStateSchema,
+    approvalState: demoInstitutionApprovalStateSchema,
+    source: bySourceKind(projectedDemoSourceReferenceSchema, 'formulary'),
+  })
+  .strict()
+
+export const projectedInstitutionalFormularyRecordSchema = z
+  .object({
+    ...institutionalRecordIdentityFields,
+    subjectId: globalGovernedCodeSchema,
+    formularyEvidence: formularyEvidenceStateSchema,
+    approvalState: projectedInstitutionalApprovalStateSchema,
+    source: bySourceKind(projectedInstitutionalSourceReferenceSchema, 'formulary'),
+  })
+  .strict()
+
+export const demoInventoryRecordSchema = inventoryRecordSchemaWith(
+  demoRecordIdentityFields,
+  bySourceKind(demoSourceReferenceSchema, 'inventory'),
+)
+export const institutionalInventoryRecordSchema = inventoryRecordSchemaWith(
+  institutionalRecordIdentityFields,
+  bySourceKind(institutionalSourceReferenceSchema, 'inventory'),
+)
+export const projectedDemoInventoryRecordSchema = inventoryRecordSchemaWith(
+  demoRecordIdentityFields,
+  bySourceKind(projectedDemoSourceReferenceSchema, 'inventory'),
+)
+export const projectedInstitutionalInventoryRecordSchema = inventoryRecordSchemaWith(
+  institutionalRecordIdentityFields,
+  bySourceKind(projectedInstitutionalSourceReferenceSchema, 'inventory'),
+)
+
+const diagnosticIdentityFields = {
+  diagnosticId: scopeLocalIdentifierSchema,
+  code: dataQualityDiagnosticCodeSchema,
+  severity: z.enum(['info', 'warning', 'blocking']),
+  observedAt: isoInstantSchema,
+  relatedRecordId: scopeLocalIdentifierSchema.nullable(),
+}
+
+export const demoDataQualityDiagnosticSchema = z
+  .object({
+    ...diagnosticIdentityFields,
+    message: internalAuthoringTextSchema,
+    context: demoContextIdentitySchema,
+    accessClassification: z.literal('public_unlisted'),
+  })
+  .strict()
+
+export const institutionalDataQualityDiagnosticSchema = z
+  .object({
+    ...diagnosticIdentityFields,
+    message: internalAuthoringTextSchema,
+    context: institutionalContextIdentitySchema,
+    accessClassification: institutionalAccessClassificationSchema,
+  })
+  .strict()
+
+function projectedDiagnosticSchemaWith<
+  ContextSchema extends z.ZodTypeAny,
+  AccessSchema extends z.ZodTypeAny,
+>(contextSchema: ContextSchema, accessSchema: AccessSchema) {
+  return z
+    .object({
+      ...diagnosticIdentityFields,
+      messageTemplateKey: diagnosticMessageTemplateKeySchema,
+      context: contextSchema,
+      accessClassification: accessSchema,
+    })
+    .strict()
+    .refine(
+      (diagnostic) =>
+        diagnostic.messageTemplateKey === DIAGNOSTIC_MESSAGE_TEMPLATE_KEY_BY_CODE[diagnostic.code],
+      { message: 'A projected diagnostic template key must be derived from its code.' },
+    )
+}
+
+export const projectedDemoDataQualityDiagnosticSchema = projectedDiagnosticSchemaWith(
+  demoContextIdentitySchema,
+  z.literal('public_unlisted'),
+)
+export const projectedInstitutionalDataQualityDiagnosticSchema = projectedDiagnosticSchemaWith(
+  institutionalContextIdentitySchema,
+  institutionalAccessClassificationSchema,
+)
+
+function collectionSchema<RecordSchema extends z.ZodTypeAny>(recordSchema: RecordSchema) {
+  return z
+    .object({
+      sourceState: dataSourceStateSchema,
+      records: z.array(recordSchema),
+    })
+    .strict()
+    .superRefine((collection, context) => {
+      if (collection.sourceState.state !== 'available' && collection.records.length > 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['records'],
+          message: 'An unknown or unavailable source cannot carry asserted records.',
+        })
+      }
+    })
+}
+
+export const demoCapabilityCollectionSchema = collectionSchema(demoCapabilityRecordSchema)
+export const institutionalCapabilityCollectionSchema = collectionSchema(
+  institutionalCapabilityRecordSchema,
+)
+export const demoFormularyCollectionSchema = collectionSchema(demoFormularyRecordSchema)
+export const institutionalFormularyCollectionSchema = collectionSchema(
+  institutionalFormularyRecordSchema,
+)
+export const demoInventoryCollectionSchema = collectionSchema(demoInventoryRecordSchema)
+export const institutionalInventoryCollectionSchema = collectionSchema(
+  institutionalInventoryRecordSchema,
+)
+
+export type InstitutionScopeIdentity = z.infer<typeof institutionScopeIdentitySchema>
+export type DemoContextIdentity = z.infer<typeof demoContextIdentitySchema>
+export type InstitutionalContextIdentity = z.infer<typeof institutionalContextIdentitySchema>
+export type OverlayContextIdentity = z.infer<typeof overlayContextIdentitySchema>
+export type AccessClassification = z.infer<typeof accessClassificationSchema>
+export type InstitutionalAccessClassification = z.infer<
+  typeof institutionalAccessClassificationSchema
+>
+
+export function sameInstitutionScope(
+  left: InstitutionScopeIdentity,
+  right: InstitutionScopeIdentity,
+): boolean {
+  return (
+    left.tenantId === right.tenantId &&
+    left.institutionId === right.institutionId &&
+    left.siteId === right.siteId
+  )
+}
+
+export function sameOverlayContext(
+  left: OverlayContextIdentity,
+  right: OverlayContextIdentity,
+): boolean {
+  if (left.contextKind !== right.contextKind) return false
+  if (left.contextKind === 'demo' && right.contextKind === 'demo') {
+    return left.demoContextId === right.demoContextId
+  }
+  if (left.contextKind === 'institutional' && right.contextKind === 'institutional') {
+    return sameInstitutionScope(left.scope, right.scope)
+  }
+  return false
+}
+
+/**
+ * Registry scope keys. These two functions define the only scope-key formats the
+ * identifier registry and the corpus projection-safety validator compare against.
+ */
+export function institutionScopeKey(scope: InstitutionScopeIdentity): string {
+  return JSON.stringify([scope.tenantId, scope.institutionId, scope.siteId])
+}
+
+export function demoContextScopeKey(demoContextId: string): string {
+  return `demo:${demoContextId}`
+}
+
+const scopeKey = institutionScopeKey
+
+const accessRank: Record<AccessClassification, number> = {
+  public_unlisted: 0,
+  institution_restricted: 1,
+  institution_confidential: 2,
+}
+
+/**
+ * This is the exported access gate, so it fails closed on its own rather than trusting
+ * every caller to have parsed its arguments first. It accepts `unknown` and promises a
+ * boolean, so it must be total for every runtime input — including a hostile one.
+ *
+ * A non-string argument is rejected by `typeof` *before* Zod, before any property of it is
+ * read, and before any coercion. That ordering is the correction, not an optimization:
+ * `safeParse` converts a Zod validation failure into `{ success: false }`, but it does not
+ * contain arbitrary exceptions thrown by the value being examined. It reads the candidate's
+ * `then` property, so a `Proxy` with a throwing `get` trap — or a plain object with a
+ * throwing getter — used to propagate its own exception out of this gate instead of being
+ * denied (D2A-R5-C3-001, reproduced at d5ecfed9). Catching that exception afterwards would
+ * still have run caller-controlled code inside the gate; the `typeof` prefilter means the
+ * trap never fires at all.
+ *
+ * Only primitive strings reach the schema, so nothing here can invoke a Proxy trap, a
+ * getter, or a conversion hook (`toString`/`valueOf`/`Symbol.toPrimitive`). Arrays, boxed
+ * `String`s, `Date`s, symbols, and null-prototype objects are all non-strings and are denied
+ * on the same line. Strings are still schema-parsed before comparison, so an unrecognized
+ * string — including an `Object.prototype` property name such as `'toString'` or
+ * `'__proto__'` — is denied rather than used as a property key, where the inherited value
+ * would otherwise compare as "allowed". The schema parse is wrapped so that the function's
+ * totality is explicit at the call site rather than inherited from Zod's internals; invalid
+ * input yields exactly `false`, never an error carrying a caller value.
+ */
+export function accessAllows(projectionAccess: unknown, recordAccess: unknown): boolean {
+  if (typeof projectionAccess !== 'string' || typeof recordAccess !== 'string') {
+    return false
+  }
+  let projection: ReturnType<typeof accessClassificationSchema.safeParse>
+  let record: ReturnType<typeof accessClassificationSchema.safeParse>
+  try {
+    projection = accessClassificationSchema.safeParse(projectionAccess)
+    record = accessClassificationSchema.safeParse(recordAccess)
+  } catch {
+    return false
+  }
+  if (!projection.success || !record.success) return false
+  if (projection.data === 'public_unlisted') return record.data === 'public_unlisted'
+  if (record.data === 'public_unlisted') return false
+  return accessRank[record.data] <= accessRank[projection.data]
+}
+
+function addDatasetIntegrityIssues(
+  datasetContext: OverlayContextIdentity,
+  records: Array<{
+    recordId: string
+    context: OverlayContextIdentity
+    accessClassification: AccessClassification
+    source: {
+      context: OverlayContextIdentity
+      accessClassification: AccessClassification
+    }
+  }>,
+  diagnostics: Array<{
+    diagnosticId: string
+    context: OverlayContextIdentity
+    relatedRecordId: string | null
+    accessClassification: AccessClassification
+  }>,
+  context: z.RefinementCtx,
+): void {
+  const recordsById = new Map<string, (typeof records)[number]>()
+  records.forEach((record, index) => {
+    if (recordsById.has(record.recordId)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['records', index, 'recordId'],
+        message: 'Record IDs must be unique within one context dataset.',
+      })
+    }
+    recordsById.set(record.recordId, record)
+    if (!sameOverlayContext(datasetContext, record.context)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['records', index, 'context'],
+        message: 'Every record must repeat the dataset exact context explicitly.',
+      })
+    }
+    if (!sameOverlayContext(record.context, record.source.context)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['records', index, 'source', 'context'],
+        message: 'Every source must repeat its record exact context explicitly.',
+      })
+    }
+    if (record.accessClassification !== record.source.accessClassification) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['records', index, 'source', 'accessClassification'],
+        message: 'A source and its record must use the same access classification.',
+      })
+    }
+  })
+  const diagnosticIds = new Set<string>()
+  diagnostics.forEach((diagnostic, index) => {
+    if (diagnosticIds.has(diagnostic.diagnosticId)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['diagnostics', index, 'diagnosticId'],
+        message: 'Diagnostic IDs must be unique within one context dataset.',
+      })
+    }
+    diagnosticIds.add(diagnostic.diagnosticId)
+    if (!sameOverlayContext(datasetContext, diagnostic.context)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['diagnostics', index, 'context'],
+        message: 'Every diagnostic must repeat the dataset exact context explicitly.',
+      })
+    }
+    if (diagnostic.relatedRecordId === null) return
+    const referencedRecord = recordsById.get(diagnostic.relatedRecordId)
+    if (!referencedRecord) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['diagnostics', index, 'relatedRecordId'],
+        message: 'A related record ID must resolve within the same exact dataset and context.',
+      })
+      return
+    }
+    if (
+      accessRank[diagnostic.accessClassification] <
+      accessRank[referencedRecord.accessClassification]
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['diagnostics', index, 'accessClassification'],
+        message: 'A diagnostic must be at least as access-restrictive as its referenced record.',
+      })
+    }
+  })
+}
+
+function addApprovalSourceIssues(
+  records: Array<{
+    context: OverlayContextIdentity
+    accessClassification: AccessClassification
+    approvalState:
+      | {
+          state: 'approved' | 'not_approved'
+          decisionSource: {
+            context: OverlayContextIdentity
+            accessClassification: AccessClassification
+          }
+        }
+      | { state: 'pending_review' }
+      | { state: 'unknown' }
+  }>,
+  context: z.RefinementCtx,
+): void {
+  records.forEach((record, index) => {
+    if (
+      record.approvalState.state !== 'approved' &&
+      record.approvalState.state !== 'not_approved'
+    ) {
+      return
+    }
+    if (!sameOverlayContext(record.context, record.approvalState.decisionSource.context)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['formularies', 'records', index, 'approvalState', 'decisionSource', 'context'],
+        message: 'An approval source must repeat its record exact context explicitly.',
+      })
+    }
+    if (record.accessClassification !== record.approvalState.decisionSource.accessClassification) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [
+          'formularies',
+          'records',
+          index,
+          'approvalState',
+          'decisionSource',
+          'accessClassification',
+        ],
+        message: 'An approval source and its record must use the same access classification.',
+      })
+    }
+  })
+}
+
+export const demoOverlayDatasetSchema = z
+  .object({
+    context: demoContextIdentitySchema,
+    capabilities: demoCapabilityCollectionSchema,
+    formularies: demoFormularyCollectionSchema,
+    inventories: demoInventoryCollectionSchema,
+    diagnostics: z.array(demoDataQualityDiagnosticSchema),
+  })
+  .strict()
+  .superRefine((dataset, context) => {
+    addDatasetIntegrityIssues(
+      dataset.context,
+      [
+        ...dataset.capabilities.records,
+        ...dataset.formularies.records,
+        ...dataset.inventories.records,
+      ],
+      dataset.diagnostics,
+      context,
+    )
+  })
+
+export const institutionalOverlayDatasetSchema = z
+  .object({
+    context: institutionalContextIdentitySchema,
+    capabilities: institutionalCapabilityCollectionSchema,
+    formularies: institutionalFormularyCollectionSchema,
+    inventories: institutionalInventoryCollectionSchema,
+    diagnostics: z.array(institutionalDataQualityDiagnosticSchema),
+  })
+  .strict()
+  .superRefine((dataset, context) => {
+    addDatasetIntegrityIssues(
+      dataset.context,
+      [
+        ...dataset.capabilities.records,
+        ...dataset.formularies.records,
+        ...dataset.inventories.records,
+      ],
+      dataset.diagnostics,
+      context,
+    )
+    addApprovalSourceIssues(dataset.formularies.records, context)
+  })
+
+export const projectedDemoOverlayDatasetSchema = z
+  .object({
+    context: demoContextIdentitySchema,
+    capabilities: collectionSchema(projectedDemoCapabilityRecordSchema),
+    formularies: collectionSchema(projectedDemoFormularyRecordSchema),
+    inventories: collectionSchema(projectedDemoInventoryRecordSchema),
+    diagnostics: z.array(projectedDemoDataQualityDiagnosticSchema),
+  })
+  .strict()
+  .superRefine((dataset, context) => {
+    addDatasetIntegrityIssues(
+      dataset.context,
+      [
+        ...dataset.capabilities.records,
+        ...dataset.formularies.records,
+        ...dataset.inventories.records,
+      ],
+      dataset.diagnostics,
+      context,
+    )
+  })
+
+export const projectedInstitutionalOverlayDatasetSchema = z
+  .object({
+    context: institutionalContextIdentitySchema,
+    capabilities: collectionSchema(projectedInstitutionalCapabilityRecordSchema),
+    formularies: collectionSchema(projectedInstitutionalFormularyRecordSchema),
+    inventories: collectionSchema(projectedInstitutionalInventoryRecordSchema),
+    diagnostics: z.array(projectedInstitutionalDataQualityDiagnosticSchema),
+  })
+  .strict()
+  .superRefine((dataset, context) => {
+    addDatasetIntegrityIssues(
+      dataset.context,
+      [
+        ...dataset.capabilities.records,
+        ...dataset.formularies.records,
+        ...dataset.inventories.records,
+      ],
+      dataset.diagnostics,
+      context,
+    )
+    addApprovalSourceIssues(dataset.formularies.records, context)
+  })
+
+/**
+ * Bundle-wide identifier registry. Every scope-local identifier is registered to exactly
+ * one scope, tier, and identifier kind, and the sealed corpus refuses:
+ *
+ * - the same identifier value registered under two scopes, tiers, or kinds;
+ * - an identifier equal to any scope component anywhere in the bundle;
+ * - an identifier containing another scope's distinctive component;
+ * - an identifier containing another scope's identifier, or a same-scope identifier of a
+ *   higher access tier;
+ * - a governed code (capability code, subject, revision) containing any scope component
+ *   or any scope-local identifier;
+ * - internal authoring text containing another scope's component or identifier, or a
+ *   same-scope identifier of a higher access tier;
+ * - a scope-component value reused in a different structural position (a site named like
+ *   a tenant, a demo context named like an institution).
+ */
+export type SealedBundleIdentifierKind =
+  | 'recordId'
+  | 'sourceId'
+  | 'provenanceId'
+  | 'formularyEntryId'
+  | 'decisionId'
+  | 'reviewReference'
+  | 'diagnosticId'
+
+export interface SealedBundleIdentifierEntry {
+  value: string
+  scopeKey: string
+  tier: AccessClassification
+  kind: SealedBundleIdentifierKind
+  path: Array<string | number>
+}
+
+export interface SealedBundleScopeComponentEntry {
+  value: string
+  position: 'tenantId' | 'institutionId' | 'siteId' | 'demoContextId'
+  scopeKey: string
+  path: Array<string | number>
+}
+
+export interface SealedBundleGovernedCodeEntry {
+  value: string
+  kind: 'capabilityCode' | 'subjectId' | 'sourceRevision'
+  scopeKey: string
+  path: Array<string | number>
+}
+
+export interface SealedBundleInternalTextEntry {
+  value: string
+  scopeKey: string
+  tier: AccessClassification
+  path: Array<string | number>
+}
+
+export interface SealedBundleIdentifierEntries {
+  components: SealedBundleScopeComponentEntry[]
+  identifiers: SealedBundleIdentifierEntry[]
+  governedCodes: SealedBundleGovernedCodeEntry[]
+  internalTexts: SealedBundleInternalTextEntry[]
+}
+
+type BundleSourceForCollection =
+  | z.infer<typeof institutionalSourceReferenceSchema>
+  | z.infer<typeof demoSourceReferenceSchema>
+
+export function collectSealedBundleIdentifierEntries(
+  bundle: FictionalInstitutionalOverlayBundle,
+): SealedBundleIdentifierEntries {
+  const components: SealedBundleScopeComponentEntry[] = []
+  const identifiers: SealedBundleIdentifierEntry[] = []
+  const governedCodes: SealedBundleGovernedCodeEntry[] = []
+  const internalTexts: SealedBundleInternalTextEntry[] = []
+
+  function collectSource(
+    source: BundleSourceForCollection,
+    scope: string,
+    tier: AccessClassification,
+    path: Array<string | number>,
+  ): void {
+    identifiers.push({
+      value: source.sourceId,
+      scopeKey: scope,
+      tier,
+      kind: 'sourceId',
+      path: [...path, 'sourceId'],
+    })
+    identifiers.push({
+      value: source.provenance.provenanceId,
+      scopeKey: scope,
+      tier,
+      kind: 'provenanceId',
+      path: [...path, 'provenance', 'provenanceId'],
+    })
+    governedCodes.push({
+      value: source.sourceRevision,
+      kind: 'sourceRevision',
+      scopeKey: scope,
+      path: [...path, 'sourceRevision'],
+    })
+    const authoring = source.provenance.internalAuthoring
+    internalTexts.push({
+      value: authoring.sourceLabel,
+      scopeKey: scope,
+      tier,
+      path: [...path, 'provenance', 'internalAuthoring', 'sourceLabel'],
+    })
+    internalTexts.push({
+      value: authoring.sourceLocator,
+      scopeKey: scope,
+      tier,
+      path: [...path, 'provenance', 'internalAuthoring', 'sourceLocator'],
+    })
+    internalTexts.push({
+      value: authoring.jurisdiction,
+      scopeKey: scope,
+      tier,
+      path: [...path, 'provenance', 'internalAuthoring', 'jurisdiction'],
+    })
+  }
+
+  function collectDataset(
+    dataset: DemoOverlayDataset | InstitutionalOverlayDataset,
+    scope: string,
+    basePath: Array<string | number>,
+  ): void {
+    const collections = [
+      ['capabilities', dataset.capabilities] as const,
+      ['formularies', dataset.formularies] as const,
+      ['inventories', dataset.inventories] as const,
+    ]
+    collections.forEach(([collectionName, collection]) => {
+      collection.records.forEach((record, recordIndex) => {
+        const recordPath = [...basePath, collectionName, 'records', recordIndex]
+        const tier = record.accessClassification
+        identifiers.push({
+          value: record.recordId,
+          scopeKey: scope,
+          tier,
+          kind: 'recordId',
+          path: [...recordPath, 'recordId'],
+        })
+        collectSource(record.source, scope, tier, [...recordPath, 'source'])
+        if ('capabilityCode' in record) {
+          governedCodes.push({
+            value: record.capabilityCode,
+            kind: 'capabilityCode',
+            scopeKey: scope,
+            path: [...recordPath, 'capabilityCode'],
+          })
+        }
+        if ('subjectId' in record) {
+          governedCodes.push({
+            value: record.subjectId,
+            kind: 'subjectId',
+            scopeKey: scope,
+            path: [...recordPath, 'subjectId'],
+          })
+        }
+        if ('formularyEvidence' in record && record.formularyEvidence.state === 'listed') {
+          identifiers.push({
+            value: record.formularyEvidence.formularyEntryId,
+            scopeKey: scope,
+            tier,
+            kind: 'formularyEntryId',
+            path: [...recordPath, 'formularyEvidence', 'formularyEntryId'],
+          })
+        }
+        if ('approvalState' in record) {
+          const approval = record.approvalState
+          if (approval.state === 'approved' || approval.state === 'not_approved') {
+            identifiers.push({
+              value: approval.decisionId,
+              scopeKey: scope,
+              tier,
+              kind: 'decisionId',
+              path: [...recordPath, 'approvalState', 'decisionId'],
+            })
+            collectSource(approval.decisionSource, scope, tier, [
+              ...recordPath,
+              'approvalState',
+              'decisionSource',
+            ])
+          }
+          if (approval.state === 'pending_review') {
+            identifiers.push({
+              value: approval.reviewReference,
+              scopeKey: scope,
+              tier,
+              kind: 'reviewReference',
+              path: [...recordPath, 'approvalState', 'reviewReference'],
+            })
+          }
+        }
+      })
+    })
+    dataset.diagnostics.forEach((diagnostic, diagnosticIndex) => {
+      const diagnosticPath = [...basePath, 'diagnostics', diagnosticIndex]
+      identifiers.push({
+        value: diagnostic.diagnosticId,
+        scopeKey: scope,
+        tier: diagnostic.accessClassification,
+        kind: 'diagnosticId',
+        path: [...diagnosticPath, 'diagnosticId'],
+      })
+      internalTexts.push({
+        value: diagnostic.message,
+        scopeKey: scope,
+        tier: diagnostic.accessClassification,
+        path: [...diagnosticPath, 'message'],
+      })
+    })
+  }
+
+  bundle.demoDatasets.forEach((dataset, index) => {
+    const scope = demoContextScopeKey(dataset.context.demoContextId)
+    components.push({
+      value: dataset.context.demoContextId,
+      position: 'demoContextId',
+      scopeKey: scope,
+      path: ['demoDatasets', index, 'context', 'demoContextId'],
+    })
+    collectDataset(dataset, scope, ['demoDatasets', index])
+  })
+  bundle.institutionalDatasets.forEach((dataset, index) => {
+    const scope = scopeKey(dataset.context.scope)
+    ;(['tenantId', 'institutionId', 'siteId'] as const).forEach((position) => {
+      components.push({
+        value: dataset.context.scope[position],
+        position,
+        scopeKey: scope,
+        path: ['institutionalDatasets', index, 'context', 'scope', position],
+      })
+    })
+    collectDataset(dataset, scope, ['institutionalDatasets', index])
+  })
+
+  return { components, identifiers, governedCodes, internalTexts }
+}
+
+function addSealedBundleRegistryIssues(
+  bundle: FictionalInstitutionalOverlayBundle,
+  context: z.RefinementCtx,
+): void {
+  const { components, identifiers, governedCodes, internalTexts } =
+    collectSealedBundleIdentifierEntries(bundle)
+
+  const positionsByComponentValue = new Map<string, Set<string>>()
+  components.forEach((component) => {
+    const positions = positionsByComponentValue.get(component.value) ?? new Set<string>()
+    positions.add(component.position)
+    positionsByComponentValue.set(component.value, positions)
+  })
+  components.forEach((component) => {
+    const positions = positionsByComponentValue.get(component.value)
+    if (positions && positions.size > 1) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: component.path,
+        message: 'A scope component value cannot be reused in a different structural position.',
+      })
+    }
+  })
+
+  const componentValues = new Set(components.map((component) => component.value))
+  const ownComponentValuesByScope = new Map<string, Set<string>>()
+  components.forEach((component) => {
+    const own = ownComponentValuesByScope.get(component.scopeKey) ?? new Set<string>()
+    own.add(component.value)
+    ownComponentValuesByScope.set(component.scopeKey, own)
+  })
+  const foreignComponentsFor = (scope: string): SealedBundleScopeComponentEntry[] => {
+    const own = ownComponentValuesByScope.get(scope) ?? new Set<string>()
+    return components.filter(
+      (component) => component.scopeKey !== scope && !own.has(component.value),
+    )
+  }
+
+  const registrations = new Map<string, SealedBundleIdentifierEntry>()
+  identifiers.forEach((entry) => {
+    const existing = registrations.get(entry.value)
+    if (!existing) {
+      registrations.set(entry.value, entry)
+      return
+    }
+    if (
+      existing.scopeKey !== entry.scopeKey ||
+      existing.tier !== entry.tier ||
+      existing.kind !== entry.kind
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: entry.path,
+        message:
+          'A scope-local identifier registers to exactly one scope, access tier, and identifier kind.',
+      })
+    }
+  })
+  const registered = Array.from(registrations.values())
+
+  identifiers.forEach((entry) => {
+    if (componentValues.has(entry.value)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: entry.path,
+        message: 'A scope-local identifier cannot equal a tenant, institution, site, or demo id.',
+      })
+    }
+    foreignComponentsFor(entry.scopeKey).forEach((component) => {
+      if (entry.value.includes(component.value)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: entry.path,
+          message: "A scope-local identifier cannot contain another scope's identity component.",
+        })
+      }
+    })
+    registered.forEach((other) => {
+      if (other.value === entry.value || !entry.value.includes(other.value)) return
+      if (other.scopeKey !== entry.scopeKey) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: entry.path,
+          message: "A scope-local identifier cannot contain another scope's identifier.",
+        })
+      } else if (accessRank[other.tier] > accessRank[entry.tier]) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: entry.path,
+          message: 'An identifier cannot contain a same-scope identifier of a higher tier.',
+        })
+      }
+    })
+  })
+
+  governedCodes.forEach((code) => {
+    componentValues.forEach((componentValue) => {
+      if (code.value.includes(componentValue)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: code.path,
+          message: 'A governed code cannot contain any scope identity component.',
+        })
+      }
+    })
+    registered.forEach((entry) => {
+      if (code.value.includes(entry.value)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: code.path,
+          message: 'A governed code cannot contain any scope-local identifier.',
+        })
+      }
+    })
+  })
+
+  internalTexts.forEach((text) => {
+    foreignComponentsFor(text.scopeKey).forEach((component) => {
+      if (text.value.includes(component.value)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: text.path,
+          message: "Internal authoring text cannot contain another scope's identity component.",
+        })
+      }
+    })
+    registered.forEach((entry) => {
+      if (!text.value.includes(entry.value)) return
+      if (entry.scopeKey !== text.scopeKey) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: text.path,
+          message: "Internal authoring text cannot contain another scope's identifier.",
+        })
+      } else if (accessRank[entry.tier] > accessRank[text.tier]) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: text.path,
+          message:
+            'Internal authoring text cannot contain a same-scope identifier of a higher tier.',
+        })
+      }
+    })
+  })
+}
+
+export const fictionalInstitutionalOverlayBundleSchema = z
+  .object({
+    foundationLabels: institutionalContractFoundationLabelsSchema,
+    fixturePolicy: z.literal('fictional_only'),
+    demoDatasets: z.array(demoOverlayDatasetSchema),
+    institutionalDatasets: z.array(institutionalOverlayDatasetSchema),
+  })
+  .strict()
+  .superRefine((bundle, context) => {
+    const demoIds = new Set<string>()
+    bundle.demoDatasets.forEach((dataset, index) => {
+      if (demoIds.has(dataset.context.demoContextId)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['demoDatasets', index, 'context', 'demoContextId'],
+          message: 'Demo context IDs must be unique.',
+        })
+      }
+      demoIds.add(dataset.context.demoContextId)
+    })
+
+    const scopeKeys = new Set<string>()
+    bundle.institutionalDatasets.forEach((dataset, index) => {
+      const key = scopeKey(dataset.context.scope)
+      if (scopeKeys.has(key)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['institutionalDatasets', index, 'context', 'scope'],
+          message: 'Institutional datasets must have unique full scope tuples.',
+        })
+      }
+      scopeKeys.add(key)
+    })
+
+    const sources = [
+      ...bundle.demoDatasets.flatMap((dataset) => [
+        ...dataset.capabilities.records.map((record) => record.source),
+        ...dataset.inventories.records.map((record) => record.source),
+        ...dataset.formularies.records.map((record) => record.source),
+      ]),
+      ...bundle.institutionalDatasets.flatMap((dataset) => [
+        ...dataset.capabilities.records.map((record) => record.source),
+        ...dataset.inventories.records.map((record) => record.source),
+        ...dataset.formularies.records.flatMap((record) => [
+          record.source,
+          ...('decisionSource' in record.approvalState
+            ? [record.approvalState.decisionSource]
+            : []),
+        ]),
+      ]),
+    ]
+    sources.forEach((source, index) => {
+      if (source.provenance.provenanceClass !== 'fictional_fixture') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['sources', index, 'provenance', 'provenanceClass'],
+          message: 'The fictional adapter accepts fictional_fixture provenance only.',
+        })
+      }
+    })
+
+    addSealedBundleRegistryIssues(bundle, context)
+  })
+
+/**
+ * Request schemas are intentionally module-internal, not exported. They read whatever
+ * object they are handed the way zod does — resolving getters and inherited values — so
+ * exposing one would be an alternate caller-facing admission path that bypasses the
+ * serialized boundary below. The only public request entry point is
+ * {@link parseOverlayProjectionRequestJson}, which decodes untrusted JSON *text* and hands
+ * these schemas the ordinary own-property object that decoding produces. The exported
+ * TypeScript request type ({@link OverlayProjectionRequest}) still derives from the union.
+ */
+const demoProjectionRequestSchema = z
+  .object({
+    contextKind: z.literal('demo'),
+    demoContextId: scopeComponentIdentifierSchema,
+    accessClassification: z.literal('public_unlisted'),
+    projectionTimestamp: isoInstantSchema,
+  })
+  .strict()
+
+const institutionalProjectionRequestSchema = z
+  .object({
+    contextKind: z.literal('institutional'),
+    scope: institutionScopeIdentitySchema,
+    accessClassification: institutionalAccessClassificationSchema,
+    projectionTimestamp: isoInstantSchema,
+  })
+  .strict()
+
+const overlayProjectionRequestSchema = z.discriminatedUnion('contextKind', [
+  demoProjectionRequestSchema,
+  institutionalProjectionRequestSchema,
+])
+
+const REQUEST_REFUSAL_MESSAGE = 'A projection request must be supplied as serialized JSON text.'
+
+/**
+ * Module-lifetime trust anchor for the request boundary. `JSON.parse` is captured and bound
+ * once, at module initialization, before any request is admitted, and the boundary uses this
+ * reference — never a fresh `JSON.parse` lookup — for every decode. It is the only primitive
+ * the boundary depends on, and it is read exactly once, so no request, and no earlier failed
+ * request, can substitute a permissive stand-in for it.
+ */
+const JSON_PARSE_INTRINSIC = JSON.parse.bind(JSON)
+
+/**
+ * The one public request boundary. It admits a serialized JSON **string** and nothing else.
+ *
+ * The earlier boundary accepted an arbitrary same-realm object graph and tried to prove, by
+ * inspection, that the graph was inert. Four successive corrections showed that goal is
+ * unreachable: a `Proxy` synthesizes any shape its traps choose, and a request whose traps
+ * run during inspection can poison the mutable globals a later request depends on — cross-call
+ * `structuredClone` poisoning and cross-call reflection-intrinsic poisoning both defeated the
+ * per-call capture. An object-inspection helper cannot make hostile same-realm code inert;
+ * code that already runs in the realm has already won.
+ *
+ * A serialized boundary removes the premise. The supported threat model is **untrusted
+ * serialized JSON data**, not arbitrary same-realm JavaScript. A primitive `string` type
+ * check runs no coercion hook and no Proxy trap: a string cannot carry a getter, a
+ * `toString`/`Symbol.toPrimitive` converter, a symbol key, a custom prototype, or a trap, so
+ * every non-string input — boxed `String`, `Date`, array, `Map`, `Set`, function, class
+ * instance, `Proxy`, plain or null-prototype object, number, boolean, `null`, `undefined` —
+ * is refused here, before a single property is read and before any caller code can run.
+ *
+ * Decoding then yields ordinary own-property data by construction: inherited fields,
+ * accessors, symbol keys, custom prototypes, and `Proxy` exotics cannot survive
+ * serialization, and a `__proto__` member decodes to an ordinary own data key (via
+ * `[[DefineOwnProperty]]`, not the prototype setter) that the strict schema rejects as
+ * unrecognized rather than installing as a prototype. The strict discriminated union does the
+ * rest of the validation on that plain object. A refusal — non-string input, malformed JSON,
+ * or a schema mismatch — is a single generic message that carries no caller value or fixture
+ * identifier. No coercion, no reflection on the input, no `structuredClone`, and no dynamic
+ * `JSON.parse` lookup are ever performed.
+ */
+export function parseOverlayProjectionRequestJson(input: unknown): OverlayProjectionRequest {
+  if (typeof input !== 'string') {
+    throw new Error(REQUEST_REFUSAL_MESSAGE)
+  }
+  let decoded: unknown
+  try {
+    decoded = JSON_PARSE_INTRINSIC(input)
+  } catch {
+    throw new Error(REQUEST_REFUSAL_MESSAGE)
+  }
+  // `safeParse`, not `parse`: a thrown `ZodError` would embed the received values in its
+  // issues, so the boundary converts any failure into the generic refusal itself.
+  const result = overlayProjectionRequestSchema.safeParse(decoded)
+  if (!result.success) {
+    throw new Error(REQUEST_REFUSAL_MESSAGE)
+  }
+  return result.data
+}
+
+const projectionFields = {
+  foundationLabels: institutionalContractFoundationLabelsSchema,
+  fixturePolicy: z.literal('fictional_only'),
+  projectionTimestamp: isoInstantSchema,
+}
+
+function addProjectionTimeIssues(
+  projectionTimestamp: string,
+  sources: Array<{ lastVerifiedAt: string }>,
+  diagnostics: Array<{ observedAt: string }>,
+  context: z.RefinementCtx,
+): void {
+  const projectedAt = Date.parse(projectionTimestamp)
+  // A NaN on either side would make every `>` below false and quietly disable the guard, so
+  // an unreadable instant is treated as a failure rather than as "not after".
+  const isAfter = (instant: string): boolean => {
+    const at = Date.parse(instant)
+    return !Number.isFinite(at) || !Number.isFinite(projectedAt) || at > projectedAt
+  }
+  sources.forEach((source, index) => {
+    if (isAfter(source.lastVerifiedAt)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['dataset', 'sources', index, 'lastVerifiedAt'],
+        message: 'A projection cannot include evidence verified after its projection timestamp.',
+      })
+    }
+  })
+  diagnostics.forEach((diagnostic, index) => {
+    if (isAfter(diagnostic.observedAt)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['dataset', 'diagnostics', index, 'observedAt'],
+        message: 'A projection cannot include a diagnostic observed after its timestamp.',
+      })
+    }
+  })
+}
+
+export const demoOverlayProjectionSchema = z
+  .object({
+    ...projectionFields,
+    accessClassification: z.literal('public_unlisted'),
+    dataset: projectedDemoOverlayDatasetSchema,
+  })
+  .strict()
+  .superRefine((projection, context) => {
+    const sources = [
+      ...projection.dataset.capabilities.records.map((record) => record.source),
+      ...projection.dataset.formularies.records.map((record) => record.source),
+      ...projection.dataset.inventories.records.map((record) => record.source),
+    ]
+    addProjectionTimeIssues(
+      projection.projectionTimestamp,
+      sources,
+      projection.dataset.diagnostics,
+      context,
+    )
+  })
+
+export const institutionalOverlayProjectionSchema = z
+  .object({
+    ...projectionFields,
+    accessClassification: institutionalAccessClassificationSchema,
+    dataset: projectedInstitutionalOverlayDatasetSchema,
+  })
+  .strict()
+  .superRefine((projection, context) => {
+    const records = [
+      ...projection.dataset.capabilities.records,
+      ...projection.dataset.formularies.records,
+      ...projection.dataset.inventories.records,
+    ]
+    records.forEach((record, index) => {
+      if (!accessAllows(projection.accessClassification, record.accessClassification)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['dataset', 'records', index, 'accessClassification'],
+          message: 'A projection cannot include data above its access classification.',
+        })
+      }
+    })
+    projection.dataset.diagnostics.forEach((diagnostic, index) => {
+      if (!accessAllows(projection.accessClassification, diagnostic.accessClassification)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['dataset', 'diagnostics', index, 'accessClassification'],
+          message: 'A projection cannot include a diagnostic above its access classification.',
+        })
+      }
+    })
+    const sources = records.flatMap((record) => [
+      record.source,
+      ...('approvalState' in record && 'decisionSource' in record.approvalState
+        ? [record.approvalState.decisionSource]
+        : []),
+    ])
+    addProjectionTimeIssues(
+      projection.projectionTimestamp,
+      sources,
+      projection.dataset.diagnostics,
+      context,
+    )
+  })
+
+export const overlayProjectionSchema = z.union([
+  demoOverlayProjectionSchema,
+  institutionalOverlayProjectionSchema,
+])
+
+export type DataSourceState = z.infer<typeof dataSourceStateSchema>
+export type SourceStateReason = z.infer<typeof sourceStateReasonSchema>
+export type UnknownReason = z.infer<typeof unknownReasonSchema>
+export type DemoCapabilityRecord = z.infer<typeof demoCapabilityRecordSchema>
+export type InstitutionalCapabilityRecord = z.infer<typeof institutionalCapabilityRecordSchema>
+export type DemoFormularyRecord = z.infer<typeof demoFormularyRecordSchema>
+export type InstitutionalFormularyRecord = z.infer<typeof institutionalFormularyRecordSchema>
+export type DemoInventoryRecord = z.infer<typeof demoInventoryRecordSchema>
+export type InstitutionalInventoryRecord = z.infer<typeof institutionalInventoryRecordSchema>
+export type DemoOverlayDataset = z.infer<typeof demoOverlayDatasetSchema>
+export type InstitutionalOverlayDataset = z.infer<typeof institutionalOverlayDatasetSchema>
+export type ProjectedDemoCapabilityRecord = z.infer<typeof projectedDemoCapabilityRecordSchema>
+export type ProjectedInstitutionalCapabilityRecord = z.infer<
+  typeof projectedInstitutionalCapabilityRecordSchema
+>
+export type ProjectedDemoInventoryRecord = z.infer<typeof projectedDemoInventoryRecordSchema>
+export type ProjectedInstitutionalInventoryRecord = z.infer<
+  typeof projectedInstitutionalInventoryRecordSchema
+>
+export type ProjectedDemoOverlayDataset = z.infer<typeof projectedDemoOverlayDatasetSchema>
+export type ProjectedInstitutionalOverlayDataset = z.infer<
+  typeof projectedInstitutionalOverlayDatasetSchema
+>
+export type FictionalInstitutionalOverlayBundle = z.infer<
+  typeof fictionalInstitutionalOverlayBundleSchema
+>
+export type OverlayProjectionRequest = z.infer<typeof overlayProjectionRequestSchema>
+export type DemoOverlayProjection = z.infer<typeof demoOverlayProjectionSchema>
+export type InstitutionalOverlayProjection = z.infer<typeof institutionalOverlayProjectionSchema>
+export type OverlayProjection = z.infer<typeof overlayProjectionSchema>
