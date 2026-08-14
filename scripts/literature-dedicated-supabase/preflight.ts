@@ -1,37 +1,53 @@
 /**
  * Read-only preflight for the dedicated Literature foundation rollout.
  *
- * Proves, before anything is applied, that the repository is at the reviewed commit, that exactly
- * one unaltered migration is selected, and that the target is the approved empty project. It holds
- * no credential and opens no connection: target facts come from a read-only observation the
- * operator captures separately, which this command can print the exact statements for.
+ * Three layers, with different authority:
  *
- *   npx tsx scripts/literature-dedicated-supabase/preflight.ts --print-observation-sql
+ *   Layer 1 (authoritative)     — repository: branch, HEAD == origin/main == owner-approved commit,
+ *                                 migration identity, exactly one selection, exact mechanism.
+ *   Layer 2 (NON-authoritative) — evidence content: shape and internal consistency only.
+ *   Layer 3 (authoritative)     — provider-bound target attestation, which this repository cannot
+ *                                 currently produce.
+ *
+ * Because Layer 3 is unimplemented, the best reachable verdict today is
+ * `provider_attestation_required`. That is deliberate: a hand-assembled JSON document proves what
+ * it says, not which database said it, so it must never authorize a migration.
+ *
+ *   npx tsx scripts/literature-dedicated-supabase/preflight.ts --print-query-bundle
  *   npx tsx scripts/literature-dedicated-supabase/preflight.ts \
- *     --approved-commit <sha> --observation <path.json>
+ *     --owner-approved-commit <sha> \
+ *     --application-mechanism supabase_connector_apply_migration_v1 \
+ *     --evidence <path.json>
  *
- * Exit code 0 means every check passed. Any missing input is a failure, never a pass.
+ * Exit code 0 requires `ready_to_apply`. Any missing input is a failure, never a pass.
  */
 
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { LITERATURE_FOUNDATION_MIGRATION } from '../../src/features/literature/dedicated-supabase/foundation-manifest'
-import { runCommand } from './lib/disposable-target'
 import {
+  captureLiteratureProviderAttestation,
+  evaluateLiteratureProviderAttestation,
+} from '../../src/features/literature/dedicated-supabase/attestation'
+import {
+  LITERATURE_DEDICATED_TARGET,
+  LITERATURE_FOUNDATION_MIGRATION,
+} from '../../src/features/literature/dedicated-supabase/foundation-manifest'
+import { runCommand } from './lib/disposable-target'
+import { LiteratureEvidenceError, parseLiteratureEvidence } from './lib/evidence-schema'
+import type { LiteratureEvidenceDocument } from './lib/evidence-schema'
+import { canonicalJson, sha256 } from './lib/foundation-catalog'
+import {
+  evaluateEvidenceContentPreflight,
   evaluateRepositoryPreflight,
-  evaluateTargetPreflight,
-  preflightApproved,
+  resolvePreflightOutcome,
   type PreflightCheck,
   type RepositoryFacts,
 } from './lib/preflight-rules'
 import {
-  LITERATURE_READ_ONLY_CATALOG_STATEMENT,
-  LITERATURE_READ_ONLY_HISTORY_STATEMENT,
-  LITERATURE_READ_ONLY_PREREQUISITE_STATEMENT,
-  parseTargetObservation,
-  type LiteratureTargetObservation,
+  LITERATURE_QUERY_BUNDLE_SHA256,
+  renderLiteratureQueryBundle,
 } from './lib/target-observation'
 
 const ROOT = process.cwd()
@@ -46,39 +62,23 @@ async function git(arguments_: readonly string[], allowFailure = false) {
   return { text: result.stdout.trim(), code: result.code }
 }
 
-async function gatherRepositoryFacts(approvedCommit?: string): Promise<RepositoryFacts> {
+async function gatherRepositoryFacts(): Promise<RepositoryFacts> {
   const gitDirectory = (await git(['rev-parse', '--absolute-git-dir'])).text
   const commonDirectory = (await git(['rev-parse', '--git-common-dir'])).text
-  const branch = (await git(['rev-parse', '--abbrev-ref', 'HEAD'])).text
-  const headCommit = (await git(['rev-parse', 'HEAD'])).text
-  const originMainCommit = (await git(['rev-parse', 'origin/main'], true)).text
-  const status = (await git(['status', '--porcelain', '--untracked-files=no'])).text
-
   const migrationBytes = await readFile(resolve(ROOT, LITERATURE_FOUNDATION_MIGRATION.path))
-
-  let headDescendsFromApprovedCommit: boolean | undefined
-  if (approvedCommit) {
-    if (approvedCommit === headCommit) {
-      headDescendsFromApprovedCommit = true
-    } else {
-      const ancestry = await git(['merge-base', '--is-ancestor', approvedCommit, headCommit], true)
-      headDescendsFromApprovedCommit = ancestry.code === 0
-    }
-  }
 
   return {
     checkoutPath: ROOT,
     isPrimaryCheckout: resolve(gitDirectory) === resolve(ROOT, commonDirectory),
-    branch,
-    headCommit,
-    originMainCommit,
-    workingTreeClean: status.length === 0,
-    approvedCommit,
-    headDescendsFromApprovedCommit,
+    branch: (await git(['rev-parse', '--abbrev-ref', 'HEAD'])).text,
+    headCommit: (await git(['rev-parse', 'HEAD'])).text,
+    originMainCommit: (await git(['rev-parse', 'origin/main'], true)).text,
+    workingTreeClean: (await git(['status', '--porcelain', '--untracked-files=no'])).text === '',
+    ownerApprovedCommit: flagValue('--owner-approved-commit'),
     migrationSha256: createHash('sha256').update(migrationBytes).digest('hex'),
     migrationByteLength: migrationBytes.byteLength,
     selectedMigrationPaths: [LITERATURE_FOUNDATION_MIGRATION.path],
-    deploymentMethod: flagValue('--deployment-method'),
+    applicationMechanism: flagValue('--application-mechanism'),
   }
 }
 
@@ -93,52 +93,85 @@ function report(title: string, checks: readonly PreflightCheck[]) {
 }
 
 async function main() {
-  if (process.argv.includes('--print-observation-sql')) {
-    process.stdout.write(
-      [
-        '-- Run each statement in a read-only session against the dedicated Literature project.',
-        '-- Record the results in an observation JSON document. Never paste a credential here.',
-        '',
-        '-- 1) migrationVersions',
-        LITERATURE_READ_ONLY_HISTORY_STATEMENT,
-        '',
-        '-- 2) catalog',
-        LITERATURE_READ_ONLY_CATALOG_STATEMENT,
-        '',
-        '-- 3) prerequisites',
-        LITERATURE_READ_ONLY_PREREQUISITE_STATEMENT,
-        '',
-      ].join('\n'),
-    )
+  if (process.argv.includes('--print-query-bundle')) {
+    process.stdout.write(renderLiteratureQueryBundle())
     return
   }
 
-  const approvedCommit = flagValue('--approved-commit')
-  const observationPath = flagValue('--observation')
-
-  let observation: LiteratureTargetObservation | null = null
-  if (observationPath) {
-    observation = parseTargetObservation(await readFile(resolve(ROOT, observationPath), 'utf8'))
+  const evidencePath = flagValue('--evidence')
+  let evidence: LiteratureEvidenceDocument | null = null
+  let evidenceError: string | null = null
+  if (evidencePath) {
+    try {
+      evidence = parseLiteratureEvidence(await readFile(resolve(ROOT, evidencePath), 'utf8'))
+    } catch (error) {
+      evidenceError =
+        error instanceof LiteratureEvidenceError
+          ? `${error.code}: ${error.message}`
+          : `unreadable evidence document: ${String(error)}`
+    }
   }
 
-  const repositoryChecks = evaluateRepositoryPreflight(await gatherRepositoryFacts(approvedCommit))
-  const targetChecks = evaluateTargetPreflight(observation)
+  const repositoryChecks = evaluateRepositoryPreflight(await gatherRepositoryFacts())
+  const evidenceChecks = evaluateEvidenceContentPreflight(evidence)
 
   process.stdout.write('Dedicated Literature foundation rollout — read-only preflight\n')
-  report('Repository', repositoryChecks)
-  report('Target', targetChecks)
-
-  const all = [...repositoryChecks, ...targetChecks]
-  const approved = preflightApproved(all)
-  const failed = all.filter((entry) => !entry.passed)
-
-  process.stdout.write(
-    `\n${all.length - failed.length}/${all.length} checks passed. ` +
-      `${approved ? 'PREFLIGHT APPROVED.' : 'PREFLIGHT BLOCKED.'}\n`,
-  )
-  if (!approved) {
+  report('Layer 1 — repository (authoritative)', repositoryChecks)
+  if (evidenceError) {
     process.stdout.write(
-      'No migration may be applied. This command never applies anything on its own.\n',
+      `\nLayer 2 — evidence content (NON-authoritative)\n  [FAIL] ${evidenceError}\n`,
+    )
+  } else {
+    report('Layer 2 — evidence content (NON-authoritative)', evidenceChecks)
+  }
+
+  // Layer 3. The only place target identity can come from. There is deliberately no flag, file, or
+  // environment variable that can substitute for it.
+  const capture = captureLiteratureProviderAttestation()
+  const attestationVerdict = evaluateLiteratureProviderAttestation(
+    capture.status === 'captured' ? capture.attestation : null,
+    {
+      projectRef: LITERATURE_DEDICATED_TARGET.projectRef,
+      queryBundleSha256: LITERATURE_QUERY_BUNDLE_SHA256,
+      ownerApprovedCommit: flagValue('--owner-approved-commit') ?? '',
+      migrationPath: LITERATURE_FOUNDATION_MIGRATION.path,
+      migrationSha256: LITERATURE_FOUNDATION_MIGRATION.sha256,
+      observedContentSha256: evidence ? sha256(canonicalJson(evidence)) : '',
+      nowMs: Date.now(),
+    },
+  )
+
+  process.stdout.write('\nLayer 3 — provider-bound target attestation (authoritative)\n')
+  if (attestationVerdict.status === 'attested') {
+    process.stdout.write('  [PASS] target identity proven by the project-scoped connector\n')
+  } else {
+    process.stdout.write(`  [FAIL] ${attestationVerdict.reason}\n`)
+    process.stdout.write(
+      `         ${capture.status === 'unavailable' ? capture.detail : attestationVerdict.detail}\n`,
+    )
+  }
+
+  const outcome = resolvePreflightOutcome({
+    repositoryChecks,
+    evidenceChecks: evidenceError
+      ? [{ id: 'E00', description: 'evidence parsed', passed: false, detail: evidenceError }]
+      : evidenceChecks,
+    attestationStatus: attestationVerdict.status === 'attested' ? 'attested' : 'rejected',
+    attestationDetail:
+      capture.status === 'unavailable'
+        ? capture.detail
+        : attestationVerdict.status === 'rejected'
+          ? attestationVerdict.detail
+          : '',
+  })
+
+  process.stdout.write(`\nVERDICT: ${outcome.verdict}\n`)
+  process.stdout.write(`authoritative: ${outcome.authoritative}\n`)
+  process.stdout.write(`${outcome.summary}\n`)
+
+  if (outcome.verdict !== 'ready_to_apply') {
+    process.stdout.write(
+      '\nNo migration may be applied. This command never applies anything on its own.\n',
     )
     process.exitCode = 1
   }

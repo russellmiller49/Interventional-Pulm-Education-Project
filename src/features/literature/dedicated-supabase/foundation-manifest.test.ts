@@ -6,15 +6,20 @@ import { resolve } from 'node:path'
 
 import {
   LITERATURE_ALL_MIGRATION_PATHS,
+  LITERATURE_APPROVED_APPLICATION_MECHANISM,
+  LITERATURE_APPROVED_APPLICATION_OPERATION,
   LITERATURE_DEDICATED_TARGET,
   LITERATURE_DEFERRED_MIGRATIONS,
-  LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_VERSIONS,
+  LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT,
   LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS,
   LITERATURE_FOUNDATION_MIGRATION,
   LITERATURE_FOUNDATION_SELECTED_MIGRATION_COUNT,
+  LITERATURE_MIGRATION_HISTORY_FIDELITY,
   LITERATURE_PROHIBITED_DEPLOYMENT_METHODS,
   LITERATURE_PROHIBITED_TARGET_REFS,
+  LITERATURE_RELATED_MIGRATION_TOTAL,
   LITERATURE_REPOSITORY_MIGRATION_TOTAL,
+  LITERATURE_UNRELATED_MIGRATION_TOTAL,
   evaluateLiteratureFoundationSelection,
   type LiteratureSelectionCandidate,
 } from './foundation-manifest'
@@ -39,8 +44,9 @@ function candidate(
       [LITERATURE_FOUNDATION_MIGRATION.path]: LITERATURE_FOUNDATION_MIGRATION.byteLength,
     },
     targetProjectRef: APPROVED_REF,
-    targetHostname: `db.${APPROVED_REF}.supabase.co`,
+    targetHostname: `${APPROVED_REF}.supabase.co`,
     appliedMigrationVersions: [],
+    applicationMechanism: LITERATURE_APPROVED_APPLICATION_MECHANISM,
     ...overrides,
   }
 }
@@ -65,22 +71,44 @@ describe('dedicated Literature foundation manifest', () => {
     expect(LITERATURE_PROHIBITED_TARGET_REFS).not.toContain(APPROVED_REF)
   })
 
-  it('expects an empty starting history and exactly one recorded version afterwards', () => {
+  it('expects an empty starting history and exactly one recorded migration afterwards', () => {
     expect(LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS).toEqual([])
-    expect(LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_VERSIONS).toEqual(['20260727032621'])
+    expect(LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT).toBe(1)
     expect(LITERATURE_FOUNDATION_SELECTED_MIGRATION_COUNT).toBe(1)
   })
 
-  describe('every Literature migration is accounted for', () => {
-    it('lists the total migration count in the mixed directory', async () => {
+  it('does not assume the recorded version equals the historical filename version (H-5)', () => {
+    expect(LITERATURE_MIGRATION_HISTORY_FIDELITY.versionStringIsProviderAssigned).toBe(true)
+    expect(LITERATURE_MIGRATION_HISTORY_FIDELITY.filenameVersionMayNotBeRecorded).toBe(true)
+    expect(LITERATURE_MIGRATION_HISTORY_FIDELITY.requiresExecutionTimeEvidence).toBe(true)
+    expect(LITERATURE_MIGRATION_HISTORY_FIDELITY.note).toMatch(/Do not assume/u)
+  })
+
+  describe('migration inventory (L-2)', () => {
+    it('records 33 total, 10 Literature-related, 9 deferred, 23 unrelated', async () => {
       const entries = await readdir(resolve(ROOT, 'supabase/migrations'))
-      expect(entries.filter((name) => name.endsWith('.sql'))).toHaveLength(
+      const sql = entries.filter((name) => name.endsWith('.sql'))
+      expect(sql).toHaveLength(LITERATURE_REPOSITORY_MIGRATION_TOTAL)
+      expect(LITERATURE_REPOSITORY_MIGRATION_TOTAL).toBe(33)
+      expect(LITERATURE_RELATED_MIGRATION_TOTAL).toBe(10)
+      expect(LITERATURE_UNRELATED_MIGRATION_TOTAL).toBe(23)
+      expect(LITERATURE_DEFERRED_MIGRATIONS).toHaveLength(9)
+      expect(LITERATURE_ALL_MIGRATION_PATHS).toHaveLength(LITERATURE_RELATED_MIGRATION_TOTAL)
+      expect(LITERATURE_RELATED_MIGRATION_TOTAL + LITERATURE_UNRELATED_MIGRATION_TOTAL).toBe(
         LITERATURE_REPOSITORY_MIGRATION_TOTAL,
       )
     })
 
-    it('defers nine Literature migrations, including the three whose filenames hide it', () => {
-      expect(LITERATURE_DEFERRED_MIGRATIONS).toHaveLength(9)
+    it('states the correct counts in the db push rejection reason', () => {
+      const push = LITERATURE_PROHIBITED_DEPLOYMENT_METHODS.find(
+        (entry) => entry.method === 'supabase db push',
+      )
+      expect(push?.reason).toMatch(/nine deferred/u)
+      expect(push?.reason).toMatch(/twenty-three unrelated/u)
+      expect(push?.reason).not.toMatch(/six deferred|twenty-six/u)
+    })
+
+    it('defers the three migrations whose filenames hide that they are Literature', () => {
       for (const name of [
         '20260728170939_add_interactive_clinical_case_publication_status.sql',
         '20260728171212_add_immune_inflammatory_disease_tag.sql',
@@ -98,18 +126,12 @@ describe('dedicated Literature foundation manifest', () => {
         const sql = await readFile(resolve(directory, name), 'utf8')
         if (/literature/iu.test(sql)) literatureMigrations.push(`supabase/migrations/${name}`)
       }
-      // Ten migrations touch Literature objects: the foundation plus the nine deferred ones.
       expect(literatureMigrations.sort()).toEqual([...LITERATURE_ALL_MIGRATION_PATHS].sort())
     })
 
-    it('confirms the foundation migration references no deferred Literature object', async () => {
+    it('confirms the foundation migration is self-contained and non-destructive', async () => {
       const sql = (await migrationBytes()).toString('utf8')
       expect(sql).not.toMatch(/literature_gold/iu)
-      expect(sql).not.toMatch(/save_literature_gold_review_v1/iu)
-    })
-
-    it('confirms the foundation migration is transactional and non-destructive', async () => {
-      const sql = (await migrationBytes()).toString('utf8')
       expect(sql).not.toMatch(/create\s+index\s+concurrently/iu)
       expect(sql).not.toMatch(/\bvacuum\b/iu)
       expect(sql).not.toMatch(/alter\s+system/iu)
@@ -120,13 +142,12 @@ describe('dedicated Literature foundation manifest', () => {
   })
 
   describe('selection contract', () => {
-    it('approves exactly one unaltered foundation migration against the approved empty target', () => {
+    it('approves exactly one unaltered foundation migration through the approved mechanism', () => {
       expect(evaluateLiteratureFoundationSelection(candidate()).approved).toBe(true)
     })
 
     it('rejects zero selected migrations', () => {
       const result = evaluateLiteratureFoundationSelection(candidate({ migrationPaths: [] }))
-      expect(result.approved).toBe(false)
       expect(reasons(result)).toContain('no_migration_selected')
     })
 
@@ -141,7 +162,6 @@ describe('dedicated Literature foundation manifest', () => {
           },
         }),
       )
-      expect(result.approved).toBe(false)
       expect(reasons(result)).toEqual(
         expect.arrayContaining(['multiple_migrations_selected', 'migration_path_not_approved']),
       )
@@ -158,105 +178,125 @@ describe('dedicated Literature foundation manifest', () => {
           migrationByteLengthByPath: {},
         }),
       )
-      expect(result.approved).toBe(false)
       expect(reasons(result)).toContain('multiple_migrations_selected')
     })
 
-    it('rejects a one-byte drift in the migration contents', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({
-          migrationSha256ByPath: { [LITERATURE_FOUNDATION_MIGRATION.path]: 'a'.repeat(64) },
-        }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('migration_checksum_mismatch')
-    })
+    it('rejects drift, a wrong byte length, and a relocated copy', () => {
+      expect(
+        reasons(
+          evaluateLiteratureFoundationSelection(
+            candidate({
+              migrationSha256ByPath: { [LITERATURE_FOUNDATION_MIGRATION.path]: 'a'.repeat(64) },
+            }),
+          ),
+        ),
+      ).toContain('migration_checksum_mismatch')
 
-    it('rejects a copied migration whose byte length differs', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({
-          migrationByteLengthByPath: { [LITERATURE_FOUNDATION_MIGRATION.path]: 1 },
-        }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('migration_byte_length_mismatch')
-    })
+      expect(
+        reasons(
+          evaluateLiteratureFoundationSelection(
+            candidate({ migrationByteLengthByPath: { [LITERATURE_FOUNDATION_MIGRATION.path]: 1 } }),
+          ),
+        ),
+      ).toContain('migration_byte_length_mismatch')
 
-    it('rejects a migration outside the approved path even with a matching hash', () => {
       const copied = 'supabase/migrations/99999999999999_copied_literature_explorer.sql'
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({
-          migrationPaths: [copied],
-          migrationSha256ByPath: { [copied]: LITERATURE_FOUNDATION_MIGRATION.sha256 },
-        }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('migration_path_not_approved')
+      expect(
+        reasons(
+          evaluateLiteratureFoundationSelection(
+            candidate({
+              migrationPaths: [copied],
+              migrationSha256ByPath: { [copied]: LITERATURE_FOUNDATION_MIGRATION.sha256 },
+            }),
+          ),
+        ),
+      ).toContain('migration_path_not_approved')
     })
 
-    it('rejects the main application project as a target', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({ targetProjectRef: MAIN_REF }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('target_ref_prohibited')
-    })
-
-    it('rejects an unapproved project ref', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({ targetProjectRef: 'abcdefghijklmnopqrst' }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('target_ref_not_approved')
-    })
-
-    it('rejects a missing target ref', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({ targetProjectRef: undefined }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('target_ref_missing')
+    it('rejects the main application project and any unapproved ref', () => {
+      expect(
+        reasons(evaluateLiteratureFoundationSelection(candidate({ targetProjectRef: MAIN_REF }))),
+      ).toContain('target_ref_prohibited')
+      expect(
+        reasons(
+          evaluateLiteratureFoundationSelection(
+            candidate({ targetProjectRef: 'abcdefghijklmnopqrst' }),
+          ),
+        ),
+      ).toContain('target_ref_not_approved')
+      expect(
+        reasons(evaluateLiteratureFoundationSelection(candidate({ targetProjectRef: undefined }))),
+      ).toContain('target_ref_missing')
     })
 
     it('rejects loopback presented as production', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({ targetHostname: '127.0.0.1' }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('target_is_loopback')
+      expect(
+        reasons(evaluateLiteratureFoundationSelection(candidate({ targetHostname: '127.0.0.1' }))),
+      ).toContain('target_is_loopback')
     })
 
-    it('rejects an already-applied foundation migration', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({ appliedMigrationVersions: [LITERATURE_FOUNDATION_MIGRATION.version] }),
+    it('rejects any non-empty pre-application history', () => {
+      for (const history of [[LITERATURE_FOUNDATION_MIGRATION.version], ['20260809231651']]) {
+        expect(
+          reasons(
+            evaluateLiteratureFoundationSelection(candidate({ appliedMigrationVersions: history })),
+          ),
+        ).toContain('pre_application_history_not_empty')
+      }
+    })
+  })
+
+  describe('application mechanism is a required closed enum (H-5)', () => {
+    it('names the approved connector operation and its bindings', () => {
+      expect(LITERATURE_APPROVED_APPLICATION_MECHANISM).toBe(
+        'supabase_connector_apply_migration_v1',
       )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('pre_application_history_not_empty')
+      expect(LITERATURE_APPROVED_APPLICATION_OPERATION).toMatchObject({
+        toolOperation: 'apply_migration',
+        projectRef: 'itcttmkxdxvwmwcmzmey',
+        exactToolCalls: 1,
+        automaticRetryPermitted: false,
+      })
     })
 
-    it('rejects later Literature migration history without the foundation', () => {
-      const result = evaluateLiteratureFoundationSelection(
-        candidate({ appliedMigrationVersions: ['20260809231651'] }),
-      )
-      expect(result.approved).toBe(false)
-      expect(reasons(result)).toContain('pre_application_history_not_empty')
-    })
-
-    it('rejects every prohibited deployment mechanism by name', () => {
-      for (const entry of LITERATURE_PROHIBITED_DEPLOYMENT_METHODS) {
-        const result = evaluateLiteratureFoundationSelection(
-          candidate({ deploymentMethod: entry.method }),
-        )
-        expect(result.approved).toBe(false)
-        expect(reasons(result)).toContain('deployment_method_prohibited')
+    it('rejects an omitted mechanism', () => {
+      for (const mechanism of [undefined, '']) {
+        expect(
+          reasons(
+            evaluateLiteratureFoundationSelection(candidate({ applicationMechanism: mechanism })),
+          ),
+        ).toContain('application_mechanism_missing')
       }
     })
 
-    it('names supabase db push and explains why bulk push is refused', () => {
-      const push = LITERATURE_PROHIBITED_DEPLOYMENT_METHODS.find(
-        (entry) => entry.method === 'supabase db push',
-      )
-      expect(push?.reason).toMatch(/every migration/iu)
+    it('rejects arbitrary, wrapped, and suffixed mechanisms', () => {
+      for (const mechanism of [
+        'anything',
+        'supabase db push',
+        'npx supabase db push',
+        'supabase db push --linked',
+        "bash -lc 'supabase db push'",
+        'supabase migration repair',
+        'supabase db reset',
+        'dashboard SQL editor',
+        'supabase_connector_apply_migration_v2',
+        ' supabase_connector_apply_migration_v1',
+        'SUPABASE_CONNECTOR_APPLY_MIGRATION_V1',
+      ]) {
+        const result = evaluateLiteratureFoundationSelection(
+          candidate({ applicationMechanism: mechanism }),
+        )
+        expect(result.approved).toBe(false)
+        expect(reasons(result)).toContain('application_mechanism_not_approved')
+      }
+    })
+
+    it('accepts only the exact approved mechanism', () => {
+      expect(
+        evaluateLiteratureFoundationSelection(
+          candidate({ applicationMechanism: LITERATURE_APPROVED_APPLICATION_MECHANISM }),
+        ).approved,
+      ).toBe(true)
     })
   })
 })

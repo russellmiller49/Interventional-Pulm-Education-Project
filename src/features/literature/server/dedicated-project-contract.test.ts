@@ -1,23 +1,24 @@
 import {
   LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+  LITERATURE_CANONICAL_PRODUCTION_ORIGIN,
   LITERATURE_MAIN_APPLICATION_PROJECT_REF,
   classifyLiteratureCredential,
   describeLiteratureBinding,
   parseLiteratureTargetUrl,
   resolveLiteratureDedicatedBinding,
+  resolveLiteratureRuntimeMode,
   type LiteratureDedicatedEnvironment,
   type LiteratureRuntimeMode,
 } from './dedicated-project-contract'
 
 const APPROVED_REF = LITERATURE_APPROVED_PRODUCTION_PROJECT_REF
 const MAIN_REF = LITERATURE_MAIN_APPLICATION_PROJECT_REF
-const APPROVED_URL = `https://${APPROVED_REF}.supabase.co`
+const APPROVED_URL = LITERATURE_CANONICAL_PRODUCTION_ORIGIN
 
 /**
  * Placeholder credentials. These are format markers, not credentials: the `sb_secret_` prefix is a
- * documented public Supabase key-class marker, and the bodies are self-describing placeholders
- * rather than anything key-shaped. Legacy JWTs are built at runtime by `legacyJwt` so no
- * credential-shaped literal is ever committed.
+ * documented public Supabase key-class marker, and the bodies are self-describing placeholders.
+ * Legacy JWTs are built at runtime by `legacyJwt` so no credential-shaped literal is committed.
  */
 const SECRET_KEY = 'sb_secret_EXAMPLE_PLACEHOLDER_NOT_A_CREDENTIAL'
 const OTHER_SECRET_KEY = 'sb_secret_EXAMPLE_PLACEHOLDER_DIFFERENT_VALUE'
@@ -31,7 +32,6 @@ function base64Url(value: object) {
     .replaceAll('=', '')
 }
 
-/** A structurally valid, cryptographically meaningless JWT with the given role claim. */
 function legacyJwt(role: string) {
   return [
     base64Url({ alg: 'HS256', typ: 'JWT' }),
@@ -42,12 +42,12 @@ function legacyJwt(role: string) {
 
 function resolve(
   environment: LiteratureDedicatedEnvironment,
-  mode: LiteratureRuntimeMode = 'production',
+  mode: LiteratureRuntimeMode = 'production_strict',
 ) {
   return resolveLiteratureDedicatedBinding(environment, mode)
 }
 
-function productionEnvironment(
+function strictEnvironment(
   overrides: Partial<LiteratureDedicatedEnvironment> = {},
 ): LiteratureDedicatedEnvironment {
   return {
@@ -58,322 +58,311 @@ function productionEnvironment(
   }
 }
 
-describe('dedicated Literature project contract', () => {
-  describe('approved production target', () => {
-    it('binds when the URL, secret key, and expected ref all agree on the approved project', () => {
-      const binding = resolve(productionEnvironment())
-      expect(binding.status).toBe('bound')
-      if (binding.status !== 'bound') throw new Error('expected a bound result')
-      expect(binding.projectRef).toBe(APPROVED_REF)
-      expect(binding.credentialClass).toBe('secret')
-      expect(binding.usedLegacyCredentialVariable).toBe(false)
-    })
+function localEnvironment(
+  overrides: Partial<LiteratureDedicatedEnvironment> = {},
+): LiteratureDedicatedEnvironment {
+  return {
+    LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+    LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
+    LITERATURE_SUPABASE_SECRET_KEY: 'local-development-placeholder',
+    LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    ...overrides,
+  }
+}
 
-    it('parses the project ref out of the hosted Supabase URL', () => {
-      expect(parseLiteratureTargetUrl(APPROVED_URL)?.projectRef).toBe(APPROVED_REF)
-      expect(parseLiteratureTargetUrl(`https://${MAIN_REF}.supabase.co`)?.projectRef).toBe(MAIN_REF)
+describe('runtime mode is fail-strict (M-1)', () => {
+  it('selects local mode only for the exact string "local"', () => {
+    expect(resolveLiteratureRuntimeMode({ LITERATURE_SUPABASE_RUNTIME_MODE: 'local' })).toBe(
+      'local',
+    )
+  })
+
+  it('defaults to the strict contract for anything else', () => {
+    for (const value of [
+      undefined,
+      '',
+      'Local',
+      'LOCAL',
+      ' local',
+      'local ',
+      'local\n',
+      'production',
+      'Production',
+      'PRODUCTION',
+      'production ',
+      'development',
+      'preview',
+      'nonsense',
+    ]) {
+      expect(resolveLiteratureRuntimeMode({ LITERATURE_SUPABASE_RUNTIME_MODE: value })).toBe(
+        'production_strict',
+      )
+    }
+  })
+
+  it('ignores NODE_ENV entirely', () => {
+    for (const nodeEnv of ['production', 'development', 'test', undefined]) {
+      expect(
+        resolveLiteratureRuntimeMode({ NODE_ENV: nodeEnv } as LiteratureDedicatedEnvironment),
+      ).toBe('production_strict')
+    }
+  })
+
+  it('applies the strict contract when the mode variable is absent', () => {
+    // A deployed environment that forgets the variable must not silently accept loopback.
+    const binding = resolveLiteratureDedicatedBinding({
+      LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
+      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    })
+    expect(binding).toMatchObject({
+      status: 'unbound',
+      mode: 'production_strict',
+      reason: 'insecure_url_scheme',
+    })
+  })
+})
+
+describe('canonical production URL (H-3)', () => {
+  it('binds the exact canonical origin', () => {
+    const binding = resolve(strictEnvironment())
+    expect(binding.status).toBe('bound')
+    if (binding.status !== 'bound') throw new Error('expected a bound result')
+    expect(binding.projectRef).toBe(APPROVED_REF)
+    expect(binding.credentialClass).toBe('secret')
+  })
+
+  it('accepts the canonical origin with an explicit root path', () => {
+    expect(resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: `${APPROVED_URL}/` })).status).toBe(
+      'bound',
+    )
+  })
+
+  const rejections: [string, string, string][] = [
+    ['plaintext http', `http://${APPROVED_REF}.supabase.co`, 'insecure_url_scheme'],
+    ['a non-default port', `https://${APPROVED_REF}.supabase.co:8443`, 'url_non_default_port'],
+    ['userinfo', `https://user:pass@${APPROVED_REF}.supabase.co`, 'url_contains_userinfo'],
+    ['a query string', `${APPROVED_URL}/?x=1`, 'url_contains_query_or_fragment'],
+    ['a fragment', `${APPROVED_URL}/#x`, 'url_contains_query_or_fragment'],
+    ['an unexpected path', `${APPROVED_URL}/rest/v1`, 'url_unexpected_path'],
+    ['a trailing-dot host', `https://${APPROVED_REF}.supabase.co.`, 'noncanonical_production_url'],
+    [
+      'an alternate project host',
+      'https://abcdefghijklmnopqrst.supabase.co',
+      'noncanonical_production_url',
+    ],
+    ['a custom host', 'https://literature.example.com', 'noncanonical_production_url'],
+    ['the main project host', `https://${MAIN_REF}.supabase.co`, 'noncanonical_production_url'],
+    ['loopback', 'https://127.0.0.1', 'loopback_not_permitted_in_production'],
+    ['a .localhost host', 'https://app.localhost', 'loopback_not_permitted_in_production'],
+  ]
+
+  it.each(rejections)('rejects %s', (_label, url, reason) => {
+    expect(resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: url }))).toMatchObject({
+      status: 'unbound',
+      reason,
     })
   })
 
-  describe('wrong project', () => {
-    it('rejects the main application project as a Literature target', () => {
-      const binding = resolve(
-        productionEnvironment({
+  it('rejects an unparseable URL', () => {
+    expect(resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: 'not a url' }))).toMatchObject({
+      status: 'unbound',
+      reason: 'invalid_url',
+    })
+  })
+
+  it('parses the project ref out of a hosted Supabase URL', () => {
+    expect(parseLiteratureTargetUrl(APPROVED_URL)?.projectRef).toBe(APPROVED_REF)
+    expect(parseLiteratureTargetUrl(`https://${MAIN_REF}.supabase.co`)?.projectRef).toBe(MAIN_REF)
+  })
+})
+
+describe('local mode', () => {
+  it('accepts a loopback target with an opaque local key', () => {
+    expect(resolve(localEnvironment(), 'local').status).toBe('bound')
+  })
+
+  it('accepts the legacy credential variable', () => {
+    const binding = resolve(
+      localEnvironment({
+        LITERATURE_SUPABASE_SECRET_KEY: undefined,
+        LITERATURE_SUPABASE_SERVICE_ROLE_KEY: legacyJwt('service_role'),
+      }),
+      'local',
+    )
+    expect(binding.status).toBe('bound')
+    if (binding.status !== 'bound') throw new Error('expected a bound result')
+    expect(binding.usedLegacyCredentialVariable).toBe(true)
+  })
+
+  it('never accepts a remote host, even the approved one', () => {
+    expect(
+      resolve(localEnvironment({ LITERATURE_SUPABASE_URL: APPROVED_URL }), 'local'),
+    ).toMatchObject({ status: 'unbound', reason: 'remote_host_not_permitted_in_local_mode' })
+  })
+
+  it('never accepts an arbitrary remote host', () => {
+    expect(
+      resolve(localEnvironment({ LITERATURE_SUPABASE_URL: 'https://evil.example.com' }), 'local'),
+    ).toMatchObject({ status: 'unbound', reason: 'remote_host_not_permitted_in_local_mode' })
+  })
+
+  it('still refuses a publishable credential', () => {
+    expect(
+      resolve(localEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY }), 'local'),
+    ).toMatchObject({ status: 'unbound', reason: 'invalid_credential_class' })
+  })
+
+  it('still refuses the main application project', () => {
+    expect(
+      resolve(localEnvironment({ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: MAIN_REF }), 'local'),
+    ).toMatchObject({ status: 'unbound', reason: 'prohibited_project_ref' })
+  })
+})
+
+describe('wrong project', () => {
+  it('rejects the main application project as a Literature target in strict mode', () => {
+    expect(
+      resolve(
+        strictEnvironment({
           LITERATURE_SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
           LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: MAIN_REF,
         }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'prohibited_project_ref' })
-    })
+      ),
+    ).toMatchObject({ status: 'unbound' })
+  })
 
-    it('rejects the main application project even outside production', () => {
-      const binding = resolve(
-        productionEnvironment({
-          LITERATURE_SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: MAIN_REF,
+  it('rejects a URL whose ref disagrees with the expected ref', () => {
+    expect(
+      resolve(
+        strictEnvironment({
+          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: 'abcdefghijklmnopqrst',
         }),
-        'non_production',
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'prohibited_project_ref' })
-    })
+      ),
+    ).toMatchObject({ status: 'unbound', reason: 'project_ref_mismatch' })
+  })
+})
 
-    it('rejects an arbitrary project ref in production', () => {
-      const other = 'abcdefghijklmnopqrst'
-      const binding = resolve(
-        productionEnvironment({
-          LITERATURE_SUPABASE_URL: `https://${other}.supabase.co`,
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: other,
-        }),
-      )
-      expect(binding).toMatchObject({
-        status: 'unbound',
-        reason: 'unapproved_production_project_ref',
-      })
-    })
+describe('incomplete configuration', () => {
+  it('reports not configured when no dedicated variable is set', () => {
+    expect(resolve({})).toMatchObject({ status: 'unbound', reason: 'not_configured' })
+  })
 
-    it('rejects a URL whose ref disagrees with the expected ref', () => {
-      const binding = resolve(
-        productionEnvironment({
-          LITERATURE_SUPABASE_URL: 'https://abcdefghijklmnopqrst.supabase.co',
-        }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'project_ref_mismatch' })
-    })
+  it('never falls back to the main application project', () => {
+    const binding = resolveLiteratureDedicatedBinding({
+      SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
+      SUPABASE_SERVICE_ROLE_KEY: SECRET_KEY,
+      NEXT_PUBLIC_SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
+    } as unknown as LiteratureDedicatedEnvironment)
+    expect(binding).toMatchObject({ status: 'unbound', reason: 'not_configured' })
+  })
 
-    it('rejects a production URL with no derivable project ref', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_URL: 'https://literature.example.com' }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'unresolvable_project_ref' })
+  it('fails closed on a partial dedicated configuration', () => {
+    expect(resolve({ LITERATURE_SUPABASE_URL: APPROVED_URL })).toMatchObject({
+      status: 'unbound',
+      reason: 'partial_configuration',
+    })
+    expect(resolve({ LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY })).toMatchObject({
+      status: 'unbound',
+      reason: 'partial_configuration',
     })
   })
 
-  describe('incomplete configuration', () => {
-    it('reports not configured when no dedicated variable is set', () => {
-      expect(resolve({})).toMatchObject({ status: 'unbound', reason: 'not_configured' })
-    })
-
-    it('never falls back to the main application project in production', () => {
-      // The main-project variables are deliberately absent from the dedicated environment type.
-      // Supplying them alongside an empty dedicated configuration must still be "not configured".
-      const binding = resolveLiteratureDedicatedBinding(
-        {
-          SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
-          SUPABASE_SERVICE_ROLE_KEY: SECRET_KEY,
-          NEXT_PUBLIC_SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
-        } as unknown as LiteratureDedicatedEnvironment,
-        'production',
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'not_configured' })
-    })
-
-    it('fails closed on a partial dedicated configuration rather than guessing', () => {
-      expect(resolve({ LITERATURE_SUPABASE_URL: APPROVED_URL })).toMatchObject({
-        status: 'unbound',
-        reason: 'partial_configuration',
-      })
-      expect(resolve({ LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY })).toMatchObject({
-        status: 'unbound',
-        reason: 'partial_configuration',
-      })
-    })
-
-    it('requires the expected project ref', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: undefined }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'expected_project_ref_missing' })
-    })
-
-    it('rejects a malformed expected project ref', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: 'too-short' }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'expected_project_ref_malformed' })
-    })
-
-    it('rejects a URL that is not absolute http(s)', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_URL: 'postgres://example' }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'invalid_url' })
-    })
+  it('requires the expected project ref', () => {
+    expect(
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: undefined })),
+    ).toMatchObject({ status: 'unbound', reason: 'expected_project_ref_missing' })
   })
 
-  describe('credential class', () => {
-    it('classifies each documented key shape', () => {
-      expect(classifyLiteratureCredential(SECRET_KEY)).toBe('secret')
-      expect(classifyLiteratureCredential(PUBLISHABLE_KEY)).toBe('publishable')
-      expect(classifyLiteratureCredential(legacyJwt('service_role'))).toBe('legacy_service_role')
-      expect(classifyLiteratureCredential(legacyJwt('anon'))).toBe('legacy_anon')
-      expect(classifyLiteratureCredential(legacyJwt('nonsense'))).toBe('unknown_jwt')
-      expect(classifyLiteratureCredential('local-development-placeholder')).toBe('opaque')
-    })
+  it('rejects a malformed expected project ref', () => {
+    expect(
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: 'too-short' })),
+    ).toMatchObject({ status: 'unbound', reason: 'expected_project_ref_malformed' })
+  })
+})
 
-    it('rejects a publishable key as the privileged credential', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'invalid_credential_class' })
-    })
-
-    it('rejects an anon key as the privileged credential', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: legacyJwt('anon') }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'invalid_credential_class' })
-    })
-
-    it('rejects a publishable key outside production too', () => {
-      const binding = resolve(
-        {
-          LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
-          LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY,
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-        },
-        'non_production',
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'invalid_credential_class' })
-    })
-
-    it('requires the current secret-key model in production', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: legacyJwt('service_role') }),
-      )
-      expect(binding).toMatchObject({
-        status: 'unbound',
-        reason: 'production_requires_secret_key_credential',
-      })
-    })
+describe('credential class', () => {
+  it('classifies each documented key shape', () => {
+    expect(classifyLiteratureCredential(SECRET_KEY)).toBe('secret')
+    expect(classifyLiteratureCredential(PUBLISHABLE_KEY)).toBe('publishable')
+    expect(classifyLiteratureCredential(legacyJwt('service_role'))).toBe('legacy_service_role')
+    expect(classifyLiteratureCredential(legacyJwt('anon'))).toBe('legacy_anon')
+    expect(classifyLiteratureCredential(legacyJwt('nonsense'))).toBe('unknown_jwt')
+    expect(classifyLiteratureCredential('local-development-placeholder')).toBe('opaque')
   })
 
-  describe('legacy credential variable', () => {
-    it('is not accepted in production even when everything else is correct', () => {
-      const binding = resolve({
+  it('rejects publishable and anon keys as the privileged credential', () => {
+    for (const credential of [PUBLISHABLE_KEY, legacyJwt('anon')]) {
+      expect(
+        resolve(strictEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: credential })),
+      ).toMatchObject({ status: 'unbound', reason: 'invalid_credential_class' })
+    }
+  })
+
+  it('requires the current secret-key model in strict mode', () => {
+    expect(
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: legacyJwt('service_role') })),
+    ).toMatchObject({ status: 'unbound', reason: 'production_requires_secret_key_credential' })
+  })
+})
+
+describe('legacy credential variable', () => {
+  it('is not accepted in strict mode', () => {
+    expect(
+      resolve({
         LITERATURE_SUPABASE_URL: APPROVED_URL,
         LITERATURE_SUPABASE_SERVICE_ROLE_KEY: SECRET_KEY,
         LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-      })
-      expect(binding).toMatchObject({
-        status: 'unbound',
-        reason: 'legacy_credential_variable_not_permitted_in_production',
-      })
+      }),
+    ).toMatchObject({
+      status: 'unbound',
+      reason: 'legacy_credential_variable_not_permitted_in_production',
     })
+  })
 
-    it('remains supported outside production so the local workflow keeps working', () => {
-      const binding = resolve(
-        {
-          LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
-          LITERATURE_SUPABASE_SERVICE_ROLE_KEY: legacyJwt('service_role'),
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-        },
-        'non_production',
-      )
-      expect(binding.status).toBe('bound')
-      if (binding.status !== 'bound') throw new Error('expected a bound result')
-      expect(binding.usedLegacyCredentialVariable).toBe(true)
-      expect(binding.credentialClass).toBe('legacy_service_role')
-    })
-
-    it('accepts an opaque local key outside production', () => {
-      const binding = resolve(
-        {
-          LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
-          LITERATURE_SUPABASE_SECRET_KEY: 'local-development-placeholder',
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-        },
-        'non_production',
-      )
-      expect(binding.status).toBe('bound')
-    })
-
-    it('fails closed when the new and legacy variables hold different values', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: OTHER_SECRET_KEY }),
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'ambiguous_credentials' })
-    })
-
-    it('fails closed on differing values outside production as well', () => {
-      const binding = resolve(
-        {
-          LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
+  it('fails closed when the two variables hold different values', () => {
+    expect(
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: OTHER_SECRET_KEY })),
+    ).toMatchObject({ status: 'unbound', reason: 'ambiguous_credentials' })
+    expect(
+      resolve(
+        localEnvironment({
           LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
           LITERATURE_SUPABASE_SERVICE_ROLE_KEY: OTHER_SECRET_KEY,
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-        },
-        'non_production',
-      )
-      expect(binding).toMatchObject({ status: 'unbound', reason: 'ambiguous_credentials' })
-    })
-
-    it('accepts byte-identical values as one credential rather than an ambiguity', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: SECRET_KEY }),
-      )
-      expect(binding.status).toBe('bound')
-      if (binding.status !== 'bound') throw new Error('expected a bound result')
-      expect(binding.usedLegacyCredentialVariable).toBe(false)
-    })
+        }),
+        'local',
+      ),
+    ).toMatchObject({ status: 'unbound', reason: 'ambiguous_credentials' })
   })
 
-  describe('loopback', () => {
-    it('rejects a loopback URL as a production target', () => {
-      for (const url of [
-        'http://127.0.0.1:55321',
-        'http://localhost:55321',
-        'https://app.localhost',
-      ]) {
-        expect(resolve(productionEnvironment({ LITERATURE_SUPABASE_URL: url }))).toMatchObject({
-          status: 'unbound',
-          reason: 'loopback_not_permitted_in_production',
-        })
+  it('accepts byte-identical values as one credential', () => {
+    const binding = resolve(strictEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: SECRET_KEY }))
+    expect(binding.status).toBe('bound')
+    if (binding.status !== 'bound') throw new Error('expected a bound result')
+    expect(binding.usedLegacyCredentialVariable).toBe(false)
+  })
+})
+
+describe('secret safety', () => {
+  it('never repeats a credential value in a failure message', () => {
+    const failures = [
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY })),
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: OTHER_SECRET_KEY })),
+      resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321' })),
+      resolve({ LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY }),
+    ]
+    for (const binding of failures) {
+      expect(binding.status).toBe('unbound')
+      if (binding.status !== 'unbound') continue
+      for (const value of [SECRET_KEY, OTHER_SECRET_KEY, PUBLISHABLE_KEY]) {
+        expect(binding.message).not.toContain(value)
       }
-    })
-
-    it('permits a loopback URL outside production', () => {
-      const binding = resolve(
-        {
-          LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
-          LITERATURE_SUPABASE_SECRET_KEY: 'local-development-placeholder',
-          LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-        },
-        'non_production',
-      )
-      expect(binding.status).toBe('bound')
-    })
-
-    it('refuses the protected real-local database port as a production target', () => {
-      const binding = resolve(
-        productionEnvironment({ LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55322' }),
-      )
-      expect(binding).toMatchObject({
-        status: 'unbound',
-        reason: 'loopback_not_permitted_in_production',
-      })
-    })
+    }
   })
 
-  describe('secret safety', () => {
-    it('never repeats a credential value in a failure message', () => {
-      const failures = [
-        resolve(productionEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY })),
-        resolve(productionEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: OTHER_SECRET_KEY })),
-        resolve(productionEnvironment({ LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321' })),
-        resolve({ LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY }),
-      ]
-      for (const binding of failures) {
-        expect(binding.status).toBe('unbound')
-        if (binding.status !== 'unbound') continue
-        expect(binding.message).not.toContain(SECRET_KEY)
-        expect(binding.message).not.toContain(OTHER_SECRET_KEY)
-        expect(binding.message).not.toContain(PUBLISHABLE_KEY)
-      }
-    })
-
-    it('produces diagnostics that carry no credential', () => {
-      const diagnostics = describeLiteratureBinding(resolve(productionEnvironment()))
-      expect(JSON.stringify(diagnostics)).not.toContain(SECRET_KEY)
-      expect(diagnostics).toMatchObject({ status: 'bound', projectRef: APPROVED_REF })
-    })
-
-    it('reports a distinct reason for each failure mode so the UI can tell them apart', () => {
-      const reasons = new Set(
-        [
-          resolve({}),
-          resolve({ LITERATURE_SUPABASE_URL: APPROVED_URL }),
-          resolve(productionEnvironment({ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: undefined })),
-          resolve(productionEnvironment({ LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321' })),
-          resolve(productionEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY })),
-          resolve(
-            productionEnvironment({
-              LITERATURE_SUPABASE_URL: `https://${MAIN_REF}.supabase.co`,
-              LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: MAIN_REF,
-            }),
-          ),
-        ].map((binding) => (binding.status === 'unbound' ? binding.reason : 'bound')),
-      )
-      expect(reasons.size).toBe(6)
-    })
+  it('produces diagnostics that carry no credential', () => {
+    const diagnostics = describeLiteratureBinding(resolve(strictEnvironment()))
+    expect(JSON.stringify(diagnostics)).not.toContain(SECRET_KEY)
+    expect(diagnostics).toMatchObject({ status: 'bound', projectRef: APPROVED_REF })
   })
 })

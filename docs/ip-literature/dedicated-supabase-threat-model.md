@@ -7,6 +7,9 @@ the repository today plus the ones the runbook requires of a human operator.
 Legend for **Status**: _code_ — enforced by a test-covered code path; _procedure_ — enforced by the
 runbook and requires operator discipline; _open_ — accepted residual risk.
 
+> Revised after an independent review returned BLOCKED. The blocking finding (evidence provenance)
+> and nine further findings are addressed below; T19–T22 are new.
+
 ## T1 — The Literature client falls back to the main application project
 
 The realised failure. A production deployment with no dedicated configuration service-roled against
@@ -32,9 +35,13 @@ the URL hostname and the two must match; in production the result must be
 migration manifest binds the same ref, and the preflight refuses any other target. Reason codes
 `project_ref_mismatch`, `unapproved_production_project_ref`, `prohibited_project_ref`.
 
-**Residual.** A non-hosted URL (custom domain, tunnel) carries no ref in its hostname. In production
-that is refused outright (`unresolvable_project_ref`); outside production the declared expected ref
-is accepted as the target's identity, which is appropriate for a local stack.
+The strict contract goes further: it accepts only the canonical origin
+`https://itcttmkxdxvwmwcmzmey.supabase.co`. Plaintext http, a non-default port, userinfo, a query,
+a fragment, an unexpected path, a trailing-dot host, an alternate project host, and any custom host
+are each refused with their own reason code (H-3).
+
+**Residual.** Prefix validation of `sb_secret_` is a credential-_class_ check only. Real acceptance
+happens when the provider validates the credential.
 
 ## T3 — Wrong Railway service or environment
 
@@ -89,10 +96,15 @@ read during this work.
 The Literature secret reaching a client bundle.
 
 **Controls (code).** The primary guarantee is naming: Next.js exposes only `NEXT_PUBLIC_*` to the
-browser, and none of the three dedicated variables carries that prefix. A test asserts that a
+browser, and none of the four dedicated variables carries that prefix. A test asserts that a
 `NEXT_PUBLIC_*`-only environment resolves to `null` for the privileged client. `database-client.ts`
-additionally throws if it is ever evaluated where `window` is defined, so an accidental client
-import fails loudly rather than shipping.
+additionally throws if it is ever evaluated where `window` is defined. A production bundle scan
+confirms `.next/static/` contains zero `LITERATURE_SUPABASE` occurrences while the secret variable
+appears only in server chunks.
+
+The repository has no `server-only` dependency; adding one was considered and left out rather than
+introducing a new package in a preparation-only PR. The naming guarantee plus the bundle scan is
+what carries the property.
 
 ## T8 — The wrong migration is applied
 
@@ -204,14 +216,79 @@ under `scripts/literature-dedicated-supabase/` references a held-out identifier,
 generator, or an import/compensation function. The foundation migration itself creates no gold-set
 object; a test asserts its SQL contains no `literature_gold` reference.
 
+## T19 — Forged or relabelled target evidence (the blocking finding)
+
+A catalog observation captured from a different database — a disposable rehearsal, the main project,
+any host — relabelled as the approved project and accepted.
+
+**Controls (code).** Two independent structural mechanisms, because a checksum alone cannot fix
+this: hashing proves bytes did not change, not which database produced them.
+
+1. **The evidence body cannot name its own target.** There is no `projectRef` or `hostname` field in
+   the schema, and the schema is `.strict()`, so a document adding one is rejected as an unknown
+   field. Relabelling is unrepresentable, not merely detected.
+2. **Identity comes from the adapter.** `LiteratureProviderAttestation.providerProjectRef`
+   originates in a project-scoped connector context and is compared against the approved ref, along
+   with the provider URL, query-bundle identity, repository commit, migration path and checksum,
+   content checksum, completeness, and a 10-minute freshness window.
+
+**Status: honestly blocked.** The provider adapter is deliberately unimplemented —
+`captureLiteratureProviderAttestation()` always reports `provider_adapter_not_implemented`, so every
+production-authorizing path returns `provider_attestation_required`. No cryptographic provenance is
+claimed, because no signature primitive exists here. A safe blocked gate beats false provenance.
+
+**Residual (open).** Until Layer 3 ships, repository and content checks are non-authoritative and
+the migration cannot be applied. That is the intended state.
+
+## T20 — Semantic drift that preserves signatures and grants
+
+A function whose signature and ACLs are untouched but whose body was replaced; a changed owner,
+column default, constraint, trigger or index definition; a flipped forced-RLS flag.
+
+**Controls (code).** The comparator binds a generated, committed artifact covering 13 catalog
+sections with an exact row count and checksum each — including function definitions (by SHA-256),
+owners, strictness, parallel safety, leakproof state, full `proconfig`, raw ACL rows, columns with
+defaults and identity/generated state, constraint definitions, trigger definitions and enabled
+state, index definitions and validity, schema and default privileges, and role attributes including
+`BYPASSRLS`. The rehearsal proves detection end to end: scenario `R17` replaces
+`literature_admin_stats_v1`'s body while keeping its signature and ACLs, and the comparison fails.
+
+Empty or missing evidence is never read as "nothing granted": the privilege grid emits an explicit
+`granted` boolean for all 224 (table, role, privilege) combinations, and `R18` proves an emptied
+array fails.
+
+## T21 — Evidence-document parsing attacks
+
+A document that parses differently than it reads: duplicate keys, unknown fields surviving a cast,
+wrong types becoming an uncontrolled `TypeError`, or a credential hidden behind Unicode escapes.
+
+**Controls (code).** A custom recursive-descent JSON parser rejects duplicate keys outright rather
+than resolving last-value-wins. A strict zod schema rejects unknown fields (top-level and nested),
+missing fields, wrong types, non-object catalog rows, partial catalog sections, and unexpected extra
+sections. Credential screening runs **after** decoding, recursively over every key and value, with
+case-normalised patterns — so `sb\u005fsecret_…` and `SB_SeCrEt_…` are caught identically to the
+plain form. Every failure is a typed `LiteratureEvidenceError` with a code.
+
+## T22 — A success verdict for an unproven or wrong target
+
+The postflight printing `applied_correct` / `proceed` and only later emitting a warning.
+
+**Controls (code).** Target attestation is the _first_ check in `classifyLiteratureRollout`, before
+any catalog reasoning. An unattested, wrong, stale, or incomplete attestation yields
+`provider_attestation_required` with `stop_read_only_reconciliation`. There is no branch that
+reaches `applied_correct` without `status: 'attested'`, and the postflight exits non-zero for every
+classification except `applied_correct`, so the verdict and the exit status always agree.
+
 ## Residual risks accepted
 
-1. **Railway is unobservable from here** (T3). Only the operator can confirm the variables landed on
+1. **Layer 3 is unimplemented** (T19). Production migration is blocked until a project-scoped
+   read-only connector exists and is independently reviewed.
+2. **Railway is unobservable from here** (T3). Only the operator can confirm the variables landed on
    the right service and environment.
-2. **Operational CLIs still read the legacy variable only.** Deliberate, to avoid entangling this
-   change with the protected gold-import tooling. Tracked as an owner decision.
-3. **Admin gold-set surfaces will error against a foundation-only database.** Expected and scoped;
-   see the architecture note.
-4. **A local production build (`NODE_ENV=production` with a loopback URL) reports not configured.**
-   This is the required fail-closed behaviour, not a defect. Local development (`npm run dev`) is
-   unaffected.
+3. **Operational CLIs still read the legacy variable only.** Deliberate, to avoid entangling this
+   change with the protected gold-import tooling.
+4. **Managed migration-history semantics are unproven.** The recorded version is provider-assigned;
+   the contract binds "exactly one recorded migration" and defers version identity to execution-time
+   evidence rather than assuming the filename version.
+5. **Admin gold-set surfaces would error against a foundation-only database.** This is why the
+   runbook gates Railway cutover behind a separate capability-gating package (M-4).

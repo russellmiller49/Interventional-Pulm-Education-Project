@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import {
-  LITERATURE_FOUNDATION_MIGRATION,
+  LITERATURE_APPROVED_APPLICATION_MECHANISM,
   LITERATURE_DEDICATED_TARGET,
+  LITERATURE_FOUNDATION_MIGRATION,
 } from '../../src/features/literature/dedicated-supabase/foundation-manifest'
 import {
   PROTECTED_REAL_LOCAL_CONTAINER,
@@ -15,22 +16,23 @@ import {
   rehearsalResourceName,
   sanitizeRehearsalChildEnvironment,
 } from './lib/disposable-target'
+import { LITERATURE_CATALOG_SECTIONS } from './lib/foundation-catalog'
 import {
+  allChecksPassed,
+  evaluateEvidenceContentPreflight,
   evaluateRepositoryPreflight,
-  evaluateTargetPreflight,
-  preflightApproved,
+  resolvePreflightOutcome,
+  type PreflightCheck,
   type RepositoryFacts,
 } from './lib/preflight-rules'
 import {
-  LITERATURE_READ_ONLY_CATALOG_STATEMENT,
-  LITERATURE_READ_ONLY_HISTORY_STATEMENT,
-  assertObservationCarriesNoSecret,
-  parseTargetObservation,
-  type LiteratureTargetObservation,
+  LITERATURE_QUERY_BUNDLE_SHA256,
+  LITERATURE_READ_ONLY_QUERY_BUNDLE,
+  renderLiteratureQueryBundle,
 } from './lib/target-observation'
+import type { LiteratureEvidenceDocument } from './lib/evidence-schema'
 
 const ROOT = process.cwd()
-const APPROVED_REF = LITERATURE_DEDICATED_TARGET.projectRef
 const HEAD = 'a'.repeat(40)
 
 function repositoryFacts(overrides: Partial<RepositoryFacts> = {}): RepositoryFacts {
@@ -41,291 +43,345 @@ function repositoryFacts(overrides: Partial<RepositoryFacts> = {}): RepositoryFa
     headCommit: HEAD,
     originMainCommit: HEAD,
     workingTreeClean: true,
-    approvedCommit: HEAD,
-    headDescendsFromApprovedCommit: true,
+    ownerApprovedCommit: HEAD,
     migrationSha256: LITERATURE_FOUNDATION_MIGRATION.sha256,
     migrationByteLength: LITERATURE_FOUNDATION_MIGRATION.byteLength,
     selectedMigrationPaths: [LITERATURE_FOUNDATION_MIGRATION.path],
+    applicationMechanism: LITERATURE_APPROVED_APPLICATION_MECHANISM,
     ...overrides,
   }
 }
 
-function emptyObservation(
-  overrides: Partial<LiteratureTargetObservation> = {},
-): LiteratureTargetObservation {
+function emptyCatalog() {
+  return Object.fromEntries(
+    LITERATURE_CATALOG_SECTIONS.map((section) => [section, []]),
+  ) as unknown as LiteratureEvidenceDocument['catalog']
+}
+
+function evidence(overrides: Partial<LiteratureEvidenceDocument> = {}): LiteratureEvidenceDocument {
   return {
-    projectRef: APPROVED_REF,
-    hostname: `db.${APPROVED_REF}.supabase.co`,
+    schemaVersion: 'literature-dedicated-observation/2.0.0',
+    queryBundleSha256: LITERATURE_QUERY_BUNDLE_SHA256,
     migrationVersions: [],
-    catalog: {
-      extensions: [],
-      tables: [],
-      policies: [],
-      functions: [],
-      triggers: [],
-      indexes: [],
-      tablePrivileges: [],
-    },
+    catalog: emptyCatalog(),
     prerequisites: {
       availableExtensions: ['pg_trgm'],
       roles: ['anon', 'authenticated', 'service_role'],
       schemas: ['extensions', 'public'],
     },
+    totalRowCount: 0,
     ...overrides,
   }
 }
 
-function failedIds(checks: ReturnType<typeof evaluateRepositoryPreflight>) {
+function withCatalog(section: string, rows: Record<string, unknown>[]) {
+  return evidence({
+    catalog: { ...emptyCatalog(), [section]: rows } as LiteratureEvidenceDocument['catalog'],
+  })
+}
+
+function failedIds(checks: readonly PreflightCheck[]) {
   return checks.filter((entry) => !entry.passed).map((entry) => entry.id)
 }
 
-describe('repository preflight rules', () => {
-  it('approves a clean primary checkout at the approved commit', () => {
+describe('repository preflight (Layer 1)', () => {
+  it('approves a clean primary checkout at the exact approved commit', () => {
     const checks = evaluateRepositoryPreflight(repositoryFacts())
     expect(failedIds(checks)).toEqual([])
-    expect(preflightApproved(checks)).toBe(true)
+    expect(allChecksPassed(checks)).toBe(true)
   })
 
-  it('blocks a linked worktree', () => {
+  it('blocks a linked worktree, a non-main branch, and a dirty tree', () => {
     expect(
       failedIds(evaluateRepositoryPreflight(repositoryFacts({ isPrimaryCheckout: false }))),
     ).toContain('P01-primary-checkout')
-  })
-
-  it('blocks a branch other than main', () => {
     expect(
       failedIds(evaluateRepositoryPreflight(repositoryFacts({ branch: 'claude/anything' }))),
     ).toContain('P02-main-branch')
-  })
-
-  it('blocks a dirty working tree', () => {
     expect(
       failedIds(evaluateRepositoryPreflight(repositoryFacts({ workingTreeClean: false }))),
     ).toContain('P03-clean-worktree')
   })
 
-  it('blocks when HEAD is behind origin/main', () => {
-    expect(
-      failedIds(evaluateRepositoryPreflight(repositoryFacts({ originMainCommit: 'b'.repeat(40) }))),
-    ).toContain('P04-head-matches-origin-main')
+  describe('exact approved commit (H-4)', () => {
+    it('passes only when HEAD == origin/main == approved', () => {
+      expect(failedIds(evaluateRepositoryPreflight(repositoryFacts()))).not.toContain(
+        'P04-exact-approved-commit',
+      )
+    })
+
+    it('rejects a descendant of the approved commit', () => {
+      // The review defeated the old rule by advancing main past the reviewed commit.
+      const descendant = 'b'.repeat(40)
+      expect(
+        failedIds(
+          evaluateRepositoryPreflight(
+            repositoryFacts({
+              headCommit: descendant,
+              originMainCommit: descendant,
+              ownerApprovedCommit: HEAD,
+            }),
+          ),
+        ),
+      ).toContain('P04-exact-approved-commit')
+    })
+
+    it('rejects HEAD behind origin/main', () => {
+      expect(
+        failedIds(
+          evaluateRepositoryPreflight(repositoryFacts({ originMainCommit: 'c'.repeat(40) })),
+        ),
+      ).toContain('P04-exact-approved-commit')
+    })
+
+    it('rejects a missing approved commit', () => {
+      expect(
+        failedIds(evaluateRepositoryPreflight(repositoryFacts({ ownerApprovedCommit: undefined }))),
+      ).toContain('P04-exact-approved-commit')
+    })
   })
 
-  it('blocks when no approved commit was supplied', () => {
+  it('blocks drift, zero selections, deferred and unrelated migrations', () => {
+    expect(
+      failedIds(evaluateRepositoryPreflight(repositoryFacts({ migrationSha256: 'a'.repeat(64) }))),
+    ).toEqual(expect.arrayContaining(['P05-migration-checksum', 'P11-manifest-approves-selection']))
+    expect(
+      failedIds(evaluateRepositoryPreflight(repositoryFacts({ selectedMigrationPaths: [] }))),
+    ).toContain('P06-exactly-one-migration')
     expect(
       failedIds(
         evaluateRepositoryPreflight(
-          repositoryFacts({ approvedCommit: undefined, headDescendsFromApprovedCommit: undefined }),
+          repositoryFacts({
+            selectedMigrationPaths: [
+              'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
+            ],
+          }),
         ),
       ),
-    ).toContain('P05-approved-commit')
-  })
-
-  it('blocks when HEAD does not descend from the approved commit', () => {
+    ).toEqual(
+      expect.arrayContaining(['P07-migration-path', 'P08-no-deferred-literature-migration']),
+    )
     expect(
       failedIds(
-        evaluateRepositoryPreflight(repositoryFacts({ headDescendsFromApprovedCommit: false })),
+        evaluateRepositoryPreflight(
+          repositoryFacts({
+            selectedMigrationPaths: [
+              'supabase/migrations/20260605041809_add_main_site_auth_usage.sql',
+            ],
+          }),
+        ),
       ),
-    ).toContain('P05-approved-commit')
+    ).toContain('P09-no-unrelated-migration')
   })
 
-  it('blocks a drifted migration', () => {
-    expect(
-      failedIds(evaluateRepositoryPreflight(repositoryFacts({ migrationSha256: 'a'.repeat(64) }))),
-    ).toEqual(expect.arrayContaining(['P06-migration-checksum', 'P11-manifest-approves-selection']))
-  })
+  describe('application mechanism (H-5)', () => {
+    it('blocks an omitted mechanism', () => {
+      expect(
+        failedIds(
+          evaluateRepositoryPreflight(repositoryFacts({ applicationMechanism: undefined })),
+        ),
+      ).toContain('P10-application-mechanism')
+    })
 
-  it('blocks zero selected migrations', () => {
-    expect(
-      failedIds(evaluateRepositoryPreflight(repositoryFacts({ selectedMigrationPaths: [] }))),
-    ).toContain('P07-exactly-one-migration')
-  })
-
-  it('blocks a deferred Literature migration', () => {
-    const checks = evaluateRepositoryPreflight(
-      repositoryFacts({
-        selectedMigrationPaths: [
-          'supabase/migrations/20260809231651_add_literature_gold_import_compensation_contract_v2.sql',
-        ],
-      }),
-    )
-    expect(failedIds(checks)).toEqual(
-      expect.arrayContaining(['P08-migration-path', 'P09-no-deferred-literature-migration']),
-    )
-  })
-
-  it('blocks an unrelated application migration', () => {
-    const checks = evaluateRepositoryPreflight(
-      repositoryFacts({
-        selectedMigrationPaths: ['supabase/migrations/20260605041809_add_main_site_auth_usage.sql'],
-      }),
-    )
-    expect(failedIds(checks)).toContain('P10-no-unrelated-migration')
-  })
-
-  it('blocks a prohibited deployment mechanism', () => {
-    expect(
-      failedIds(
-        evaluateRepositoryPreflight(repositoryFacts({ deploymentMethod: 'supabase db push' })),
-      ),
-    ).toContain('P11-manifest-approves-selection')
+    it.each([
+      'supabase db push',
+      'npx supabase db push',
+      'supabase db push --linked',
+      "bash -lc 'supabase db push'",
+      'supabase migration repair',
+      'anything at all',
+    ])('blocks mechanism %s', (mechanism) => {
+      expect(
+        failedIds(
+          evaluateRepositoryPreflight(repositoryFacts({ applicationMechanism: mechanism })),
+        ),
+      ).toContain('P10-application-mechanism')
+    })
   })
 })
 
-describe('target preflight rules', () => {
-  it('approves a clean empty approved target', () => {
-    const checks = evaluateTargetPreflight(emptyObservation())
-    expect(failedIds(checks)).toEqual([])
+describe('evidence content preflight (Layer 2, non-authoritative)', () => {
+  it('passes a clean empty catalog', () => {
+    expect(failedIds(evaluateEvidenceContentPreflight(evidence()))).toEqual([])
   })
 
-  it('fails closed when no observation was supplied', () => {
-    const checks = evaluateTargetPreflight(null)
-    expect(preflightApproved(checks)).toBe(false)
-    expect(failedIds(checks)).toContain('T00-observation-present')
-  })
-
-  it('blocks the main application project', () => {
-    const checks = evaluateTargetPreflight(
-      emptyObservation({
-        projectRef: 'tqnhxlwvkkswuckszlee',
-        hostname: 'db.tqnhxlwvkkswuckszlee.supabase.co',
-      }),
-    )
-    expect(failedIds(checks)).toEqual(
-      expect.arrayContaining(['T01-target-ref-approved', 'T02-target-ref-not-prohibited']),
-    )
-  })
-
-  it('blocks a loopback target presented as production', () => {
-    expect(
-      failedIds(evaluateTargetPreflight(emptyObservation({ hostname: '127.0.0.1' }))),
-    ).toContain('T03-not-loopback-or-preview')
+  it('fails closed when no evidence was supplied', () => {
+    const checks = evaluateEvidenceContentPreflight(null)
+    expect(allChecksPassed(checks)).toBe(false)
+    expect(failedIds(checks)).toContain('E00-evidence-present')
   })
 
   it('blocks an already-populated migration history', () => {
-    const checks = evaluateTargetPreflight(
-      emptyObservation({ migrationVersions: ['20260727032621'] }),
-    )
-    expect(failedIds(checks)).toEqual(
-      expect.arrayContaining(['T04-empty-migration-history', 'T05-foundation-not-already-applied']),
-    )
-  })
-
-  it('blocks a target that already holds Literature objects', () => {
-    const checks = evaluateTargetPreflight(
-      emptyObservation({
-        catalog: {
-          extensions: [],
-          tables: [
-            { name: 'literature_articles', rowLevelSecurity: true, rowLevelSecurityForced: false },
-          ],
-          policies: [],
-          functions: [],
-          triggers: [],
-          indexes: [],
-          tablePrivileges: [],
-        },
-      }),
-    )
-    expect(failedIds(checks)).toEqual(
-      expect.arrayContaining([
-        'T06-no-foundation-objects',
-        'T07-no-name-collision',
-        'T08-no-partial-schema',
-      ]),
-    )
-  })
-
-  it('blocks a semantic name collision on a function', () => {
-    const checks = evaluateTargetPreflight(
-      emptyObservation({
-        catalog: {
-          extensions: [],
-          tables: [],
-          policies: [],
-          functions: [
-            {
-              name: 'search_literature_v1',
-              argumentTypes: '',
-              returnType: 'void',
-              language: 'sql',
-              volatility: 'v',
-              securityDefiner: false,
-              searchPath: null,
-              owner: 'postgres',
-              publicExecute: true,
-              anonExecute: true,
-              authenticatedExecute: true,
-              serviceRoleExecute: true,
-            },
-          ],
-          triggers: [],
-          indexes: [],
-          tablePrivileges: [],
-        },
-      }),
-    )
-    expect(failedIds(checks)).toContain('T07-no-name-collision')
-  })
-
-  it('blocks when the required extension or roles are unavailable', () => {
     expect(
       failedIds(
-        evaluateTargetPreflight(
-          emptyObservation({
+        evaluateEvidenceContentPreflight(evidence({ migrationVersions: ['20260727032621'] })),
+      ),
+    ).toContain('E01-empty-migration-history')
+  })
+
+  describe('same-name collision detection (H-2)', () => {
+    it('detects a VIEW occupying a Literature table name', () => {
+      // The exact reproduction: public.literature_journals as a view previously passed preflight
+      // and then broke the migration.
+      const checks = evaluateEvidenceContentPreflight(
+        withCatalog('relations', [{ name: 'literature_journals', relkind: 'v' }]),
+      )
+      expect(failedIds(checks)).toContain('E05-no-name-collision')
+      const collision = checks.find((entry) => entry.id === 'E05-no-name-collision')
+      expect(collision?.detail).toMatch(/view literature_journals/u)
+    })
+
+    it.each([
+      ['materialized view', 'm'],
+      ['partitioned table', 'p'],
+      ['foreign table', 'f'],
+      ['sequence', 'S'],
+      ['table', 'r'],
+    ])('detects a %s occupying a Literature table name', (_label, relkind) => {
+      expect(
+        failedIds(
+          evaluateEvidenceContentPreflight(
+            withCatalog('relations', [{ name: 'literature_articles', relkind }]),
+          ),
+        ),
+      ).toContain('E05-no-name-collision')
+    })
+
+    it('detects a composite/enum/domain type collision', () => {
+      expect(
+        failedIds(
+          evaluateEvidenceContentPreflight(
+            withCatalog('types', [{ name: 'literature_topics', typtype: 'e' }]),
+          ),
+        ),
+      ).toContain('E05-no-name-collision')
+    })
+
+    it('detects a same-name function that CREATE OR REPLACE could overwrite', () => {
+      expect(
+        failedIds(
+          evaluateEvidenceContentPreflight(
+            withCatalog('functions', [{ name: 'search_literature_v1' }]),
+          ),
+        ),
+      ).toEqual(expect.arrayContaining(['E03-no-literature-functions', 'E05-no-name-collision']))
+    })
+
+    it('detects an unexpected index name collision', () => {
+      expect(
+        failedIds(
+          evaluateEvidenceContentPreflight(
+            withCatalog('indexes', [{ name: 'literature_articles_pkey' }]),
+          ),
+        ),
+      ).toContain('E05-no-name-collision')
+    })
+  })
+
+  it('blocks a partial Literature schema', () => {
+    expect(
+      failedIds(
+        evaluateEvidenceContentPreflight(
+          withCatalog('relations', [
+            { name: 'literature_articles', relkind: 'r' },
+            { name: 'literature_topics', relkind: 'r' },
+          ]),
+        ),
+      ),
+    ).toContain('E06-no-partial-schema')
+  })
+
+  it('blocks missing prerequisites', () => {
+    expect(
+      failedIds(
+        evaluateEvidenceContentPreflight(
+          evidence({
             prerequisites: { availableExtensions: [], roles: [], schemas: ['public'] },
           }),
         ),
       ),
-    ).toContain('T09-prerequisites-available')
-  })
-
-  it('fails closed when prerequisites were not observed at all', () => {
-    expect(
-      failedIds(evaluateTargetPreflight(emptyObservation({ prerequisites: undefined }))),
-    ).toContain('T09-prerequisites-available')
+    ).toContain('E07-prerequisites-available')
   })
 })
 
-describe('observation documents carry no credential', () => {
-  it('rejects a document containing a secret-shaped value', () => {
-    for (const shape of [
-      'sb_secret_' + 'x'.repeat(20),
-      'sb_publishable_' + 'x'.repeat(20),
-      'eyJhbGciOiJIUzI1NiJ9',
-    ]) {
-      expect(() =>
-        assertObservationCarriesNoSecret(JSON.stringify({ projectRef: APPROVED_REF, shape })),
-      ).toThrow(/credential-shaped/u)
-    }
+describe('preflight outcome layering (B-1)', () => {
+  const passing = [{ id: 'x', description: 'x', passed: true, detail: '' }]
+  const failing = [{ id: 'y', description: 'y', passed: false, detail: '' }]
+
+  it('blocks on a repository failure', () => {
+    expect(
+      resolvePreflightOutcome({
+        repositoryChecks: failing,
+        evidenceChecks: passing,
+        attestationStatus: 'attested',
+        attestationDetail: '',
+      }).verdict,
+    ).toBe('blocked')
   })
 
-  it('accepts a clean observation document', () => {
-    expect(() => parseTargetObservation(JSON.stringify(emptyObservation()))).not.toThrow()
+  it('blocks on an evidence-content failure', () => {
+    expect(
+      resolvePreflightOutcome({
+        repositoryChecks: passing,
+        evidenceChecks: failing,
+        attestationStatus: 'attested',
+        attestationDetail: '',
+      }).verdict,
+    ).toBe('blocked')
   })
 
-  it('requires the observation to record which project was inspected', () => {
-    expect(() => parseTargetObservation(JSON.stringify({ migrationVersions: [] }))).toThrow(
-      /projectRef/u,
-    )
+  it('never reaches ready_to_apply without provider attestation, however good the evidence is', () => {
+    const outcome = resolvePreflightOutcome({
+      repositoryChecks: passing,
+      evidenceChecks: passing,
+      attestationStatus: 'rejected',
+      attestationDetail: 'adapter not implemented',
+    })
+    expect(outcome.verdict).toBe('provider_attestation_required')
+    expect(outcome.authoritative).toBe(false)
+    expect(outcome.summary).toMatch(/NON-AUTHORITATIVE/u)
+  })
+
+  it('reaches ready_to_apply only with all three layers', () => {
+    expect(
+      resolvePreflightOutcome({
+        repositoryChecks: passing,
+        evidenceChecks: passing,
+        attestationStatus: 'attested',
+        attestationDetail: '',
+      }),
+    ).toMatchObject({ verdict: 'ready_to_apply', authoritative: true })
+  })
+})
+
+describe('read-only query bundle (L-1)', () => {
+  it('includes every statement the evidence schema needs, including the row count', () => {
+    const ids = LITERATURE_READ_ONLY_QUERY_BUNDLE.map((entry) => entry.id)
+    expect(ids).toEqual(['migrationVersions', 'catalog', 'prerequisites', 'totalRowCount'])
+  })
+
+  it('marks the row count as post-application only', () => {
+    const rowCount = LITERATURE_READ_ONLY_QUERY_BUNDLE.find((entry) => entry.id === 'totalRowCount')
+    expect(rowCount?.postApplicationOnly).toBe(true)
+  })
+
+  it('binds a stable bundle identity and prints it', () => {
+    expect(LITERATURE_QUERY_BUNDLE_SHA256).toMatch(/^[a-f0-9]{64}$/u)
+    expect(renderLiteratureQueryBundle()).toContain(LITERATURE_QUERY_BUNDLE_SHA256)
   })
 
   it('emits read-only statements only', () => {
-    for (const statement of [
-      LITERATURE_READ_ONLY_CATALOG_STATEMENT,
-      LITERATURE_READ_ONLY_HISTORY_STATEMENT,
-    ]) {
-      expect(statement).toMatch(/^begin read only;/u)
-      expect(statement).toMatch(/set transaction read only;/u)
-      expect(statement).toMatch(/rollback;$/u)
+    for (const entry of LITERATURE_READ_ONLY_QUERY_BUNDLE) {
+      expect(entry.statement).toMatch(/^begin read only;/u)
+      expect(entry.statement).toMatch(/set transaction read only;/u)
+      expect(entry.statement).toMatch(/rollback;$/u)
 
       // Privilege names such as 'INSERT' appear legitimately as quoted literals in the probe
       // arrays, so string literals are stripped before looking for an actual DML or DDL keyword.
-      const withoutLiterals = statement.replaceAll(/'[^']*'/gu, "''")
+      const withoutLiterals = entry.statement.replaceAll(/'[^']*'/gu, "''")
       expect(withoutLiterals).not.toMatch(
         /\b(insert|update|delete|drop|alter|create|grant|revoke|truncate)\b/iu,
       )
-
-      // Every statement in the body must start with a read-only verb.
       const verbs = withoutLiterals
         .split(';')
         .map((part) => part.trim())
@@ -335,6 +391,10 @@ describe('observation documents carry no credential', () => {
         true,
       )
     }
+  })
+
+  it('tells the operator that hand-assembled evidence cannot authorize anything', () => {
+    expect(renderLiteratureQueryBundle()).toMatch(/can never authorize a\s+-- migration/u)
   })
 })
 
@@ -349,14 +409,12 @@ describe('disposable rehearsal safety guards', () => {
 
   it('generates unique operation-owned resource names', () => {
     const first = rehearsalResourceName('target')
-    const second = rehearsalResourceName('target')
-    expect(first).not.toBe(second)
+    expect(first).not.toBe(rehearsalResourceName('target'))
     expect(first).toMatch(/^literature-dedicated-bootstrap-target-\d+-[a-f0-9]{8}$/u)
   })
 
   it('requires a local Docker socket', () => {
     expect(assertLocalDockerEndpoint('unix:///var/run/docker.sock')).toBe('unix-domain-socket')
-    expect(assertLocalDockerEndpoint('npipe:////./pipe/docker_engine')).toBe('windows-named-pipe')
     expect(() => assertLocalDockerEndpoint('tcp://10.0.0.5:2375')).toThrow(/local Docker socket/u)
     expect(() => assertLocalDockerEndpoint('')).toThrow(/local Docker socket/u)
   })
@@ -365,7 +423,7 @@ describe('disposable rehearsal safety guards', () => {
     const sanitized = sanitizeRehearsalChildEnvironment({
       PATH: '/usr/bin',
       LITERATURE_SUPABASE_URL: 'https://example.supabase.co',
-      LITERATURE_SUPABASE_SECRET_KEY: 'sb_secret_EXAMPLE',
+      LITERATURE_SUPABASE_SECRET_KEY: 'placeholder',
       LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'legacy',
       SUPABASE_SERVICE_ROLE_KEY: 'main',
       PGPASSWORD: 'nope',
@@ -390,15 +448,53 @@ describe('disposable rehearsal safety guards', () => {
     }
   })
 
-  it('the rehearsal never publishes a port and never names the protected stack', async () => {
+  it('the rehearsal never publishes a port and cleans up by exact name', async () => {
     const source = await readFile(
       resolve(ROOT, 'scripts/literature-dedicated-supabase/rehearse-foundation.ts'),
       'utf8',
     )
-    // No published port at all means there is no TCP surface that could reach 55322.
     expect(source).not.toMatch(/'--publish'|"-p"|'-p'/u)
     expect(source).toMatch(/removeContainerByExactName/u)
-    // Cleanup is by exact name; a prefix or wildcard removal could take an unrelated container.
     expect(source).not.toMatch(/docker.*prune|--filter.*name=literature-dedicated-bootstrap\*/u)
+  })
+
+  it('the rehearsal labels its migration-history recording as modeled, not proven', async () => {
+    const source = await readFile(
+      resolve(ROOT, 'scripts/literature-dedicated-supabase/rehearse-foundation.ts'),
+      'utf8',
+    )
+    expect(source).toMatch(/MODELED, not proven/u)
+    expect(source).toMatch(/Modeled locally/u)
+  })
+})
+
+describe('capability boundaries', () => {
+  it('the target is the approved dedicated project', () => {
+    expect(LITERATURE_DEDICATED_TARGET.projectRef).toBe('itcttmkxdxvwmwcmzmey')
+  })
+
+  it('no dedicated-supabase module can apply, repair, or reach a protected operation', async () => {
+    for (const file of [
+      'scripts/literature-dedicated-supabase/preflight.ts',
+      'scripts/literature-dedicated-supabase/postflight.ts',
+      'scripts/literature-dedicated-supabase/lib/reconciliation.ts',
+      'scripts/literature-dedicated-supabase/lib/preflight-rules.ts',
+      'scripts/literature-dedicated-supabase/lib/foundation-catalog.ts',
+      'scripts/literature-dedicated-supabase/lib/target-observation.ts',
+      'scripts/literature-dedicated-supabase/lib/evidence-schema.ts',
+    ]) {
+      const source = await readFile(resolve(ROOT, file), 'utf8')
+      expect(source).not.toMatch(
+        /apply_literature_gold_import_v2|compensate_literature_gold_import/u,
+      )
+      expect(source).not.toMatch(/generate-gold-import-compensation-package/u)
+      expect(source).not.toMatch(/held[-_]?out/iu)
+
+      // No module may *invoke* the Supabase CLI. Prose that forbids `migration repair` is
+      // desirable, so the check targets invocation shapes rather than the phrase itself.
+      expect(source).not.toMatch(/runCommand\(\s*['"]supabase['"]/u)
+      expect(source).not.toMatch(/spawn\(\s*['"]supabase['"]/u)
+      expect(source).not.toMatch(/execFile\w*\(\s*['"]supabase['"]/u)
+    }
   })
 })

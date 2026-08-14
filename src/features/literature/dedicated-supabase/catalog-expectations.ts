@@ -1,17 +1,17 @@
 /**
- * The exact catalog the foundation migration is expected to produce on an empty Supabase project.
+ * High-level expectations for the catalog the foundation migration produces.
  *
- * This is the shared expectation used by three consumers:
- *   - the disposable rehearsal, which applies the migration to a throwaway PostgreSQL 17 container
- *     and asserts the resulting catalog matches this file exactly;
- *   - the read-only preflight, which asserts none of these objects already exists on the target;
- *   - the read-only postflight, which asserts all of them exist and nothing else does.
+ * These are the *reviewable* invariants — the names and counts a human can check by eye. The
+ * byte-exact semantic contract (function definitions, owners, column defaults, constraint and
+ * trigger and index definitions, complete ACL grids, role attributes) lives in the generated
+ * artifact `foundation-catalog-expectations.json`, which the disposable rehearsal produces and the
+ * comparator in `scripts/literature-dedicated-supabase/lib/foundation-catalog.ts` enforces.
  *
- * Because the rehearsal compares the real catalog against this list in both directions, a
- * transcription error here fails the rehearsal rather than silently weakening a later verification.
+ * Keeping both matters: the artifact catches drift a human would never spot, and these hand-written
+ * counts catch a bad artifact regeneration that silently "expects" the drift.
  */
 
-export const LITERATURE_FOUNDATION_CATALOG_SCHEMA_VERSION = 'literature-foundation-catalog-v1'
+export const LITERATURE_FOUNDATION_CATALOG_SCHEMA_VERSION = 'literature-foundation-catalog-v2'
 
 export const LITERATURE_FOUNDATION_SCHEMA = 'public'
 
@@ -40,102 +40,14 @@ export const LITERATURE_FOUNDATION_TABLES: readonly string[] = [
  */
 export const LITERATURE_FOUNDATION_EXPECTED_POLICY_COUNT = 0
 
-export interface LiteratureFunctionExpectation {
-  name: string
-  /** Argument types as PostgreSQL renders them in `pg_get_function_arguments`, comma separated. */
-  argumentTypes: string
-  returnType: string
-  language: 'plpgsql' | 'sql'
-  volatility: 'v' | 's' | 'i'
-  /** Every function is SECURITY INVOKER; none is SECURITY DEFINER. */
-  securityDefiner: false
-  /** Every function pins its search path away from a caller-controlled one. */
-  searchPath: 'pg_catalog, public'
-  /** True for the three RPCs the application calls through PostgREST. */
-  serviceRoleExecute: boolean
-}
-
-/**
- * Six functions. Three are trigger functions with execute revoked from `public`, `anon`, and
- * `authenticated` (and never granted to `service_role` — PostgreSQL does not check EXECUTE when
- * firing a trigger). Three are the RPCs the runtime calls, granted to `service_role` only.
- */
-export const LITERATURE_FOUNDATION_FUNCTIONS: readonly LiteratureFunctionExpectation[] = [
-  {
-    name: 'curate_literature_article_v1',
-    argumentTypes:
-      'p_pmid text, p_actor_user_id uuid, p_actor_email text, p_relevance_state text, ' +
-      'p_visibility_state text, p_is_landmark boolean, p_topic_decisions jsonb, p_reason text',
-    returnType: 'jsonb',
-    language: 'plpgsql',
-    volatility: 'v',
-    securityDefiner: false,
-    searchPath: 'pg_catalog, public',
-    serviceRoleExecute: true,
-  },
-  {
-    name: 'literature_admin_stats_v1',
-    argumentTypes: '',
-    returnType: 'jsonb',
-    language: 'sql',
-    volatility: 's',
-    securityDefiner: false,
-    searchPath: 'pg_catalog, public',
-    serviceRoleExecute: true,
-  },
-  {
-    name: 'literature_articles_search_vector_update',
-    argumentTypes: '',
-    returnType: 'trigger',
-    language: 'plpgsql',
-    volatility: 'v',
-    securityDefiner: false,
-    searchPath: 'pg_catalog, public',
-    serviceRoleExecute: false,
-  },
-  {
-    name: 'prevent_literature_curation_event_mutation',
-    argumentTypes: '',
-    returnType: 'trigger',
-    language: 'plpgsql',
-    volatility: 'v',
-    securityDefiner: false,
-    searchPath: 'pg_catalog, public',
-    serviceRoleExecute: false,
-  },
-  {
-    name: 'search_literature_v1',
-    argumentTypes:
-      'p_query text, p_journal_ids text[], p_topic_ids text[], p_year_from integer, ' +
-      'p_year_to integer, p_publication_types text[], p_landmark_only boolean, p_sort text, ' +
-      'p_page integer, p_page_size integer, p_admin_preview boolean',
-    // Bound in full rather than as a bare `TABLE`, because the runtime row mappers in
-    // `server/queries.ts` depend on this exact column set and order. A dropped or retyped column
-    // would still be a valid function but a broken Explorer.
-    returnType:
-      'TABLE(pmid text, doi text, title text, authors jsonb, journal_id text, ' +
-      'journal_title text, journal_abbreviation text, publication_year integer, volume text, ' +
-      'issue text, pages text, abstract_snippet text, publication_types text[], ' +
-      'is_landmark boolean, is_retracted boolean, is_correction boolean, ' +
-      'is_conference_abstract boolean, relevance_state text, visibility_state text, ' +
-      'confirmed_topics jsonb, suggested_topics jsonb, matched_by text[], rank_score real, ' +
-      'total_count bigint)',
-    language: 'plpgsql',
-    volatility: 's',
-    securityDefiner: false,
-    searchPath: 'pg_catalog, public',
-    serviceRoleExecute: true,
-  },
-  {
-    name: 'set_literature_updated_at',
-    argumentTypes: '',
-    returnType: 'trigger',
-    language: 'plpgsql',
-    volatility: 'v',
-    securityDefiner: false,
-    searchPath: 'pg_catalog, public',
-    serviceRoleExecute: false,
-  },
+/** The six functions the migration creates, by name. */
+export const LITERATURE_FOUNDATION_FUNCTION_NAMES: readonly string[] = [
+  'curate_literature_article_v1',
+  'literature_admin_stats_v1',
+  'literature_articles_search_vector_update',
+  'prevent_literature_curation_event_mutation',
+  'search_literature_v1',
+  'set_literature_updated_at',
 ]
 
 /** The three RPCs the Literature runtime invokes. Everything else is internal. */
@@ -190,7 +102,15 @@ export const LITERATURE_FOUNDATION_INDEXES: readonly string[] = [
 ]
 
 /** Roles that must hold no privilege on any Literature table after the migration. */
-export const LITERATURE_UNPRIVILEGED_ROLES: readonly string[] = ['anon', 'authenticated']
+export const LITERATURE_UNPRIVILEGED_ROLES: readonly string[] = ['public', 'anon', 'authenticated']
+
+/** Every role the privilege grid probes. `service_role` is expected to hold everything. */
+export const LITERATURE_PROBED_ROLES: readonly string[] = [
+  'public',
+  'anon',
+  'authenticated',
+  'service_role',
+]
 
 /** Table privileges `service_role` is expected to hold on every Literature table. */
 export const LITERATURE_SERVICE_ROLE_TABLE_PRIVILEGES: readonly string[] = [
@@ -203,7 +123,11 @@ export const LITERATURE_SERVICE_ROLE_TABLE_PRIVILEGES: readonly string[] = [
   'TRIGGER',
 ]
 
-/** Privileges probed against `anon` and `authenticated`; all must be false. */
+/**
+ * Privileges probed for every (table, role) pair. The grid always emits a row with an explicit
+ * `granted` boolean, so an empty or truncated privilege array is detectable as missing evidence
+ * rather than being misread as proof that nothing is granted.
+ */
 export const LITERATURE_PROBED_TABLE_PRIVILEGES: readonly string[] = [
   'SELECT',
   'INSERT',
@@ -230,8 +154,22 @@ export interface LiteratureFoundationObjectCounts {
 
 export const LITERATURE_FOUNDATION_OBJECT_COUNTS: LiteratureFoundationObjectCounts = {
   tables: LITERATURE_FOUNDATION_TABLES.length,
-  functions: LITERATURE_FOUNDATION_FUNCTIONS.length,
+  functions: LITERATURE_FOUNDATION_FUNCTION_NAMES.length,
   triggers: LITERATURE_FOUNDATION_TRIGGERS.length,
   indexes: LITERATURE_FOUNDATION_INDEXES.length,
   policies: LITERATURE_FOUNDATION_EXPECTED_POLICY_COUNT,
 }
+
+/**
+ * Object classes that can collide with something the foundation migration creates. A collision of
+ * *any* of these classes blocks or alters the migration, so preflight observes them all — a view
+ * named `public.literature_journals` is as fatal as a table of that name.
+ */
+export const LITERATURE_COLLIDING_RELKINDS: readonly { relkind: string; label: string }[] = [
+  { relkind: 'r', label: 'table' },
+  { relkind: 'p', label: 'partitioned table' },
+  { relkind: 'f', label: 'foreign table' },
+  { relkind: 'v', label: 'view' },
+  { relkind: 'm', label: 'materialized view' },
+  { relkind: 'S', label: 'sequence' },
+]

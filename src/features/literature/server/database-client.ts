@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import {
   describeLiteratureBinding,
   resolveLiteratureDedicatedBinding,
+  resolveLiteratureRuntimeMode,
   type LiteratureBindingDiagnostics,
   type LiteratureDatabaseBinding,
   type LiteratureDedicatedEnvironment,
@@ -17,10 +18,12 @@ import {
  * the main project through the existing auth client in `src/lib/supabase`; this module only ever
  * reaches the Literature database. When the dedicated configuration is missing, partial, or points
  * at the wrong project, the client fails closed instead of falling back to the main project.
+ *
+ * The contract in force is decided by `LITERATURE_SUPABASE_RUNTIME_MODE`, not by `NODE_ENV`.
+ * Anything other than the exact string `local` gets the strict hosted contract, so an unset or
+ * misspelled variable in a deployed environment fails safe rather than open.
  */
-interface LiteratureDatabaseEnvironment extends LiteratureDedicatedEnvironment {
-  NODE_ENV?: string
-}
+type LiteratureDatabaseEnvironment = LiteratureDedicatedEnvironment
 
 export interface LiteratureDatabaseConfiguration {
   url: string
@@ -30,9 +33,9 @@ export interface LiteratureDatabaseConfiguration {
 }
 
 export function literatureRuntimeMode(
-  environment: Pick<LiteratureDatabaseEnvironment, 'NODE_ENV'> = process.env,
+  environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): LiteratureRuntimeMode {
-  return environment.NODE_ENV === 'production' ? 'production' : 'non_production'
+  return resolveLiteratureRuntimeMode(environment)
 }
 
 /**
@@ -41,22 +44,26 @@ export function literatureRuntimeMode(
  * Callers that need to tell "not configured" from "wrong project" from "database unavailable" —
  * the later unavailable-versus-empty UI work — should use this rather than the nullable helpers
  * below, which collapse every failure to `null`.
+ *
+ * Current consumers (`server/queries.ts`, `server/gold-set.ts`) still use the nullable
+ * `createLiteratureAdmin()`. Adopting this typed result is the job of the separate capability
+ * gating / unavailable-versus-empty package; it is deliberately not done here.
  */
 export function resolveLiteratureDatabaseBinding(
-  environment: LiteratureDatabaseEnvironment = process.env,
+  environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): LiteratureDatabaseBinding {
   return resolveLiteratureDedicatedBinding(environment, literatureRuntimeMode(environment))
 }
 
 /** A redacted, log-safe view of the current binding. Never contains a credential. */
 export function describeLiteratureDatabaseBinding(
-  environment: LiteratureDatabaseEnvironment = process.env,
+  environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): LiteratureBindingDiagnostics {
   return describeLiteratureBinding(resolveLiteratureDatabaseBinding(environment))
 }
 
 export function resolveLiteratureDatabaseConfiguration(
-  environment: LiteratureDatabaseEnvironment = process.env,
+  environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): LiteratureDatabaseConfiguration | null {
   const binding = resolveLiteratureDatabaseBinding(environment)
   if (binding.status !== 'bound') {
@@ -70,9 +77,12 @@ export function resolveLiteratureDatabaseConfiguration(
 }
 
 /**
- * The dedicated Literature secret is server-only. This module is imported exclusively from server
- * code, and the guard makes an accidental client import fail loudly instead of shipping the
- * credential in a browser bundle.
+ * The dedicated Literature secret is server-only.
+ *
+ * The load-bearing guarantee is naming: Next.js only inlines `NEXT_PUBLIC_*` into client bundles,
+ * and none of the dedicated variables carries that prefix — a production bundle scan asserts the
+ * secret variable appears in server chunks only. This guard is defence in depth on top of that, so
+ * an accidental client import fails loudly instead of shipping.
  */
 function assertServerOnly() {
   if (typeof window !== 'undefined') {

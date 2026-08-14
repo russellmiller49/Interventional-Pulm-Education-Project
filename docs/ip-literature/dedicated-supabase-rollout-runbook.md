@@ -10,9 +10,13 @@ migrationAuthorized:   false
 dataImportAuthorized:  false
 ```
 
-Every step that touches a remote system requires a separate, explicit owner authorization. Two
-distinct authorizations are needed: one for the migration, one for the Railway configuration. They
-are not interchangeable, and neither is implied by merging the PR.
+**Production migration is currently blocked** — not by policy alone, but structurally: the
+provider-bound target attestation (Layer 3) is not implemented, so the preflight cannot return
+anything better than `provider_attestation_required`. See
+[provenance](./dedicated-supabase-provenance.md).
+
+Three separate owner authorizations are needed, in order: the migration, the capability-gating
+package, and the Railway cutover. None is implied by merging this PR, and none implies another.
 
 ## Target
 
@@ -34,15 +38,34 @@ Bytes:  37669
 Count:  exactly 1
 ```
 
-## Prohibited mechanisms
+## The one approved application mechanism
 
-| Mechanism                            | Why                                                                                                          |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `supabase db push`                   | Directory-scoped. Would apply all 33 migrations, including 9 deferred Literature ones and 23 unrelated ones. |
-| `supabase migration repair`          | Rewrites history without applying SQL, destroying the audit trail.                                           |
-| `supabase db reset`                  | Destructive against a remote project.                                                                        |
-| Supabase GitHub integration          | Would deploy the whole mixed directory on every merge.                                                       |
-| Ad-hoc SQL pasted into the dashboard | Unchecksummed; no receipt binds it to the approved migration.                                                |
+```
+supabase_connector_apply_migration_v1
+```
+
+Required, and compared byte for byte. An omitted mechanism, a wrapped one
+(`bash -lc 'supabase db push'`), a suffixed one (`supabase db push --linked`), or any unrecognised
+name is refused. The authorized operation must bind: tool operation `apply_migration`, project ref
+`itcttmkxdxvwmwcmzmey`, the exact migration name, the exact immutable SQL bytes and checksum, the
+exact owner-approved commit, exactly one tool call, and no automatic retry.
+
+### Prohibited mechanisms
+
+| Mechanism                            | Why                                                                                                         |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `supabase db push`                   | Directory-scoped. Would apply all 33 migrations — the 9 deferred Literature ones and the 23 unrelated ones. |
+| `supabase migration repair`          | Rewrites migration history without applying SQL, destroying the audit trail.                                |
+| `supabase db reset`                  | Destructive against a remote project.                                                                       |
+| Supabase GitHub integration          | Would deploy the whole mixed directory on every merge.                                                      |
+| Ad-hoc SQL pasted into the dashboard | Unchecksummed; no receipt binds it to the approved migration.                                               |
+
+## Migration-history fidelity
+
+Do **not** assume the recorded version will be `20260727032621`. That is the historical _filename_
+version. `apply_migration` takes a migration _name_; the provider assigns the stored version. The
+contract therefore requires **exactly one recorded migration** and establishes identity from the
+applied-SQL checksum in the attestation. Never write or repair migration history to make it match.
 
 ## Sequence
 
@@ -50,102 +73,109 @@ Count:  exactly 1
 
 Merge this PR only after the independent review in
 [`dedicated-supabase-codex-review-handoff.md`](./dedicated-supabase-codex-review-handoff.md)
-completes. Record the resulting `main` commit — it becomes the approved repository commit.
+completes. Record the resulting `main` commit — it becomes the owner-approved commit.
 
 > After this merges and before step 12, production Literature reports _not configured_ rather than
-> silently reading `Endoreels`. Both render no articles; the new behaviour is the honest one. This
-> is expected, not a regression.
+> silently reading `Endoreels`. Both render no articles; the new behaviour is the honest one.
 
-### 2. Verify the primary checkout
+### 2. Implement Layer 3
+
+A separate, independently reviewed change must implement the project-scoped read-only Supabase
+adapter (`supabase_project_scoped_read_only_mcp_v1`). Until then the preflight blocks and no
+migration may be applied. **Do not work around this with a hand-written JSON file.**
+
+### 3. Verify the primary checkout
 
 From the **primary checkout** (`…/Interventional-Pulm-Education-Project`), on `main`, clean, with
-`HEAD == origin/main`.
+`HEAD == origin/main == the owner-approved commit`, exactly. A descendant is not accepted; if `main`
+has moved, obtain a new authorization.
 
-### 3. Capture a read-only observation of the target
-
-Print the statements:
-
-```bash
-npm run literature:dedicated:preflight -- --print-observation-sql
-```
-
-Run each in a **read-only session** against `IP_Literature`. Each is already wrapped in
-`BEGIN READ ONLY; SET TRANSACTION READ ONLY; … ROLLBACK;`. Record the three results into an
-observation document:
-
-```json
-{
-  "projectRef": "itcttmkxdxvwmwcmzmey",
-  "hostname": "db.itcttmkxdxvwmwcmzmey.supabase.co",
-  "migrationVersions": [],
-  "catalog": { "...": "result of statement 2" },
-  "prerequisites": { "...": "result of statement 3" }
-}
-```
-
-Never paste a credential into this document — the verifiers reject one if present, and they never
-need it.
-
-### 4. Run the read-only preflight
+### 4. Print the read-only query bundle
 
 ```bash
-npm run literature:dedicated:preflight -- --approved-commit <sha> --observation <path.json>
+npm run literature:dedicated:preflight -- --print-query-bundle
 ```
 
-All 20 checks must pass. Any failure — including a missing input — blocks the rollout. The preflight
-applies nothing.
+Four statements — history, catalog, prerequisites, and the total row count — each already wrapped in
+`BEGIN READ ONLY; SET TRANSACTION READ ONLY; … ROLLBACK;`. The bundle prints its own SHA-256, which
+the attestation must carry.
 
-### 5. Obtain the migration authorization
+### 5. Capture evidence through the connector
 
-The owner must state, in writing, all six of:
+Run the bundle through the project-scoped read-only connector. The evidence document has **no**
+`projectRef` or `hostname` field — target identity comes from the adapter, not the body, and a
+document that declares its own project is rejected. Never paste a credential anywhere.
 
-- project name `IP_Literature`;
-- project ref `itcttmkxdxvwmwcmzmey`;
-- migration path `supabase/migrations/20260727032621_add_literature_explorer.sql`;
-- migration SHA-256 `c737865cdde3572ed0c0c59c134530bbd7e86e2013d97e0b9edc06c27aa426da`;
-- the approved repository commit;
-- that exactly one migration operation is permitted.
-
-### 6. Apply exactly the authorized migration
-
-Through a narrowly scoped mechanism that applies **only** that file, as a single transaction, and
-records the version `20260727032621` in `supabase_migrations.schema_migrations`. Do not use any
-mechanism from the prohibited table.
-
-### 7. If the acknowledgement is lost, do not retry
-
-Go directly to step 8. Do not resend the migration, do not run migration repair, do not compensate,
-and do not edit migration history. The correct next action after an ambiguous acknowledgement is
-observation, not correction.
-
-### 8. Capture a second observation and run the postflight
-
-Re-capture the observation as in step 3, adding `totalRowCount`, then:
+### 6. Run the read-only preflight
 
 ```bash
-npm run literature:dedicated:postflight -- --observation <path.json>
+npm run literature:dedicated:preflight -- \
+  --owner-approved-commit <sha> \
+  --application-mechanism supabase_connector_apply_migration_v1 \
+  --evidence <path.json>
 ```
 
-| Classification     | Meaning                                | Next action                        |
-| ------------------ | -------------------------------------- | ---------------------------------- |
-| `applied_correct`  | Exact history, exact inventory, 0 rows | Proceed to step 9                  |
-| `not_applied`      | Nothing landed                         | Re-authorize from the preflight    |
-| `partial_incident` | Half-built schema                      | **Stop.** Read-only reconciliation |
-| `applied_drifted`  | Complete but wrong                     | **Stop.** Read-only reconciliation |
-| `ambiguous`        | Could not be observed                  | **Stop.** Read-only reconciliation |
+Layer 1 (11 checks) and Layer 2 (8 checks) must pass, and Layer 3 must be `attested`. Only
+`ready_to_apply` permits proceeding. The preflight applies nothing.
 
-### 9. Produce a durable receipt
+### 7. Obtain the migration authorization
 
-Record the migration path and SHA-256, the target ref, the approved commit, the classification, the
-full object inventory, and the timestamp. Never record a credential.
+The owner must state, in writing, all seven of: project name `IP_Literature`; project ref
+`itcttmkxdxvwmwcmzmey`; the migration path; the migration SHA-256; the owner-approved commit; the
+application mechanism `supabase_connector_apply_migration_v1`; and that exactly one migration
+operation is permitted.
 
-### 10–11. Stop and re-authorize
+### 8. Apply exactly the authorized migration
 
-The migration authorization is now spent. Railway configuration needs its own.
+One `apply_migration` call, carrying exactly the immutable SQL bytes. No retry.
 
-### 12. Add the Railway variables
+### 9. If the acknowledgement is lost, do not retry
 
-Only after a separate authorization naming the Railway service and environment:
+Go to step 10. Do not resend, do not repair history, do not compensate.
+
+### 10. Re-capture evidence and run the postflight
+
+```bash
+npm run literature:dedicated:postflight -- --owner-approved-commit <sha> --evidence <path.json>
+```
+
+| Classification                  | Meaning                                                        | Next action                        |
+| ------------------------------- | -------------------------------------------------------------- | ---------------------------------- |
+| `applied_correct`               | Attested target, one recorded migration, exact catalog, 0 rows | Proceed to step 11                 |
+| `not_applied`                   | Nothing landed                                                 | Re-authorize from the preflight    |
+| `partial_incident`              | Half-built schema                                              | **Stop.** Read-only reconciliation |
+| `applied_drifted`               | Complete but wrong                                             | **Stop.** Read-only reconciliation |
+| `ambiguous`                     | Could not be observed                                          | **Stop.** Read-only reconciliation |
+| `provider_attestation_required` | Target identity unproven                                       | **Stop.** Read-only reconciliation |
+
+Only `applied_correct` exits 0. The classification and the exit status always agree.
+
+### 11. Produce a durable receipt
+
+Record the migration path and SHA-256, the attested project ref, the query-bundle identity, the
+owner-approved commit, the mechanism, the classification, the catalog artifact checksum, and the
+timestamp. Never record a credential. **A persisted receipt is audit evidence and can never be
+re-ingested to authorize anything.**
+
+### 12. Stop. The foundation migration does NOT authorize Railway cutover.
+
+This is the M-4 correction. Cutting Railway over immediately after the migration would expose the
+admin gold-set route, whose RPCs the foundation migration does not create — it would render raw
+errors and a `literature:local:start` instruction in production.
+
+Before any Railway change:
+
+1. Implement and independently review a **separate capability-gating / unavailable-versus-empty
+   package.**
+2. That package must hide or type-gate the gold-set destination while the nine deferred Literature
+   migrations are absent, and must never show local-development instructions in production. It
+   should adopt the typed `resolveLiteratureDatabaseBinding()` result rather than the nullable
+   helper.
+3. Merge and deploy it.
+
+Keep the dedicated Railway variables **unset** until that is done.
+
+### 13. Obtain a separate Railway authorization, then set the variables
 
 ```
 LITERATURE_SUPABASE_URL=https://itcttmkxdxvwmwcmzmey.supabase.co
@@ -153,46 +183,38 @@ LITERATURE_SUPABASE_SECRET_KEY=<sb_secret_… from the IP_Literature project>
 LITERATURE_SUPABASE_EXPECTED_PROJECT_REF=itcttmkxdxvwmwcmzmey
 ```
 
-Do **not** change `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_URL`, or `SUPABASE_SERVICE_ROLE_KEY`. Site
-authentication stays on `Endoreels`. Do not add any `NEXT_PUBLIC_LITERATURE_*` variable — the secret
-must never reach a browser bundle. Read the variables back afterwards and confirm the service and
-environment are the intended ones.
+Leave `LITERATURE_SUPABASE_RUNTIME_MODE` **unset** — absent means the strict hosted contract, which
+is what production wants. Do **not** change `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_URL`, or
+`SUPABASE_SERVICE_ROLE_KEY`; authentication stays on `Endoreels`. Do not add any
+`NEXT_PUBLIC_LITERATURE_*` variable. Read the variables back and confirm the service and environment.
 
-No CSP change is required: the Literature client is server-side only, so
-`next.config.mjs`'s `connect-src` does not apply to it.
+No CSP change is required: the Literature client is server-side only.
 
-### 13. Deploy the reviewed commit
+### 14. Deploy the reviewed commit and verify
 
-Deploy the approved commit — not a newer one.
-
-### 14. Verify
-
-- An authenticated Literature list and search return a **legitimate empty corpus**, not an error.
+- Authenticated Literature list, search, and detail return a **legitimate empty corpus**, not an error.
+- The admin surface shows the gated empty state, not a raw RPC error.
 - Public and anonymous paths remain closed.
 - No `NEXT_PUBLIC_*` Literature variable exists.
 
 ### 15. Stop
 
-Do not ingest a canary. Do not import the corpus. Both are separate packages requiring separate
-authorization.
+Do not ingest a canary. Do not import the corpus.
 
 ## Explicitly out of scope
 
-Not implemented and not authorized here: the unavailable-versus-empty UI correction, the
-`robots.txt` repair, draft canary ingestion, full corpus ingestion, the V2 real-import operator, the
-630-record review overlay, autonomous classifier work, public-beta publication, and automatic
+Not implemented and not authorized here: the capability-gating / unavailable-versus-empty package,
+the `robots.txt` repair, draft canary ingestion, full corpus ingestion, the V2 real-import operator,
+the 630-record review overlay, autonomous classifier work, public-beta publication, and automatic
 GitHub-to-Supabase deployment.
 
 ## Owner decisions still required
 
-1. **Operational CLIs.** `scripts/literature/lib/database.ts` and `gold-import-compensation-cli.ts`
-   still read `LITERATURE_SUPABASE_SERVICE_ROLE_KEY` only. Widening them to accept
-   `LITERATURE_SUPABASE_SECRET_KEY` was deliberately excluded to avoid entangling this change with
-   the protected gold-import tooling. Decide whether that happens in a follow-up.
-2. **Legacy alias retirement.** Decide when `LITERATURE_SUPABASE_SERVICE_ROLE_KEY` is removed
-   outside production too.
-3. **Admin gold-set surfaces.** Confirm it is acceptable that they error against a foundation-only
-   database until the review-workflow migrations are separately authorized.
-4. **Deferred-migration rollout.** If the gold-set chain is ever applied to `IP_Literature`, all
-   nine deferred migrations must go in timestamp order — including the three whose filenames do not
-   say "literature".
+1. **Layer 3 adapter.** Who implements and reviews the project-scoped read-only connector.
+2. **Operational CLIs.** `scripts/literature/lib/database.ts` and `gold-import-compensation-cli.ts`
+   still read `LITERATURE_SUPABASE_SERVICE_ROLE_KEY` only — deliberately unchanged to avoid
+   entangling this with the protected gold-import tooling.
+3. **Legacy alias retirement.** When `LITERATURE_SUPABASE_SERVICE_ROLE_KEY` is removed entirely.
+4. **Deferred-migration rollout.** If the gold-set chain is ever applied, all nine deferred
+   migrations must go in timestamp order — including the three whose filenames do not say
+   "literature".

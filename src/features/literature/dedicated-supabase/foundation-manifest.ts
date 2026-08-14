@@ -61,13 +61,52 @@ export const LITERATURE_FOUNDATION_SELECTED_MIGRATION_COUNT = 1
  */
 export const LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS: readonly string[] = []
 
-/** The migration history the target must present *after* a correct rollout. */
-export const LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_VERSIONS: readonly string[] = [
-  LITERATURE_FOUNDATION_MIGRATION.version,
-]
+/**
+ * Exactly one migration must be recorded after a correct rollout.
+ *
+ * The recorded **version string is deliberately not asserted.** `20260727032621` is the historical
+ * *filename* version; it is not safe to assume the managed apply mechanism records that value.
+ * Supabase's `apply_migration` takes a migration *name* and the provider decides the version it
+ * stores — commonly a capture-time timestamp rather than a timestamp lifted from a filename. This
+ * cannot be resolved without a remote write, which is not authorized here, so the contract binds
+ * what is knowable (exactly one recorded migration) and defers version identity to execution-time
+ * evidence supplied by the provider-bound attestation. See
+ * `LITERATURE_MIGRATION_HISTORY_FIDELITY` below.
+ */
+export const LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT = 1
 
-/** Total migrations present in the mixed `supabase/migrations/` directory at the approved commit. */
+/**
+ * The historical filename version. Recorded for traceability only — never asserted against a
+ * managed target's migration history.
+ */
+export const LITERATURE_HISTORICAL_MIGRATION_FILENAME_VERSION =
+  LITERATURE_FOUNDATION_MIGRATION.version
+
+/**
+ * What is, and is not, known about how the approved apply mechanism records migration history.
+ *
+ * Stated explicitly so a future execution session does not silently inherit an assumption this PR
+ * could not verify.
+ */
+export const LITERATURE_MIGRATION_HISTORY_FIDELITY = {
+  versionStringIsProviderAssigned: true,
+  filenameVersionMayNotBeRecorded: true,
+  requiresExecutionTimeEvidence: true,
+  note:
+    'The recorded version is assigned by the provider when apply_migration runs. Do not assume ' +
+    'the filename version 20260727032621 appears in list_migrations. Identity is established by ' +
+    'the applied SQL checksum carried in the provider attestation plus exactly one recorded ' +
+    'migration — never by writing or repairing migration history.',
+} as const
+
+/**
+ * Migration inventory at the approved commit, verified by reading the SQL rather than filenames:
+ * 33 total, of which 10 are Literature-related (1 foundation + 9 deferred) and 23 are unrelated
+ * application migrations.
+ */
 export const LITERATURE_REPOSITORY_MIGRATION_TOTAL = 33
+export const LITERATURE_RELATED_MIGRATION_TOTAL = 10
+export const LITERATURE_UNRELATED_MIGRATION_TOTAL = 23
 
 /**
  * Literature migrations that exist in the repository but are deliberately **not** part of this
@@ -133,9 +172,31 @@ export const LITERATURE_ALL_MIGRATION_PATHS: readonly string[] = [
 ]
 
 /**
- * Deployment mechanisms that must never be used for this rollout, with the reason each is refused.
- * `supabase db push` and `supabase migration repair` are the two that would silently exceed the
- * approved scope.
+ * The **only** approved application mechanism, as a closed enum.
+ *
+ * The previous design used an optional free-text field checked against a blacklist, which the
+ * review defeated four ways: omit it, wrap it (`bash -lc 'supabase db push'`), suffix it
+ * (`supabase db push --linked`), or invent a new name. Mechanism is now required and must equal
+ * this value exactly; everything else — including anything unrecognised — is refused by default.
+ */
+export const LITERATURE_APPROVED_APPLICATION_MECHANISM = 'supabase_connector_apply_migration_v1'
+
+/**
+ * What the single authorized future operation must bind. Stated as data so the runbook, the
+ * authorization record, and the tests cannot drift apart.
+ */
+export const LITERATURE_APPROVED_APPLICATION_OPERATION = {
+  mechanism: LITERATURE_APPROVED_APPLICATION_MECHANISM,
+  toolOperation: 'apply_migration',
+  projectRef: LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+  exactToolCalls: 1,
+  automaticRetryPermitted: false,
+} as const
+
+/**
+ * Mechanisms named explicitly so the runbook and the failure messages can explain *why* each is
+ * refused. This list is documentation, not the gate — the gate is exact equality with
+ * `LITERATURE_APPROVED_APPLICATION_MECHANISM`, so an unlisted mechanism is refused too.
  */
 export const LITERATURE_PROHIBITED_DEPLOYMENT_METHODS: readonly {
   method: string
@@ -144,8 +205,8 @@ export const LITERATURE_PROHIBITED_DEPLOYMENT_METHODS: readonly {
   {
     method: 'supabase db push',
     reason:
-      'Directory-scoped: applies every migration in supabase/migrations/, including six deferred ' +
-      'Literature migrations and twenty-six unrelated application migrations.',
+      'Directory-scoped: applies every migration in supabase/migrations/, including the nine ' +
+      'deferred Literature migrations and the twenty-three unrelated application migrations.',
   },
   {
     method: 'supabase migration repair',
@@ -177,7 +238,8 @@ export type LiteratureSelectionRejectionReason =
   | 'target_ref_prohibited'
   | 'target_ref_not_approved'
   | 'target_is_loopback'
-  | 'deployment_method_prohibited'
+  | 'application_mechanism_missing'
+  | 'application_mechanism_not_approved'
   | 'pre_application_history_not_empty'
 
 export interface LiteratureSelectionCandidate {
@@ -193,8 +255,12 @@ export interface LiteratureSelectionCandidate {
   targetHostname?: string
   /** Migration versions already recorded on the target. */
   appliedMigrationVersions?: readonly string[]
-  /** The mechanism the operator intends to use. */
-  deploymentMethod?: string
+  /**
+   * The mechanism the operator intends to use. **Required.** Must equal
+   * `LITERATURE_APPROVED_APPLICATION_MECHANISM` exactly; anything else, including an omitted
+   * value, is refused.
+   */
+  applicationMechanism?: string
 }
 
 export interface LiteratureSelectionVerdict {
@@ -287,14 +353,27 @@ export function evaluateLiteratureFoundationSelection(
     )
   }
 
-  const method = candidate.deploymentMethod?.trim()
-  if (method) {
-    const prohibited = LITERATURE_PROHIBITED_DEPLOYMENT_METHODS.find(
-      (entry) => entry.method.toLowerCase() === method.toLowerCase(),
+  // Mechanism is an allowlist of exactly one, compared byte for byte. An omitted mechanism is a
+  // rejection, not a default, and wrapping or suffixing an approved-looking command does not help
+  // because nothing is pattern-matched — only exact equality passes.
+  const mechanism = candidate.applicationMechanism
+  if (mechanism === undefined || mechanism === '') {
+    reject(
+      'application_mechanism_missing',
+      'No application mechanism was declared. The rollout must name ' +
+        `${LITERATURE_APPROVED_APPLICATION_MECHANISM} exactly.`,
     )
-    if (prohibited) {
-      reject('deployment_method_prohibited', `${prohibited.method}: ${prohibited.reason}`)
-    }
+  } else if (mechanism !== LITERATURE_APPROVED_APPLICATION_MECHANISM) {
+    const explained = LITERATURE_PROHIBITED_DEPLOYMENT_METHODS.find((entry) =>
+      mechanism.toLowerCase().includes(entry.method.toLowerCase()),
+    )
+    reject(
+      'application_mechanism_not_approved',
+      explained
+        ? `${mechanism} is not approved (${explained.method}: ${explained.reason})`
+        : `${mechanism} is not the approved mechanism ` +
+            `(${LITERATURE_APPROVED_APPLICATION_MECHANISM}).`,
+    )
   }
 
   return { approved: rejections.length === 0, rejections }

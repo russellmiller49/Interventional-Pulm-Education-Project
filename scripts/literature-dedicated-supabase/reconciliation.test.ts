@@ -4,9 +4,11 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import {
-  LITERATURE_FOUNDATION_FUNCTIONS,
+  LITERATURE_FOUNDATION_FUNCTION_NAMES,
   LITERATURE_FOUNDATION_TABLES,
 } from '../../src/features/literature/dedicated-supabase/catalog-expectations'
+import { LITERATURE_FOUNDATION_MIGRATION } from '../../src/features/literature/dedicated-supabase/foundation-manifest'
+import type { LiteratureAttestationVerdict } from '../../src/features/literature/dedicated-supabase/attestation'
 import {
   classifyLiteratureRollout,
   resolveLostAcknowledgement,
@@ -15,14 +17,37 @@ import {
 
 const ROOT = process.cwd()
 const EXPECTED_TABLES = [...LITERATURE_FOUNDATION_TABLES]
-const EXPECTED_FUNCTIONS = [...new Set(LITERATURE_FOUNDATION_FUNCTIONS.map((fn) => fn.name))]
+const EXPECTED_FUNCTIONS = [...LITERATURE_FOUNDATION_FUNCTION_NAMES]
+
+const ATTESTED: LiteratureAttestationVerdict = {
+  status: 'attested',
+  attestation: {
+    mechanism: 'supabase_project_scoped_read_only_mcp_v1',
+    providerProjectRef: 'itcttmkxdxvwmwcmzmey',
+    providerProjectUrl: 'https://itcttmkxdxvwmwcmzmey.supabase.co',
+    queryBundleSha256: 'a'.repeat(64),
+    repositoryCommit: 'b'.repeat(40),
+    migrationPath: LITERATURE_FOUNDATION_MIGRATION.path,
+    migrationSha256: LITERATURE_FOUNDATION_MIGRATION.sha256,
+    capturedAt: '2026-08-14T12:00:00.000Z',
+    contentSha256: 'c'.repeat(64),
+    completeness: 'complete',
+  },
+}
+
+const UNATTESTED: LiteratureAttestationVerdict = {
+  status: 'rejected',
+  reason: 'provider_attestation_required',
+  detail: 'no provider adapter',
+}
 
 function observation(
   overrides: Partial<LiteratureRolloutObservation> = {},
 ): LiteratureRolloutObservation {
   return {
+    targetAttestation: ATTESTED,
     observationComplete: true,
-    recordedMigrationVersions: ['20260727032621'],
+    recordedMigrationVersions: ['20260814120000'],
     presentTables: EXPECTED_TABLES,
     presentFunctions: EXPECTED_FUNCTIONS,
     expectedTables: EXPECTED_TABLES,
@@ -34,20 +59,62 @@ function observation(
   }
 }
 
+describe('target identity is checked first (M-3)', () => {
+  it('never emits applied_correct for an unproven target, however perfect the catalog', () => {
+    const verdict = classifyLiteratureRollout(observation({ targetAttestation: UNATTESTED }))
+    expect(verdict.classification).toBe('provider_attestation_required')
+    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
+    expect(verdict.classification).not.toBe('applied_correct')
+    expect(verdict.nextAction).not.toBe('proceed')
+  })
+
+  it.each([
+    ['wrong project ref', 'wrong_project_ref'],
+    ['stale evidence', 'stale_attestation'],
+    ['wrong query bundle', 'wrong_query_bundle'],
+    ['wrong commit', 'wrong_repository_commit'],
+    ['incomplete capture', 'incomplete_capture'],
+  ])('stops on %s', (_label, reason) => {
+    const verdict = classifyLiteratureRollout(
+      observation({
+        targetAttestation: {
+          status: 'rejected',
+          reason: reason as 'wrong_project_ref',
+          detail: 'x',
+        },
+      }),
+    )
+    expect(verdict.classification).toBe('provider_attestation_required')
+    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
+  })
+
+  it('reports the attestation reason in its findings', () => {
+    const verdict = classifyLiteratureRollout(observation({ targetAttestation: UNATTESTED }))
+    expect(verdict.findings.join(' ')).toMatch(/provider_attestation_required/u)
+    expect(verdict.findings.join(' ')).toMatch(/non-authoritative/iu)
+  })
+})
+
 describe('literature rollout reconciliation', () => {
-  it('classifies a correct application', () => {
+  it('classifies a correct application against an attested target', () => {
     const verdict = classifyLiteratureRollout(observation())
     expect(verdict.classification).toBe('applied_correct')
     expect(verdict.nextAction).toBe('proceed')
   })
 
+  it('does not require the recorded version to equal the filename version (H-5)', () => {
+    // The provider assigns the version; only the count is asserted.
+    for (const version of ['20260727032621', '20260814120000', 'anything']) {
+      expect(
+        classifyLiteratureRollout(observation({ recordedMigrationVersions: [version] }))
+          .classification,
+      ).toBe('applied_correct')
+    }
+  })
+
   it('classifies a target where nothing was applied', () => {
     const verdict = classifyLiteratureRollout(
-      observation({
-        recordedMigrationVersions: [],
-        presentTables: [],
-        presentFunctions: [],
-      }),
+      observation({ recordedMigrationVersions: [], presentTables: [], presentFunctions: [] }),
     )
     expect(verdict.classification).toBe('not_applied')
     expect(verdict.nextAction).toBe('reauthorize_from_preflight')
@@ -66,57 +133,66 @@ describe('literature rollout reconciliation', () => {
     }
   })
 
-  it('detects an omitted object as a partial incident rather than a clean result', () => {
-    const verdict = classifyLiteratureRollout(
-      observation({ presentTables: EXPECTED_TABLES.slice(0, 4) }),
+  it('detects omitted objects as a partial incident', () => {
+    expect(
+      classifyLiteratureRollout(observation({ presentTables: EXPECTED_TABLES.slice(0, 4) }))
+        .classification,
+    ).toBe('partial_incident')
+    expect(
+      classifyLiteratureRollout(observation({ presentFunctions: EXPECTED_FUNCTIONS.slice(0, 2) }))
+        .classification,
+    ).toBe('partial_incident')
+    expect(
+      classifyLiteratureRollout(observation({ recordedMigrationVersions: [] })).classification,
+    ).toBe('partial_incident')
+  })
+
+  it('detects more than one recorded migration as a partial incident', () => {
+    expect(
+      classifyLiteratureRollout(observation({ recordedMigrationVersions: ['a', 'b'] }))
+        .classification,
+    ).toBe('partial_incident')
+  })
+
+  it('detects drift: unexpected objects, failed security checks, or data present', () => {
+    expect(
+      classifyLiteratureRollout(
+        observation({ unexpectedLiteratureObjects: ['v:literature_shadow'] }),
+      ).classification,
+    ).toBe('applied_drifted')
+    expect(
+      classifyLiteratureRollout(observation({ securityChecksPassed: false })).classification,
+    ).toBe('applied_drifted')
+    expect(classifyLiteratureRollout(observation({ totalRowCount: 1 })).classification).toBe(
+      'applied_drifted',
     )
-    expect(verdict.classification).toBe('partial_incident')
-    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
-    expect(verdict.findings.join(' ')).toMatch(/Missing tables/u)
   })
 
-  it('detects an omitted function', () => {
-    const verdict = classifyLiteratureRollout(
-      observation({ presentFunctions: EXPECTED_FUNCTIONS.slice(0, 2) }),
-    )
-    expect(verdict.classification).toBe('partial_incident')
-    expect(verdict.findings.join(' ')).toMatch(/Missing functions/u)
-  })
+  describe('row count validation (L-1)', () => {
+    it('stops when the row count is missing', () => {
+      const verdict = classifyLiteratureRollout(observation({ totalRowCount: null }))
+      expect(verdict.classification).toBe('applied_drifted')
+      expect(verdict.findings.join(' ')).toMatch(/row counts could not be evaluated/u)
+    })
 
-  it('detects objects present with no recorded migration history', () => {
-    const verdict = classifyLiteratureRollout(observation({ recordedMigrationVersions: [] }))
-    expect(verdict.classification).toBe('partial_incident')
-  })
+    it('stops when the row count is non-zero', () => {
+      expect(
+        classifyLiteratureRollout(observation({ totalRowCount: 42 })).findings.join(' '),
+      ).toMatch(/imports no data/u)
+    })
 
-  it('detects a substituted or drifted object set', () => {
-    const verdict = classifyLiteratureRollout(
-      observation({ unexpectedLiteratureObjects: ['table:literature_shadow'] }),
-    )
-    expect(verdict.classification).toBe('applied_drifted')
-    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
-  })
-
-  it('detects a failed security check as drift', () => {
-    const verdict = classifyLiteratureRollout(observation({ securityChecksPassed: false }))
-    expect(verdict.classification).toBe('applied_drifted')
-  })
-
-  it('detects data present after a foundation-only rollout', () => {
-    const verdict = classifyLiteratureRollout(observation({ totalRowCount: 1 }))
-    expect(verdict.classification).toBe('applied_drifted')
-    expect(verdict.findings.join(' ')).toMatch(/imports no data/u)
-  })
-
-  it('detects a wrong recorded migration version', () => {
-    const verdict = classifyLiteratureRollout(
-      observation({ recordedMigrationVersions: ['20260809231651'] }),
-    )
-    expect(verdict.classification).toBe('applied_drifted')
+    it('stops when the row count is not a non-negative integer', () => {
+      for (const value of [-1, 1.5]) {
+        const verdict = classifyLiteratureRollout(observation({ totalRowCount: value }))
+        expect(verdict.classification).toBe('applied_drifted')
+      }
+    })
   })
 
   it('never permits retry, reapplication, compensation, or history edits in any classification', () => {
     const cases: Partial<LiteratureRolloutObservation>[] = [
       {},
+      { targetAttestation: UNATTESTED },
       { observationComplete: false },
       { recordedMigrationVersions: [], presentTables: [], presentFunctions: [] },
       { presentTables: EXPECTED_TABLES.slice(0, 2) },
@@ -137,11 +213,12 @@ describe('literature rollout reconciliation', () => {
     expect(resolution.automaticRetryPermitted).toBe(false)
     expect(resolution.nextAction).toBe('stop_read_only_reconciliation')
     expect(resolution.instruction).toMatch(/Do not resend/u)
+    expect(resolution.instruction).toMatch(/provider-bound/u)
   })
 })
 
-describe('reconciliation and postflight capability boundaries', () => {
-  it('the reconciliation module cannot reach a database or spawn a process', async () => {
+describe('reconciliation capability boundaries', () => {
+  it('cannot reach a database or spawn a process', async () => {
     const source = await readFile(
       resolve(ROOT, 'scripts/literature-dedicated-supabase/lib/reconciliation.ts'),
       'utf8',
@@ -158,31 +235,12 @@ describe('reconciliation and postflight capability boundaries', () => {
     expect(source).not.toMatch(/\binsert\s+into\b|\bupdate\s+\w+\s+set\b|\bdelete\s+from\b/iu)
   })
 
-  it('the preflight never applies anything', async () => {
+  it('the postflight exit status agrees with the classification', async () => {
     const source = await readFile(
-      resolve(ROOT, 'scripts/literature-dedicated-supabase/preflight.ts'),
+      resolve(ROOT, 'scripts/literature-dedicated-supabase/postflight.ts'),
       'utf8',
     )
-    expect(source).not.toMatch(/apply_migration|db\s+push|migration\s+repair/u)
-  })
-
-  it('no dedicated-supabase module reaches a package, import, or compensation operation', async () => {
-    for (const file of [
-      'scripts/literature-dedicated-supabase/preflight.ts',
-      'scripts/literature-dedicated-supabase/postflight.ts',
-      'scripts/literature-dedicated-supabase/rehearse-foundation.ts',
-      'scripts/literature-dedicated-supabase/lib/reconciliation.ts',
-      'scripts/literature-dedicated-supabase/lib/preflight-rules.ts',
-      'scripts/literature-dedicated-supabase/lib/foundation-catalog.ts',
-      'scripts/literature-dedicated-supabase/lib/target-observation.ts',
-      'scripts/literature-dedicated-supabase/lib/disposable-target.ts',
-    ]) {
-      const source = await readFile(resolve(ROOT, file), 'utf8')
-      expect(source).not.toMatch(
-        /apply_literature_gold_import_v2|compensate_literature_gold_import/u,
-      )
-      expect(source).not.toMatch(/generate-gold-import-compensation-package/u)
-      expect(source).not.toMatch(/held[-_]?out/iu)
-    }
+    // Only applied_correct exits 0; there is no separate "warn but succeed" branch.
+    expect(source).toMatch(/verdict\.classification !== 'applied_correct'/u)
   })
 })

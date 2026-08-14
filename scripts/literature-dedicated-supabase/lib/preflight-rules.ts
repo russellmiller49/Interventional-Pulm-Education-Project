@@ -2,27 +2,40 @@
  * Fail-closed preflight rules for the dedicated Literature foundation rollout.
  *
  * Pure evaluation: these functions take facts and return checks. Gathering the facts (running git,
- * hashing the migration, reading the operator's read-only observation) happens in `../preflight.ts`.
- * Splitting it this way means every rule is unit-testable without a repository or a database.
+ * hashing the migration, reading evidence) happens in `../preflight.ts`. Splitting it this way
+ * means every rule is unit-testable without a repository or a database.
  *
  * The controlling principle is that an unprovable fact is a failure. A check whose input is missing
  * fails; it never passes by default.
+ *
+ * The layering matters as much as the individual rules:
+ *
+ *   - `evaluateRepositoryPreflight` is **Layer 1** and authoritative — every fact is locally
+ *     verifiable in this checkout.
+ *   - `evaluateEvidenceContentPreflight` is **Layer 2** and explicitly *non-authoritative*. It
+ *     validates the shape and internal consistency of catalog evidence and nothing more. It cannot
+ *     establish which database produced that evidence, and its verdict is named so no caller can
+ *     mistake it for permission to act.
+ *   - Target identity is **Layer 3** and comes only from a provider attestation
+ *     (`../../../src/features/literature/dedicated-supabase/attestation`).
  */
 
 import {
   LITERATURE_ALL_MIGRATION_PATHS,
+  LITERATURE_APPROVED_APPLICATION_MECHANISM,
   LITERATURE_DEDICATED_TARGET,
   LITERATURE_DEFERRED_MIGRATIONS,
   LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS,
   LITERATURE_FOUNDATION_MIGRATION,
-  LITERATURE_PROHIBITED_TARGET_REFS,
   evaluateLiteratureFoundationSelection,
 } from '../../../src/features/literature/dedicated-supabase/foundation-manifest'
 import {
-  LITERATURE_FOUNDATION_FUNCTIONS,
+  LITERATURE_COLLIDING_RELKINDS,
+  LITERATURE_FOUNDATION_FUNCTION_NAMES,
+  LITERATURE_FOUNDATION_INDEXES,
   LITERATURE_FOUNDATION_TABLES,
 } from '../../../src/features/literature/dedicated-supabase/catalog-expectations'
-import type { LiteratureTargetObservation } from './target-observation'
+import type { LiteratureEvidenceDocument } from './evidence-schema'
 
 export interface PreflightCheck {
   id: string
@@ -42,23 +55,21 @@ export interface RepositoryFacts {
   /** Tracked-file dirtiness. Any modification blocks the rollout. */
   workingTreeClean: boolean
   /** The commit the owner authorized, if one was supplied. */
-  approvedCommit?: string
-  /** True when HEAD is `approvedCommit` or a descendant of it. */
-  headDescendsFromApprovedCommit?: boolean
+  ownerApprovedCommit?: string
   /** SHA-256 of the migration file as read from this checkout. */
   migrationSha256: string
   migrationByteLength: number
   /** Repository-relative paths the operator intends to apply. */
   selectedMigrationPaths: readonly string[]
-  /** The mechanism the operator intends to use. */
-  deploymentMethod?: string
+  /** The mechanism the operator intends to use. Required. */
+  applicationMechanism?: string
 }
 
 function check(id: string, description: string, passed: boolean, detail: string): PreflightCheck {
   return { id, description, passed, detail }
 }
 
-/** Repository-side rules. None of these needs network access or a credential. */
+/** Layer 1. Repository-side rules. None of these needs network access or a credential. */
 export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCheck[] {
   const checks: PreflightCheck[] = []
 
@@ -86,28 +97,26 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
       facts.workingTreeClean ? 'clean' : 'tracked files are modified',
     ),
   )
+
+  // H-4: exact equality in both directions. A descendant of the approved commit is a different
+  // tree than the one that was reviewed, so any movement on main requires a new authorization.
+  const commitsAgree =
+    facts.headCommit.length === 40 &&
+    facts.headCommit === facts.originMainCommit &&
+    facts.ownerApprovedCommit === facts.headCommit
   checks.push(
     check(
-      'P04-head-matches-origin-main',
-      'HEAD equals origin/main',
-      facts.headCommit === facts.originMainCommit && facts.headCommit.length === 40,
-      `head=${facts.headCommit} origin/main=${facts.originMainCommit}`,
-    ),
-  )
-  checks.push(
-    check(
-      'P05-approved-commit',
-      'HEAD is the owner-approved commit or an explicitly approved descendant',
-      Boolean(facts.approvedCommit) && facts.headDescendsFromApprovedCommit === true,
-      facts.approvedCommit
-        ? `approved=${facts.approvedCommit} descends=${String(facts.headDescendsFromApprovedCommit)}`
-        : 'no approved commit was supplied',
+      'P04-exact-approved-commit',
+      'HEAD == origin/main == the owner-approved commit, exactly',
+      commitsAgree,
+      `head=${facts.headCommit} origin/main=${facts.originMainCommit} ` +
+        `approved=${facts.ownerApprovedCommit ?? '(none supplied)'}`,
     ),
   )
 
   checks.push(
     check(
-      'P06-migration-checksum',
+      'P05-migration-checksum',
       'the foundation migration matches the manifest SHA-256 and byte length',
       facts.migrationSha256 === LITERATURE_FOUNDATION_MIGRATION.sha256 &&
         facts.migrationByteLength === LITERATURE_FOUNDATION_MIGRATION.byteLength,
@@ -118,7 +127,7 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
   const selected = facts.selectedMigrationPaths
   checks.push(
     check(
-      'P07-exactly-one-migration',
+      'P06-exactly-one-migration',
       'exactly one migration is selected',
       selected.length === 1,
       `selected=${selected.length} [${selected.join(', ')}]`,
@@ -126,7 +135,7 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
   )
   checks.push(
     check(
-      'P08-migration-path',
+      'P07-migration-path',
       'the selected migration is the approved foundation path',
       selected.length === 1 && selected[0] === LITERATURE_FOUNDATION_MIGRATION.path,
       `selected=[${selected.join(', ')}]`,
@@ -138,8 +147,8 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
   )
   checks.push(
     check(
-      'P09-no-deferred-literature-migration',
-      'no deferred Literature migration is selected',
+      'P08-no-deferred-literature-migration',
+      'none of the nine deferred Literature migrations is selected',
       deferredSelected.length === 0,
       deferredSelected.join(', ') || 'none selected',
     ),
@@ -150,10 +159,20 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
   )
   checks.push(
     check(
-      'P10-no-unrelated-migration',
-      'no unrelated application migration is selected',
+      'P09-no-unrelated-migration',
+      'none of the twenty-three unrelated application migrations is selected',
       unrelatedSelected.length === 0,
       unrelatedSelected.join(', ') || 'none selected',
+    ),
+  )
+
+  // H-5: mechanism is required and exact.
+  checks.push(
+    check(
+      'P10-application-mechanism',
+      'the application mechanism is exactly the approved connector operation',
+      facts.applicationMechanism === LITERATURE_APPROVED_APPLICATION_MECHANISM,
+      `declared=${facts.applicationMechanism ?? '(none)'} required=${LITERATURE_APPROVED_APPLICATION_MECHANISM}`,
     ),
   )
 
@@ -165,7 +184,7 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
     },
     targetProjectRef: LITERATURE_DEDICATED_TARGET.projectRef,
     appliedMigrationVersions: [],
-    deploymentMethod: facts.deploymentMethod,
+    applicationMechanism: facts.applicationMechanism,
   })
   checks.push(
     check(
@@ -180,138 +199,226 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
   return checks
 }
 
-/** Target-side rules, evaluated against the operator's read-only observation. */
-export function evaluateTargetPreflight(
-  observation: LiteratureTargetObservation | null,
+/**
+ * Layer 2. Content-only validation of catalog evidence.
+ *
+ * **Non-authoritative.** These checks say "this evidence describes an empty, collision-free
+ * schema"; they do not and cannot say "the approved project is empty". Callers must treat a full
+ * pass here as audit evidence, never as permission.
+ */
+export function evaluateEvidenceContentPreflight(
+  evidence: LiteratureEvidenceDocument | null,
 ): PreflightCheck[] {
-  const checks: PreflightCheck[] = []
-
-  if (!observation) {
+  if (!evidence) {
     return [
       check(
-        'T00-observation-present',
-        'a read-only target observation was supplied',
+        'E00-evidence-present',
+        'a parsed evidence document was supplied',
         false,
-        'no observation document was supplied; target state cannot be proven',
+        'no evidence document was supplied; content checks could not run',
       ),
     ]
   }
 
-  checks.push(
-    check(
-      'T01-target-ref-approved',
-      'the inspected project is the approved dedicated Literature project',
-      observation.projectRef === LITERATURE_DEDICATED_TARGET.projectRef,
-      `observed=${observation.projectRef} approved=${LITERATURE_DEDICATED_TARGET.projectRef}`,
-    ),
-  )
-  checks.push(
-    check(
-      'T02-target-ref-not-prohibited',
-      'the inspected project is not the main application project',
-      !LITERATURE_PROHIBITED_TARGET_REFS.includes(observation.projectRef),
-      `observed=${observation.projectRef}`,
-    ),
-  )
+  const checks: PreflightCheck[] = []
+  const catalog = evidence.catalog
 
-  const hostname = observation.hostname?.trim().toLowerCase() ?? ''
-  const loopback =
-    ['localhost', '127.0.0.1', '::1', '[::1]', '0.0.0.0'].includes(hostname) ||
-    hostname.endsWith('.localhost')
+  const history = evidence.migrationVersions
   checks.push(
     check(
-      'T03-not-loopback-or-preview',
-      'the target is a hosted production project, not loopback, local, or a preview branch',
-      hostname.length > 0 && !loopback && !hostname.includes('branch'),
-      `hostname=${hostname || '(not recorded)'}`,
-    ),
-  )
-
-  const history = observation.migrationVersions ?? []
-  checks.push(
-    check(
-      'T04-empty-migration-history',
-      'the target records the expected starting migration history',
-      history.length === LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS.length &&
-        history.every((version) =>
-          LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS.includes(version),
-        ),
-      `history=[${history.join(', ')}]`,
-    ),
-  )
-  checks.push(
-    check(
-      'T05-foundation-not-already-applied',
-      'the foundation migration is not already recorded',
-      !history.includes(LITERATURE_FOUNDATION_MIGRATION.version),
+      'E01-empty-migration-history',
+      'the evidence records the expected starting migration history',
+      history.length === LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS.length,
       `history=[${history.join(', ')}]`,
     ),
   )
 
-  const catalog = observation.catalog
-  const presentTables = catalog.tables?.map((table) => table.name) ?? []
-  const presentFunctions = catalog.functions?.map((entry) => entry.name) ?? []
-  const presentIndexes = catalog.indexes ?? []
-  const presentTriggers = catalog.triggers ?? []
-
-  checks.push(
-    check(
-      'T06-no-foundation-objects',
-      'no Literature table, function, trigger, or index exists on the target',
-      presentTables.length === 0 &&
-        presentFunctions.length === 0 &&
-        presentIndexes.length === 0 &&
-        presentTriggers.length === 0,
-      `tables=${presentTables.length} functions=${presentFunctions.length} ` +
-        `triggers=${presentTriggers.length} indexes=${presentIndexes.length}`,
-    ),
-  )
-
-  const collidingTables = presentTables.filter((name) =>
-    LITERATURE_FOUNDATION_TABLES.includes(name),
-  )
-  const collidingFunctions = presentFunctions.filter((name) =>
-    LITERATURE_FOUNDATION_FUNCTIONS.some((entry) => entry.name === name),
+  const relations = catalog.relations as { name?: unknown; relkind?: unknown }[]
+  const literatureRelations = relations.filter(
+    (relation) => typeof relation.name === 'string' && relation.name.startsWith('literature'),
   )
   checks.push(
     check(
-      'T07-no-name-collision',
-      'no object shares a name with anything the foundation migration creates',
-      collidingTables.length === 0 && collidingFunctions.length === 0,
-      [...collidingTables, ...collidingFunctions].join(', ') || 'no collisions',
+      'E02-no-literature-relations',
+      'the evidence shows no Literature relation of any kind',
+      literatureRelations.length === 0,
+      literatureRelations
+        .map((relation) => `${String(relation.relkind)}:${String(relation.name)}`)
+        .join(', ') || 'none present',
     ),
   )
 
   checks.push(
     check(
-      'T08-no-partial-schema',
-      'the target holds no partial Literature schema',
-      presentTables.length === 0 || presentTables.length === LITERATURE_FOUNDATION_TABLES.length,
-      `tables=${presentTables.length}`,
+      'E03-no-literature-functions',
+      'the evidence shows no Literature function',
+      catalog.functions.length === 0,
+      `functions=${catalog.functions.length}`,
+    ),
+  )
+  checks.push(
+    check(
+      'E04-no-literature-triggers-or-indexes',
+      'the evidence shows no Literature trigger or index',
+      catalog.triggers.length === 0 && catalog.indexes.length === 0,
+      `triggers=${catalog.triggers.length} indexes=${catalog.indexes.length}`,
     ),
   )
 
-  const prerequisites = observation.prerequisites
+  // H-2: collision detection across every object class that can block or alter the migration,
+  // not just tables. A view named public.literature_journals previously passed here and then
+  // broke the apply.
+  const expectedNames = new Set<string>([
+    ...LITERATURE_FOUNDATION_TABLES,
+    ...LITERATURE_FOUNDATION_INDEXES,
+  ])
+  const relationCollisions = relations
+    .filter(
+      (relation) =>
+        typeof relation.name === 'string' &&
+        expectedNames.has(relation.name) &&
+        LITERATURE_COLLIDING_RELKINDS.some((entry) => entry.relkind === relation.relkind),
+    )
+    .map((relation) => {
+      const label =
+        LITERATURE_COLLIDING_RELKINDS.find((entry) => entry.relkind === relation.relkind)?.label ??
+        String(relation.relkind)
+      return `${label} ${String(relation.name)}`
+    })
+
+  const typeCollisions = (catalog.types as { name?: unknown }[])
+    .filter((entry) => typeof entry.name === 'string' && expectedNames.has(entry.name))
+    .map((entry) => `type ${String(entry.name)}`)
+
+  const functionCollisions = (catalog.functions as { name?: unknown }[])
+    .filter(
+      (entry) =>
+        typeof entry.name === 'string' && LITERATURE_FOUNDATION_FUNCTION_NAMES.includes(entry.name),
+    )
+    .map((entry) => `function ${String(entry.name)}`)
+
+  const indexCollisions = (catalog.indexes as { name?: unknown }[])
+    .filter((entry) => typeof entry.name === 'string' && expectedNames.has(entry.name))
+    .map((entry) => `index ${String(entry.name)}`)
+
+  const collisions = [
+    ...relationCollisions,
+    ...typeCollisions,
+    ...functionCollisions,
+    ...indexCollisions,
+  ]
   checks.push(
     check(
-      'T09-prerequisites-available',
+      'E05-no-name-collision',
+      'no object of any class shares a name with anything the migration creates',
+      collisions.length === 0,
+      collisions.join(', ') || 'no collisions',
+    ),
+  )
+
+  const tableRelations = relations.filter((relation) => relation.relkind === 'r')
+  const literatureTables = tableRelations.filter(
+    (relation) => typeof relation.name === 'string' && relation.name.startsWith('literature'),
+  )
+  checks.push(
+    check(
+      'E06-no-partial-schema',
+      'the evidence holds no partial Literature schema',
+      literatureTables.length === 0 ||
+        literatureTables.length === LITERATURE_FOUNDATION_TABLES.length,
+      `literatureTables=${literatureTables.length}`,
+    ),
+  )
+
+  const prerequisites = evidence.prerequisites
+  checks.push(
+    check(
+      'E07-prerequisites-available',
       'pg_trgm is available and the anon, authenticated, and service_role roles exist',
-      Boolean(prerequisites) &&
-        prerequisites!.availableExtensions.includes('pg_trgm') &&
+      prerequisites.availableExtensions.includes('pg_trgm') &&
         ['anon', 'authenticated', 'service_role'].every((role) =>
-          prerequisites!.roles.includes(role),
+          prerequisites.roles.includes(role),
         ) &&
-        prerequisites!.schemas.includes('extensions'),
-      prerequisites
-        ? `extensions=[${prerequisites.availableExtensions.join(', ')}] ` +
-            `roles=[${prerequisites.roles.join(', ')}] schemas=[${prerequisites.schemas.join(', ')}]`
-        : 'prerequisite observation was not supplied',
+        prerequisites.schemas.includes('extensions'),
+      `extensions=[${prerequisites.availableExtensions.join(', ')}] ` +
+        `roles=[${prerequisites.roles.join(', ')}] schemas=[${prerequisites.schemas.join(', ')}]`,
+    ),
+  )
+
+  checks.push(
+    check(
+      'E08-row-count-present',
+      'the evidence carries a non-negative integer total row count',
+      Number.isInteger(evidence.totalRowCount) && evidence.totalRowCount >= 0,
+      `totalRowCount=${evidence.totalRowCount}`,
     ),
   )
 
   return checks
 }
 
-export function preflightApproved(checks: readonly PreflightCheck[]): boolean {
+export function allChecksPassed(checks: readonly PreflightCheck[]): boolean {
   return checks.length > 0 && checks.every((entry) => entry.passed)
+}
+
+/**
+ * The overall preflight verdict.
+ *
+ * `ready_to_apply` is unreachable without a provider attestation, which this repository cannot
+ * currently produce. The other two names are deliberately explicit that they do not authorize
+ * anything.
+ */
+export type LiteraturePreflightVerdict =
+  | 'blocked'
+  | 'repository_checks_passed_nonauthoritative'
+  | 'provider_attestation_required'
+  | 'ready_to_apply'
+
+export interface PreflightOutcome {
+  verdict: LiteraturePreflightVerdict
+  authoritative: boolean
+  summary: string
+}
+
+/**
+ * Combine the layers into a single outcome.
+ *
+ * Layer 1 and Layer 2 passing is *not* permission to act: without Layer 3, the most that can be
+ * said is that this repository and this document are internally consistent.
+ */
+export function resolvePreflightOutcome(input: {
+  repositoryChecks: readonly PreflightCheck[]
+  evidenceChecks: readonly PreflightCheck[]
+  attestationStatus: 'attested' | 'rejected'
+  attestationDetail: string
+}): PreflightOutcome {
+  if (!allChecksPassed(input.repositoryChecks)) {
+    return {
+      verdict: 'blocked',
+      authoritative: true,
+      summary: 'Repository checks failed. No migration may be applied.',
+    }
+  }
+  if (!allChecksPassed(input.evidenceChecks)) {
+    return {
+      verdict: 'blocked',
+      authoritative: false,
+      summary: 'Evidence content checks failed. No migration may be applied.',
+    }
+  }
+  if (input.attestationStatus !== 'attested') {
+    return {
+      verdict: 'provider_attestation_required',
+      authoritative: false,
+      summary:
+        'Repository and evidence-content checks passed, but they are NON-AUTHORITATIVE: they ' +
+        'cannot establish which database produced the evidence. ' +
+        input.attestationDetail,
+    }
+  }
+  return {
+    verdict: 'ready_to_apply',
+    authoritative: true,
+    summary: 'Repository, evidence, and provider-bound target attestation all passed.',
+  }
 }
