@@ -3,19 +3,27 @@
  *
  * Creates a throwaway PostgreSQL 17 container that stands in for a brand-new Supabase project,
  * applies exactly the immutable foundation migration to it in a single transaction, proves the
- * resulting catalog matches the committed expectations artifact byte for byte, exercises the
- * failure modes a real rollout could hit, and then destroys only what it created.
+ * resulting foundation-owned catalog matches the committed expectations artifact byte for byte,
+ * exercises the failure modes a real rollout could hit, and then destroys only what it created.
  *
  * ## What this does and does not prove
  *
- *   - **Proven in the Supabase Postgres image:** the SQL applies transactionally; the exact catalog
- *     it produces; RLS/grant/ACL posture; `anon` denial; empty-search validity; rejection of a
- *     second application; rollback behaviour on a late collision.
+ *   - **Proven in the Supabase Postgres image:** the SQL applies transactionally; the exact
+ *     foundation-owned catalog it produces; RLS/grant/ACL posture; `anon` denial; empty-search
+ *     validity; rejection of a second application; full rollback on late collisions (view,
+ *     index-name, wrong-schema `pg_trgm`); that unrelated managed-baseline state (extra installed
+ *     extensions, pre-existing `pg_default_acl` rows) does **not** read as drift; that the
+ *     migration leaves default and schema privileges unchanged (empty pre/post delta); and that
+ *     every preflight-plan statement is existence-safe on a database with no migration-history
+ *     table and no Literature relation.
  *   - **Modeled locally:** migration-history recording. The rehearsal inserts the history row
  *     itself, so the recorded *version* here is a local model, not evidence of what Supabase's
  *     managed `apply_migration` records. See `LITERATURE_MIGRATION_HISTORY_FIDELITY`.
- *   - **Not proven here at all:** anything about the managed hosted project. That requires
- *     provider-bound execution-time verification.
+ *   - **Not proven here at all:** anything about the managed hosted project. The managed baseline
+ *     is only ever *scoped* through read-only observation requirements, and the pre/post
+ *     global-state delta on the managed project is an execution-time, provider-bound requirement.
+ *     While the Layer-3 adapter is unimplemented, nothing in this rehearsal — or anywhere else in
+ *     this repository — can produce a production success verdict.
  *
  * Never call the modeled parts "proved production behavior".
  *
@@ -56,19 +64,32 @@ import {
   LITERATURE_ROW_COUNT_SQL,
   buildCatalogExpectationArtifact,
   canonicalJson,
+  classifyPgTrgmState,
+  compareGlobalStateDelta,
   compareLiteratureCatalog,
+  evaluateManagedPrerequisiteState,
   summarizeCatalogPresence,
   type LiteratureCatalogExpectationArtifact,
   type LiteratureCatalogSnapshot,
 } from './lib/foundation-catalog'
-import { evaluateEvidenceContentPreflight } from './lib/preflight-rules'
+import { evaluateEvidenceContentPreflight, allChecksPassed } from './lib/preflight-rules'
 import { classifyLiteratureRollout, resolveLostAcknowledgement } from './lib/reconciliation'
-import type { LiteratureEvidenceDocument } from './lib/evidence-schema'
+import {
+  LITERATURE_FOUNDATION_TABLE_EXISTENCE_STATEMENT,
+  LITERATURE_HISTORY_TABLE_EXISTENCE_STATEMENT,
+  LITERATURE_PREFLIGHT_QUERY_PLAN,
+  LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+  LITERATURE_READ_ONLY_PREREQUISITE_STATEMENT,
+} from './lib/target-observation'
+import type { LiteraturePreflightEvidenceDocument } from './lib/evidence-schema'
 
 const ROOT = process.cwd()
 const ARTIFACT_PATH =
   'src/features/literature/dedicated-supabase/foundation-catalog-expectations.json'
-const PROBE_DATABASE = 'literature_rollback_probe'
+const VIEW_PROBE_DATABASE = 'literature_rollback_probe'
+const INDEX_PROBE_DATABASE = 'literature_index_collision_probe'
+const TRGM_PROBE_DATABASE = 'literature_trgm_schema_probe'
+const BARE_PROBE_DATABASE = 'literature_bare_probe'
 const CONTAINER_READY_TIMEOUT_MS = 90_000
 const CONTAINER_READY_POLL_MS = 500
 
@@ -226,32 +247,32 @@ async function readCatalog(container: string, database = REHEARSAL_DATABASE) {
   return JSON.parse(raw) as LiteratureCatalogSnapshot
 }
 
-async function extensionInstalled(container: string, database: string, name: string) {
-  const result = await psqlReadOnly(
-    container,
-    `select count(*) from pg_catalog.pg_extension where extname = '${name}';`,
-    { database },
-  )
-  return result.stdout.trim() !== '0'
+async function historyRowCount(container: string, database: string) {
+  return (
+    await psqlReadOnly(container, 'select count(*) from supabase_migrations.schema_migrations;', {
+      database,
+    })
+  ).stdout.trim()
 }
 
-/** Build an evidence document from a snapshot, as the query bundle would. */
-function evidenceFrom(
+/**
+ * Build a preflight evidence document from a snapshot, exactly as the preflight query plan would:
+ * existence probe first, versions only when the history table exists.
+ */
+function preflightEvidenceFrom(
   snapshot: LiteratureCatalogSnapshot,
-  migrationVersions: string[],
-  totalRowCount: number,
-): LiteratureEvidenceDocument {
+  history: { tableExists: boolean; versions: string[] | null },
+): LiteraturePreflightEvidenceDocument {
   return {
-    schemaVersion: 'literature-dedicated-observation/2.0.0',
-    queryBundleSha256: 'f'.repeat(64),
-    migrationVersions,
-    catalog: snapshot as unknown as LiteratureEvidenceDocument['catalog'],
+    schemaVersion: 'literature-dedicated-preflight-observation/3.0.0',
+    queryPlanSha256: LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+    migrationHistory: history,
+    catalog: snapshot as unknown as LiteraturePreflightEvidenceDocument['catalog'],
     prerequisites: {
       availableExtensions: ['pg_trgm'],
       roles: ['anon', 'authenticated', 'service_role'],
       schemas: ['extensions', 'public'],
     },
-    totalRowCount,
   }
 }
 
@@ -296,7 +317,7 @@ async function main() {
       driftVerdict.rejections.map((entry) => entry.reason).join(', ') || 'no rejection produced',
     )
 
-    // ---- 2. Disposable baseline ---------------------------------------------------------------
+    // ---- 2. Disposable baseline, with managed-style noise (H-1) --------------------------------
     await startContainer(container)
     await startContainer(sentinel)
     const baseline = await establishBaseline(container, REHEARSAL_DATABASE)
@@ -307,19 +328,99 @@ async function main() {
       `rolesAlreadyPresent=[${baseline.rolesAlreadyPresent.join(', ')}] rolesCreated=[${baseline.rolesCreated.join(', ')}]`,
     )
 
-    const trgmBefore = await extensionInstalled(container, REHEARSAL_DATABASE, 'pg_trgm')
-    const beforeCatalog = await readCatalog(container)
-    const beforeLiteratureRelations = beforeCatalog.relations.filter((relation) =>
+    // Simulate the managed baseline the real project actually has: an unrelated installed
+    // extension and pre-existing default-privilege rows. Neither belongs to the foundation
+    // migration, so neither may read as drift (H-1).
+    await psql(container, 'create extension if not exists pgcrypto with schema extensions;')
+    await psql(
+      container,
+      'alter default privileges in schema public grant select on tables to service_role;',
+    )
+    const preCatalog = await readCatalog(container)
+    record(
+      'R04-managed-style-noise-installed',
+      'an unrelated installed extension and a pre-existing pg_default_acl row are present ' +
+        'before the migration',
+      preCatalog.defaultPrivileges.length > 0 && classifyPgTrgmState(preCatalog).state === 'absent',
+      `defaultPrivileges=${preCatalog.defaultPrivileges.length} ` +
+        `pgTrgm=${classifyPgTrgmState(preCatalog).state}`,
+    )
+
+    const preLiteratureRelations = preCatalog.relations.filter((relation) =>
       relation.name.startsWith('literature'),
     )
     record(
-      'R04-pre-migration-inventory',
+      'R05-pre-migration-inventory',
       'no Literature object exists before the migration',
-      beforeLiteratureRelations.length === 0 && beforeCatalog.functions.length === 0,
-      `relations=${beforeLiteratureRelations.length} functions=${beforeCatalog.functions.length} pg_trgm=${trgmBefore}`,
+      preLiteratureRelations.length === 0 && preCatalog.functions.length === 0,
+      `relations=${preLiteratureRelations.length} functions=${preCatalog.functions.length}`,
     )
 
-    // ---- 3. Runtime surfaces must fail before the migration ------------------------------------
+    // The full preflight content evaluation must PASS on this noisy-but-clean baseline: unrelated
+    // extensions and default-ACL rows are managed state, not collisions and not drift.
+    const cleanPreflightChecks = evaluateEvidenceContentPreflight(
+      preflightEvidenceFrom(preCatalog, { tableExists: true, versions: [] }),
+    )
+    record(
+      'R06-preflight-passes-noisy-baseline',
+      'every preflight content check passes on the noisy managed-style baseline',
+      allChecksPassed(cleanPreflightChecks),
+      cleanPreflightChecks
+        .filter((entry) => !entry.passed)
+        .map((entry) => `${entry.id}: ${entry.detail}`)
+        .join('; ') || 'all passed',
+    )
+
+    // ---- 3. Preflight plan is existence-safe on a bare database (L-1) --------------------------
+    // No roles bootstrap, no extensions schema, no history table, no Literature relation: every
+    // unconditional preflight-plan statement must still succeed and return absence evidence.
+    await psql(container, `create database ${BARE_PROBE_DATABASE};`, { database: 'postgres' })
+    const bareHistory = await psqlReadOnly(
+      container,
+      'select exists (select 1 from pg_catalog.pg_class as c ' +
+        'join pg_catalog.pg_namespace as n on n.oid = c.relnamespace ' +
+        "where n.nspname = 'supabase_migrations' and c.relname = 'schema_migrations' " +
+        "and c.relkind = 'r') as history_table_exists;",
+      { database: BARE_PROBE_DATABASE },
+    )
+    const bareCatalogRun = await psqlReadOnly(container, LITERATURE_CATALOG_INSPECTION_SQL, {
+      database: BARE_PROBE_DATABASE,
+      allowFailure: true,
+    })
+    const barePrerequisites = await psql(container, LITERATURE_READ_ONLY_PREREQUISITE_STATEMENT, {
+      database: BARE_PROBE_DATABASE,
+      allowFailure: true,
+    })
+    const bareTableProbe = await psql(container, LITERATURE_FOUNDATION_TABLE_EXISTENCE_STATEMENT, {
+      database: BARE_PROBE_DATABASE,
+      allowFailure: true,
+    })
+    const bareHistoryProbe = await psql(container, LITERATURE_HISTORY_TABLE_EXISTENCE_STATEMENT, {
+      database: BARE_PROBE_DATABASE,
+      allowFailure: true,
+    })
+    const conditionalSteps = LITERATURE_PREFLIGHT_QUERY_PLAN.steps.filter(
+      (step) => step.conditionalOnProbe !== undefined,
+    )
+    record(
+      'R07-preflight-plan-existence-safe',
+      'every unconditional preflight-plan statement succeeds on a database with no history ' +
+        'table and no Literature relation, and the versions statement is conditional',
+      bareHistory.stdout.trim() === 'f' &&
+        bareCatalogRun.code === 0 &&
+        barePrerequisites.code === 0 &&
+        bareTableProbe.code === 0 &&
+        bareHistoryProbe.code === 0 &&
+        conditionalSteps.length === 1 &&
+        conditionalSteps[0].id === 'historyVersions',
+      `historyExists=${bareHistory.stdout.trim()} catalogExit=${bareCatalogRun.code} ` +
+        `prerequisitesExit=${barePrerequisites.code} tableProbeExit=${bareTableProbe.code} ` +
+        `historyProbeExit=${bareHistoryProbe.code} conditional=[${conditionalSteps
+          .map((step) => step.id)
+          .join(', ')}]`,
+    )
+
+    // ---- 4. Runtime surfaces must fail before the migration ------------------------------------
     const searchBefore = await psql(container, 'select * from public.search_literature_v1();', {
       allowFailure: true,
     })
@@ -327,13 +428,13 @@ async function main() {
       allowFailure: true,
     })
     record(
-      'R05-runtime-fails-before',
+      'R08-runtime-fails-before',
       'search and list fail before the migration rather than returning an empty corpus',
       searchBefore.code !== 0 && listBefore.code !== 0,
       `searchExit=${searchBefore.code} listExit=${listBefore.code}`,
     )
 
-    // ---- 4. Apply exactly the foundation migration, in one transaction --------------------------
+    // ---- 5. Apply exactly the foundation migration, in one transaction --------------------------
     await psql(container, migrationSql, { singleTransaction: true })
     // MODELED, not proven: a real managed apply assigns its own version. See the module header.
     await psql(
@@ -349,13 +450,13 @@ async function main() {
       )
     ).stdout.trim()
     record(
-      'R06-applied',
+      'R09-applied',
       'the migration applied as a single transaction and exactly one version is recorded (version string is modeled locally)',
       history.split(',').filter(Boolean).length === 1,
       `history=[${history}]`,
     )
 
-    // ---- 5. Exact canonical catalog -------------------------------------------------------------
+    // ---- 6. Exact foundation-owned catalog ------------------------------------------------------
     const afterCatalog = await readCatalog(container)
 
     if (EMIT_EXPECTATIONS) {
@@ -369,17 +470,95 @@ async function main() {
     ) as LiteratureCatalogExpectationArtifact
     const comparison = compareLiteratureCatalog(afterCatalog, artifact)
     record(
-      'R07-exact-canonical-catalog',
-      'every relation, column, constraint, function definition, trigger, index, ACL row, and role attribute matches the committed artifact',
+      'R10-exact-foundation-catalog',
+      'every foundation-owned relation, column, constraint, function definition, trigger, ' +
+        'index, and ACL row matches the committed artifact despite the managed-style noise',
       comparison.matches,
       comparison.failures.join('; ') || 'exact match',
+    )
+
+    // H-1: the pre-existing unrelated extension and default-ACL rows are still there, and still
+    // do not read as drift, because the exact scope is foundation-owned only.
+    record(
+      'R11-unrelated-baseline-not-drift',
+      'unrelated installed extensions and pre-existing pg_default_acl rows do not fail the ' +
+        'exact comparison',
+      comparison.matches && afterCatalog.defaultPrivileges.length > 0,
+      `defaultPrivileges=${afterCatalog.defaultPrivileges.length} (still present, not drift)`,
+    )
+
+    // H-1: the migration must leave the global-state sections untouched: empty pre/post delta.
+    const delta = compareGlobalStateDelta(preCatalog, afterCatalog)
+    record(
+      'R12-global-state-delta-empty',
+      'default privileges and schema privileges are unchanged across the apply (empty delta)',
+      delta.matches,
+      delta.failures.join('; ') || 'no delta',
+    )
+
+    // H-1: scoped prerequisite semantics after the apply.
+    const postPrerequisites = evaluateManagedPrerequisiteState(afterCatalog, 'post_application')
+    record(
+      'R13-managed-prerequisites-post',
+      'pg_trgm is installed in exactly the extensions schema and the API roles have the ' +
+        'expected scoped attributes',
+      postPrerequisites.every((entry) => entry.passed),
+      postPrerequisites
+        .map((entry) => `${entry.id}=${entry.passed ? 'pass' : entry.detail}`)
+        .join('; '),
+    )
+
+    // H-1: the scoped checks must still detect material changes to the relevant roles.
+    const tamperedRoleRun = await psql(
+      container,
+      [
+        'begin;',
+        'alter role service_role nobypassrls;',
+        LITERATURE_CATALOG_INSPECTION_SQL,
+        'rollback;',
+      ].join('\n'),
+    )
+    const tamperedRoleSnapshot = JSON.parse(
+      tamperedRoleRun.stdout.trim(),
+    ) as LiteratureCatalogSnapshot
+    const tamperedRoleChecks = evaluateManagedPrerequisiteState(
+      tamperedRoleSnapshot,
+      'post_application',
+    )
+    record(
+      'R14-scoped-role-change-detected',
+      'removing service_role RLS bypass is detected by the scoped prerequisite checks',
+      tamperedRoleChecks.some((entry) => entry.id === 'Q04-rls-bypass-shape' && !entry.passed),
+      tamperedRoleChecks.map((entry) => `${entry.id}=${entry.passed}`).join('; '),
+    )
+
+    // H-1: the delta comparison must still detect a material default-privilege change.
+    const tamperedAclRun = await psql(
+      container,
+      [
+        'begin;',
+        'alter default privileges in schema public grant select on tables to anon;',
+        LITERATURE_CATALOG_INSPECTION_SQL,
+        'rollback;',
+      ].join('\n'),
+    )
+    const tamperedAclSnapshot = JSON.parse(
+      tamperedAclRun.stdout.trim(),
+    ) as LiteratureCatalogSnapshot
+    const tamperedDelta = compareGlobalStateDelta(preCatalog, tamperedAclSnapshot)
+    record(
+      'R15-material-delta-detected',
+      'a new default-privilege grant is detected by the pre/post delta comparison',
+      !tamperedDelta.matches &&
+        tamperedDelta.failures.some((failure) => failure.includes('defaultPrivileges')),
+      tamperedDelta.failures.join('; ') || 'NOT DETECTED',
     )
 
     const literatureTables = afterCatalog.relations.filter(
       (relation) => relation.relkind === 'r' && relation.name.startsWith('literature'),
     )
     record(
-      'R08-object-counts',
+      'R16-object-counts',
       'object counts match the reviewable expectations',
       literatureTables.length === LITERATURE_FOUNDATION_OBJECT_COUNTS.tables &&
         afterCatalog.functions.length === LITERATURE_FOUNDATION_OBJECT_COUNTS.functions &&
@@ -391,7 +570,7 @@ async function main() {
         `policies=${afterCatalog.policies.length}`,
     )
     record(
-      'R09-rls-no-policies',
+      'R17-rls-no-policies',
       'row-level security is enabled on every Literature table and no policy grants access',
       literatureTables.every((relation) => relation.rowLevelSecurity) &&
         afterCatalog.policies.length === 0,
@@ -402,7 +581,7 @@ async function main() {
       (entry) => entry.granted && ['public', 'anon', 'authenticated'].includes(entry.role),
     )
     record(
-      'R10-unprivileged-roles',
+      'R18-unprivileged-roles',
       'PUBLIC, anon, and authenticated hold no privilege on any Literature table',
       leaked.length === 0 && afterCatalog.tablePrivileges.length > 0,
       leaked.map((entry) => `${entry.role}:${entry.privilege}:${entry.table}`).join(', ') ||
@@ -413,7 +592,7 @@ async function main() {
       LITERATURE_FOUNDATION_RUNTIME_RPCS.includes(entry.name),
     )
     record(
-      'R11-service-role-access',
+      'R19-service-role-access',
       'the three runtime RPCs are executable by service_role and by nobody else',
       rpcGrants.length === LITERATURE_FOUNDATION_RUNTIME_RPCS.length &&
         rpcGrants.every(
@@ -426,7 +605,7 @@ async function main() {
       rpcGrants.map((entry) => `${entry.name}:${entry.serviceRoleExecute}`).join(', '),
     )
     record(
-      'R12-function-security',
+      'R20-function-security',
       'every Literature function is SECURITY INVOKER with a pinned search_path',
       afterCatalog.functions.every(
         (entry) =>
@@ -438,7 +617,7 @@ async function main() {
         .join(', '),
     )
 
-    // ---- 6. Behaviour as the real roles ---------------------------------------------------------
+    // ---- 7. Behaviour as the real roles ---------------------------------------------------------
     const anonSelect = await psql(container, 'select count(*) from public.literature_articles;', {
       role: 'anon',
       allowFailure: true,
@@ -448,7 +627,7 @@ async function main() {
       allowFailure: true,
     })
     record(
-      'R13-anon-denied',
+      'R21-anon-denied',
       'anon can neither read a Literature table nor execute the search RPC',
       anonSelect.code !== 0 && anonRpc.code !== 0,
       `tableExit=${anonSelect.code} rpcExit=${anonRpc.code}`,
@@ -460,7 +639,7 @@ async function main() {
       { role: 'service_role', allowFailure: true },
     )
     record(
-      'R14-empty-search-valid',
+      'R22-empty-search-valid',
       'a blank search as service_role succeeds and returns an empty result',
       serviceSearch.code === 0 && serviceSearch.stdout.trim() === '0',
       `exit=${serviceSearch.code} rows=${serviceSearch.stdout.trim()}`,
@@ -477,7 +656,7 @@ async function main() {
       { role: 'service_role', allowFailure: true },
     )
     record(
-      'R15-runtime-works-after',
+      'R23-runtime-works-after',
       'list, detail, and stats all succeed as service_role after the migration',
       serviceDetail.code === 0 &&
         serviceDetail.stdout.trim() === '0' &&
@@ -488,13 +667,13 @@ async function main() {
 
     const rowCount = (await psqlReadOnly(container, LITERATURE_ROW_COUNT_SQL)).stdout.trim()
     record(
-      'R16-empty-corpus',
+      'R24-empty-corpus',
       'every Literature table is empty immediately after a foundation-only rollout',
       rowCount === '0',
       `totalRows=${rowCount}`,
     )
 
-    // ---- 7. Semantic drift detection ------------------------------------------------------------
+    // ---- 8. Semantic drift detection ------------------------------------------------------------
     const tamperedBody = await psql(
       container,
       [
@@ -510,7 +689,7 @@ async function main() {
     const tamperedSnapshot = JSON.parse(tamperedBody.stdout.trim()) as LiteratureCatalogSnapshot
     const tamperedComparison = compareLiteratureCatalog(tamperedSnapshot, artifact)
     record(
-      'R17-function-body-tampering-detected',
+      'R25-function-body-tampering-detected',
       'a same-signature function with a tampered body fails the canonical comparison',
       !tamperedComparison.matches &&
         tamperedComparison.failures.some((failure) => failure.includes('functions')),
@@ -520,37 +699,37 @@ async function main() {
     const missingAcl = JSON.parse(JSON.stringify(afterCatalog)) as LiteratureCatalogSnapshot
     missingAcl.tablePrivileges = []
     record(
-      'R18-missing-privilege-evidence-detected',
+      'R26-missing-privilege-evidence-detected',
       'an empty privilege array fails rather than reading as "nothing granted"',
       !compareLiteratureCatalog(missingAcl, artifact).matches,
       compareLiteratureCatalog(missingAcl, artifact).failures.join('; ') || 'NOT DETECTED',
     )
 
-    // ---- 8. Nothing unrelated changed -----------------------------------------------------------
+    // ---- 9. Nothing unrelated changed -----------------------------------------------------------
     const unrelated = afterCatalog.relations.filter(
       (relation) => !relation.name.startsWith('literature'),
     )
     record(
-      'R19-no-unrelated-drift',
-      'no unrelated application object was created',
+      'R27-no-unrelated-drift',
+      'no unrelated application object was created in public',
       unrelated.length === 0,
       unrelated.map((relation) => relation.name).join(', ') || 'none',
     )
 
-    // ---- 9. Second application ------------------------------------------------------------------
+    // ---- 10. Second application -----------------------------------------------------------------
     const second = await psql(container, migrationSql, {
       singleTransaction: true,
       allowFailure: true,
     })
     const afterSecond = compareLiteratureCatalog(await readCatalog(container), artifact)
     record(
-      'R20-second-application-rejected',
+      'R28-second-application-rejected',
       'reapplying the migration is rejected and leaves the catalog unchanged',
       second.code !== 0 && afterSecond.matches,
       `exit=${second.code} ${afterSecond.failures.join('; ') || 'catalog unchanged'}`,
     )
 
-    // ---- 10. Partial state is detected -----------------------------------------------------------
+    // ---- 11. Partial state is assessed as an incident, never as success -------------------------
     const partialProbe = await psql(
       container,
       [
@@ -563,21 +742,6 @@ async function main() {
     const partialSnapshot = JSON.parse(partialProbe.stdout.trim()) as LiteratureCatalogSnapshot
     const partialPresence = summarizeCatalogPresence(partialSnapshot)
     const partialVerdict = classifyLiteratureRollout({
-      targetAttestation: {
-        status: 'attested',
-        attestation: {
-          mechanism: 'supabase_project_scoped_read_only_mcp_v1',
-          providerProjectRef: 'itcttmkxdxvwmwcmzmey',
-          providerProjectUrl: 'https://itcttmkxdxvwmwcmzmey.supabase.co',
-          queryBundleSha256: 'f'.repeat(64),
-          repositoryCommit: '0'.repeat(40),
-          migrationPath: LITERATURE_FOUNDATION_MIGRATION.path,
-          migrationSha256: LITERATURE_FOUNDATION_MIGRATION.sha256,
-          capturedAt: new Date().toISOString(),
-          contentSha256: 'f'.repeat(64),
-          completeness: 'complete',
-        },
-      },
       observationComplete: true,
       recordedMigrationVersions: [LITERATURE_FOUNDATION_MIGRATION.version],
       presentTables: partialPresence.presentTables,
@@ -589,110 +753,224 @@ async function main() {
       securityChecksPassed: compareLiteratureCatalog(partialSnapshot, artifact).matches,
     })
     record(
-      'R21-partial-state-detected',
-      'a missing table is detected as a partial-state incident, not a clean result',
-      partialVerdict.classification === 'partial_incident',
-      `classification=${partialVerdict.classification}`,
+      'R29-partial-state-detected',
+      'a missing table is assessed as a partial-incident content state, and the classification ' +
+        'stays provider_attestation_required / stop',
+      partialVerdict.contentAssessment === 'content_partial_incident_nonauthoritative' &&
+        partialVerdict.classification === 'provider_attestation_required' &&
+        partialVerdict.nextAction === 'stop_read_only_reconciliation',
+      `contentAssessment=${partialVerdict.contentAssessment} ` +
+        `classification=${partialVerdict.classification}`,
     )
     record(
-      'R22-partial-probe-rolled-back',
+      'R30-partial-probe-rolled-back',
       'the partial-state probe rolled back and left the catalog intact',
       compareLiteratureCatalog(await readCatalog(container), artifact).matches,
       'catalog intact',
     )
 
-    // ---- 11. Late-collision rollback probe on a second disposable database -----------------------
-    await establishBaseline(container, PROBE_DATABASE)
-    const probeTrgmBefore = await extensionInstalled(container, PROBE_DATABASE, 'pg_trgm')
-    // A pre-existing VIEW occupying a table name the migration creates. This is the exact H-2
-    // reproduction: the old preflight did not observe views and approved a migration that then
-    // failed here.
-    await psql(container, 'create view public.literature_journals as select 1 as sentinel;', {
-      database: PROBE_DATABASE,
+    // Even the fully correct catalog can never read as success while Layer 3 is absent.
+    const perfectVerdict = classifyLiteratureRollout({
+      observationComplete: true,
+      recordedMigrationVersions: [LITERATURE_FOUNDATION_MIGRATION.version],
+      presentTables: summarizeCatalogPresence(afterCatalog).presentTables,
+      presentFunctions: summarizeCatalogPresence(afterCatalog).presentFunctions,
+      expectedTables: [...LITERATURE_FOUNDATION_TABLES],
+      expectedFunctions: [...new Set(afterCatalog.functions.map((entry) => entry.name))],
+      unexpectedLiteratureObjects:
+        summarizeCatalogPresence(afterCatalog).unexpectedLiteratureObjects,
+      totalRowCount: 0,
+      securityChecksPassed: comparison.matches,
     })
-
-    const collisionCatalog = await readCatalog(container, PROBE_DATABASE)
-    const collisionChecks = evaluateEvidenceContentPreflight(evidenceFrom(collisionCatalog, [], 0))
-    const collisionCheck = collisionChecks.find((entry) => entry.id === 'E05-no-name-collision')
     record(
-      'R23-view-collision-observed',
-      'a view occupying a Literature table name is observed as a collision by the preflight',
-      collisionCheck?.passed === false,
-      collisionCheck?.detail ?? 'collision check not produced',
+      'R31-perfect-catalog-still-blocked',
+      'a byte-exact catalog match is assessed catalog_matches_expected_nonauthoritative and ' +
+        'still classified provider_attestation_required / stop',
+      perfectVerdict.contentAssessment === 'catalog_matches_expected_nonauthoritative' &&
+        perfectVerdict.classification === 'provider_attestation_required' &&
+        perfectVerdict.nextAction === 'stop_read_only_reconciliation',
+      `contentAssessment=${perfectVerdict.contentAssessment} ` +
+        `classification=${perfectVerdict.classification} nextAction=${perfectVerdict.nextAction}`,
     )
 
-    const collidingApply = await psql(container, migrationSql, {
-      database: PROBE_DATABASE,
+    // ---- 12. Late-collision rollback probes -----------------------------------------------------
+    // 12a. A pre-existing VIEW occupying a table name the migration creates.
+    await establishBaseline(container, VIEW_PROBE_DATABASE)
+    const viewTrgmBefore = classifyPgTrgmState(await readCatalog(container, VIEW_PROBE_DATABASE))
+    await psql(container, 'create view public.literature_journals as select 1 as sentinel;', {
+      database: VIEW_PROBE_DATABASE,
+    })
+
+    const viewCollisionCatalog = await readCatalog(container, VIEW_PROBE_DATABASE)
+    const viewCollisionChecks = evaluateEvidenceContentPreflight(
+      preflightEvidenceFrom(viewCollisionCatalog, { tableExists: true, versions: [] }),
+    )
+    const viewCollisionCheck = viewCollisionChecks.find(
+      (entry) => entry.id === 'E05-no-name-collision',
+    )
+    record(
+      'R32-view-collision-observed',
+      'a view occupying a Literature table name is observed as a collision by the preflight',
+      viewCollisionCheck?.passed === false,
+      viewCollisionCheck?.detail ?? 'collision check not produced',
+    )
+
+    const viewCollidingApply = await psql(container, migrationSql, {
+      database: VIEW_PROBE_DATABASE,
       singleTransaction: true,
       allowFailure: true,
     })
-    const afterCollision = await readCatalog(container, PROBE_DATABASE)
-    const probeTrgmAfter = await extensionInstalled(container, PROBE_DATABASE, 'pg_trgm')
-    const probeHistory = (
-      await psqlReadOnly(container, 'select count(*) from supabase_migrations.schema_migrations;', {
-        database: PROBE_DATABASE,
-      })
-    ).stdout.trim()
-    const survivingView = afterCollision.relations.filter(
+    const afterViewCollision = await readCatalog(container, VIEW_PROBE_DATABASE)
+    const viewTrgmAfter = classifyPgTrgmState(afterViewCollision)
+    const viewProbeHistory = await historyRowCount(container, VIEW_PROBE_DATABASE)
+    const survivingView = afterViewCollision.relations.filter(
       (relation) => relation.name === 'literature_journals' && relation.relkind === 'v',
     )
-    const leftoverLiterature = afterCollision.relations.filter(
+    const viewLeftoverLiterature = afterViewCollision.relations.filter(
       (relation) => relation.name.startsWith('literature') && relation.relkind !== 'v',
     )
     record(
-      'R24-collision-rollback-complete',
-      'the failed apply rolled back fully: no foundation objects, no new pg_trgm, no history row, and the pre-existing view survives',
-      collidingApply.code !== 0 &&
-        leftoverLiterature.length === 0 &&
-        afterCollision.functions.length === 0 &&
-        probeTrgmAfter === probeTrgmBefore &&
-        probeHistory === '0' &&
+      'R33-view-collision-rollback-complete',
+      'the failed apply rolled back fully: no foundation objects, no new pg_trgm, no history ' +
+        'row, and the pre-existing view survives',
+      viewCollidingApply.code !== 0 &&
+        viewLeftoverLiterature.length === 0 &&
+        afterViewCollision.functions.length === 0 &&
+        viewTrgmAfter.state === viewTrgmBefore.state &&
+        viewProbeHistory === '0' &&
         survivingView.length === 1,
-      `applyExit=${collidingApply.code} leftoverRelations=${leftoverLiterature.length} ` +
-        `functions=${afterCollision.functions.length} trgmBefore=${probeTrgmBefore} ` +
-        `trgmAfter=${probeTrgmAfter} history=${probeHistory} viewSurvived=${survivingView.length === 1}`,
+      `applyExit=${viewCollidingApply.code} leftoverRelations=${viewLeftoverLiterature.length} ` +
+        `functions=${afterViewCollision.functions.length} trgmBefore=${viewTrgmBefore.state} ` +
+        `trgmAfter=${viewTrgmAfter.state} history=${viewProbeHistory} ` +
+        `viewSurvived=${survivingView.length === 1}`,
     )
 
-    const probeVerdict = classifyLiteratureRollout({
-      targetAttestation: {
-        status: 'rejected',
-        reason: 'provider_attestation_required',
-        detail: 'rehearsal target is not the production project',
-      },
-      observationComplete: true,
-      recordedMigrationVersions: [],
-      presentTables: [],
-      presentFunctions: [],
-      expectedTables: [...LITERATURE_FOUNDATION_TABLES],
-      expectedFunctions: [],
-      unexpectedLiteratureObjects: [],
-      totalRowCount: 0,
-      securityChecksPassed: true,
-    })
+    // 12b. H-2: an index named literature_articles_search_vector_idx on an UNRELATED table. The
+    // old preflight scoped index observation through Literature tables and missed exactly this.
+    await establishBaseline(container, INDEX_PROBE_DATABASE)
+    await psql(
+      container,
+      [
+        'create table public.unrelated_notes (body text);',
+        'create index literature_articles_search_vector_idx on public.unrelated_notes (body);',
+      ].join('\n'),
+      { database: INDEX_PROBE_DATABASE },
+    )
+    const indexCollisionCatalog = await readCatalog(container, INDEX_PROBE_DATABASE)
+    const indexCollisionChecks = evaluateEvidenceContentPreflight(
+      preflightEvidenceFrom(indexCollisionCatalog, { tableExists: true, versions: [] }),
+    )
+    const indexCollisionCheck = indexCollisionChecks.find(
+      (entry) => entry.id === 'E05-no-name-collision',
+    )
     record(
-      'R25-postflight-classifies-safely',
-      'the postflight refuses to classify the rolled-back probe without provider attestation',
-      probeVerdict.classification === 'provider_attestation_required' &&
-        probeVerdict.nextAction === 'stop_read_only_reconciliation',
-      `classification=${probeVerdict.classification}`,
+      'R34-unrelated-index-collision-observed',
+      'an expected foundation index name occupied by an index on an unrelated table is observed ' +
+        'as a collision, independent of its owning table',
+      indexCollisionCheck?.passed === false &&
+        (indexCollisionCheck?.detail ?? '').includes('literature_articles_search_vector_idx'),
+      indexCollisionCheck?.detail ?? 'collision check not produced',
     )
 
-    // ---- 12. Lost acknowledgement never retries --------------------------------------------------
+    const indexCollidingApply = await psql(container, migrationSql, {
+      database: INDEX_PROBE_DATABASE,
+      singleTransaction: true,
+      allowFailure: true,
+    })
+    const afterIndexCollision = await readCatalog(container, INDEX_PROBE_DATABASE)
+    const indexProbeHistory = await historyRowCount(container, INDEX_PROBE_DATABASE)
+    const survivingUnrelatedIndex = afterIndexCollision.indexNames.filter(
+      (entry) => entry.name === 'literature_articles_search_vector_idx',
+    )
+    const indexLeftoverLiterature = afterIndexCollision.relations.filter((relation) =>
+      relation.name.startsWith('literature'),
+    )
+    record(
+      'R35-index-collision-rollback-complete',
+      'the failed apply rolled back fully: no foundation objects, no new pg_trgm, no history ' +
+        'row, and the unrelated index survives on its unrelated table',
+      indexCollidingApply.code !== 0 &&
+        indexLeftoverLiterature.length === 0 &&
+        afterIndexCollision.functions.length === 0 &&
+        classifyPgTrgmState(afterIndexCollision).state === 'absent' &&
+        indexProbeHistory === '0' &&
+        survivingUnrelatedIndex.length === 1,
+      `applyExit=${indexCollidingApply.code} ` +
+        `leftoverRelations=${indexLeftoverLiterature.length} ` +
+        `functions=${afterIndexCollision.functions.length} ` +
+        `trgm=${classifyPgTrgmState(afterIndexCollision).state} history=${indexProbeHistory} ` +
+        `indexSurvived=${survivingUnrelatedIndex.length === 1}`,
+    )
+
+    // 12c. H-2: pg_trgm already installed in `public`. CREATE EXTENSION IF NOT EXISTS does not
+    // relocate it, so the later extensions.gin_trgm_ops reference must fail and roll back.
+    await establishBaseline(container, TRGM_PROBE_DATABASE)
+    await psql(container, 'create extension pg_trgm with schema public;', {
+      database: TRGM_PROBE_DATABASE,
+    })
+    const trgmProbeCatalog = await readCatalog(container, TRGM_PROBE_DATABASE)
+    const trgmProbeChecks = evaluateEvidenceContentPreflight(
+      preflightEvidenceFrom(trgmProbeCatalog, { tableExists: true, versions: [] }),
+    )
+    const trgmLocationCheck = trgmProbeChecks.find((entry) =>
+      entry.id.includes('Q01-pg-trgm-location'),
+    )
+    record(
+      'R36-wrong-schema-trgm-rejected-preflight',
+      'pg_trgm installed in public (not extensions) is rejected by the preflight, while absent ' +
+        'and extensions-installed are both permitted',
+      trgmLocationCheck?.passed === false &&
+        classifyPgTrgmState(trgmProbeCatalog).state === 'installed_elsewhere' &&
+        classifyPgTrgmState(preCatalog).state === 'absent' &&
+        classifyPgTrgmState(afterCatalog).state === 'installed_in_extensions',
+      `probe=${classifyPgTrgmState(trgmProbeCatalog).state} ` +
+        `cleanBaseline=absent afterApply=installed_in_extensions ` +
+        `check=${trgmLocationCheck?.passed === false ? 'rejected' : 'NOT REJECTED'}`,
+    )
+
+    const trgmCollidingApply = await psql(container, migrationSql, {
+      database: TRGM_PROBE_DATABASE,
+      singleTransaction: true,
+      allowFailure: true,
+    })
+    const afterTrgmCollision = await readCatalog(container, TRGM_PROBE_DATABASE)
+    const trgmProbeHistory = await historyRowCount(container, TRGM_PROBE_DATABASE)
+    const trgmStateAfter = classifyPgTrgmState(afterTrgmCollision)
+    const trgmLeftoverLiterature = afterTrgmCollision.relations.filter((relation) =>
+      relation.name.startsWith('literature'),
+    )
+    record(
+      'R37-wrong-schema-trgm-rollback-complete',
+      'the failed apply (extensions.gin_trgm_ops unresolvable) rolled back fully and left the ' +
+        'pre-existing public-schema pg_trgm untouched',
+      trgmCollidingApply.code !== 0 &&
+        trgmLeftoverLiterature.length === 0 &&
+        afterTrgmCollision.functions.length === 0 &&
+        trgmStateAfter.state === 'installed_elsewhere' &&
+        (trgmStateAfter.state === 'installed_elsewhere' ? trgmStateAfter.schema : '') ===
+          'public' &&
+        trgmProbeHistory === '0',
+      `applyExit=${trgmCollidingApply.code} leftover=${trgmLeftoverLiterature.length} ` +
+        `functions=${afterTrgmCollision.functions.length} trgm=${JSON.stringify(trgmStateAfter)} ` +
+        `history=${trgmProbeHistory}`,
+    )
+
+    // ---- 13. Lost acknowledgement never retries -------------------------------------------------
     const lostAck = resolveLostAcknowledgement()
     record(
-      'R26-lost-ack-no-retry',
+      'R38-lost-ack-no-retry',
       'an ambiguous acknowledgement transitions to read-only reconciliation and never retries',
       lostAck.automaticRetryPermitted === false &&
         lostAck.nextAction === 'stop_read_only_reconciliation',
       `nextAction=${lostAck.nextAction}`,
     )
 
-    // ---- 13. Cleanup ownership ---------------------------------------------------------------------
+    // ---- 14. Cleanup ownership ------------------------------------------------------------------
     await removeContainerByExactName(container)
     const targetGone = !(await containerExists(container))
     const sentinelSurvived = await containerExists(sentinel)
     record(
-      'R27-cleanup-is-operation-owned',
+      'R39-cleanup-is-operation-owned',
       'cleanup removed the rehearsal target and left an unrelated same-prefix sentinel running',
       targetGone && sentinelSurvived,
       `targetRemoved=${targetGone} sentinelSurvived=${sentinelSurvived}`,
@@ -700,7 +978,7 @@ async function main() {
     cleanupVerified = true
 
     record(
-      'R28-protected-database-untouched',
+      'R40-protected-database-untouched',
       'the protected real-local Literature database is still present and was never contacted',
       await containerExists('supabase_db_ip-literature-local'),
       'present',
@@ -713,7 +991,7 @@ async function main() {
   const leftoverTarget = await containerExists(container)
   const leftoverSentinel = await containerExists(sentinel)
   record(
-    'R29-no-leftovers',
+    'R41-no-leftovers',
     'no rehearsal container remains after the run',
     !leftoverTarget && !leftoverSentinel,
     `target=${leftoverTarget} sentinel=${leftoverSentinel}`,

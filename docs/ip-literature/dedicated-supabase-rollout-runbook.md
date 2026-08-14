@@ -90,21 +90,28 @@ From the **primary checkout** (`…/Interventional-Pulm-Education-Project`), on 
 `HEAD == origin/main == the owner-approved commit`, exactly. A descendant is not accepted; if `main`
 has moved, obtain a new authorization.
 
-### 4. Print the read-only query bundle
+### 4. Print the phase-specific query plans
 
 ```bash
-npm run literature:dedicated:preflight -- --print-query-bundle
+npm run literature:dedicated:preflight -- --print-query-plans
 ```
 
-Four statements — history, catalog, prerequisites, and the total row count — each already wrapped in
-`BEGIN READ ONLY; SET TRANSACTION READ ONLY; … ROLLBACK;`. The bundle prints its own SHA-256, which
-the attestation must carry.
+Three ordered plans, each with its own SHA-256 identity: the **preflight plan** (existence-safe on
+a brand-new project — the history existence probe runs first and the versions statement is
+conditional on it; nothing references `supabase_migrations.schema_migrations` or any Literature
+relation unconditionally), the **postflight existence probe**, and the **postflight complete
+plan** (history versions, full catalog, prerequisites, and the row count, valid only after the
+probe proved the referenced relations present). Every statement is wrapped in
+`BEGIN READ ONLY; SET TRANSACTION READ ONLY; … ROLLBACK;`. The identities are distinct, so one
+phase's capture cannot be substituted for another's. In the future authoritative gate, migration
+history comes from the provider's project-scoped `list_migrations` operation, not from a manually
+assembled SQL result.
 
 ### 5. Capture evidence through the connector
 
-Run the bundle through the project-scoped read-only connector. The evidence document has **no**
-`projectRef` or `hostname` field — target identity comes from the adapter, not the body, and a
-document that declares its own project is rejected. Never paste a credential anywhere.
+Run the appropriate plan through the project-scoped read-only connector. The evidence documents
+have **no** `projectRef` or `hostname` field — target identity comes from the adapter, not the
+body, and a document that declares its own project is rejected. Never paste a credential anywhere.
 
 ### 6. Run the read-only preflight
 
@@ -115,8 +122,12 @@ npm run literature:dedicated:preflight -- \
   --evidence <path.json>
 ```
 
-Layer 1 (11 checks) and Layer 2 (8 checks) must pass, and Layer 3 must be `attested`. Only
-`ready_to_apply` permits proceeding. The preflight applies nothing.
+Layer 1 (11 checks) and Layer 2 (13 checks) can pass **non-authoritatively**. While the
+provider-bound Layer-3 adapter is unimplemented, the best reachable verdict is
+`provider_attestation_required`, the command always exits nonzero, and **no migration may be
+applied on the strength of this repository's output**. The success verdict does not exist in this
+PR; the future, separately reviewed provider-adapter PR introduces the first one. The preflight
+applies nothing.
 
 ### 7. Obtain the migration authorization
 
@@ -139,20 +150,26 @@ Go to step 10. Do not resend, do not repair history, do not compensate.
 npm run literature:dedicated:postflight -- --owner-approved-commit <sha> --evidence <path.json>
 ```
 
-| Classification                  | Meaning                                                        | Next action                        |
-| ------------------------------- | -------------------------------------------------------------- | ---------------------------------- |
-| `applied_correct`               | Attested target, one recorded migration, exact catalog, 0 rows | Proceed to step 11                 |
-| `not_applied`                   | Nothing landed                                                 | Re-authorize from the preflight    |
-| `partial_incident`              | Half-built schema                                              | **Stop.** Read-only reconciliation |
-| `applied_drifted`               | Complete but wrong                                             | **Stop.** Read-only reconciliation |
-| `ambiguous`                     | Could not be observed                                          | **Stop.** Read-only reconciliation |
-| `provider_attestation_required` | Target identity unproven                                       | **Stop.** Read-only reconciliation |
+While Layer 3 is unimplemented, the classification is **always** `provider_attestation_required`
+and the next action is **always** `stop_read_only_reconciliation` — the command exits nonzero for
+every input. What varies is the explicitly non-authoritative _content assessment_, which exists
+for the human reconciling with the owner:
 
-Only `applied_correct` exits 0. The classification and the exit status always agree.
+| Content assessment                                | The evidence content shows…                       |
+| ------------------------------------------------- | ------------------------------------------------- |
+| `catalog_matches_expected_nonauthoritative`       | One recorded migration, exact catalog, 0 rows     |
+| `content_absent_nonauthoritative`                 | No history and no Literature objects              |
+| `content_partial_incident_nonauthoritative`       | A state no single successful transaction produces |
+| `content_drifted_nonauthoritative`                | Complete inventory, but something changed         |
+| `content_observation_incomplete_nonauthoritative` | The observation itself did not complete           |
+
+No assessment authorizes anything: each is a statement about a document, not a proven database.
+The provider-bound gate in the future adapter PR is the only thing that will ever turn content
+into a decision.
 
 ### 11. Produce a durable receipt
 
-Record the migration path and SHA-256, the attested project ref, the query-bundle identity, the
+Record the migration path and SHA-256, the project ref, the query-plan identities, the
 owner-approved commit, the mechanism, the classification, the catalog artifact checksum, and the
 timestamp. Never record a credential. **A persisted receipt is audit evidence and can never be
 re-ingested to authorize anything.**

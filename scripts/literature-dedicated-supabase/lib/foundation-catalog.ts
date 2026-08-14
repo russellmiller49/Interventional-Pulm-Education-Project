@@ -1,18 +1,38 @@
 /**
  * Complete canonical catalog introspection for the dedicated Literature foundation schema.
  *
- * The independent review found that the first version accepted material semantic drift: a tampered
- * body for `literature_admin_stats_v1()` kept its signature and ACLs and still compared equal. The
- * comparator now binds the full semantic surface — function definitions, owners, columns,
- * constraints, trigger and index definitions, complete ACL grids, role attributes, and forced-RLS
- * state — against a generated, committed expectations artifact, and every section carries an exact
- * expected row count so missing evidence fails closed instead of reading as "nothing granted".
+ * The first review found that a tampered function body could survive a signature-level comparison;
+ * the comparator therefore binds the full semantic surface (function definitions, owners, columns,
+ * constraints, trigger and index definitions, complete ACL grids) against a generated, committed
+ * expectations artifact, and every section carries an exact expected row count so missing evidence
+ * fails closed instead of reading as "nothing granted".
+ *
+ * The second review (H-1) found the opposite defect: the committed artifact also froze *global*
+ * state of the disposable image — every installed extension and every `pg_default_acl` row — which
+ * an actual managed Supabase project does not share (it ships baseline extensions and default-ACL
+ * rows of its own). A correct managed migration would therefore have read as drift. The catalog is
+ * now split into four scopes:
+ *
+ *   1. **Exact foundation-owned sections** (`LITERATURE_EXACT_CATALOG_SECTIONS`): objects the
+ *      foundation migration itself creates or alters. Compared byte-exactly against the artifact.
+ *   2. **Scoped managed prerequisites** (`LITERATURE_PREREQUISITE_CATALOG_SECTIONS`): `pg_trgm`
+ *      state and the three API role attributes. Checked *semantically* by
+ *      `evaluateManagedPrerequisiteState`, never bound to the disposable image's incidental values.
+ *   3. **Pre/post global-state deltas** (`LITERATURE_DELTA_CATALOG_SECTIONS`): default privileges
+ *      and schema privileges, which the foundation migration does not touch. The requirement is
+ *      that they are *unchanged across the apply* (`compareGlobalStateDelta`), not that they equal
+ *      any fixed inventory. For the managed project this is an execution-time, provider-bound
+ *      requirement; it cannot produce a success verdict in this PR.
+ *   4. **Observation-only sections** (`LITERATURE_OBSERVATION_ONLY_CATALOG_SECTIONS`): every index
+ *      relation name in `public`, observed independently of its owning table so a same-name index
+ *      on an *unrelated* table is visible to the preflight collision check (H-2).
  *
  * Every query here is `SELECT`-only against `pg_catalog`. Nothing in this file writes.
  *
  * The comparator is deliberately **not** self-authorizing. It proves the observed catalog equals
  * the reviewed artifact; the immutable migration checksum, the exact owner-approved commit, the
- * provider-bound attestation, and independent review all remain separate, independent gates.
+ * (absent, therefore blocking) provider-bound attestation, and independent review all remain
+ * separate, independent gates.
  */
 
 import { createHash } from 'node:crypto'
@@ -59,12 +79,18 @@ const PRIVILEGE_VALUES = LITERATURE_PROBED_TABLE_PRIVILEGES.map(
 ).join(', ')
 
 /**
- * The complete read-only catalog statement.
+ * The complete read-only catalog statement. Existence-safe by construction: every subquery reads
+ * `pg_catalog` only, so it runs identically against a brand-new project with no Literature
+ * relation and no migration-history table (L-1).
  *
  * `relations` deliberately covers **every** relkind in `public` — ordinary, partitioned and foreign
  * tables, views, materialized views, sequences — plus types, so a same-name collision of any class
- * is observable. A view named `public.literature_journals` previously slipped through preflight and
- * then broke the migration; it is now visible here.
+ * is observable. `indexNames` additionally lists every index relation name in `public`
+ * independently of its owning table, so an expected foundation index name occupied by an index on
+ * an *unrelated* table is observable too (H-2). `extensions` is scoped to `pg_trgm`, the one
+ * extension the foundation migration requires, so unrelated managed baseline extensions cannot
+ * read as drift (H-1); `defaultPrivileges` and `schemaPrivileges` are captured for pre/post delta
+ * comparison only, scoped to the relevant namespaces and roles.
  */
 export const LITERATURE_CATALOG_INSPECTION_SQL = `
 select jsonb_build_object(
@@ -74,6 +100,7 @@ select jsonb_build_object(
     ) order by e.extname)
     from pg_catalog.pg_extension as e
     join pg_catalog.pg_namespace as n on n.oid = e.extnamespace
+    where e.extname = 'pg_trgm'
   ), '[]'::jsonb),
   'relations', coalesce((
     select jsonb_agg(jsonb_build_object(
@@ -88,6 +115,14 @@ select jsonb_build_object(
     from pg_catalog.pg_class as c
     join pg_catalog.pg_namespace as n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relkind in ('r','p','f','v','m','S')
+  ), '[]'::jsonb),
+  'indexNames', coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'schema', n.nspname, 'name', c.relname
+    ) order by c.relname)
+    from pg_catalog.pg_class as c
+    join pg_catalog.pg_namespace as n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind in ('i','I')
   ), '[]'::jsonb),
   'types', coalesce((
     select jsonb_agg(jsonb_build_object(
@@ -256,6 +291,7 @@ select jsonb_build_object(
     ) order by pg_catalog.pg_get_userbyid(d.defaclrole), coalesce(n.nspname, ''), d.defaclobjtype)
     from pg_catalog.pg_default_acl as d
     left join pg_catalog.pg_namespace as n on n.oid = d.defaclnamespace
+    where n.nspname is null or n.nspname in ('public', 'extensions')
   ), '[]'::jsonb),
   'roleAttributes', coalesce((
     select jsonb_agg(jsonb_build_object(
@@ -303,9 +339,29 @@ export interface CatalogFunction {
   serviceRoleExecute: boolean
 }
 
+export interface CatalogExtension {
+  name: string
+  schema: string
+  version: string
+}
+
+export interface CatalogIndexName {
+  schema: string
+  name: string
+}
+
+export interface CatalogRoleAttributes {
+  role: string
+  superuser: boolean
+  bypassRls: boolean
+  canLogin: boolean
+  inherit: boolean
+}
+
 export interface LiteratureCatalogSnapshot {
-  extensions: { name: string; schema: string; version: string }[]
+  extensions: CatalogExtension[]
   relations: CatalogRelation[]
+  indexNames: CatalogIndexName[]
   types: { schema: string; name: string; typtype: string }[]
   columns: Record<string, unknown>[]
   constraints: Record<string, unknown>[]
@@ -316,13 +372,14 @@ export interface LiteratureCatalogSnapshot {
   tablePrivileges: { table: string; role: string; privilege: string; granted: boolean }[]
   schemaPrivileges: Record<string, unknown>[]
   defaultPrivileges: Record<string, unknown>[]
-  roleAttributes: Record<string, unknown>[]
+  roleAttributes: CatalogRoleAttributes[]
 }
 
-/** Section names that must all be present. A missing section is never "nothing found". */
+/** Every section the inspection emits. A missing section is never "nothing found". */
 export const LITERATURE_CATALOG_SECTIONS = [
   'extensions',
   'relations',
+  'indexNames',
   'types',
   'columns',
   'constraints',
@@ -339,23 +396,67 @@ export const LITERATURE_CATALOG_SECTIONS = [
 export type LiteratureCatalogSection = (typeof LITERATURE_CATALOG_SECTIONS)[number]
 
 /**
+ * Sections the foundation migration itself creates or alters. These — and only these — are
+ * compared byte-exactly against the committed expectations artifact. Freezing anything broader
+ * (installed extensions, default ACLs) would encode disposable-image state as if it were a managed
+ * platform contract, guaranteeing false drift on the real project (H-1).
+ */
+export const LITERATURE_EXACT_CATALOG_SECTIONS = [
+  'columns',
+  'constraints',
+  'functions',
+  'indexes',
+  'policies',
+  'relations',
+  'tablePrivileges',
+  'triggers',
+  'types',
+] as const satisfies readonly LiteratureCatalogSection[]
+
+export type LiteratureExactCatalogSection = (typeof LITERATURE_EXACT_CATALOG_SECTIONS)[number]
+
+/** Sections checked semantically as scoped managed prerequisites, never byte-exactly. */
+export const LITERATURE_PREREQUISITE_CATALOG_SECTIONS = [
+  'extensions',
+  'roleAttributes',
+] as const satisfies readonly LiteratureCatalogSection[]
+
+/**
+ * Global-state sections the foundation migration must leave untouched. Compared pre-versus-post
+ * (`compareGlobalStateDelta`) — the disposable rehearsal proves the migration produces an empty
+ * delta, and the managed project inherits the same requirement as an execution-time, provider-bound
+ * check. No fixed inventory is asserted, because the managed baseline is a platform observation,
+ * not a contract this repository owns.
+ */
+export const LITERATURE_DELTA_CATALOG_SECTIONS = [
+  'defaultPrivileges',
+  'schemaPrivileges',
+] as const satisfies readonly LiteratureCatalogSection[]
+
+/** Sections captured purely for preflight collision observation. */
+export const LITERATURE_OBSERVATION_ONLY_CATALOG_SECTIONS = [
+  'indexNames',
+] as const satisfies readonly LiteratureCatalogSection[]
+
+/**
  * The reviewed expectations artifact. Function definitions are bound by SHA-256 rather than stored
  * verbatim, so a same-signature function with a tampered body fails while the artifact stays
- * reviewable. Everything else is stored in full.
+ * reviewable. Everything else in the exact scope is stored in full. Version 3.0.0 narrowed the
+ * artifact to foundation-owned sections only (H-1).
  */
 export interface LiteratureCatalogExpectationArtifact {
-  schemaVersion: 'literature-foundation-catalog-expectations/2.0.0'
-  /** Exact expected row count per section. Zero is a real expectation, not an absence. */
-  sectionCounts: Record<LiteratureCatalogSection, number>
-  /** Canonical checksum per section. */
-  sectionSha256: Record<LiteratureCatalogSection, string>
+  schemaVersion: 'literature-foundation-catalog-expectations/3.0.0'
+  /** Exact expected row count per foundation-owned section. Zero is a real expectation. */
+  sectionCounts: Record<LiteratureExactCatalogSection, number>
+  /** Canonical checksum per foundation-owned section. */
+  sectionSha256: Record<LiteratureExactCatalogSection, string>
   /** Checksum over every section checksum. */
   aggregateSha256: string
 }
 
 /**
- * Normalize a snapshot into the comparable form: function `definition` collapses to a checksum,
- * everything else is compared verbatim.
+ * Normalize a snapshot section into the comparable form: function `definition` collapses to a
+ * checksum, everything else is compared verbatim.
  */
 export function normalizeCatalogSection(
   section: LiteratureCatalogSection,
@@ -374,15 +475,15 @@ export function normalizeCatalogSection(
 export function buildCatalogExpectationArtifact(
   snapshot: LiteratureCatalogSnapshot,
 ): LiteratureCatalogExpectationArtifact {
-  const sectionCounts = {} as Record<LiteratureCatalogSection, number>
-  const sectionSha256 = {} as Record<LiteratureCatalogSection, string>
-  for (const section of LITERATURE_CATALOG_SECTIONS) {
+  const sectionCounts = {} as Record<LiteratureExactCatalogSection, number>
+  const sectionSha256 = {} as Record<LiteratureExactCatalogSection, string>
+  for (const section of LITERATURE_EXACT_CATALOG_SECTIONS) {
     const normalized = normalizeCatalogSection(section, snapshot)
     sectionCounts[section] = normalized.length
     sectionSha256[section] = sha256(canonicalJson(normalized))
   }
   return {
-    schemaVersion: 'literature-foundation-catalog-expectations/2.0.0',
+    schemaVersion: 'literature-foundation-catalog-expectations/3.0.0',
     sectionCounts,
     sectionSha256,
     aggregateSha256: sha256(canonicalJson(sectionSha256)),
@@ -395,12 +496,13 @@ export interface CatalogComparison {
 }
 
 /**
- * Compare an observed catalog against the reviewed artifact, section by section.
+ * Compare an observed catalog against the reviewed artifact, foundation-owned section by section.
  *
  * Fail-closed: a missing section, a wrong row count, or any checksum difference fails. Because the
  * checksum covers function owners, ACL rows, column defaults, constraint definitions, trigger and
- * index definitions, forced-RLS state, and role attributes, any material semantic drift fails even
- * when signatures and grants are untouched.
+ * index definitions, and forced-RLS state, any material semantic drift fails even when signatures
+ * and grants are untouched. A match is a *content* fact only; it says nothing about which database
+ * was observed and never authorizes anything.
  */
 export function compareLiteratureCatalog(
   snapshot: LiteratureCatalogSnapshot,
@@ -408,7 +510,14 @@ export function compareLiteratureCatalog(
 ): CatalogComparison {
   const failures: string[] = []
 
-  for (const section of LITERATURE_CATALOG_SECTIONS) {
+  if (artifact.schemaVersion !== 'literature-foundation-catalog-expectations/3.0.0') {
+    return {
+      matches: false,
+      failures: [`unsupported expectations artifact version ${String(artifact.schemaVersion)}`],
+    }
+  }
+
+  for (const section of LITERATURE_EXACT_CATALOG_SECTIONS) {
     const raw = (snapshot as unknown as Record<string, unknown>)[section]
     if (!Array.isArray(raw)) {
       failures.push(`catalog section ${section} is missing or is not an array`)
@@ -435,7 +544,134 @@ export function compareLiteratureCatalog(
   return { matches: failures.length === 0, failures }
 }
 
-/** Literature object names present, used by the reconciliation classifier. */
+export type PgTrgmState =
+  | { state: 'absent' }
+  | { state: 'installed_in_extensions'; version: string }
+  | { state: 'installed_elsewhere'; schema: string; version: string }
+
+/** Classify the installed state of `pg_trgm` from a snapshot's scoped extensions section. */
+export function classifyPgTrgmState(snapshot: LiteratureCatalogSnapshot): PgTrgmState {
+  const installed = (snapshot.extensions ?? []).find((entry) => entry.name === 'pg_trgm')
+  if (!installed) return { state: 'absent' }
+  if (installed.schema === 'extensions') {
+    return { state: 'installed_in_extensions', version: installed.version }
+  }
+  return { state: 'installed_elsewhere', schema: installed.schema, version: installed.version }
+}
+
+export interface PrerequisiteCheck {
+  id: string
+  description: string
+  passed: boolean
+  detail: string
+}
+
+/**
+ * Scoped managed prerequisite state, checked semantically (H-1).
+ *
+ * `pg_trgm`: before the migration, absent and installed-in-`extensions` are both acceptable;
+ * installed anywhere else is rejected, because `create extension if not exists … with schema
+ * extensions` would silently keep the wrong location and every later `extensions.gin_trgm_ops`
+ * reference would fail (H-2). After the migration it must be installed in exactly `extensions`.
+ * Its version is *observed* in the detail text but never bound — the migration does not pin one.
+ *
+ * Role attributes: the three API roles must exist, none may be a superuser, `service_role` must
+ * bypass RLS and `anon`/`authenticated` must not. `canLogin`/`inherit` are observed but not bound;
+ * they are managed-platform details this repository does not own.
+ */
+export function evaluateManagedPrerequisiteState(
+  snapshot: LiteratureCatalogSnapshot,
+  phase: 'pre_application' | 'post_application',
+): PrerequisiteCheck[] {
+  const checks: PrerequisiteCheck[] = []
+  const trgm = classifyPgTrgmState(snapshot)
+
+  if (phase === 'pre_application') {
+    checks.push({
+      id: 'Q01-pg-trgm-location',
+      description: 'pg_trgm is absent or already installed in the extensions schema',
+      passed: trgm.state !== 'installed_elsewhere',
+      detail:
+        trgm.state === 'absent'
+          ? 'absent (the migration will install it into extensions)'
+          : trgm.state === 'installed_in_extensions'
+            ? `installed in extensions (version ${trgm.version}, observed, not bound)`
+            : `installed in schema ${trgm.schema}: CREATE EXTENSION IF NOT EXISTS cannot relocate ` +
+              'it and extensions.gin_trgm_ops references would fail. Reject this target.',
+    })
+  } else {
+    checks.push({
+      id: 'Q01-pg-trgm-location',
+      description: 'pg_trgm is installed in exactly the extensions schema',
+      passed: trgm.state === 'installed_in_extensions',
+      detail:
+        trgm.state === 'installed_in_extensions'
+          ? `installed in extensions (version ${trgm.version}, observed, not bound)`
+          : trgm.state === 'absent'
+            ? 'pg_trgm is not installed'
+            : `pg_trgm is installed in schema ${trgm.schema}, not extensions`,
+    })
+  }
+
+  const roles = new Map((snapshot.roleAttributes ?? []).map((entry) => [entry.role, entry]))
+  const required = ['anon', 'authenticated', 'service_role'] as const
+  const missing = required.filter((role) => !roles.has(role))
+  checks.push({
+    id: 'Q02-api-roles-exist',
+    description: 'the anon, authenticated, and service_role roles exist',
+    passed: missing.length === 0,
+    detail: missing.length === 0 ? 'all present' : `missing: ${missing.join(', ')}`,
+  })
+
+  const superusers = required.filter((role) => roles.get(role)?.superuser === true)
+  checks.push({
+    id: 'Q03-no-api-superuser',
+    description: 'no API role is a superuser',
+    passed: missing.length === 0 && superusers.length === 0,
+    detail: superusers.length === 0 ? 'none' : `superuser: ${superusers.join(', ')}`,
+  })
+
+  const serviceRole = roles.get('service_role')
+  const nonBypass = ['anon', 'authenticated'].filter((role) => roles.get(role)?.bypassRls === true)
+  checks.push({
+    id: 'Q04-rls-bypass-shape',
+    description: 'service_role bypasses RLS and anon/authenticated do not',
+    passed: serviceRole?.bypassRls === true && nonBypass.length === 0,
+    detail:
+      `service_role.bypassRls=${String(serviceRole?.bypassRls)}` +
+      (nonBypass.length > 0 ? `; unexpected bypass: ${nonBypass.join(', ')}` : ''),
+  })
+
+  return checks
+}
+
+/**
+ * Pre-versus-post comparison of the global-state sections the migration must not touch.
+ *
+ * The requirement is a *delta*, not an inventory: whatever default privileges and schema
+ * privileges the target had before the apply, it must have identically afterwards. Because Layer 3
+ * is absent, running this against the managed project is a documented execution-time provider
+ * requirement — nothing here can produce a production success verdict.
+ */
+export function compareGlobalStateDelta(
+  before: LiteratureCatalogSnapshot,
+  after: LiteratureCatalogSnapshot,
+): CatalogComparison {
+  const failures: string[] = []
+  for (const section of LITERATURE_DELTA_CATALOG_SECTIONS) {
+    const beforeCanonical = canonicalJson(normalizeCatalogSection(section, before))
+    const afterCanonical = canonicalJson(normalizeCatalogSection(section, after))
+    if (beforeCanonical !== afterCanonical) {
+      failures.push(
+        `global-state section ${section} changed across the apply ` +
+          `(before sha256 ${sha256(beforeCanonical)}, after ${sha256(afterCanonical)})`,
+      )
+    }
+  }
+  return { matches: failures.length === 0, failures }
+}
+
+/** Literature object names present, used by the content-observation summarizer. */
 export function summarizeCatalogPresence(snapshot: LiteratureCatalogSnapshot) {
   const literatureRelations = (snapshot.relations ?? []).filter((relation) =>
     relation.name.startsWith('literature'),
@@ -457,7 +693,11 @@ export function summarizeCatalogPresence(snapshot: LiteratureCatalogSnapshot) {
   }
 }
 
-/** Row-count statement covering every Literature table. Read-only. */
+/**
+ * Row-count statement covering every Literature table. Read-only. **Not existence-safe**: it
+ * references the Literature tables directly, so it belongs exclusively to the postflight complete
+ * plan and may run only after the existence probe has proven every table present (L-1).
+ */
 export const LITERATURE_ROW_COUNT_SQL = `
 select coalesce(sum(counted), 0)::bigint as total
 from (

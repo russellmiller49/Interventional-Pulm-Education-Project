@@ -5,11 +5,12 @@ import {
 } from './database-client'
 import {
   LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
-  LITERATURE_CANONICAL_PRODUCTION_ORIGIN,
+  LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
 } from './dedicated-project-contract'
 
 const APPROVED_REF = LITERATURE_APPROVED_PRODUCTION_PROJECT_REF
-const APPROVED_URL = LITERATURE_CANONICAL_PRODUCTION_ORIGIN
+// H-3: strict mode accepts exactly one byte sequence, trailing slash included.
+const APPROVED_URL = LITERATURE_CANONICAL_PRODUCTION_URL_EXACT
 const SECRET_KEY = 'sb_secret_EXAMPLE_PLACEHOLDER_NOT_A_CREDENTIAL'
 
 describe('literature database configuration', () => {
@@ -85,12 +86,14 @@ describe('literature database configuration', () => {
     const notConfigured = describeLiteratureDatabaseBinding({})
     expect(notConfigured).toMatchObject({ status: 'unbound', reason: 'not_configured' })
 
+    // H-3: any deviation from the exact byte sequence — here the scheme — fails the byte-exact
+    // primary gate before parsing, so the typed reason is noncanonical_production_url.
     const wrongScheme = describeLiteratureDatabaseBinding({
-      LITERATURE_SUPABASE_URL: `http://${APPROVED_REF}.supabase.co`,
+      LITERATURE_SUPABASE_URL: `http://${APPROVED_REF}.supabase.co/`,
       LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
       LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
     })
-    expect(wrongScheme).toMatchObject({ status: 'unbound', reason: 'insecure_url_scheme' })
+    expect(wrongScheme).toMatchObject({ status: 'unbound', reason: 'noncanonical_production_url' })
     expect(notConfigured.reason).not.toBe(wrongScheme.reason)
   })
 

@@ -36,6 +36,18 @@ export const LITERATURE_CANONICAL_PRODUCTION_ORIGIN = `https://${LITERATURE_APPR
 export const LITERATURE_CANONICAL_PRODUCTION_HOSTNAME = `${LITERATURE_APPROVED_PRODUCTION_PROJECT_REF}.supabase.co`
 
 /**
+ * The one exact byte sequence `LITERATURE_SUPABASE_URL` may hold under the strict contract.
+ *
+ * H-3: the strict contract compares the **raw environment string** against this constant,
+ * byte for byte, *before* any URL parsing. No trimming, no case folding, no dot-segment
+ * resolution, no percent-decoding, no default-port normalization happens first — every variant
+ * (`:443`, uppercase scheme, `/./`, `/%2e`, missing slash, surrounding whitespace) is refused
+ * because it is a different byte sequence, not because a parser judged it equivalent. Parsing
+ * runs only *after* exact equality, as a defensive secondary validation.
+ */
+export const LITERATURE_CANONICAL_PRODUCTION_URL_EXACT = `${LITERATURE_CANONICAL_PRODUCTION_ORIGIN}/`
+
+/**
  * Project refs that may never be used as a Literature data target, in any mode. The main
  * application project is excluded outright rather than only in strict mode: the whole point of the
  * dedicated project is that Literature data never lands in `Endoreels`.
@@ -358,7 +370,14 @@ export function resolveLiteratureDedicatedBinding(
   mode: LiteratureRuntimeMode = resolveLiteratureRuntimeMode(environment),
 ): LiteratureDatabaseBinding {
   const strict = mode === 'production_strict'
-  const url = trimmed(environment.LITERATURE_SUPABASE_URL)
+  const rawUrl = environment.LITERATURE_SUPABASE_URL
+  // H-3: the strict contract judges the raw byte sequence. Only local mode trims, and only for
+  // presence detection — the two modes deliberately do not share a normalization path.
+  const url = strict
+    ? rawUrl === undefined || rawUrl === ''
+      ? undefined
+      : rawUrl
+    : trimmed(rawUrl)
   const secretKey = trimmed(environment.LITERATURE_SUPABASE_SECRET_KEY)
   const legacyKey = trimmed(environment.LITERATURE_SUPABASE_SERVICE_ROLE_KEY)
   const expectedRef = trimmed(environment.LITERATURE_SUPABASE_EXPECTED_PROJECT_REF)
@@ -427,12 +446,24 @@ export function resolveLiteratureDedicatedBinding(
     )
   }
 
+  if (strict && url !== LITERATURE_CANONICAL_PRODUCTION_URL_EXACT) {
+    // H-3 primary gate: raw bytes first, parsing never. The raw value is deliberately not echoed.
+    return failure(
+      mode,
+      'noncanonical_production_url',
+      'LITERATURE_SUPABASE_URL must be byte-for-byte exactly ' +
+        `${LITERATURE_CANONICAL_PRODUCTION_URL_EXACT} — no trailing-slash omission, scheme case ` +
+        'change, whitespace, explicit :443, dot path, or percent-encoding variant is accepted.',
+    )
+  }
+
   const target = parseLiteratureTargetUrl(url)
   if (!target) {
     return failure(mode, 'invalid_url', 'LITERATURE_SUPABASE_URL must be an absolute URL.')
   }
 
   if (strict) {
+    // Secondary, defensive validation of the already-byte-exact value.
     const urlFailure = strictUrlFailure(target)
     if (urlFailure) return failure(mode, urlFailure.reason, urlFailure.message)
   } else {

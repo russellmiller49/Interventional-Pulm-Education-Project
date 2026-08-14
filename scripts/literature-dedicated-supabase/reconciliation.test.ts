@@ -7,8 +7,6 @@ import {
   LITERATURE_FOUNDATION_FUNCTION_NAMES,
   LITERATURE_FOUNDATION_TABLES,
 } from '../../src/features/literature/dedicated-supabase/catalog-expectations'
-import { LITERATURE_FOUNDATION_MIGRATION } from '../../src/features/literature/dedicated-supabase/foundation-manifest'
-import type { LiteratureAttestationVerdict } from '../../src/features/literature/dedicated-supabase/attestation'
 import {
   classifyLiteratureRollout,
   resolveLostAcknowledgement,
@@ -16,42 +14,17 @@ import {
 } from './lib/reconciliation'
 
 const ROOT = process.cwd()
-const EXPECTED_TABLES = [...LITERATURE_FOUNDATION_TABLES]
-const EXPECTED_FUNCTIONS = [...LITERATURE_FOUNDATION_FUNCTION_NAMES]
-
-const ATTESTED: LiteratureAttestationVerdict = {
-  status: 'attested',
-  attestation: {
-    mechanism: 'supabase_project_scoped_read_only_mcp_v1',
-    providerProjectRef: 'itcttmkxdxvwmwcmzmey',
-    providerProjectUrl: 'https://itcttmkxdxvwmwcmzmey.supabase.co',
-    queryBundleSha256: 'a'.repeat(64),
-    repositoryCommit: 'b'.repeat(40),
-    migrationPath: LITERATURE_FOUNDATION_MIGRATION.path,
-    migrationSha256: LITERATURE_FOUNDATION_MIGRATION.sha256,
-    capturedAt: '2026-08-14T12:00:00.000Z',
-    contentSha256: 'c'.repeat(64),
-    completeness: 'complete',
-  },
-}
-
-const UNATTESTED: LiteratureAttestationVerdict = {
-  status: 'rejected',
-  reason: 'provider_attestation_required',
-  detail: 'no provider adapter',
-}
 
 function observation(
   overrides: Partial<LiteratureRolloutObservation> = {},
 ): LiteratureRolloutObservation {
   return {
-    targetAttestation: ATTESTED,
     observationComplete: true,
-    recordedMigrationVersions: ['20260814120000'],
-    presentTables: EXPECTED_TABLES,
-    presentFunctions: EXPECTED_FUNCTIONS,
-    expectedTables: EXPECTED_TABLES,
-    expectedFunctions: EXPECTED_FUNCTIONS,
+    recordedMigrationVersions: ['20260727032621'],
+    presentTables: [...LITERATURE_FOUNDATION_TABLES],
+    presentFunctions: [...LITERATURE_FOUNDATION_FUNCTION_NAMES],
+    expectedTables: [...LITERATURE_FOUNDATION_TABLES],
+    expectedFunctions: [...LITERATURE_FOUNDATION_FUNCTION_NAMES],
     unexpectedLiteratureObjects: [],
     totalRowCount: 0,
     securityChecksPassed: true,
@@ -59,148 +32,137 @@ function observation(
   }
 }
 
-describe('target identity is checked first (M-3)', () => {
-  it('never emits applied_correct for an unproven target, however perfect the catalog', () => {
-    const verdict = classifyLiteratureRollout(observation({ targetAttestation: UNATTESTED }))
-    expect(verdict.classification).toBe('provider_attestation_required')
-    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
-    expect(verdict.classification).not.toBe('applied_correct')
-    expect(verdict.nextAction).not.toBe('proceed')
-  })
-
-  it.each([
-    ['wrong project ref', 'wrong_project_ref'],
-    ['stale evidence', 'stale_attestation'],
-    ['wrong query bundle', 'wrong_query_bundle'],
-    ['wrong commit', 'wrong_repository_commit'],
-    ['incomplete capture', 'incomplete_capture'],
-  ])('stops on %s', (_label, reason) => {
-    const verdict = classifyLiteratureRollout(
-      observation({
-        targetAttestation: {
-          status: 'rejected',
-          reason: reason as 'wrong_project_ref',
-          detail: 'x',
-        },
-      }),
-    )
-    expect(verdict.classification).toBe('provider_attestation_required')
-    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
-  })
-
-  it('reports the attestation reason in its findings', () => {
-    const verdict = classifyLiteratureRollout(observation({ targetAttestation: UNATTESTED }))
-    expect(verdict.findings.join(' ')).toMatch(/provider_attestation_required/u)
-    expect(verdict.findings.join(' ')).toMatch(/non-authoritative/iu)
-  })
-})
-
-describe('literature rollout reconciliation', () => {
-  it('classifies a correct application against an attested target', () => {
+describe('no reachable success verdict while Layer 3 is absent (B-1/M-3)', () => {
+  it('classifies even a perfect observation as provider_attestation_required / stop', () => {
     const verdict = classifyLiteratureRollout(observation())
-    expect(verdict.classification).toBe('applied_correct')
-    expect(verdict.nextAction).toBe('proceed')
+    expect(verdict.classification).toBe('provider_attestation_required')
+    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
+    expect(verdict.contentAssessment).toBe('catalog_matches_expected_nonauthoritative')
+    expect(verdict.findings[0]).toMatch(/not implemented/u)
   })
 
-  it('does not require the recorded version to equal the filename version (H-5)', () => {
-    // The provider assigns the version; only the count is asserted.
-    for (const version of ['20260727032621', '20260814120000', 'anything']) {
-      expect(
-        classifyLiteratureRollout(observation({ recordedMigrationVersions: [version] }))
-          .classification,
-      ).toBe('applied_correct')
+  it('never emits applied_correct or proceed for any observation shape', () => {
+    const variants: Partial<LiteratureRolloutObservation>[] = [
+      {},
+      { observationComplete: false },
+      { recordedMigrationVersions: [] },
+      { recordedMigrationVersions: ['a', 'b'] },
+      { presentTables: [] },
+      { presentFunctions: [] },
+      { totalRowCount: 5 },
+      { totalRowCount: null },
+      { securityChecksPassed: false },
+      { unexpectedLiteratureObjects: ['v:literature_articles_view'] },
+    ]
+    for (const variant of variants) {
+      const verdict = classifyLiteratureRollout(observation(variant))
+      expect(verdict.classification).toBe('provider_attestation_required')
+      expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
+      const serialized = JSON.stringify(verdict)
+      expect(serialized).not.toContain('applied_correct')
+      expect(serialized).not.toContain('"proceed"')
+      expect(serialized).not.toContain('ready_to_apply')
     }
   })
 
-  it('classifies a target where nothing was applied', () => {
+  it('ignores forged attestation-shaped fields smuggled into the observation', () => {
+    // The prior design accepted a targetAttestation input; a forged {status:'attested'} then
+    // produced applied_correct/proceed. The input type no longer has such a field, and a cast
+    // cannot bring the behavior back.
+    const forged = {
+      ...observation(),
+      targetAttestation: { status: 'attested' },
+      attested: true,
+      authoritative: true,
+    } as never
+    const verdict = classifyLiteratureRollout(forged)
+    expect(verdict.classification).toBe('provider_attestation_required')
+    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
+    expect(JSON.stringify(verdict)).not.toContain('applied_correct')
+  })
+})
+
+describe('non-authoritative content assessment', () => {
+  it('assesses a byte-perfect content match, explicitly nonauthoritatively', () => {
+    const verdict = classifyLiteratureRollout(observation())
+    expect(verdict.contentAssessment).toBe('catalog_matches_expected_nonauthoritative')
+    expect(verdict.findings.join(' ')).toMatch(/statement about a document/u)
+  })
+
+  it('does not require the recorded version to equal the filename version (H-5)', () => {
+    const verdict = classifyLiteratureRollout(
+      observation({ recordedMigrationVersions: ['20990101000000'] }),
+    )
+    expect(verdict.contentAssessment).toBe('catalog_matches_expected_nonauthoritative')
+  })
+
+  it('assesses absent history and absent objects as content-absent', () => {
     const verdict = classifyLiteratureRollout(
       observation({ recordedMigrationVersions: [], presentTables: [], presentFunctions: [] }),
     )
-    expect(verdict.classification).toBe('not_applied')
-    expect(verdict.nextAction).toBe('reauthorize_from_preflight')
+    expect(verdict.contentAssessment).toBe('content_absent_nonauthoritative')
+    expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
   })
 
-  it('classifies an incomplete observation as ambiguous and stops', () => {
-    for (const partial of [
+  it('assesses an incomplete observation as incomplete and stops', () => {
+    for (const variant of [
       { observationComplete: false },
       { recordedMigrationVersions: null },
       { presentTables: null },
       { presentFunctions: null },
-    ] as Partial<LiteratureRolloutObservation>[]) {
-      const verdict = classifyLiteratureRollout(observation(partial))
-      expect(verdict.classification).toBe('ambiguous')
+    ] as const) {
+      const verdict = classifyLiteratureRollout(observation(variant))
+      expect(verdict.contentAssessment).toBe('content_observation_incomplete_nonauthoritative')
       expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
     }
   })
 
-  it('detects omitted objects as a partial incident', () => {
-    expect(
-      classifyLiteratureRollout(observation({ presentTables: EXPECTED_TABLES.slice(0, 4) }))
-        .classification,
-    ).toBe('partial_incident')
-    expect(
-      classifyLiteratureRollout(observation({ presentFunctions: EXPECTED_FUNCTIONS.slice(0, 2) }))
-        .classification,
-    ).toBe('partial_incident')
-    expect(
-      classifyLiteratureRollout(observation({ recordedMigrationVersions: [] })).classification,
-    ).toBe('partial_incident')
-  })
-
-  it('detects more than one recorded migration as a partial incident', () => {
-    expect(
-      classifyLiteratureRollout(observation({ recordedMigrationVersions: ['a', 'b'] }))
-        .classification,
-    ).toBe('partial_incident')
-  })
-
-  it('detects drift: unexpected objects, failed security checks, or data present', () => {
-    expect(
-      classifyLiteratureRollout(
-        observation({ unexpectedLiteratureObjects: ['v:literature_shadow'] }),
-      ).classification,
-    ).toBe('applied_drifted')
-    expect(
-      classifyLiteratureRollout(observation({ securityChecksPassed: false })).classification,
-    ).toBe('applied_drifted')
-    expect(classifyLiteratureRollout(observation({ totalRowCount: 1 })).classification).toBe(
-      'applied_drifted',
+  it('assesses omitted objects as a partial incident', () => {
+    const verdict = classifyLiteratureRollout(
+      observation({
+        presentTables: LITERATURE_FOUNDATION_TABLES.filter(
+          (table) => table !== 'literature_import_errors',
+        ),
+      }),
     )
+    expect(verdict.contentAssessment).toBe('content_partial_incident_nonauthoritative')
+    expect(verdict.findings.join(' ')).toMatch(/literature_import_errors/u)
   })
 
-  describe('row count validation (L-1)', () => {
-    it('stops when the row count is missing', () => {
-      const verdict = classifyLiteratureRollout(observation({ totalRowCount: null }))
-      expect(verdict.classification).toBe('applied_drifted')
-      expect(verdict.findings.join(' ')).toMatch(/row counts could not be evaluated/u)
-    })
-
-    it('stops when the row count is non-zero', () => {
-      expect(
-        classifyLiteratureRollout(observation({ totalRowCount: 42 })).findings.join(' '),
-      ).toMatch(/imports no data/u)
-    })
-
-    it('stops when the row count is not a non-negative integer', () => {
-      for (const value of [-1, 1.5]) {
-        const verdict = classifyLiteratureRollout(observation({ totalRowCount: value }))
-        expect(verdict.classification).toBe('applied_drifted')
-      }
-    })
+  it('assesses more than one recorded migration as a partial incident', () => {
+    const verdict = classifyLiteratureRollout(
+      observation({ recordedMigrationVersions: ['20260727032621', '20260727032622'] }),
+    )
+    expect(verdict.contentAssessment).toBe('content_partial_incident_nonauthoritative')
   })
 
-  it('never permits retry, reapplication, compensation, or history edits in any classification', () => {
-    const cases: Partial<LiteratureRolloutObservation>[] = [
-      {},
-      { targetAttestation: UNATTESTED },
-      { observationComplete: false },
-      { recordedMigrationVersions: [], presentTables: [], presentFunctions: [] },
-      { presentTables: EXPECTED_TABLES.slice(0, 2) },
+  it('assesses drift: unexpected objects, failed security checks, or data present', () => {
+    for (const variant of [
+      { unexpectedLiteratureObjects: ['v:literature_articles_view'] },
       { securityChecksPassed: false },
-      { totalRowCount: 42 },
+      { securityChecksPassed: null },
+      { totalRowCount: 12 },
+      { totalRowCount: null },
+      { totalRowCount: -1 },
+      { totalRowCount: 0.5 },
+    ] as const) {
+      const verdict = classifyLiteratureRollout(observation(variant))
+      expect(verdict.contentAssessment).toBe('content_drifted_nonauthoritative')
+      expect(verdict.nextAction).toBe('stop_read_only_reconciliation')
+    }
+  })
+
+  it('never permits retry, reapplication, compensation, or history edits in any assessment', () => {
+    const variants: Partial<LiteratureRolloutObservation>[] = [
+      {},
+      { observationComplete: false },
+      { recordedMigrationVersions: [] },
+      { presentTables: [] },
+      { totalRowCount: 3 },
+      { securityChecksPassed: false },
     ]
-    for (const partial of cases) {
-      const verdict = classifyLiteratureRollout(observation(partial))
+    for (const variant of variants) {
+      const verdict = classifyLiteratureRollout(observation(variant))
       expect(verdict.automaticRetryPermitted).toBe(false)
       expect(verdict.automaticReapplicationPermitted).toBe(false)
       expect(verdict.automaticCompensationPermitted).toBe(false)
@@ -210,10 +172,9 @@ describe('literature rollout reconciliation', () => {
 
   it('resolves a lost acknowledgement to read-only reconciliation, never a retry', () => {
     const resolution = resolveLostAcknowledgement()
-    expect(resolution.automaticRetryPermitted).toBe(false)
     expect(resolution.nextAction).toBe('stop_read_only_reconciliation')
-    expect(resolution.instruction).toMatch(/Do not resend/u)
-    expect(resolution.instruction).toMatch(/provider-bound/u)
+    expect(resolution.automaticRetryPermitted).toBe(false)
+    expect(resolution.instruction).toMatch(/provider_attestation_required/u)
   })
 })
 
@@ -223,7 +184,17 @@ describe('reconciliation capability boundaries', () => {
       resolve(ROOT, 'scripts/literature-dedicated-supabase/lib/reconciliation.ts'),
       'utf8',
     )
-    expect(source).not.toMatch(/node:child_process|@supabase|createClient\(|docker|psql/u)
+    expect(source).not.toMatch(/child_process|spawn|exec|psql|createClient|fetch\(/u)
+  })
+
+  it('contains no success verdict member at all', async () => {
+    const source = await readFile(
+      resolve(ROOT, 'scripts/literature-dedicated-supabase/lib/reconciliation.ts'),
+      'utf8',
+    )
+    expect(source).not.toMatch(/'applied_correct'/u)
+    expect(source).not.toMatch(/'proceed'/u)
+    expect(source).not.toMatch(/'attested'/u)
   })
 
   it('the postflight never applies, retries, reapplies, or repairs', async () => {
@@ -231,16 +202,18 @@ describe('reconciliation capability boundaries', () => {
       resolve(ROOT, 'scripts/literature-dedicated-supabase/postflight.ts'),
       'utf8',
     )
-    expect(source).not.toMatch(/child_process|apply_migration|db\s+push|migration\s+repair/u)
-    expect(source).not.toMatch(/\binsert\s+into\b|\bupdate\s+\w+\s+set\b|\bdelete\s+from\b/iu)
+    expect(source).not.toMatch(/runCommand\(\s*['"]supabase['"]/u)
+    expect(source).not.toMatch(/spawn|execFile/u)
+    expect(source).not.toMatch(/migration\s+repair/iu)
+    expect(source).not.toMatch(/'applied_correct'|'proceed'/u)
   })
 
-  it('the postflight exit status agrees with the classification', async () => {
+  it('the postflight exit status is unconditionally nonzero while Layer 3 is absent', async () => {
     const source = await readFile(
       resolve(ROOT, 'scripts/literature-dedicated-supabase/postflight.ts'),
       'utf8',
     )
-    // Only applied_correct exits 0; there is no separate "warn but succeed" branch.
-    expect(source).toMatch(/verdict\.classification !== 'applied_correct'/u)
+    expect(source).toMatch(/process\.exitCode = 1/u)
+    expect(source).not.toMatch(/process\.exitCode = 0/u)
   })
 })

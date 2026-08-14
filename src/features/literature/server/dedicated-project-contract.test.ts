@@ -1,6 +1,7 @@
 import {
   LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
   LITERATURE_CANONICAL_PRODUCTION_ORIGIN,
+  LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
   LITERATURE_MAIN_APPLICATION_PROJECT_REF,
   classifyLiteratureCredential,
   describeLiteratureBinding,
@@ -13,7 +14,8 @@ import {
 
 const APPROVED_REF = LITERATURE_APPROVED_PRODUCTION_PROJECT_REF
 const MAIN_REF = LITERATURE_MAIN_APPLICATION_PROJECT_REF
-const APPROVED_URL = LITERATURE_CANONICAL_PRODUCTION_ORIGIN
+// H-3: the single byte sequence strict mode accepts, trailing slash included.
+const APPROVED_URL = LITERATURE_CANONICAL_PRODUCTION_URL_EXACT
 
 /**
  * Placeholder credentials. These are format markers, not credentials: the `sb_secret_` prefix is a
@@ -118,57 +120,66 @@ describe('runtime mode is fail-strict (M-1)', () => {
     expect(binding).toMatchObject({
       status: 'unbound',
       mode: 'production_strict',
-      reason: 'insecure_url_scheme',
+      reason: 'noncanonical_production_url',
     })
   })
 })
 
-describe('canonical production URL (H-3)', () => {
-  it('binds the exact canonical origin', () => {
+describe('byte-exact production URL (H-3)', () => {
+  it('binds only the exact approved byte sequence, trailing slash included', () => {
+    expect(LITERATURE_CANONICAL_PRODUCTION_URL_EXACT).toBe(
+      'https://itcttmkxdxvwmwcmzmey.supabase.co/',
+    )
     const binding = resolve(strictEnvironment())
     expect(binding.status).toBe('bound')
     if (binding.status !== 'bound') throw new Error('expected a bound result')
+    expect(binding.url).toBe(LITERATURE_CANONICAL_PRODUCTION_URL_EXACT)
     expect(binding.projectRef).toBe(APPROVED_REF)
     expect(binding.credentialClass).toBe('secret')
   })
 
-  it('accepts the canonical origin with an explicit root path', () => {
-    expect(resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: `${APPROVED_URL}/` })).status).toBe(
-      'bound',
-    )
-  })
-
-  const rejections: [string, string, string][] = [
-    ['plaintext http', `http://${APPROVED_REF}.supabase.co`, 'insecure_url_scheme'],
-    ['a non-default port', `https://${APPROVED_REF}.supabase.co:8443`, 'url_non_default_port'],
-    ['userinfo', `https://user:pass@${APPROVED_REF}.supabase.co`, 'url_contains_userinfo'],
-    ['a query string', `${APPROVED_URL}/?x=1`, 'url_contains_query_or_fragment'],
-    ['a fragment', `${APPROVED_URL}/#x`, 'url_contains_query_or_fragment'],
-    ['an unexpected path', `${APPROVED_URL}/rest/v1`, 'url_unexpected_path'],
-    ['a trailing-dot host', `https://${APPROVED_REF}.supabase.co.`, 'noncanonical_production_url'],
-    [
-      'an alternate project host',
-      'https://abcdefghijklmnopqrst.supabase.co',
-      'noncanonical_production_url',
-    ],
-    ['a custom host', 'https://literature.example.com', 'noncanonical_production_url'],
-    ['the main project host', `https://${MAIN_REF}.supabase.co`, 'noncanonical_production_url'],
-    ['loopback', 'https://127.0.0.1', 'loopback_not_permitted_in_production'],
-    ['a .localhost host', 'https://app.localhost', 'loopback_not_permitted_in_production'],
+  // Every variant differs from the approved constant by at least one byte, so each fails the
+  // pre-parse byte comparison with the same controlled typed reason. No trimming, case folding,
+  // dot-segment resolution, percent-decoding, or default-port normalization runs first.
+  const byteVariants: [string, string][] = [
+    ['the origin without the trailing slash', LITERATURE_CANONICAL_PRODUCTION_ORIGIN],
+    ['an uppercase scheme', `HTTPS://${APPROVED_REF}.supabase.co/`],
+    ['a mixed-case scheme', `Https://${APPROVED_REF}.supabase.co/`],
+    ['a mixed-case host', `https://${APPROVED_REF}.Supabase.co/`],
+    ['leading whitespace', ` ${APPROVED_URL}`],
+    ['trailing whitespace', `${APPROVED_URL} `],
+    ['a leading newline', `\n${APPROVED_URL}`],
+    ['an explicit :443 port', `https://${APPROVED_REF}.supabase.co:443/`],
+    ['a /./ dot path', `https://${APPROVED_REF}.supabase.co/./`],
+    ['a /%2e percent-encoded dot path', `https://${APPROVED_REF}.supabase.co/%2e`],
+    ['a /%2E percent-encoded dot path', `https://${APPROVED_REF}.supabase.co/%2E`],
+    ['plaintext http', `http://${APPROVED_REF}.supabase.co/`],
+    ['userinfo', `https://user:pass@${APPROVED_REF}.supabase.co/`],
+    ['a path', `${APPROVED_URL}rest/v1`],
+    ['a query string', `${APPROVED_URL}?x=1`],
+    ['a fragment', `${APPROVED_URL}#x`],
+    ['a trailing-dot host', `https://${APPROVED_REF}.supabase.co./`],
+    ['an alternate project host', 'https://abcdefghijklmnopqrst.supabase.co/'],
+    ['the main project host', `https://${MAIN_REF}.supabase.co/`],
+    ['a custom host', 'https://literature.example.com/'],
+    ['loopback', 'https://127.0.0.1/'],
+    ['a .localhost host', 'https://app.localhost/'],
+    ['an unparseable value', 'not a url'],
   ]
 
-  it.each(rejections)('rejects %s', (_label, url, reason) => {
+  it.each(byteVariants)('rejects %s before parsing', (_label, url) => {
     expect(resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: url }))).toMatchObject({
       status: 'unbound',
-      reason,
+      reason: 'noncanonical_production_url',
     })
   })
 
-  it('rejects an unparseable URL', () => {
-    expect(resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: 'not a url' }))).toMatchObject({
-      status: 'unbound',
-      reason: 'invalid_url',
-    })
+  it('never echoes the rejected raw value in the failure message', () => {
+    const raw = ` HTTPS://${APPROVED_REF}.supabase.co:443/./`
+    const binding = resolve(strictEnvironment({ LITERATURE_SUPABASE_URL: raw }))
+    expect(binding.status).toBe('unbound')
+    if (binding.status !== 'unbound') throw new Error('expected an unbound result')
+    expect(binding.message).not.toContain(raw)
   })
 
   it('parses the project ref out of a hosted Supabase URL', () => {

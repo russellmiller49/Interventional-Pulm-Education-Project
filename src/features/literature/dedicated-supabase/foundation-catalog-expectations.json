@@ -1,17 +1,13 @@
 {
-  "aggregateSha256": "ad86ae7fc815d4baf0c3235532569fa078ba77469d90e5439dc66e95f206696b",
-  "schemaVersion": "literature-foundation-catalog-expectations/2.0.0",
+  "aggregateSha256": "5fda6eecf4704fb51b1217810af8bc00d5294f399e92f7baed7f89c9e6b53c99",
+  "schemaVersion": "literature-foundation-catalog-expectations/3.0.0",
   "sectionCounts": {
     "columns": 132,
     "constraints": 55,
-    "defaultPrivileges": 0,
-    "extensions": 2,
     "functions": 6,
     "indexes": 28,
     "policies": 0,
     "relations": 8,
-    "roleAttributes": 3,
-    "schemaPrivileges": 16,
     "tablePrivileges": 224,
     "triggers": 6,
     "types": 0
@@ -19,14 +15,10 @@
   "sectionSha256": {
     "columns": "54dae25db3a806f116c80c5be57d5c5990f736cd4259a282ca47b1262426267a",
     "constraints": "bb69577893a616803417e9517ef64c25d2ba2746c87b9a39eade7cf1986cd87e",
-    "defaultPrivileges": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
-    "extensions": "61cd70247436648c8fcfea0805fc13883d5d2ef1d3752e79f2027e5256311cb8",
     "functions": "13240d5b8bc2c639a5a295d26435d1ab391d6e6d50a6449dd4e5295c2474b28a",
     "indexes": "12da5a4c50131f2c3bc114e24135c60398de8c40a4d008ee8780a5d48a3898d0",
     "policies": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
     "relations": "a46f9487ba80c0bed607e8d654da226d6b6580cd64e2e10d62482001e1990be8",
-    "roleAttributes": "e5e0f070de15558bbc8f2a05b06114acc20dafcfe51735d51c1798f2610f8209",
-    "schemaPrivileges": "3521c814bc03ffa63c30517d910646c8928611c65e60ff19d20de7eacebad119",
     "tablePrivileges": "04de8d2c12874be5fec2fbdd186ccf396663db38dbe7a97246372a5cb708516a",
     "triggers": "27f8a9d08a7457fc1be004eeafbc668c906ffcaa2c15f021dffac849d5dd7dd1",
     "types": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"

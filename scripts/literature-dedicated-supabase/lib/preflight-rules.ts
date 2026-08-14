@@ -10,14 +10,16 @@
  *
  * The layering matters as much as the individual rules:
  *
- *   - `evaluateRepositoryPreflight` is **Layer 1** and authoritative — every fact is locally
- *     verifiable in this checkout.
+ *   - `evaluateRepositoryPreflight` is **Layer 1** — every fact is locally verifiable in this
+ *     checkout. It can block, but it cannot authorize a production application.
  *   - `evaluateEvidenceContentPreflight` is **Layer 2** and explicitly *non-authoritative*. It
  *     validates the shape and internal consistency of catalog evidence and nothing more. It cannot
- *     establish which database produced that evidence, and its verdict is named so no caller can
- *     mistake it for permission to act.
- *   - Target identity is **Layer 3** and comes only from a provider attestation
- *     (`../../../src/features/literature/dedicated-supabase/attestation`).
+ *     establish which database produced that evidence.
+ *   - Target identity is **Layer 3** and would come only from a provider-bound adapter, which is
+ *     **not implemented in this PR**. `resolvePreflightOutcome` therefore has exactly two
+ *     reachable verdicts — `blocked` and `provider_attestation_required` — and no input of any
+ *     shape (attestation status strings, forged objects, casts, deserialized fixtures) can move it
+ *     past them. The success verdict does not exist in the union.
  */
 
 import {
@@ -25,7 +27,6 @@ import {
   LITERATURE_APPROVED_APPLICATION_MECHANISM,
   LITERATURE_DEDICATED_TARGET,
   LITERATURE_DEFERRED_MIGRATIONS,
-  LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS,
   LITERATURE_FOUNDATION_MIGRATION,
   evaluateLiteratureFoundationSelection,
 } from '../../../src/features/literature/dedicated-supabase/foundation-manifest'
@@ -35,7 +36,10 @@ import {
   LITERATURE_FOUNDATION_INDEXES,
   LITERATURE_FOUNDATION_TABLES,
 } from '../../../src/features/literature/dedicated-supabase/catalog-expectations'
-import type { LiteratureEvidenceDocument } from './evidence-schema'
+import { evaluateManagedPrerequisiteState } from './foundation-catalog'
+import type { LiteratureCatalogSnapshot } from './foundation-catalog'
+import { LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256 } from './target-observation'
+import type { LiteraturePreflightEvidenceDocument } from './evidence-schema'
 
 export interface PreflightCheck {
   id: string
@@ -61,12 +65,24 @@ export interface RepositoryFacts {
   migrationByteLength: number
   /** Repository-relative paths the operator intends to apply. */
   selectedMigrationPaths: readonly string[]
-  /** The mechanism the operator intends to use. Required. */
-  applicationMechanism?: string
+  /**
+   * The mechanism the operator intends to use. Required, and deliberately `unknown` (H-5): the
+   * value arrives from a CLI flag or deserialized input, so the rules must be total over every
+   * runtime shape without throwing.
+   */
+  applicationMechanism?: unknown
 }
 
 function check(id: string, description: string, passed: boolean, detail: string): PreflightCheck {
   return { id, description, passed, detail }
+}
+
+function describeMechanism(mechanism: unknown): string {
+  if (typeof mechanism === 'string') return mechanism === '' ? '(empty string)' : mechanism
+  if (mechanism === undefined) return '(none)'
+  if (mechanism === null) return '(null)'
+  if (Array.isArray(mechanism)) return '(array)'
+  return `(${typeof mechanism})`
 }
 
 /** Layer 1. Repository-side rules. None of these needs network access or a credential. */
@@ -166,13 +182,14 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
     ),
   )
 
-  // H-5: mechanism is required and exact.
+  // H-5: mechanism is required, exact, and judged without any string operation on a non-string.
   checks.push(
     check(
       'P10-application-mechanism',
       'the application mechanism is exactly the approved connector operation',
       facts.applicationMechanism === LITERATURE_APPROVED_APPLICATION_MECHANISM,
-      `declared=${facts.applicationMechanism ?? '(none)'} required=${LITERATURE_APPROVED_APPLICATION_MECHANISM}`,
+      `declared=${describeMechanism(facts.applicationMechanism)} ` +
+        `required=${LITERATURE_APPROVED_APPLICATION_MECHANISM}`,
     ),
   )
 
@@ -200,14 +217,14 @@ export function evaluateRepositoryPreflight(facts: RepositoryFacts): PreflightCh
 }
 
 /**
- * Layer 2. Content-only validation of catalog evidence.
+ * Layer 2. Content-only validation of preflight catalog evidence.
  *
  * **Non-authoritative.** These checks say "this evidence describes an empty, collision-free
- * schema"; they do not and cannot say "the approved project is empty". Callers must treat a full
- * pass here as audit evidence, never as permission.
+ * schema"; they do not and cannot say "the approved project is empty". A full pass here is audit
+ * evidence, never permission — the outcome resolver structurally cannot say otherwise.
  */
 export function evaluateEvidenceContentPreflight(
-  evidence: LiteratureEvidenceDocument | null,
+  evidence: LiteraturePreflightEvidenceDocument | null,
 ): PreflightCheck[] {
   if (!evidence) {
     return [
@@ -223,28 +240,29 @@ export function evaluateEvidenceContentPreflight(
   const checks: PreflightCheck[] = []
   const catalog = evidence.catalog
 
-  const history = evidence.migrationVersions
+  // L-1: emptiness is expressed existence-safely. Either the history table does not exist at all
+  // (a brand-new project) or it exists and records nothing.
+  const history = evidence.migrationHistory
   checks.push(
     check(
       'E01-empty-migration-history',
-      'the evidence records the expected starting migration history',
-      history.length === LITERATURE_EXPECTED_PRE_APPLICATION_MIGRATION_VERSIONS.length,
-      `history=[${history.join(', ')}]`,
+      'the migration-history table is absent, or present and empty',
+      !history.tableExists || (history.versions !== null && history.versions.length === 0),
+      history.tableExists
+        ? `tableExists=true versions=[${(history.versions ?? []).join(', ')}]`
+        : 'tableExists=false (absence is the expected brand-new-project answer)',
     ),
   )
 
-  const relations = catalog.relations as { name?: unknown; relkind?: unknown }[]
-  const literatureRelations = relations.filter(
-    (relation) => typeof relation.name === 'string' && relation.name.startsWith('literature'),
-  )
+  const relations = catalog.relations
+  const literatureRelations = relations.filter((relation) => relation.name.startsWith('literature'))
   checks.push(
     check(
       'E02-no-literature-relations',
       'the evidence shows no Literature relation of any kind',
       literatureRelations.length === 0,
-      literatureRelations
-        .map((relation) => `${String(relation.relkind)}:${String(relation.name)}`)
-        .join(', ') || 'none present',
+      literatureRelations.map((relation) => `${relation.relkind}:${relation.name}`).join(', ') ||
+        'none present',
     ),
   )
 
@@ -275,50 +293,56 @@ export function evaluateEvidenceContentPreflight(
   const relationCollisions = relations
     .filter(
       (relation) =>
-        typeof relation.name === 'string' &&
         expectedNames.has(relation.name) &&
         LITERATURE_COLLIDING_RELKINDS.some((entry) => entry.relkind === relation.relkind),
     )
     .map((relation) => {
       const label =
         LITERATURE_COLLIDING_RELKINDS.find((entry) => entry.relkind === relation.relkind)?.label ??
-        String(relation.relkind)
-      return `${label} ${String(relation.name)}`
+        relation.relkind
+      return `${label} ${relation.name}`
     })
 
-  const typeCollisions = (catalog.types as { name?: unknown }[])
-    .filter((entry) => typeof entry.name === 'string' && expectedNames.has(entry.name))
-    .map((entry) => `type ${String(entry.name)}`)
+  const typeCollisions = catalog.types
+    .filter((entry) => expectedNames.has(entry.name))
+    .map((entry) => `type ${entry.name}`)
 
-  const functionCollisions = (catalog.functions as { name?: unknown }[])
-    .filter(
-      (entry) =>
-        typeof entry.name === 'string' && LITERATURE_FOUNDATION_FUNCTION_NAMES.includes(entry.name),
-    )
-    .map((entry) => `function ${String(entry.name)}`)
+  const functionCollisions = catalog.functions
+    .filter((entry) => LITERATURE_FOUNDATION_FUNCTION_NAMES.includes(entry.name))
+    .map((entry) => `function ${entry.name}`)
 
-  const indexCollisions = (catalog.indexes as { name?: unknown }[])
-    .filter((entry) => typeof entry.name === 'string' && expectedNames.has(entry.name))
-    .map((entry) => `index ${String(entry.name)}`)
+  // H-2: index names are observed independently of their owning table, so an index named
+  // literature_articles_search_vector_idx on an *unrelated* table is a collision here even though
+  // no Literature table exists yet. Relation names in pg_class share one namespace; the migration
+  // would fail with "relation already exists".
+  const indexNameCollisions = catalog.indexNames
+    .filter((entry) => expectedNames.has(entry.name))
+    .map((entry) => `index ${entry.schema}.${entry.name} (owning table irrelevant)`)
+
+  const scopedIndexCollisions = catalog.indexes
+    .filter((entry) => expectedNames.has(entry.name))
+    .map((entry) => `index ${entry.name}`)
 
   const collisions = [
     ...relationCollisions,
     ...typeCollisions,
     ...functionCollisions,
-    ...indexCollisions,
+    ...indexNameCollisions,
+    ...scopedIndexCollisions,
   ]
   checks.push(
     check(
       'E05-no-name-collision',
-      'no object of any class shares a name with anything the migration creates',
+      'no object of any class — including indexes on unrelated tables — shares a name with ' +
+        'anything the migration creates',
       collisions.length === 0,
       collisions.join(', ') || 'no collisions',
     ),
   )
 
   const tableRelations = relations.filter((relation) => relation.relkind === 'r')
-  const literatureTables = tableRelations.filter(
-    (relation) => typeof relation.name === 'string' && relation.name.startsWith('literature'),
+  const literatureTables = tableRelations.filter((relation) =>
+    relation.name.startsWith('literature'),
   )
   checks.push(
     check(
@@ -345,12 +369,31 @@ export function evaluateEvidenceContentPreflight(
     ),
   )
 
+  // H-1/H-2: scoped managed prerequisite semantics, including the pg_trgm three-way distinction —
+  // absent is permitted, installed in `extensions` is permitted, installed anywhere else is
+  // rejected because CREATE EXTENSION IF NOT EXISTS would not relocate it.
+  for (const prerequisite of evaluateManagedPrerequisiteState(
+    catalog as unknown as LiteratureCatalogSnapshot,
+    'pre_application',
+  )) {
+    checks.push(
+      check(
+        `E08-${prerequisite.id}`,
+        prerequisite.description,
+        prerequisite.passed,
+        prerequisite.detail,
+      ),
+    )
+  }
+
+  // L-1: the evidence must have been produced by exactly the preflight plan. A postflight (or any
+  // other) capture cannot be substituted, however similar its content looks.
   checks.push(
     check(
-      'E08-row-count-present',
-      'the evidence carries a non-negative integer total row count',
-      Number.isInteger(evidence.totalRowCount) && evidence.totalRowCount >= 0,
-      `totalRowCount=${evidence.totalRowCount}`,
+      'E09-preflight-plan-identity',
+      'the evidence binds the identity of the preflight query plan, not any other plan',
+      evidence.queryPlanSha256 === LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+      `evidence=${evidence.queryPlanSha256} expected=${LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256}`,
     ),
   )
 
@@ -364,61 +407,69 @@ export function allChecksPassed(checks: readonly PreflightCheck[]): boolean {
 /**
  * The overall preflight verdict.
  *
- * `ready_to_apply` is unreachable without a provider attestation, which this repository cannot
- * currently produce. The other two names are deliberately explicit that they do not authorize
- * anything.
+ * There is no success member. `ready_to_apply` (and every equivalent) was removed from this union
+ * entirely: while the provider-bound Layer-3 adapter is unimplemented, the strongest statement
+ * this repository can make is that its own checks passed *non-authoritatively* and that provider
+ * attestation is still required. The future adapter PR — separately reviewed — will be the first
+ * change allowed to introduce a success verdict.
  */
-export type LiteraturePreflightVerdict =
-  | 'blocked'
+export type LiteraturePreflightVerdict = 'blocked' | 'provider_attestation_required'
+
+/**
+ * Names for what each non-authoritative layer established. Deliberately verbose, so no log line
+ * or transcript can read them as permission to act.
+ */
+export type LiteraturePreflightLayerSummary =
+  | 'repository_checks_failed'
   | 'repository_checks_passed_nonauthoritative'
-  | 'provider_attestation_required'
-  | 'ready_to_apply'
+  | 'content_checks_failed'
+  | 'content_checks_passed_nonauthoritative'
 
 export interface PreflightOutcome {
   verdict: LiteraturePreflightVerdict
-  authoritative: boolean
+  layerSummaries: readonly LiteraturePreflightLayerSummary[]
   summary: string
 }
 
 /**
  * Combine the layers into a single outcome.
  *
- * Layer 1 and Layer 2 passing is *not* permission to act: without Layer 3, the most that can be
- * said is that this repository and this document are internally consistent.
+ * Layer 1 and Layer 2 passing is *not* permission to act. This function accepts no attestation
+ * status, no attestation object, and no third layer of any kind — with Layer 3 absent there is
+ * nothing an operator could supply that would change the reachable verdicts, and the verdict type
+ * itself cannot express success.
  */
 export function resolvePreflightOutcome(input: {
   repositoryChecks: readonly PreflightCheck[]
   evidenceChecks: readonly PreflightCheck[]
-  attestationStatus: 'attested' | 'rejected'
-  attestationDetail: string
 }): PreflightOutcome {
-  if (!allChecksPassed(input.repositoryChecks)) {
+  const repositoryPassed = allChecksPassed(input.repositoryChecks)
+  const evidencePassed = allChecksPassed(input.evidenceChecks)
+  const layerSummaries: LiteraturePreflightLayerSummary[] = [
+    repositoryPassed ? 'repository_checks_passed_nonauthoritative' : 'repository_checks_failed',
+    evidencePassed ? 'content_checks_passed_nonauthoritative' : 'content_checks_failed',
+  ]
+
+  if (!repositoryPassed) {
     return {
       verdict: 'blocked',
-      authoritative: true,
+      layerSummaries,
       summary: 'Repository checks failed. No migration may be applied.',
     }
   }
-  if (!allChecksPassed(input.evidenceChecks)) {
+  if (!evidencePassed) {
     return {
       verdict: 'blocked',
-      authoritative: false,
+      layerSummaries,
       summary: 'Evidence content checks failed. No migration may be applied.',
     }
   }
-  if (input.attestationStatus !== 'attested') {
-    return {
-      verdict: 'provider_attestation_required',
-      authoritative: false,
-      summary:
-        'Repository and evidence-content checks passed, but they are NON-AUTHORITATIVE: they ' +
-        'cannot establish which database produced the evidence. ' +
-        input.attestationDetail,
-    }
-  }
   return {
-    verdict: 'ready_to_apply',
-    authoritative: true,
-    summary: 'Repository, evidence, and provider-bound target attestation all passed.',
+    verdict: 'provider_attestation_required',
+    layerSummaries,
+    summary:
+      'Repository and evidence-content checks passed, but they are NON-AUTHORITATIVE: they ' +
+      'cannot establish which database produced the evidence. The provider-bound Layer-3 adapter ' +
+      'is not implemented in this repository, so no migration may be applied under any input.',
   }
 }

@@ -259,13 +259,36 @@ describe('dedicated Literature foundation manifest', () => {
       })
     })
 
-    it('rejects an omitted mechanism', () => {
+    it('rejects an omitted or empty mechanism with the controlled reason', () => {
       for (const mechanism of [undefined, '']) {
         expect(
           reasons(
             evaluateLiteratureFoundationSelection(candidate({ applicationMechanism: mechanism })),
           ),
-        ).toContain('application_mechanism_missing')
+        ).toContain('application_mechanism_not_approved')
+      }
+    })
+
+    it('rejects every non-string runtime shape with the controlled reason, never a TypeError (H-5)', () => {
+      // The evaluator is total: values arriving from deserialized input, casts, or `as any`
+      // callers must produce application_mechanism_not_approved, not a thrown string-method
+      // TypeError.
+      const shapes: unknown[] = [
+        null,
+        [LITERATURE_APPROVED_APPLICATION_MECHANISM],
+        { mechanism: LITERATURE_APPROVED_APPLICATION_MECHANISM },
+        42,
+        0,
+        true,
+        false,
+        Symbol('mechanism'),
+      ]
+      for (const mechanism of shapes) {
+        const result = evaluateLiteratureFoundationSelection(
+          candidate({ applicationMechanism: mechanism }),
+        )
+        expect(result.approved).toBe(false)
+        expect(reasons(result)).toContain('application_mechanism_not_approved')
       }
     })
 

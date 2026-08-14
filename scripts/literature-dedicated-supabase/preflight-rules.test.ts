@@ -26,11 +26,16 @@ import {
   type RepositoryFacts,
 } from './lib/preflight-rules'
 import {
-  LITERATURE_QUERY_BUNDLE_SHA256,
-  LITERATURE_READ_ONLY_QUERY_BUNDLE,
-  renderLiteratureQueryBundle,
+  LITERATURE_POSTFLIGHT_EXISTENCE_PROBE_PLAN,
+  LITERATURE_POSTFLIGHT_EXISTENCE_PROBE_SHA256,
+  LITERATURE_POSTFLIGHT_QUERY_PLAN,
+  LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256,
+  LITERATURE_PREFLIGHT_QUERY_PLAN,
+  LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+  renderLiteratureQueryPlans,
+  type LiteratureQueryPlan,
 } from './lib/target-observation'
-import type { LiteratureEvidenceDocument } from './lib/evidence-schema'
+import type { LiteraturePreflightEvidenceDocument } from './lib/evidence-schema'
 
 const ROOT = process.cwd()
 const HEAD = 'a'.repeat(40)
@@ -52,31 +57,45 @@ function repositoryFacts(overrides: Partial<RepositoryFacts> = {}): RepositoryFa
   }
 }
 
-function emptyCatalog() {
-  return Object.fromEntries(
-    LITERATURE_CATALOG_SECTIONS.map((section) => [section, []]),
-  ) as unknown as LiteratureEvidenceDocument['catalog']
+type Catalog = LiteraturePreflightEvidenceDocument['catalog']
+
+// The three API roles a representative target always has; the scoped prerequisite checks (E08)
+// read these from the catalog itself.
+const ROLE_ATTRIBUTE_ROWS = [
+  { role: 'anon', superuser: false, bypassRls: false, canLogin: false, inherit: false },
+  { role: 'authenticated', superuser: false, bypassRls: false, canLogin: false, inherit: false },
+  { role: 'service_role', superuser: false, bypassRls: true, canLogin: false, inherit: false },
+]
+
+function emptyCatalog(): Catalog {
+  return {
+    ...(Object.fromEntries(
+      LITERATURE_CATALOG_SECTIONS.map((section) => [section, []]),
+    ) as unknown as Catalog),
+    roleAttributes: ROLE_ATTRIBUTE_ROWS,
+  } as Catalog
 }
 
-function evidence(overrides: Partial<LiteratureEvidenceDocument> = {}): LiteratureEvidenceDocument {
+function evidence(
+  overrides: Partial<LiteraturePreflightEvidenceDocument> = {},
+): LiteraturePreflightEvidenceDocument {
   return {
-    schemaVersion: 'literature-dedicated-observation/2.0.0',
-    queryBundleSha256: LITERATURE_QUERY_BUNDLE_SHA256,
-    migrationVersions: [],
+    schemaVersion: 'literature-dedicated-preflight-observation/3.0.0',
+    queryPlanSha256: LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+    migrationHistory: { tableExists: false, versions: null },
     catalog: emptyCatalog(),
     prerequisites: {
       availableExtensions: ['pg_trgm'],
       roles: ['anon', 'authenticated', 'service_role'],
       schemas: ['extensions', 'public'],
     },
-    totalRowCount: 0,
     ...overrides,
   }
 }
 
-function withCatalog(section: string, rows: Record<string, unknown>[]) {
+function withCatalog(section: keyof Catalog, rows: Record<string, unknown>[]) {
   return evidence({
-    catalog: { ...emptyCatalog(), [section]: rows } as LiteratureEvidenceDocument['catalog'],
+    catalog: { ...emptyCatalog(), [section]: rows } as unknown as Catalog,
   })
 }
 
@@ -190,6 +209,7 @@ describe('repository preflight (Layer 1)', () => {
       "bash -lc 'supabase db push'",
       'supabase migration repair',
       'anything at all',
+      '',
     ])('blocks mechanism %s', (mechanism) => {
       expect(
         failedIds(
@@ -197,12 +217,38 @@ describe('repository preflight (Layer 1)', () => {
         ),
       ).toContain('P10-application-mechanism')
     })
+
+    it.each([
+      ['null', null],
+      ['an array', [LITERATURE_APPROVED_APPLICATION_MECHANISM]],
+      ['an object', { mechanism: LITERATURE_APPROVED_APPLICATION_MECHANISM }],
+      ['a number', 42],
+      ['a boolean', true],
+    ])(
+      'blocks a %s mechanism with a controlled failure, never a TypeError (H-5)',
+      (_label, value) => {
+        const checks = evaluateRepositoryPreflight(repositoryFacts({ applicationMechanism: value }))
+        expect(failedIds(checks)).toEqual(
+          expect.arrayContaining(['P10-application-mechanism', 'P11-manifest-approves-selection']),
+        )
+      },
+    )
   })
 })
 
 describe('evidence content preflight (Layer 2, non-authoritative)', () => {
-  it('passes a clean empty catalog', () => {
+  it('passes a clean empty catalog with an absent history table', () => {
     expect(failedIds(evaluateEvidenceContentPreflight(evidence()))).toEqual([])
+  })
+
+  it('passes a present-but-empty history table', () => {
+    expect(
+      failedIds(
+        evaluateEvidenceContentPreflight(
+          evidence({ migrationHistory: { tableExists: true, versions: [] } }),
+        ),
+      ),
+    ).toEqual([])
   })
 
   it('fails closed when no evidence was supplied', () => {
@@ -214,7 +260,9 @@ describe('evidence content preflight (Layer 2, non-authoritative)', () => {
   it('blocks an already-populated migration history', () => {
     expect(
       failedIds(
-        evaluateEvidenceContentPreflight(evidence({ migrationVersions: ['20260727032621'] })),
+        evaluateEvidenceContentPreflight(
+          evidence({ migrationHistory: { tableExists: true, versions: ['20260727032621'] } }),
+        ),
       ),
     ).toContain('E01-empty-migration-history')
   })
@@ -267,7 +315,7 @@ describe('evidence content preflight (Layer 2, non-authoritative)', () => {
       ).toEqual(expect.arrayContaining(['E03-no-literature-functions', 'E05-no-name-collision']))
     })
 
-    it('detects an unexpected index name collision', () => {
+    it('detects an index name collision on a Literature table', () => {
       expect(
         failedIds(
           evaluateEvidenceContentPreflight(
@@ -275,6 +323,58 @@ describe('evidence content preflight (Layer 2, non-authoritative)', () => {
           ),
         ),
       ).toContain('E05-no-name-collision')
+    })
+
+    it('detects an expected index name occupied by an index on an UNRELATED table (H-2)', () => {
+      // The exact reproduction: literature_articles_search_vector_idx on some unrelated table.
+      // The old query scoped index observation through Literature tables and missed it; the
+      // indexNames section observes every public index relation name independently.
+      const checks = evaluateEvidenceContentPreflight(
+        withCatalog('indexNames', [
+          { schema: 'public', name: 'literature_articles_search_vector_idx' },
+        ]),
+      )
+      expect(failedIds(checks)).toContain('E05-no-name-collision')
+      const collision = checks.find((entry) => entry.id === 'E05-no-name-collision')
+      expect(collision?.detail).toMatch(/literature_articles_search_vector_idx/u)
+      expect(collision?.detail).toMatch(/owning table irrelevant/u)
+    })
+
+    it('does not flag unrelated index names', () => {
+      expect(
+        failedIds(
+          evaluateEvidenceContentPreflight(
+            withCatalog('indexNames', [{ schema: 'public', name: 'unrelated_notes_idx' }]),
+          ),
+        ),
+      ).toEqual([])
+    })
+  })
+
+  describe('pg_trgm location (H-2)', () => {
+    it('permits pg_trgm absent', () => {
+      expect(failedIds(evaluateEvidenceContentPreflight(evidence()))).toEqual([])
+    })
+
+    it('permits pg_trgm installed in the extensions schema', () => {
+      expect(
+        failedIds(
+          evaluateEvidenceContentPreflight(
+            withCatalog('extensions', [{ name: 'pg_trgm', schema: 'extensions', version: '1.6' }]),
+          ),
+        ),
+      ).toEqual([])
+    })
+
+    it('rejects pg_trgm installed anywhere else', () => {
+      // CREATE EXTENSION IF NOT EXISTS ... WITH SCHEMA extensions does not relocate an existing
+      // installation, and extensions.gin_trgm_ops would then fail mid-migration.
+      const checks = evaluateEvidenceContentPreflight(
+        withCatalog('extensions', [{ name: 'pg_trgm', schema: 'public', version: '1.6' }]),
+      )
+      expect(failedIds(checks)).toContain('E08-Q01-pg-trgm-location')
+      const detail = checks.find((entry) => entry.id === 'E08-Q01-pg-trgm-location')?.detail
+      expect(detail).toMatch(/cannot relocate/u)
     })
   })
 
@@ -302,99 +402,183 @@ describe('evidence content preflight (Layer 2, non-authoritative)', () => {
       ),
     ).toContain('E07-prerequisites-available')
   })
+
+  it('blocks missing or tampered API roles via the scoped role checks (H-1)', () => {
+    expect(failedIds(evaluateEvidenceContentPreflight(withCatalog('roleAttributes', [])))).toEqual(
+      expect.arrayContaining(['E08-Q02-api-roles-exist']),
+    )
+    expect(
+      failedIds(
+        evaluateEvidenceContentPreflight(
+          withCatalog(
+            'roleAttributes',
+            ROLE_ATTRIBUTE_ROWS.map((row) =>
+              row.role === 'service_role' ? { ...row, bypassRls: false } : row,
+            ),
+          ),
+        ),
+      ),
+    ).toContain('E08-Q04-rls-bypass-shape')
+  })
+
+  it('blocks evidence produced by a different query plan (L-1)', () => {
+    expect(
+      failedIds(
+        evaluateEvidenceContentPreflight(
+          evidence({ queryPlanSha256: LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256 }),
+        ),
+      ),
+    ).toContain('E09-preflight-plan-identity')
+  })
 })
 
-describe('preflight outcome layering (B-1)', () => {
+describe('preflight outcome has no success verdict (B-1/M-3)', () => {
   const passing = [{ id: 'x', description: 'x', passed: true, detail: '' }]
   const failing = [{ id: 'y', description: 'y', passed: false, detail: '' }]
 
   it('blocks on a repository failure', () => {
-    expect(
-      resolvePreflightOutcome({
-        repositoryChecks: failing,
-        evidenceChecks: passing,
-        attestationStatus: 'attested',
-        attestationDetail: '',
-      }).verdict,
-    ).toBe('blocked')
+    const outcome = resolvePreflightOutcome({ repositoryChecks: failing, evidenceChecks: passing })
+    expect(outcome.verdict).toBe('blocked')
+    expect(outcome.layerSummaries).toContain('repository_checks_failed')
   })
 
   it('blocks on an evidence-content failure', () => {
-    expect(
-      resolvePreflightOutcome({
-        repositoryChecks: passing,
-        evidenceChecks: failing,
-        attestationStatus: 'attested',
-        attestationDetail: '',
-      }).verdict,
-    ).toBe('blocked')
+    const outcome = resolvePreflightOutcome({ repositoryChecks: passing, evidenceChecks: failing })
+    expect(outcome.verdict).toBe('blocked')
+    expect(outcome.layerSummaries).toContain('content_checks_failed')
   })
 
-  it('never reaches ready_to_apply without provider attestation, however good the evidence is', () => {
-    const outcome = resolvePreflightOutcome({
-      repositoryChecks: passing,
-      evidenceChecks: passing,
-      attestationStatus: 'rejected',
-      attestationDetail: 'adapter not implemented',
-    })
+  it('resolves to provider_attestation_required when both layers pass', () => {
+    const outcome = resolvePreflightOutcome({ repositoryChecks: passing, evidenceChecks: passing })
     expect(outcome.verdict).toBe('provider_attestation_required')
-    expect(outcome.authoritative).toBe(false)
+    expect(outcome.layerSummaries).toEqual([
+      'repository_checks_passed_nonauthoritative',
+      'content_checks_passed_nonauthoritative',
+    ])
     expect(outcome.summary).toMatch(/NON-AUTHORITATIVE/u)
   })
 
-  it('reaches ready_to_apply only with all three layers', () => {
-    expect(
-      resolvePreflightOutcome({
-        repositoryChecks: passing,
-        evidenceChecks: passing,
-        attestationStatus: 'attested',
-        attestationDetail: '',
-      }),
-    ).toMatchObject({ verdict: 'ready_to_apply', authoritative: true })
+  it('cannot be moved past provider_attestation_required by attestation-shaped extras', () => {
+    // The prior design accepted an attestation status string here; a forged 'attested' then
+    // produced ready_to_apply. The input type no longer has such a field, and smuggling one in
+    // through a cast changes nothing.
+    const outcome = resolvePreflightOutcome({
+      repositoryChecks: passing,
+      evidenceChecks: passing,
+      attestationStatus: 'attested',
+      attestation: { status: 'attested' },
+      authoritative: true,
+    } as never)
+    expect(outcome.verdict).toBe('provider_attestation_required')
+    expect(JSON.stringify(outcome)).not.toContain('ready_to_apply')
+    expect(JSON.stringify(outcome)).not.toContain('"authoritative":true')
+  })
+
+  it('exposes only blocked and provider_attestation_required as reachable verdicts', () => {
+    for (const [repositoryChecks, evidenceChecks] of [
+      [passing, passing],
+      [passing, failing],
+      [failing, passing],
+      [failing, failing],
+    ] as const) {
+      const outcome = resolvePreflightOutcome({ repositoryChecks, evidenceChecks })
+      expect(['blocked', 'provider_attestation_required']).toContain(outcome.verdict)
+    }
   })
 })
 
-describe('read-only query bundle (L-1)', () => {
-  it('includes every statement the evidence schema needs, including the row count', () => {
-    const ids = LITERATURE_READ_ONLY_QUERY_BUNDLE.map((entry) => entry.id)
-    expect(ids).toEqual(['migrationVersions', 'catalog', 'prerequisites', 'totalRowCount'])
+describe('phase-specific query plans (L-1)', () => {
+  const plans: readonly [string, LiteratureQueryPlan, string][] = [
+    ['preflight', LITERATURE_PREFLIGHT_QUERY_PLAN, LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256],
+    [
+      'postflight existence probe',
+      LITERATURE_POSTFLIGHT_EXISTENCE_PROBE_PLAN,
+      LITERATURE_POSTFLIGHT_EXISTENCE_PROBE_SHA256,
+    ],
+    [
+      'postflight complete',
+      LITERATURE_POSTFLIGHT_QUERY_PLAN,
+      LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256,
+    ],
+  ]
+
+  it('binds three distinct plan identities that cannot be substituted', () => {
+    const identities = plans.map(([, , identity]) => identity)
+    expect(new Set(identities).size).toBe(3)
+    for (const identity of identities) expect(identity).toMatch(/^[a-f0-9]{64}$/u)
   })
 
-  it('marks the row count as post-application only', () => {
-    const rowCount = LITERATURE_READ_ONLY_QUERY_BUNDLE.find((entry) => entry.id === 'totalRowCount')
-    expect(rowCount?.postApplicationOnly).toBe(true)
-  })
-
-  it('binds a stable bundle identity and prints it', () => {
-    expect(LITERATURE_QUERY_BUNDLE_SHA256).toMatch(/^[a-f0-9]{64}$/u)
-    expect(renderLiteratureQueryBundle()).toContain(LITERATURE_QUERY_BUNDLE_SHA256)
-  })
-
-  it('emits read-only statements only', () => {
-    for (const entry of LITERATURE_READ_ONLY_QUERY_BUNDLE) {
-      expect(entry.statement).toMatch(/^begin read only;/u)
-      expect(entry.statement).toMatch(/set transaction read only;/u)
-      expect(entry.statement).toMatch(/rollback;$/u)
-
-      // Privilege names such as 'INSERT' appear legitimately as quoted literals in the probe
-      // arrays, so string literals are stripped before looking for an actual DML or DDL keyword.
-      const withoutLiterals = entry.statement.replaceAll(/'[^']*'/gu, "''")
-      expect(withoutLiterals).not.toMatch(
-        /\b(insert|update|delete|drop|alter|create|grant|revoke|truncate)\b/iu,
-      )
-      const verbs = withoutLiterals
-        .split(';')
-        .map((part) => part.trim())
-        .filter((part) => part.length > 0)
-        .map((part) => part.split(/\s+/u)[0].toLowerCase())
-      expect(verbs.every((verb) => ['begin', 'set', 'select', 'rollback'].includes(verb))).toBe(
-        true,
-      )
+  it('no preflight statement references an optional relation unconditionally', () => {
+    for (const step of LITERATURE_PREFLIGHT_QUERY_PLAN.steps) {
+      if (step.conditionalOnProbe) continue
+      expect(step.statement).not.toMatch(/from\s+supabase_migrations\.schema_migrations/iu)
+      expect(step.statement).not.toMatch(/from\s+public\.literature/iu)
     }
   })
 
-  it('tells the operator that hand-assembled evidence cannot authorize anything', () => {
-    expect(renderLiteratureQueryBundle()).toMatch(/can never authorize a\s+-- migration/u)
+  it('the preflight versions statement is conditional on the existence probe', () => {
+    const versions = LITERATURE_PREFLIGHT_QUERY_PLAN.steps.find(
+      (step) => step.id === 'historyVersions',
+    )
+    expect(versions?.conditionalOnProbe).toBe('historyTableExists')
+  })
+
+  it('the preflight plan has no row-count step at all', () => {
+    expect(LITERATURE_PREFLIGHT_QUERY_PLAN.steps.some((step) => step.id === 'totalRowCount')).toBe(
+      false,
+    )
+  })
+
+  it('the postflight existence probe is pg_catalog-only', () => {
+    for (const step of LITERATURE_POSTFLIGHT_EXISTENCE_PROBE_PLAN.steps) {
+      expect(step.conditionalOnProbe).toBeUndefined()
+      expect(step.statement).not.toMatch(/from\s+supabase_migrations\.schema_migrations/iu)
+      expect(step.statement).not.toMatch(/from\s+public\.literature/iu)
+    }
+  })
+
+  it('the postflight row count and history dump are conditional on the probe', () => {
+    const rowCount = LITERATURE_POSTFLIGHT_QUERY_PLAN.steps.find(
+      (step) => step.id === 'totalRowCount',
+    )
+    const versions = LITERATURE_POSTFLIGHT_QUERY_PLAN.steps.find(
+      (step) => step.id === 'historyVersions',
+    )
+    expect(rowCount?.conditionalOnProbe).toBe('presentLiteratureTables')
+    expect(versions?.conditionalOnProbe).toBe('historyTableExists')
+  })
+
+  it('emits read-only statements only', () => {
+    for (const [, plan] of plans) {
+      for (const step of plan.steps) {
+        expect(step.statement).toMatch(/^begin read only;/u)
+        expect(step.statement).toMatch(/set transaction read only;/u)
+        expect(step.statement).toMatch(/rollback;$/u)
+
+        // Privilege names such as 'INSERT' appear legitimately as quoted literals in the probe
+        // arrays, so string literals are stripped before looking for an actual DML or DDL
+        // keyword.
+        const withoutLiterals = step.statement.replaceAll(/'[^']*'/gu, "''")
+        expect(withoutLiterals).not.toMatch(
+          /\b(insert|update|delete|drop|alter|create|grant|revoke|truncate)\b/iu,
+        )
+        const verbs = withoutLiterals
+          .split(';')
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0)
+          .map((part) => part.split(/\s+/u)[0].toLowerCase())
+        expect(verbs.every((verb) => ['begin', 'set', 'select', 'rollback'].includes(verb))).toBe(
+          true,
+        )
+      }
+    }
+  })
+
+  it('prints every plan identity and the no-authorization warning', () => {
+    const rendered = renderLiteratureQueryPlans()
+    for (const [, , identity] of plans) expect(rendered).toContain(identity)
+    expect(rendered).toMatch(/can never authorize a\s+-- migration/u)
+    expect(rendered).toMatch(/list_migrations/u)
   })
 })
 

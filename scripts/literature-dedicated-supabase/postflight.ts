@@ -1,16 +1,16 @@
 /**
  * Read-only postflight and lost-acknowledgement reconciliation.
  *
- * Run after an application attempt — including, and especially, after one whose acknowledgement was
- * lost. It classifies the observed target and states the single next action.
+ * Run after an application attempt — including, and especially, after one whose acknowledgement
+ * was lost. It validates the postflight evidence, summarizes what the *content* shows, and stops.
  *
- *   npx tsx scripts/literature-dedicated-supabase/postflight.ts \
- *     --owner-approved-commit <sha> --evidence <path.json>
+ *   npx tsx scripts/literature-dedicated-supabase/postflight.ts --evidence <path.json>
  *
- * Target identity is a **mandatory** input and is checked first. Without a provider-bound
- * attestation the only reachable classification is `provider_attestation_required`; the command
- * never prints `applied_correct` / `proceed` for a target it cannot prove, and the classification
- * and exit status always agree.
+ * While the provider-bound Layer-3 adapter is unimplemented, the classification is always
+ * `provider_attestation_required` and the next action is always `stop_read_only_reconciliation`.
+ * The command cannot print `applied_correct` or `proceed` for any input, because those members no
+ * longer exist in the verdict types, and it always exits nonzero. The content assessment it prints
+ * is explicitly non-authoritative: it describes a document, not a proven database.
  *
  * There is no flag, argument, or code path here that applies, retries, reapplies, compensates, or
  * edits migration history.
@@ -19,29 +19,21 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import {
-  captureLiteratureProviderAttestation,
-  evaluateLiteratureProviderAttestation,
-} from '../../src/features/literature/dedicated-supabase/attestation'
+import { requireLiteratureProviderAttestation } from '../../src/features/literature/dedicated-supabase/attestation'
 import {
   LITERATURE_FOUNDATION_FUNCTION_NAMES,
   LITERATURE_FOUNDATION_TABLES,
 } from '../../src/features/literature/dedicated-supabase/catalog-expectations'
+import { LiteratureEvidenceError, parseLiteraturePostflightEvidence } from './lib/evidence-schema'
 import {
-  LITERATURE_DEDICATED_TARGET,
-  LITERATURE_FOUNDATION_MIGRATION,
-} from '../../src/features/literature/dedicated-supabase/foundation-manifest'
-import { LiteratureEvidenceError, parseLiteratureEvidence } from './lib/evidence-schema'
-import {
-  canonicalJson,
   compareLiteratureCatalog,
-  sha256,
+  evaluateManagedPrerequisiteState,
   summarizeCatalogPresence,
   type LiteratureCatalogExpectationArtifact,
   type LiteratureCatalogSnapshot,
 } from './lib/foundation-catalog'
 import { classifyLiteratureRollout } from './lib/reconciliation'
-import { LITERATURE_QUERY_BUNDLE_SHA256 } from './lib/target-observation'
+import { LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256 } from './lib/target-observation'
 
 const ROOT = process.cwd()
 const ARTIFACT_PATH =
@@ -56,12 +48,14 @@ async function main() {
   process.stdout.write('Dedicated Literature foundation rollout — read-only postflight\n')
 
   const evidencePath = flagValue('--evidence')
-  let evidence: Awaited<ReturnType<typeof parseLiteratureEvidence>> | null = null
+  let evidence: Awaited<ReturnType<typeof parseLiteraturePostflightEvidence>> | null = null
   let evidenceError: string | null = null
 
   if (evidencePath) {
     try {
-      evidence = parseLiteratureEvidence(await readFile(resolve(ROOT, evidencePath), 'utf8'))
+      evidence = parseLiteraturePostflightEvidence(
+        await readFile(resolve(ROOT, evidencePath), 'utf8'),
+      )
     } catch (error) {
       evidenceError =
         error instanceof LiteratureEvidenceError
@@ -70,50 +64,76 @@ async function main() {
     }
   }
 
-  // Layer 3 first. An unproven target is decided before any catalog reasoning happens, so a
-  // perfect-looking catalog from an unknown database can never read as success.
-  const capture = captureLiteratureProviderAttestation()
-  const attestation = evaluateLiteratureProviderAttestation(
-    capture.status === 'captured' ? capture.attestation : null,
-    {
-      projectRef: LITERATURE_DEDICATED_TARGET.projectRef,
-      queryBundleSha256: LITERATURE_QUERY_BUNDLE_SHA256,
-      ownerApprovedCommit: flagValue('--owner-approved-commit') ?? '',
-      migrationPath: LITERATURE_FOUNDATION_MIGRATION.path,
-      migrationSha256: LITERATURE_FOUNDATION_MIGRATION.sha256,
-      observedContentSha256: evidence ? sha256(canonicalJson(evidence)) : '',
-      nowMs: Date.now(),
-    },
-  )
+  // L-1: the evidence must have been produced by exactly the postflight complete plan, and the
+  // ordered plan requires the existence probe to have licensed the row count and history dump.
+  let planViolations: string[] = []
+  if (evidence) {
+    planViolations = []
+    if (evidence.queryPlanSha256 !== LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256) {
+      planViolations.push(
+        'the evidence does not bind the postflight query-plan identity; a preflight or foreign ' +
+          'capture cannot be substituted',
+      )
+    }
+    if (!evidence.existenceProbe.migrationHistoryTableExists) {
+      planViolations.push(
+        'the existence probe reports no migration-history table, so the migrationVersions dump ' +
+          'could not have run validly',
+      )
+    }
+    const provenTables = new Set(evidence.existenceProbe.presentLiteratureTables)
+    const unproven = LITERATURE_FOUNDATION_TABLES.filter((table) => !provenTables.has(table))
+    if (unproven.length > 0) {
+      planViolations.push(
+        `the existence probe did not prove these tables present, so the row count could not ` +
+          `have run validly: ${unproven.join(', ')}`,
+      )
+    }
+  }
 
   let comparison: { matches: boolean; failures: string[] } | null = null
   let presence: ReturnType<typeof summarizeCatalogPresence> | null = null
+  let prerequisitesPassed: boolean | null = null
 
-  if (evidence) {
+  if (evidence && planViolations.length === 0) {
     const artifact = JSON.parse(
       await readFile(resolve(ROOT, ARTIFACT_PATH), 'utf8'),
     ) as LiteratureCatalogExpectationArtifact
     const snapshot = evidence.catalog as unknown as LiteratureCatalogSnapshot
     comparison = compareLiteratureCatalog(snapshot, artifact)
     presence = summarizeCatalogPresence(snapshot)
+    prerequisitesPassed = evaluateManagedPrerequisiteState(snapshot, 'post_application').every(
+      (entry) => entry.passed,
+    )
   }
 
+  // Layer 3 is decisive: without the provider-bound adapter, no content can read as success, and
+  // nothing here can consume an attestation-shaped input.
+  const attestation = requireLiteratureProviderAttestation()
+  process.stdout.write(`\n  layer3: ${attestation.reason}\n`)
+
   const verdict = classifyLiteratureRollout({
-    targetAttestation: attestation,
-    observationComplete: Boolean(evidence) && !evidenceError,
+    observationComplete: Boolean(evidence) && !evidenceError && planViolations.length === 0,
     recordedMigrationVersions: evidence ? evidence.migrationVersions : null,
     presentTables: presence ? presence.presentTables : null,
     presentFunctions: presence ? presence.presentFunctions : null,
     expectedTables: [...LITERATURE_FOUNDATION_TABLES],
     expectedFunctions: [...LITERATURE_FOUNDATION_FUNCTION_NAMES],
     unexpectedLiteratureObjects: presence ? presence.unexpectedLiteratureObjects : [],
-    totalRowCount: evidence ? evidence.totalRowCount : null,
-    securityChecksPassed: comparison ? comparison.matches : null,
+    totalRowCount: evidence && planViolations.length === 0 ? evidence.totalRowCount : null,
+    securityChecksPassed:
+      comparison === null || prerequisitesPassed === null
+        ? null
+        : comparison.matches && prerequisitesPassed,
   })
 
   if (evidenceError) process.stdout.write(`\n  evidence: ${evidenceError}\n`)
+  for (const violation of planViolations) {
+    process.stdout.write(`  planViolation: ${violation}\n`)
+  }
   process.stdout.write(`\n  classification: ${verdict.classification}\n`)
   process.stdout.write(`  nextAction: ${verdict.nextAction}\n`)
+  process.stdout.write(`  contentAssessment: ${verdict.contentAssessment}\n`)
   process.stdout.write(`  automaticRetryPermitted: ${verdict.automaticRetryPermitted}\n`)
   process.stdout.write(
     `  automaticReapplicationPermitted: ${verdict.automaticReapplicationPermitted}\n`,
@@ -131,10 +151,9 @@ async function main() {
     for (const failure of comparison.failures) process.stdout.write(`    - ${failure}\n`)
   }
 
-  // Classification and exit status agree: only a fully attested, fully correct result exits 0.
-  if (verdict.classification !== 'applied_correct') {
-    process.exitCode = 1
-  }
+  // The classification is provider_attestation_required by construction, so the exit status is
+  // unconditionally nonzero: no automation can chain a success path off this command.
+  process.exitCode = 1
 }
 
 main().catch((error: unknown) => {

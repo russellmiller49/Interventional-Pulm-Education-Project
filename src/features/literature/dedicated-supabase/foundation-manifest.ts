@@ -238,7 +238,6 @@ export type LiteratureSelectionRejectionReason =
   | 'target_ref_prohibited'
   | 'target_ref_not_approved'
   | 'target_is_loopback'
-  | 'application_mechanism_missing'
   | 'application_mechanism_not_approved'
   | 'pre_application_history_not_empty'
 
@@ -256,11 +255,13 @@ export interface LiteratureSelectionCandidate {
   /** Migration versions already recorded on the target. */
   appliedMigrationVersions?: readonly string[]
   /**
-   * The mechanism the operator intends to use. **Required.** Must equal
-   * `LITERATURE_APPROVED_APPLICATION_MECHANISM` exactly; anything else, including an omitted
-   * value, is refused.
+   * The mechanism the operator intends to use. **Required**, and typed `unknown` on purpose
+   * (H-5): the value can arrive from a CLI flag, an env variable, or deserialized JSON, so the
+   * evaluator must be total over every runtime shape. Only the exact approved string passes;
+   * `null`, arrays, objects, numbers, booleans, and missing values are all refused with the
+   * controlled reason `application_mechanism_not_approved`, never a thrown `TypeError`.
    */
-  applicationMechanism?: string
+  applicationMechanism?: unknown
 }
 
 export interface LiteratureSelectionVerdict {
@@ -355,13 +356,24 @@ export function evaluateLiteratureFoundationSelection(
 
   // Mechanism is an allowlist of exactly one, compared byte for byte. An omitted mechanism is a
   // rejection, not a default, and wrapping or suffixing an approved-looking command does not help
-  // because nothing is pattern-matched — only exact equality passes.
-  const mechanism = candidate.applicationMechanism
-  if (mechanism === undefined || mechanism === '') {
+  // because nothing is pattern-matched — only exact equality passes. The type gate runs before
+  // any string operation, so no runtime shape can raise past the controlled rejection (H-5).
+  const mechanism: unknown = candidate.applicationMechanism
+  if (typeof mechanism !== 'string' || mechanism === '') {
+    const shape =
+      mechanism === undefined
+        ? 'missing'
+        : mechanism === null
+          ? 'null'
+          : mechanism === ''
+            ? 'empty string'
+            : Array.isArray(mechanism)
+              ? 'array'
+              : typeof mechanism
     reject(
-      'application_mechanism_missing',
-      'No application mechanism was declared. The rollout must name ' +
-        `${LITERATURE_APPROVED_APPLICATION_MECHANISM} exactly.`,
+      'application_mechanism_not_approved',
+      `The declared application mechanism is ${shape}, not a string naming ` +
+        `${LITERATURE_APPROVED_APPLICATION_MECHANISM}.`,
     )
   } else if (mechanism !== LITERATURE_APPROVED_APPLICATION_MECHANISM) {
     const explained = LITERATURE_PROHIBITED_DEPLOYMENT_METHODS.find((entry) =>

@@ -9,7 +9,7 @@
  *
  *   **Layer 1 — repository validation.** Branch, `HEAD == origin/main == ownerApprovedCommit`,
  *   migration path/bytes/SHA-256, exactly one selected migration, the application mechanism enum.
- *   Fully authoritative, because the repository is right here and every fact is locally verifiable.
+ *   Locally verifiable, and it can *block*, but it cannot authorize a production application.
  *
  *   **Layer 2 — observation-content validation.** Shape and internal consistency of catalog
  *   evidence. Useful, and it catches real drift, but it is **never** proof of origin. A Layer 2
@@ -19,20 +19,26 @@
  *   authenticated, project-scoped, read-only Supabase adapter where the project ref comes from the
  *   adapter's own context rather than an editable body field.
  *
- * Layer 3 is **not implemented in this PR**, because doing so honestly would require an
- * OAuth/PAT/secret workflow that is out of scope and would be unsafe to add unreviewed. Rather than
- * simulate provenance, `captureLiteratureProviderAttestation()` is a seam that always reports
- * unavailable, and every production-authorizing path therefore fails closed with
- * `provider_attestation_required`. A safe, honestly blocked gate beats false provenance.
+ * Layer 3 is **not implemented in this PR**, and the second independent review established that a
+ * structurally typed TypeScript object can never be made unforgeable while the real adapter is
+ * absent: any exported evaluator that maps ordinary content to an `attested` verdict can be fed a
+ * hand-built object (directly, through a cast, or through deserialized JSON) and its output can be
+ * piped into downstream helpers. The correction is therefore **removal, not hardening**:
  *
- * There is deliberately no function anywhere in this repository that turns a file into a
- * `LiteratureProviderAttestation`.
+ *   - there is no exported type whose value represents a satisfied attestation;
+ *   - there is no exported function that accepts attestation-shaped input;
+ *   - there is no exported function whose return can carry an attested status, a
+ *     ready-to-apply or applied-correct verdict, a proceed action, or an authoritative-true flag;
+ *   - every production path terminates in `provider_attestation_required` /
+ *     `stop_read_only_reconciliation` until a separate, independently reviewed PR implements the
+ *     provider-bound adapter — which will introduce the *first* success-capable path.
+ *
+ * What the future Layer-3 adapter must bind is recorded as inert data in
+ * `LITERATURE_LAYER3_REQUIRED_BINDINGS`, so the interface design survives without any dormant
+ * success code.
  */
 
-import {
-  LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
-  LITERATURE_CANONICAL_PRODUCTION_ORIGIN,
-} from '../server/dedicated-project-contract'
+import { LITERATURE_APPROVED_PRODUCTION_PROJECT_REF } from '../server/dedicated-project-contract'
 
 /**
  * The approved future *read-only capture* channel: a project-scoped, read-only Supabase connector
@@ -51,160 +57,73 @@ export const LITERATURE_APPROVED_APPLY_MECHANISM = 'supabase_connector_apply_mig
 export const LITERATURE_ATTESTATION_MAX_AGE_MS = 10 * 60 * 1000
 
 /**
- * Authoritative target evidence. Every field must originate from the provider adapter's own
- * context. In particular `providerProjectRef` must be the ref the adapter is scoped to — never a
- * value read from an operator-supplied document body.
+ * What the future provider-bound adapter must bind before the first success-capable verdict can
+ * exist. This is documentation-as-data: nothing consumes it as an input, no exported function
+ * compares anything against it, and holding a value shaped like it grants nothing.
  */
-export interface LiteratureProviderAttestation {
-  mechanism: typeof LITERATURE_PROVIDER_CAPTURE_MECHANISM
-  /** Project ref taken from the adapter context, not from an observation body. */
-  providerProjectRef: string
-  /** Project URL or identity as returned by the provider. */
-  providerProjectUrl: string
-  /** Identity of the exact read-only query bundle that produced the evidence. */
-  queryBundleSha256: string
-  /** The owner-approved repository commit this capture is bound to. */
-  repositoryCommit: string
-  migrationPath: string
-  migrationSha256: string
-  /** ISO-8601 capture time, from the capture process. */
-  capturedAt: string
-  /** Canonical checksum of the captured evidence content. */
-  contentSha256: string
-  /** Whether every catalog section was captured. Anything but `complete` fails closed. */
-  completeness: 'complete' | 'partial'
-}
+export const LITERATURE_LAYER3_REQUIRED_BINDINGS = {
+  captureMechanism: LITERATURE_PROVIDER_CAPTURE_MECHANISM,
+  projectRefSource: 'adapter context only — never an operator-editable body field',
+  approvedProjectRef: LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+  migrationHistorySource: 'provider list_migrations, never a manually fabricated SQL result',
+  boundFacts: [
+    'project ref from the adapter context',
+    'project URL as reported by the provider',
+    'identity (SHA-256) of the exact read-only query plan that produced the evidence',
+    'owner-approved repository commit',
+    'foundation migration path and SHA-256',
+    'capture timestamp within the freshness window',
+    'canonical checksum of the captured evidence content',
+    'capture completeness',
+  ],
+  maxAgeMs: LITERATURE_ATTESTATION_MAX_AGE_MS,
+} as const
 
 export type LiteratureAttestationFailureReason =
   | 'provider_attestation_required'
   | 'provider_adapter_not_implemented'
-  | 'wrong_capture_mechanism'
-  | 'wrong_project_ref'
-  | 'wrong_project_url'
-  | 'wrong_query_bundle'
-  | 'wrong_repository_commit'
-  | 'wrong_migration_path'
-  | 'wrong_migration_checksum'
-  | 'stale_attestation'
-  | 'invalid_capture_timestamp'
-  | 'incomplete_capture'
-  | 'content_checksum_mismatch'
-
-export interface LiteratureAttestationExpectation {
-  projectRef: string
-  queryBundleSha256: string
-  ownerApprovedCommit: string
-  migrationPath: string
-  migrationSha256: string
-  /** Canonical checksum recomputed locally from the evidence content. */
-  observedContentSha256: string
-  /** Evaluation time, injected so the check is deterministic in tests. */
-  nowMs: number
-}
-
-export type LiteratureAttestationVerdict =
-  | { status: 'attested'; attestation: LiteratureProviderAttestation }
-  | { status: 'rejected'; reason: LiteratureAttestationFailureReason; detail: string }
 
 /**
- * Evaluate a provider attestation against what the repository expects.
- *
- * Fail-closed throughout: a missing attestation is a rejection, and every binding must match
- * exactly. Nothing here can be satisfied by an operator-authored file, because nothing here
- * constructs an attestation — it only judges one an adapter produced.
+ * The only verdict this module can produce while Layer 3 is absent. There is deliberately no
+ * `attested` member: the union itself cannot represent success, so no cast, forged object,
+ * deserialized fixture, or `as any` call can smuggle one through a caller's type checks.
  */
-export function evaluateLiteratureProviderAttestation(
-  attestation: LiteratureProviderAttestation | null | undefined,
-  expectation: LiteratureAttestationExpectation,
-): LiteratureAttestationVerdict {
-  const reject = (
-    reason: LiteratureAttestationFailureReason,
-    detail: string,
-  ): LiteratureAttestationVerdict => ({ status: 'rejected', reason, detail })
-
-  if (!attestation) {
-    return reject(
-      'provider_attestation_required',
-      'No provider-bound target attestation was supplied. Repository and content checks are ' +
-        'non-authoritative and cannot establish which database produced the evidence.',
-    )
-  }
-  if (attestation.mechanism !== LITERATURE_PROVIDER_CAPTURE_MECHANISM) {
-    return reject(
-      'wrong_capture_mechanism',
-      `Capture mechanism ${String(attestation.mechanism)} is not ${LITERATURE_PROVIDER_CAPTURE_MECHANISM}.`,
-    )
-  }
-  if (attestation.providerProjectRef !== expectation.projectRef) {
-    return reject(
-      'wrong_project_ref',
-      `Adapter reported project ${attestation.providerProjectRef}, expected ${expectation.projectRef}.`,
-    )
-  }
-  if (attestation.providerProjectUrl !== LITERATURE_CANONICAL_PRODUCTION_ORIGIN) {
-    return reject(
-      'wrong_project_url',
-      `Adapter reported URL ${attestation.providerProjectUrl}, expected ${LITERATURE_CANONICAL_PRODUCTION_ORIGIN}.`,
-    )
-  }
-  if (attestation.queryBundleSha256 !== expectation.queryBundleSha256) {
-    return reject(
-      'wrong_query_bundle',
-      'The attested read-only query bundle is not the bundle this repository defines.',
-    )
-  }
-  if (attestation.repositoryCommit !== expectation.ownerApprovedCommit) {
-    return reject(
-      'wrong_repository_commit',
-      `Attestation is bound to commit ${attestation.repositoryCommit}, not the owner-approved ` +
-        `${expectation.ownerApprovedCommit}.`,
-    )
-  }
-  if (attestation.migrationPath !== expectation.migrationPath) {
-    return reject('wrong_migration_path', `Attestation names ${attestation.migrationPath}.`)
-  }
-  if (attestation.migrationSha256 !== expectation.migrationSha256) {
-    return reject('wrong_migration_checksum', 'Attestation binds a different migration checksum.')
-  }
-  if (attestation.completeness !== 'complete') {
-    return reject('incomplete_capture', `Capture completeness is ${attestation.completeness}.`)
-  }
-  if (attestation.contentSha256 !== expectation.observedContentSha256) {
-    return reject(
-      'content_checksum_mismatch',
-      'The attested content checksum does not match the evidence supplied alongside it.',
-    )
-  }
-
-  const capturedMs = Date.parse(attestation.capturedAt)
-  if (!Number.isFinite(capturedMs)) {
-    return reject(
-      'invalid_capture_timestamp',
-      `capturedAt ${attestation.capturedAt} is not a date.`,
-    )
-  }
-  const ageMs = expectation.nowMs - capturedMs
-  if (ageMs < 0 || ageMs > LITERATURE_ATTESTATION_MAX_AGE_MS) {
-    return reject(
-      'stale_attestation',
-      `Attestation age ${Math.round(ageMs / 1000)}s is outside the ` +
-        `${LITERATURE_ATTESTATION_MAX_AGE_MS / 1000}s freshness window.`,
-    )
-  }
-
-  return { status: 'attested', attestation }
+export interface LiteratureAttestationVerdict {
+  status: 'blocked'
+  reason: LiteratureAttestationFailureReason
+  detail: string
 }
 
-export type LiteratureProviderCaptureResult =
-  | { status: 'captured'; attestation: LiteratureProviderAttestation }
-  | { status: 'unavailable'; reason: LiteratureAttestationFailureReason; detail: string }
+/**
+ * Demand a provider-bound attestation. Takes **no input** — there is nothing an operator, a file,
+ * an environment variable, or a test fixture could pass that would change the answer — and always
+ * returns the blocked verdict, because the provider adapter does not exist in this repository.
+ */
+export function requireLiteratureProviderAttestation(): LiteratureAttestationVerdict {
+  const capture = captureLiteratureProviderAttestation()
+  return {
+    status: 'blocked',
+    reason: 'provider_attestation_required',
+    detail:
+      'No provider-bound target attestation exists. Repository and content checks are ' +
+      'non-authoritative and cannot establish which database produced the evidence. ' +
+      capture.detail,
+  }
+}
+
+export interface LiteratureProviderCaptureResult {
+  status: 'unavailable'
+  reason: 'provider_adapter_not_implemented'
+  detail: string
+}
 
 /**
  * The single seam through which a real attestation may ever enter this repository.
  *
- * It is intentionally unimplemented. Implementing it requires an authenticated, project-scoped,
- * read-only Supabase connector, which cannot be added safely in a preparation-only PR. Until a
- * future, separately reviewed change implements it, every production-authorizing path is blocked.
+ * It is intentionally unimplemented, and its result union has no success member. Implementing it
+ * requires an authenticated, project-scoped, read-only Supabase connector, which cannot be added
+ * safely in a preparation-only PR. Until a future, separately reviewed change implements it, every
+ * production-authorizing path is blocked.
  *
  * Do not "temporarily" satisfy this from a file, an environment variable, or a CLI flag. Doing so
  * would reintroduce exactly the blocking finding this layering exists to fix.

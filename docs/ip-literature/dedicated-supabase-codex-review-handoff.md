@@ -1,11 +1,15 @@
-# Independent review handoff — dedicated Literature Supabase bootstrap (correction pass)
+# Independent review handoff — dedicated Literature Supabase bootstrap (second correction pass)
 
 For a fresh reviewer with no context from the implementing sessions.
 
-A previous independent review returned **BLOCKED** with one blocking, five high, four medium, and
-two low findings. This document lists every correction and asks you to **re-run the exact original
-reproductions**. The goal is to decide whether the PR is safe to merge — **not** whether the
-migration should be applied, which is separately gated and currently blocked by design.
+A first independent review returned **BLOCKED** (one blocking, five high, four medium, two low). A
+correction pass followed. A **second** independent review of that correction again returned
+**BLOCKED**, with the central architectural finding that a structurally typed attestation object
+can never be made unforgeable while the real provider adapter is absent — plus scoping, collision,
+parser, URL, query-plan, screening, and runtime-type findings. This document lists the second
+correction and asks you to **re-run the exact reproductions**. The goal is to decide whether the
+PR is safe to merge — **not** whether the migration should be applied, which is separately gated
+and, in this PR, structurally impossible.
 
 ## Setup
 
@@ -27,121 +31,150 @@ project; mutate the protected real-local database (container `supabase_db_ip-lit
 compensation; or access the held-out set.
 
 `npm run literature:dedicated:rehearse` creates and destroys its own throwaway container. It
-publishes no port and cannot reach 55322. Running it is safe and is the single most useful check.
+publishes no port and cannot reach 55322. Running it is safe and is the single most useful check
+(41 scenarios).
 
-## Finding-by-finding corrections to verify
+## The central correction — authority was removed, not hardened (B-1 / M-3)
 
-### B-1 (blocking) — evidence was not bound to the database that produced it
+Your reproduction: construct a plain object with every expected field and checksum, pass it to the
+exported evaluator, receive `attested`; pipe that (or a bare `{status:"attested"}`) into the
+preflight/reconciliation helpers, receive `ready_to_apply` and `applied_correct`/`proceed`.
 
-**Correction.** Three explicit layers, in `docs/ip-literature/dedicated-supabase-provenance.md`:
-Layer 1 repository (authoritative), Layer 2 evidence content (**non-authoritative**), Layer 3
-provider attestation (authoritative, **not implemented**).
+**Correction.** The success-capable production API no longer exists:
 
-Two structural anti-relabelling mechanisms: the evidence body has no `projectRef`/`hostname` field
-and the schema is `.strict()`, so a document cannot name its own target; and
-`providerProjectRef` originates in the adapter context.
+- `evaluateLiteratureProviderAttestation` was **deleted**. No exported function accepts
+  attestation-shaped input. `requireLiteratureProviderAttestation()` takes no arguments and always
+  returns `{status:'blocked', reason:'provider_attestation_required'}`.
+- No exported type has an `attested` member; `LiteratureProviderAttestation` as an exported
+  interface is gone. Future bindings live only as inert data
+  (`LITERATURE_LAYER3_REQUIRED_BINDINGS`) that nothing consumes.
+- `resolvePreflightOutcome` accepts no attestation status or object; its verdict union is exactly
+  `'blocked' | 'provider_attestation_required'`. `ready_to_apply` and the `authoritative` field no
+  longer exist. Layer results carry non-authoritative names
+  (`repository_checks_passed_nonauthoritative`, `content_checks_passed_nonauthoritative`).
+- `classifyLiteratureRollout` accepts no attestation input; its classification union is exactly
+  `'provider_attestation_required'` and its next-action union exactly
+  `'stop_read_only_reconciliation'`. What it computes is an explicitly
+  `*_nonauthoritative` content assessment (e.g. `catalog_matches_expected_nonauthoritative`).
+- `captureLiteratureProviderAttestation()` still returns `provider_adapter_not_implemented`, and
+  its result union has no success member.
+- Both CLIs set `process.exitCode = 1` unconditionally.
 
-`captureLiteratureProviderAttestation()` always returns `provider_adapter_not_implemented`, so the
-best reachable preflight verdict is `provider_attestation_required`.
+**Re-run your reproduction.** Forge the object again — with real recomputed checksums — and try
+every route: direct call, `as any` cast, `{status:'attested'}`, deserialized fixture, importing
+every public symbol of `attestation.ts`, calling `resolvePreflightOutcome` and
+`classifyLiteratureRollout` directly with smuggled extra fields. There is nothing to flip: the
+types cannot express success. `scripts/literature-dedicated-supabase/authority-lockdown.test.ts`
+replays each of these; a source-scan test additionally asserts no production file contains a
+quoted `attested`, `ready_to_apply`, `applied_correct`, `proceed`-next-action, or
+`authoritative: true` literal.
 
-**Re-run your reproduction.** Take a valid observation from any other database and try to make it
-authorize. Try adding `projectRef`. Try a checksum-consistent forgery. Confirm you cannot reach
-`ready_to_apply` or `applied_correct` by any file-only route. Confirm no function anywhere
-constructs a `LiteratureProviderAttestation` from a file, flag, or environment variable.
+## H-1 — managed-project-aware catalog scope
 
-### H-1 — the catalog comparator accepted material semantic drift
+Your reproduction: the committed artifact froze the disposable image's global state (2 installed
+extensions, 0 default-ACL rows), while the empty managed project has 5 baseline extensions and 24
+`pg_default_acl` rows — guaranteeing false postflight drift.
 
-**Correction.** `LITERATURE_CATALOG_INSPECTION_SQL` now captures 13 sections: extensions, relations
-(all relkinds, owner, persistence, RLS **and forced RLS**), types, columns (ordinal, type, notNull,
-default, generated, identity, collation), constraints (`pg_get_constraintdef`, validated,
-deferrable), functions (identity args, complete return type, language, owner, volatility, strict,
-parallel, security, leakproof, full `proconfig`, **full definition**, raw `proacl`), triggers
-(`pg_get_triggerdef`, enabled), indexes (`pg_get_indexdef`, unique/primary/valid/ready/method),
-policies, a 224-row table-privilege grid, schema privileges, default privileges, and role attributes
-including `BYPASSRLS`. Each section carries an exact row count and checksum in the committed
-artifact `foundation-catalog-expectations.json`.
+**Correction.** The catalog is split into four scopes
+(`scripts/literature-dedicated-supabase/lib/foundation-catalog.ts`):
 
-**Re-run your reproduction.** Tamper with `literature_admin_stats_v1`'s body while keeping its
-signature and ACLs — rehearsal scenario `R17` does exactly this and must FAIL the comparison. Empty
-the privilege array — `R18` must FAIL. Also try: owner change, altered default, altered constraint,
-altered trigger definition, altered index definition, forced-RLS flip, an extra Literature object.
+1. **Exact foundation-owned** (`LITERATURE_EXACT_CATALOG_SECTIONS`, 9 sections): relations,
+   columns, constraints, functions, triggers, indexes, policies, tablePrivileges, types. Only
+   these are in `foundation-catalog-expectations.json` (v3.0.0).
+2. **Scoped managed prerequisites**: the extensions observation is scoped to `pg_trgm` only
+   (`where e.extname = 'pg_trgm'`), checked semantically — absent or in `extensions` pre-apply, in
+   exactly `extensions` post-apply, version observed but never bound; role attributes checked
+   semantically for the three API roles (exist, not superuser, `BYPASSRLS` shape).
+3. **Pre/post deltas**: `defaultPrivileges` (scoped to global/public/extensions rows) and
+   `schemaPrivileges` must be _unchanged across the apply_ (`compareGlobalStateDelta`) — no fixed
+   inventory is asserted anywhere. For the managed project this remains an execution-time,
+   provider-bound requirement that cannot produce success in this PR.
+4. **Observation-only**: `indexNames` (see H-2).
 
-### H-2 — partial observations passed; non-table collisions were missed
+**Re-run your reproduction.** Rehearsal `R04`/`R06`/`R10`–`R15`: an unrelated installed extension
+(pgcrypto) and a pre-existing `pg_default_acl` row are planted _before_ the apply and do not read
+as drift; the delta is empty across the apply; a tampered role attribute (`R14`) and a new
+default-privilege grant (`R15`) are still detected. Confirm no code or doc claims the disposable
+baseline is an exact managed baseline, and no "5 extensions"/"24 default privileges" constant
+exists anywhere.
 
-**Correction.** `lib/evidence-schema.ts`: a duplicate-key-rejecting JSON parser, then a strict zod
-schema (unknown/missing/wrong-type/partial-section/extra-section all rejected), then typed
-`LiteratureEvidenceError` codes — never a raw `TypeError`. Collision detection now covers tables,
-partitioned and foreign tables, **views**, materialized views, sequences, types, functions by name,
-and indexes.
+## H-2 — collision gaps
 
-**Re-run your reproduction.** `catalog: {"tables":[]}` must be rejected. A view named
-`public.literature_journals` must be observed — rehearsal `R23` reproduces it, and `R24` proves the
-subsequent apply fails and rolls back completely.
+**Index names.** The inspection now emits an `indexNames` section: every index relname in
+`public`, independent of its owning table. `E05-no-name-collision` rejects any expected foundation
+index name found there. Rehearsal `R34` plants `literature_articles_search_vector_idx` on an
+unrelated table: preflight rejects it, the apply fails, and `R35` proves complete rollback with
+the unrelated index surviving.
 
-### H-3 — production permitted plaintext HTTP and non-canonical URLs
+**pg_trgm location.** `classifyPgTrgmState` distinguishes absent (permitted) / installed in
+`extensions` (permitted) / installed anywhere else (rejected,
+`E08-Q01-pg-trgm-location`). Rehearsal `R36` installs pg_trgm in `public`: preflight rejects; the
+apply fails at `extensions.gin_trgm_ops`; `R37` proves rollback leaves the pre-existing extension
+untouched in `public`, no foundation objects, no history row.
 
-**Correction.** Strict mode accepts only `https://itcttmkxdxvwmwcmzmey.supabase.co`. Distinct reason
-codes for scheme, userinfo, query/fragment, port, path, loopback, and non-canonical host.
+## H-2 — strict nested evidence schemas
 
-**Re-run your reproduction.** `http://`, `:8443`, `user:pass@`, `?x=1`, `#x`, `/rest/v1`, a
-trailing-dot host, an alternate project host, and a custom host must each be rejected.
+Every row of every catalog section now has its own `.strict()` zod schema with exact field types
+(`lib/evidence-schema.ts`). Nested `projectRef`, `HostName`, Unicode-escaped spellings, arbitrary
+nested fields, `{name:5, relkind:"r"}`, malformed booleans/arrays — all controlled
+`LiteratureEvidenceError: schema_violation`, never a raw `TypeError`. The JSON parser remains
+duplicate-key-rejecting and now rejects unescaped control characters U+0000–U+001F inside strings
+(RFC 8259); escaped forms remain valid. Re-run each of your parser reproductions against
+`parseLiteraturePreflightEvidence` / `parseLiteraturePostflightEvidence`.
 
-### H-4 — any descendant of the approved commit was accepted
+## H-3 — byte-exact production URL
 
-**Correction.** `P04-exact-approved-commit` requires `HEAD == origin/main == ownerApprovedCommit`
-exactly. Descendants are rejected.
+Strict mode compares the **raw** `LITERATURE_SUPABASE_URL` byte-for-byte against
+`LITERATURE_CANONICAL_PRODUCTION_URL_EXACT` = `https://itcttmkxdxvwmwcmzmey.supabase.co/` —
+trailing slash included — _before any parsing_. No trim, case fold, dot-path resolution,
+percent-decoding, or `:443` normalization runs first; parsing happens only after exact equality,
+as secondary defense. Local mode keeps its own loopback allowlist and does not share the
+production path. Re-run every variant: no slash, `HTTPS://`, `Https://`, whitespace, `:443`,
+`/./`, `/%2e`, `/%2E`, `http://`, userinfo, path, query, fragment, trailing-dot host,
+alternate/main/custom host — each must fail with the typed reason `noncanonical_production_url`,
+and the raw value is never echoed.
 
-### H-5 — `deploymentMethod` was optional free text
+## L-1 — phase-specific, existence-safe query plans
 
-**Correction.** `applicationMechanism` is required and must equal
-`supabase_connector_apply_migration_v1` exactly. Omitted, wrapped, suffixed, case-changed, and
-arbitrary values are all rejected — the gate is exact equality, not a blacklist.
+The single four-statement bundle is gone. `lib/target-observation.ts` defines three ordered plans
+with distinct SHA-256 identities: the **preflight plan** (existence probes + `pg_catalog`-only
+inspection; the history-versions step is conditional on the probe; nothing references
+`supabase_migrations.schema_migrations` or `public.literature_*` unconditionally), the
+**postflight existence probe**, and the **postflight complete plan** (versions/catalog/row count,
+each optional-relation step conditional on the probe). Evidence documents are phase-specific:
+preflight (`literature-dedicated-preflight-observation/3.0.0`) has **no** `totalRowCount` and
+carries `migrationHistory: {tableExists, versions|null}` with versions-null-iff-absent enforced;
+postflight requires the existence probe and `totalRowCount`. Each document binds its plan
+identity; `E09-preflight-plan-identity` and the postflight plan-violation checks reject
+substitution. Rehearsal `R07` runs every unconditional preflight statement against a bare database
+with no history table and no Literature relation and they all succeed. Migration history for the
+future authoritative gate is documented as coming from provider `list_migrations`.
 
-**Migration-history semantics.** Resolved honestly rather than assumed:
-`LITERATURE_MIGRATION_HISTORY_FIDELITY` records that the version is provider-assigned and that the
-filename version `20260727032621` may not be what `list_migrations` returns. The postflight requires
-**exactly one recorded migration** and defers version identity to execution-time evidence. Verify
-nothing asserts the filename version against a managed target.
+## M-2 — complete decoded-value vocabulary
 
-### M-1 — anything but exact `NODE_ENV=production` was permissive
+`assertDecodedEvidenceCarriesNoSecret` scans decoded keys **and decoded string values**,
+case-insensitively, for: secret, token, password/passwd, credential, authorization, bearer,
+api key/api*key/apikey, private key, connection string, database URL, service role, `sb_secret*`,
+`sb*publishable*`, JWT-shaped values, and inline-credential connection strings. `"password"`and`"Authorization"`as decoded values are rejected. Rejected content is never echoed (offending path
+segments are`[redacted-key]`). Legitimate catalog content is admitted through typed exact
+allowances rather than weakened screening: the exact role name `service_role`in role positions,
+PostgreSQL ACL grammar entries, and the contract's own`serviceRoleExecute` key — free text
+containing those tokens is still rejected.
 
-**Correction.** `NODE_ENV` is no longer consulted. `LITERATURE_SUPABASE_RUNTIME_MODE` is a closed
-enum where only the exact string `local` relaxes anything; absent, empty, `Local`, `LOCAL`,
-`' local'`, `production`, `Production` all resolve to the strict contract. Local mode permits
-loopback **only** and never an arbitrary remote host.
+## H-5 — total runtime input handling
 
-### M-2 — raw, case-sensitive scanning before decoding
+`applicationMechanism` is typed `unknown` and type-gated before any string operation:
+`null`, arrays, objects, numbers, booleans, symbols, and missing values all produce the controlled
+`application_mechanism_not_approved` rejection — never a `TypeError`. The closed enum is retained:
+only the exact string `supabase_connector_apply_migration_v1` passes.
 
-**Correction.** Screening runs after decoding, recursively over keys and values, case-normalised,
-covering `sb_secret_`, `sb_publishable_`, JWTs, inline-credential connection strings, bearer tokens,
-and credential-shaped key names.
+## Documentation corrections
 
-**Re-run your reproduction.** `sb_secret_…`, mixed case, nested, in an array, as a key name,
-and duplicate keys must all be rejected.
-
-### M-3 — a wrong target could print `applied_correct` before failing later
-
-**Correction.** Target attestation is the first check in `classifyLiteratureRollout`. An unproven,
-wrong, stale, or incomplete target yields `provider_attestation_required` /
-`stop_read_only_reconciliation`. The exit status agrees with the classification.
-
-### M-4 — the documented sequence exposed an ungated gold-set route
-
-**Correction (sequencing, not scope).** Runbook step 12 now states explicitly that the foundation
-migration does **not** authorize Railway cutover, and requires a separate capability-gating /
-unavailable-versus-empty package — reviewed and deployed — before the dedicated Railway variables are
-set. No gold-set UI is implemented here, by design.
-
-### L-1 — the row-count query existed but was not emitted
-
-**Correction.** `LITERATURE_READ_ONLY_QUERY_BUNDLE` has four entries and the row count is one of
-them, marked `postApplicationOnly`. The bundle has a bound SHA-256 that an attestation must carry.
-`totalRowCount` is required, integer, non-negative, and must be exactly zero.
-
-### L-2 — stale counts
-
-**Correction.** Everywhere: 33 total, 10 Literature-related, 1 foundation, 9 deferred, 23 unrelated.
-A test asserts the `db push` reason text does not say "six deferred" or "twenty-six".
+- The architecture note names the actual flag (`--print-query-plans`), the actual scenario count
+  (41), and the split catalog scopes.
+- The threat model names the actual function `assertDecodedEvidenceCarriesNoSecret()`.
+- The runbook and provenance notes state that no success verdict exists in this PR and describe
+  the non-authoritative content assessments.
 
 ## Gates to re-run
 
@@ -151,30 +184,27 @@ npm run lint
 npx eslint scripts/literature-dedicated-supabase src/features/literature
 npx prettier --check .
 npx jest scripts/literature-dedicated-supabase src/features/literature
-npx jest scripts/literature
-npx jest --runInBand
+npx jest scripts/literature --maxWorkers=2
+npx jest --maxWorkers=2
 npm run build
 git diff --check
-npm run literature:dedicated:rehearse
+npm run literature:dedicated:rehearse   # repeat three times; 41/41 each
 ```
 
-## The pre-existing protected-suite failure
+## The protected catalog-expectation suite
 
-The previous review reported `scripts/literature/generate-gold-import-contract-v2-catalog-expectations.test.ts`
-failing on both base `6044bfd9` and the branch.
-
-On this machine it **passes** — 4/4 consecutive runs on the branch, and 54/54 suites / 901 tests
-green for the whole `scripts/literature` directory. The branch also changes **zero** files under
-`scripts/literature/`, `supabase/`, or `src/features/literature/gold-set/`, so that test's inputs are
-byte-identical to base.
-
-Please re-check it in your environment and report base-versus-branch honestly. Do **not** modify
-protected catalog expectations or protected V2 authorities to make this PR green unless you can
-independently prove PR #104 caused the failure.
+Run `npx jest scripts/literature/generate-gold-import-contract-v2-catalog-expectations.test.ts`
+on both base `6044bfd9` and the branch head, without modifying any protected file, and report
+base-versus-branch honestly. The branch changes zero files under `scripts/literature/` or
+`supabase/`, so its inputs are byte-identical to base. Do **not** modify protected catalog
+expectations or protected V2 authorities to make this PR green unless you can independently prove
+PR #104 caused a failure.
 
 ## What a good review returns
 
-For each finding B-1, H-1…H-5, M-1…M-4, L-1, L-2: corrected, or a specific counter-example. Flag
-anything that would let a hand-authored file authorize a migration, let Literature data reach
-`tqnhxlwvkkswuckszlee`, let more than one migration be selected, let a credential escape, let
-semantic drift pass, or let an ambiguous acknowledgement become a retry.
+For each finding — B-1/M-3, H-1, H-2 (collisions), H-2 (schemas), H-3, H-5, L-1, M-2, docs —
+corrected, or a specific counter-example. Flag anything that would let _any_ input produce a
+success verdict from production code while the provider adapter is absent; let a hand-authored
+file authorize a migration; let Literature data reach `tqnhxlwvkkswuckszlee`; let more than one
+migration be selected; let a credential escape; let semantic drift pass; or let an ambiguous
+acknowledgement become a retry.

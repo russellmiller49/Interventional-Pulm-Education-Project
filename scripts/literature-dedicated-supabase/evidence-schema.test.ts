@@ -1,22 +1,155 @@
 /** @jest-environment node */
 
 import { LITERATURE_CATALOG_SECTIONS } from './lib/foundation-catalog'
+import type { LiteratureCatalogSection } from './lib/foundation-catalog'
 import {
   LiteratureEvidenceError,
   assertDecodedEvidenceCarriesNoSecret,
-  parseLiteratureEvidence,
+  parseLiteraturePostflightEvidence,
+  parseLiteraturePreflightEvidence,
 } from './lib/evidence-schema'
+import {
+  LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256,
+  LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+} from './lib/target-observation'
+
+/** One structurally valid row per catalog section, mirroring what the inspection SQL emits. */
+const VALID_ROWS: Record<LiteratureCatalogSection, Record<string, unknown>> = {
+  extensions: { name: 'pg_trgm', schema: 'extensions', version: '1.6' },
+  relations: {
+    schema: 'public',
+    name: 'literature_articles',
+    relkind: 'r',
+    owner: 'supabase_admin',
+    persistence: 'p',
+    rowLevelSecurity: true,
+    forcedRowLevelSecurity: false,
+  },
+  indexNames: { schema: 'public', name: 'literature_articles_pkey' },
+  types: { schema: 'public', name: 'some_enum', typtype: 'e' },
+  columns: {
+    table: 'literature_articles',
+    ordinal: 1,
+    name: 'pmid',
+    type: 'text',
+    notNull: true,
+    default: null,
+    generated: '',
+    identity: '',
+    collation: null,
+  },
+  constraints: {
+    table: 'literature_articles',
+    name: 'literature_articles_pkey',
+    type: 'p',
+    definition: 'PRIMARY KEY (pmid)',
+    validated: true,
+    deferrable: false,
+    deferred: false,
+  },
+  functions: {
+    schema: 'public',
+    name: 'search_literature_v1',
+    argumentTypes: '',
+    identityArguments: '',
+    returnType: 'jsonb',
+    language: 'sql',
+    owner: 'supabase_admin',
+    volatility: 's',
+    strict: false,
+    parallel: 's',
+    securityDefiner: false,
+    leakproof: false,
+    config: ['search_path=pg_catalog, public'],
+    definition: 'select 1',
+    acl: ['service_role=X/supabase_admin', '=X/supabase_admin'],
+    publicExecute: false,
+    anonExecute: false,
+    authenticatedExecute: false,
+    serviceRoleExecute: true,
+  },
+  triggers: {
+    table: 'literature_articles',
+    name: 'set_literature_articles_updated_at',
+    definition: 'CREATE TRIGGER set_literature_articles_updated_at ...',
+    enabled: 'O',
+    function: 'set_literature_updated_at',
+  },
+  indexes: {
+    name: 'literature_articles_pkey',
+    table: 'literature_articles',
+    definition: 'CREATE UNIQUE INDEX literature_articles_pkey ...',
+    unique: true,
+    primary: true,
+    valid: true,
+    ready: true,
+    method: 'btree',
+  },
+  policies: {
+    table: 'literature_articles',
+    name: 'some_policy',
+    command: 'r',
+    permissive: true,
+    using: null,
+    withCheck: null,
+  },
+  tablePrivileges: {
+    table: 'literature_articles',
+    role: 'service_role',
+    privilege: 'SELECT',
+    granted: true,
+  },
+  schemaPrivileges: { schema: 'public', role: 'service_role', privilege: 'USAGE', granted: true },
+  defaultPrivileges: {
+    owner: 'postgres',
+    schema: 'public',
+    objectType: 'r',
+    acl: ['postgres=arwdDxt/postgres'],
+  },
+  roleAttributes: {
+    role: 'service_role',
+    superuser: false,
+    bypassRls: true,
+    canLogin: false,
+    inherit: false,
+  },
+}
 
 function emptyCatalog() {
   return Object.fromEntries(LITERATURE_CATALOG_SECTIONS.map((section) => [section, []]))
 }
 
-function validEvidence(overrides: Record<string, unknown> = {}) {
+function populatedCatalog() {
+  return Object.fromEntries(
+    LITERATURE_CATALOG_SECTIONS.map((section) => [section, [VALID_ROWS[section]]]),
+  )
+}
+
+function validPreflight(overrides: Record<string, unknown> = {}) {
   return {
-    schemaVersion: 'literature-dedicated-observation/2.0.0',
-    queryBundleSha256: 'a'.repeat(64),
-    migrationVersions: [],
+    schemaVersion: 'literature-dedicated-preflight-observation/3.0.0',
+    queryPlanSha256: LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256,
+    migrationHistory: { tableExists: false, versions: null },
     catalog: emptyCatalog(),
+    prerequisites: {
+      availableExtensions: ['pg_trgm'],
+      roles: ['anon', 'authenticated', 'service_role'],
+      schemas: ['extensions', 'public'],
+    },
+    ...overrides,
+  }
+}
+
+function validPostflight(overrides: Record<string, unknown> = {}) {
+  return {
+    schemaVersion: 'literature-dedicated-postflight-observation/3.0.0',
+    queryPlanSha256: LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256,
+    existenceProbe: {
+      migrationHistoryTableExists: true,
+      presentLiteratureTables: ['literature_articles'],
+    },
+    migrationVersions: ['20260727032621'],
+    catalog: populatedCatalog(),
     prerequisites: {
       availableExtensions: ['pg_trgm'],
       roles: ['anon', 'authenticated', 'service_role'],
@@ -27,160 +160,290 @@ function validEvidence(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function parse(value: unknown) {
-  return parseLiteratureEvidence(JSON.stringify(value))
+function parsePre(value: unknown) {
+  return parseLiteraturePreflightEvidence(JSON.stringify(value))
 }
 
-function expectCode(action: () => unknown, code: string) {
+function parsePost(value: unknown) {
+  return parseLiteraturePostflightEvidence(JSON.stringify(value))
+}
+
+function expectCode(action: () => unknown, code: string): LiteratureEvidenceError {
   try {
     action()
   } catch (error) {
     expect(error).toBeInstanceOf(LiteratureEvidenceError)
     expect((error as LiteratureEvidenceError).code).toBe(code)
-    return
+    return error as LiteratureEvidenceError
   }
   throw new Error(`expected a ${code} error`)
 }
 
-describe('strict evidence parsing (H-2)', () => {
-  it('accepts a well-formed document', () => {
-    expect(parse(validEvidence()).totalRowCount).toBe(0)
+describe('phase-specific documents (L-1)', () => {
+  it('accepts a well-formed preflight document, which has no totalRowCount', () => {
+    const document = parsePre(validPreflight())
+    expect(document.migrationHistory.tableExists).toBe(false)
+    expect('totalRowCount' in document).toBe(false)
   })
 
+  it('accepts a well-formed postflight document, which requires totalRowCount', () => {
+    expect(parsePost(validPostflight()).totalRowCount).toBe(0)
+  })
+
+  it('rejects a totalRowCount smuggled into the preflight document', () => {
+    expectCode(() => parsePre(validPreflight({ totalRowCount: 0 })), 'schema_violation')
+  })
+
+  it('rejects a postflight document without totalRowCount', () => {
+    const document = validPostflight()
+    delete (document as Record<string, unknown>).totalRowCount
+    expectCode(() => parsePost(document), 'schema_violation')
+  })
+
+  it('rejects each phase document under the other phase parser', () => {
+    expectCode(() => parsePost(validPreflight()), 'schema_violation')
+    expectCode(() => parsePre(validPostflight()), 'schema_violation')
+  })
+
+  it('requires the phase plan identities to differ', () => {
+    expect(LITERATURE_PREFLIGHT_QUERY_PLAN_SHA256).not.toBe(LITERATURE_POSTFLIGHT_QUERY_PLAN_SHA256)
+  })
+
+  it('rejects versions for an absent history table, and null versions for a present one', () => {
+    expectCode(
+      () => parsePre(validPreflight({ migrationHistory: { tableExists: false, versions: [] } })),
+      'schema_violation',
+    )
+    expectCode(
+      () => parsePre(validPreflight({ migrationHistory: { tableExists: true, versions: null } })),
+      'schema_violation',
+    )
+    expect(
+      parsePre(validPreflight({ migrationHistory: { tableExists: true, versions: [] } }))
+        .migrationHistory.versions,
+    ).toEqual([])
+  })
+
+  it('rejects a malformed query-plan hash', () => {
+    expectCode(() => parsePre(validPreflight({ queryPlanSha256: 'nope' })), 'schema_violation')
+  })
+})
+
+describe('strict catalog structure (H-2)', () => {
   it('rejects a partial catalog', () => {
     // The exact review reproduction: catalog: {"tables":[]} previously passed.
-    expectCode(() => parse(validEvidence({ catalog: { tables: [] } })), 'schema_violation')
+    expectCode(() => parsePre(validPreflight({ catalog: { tables: [] } })), 'schema_violation')
   })
 
   it('rejects a catalog missing a single section', () => {
     const catalog = emptyCatalog()
     delete (catalog as Record<string, unknown>).tablePrivileges
-    expectCode(() => parse(validEvidence({ catalog })), 'schema_violation')
+    expectCode(() => parsePre(validPreflight({ catalog })), 'schema_violation')
   })
 
   it('rejects an unexpected extra catalog section', () => {
     expectCode(
-      () => parse(validEvidence({ catalog: { ...emptyCatalog(), surprise: [] } })),
+      () => parsePre(validPreflight({ catalog: { ...emptyCatalog(), extra: [] } })),
       'schema_violation',
     )
   })
 
   it('rejects unknown top-level fields, including a self-declared projectRef', () => {
-    // Structural half of the B-1 fix: an evidence document cannot name its own target.
     expectCode(
-      () => parse(validEvidence({ projectRef: 'itcttmkxdxvwmwcmzmey' })),
+      () => parsePre(validPreflight({ projectRef: 'itcttmkxdxvwmwcmzmey' })),
       'schema_violation',
     )
+    expectCode(() => parsePre(validPreflight({ hostname: 'x.supabase.co' })), 'schema_violation')
+  })
+
+  it('rejects a malformed section that is not an array', () => {
     expectCode(
-      () => parse(validEvidence({ hostname: 'db.example.supabase.co' })),
+      () => parsePre(validPreflight({ catalog: { ...emptyCatalog(), functions: {} } })),
       'schema_violation',
     )
   })
 
-  it('rejects unknown nested fields', () => {
+  describe('strict rows for every section', () => {
+    it.each(LITERATURE_CATALOG_SECTIONS)('accepts a valid %s row', (section) => {
+      const catalog = { ...emptyCatalog(), [section]: [VALID_ROWS[section]] }
+      expect(() => parsePre(validPreflight({ catalog }))).not.toThrow()
+    })
+
+    it.each(LITERATURE_CATALOG_SECTIONS)('rejects an unknown nested field in %s', (section) => {
+      const catalog = {
+        ...emptyCatalog(),
+        [section]: [{ ...VALID_ROWS[section], projectRef: 'zzzzzzzzzzzzzzzzzzzz' }],
+      }
+      expectCode(() => parsePre(validPreflight({ catalog })), 'schema_violation')
+    })
+
+    it.each(LITERATURE_CATALOG_SECTIONS)(
+      'rejects a differently cased identity in %s',
+      (section) => {
+        const catalog = {
+          ...emptyCatalog(),
+          [section]: [{ ...VALID_ROWS[section], HostName: 'forged.supabase.co' }],
+        }
+        expectCode(() => parsePre(validPreflight({ catalog })), 'schema_violation')
+      },
+    )
+
+    it.each(LITERATURE_CATALOG_SECTIONS)('rejects a missing field in %s', (section) => {
+      const row = { ...VALID_ROWS[section] }
+      delete row[Object.keys(row)[0]]
+      const catalog = { ...emptyCatalog(), [section]: [row] }
+      expectCode(() => parsePre(validPreflight({ catalog })), 'schema_violation')
+    })
+  })
+
+  it('rejects a Unicode-escaped spelling of a nested identity field', () => {
+    // "projectRef" decodes to "projectRef"; screening and schema run post-decode, so the
+    // escaped spelling is exactly as unrepresentable as the plain one.
+    const raw = JSON.stringify(validPreflight()).replace(
+      '"tableExists"',
+      '"\\u0070rojectRef":"zzzzzzzzzzzzzzzzzzzz","tableExists"',
+    )
+    expect(raw).toContain('\\u0070rojectRef')
+    expectCode(() => parseLiteraturePreflightEvidence(raw), 'schema_violation')
+  })
+
+  it('rejects numeric relation, function, and index names with a controlled error (H-2)', () => {
+    // The exact reproduction: {name: 5, relkind: "r"} previously survived into catalog
+    // summarization and became a raw TypeError.
+    for (const [section, field] of [
+      ['relations', 'name'],
+      ['functions', 'name'],
+      ['indexes', 'name'],
+      ['indexNames', 'name'],
+    ] as const) {
+      const catalog = {
+        ...emptyCatalog(),
+        [section]: [{ ...VALID_ROWS[section], [field]: 5 }],
+      }
+      const error = expectCode(() => parsePre(validPreflight({ catalog })), 'schema_violation')
+      expect(error).not.toBeInstanceOf(TypeError)
+    }
+  })
+
+  it('rejects malformed booleans and malformed arrays inside rows', () => {
     expectCode(
       () =>
-        parse(
-          validEvidence({
+        parsePre(
+          validPreflight({
+            catalog: {
+              ...emptyCatalog(),
+              relations: [{ ...VALID_ROWS.relations, rowLevelSecurity: 'yes' }],
+            },
+          }),
+        ),
+      'schema_violation',
+    )
+    expectCode(
+      () =>
+        parsePre(
+          validPreflight({
+            catalog: {
+              ...emptyCatalog(),
+              functions: [{ ...VALID_ROWS.functions, config: 'search_path=public' }],
+            },
+          }),
+        ),
+      'schema_violation',
+    )
+  })
+
+  it('rejects wrong types before any business logic runs', () => {
+    expectCode(() => parsePre(validPreflight({ migrationHistory: [] })), 'schema_violation')
+    expectCode(() => parsePost(validPostflight({ totalRowCount: '0' })), 'schema_violation')
+    expectCode(() => parsePost(validPostflight({ totalRowCount: -1 })), 'schema_violation')
+    expectCode(() => parsePost(validPostflight({ totalRowCount: 0.5 })), 'schema_violation')
+  })
+
+  it('rejects unknown fields nested in prerequisites and the existence probe', () => {
+    expectCode(
+      () =>
+        parsePre(
+          validPreflight({
             prerequisites: {
               availableExtensions: [],
               roles: [],
               schemas: [],
-              extra: true,
+              projectRef: 'zzzzzzzzzzzzzzzzzzzz',
+            },
+          }),
+        ),
+      'schema_violation',
+    )
+    expectCode(
+      () =>
+        parsePost(
+          validPostflight({
+            existenceProbe: {
+              migrationHistoryTableExists: true,
+              presentLiteratureTables: [],
+              hostname: 'forged',
             },
           }),
         ),
       'schema_violation',
     )
   })
+})
 
-  it('rejects missing required fields', () => {
-    const evidence = validEvidence() as Record<string, unknown>
-    delete evidence.totalRowCount
-    expectCode(() => parse(evidence), 'schema_violation')
-  })
-
-  it('rejects wrong types before any business logic runs', () => {
-    expectCode(() => parse(validEvidence({ migrationVersions: 'none' })), 'schema_violation')
-    expectCode(() => parse(validEvidence({ totalRowCount: '0' })), 'schema_violation')
-    expectCode(() => parse(validEvidence({ totalRowCount: -1 })), 'schema_violation')
-    expectCode(() => parse(validEvidence({ totalRowCount: 1.5 })), 'schema_violation')
-    expectCode(
-      () => parse(validEvidence({ catalog: { ...emptyCatalog(), relations: 'nope' } })),
-      'schema_violation',
-    )
-  })
-
-  it('rejects malformed catalog rows rather than throwing a TypeError later', () => {
-    expectCode(
-      () => parse(validEvidence({ catalog: { ...emptyCatalog(), relations: [[1, 2]] } })),
-      'schema_violation',
-    )
-    expectCode(
-      () => parse(validEvidence({ catalog: { ...emptyCatalog(), relations: ['text'] } })),
-      'schema_violation',
-    )
-  })
-
-  it('rejects a wrong schema version', () => {
-    expectCode(() => parse(validEvidence({ schemaVersion: 'v1' })), 'schema_violation')
-  })
-
-  it('rejects a malformed query bundle hash', () => {
-    expectCode(() => parse(validEvidence({ queryBundleSha256: 'short' })), 'schema_violation')
-  })
-
+describe('JSON-compliant strict parser (H-2)', () => {
   it('rejects duplicate JSON keys instead of taking the last value', () => {
-    const base = JSON.stringify(validEvidence())
-    const duplicated = `${base.slice(0, -1)},"totalRowCount":99}`
-    expectCode(() => parseLiteratureEvidence(duplicated), 'duplicate_json_key')
+    const raw = `{"schemaVersion":"a","schemaVersion":"b"}`
+    expectCode(() => parseLiteraturePreflightEvidence(raw), 'duplicate_json_key')
   })
 
-  it('rejects duplicate keys nested inside the catalog', () => {
-    const duplicated =
-      '{"schemaVersion":"literature-dedicated-observation/2.0.0","queryBundleSha256":"' +
-      'a'.repeat(64) +
-      '","migrationVersions":[],"catalog":{"relations":[],"relations":[]},"prerequisites":' +
-      '{"availableExtensions":[],"roles":[],"schemas":[]},"totalRowCount":0}'
-    expectCode(() => parseLiteratureEvidence(duplicated), 'duplicate_json_key')
+  it('rejects duplicate keys nested deep inside the document', () => {
+    const raw = JSON.stringify(validPreflight()).replace(
+      '"tableExists":false',
+      '"tableExists":false,"tableExists":false',
+    )
+    expectCode(() => parseLiteraturePreflightEvidence(raw), 'duplicate_json_key')
   })
 
   it('rejects malformed JSON with a typed error', () => {
-    expectCode(() => parseLiteratureEvidence('{'), 'malformed_json')
-    expectCode(() => parseLiteratureEvidence('{} trailing'), 'malformed_json')
+    expectCode(() => parseLiteraturePreflightEvidence('{"a":'), 'malformed_json')
+    expectCode(() => parseLiteraturePreflightEvidence('{} trailing'), 'malformed_json')
+  })
+
+  it.each([
+    ['a literal newline U+000A', '\n'],
+    ['a literal tab U+0009', '\t'],
+    ['a literal carriage return U+000D', '\r'],
+    ['a literal NUL U+0000', '\u0000'],
+    ['a literal U+0001', '\u0001'],
+    ['a literal U+001F', '\u001f'],
+  ])('rejects %s inside a JSON string (RFC 8259)', (_label, character) => {
+    const raw = `{"schemaVersion":"literature${character}forged"}`
+    expectCode(() => parseLiteraturePreflightEvidence(raw), 'malformed_json')
+  })
+
+  it('accepts the escaped forms of the same control characters at the JSON layer', () => {
+    // `\n`, `\t`, and `\u0001` written as escapes are valid JSON string content. The document
+    // still fails -- but at the *schema* layer, proving the JSON parser accepted the string.
+    const withEscapes = '{"a":"line\\nbreak\\ttab\\u0001"}'
+    expectCode(() => parseLiteraturePreflightEvidence(withEscapes), 'schema_violation')
   })
 })
 
 describe('post-decode credential screening (M-2)', () => {
-  it('rejects a top-level secret', () => {
+  it('rejects a top-level secret-shaped value', () => {
     expectCode(
-      () => parse(validEvidence({ migrationVersions: ['sb_secret_' + 'x'.repeat(20)] })),
+      () => parsePre(validPreflight({ queryPlanSha256: 'sb_secret_0000' })),
       'credential_shaped_value',
     )
   })
 
-  it('rejects a nested secret', () => {
+  it('rejects a nested secret-shaped value', () => {
     expectCode(
       () =>
-        parse(
-          validEvidence({
-            catalog: {
-              ...emptyCatalog(),
-              relations: [{ name: 'x', note: 'sb_secret_' + 'y'.repeat(20) }],
-            },
-          }),
-        ),
-      'credential_shaped_value',
-    )
-  })
-
-  it('rejects a secret inside an array', () => {
-    expectCode(
-      () =>
-        parse(
-          validEvidence({
+        parsePre(
+          validPreflight({
             prerequisites: {
-              availableExtensions: ['sb_publishable_' + 'z'.repeat(20)],
+              availableExtensions: ['sb_secret_nested'],
               roles: [],
               schemas: [],
             },
@@ -191,67 +454,113 @@ describe('post-decode credential screening (M-2)', () => {
   })
 
   it('rejects a secret written with Unicode escapes', () => {
-    // sb_secret_… decodes to sb_secret_… — the old raw-text scan missed this entirely.
-    const escaped =
-      '{"schemaVersion":"literature-dedicated-observation/2.0.0","queryBundleSha256":"' +
-      'a'.repeat(64) +
-      '","migrationVersions":["sb\\u005fsecret\\u005fAAAAAAAAAAAAAAAAAAAA"],"catalog":' +
-      JSON.stringify(emptyCatalog()) +
-      ',"prerequisites":{"availableExtensions":[],"roles":[],"schemas":[]},"totalRowCount":0}'
-    expectCode(() => parseLiteratureEvidence(escaped), 'credential_shaped_value')
+    const raw = JSON.stringify(validPreflight()).replace('"pg_trgm"', '"\\u0073b_secret_hidden"')
+    expectCode(() => parseLiteraturePreflightEvidence(raw), 'credential_shaped_value')
   })
 
   it('rejects a mixed-case secret', () => {
     expectCode(
-      () => parse(validEvidence({ migrationVersions: ['SB_SeCrEt_' + 'q'.repeat(20)] })),
-      'credential_shaped_value',
-    )
-  })
-
-  it('rejects a JWT-shaped value', () => {
-    expectCode(
       () =>
-        parse(validEvidence({ migrationVersions: ['eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9'] })),
+        parsePre(
+          validPreflight({
+            prerequisites: { availableExtensions: ['SB_Secret_Mixed'], roles: [], schemas: [] },
+          }),
+        ),
       'credential_shaped_value',
     )
   })
 
-  it('rejects an inline-credential connection string', () => {
+  it('rejects a JWT-shaped value and an inline-credential connection string', () => {
     expectCode(
-      () => parse(validEvidence({ migrationVersions: ['postgresql://user:pw@host:5432/db'] })),
+      () => assertDecodedEvidenceCarriesNoSecret({ x: `eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoieCJ9.zz` }),
+      'credential_shaped_value',
+    )
+    expectCode(
+      () => assertDecodedEvidenceCarriesNoSecret({ x: 'postgresql://user:pw@host/db' }),
       'credential_shaped_value',
     )
   })
 
-  it('rejects a credential-shaped key', () => {
-    expectCode(
-      () =>
+  it('rejects a credential-shaped key without echoing it', () => {
+    const error = expectCode(
+      () => assertDecodedEvidenceCarriesNoSecret({ nested: { password: 'x' } }),
+      'credential_shaped_value',
+    )
+    expect(error.message).not.toContain('password')
+    expect(error.message).toContain('[redacted-key]')
+  })
+
+  describe('prohibited vocabulary in decoded string values', () => {
+    it.each([
+      ['password', 'password'],
+      ['Authorization', 'Authorization'],
+      ['a secret mention', 'this is my secret'],
+      ['a token mention', 'access token here'],
+      ['bearer', 'Bearer something'],
+      ['api key with space', 'api key'],
+      ['api_key', 'api_key'],
+      ['apikey', 'apikey'],
+      ['connection string', 'connection string'],
+      ['connection_string', 'connection_string'],
+      ['database URL', 'database URL'],
+      ['database_url', 'database_url'],
+      ['service role free text', 'use the service role for this'],
+      ['service-role', 'service-role'],
+      ['mixed case', 'PaSsWoRd'],
+    ])('rejects %s as a decoded value', (_label, value) => {
+      const error = expectCode(
+        () => assertDecodedEvidenceCarriesNoSecret({ harmlessKey: value }),
+        'credential_shaped_value',
+      )
+      // Never echo the rejected content.
+      expect(error.message).not.toContain(value)
+    })
+
+    it('rejects vocabulary in values nested inside arrays and objects', () => {
+      expectCode(
+        () => assertDecodedEvidenceCarriesNoSecret({ a: [{ b: ['fine', 'Password!'] }] }),
+        'credential_shaped_value',
+      )
+    })
+
+    it('rejects a Unicode-escaped vocabulary value after decoding', () => {
+      const raw = '{"a":"\\u0070assword"}'
+      expectCode(() => parseLiteraturePreflightEvidence(raw), 'credential_shaped_value')
+    })
+  })
+
+  describe('typed non-secret allowances instead of weakened screening', () => {
+    it('permits the exact role name service_role in role positions', () => {
+      expect(() =>
+        assertDecodedEvidenceCarriesNoSecret({ role: 'service_role', granted: true }),
+      ).not.toThrow()
+    })
+
+    it('permits PostgreSQL ACL grammar entries', () => {
+      expect(() =>
         assertDecodedEvidenceCarriesNoSecret({
-          catalog: { relations: [{ service_role_key: 'anything' }] },
+          acl: ['service_role=arwdDxt/supabase_admin', '=X/supabase_admin'],
         }),
-      'credential_shaped_value',
-    )
-    expectCode(
-      () => assertDecodedEvidenceCarriesNoSecret({ authorization: 'x' }),
-      'credential_shaped_value',
-    )
-    expectCode(
-      () => assertDecodedEvidenceCarriesNoSecret({ apiKey: 'x' }),
-      'credential_shaped_value',
-    )
+      ).not.toThrow()
+    })
+
+    it('permits the contract-owned serviceRoleExecute field name', () => {
+      expect(() => assertDecodedEvidenceCarriesNoSecret({ serviceRoleExecute: true })).not.toThrow()
+    })
+
+    it('still rejects service_role embedded in free text or padded forms', () => {
+      expectCode(
+        () => assertDecodedEvidenceCarriesNoSecret({ x: 'service_role_key_material' }),
+        'credential_shaped_value',
+      )
+      expectCode(
+        () => assertDecodedEvidenceCarriesNoSecret({ x: ' service_role ' }),
+        'credential_shaped_value',
+      )
+    })
   })
 
   it('does not false-positive on ordinary catalog content', () => {
-    expect(() =>
-      assertDecodedEvidenceCarriesNoSecret({
-        functions: [
-          {
-            name: 'search_literature_v1',
-            acl: ['service_role=X/supabase_admin'],
-            definition: 'CREATE OR REPLACE FUNCTION public.search_literature_v1() ...',
-          },
-        ],
-      }),
-    ).not.toThrow()
+    expect(() => parsePost(validPostflight())).not.toThrow()
   })
 })

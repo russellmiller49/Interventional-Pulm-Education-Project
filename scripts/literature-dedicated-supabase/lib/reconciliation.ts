@@ -6,60 +6,67 @@
  * retry — a second application either fails noisily or, worse, half-succeeds against a schema that
  * is already partly there. The right move is to observe the target read-only and classify.
  *
- * Two review findings changed the shape of this module.
+ * Three review rounds shaped this module, each narrowing what it is allowed to say.
  *
- * **M-3** — the classifier could previously print `applied_correct` / `proceed` for a target it had
- * no proof of, deferring the objection to a warning and an exit code. Target attestation is now a
- * mandatory input evaluated *first*: without proof of which database was observed, the only
- * reachable outcome is `provider_attestation_required`. The classification and the exit status
- * agree by construction.
+ * **M-3** — the classifier could once print `applied_correct` / `proceed` for a target it had no
+ * proof of. The first correction made an attestation verdict a mandatory input — and the second
+ * review then demonstrated that any function *accepting* an attestation-shaped input can be fed a
+ * forged plain object (a bare attested-status literal, an `as any` cast, a deserialized fixture)
+ * and made to emit success. The final correction is structural: this module no longer accepts any
+ * attestation input, and its verdict unions no longer contain `applied_correct` or `proceed` at
+ * all. What remains is a **non-authoritative content assessment** — every name carries the
+ * `_nonauthoritative` suffix — wrapped in a final classification that is always
+ * `provider_attestation_required` with next action `stop_read_only_reconciliation`, because the
+ * provider-bound Layer-3 adapter does not exist in this repository. The future adapter PR,
+ * separately reviewed, will be the first change permitted to reintroduce a success verdict.
  *
- * **H-5** — the recorded migration *version* is no longer asserted against the historical filename
- * version. The managed apply mechanism assigns the version, so identity comes from "exactly one
- * recorded migration" plus the applied-SQL checksum carried in the attestation.
+ * **H-5** — the recorded migration *version* is not asserted against the historical filename
+ * version. The managed apply mechanism assigns the version, so content assessment binds "exactly
+ * one recorded migration" plus checksums, never a specific version string.
  *
  * This module is pure. It never applies, retries, compensates, or edits migration history, and
  * there is no code path here that can.
  */
 
 import { LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT } from '../../../src/features/literature/dedicated-supabase/foundation-manifest'
-import type { LiteratureAttestationVerdict } from '../../../src/features/literature/dedicated-supabase/attestation'
 
-export type LiteratureRolloutClassification =
-  /** Target identity is unproven. Nothing may be concluded about the database. */
-  | 'provider_attestation_required'
-  /** Nothing was applied. The target is still the empty project the preflight described. */
-  | 'not_applied'
-  /** Applied correctly: one recorded migration, complete inventory, zero rows, attested target. */
-  | 'applied_correct'
+/**
+ * The only final classification this repository can produce while Layer 3 is absent. There is
+ * deliberately no `applied_correct` member — the type cannot express production success.
+ */
+export type LiteratureRolloutClassification = 'provider_attestation_required'
+
+/**
+ * The only reachable next action. There is deliberately no `proceed` member. Even a target whose
+ * *content* looks untouched must stop here: without provider-bound identity, "untouched" is a
+ * statement about a document, not about the production database.
+ */
+export type LiteratureRolloutNextAction = 'stop_read_only_reconciliation'
+
+/**
+ * What the observed *content* looks like. Every member is explicitly non-authoritative: these
+ * describe a document, not a proven database, and none of them unlocks any action.
+ */
+export type LiteratureContentAssessment =
+  /** The observation did not complete; nothing may be concluded even about the content. */
+  | 'content_observation_incomplete_nonauthoritative'
+  /** No history and no Literature objects appear in the evidence. */
+  | 'content_absent_nonauthoritative'
+  /** The content shows a state no single successful transaction produces. */
+  | 'content_partial_incident_nonauthoritative'
   /** History and inventory are complete, but something about the objects drifted. */
-  | 'applied_drifted'
-  /** Objects exist but the set is incomplete — a partial or interrupted application. */
-  | 'partial_incident'
-  /** The observation itself is inconclusive; nothing may be concluded from it. */
-  | 'ambiguous'
-
-export type LiteratureRolloutNextAction =
-  /** Safe to proceed to the next authorized step. */
-  | 'proceed'
-  /** Re-run the read-only preflight; a fresh authorization may then apply the migration. */
-  | 'reauthorize_from_preflight'
-  /** Stop. A human must reconcile read-only before anything else happens. */
-  | 'stop_read_only_reconciliation'
+  | 'content_drifted_nonauthoritative'
+  /** The catalog content matches the expected foundation state exactly. Still not permission. */
+  | 'catalog_matches_expected_nonauthoritative'
 
 export interface LiteratureRolloutObservation {
-  /**
-   * Verdict from `evaluateLiteratureProviderAttestation`. Mandatory. Anything but `attested`
-   * short-circuits every other check — an unproven target cannot produce a success classification.
-   */
-  targetAttestation: LiteratureAttestationVerdict
   /** Whether the read-only observation completed. False means the target could not be inspected. */
   observationComplete: boolean
-  /** Migration versions recorded on the target, or null when history could not be read. */
+  /** Migration versions recorded in the evidence, or null when history could not be read. */
   recordedMigrationVersions: readonly string[] | null
-  /** Literature tables actually present, or null when the catalog could not be read. */
+  /** Literature tables present in the evidence, or null when the catalog could not be read. */
   presentTables: readonly string[] | null
-  /** Literature functions actually present, or null when the catalog could not be read. */
+  /** Literature functions present in the evidence, or null when the catalog could not be read. */
   presentFunctions: readonly string[] | null
   /** Expected tables, from the catalog expectations. */
   expectedTables: readonly string[]
@@ -74,8 +81,12 @@ export interface LiteratureRolloutObservation {
 }
 
 export interface LiteratureRolloutVerdict {
+  /** Always `provider_attestation_required` while Layer 3 is absent. */
   classification: LiteratureRolloutClassification
+  /** Always `stop_read_only_reconciliation` while Layer 3 is absent. */
   nextAction: LiteratureRolloutNextAction
+  /** Non-authoritative description of what the evidence content shows. */
+  contentAssessment: LiteratureContentAssessment
   /** Always false. Retrying after an ambiguous acknowledgement is never permitted. */
   automaticRetryPermitted: false
   /** Always false. This module never authorizes reapplication. */
@@ -94,6 +105,11 @@ const NEVER_PERMITTED = {
   migrationHistoryEditPermitted: false,
 } as const
 
+const ALWAYS_BLOCKED = {
+  classification: 'provider_attestation_required',
+  nextAction: 'stop_read_only_reconciliation',
+} as const satisfies Pick<LiteratureRolloutVerdict, 'classification' | 'nextAction'>
+
 function sortedMissing(expected: readonly string[], present: readonly string[]): string[] {
   const seen = new Set(present)
   return expected.filter((name) => !seen.has(name)).sort()
@@ -102,33 +118,28 @@ function sortedMissing(expected: readonly string[], present: readonly string[]):
 /**
  * Classify a read-only observation of the target after an application attempt.
  *
- * Ordering matters. Target identity is checked before anything else, because a catalog that looks
- * perfect proves nothing when it might have come from a different database. Incomplete observation
- * is ambiguous next, because a partial read must never be reported as a clean result. A
+ * The classification and next action are constants while Layer 3 is absent; what this function
+ * actually computes is the non-authoritative content assessment and its findings, which exist for
+ * the human reconciling with the owner. An incomplete observation is assessed before anything
+ * else, because a partial read must never be reported as a clean content match; a
  * present-but-incomplete object set is an incident rather than drift, because it is the signature
  * of an interrupted apply.
  */
 export function classifyLiteratureRollout(
   observation: LiteratureRolloutObservation,
 ): LiteratureRolloutVerdict {
-  const findings: string[] = []
+  const findings: string[] = [
+    'Target identity is not proven: the provider-bound Layer-3 adapter is not implemented in ' +
+      'this repository. Every statement below describes evidence content only, and no content, ' +
+      'however perfect, authorizes any action.',
+  ]
 
-  if (observation.targetAttestation.status !== 'attested') {
-    findings.push(
-      `Target identity is not proven (${observation.targetAttestation.reason}): ` +
-        observation.targetAttestation.detail,
-    )
-    findings.push(
-      'No classification of the database state is possible without provider-bound attestation. ' +
-        'Repository and content checks are non-authoritative.',
-    )
-    return {
-      classification: 'provider_attestation_required',
-      nextAction: 'stop_read_only_reconciliation',
-      ...NEVER_PERMITTED,
-      findings,
-    }
-  }
+  const conclude = (contentAssessment: LiteratureContentAssessment): LiteratureRolloutVerdict => ({
+    ...ALWAYS_BLOCKED,
+    contentAssessment,
+    ...NEVER_PERMITTED,
+    findings,
+  })
 
   if (
     !observation.observationComplete ||
@@ -140,12 +151,7 @@ export function classifyLiteratureRollout(
       'The read-only observation did not complete, so no conclusion may be drawn about whether ' +
         'the migration was applied.',
     )
-    return {
-      classification: 'ambiguous',
-      nextAction: 'stop_read_only_reconciliation',
-      ...NEVER_PERMITTED,
-      findings,
-    }
+    return conclude('content_observation_incomplete_nonauthoritative')
   }
 
   const history = [...observation.recordedMigrationVersions].sort()
@@ -158,23 +164,20 @@ export function classifyLiteratureRollout(
     observation.presentTables.length > 0 || observation.presentFunctions.length > 0
   const allObjectsPresent = missingTables.length === 0 && missingFunctions.length === 0
 
-  // Nothing recorded and nothing present: the attempt did not land. This is the one state from
-  // which a fresh authorization may legitimately apply the migration.
+  // Nothing recorded and nothing present: the evidence content says the attempt did not land.
+  // Whether the *database* is in that state is exactly what Layer 3 would have to prove.
   if (history.length === 0 && !anyObjectPresent) {
     findings.push(
-      'No migration history and no Literature objects are present. The foundation migration was ' +
-        'not applied.',
+      'The evidence content records no migration history and no Literature objects. As content, ' +
+        'that is the shape of a target where the foundation migration was not applied — but ' +
+        'establishing that about the real database, and any fresh authorization, requires the ' +
+        'provider-bound gate.',
     )
-    return {
-      classification: 'not_applied',
-      nextAction: 'reauthorize_from_preflight',
-      ...NEVER_PERMITTED,
-      findings,
-    }
+    return conclude('content_absent_nonauthoritative')
   }
 
   // Objects without history, or history without objects, or a half-built schema. Each of these is
-  // an incident: the target is in a state no single successful transaction produces.
+  // an incident signature: a state no single successful transaction produces.
   if (
     !allObjectsPresent ||
     history.length !== LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT
@@ -185,67 +188,56 @@ export function classifyLiteratureRollout(
     }
     if (history.length !== LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT) {
       findings.push(
-        `The target records ${history.length} migration(s) ` +
+        `The evidence records ${history.length} migration(s) ` +
           `[${history.join(', ')}]; exactly ` +
           `${LITERATURE_EXPECTED_POST_APPLICATION_MIGRATION_COUNT} is expected.`,
       )
     }
     findings.push(
-      'Partial or inconsistent state. Do not reapply and do not repair migration history; ' +
+      'Partial or inconsistent content. Do not reapply and do not repair migration history; ' +
         'reconcile read-only with the owner.',
     )
-    return {
-      classification: 'partial_incident',
-      nextAction: 'stop_read_only_reconciliation',
-      ...NEVER_PERMITTED,
-      findings,
-    }
+    return conclude('content_partial_incident_nonauthoritative')
   }
 
+  const driftFindings: string[] = []
   if (observation.unexpectedLiteratureObjects.length > 0) {
-    findings.push(
+    driftFindings.push(
       `Unexpected Literature objects present: ` +
         `${[...observation.unexpectedLiteratureObjects].sort().join(', ')}.`,
     )
   }
   if (observation.securityChecksPassed === false) {
-    findings.push('One or more catalog, RLS, grant, policy, or trigger checks failed.')
+    driftFindings.push('One or more catalog, RLS, grant, policy, or trigger checks failed.')
   }
   if (observation.securityChecksPassed === null) {
-    findings.push('Security checks could not be evaluated.')
+    driftFindings.push('Security checks could not be evaluated.')
   }
   if (observation.totalRowCount === null) {
-    findings.push('Literature row counts could not be evaluated.')
+    driftFindings.push('Literature row counts could not be evaluated.')
   } else if (!Number.isInteger(observation.totalRowCount) || observation.totalRowCount < 0) {
-    findings.push(
+    driftFindings.push(
       `Literature row count ${observation.totalRowCount} is not a non-negative integer.`,
     )
   } else if (observation.totalRowCount !== 0) {
-    findings.push(
+    driftFindings.push(
       `Literature tables hold ${observation.totalRowCount} rows. A foundation-only rollout ` +
         'imports no data.',
     )
   }
 
-  if (findings.length > 0) {
-    return {
-      classification: 'applied_drifted',
-      nextAction: 'stop_read_only_reconciliation',
-      ...NEVER_PERMITTED,
-      findings,
-    }
+  if (driftFindings.length > 0) {
+    findings.push(...driftFindings)
+    return conclude('content_drifted_nonauthoritative')
   }
 
   findings.push(
-    'The foundation migration is applied to the attested target, exactly one migration is ' +
-      'recorded, the object inventory is exact, security checks passed, and the corpus is empty.',
+    'The evidence content matches the expected foundation state exactly: one recorded ' +
+      'migration, exact object inventory, security checks passed, empty corpus. This remains a ' +
+      'statement about a document. It does not establish which database produced it, and it ' +
+      'authorizes nothing.',
   )
-  return {
-    classification: 'applied_correct',
-    nextAction: 'proceed',
-    ...NEVER_PERMITTED,
-    findings,
-  }
+  return conclude('catalog_matches_expected_nonauthoritative')
 }
 
 /**
@@ -263,8 +255,9 @@ export function resolveLostAcknowledgement(): {
     nextAction: 'stop_read_only_reconciliation',
     automaticRetryPermitted: false,
     instruction:
-      'The acknowledgement was lost. Obtain a provider-bound read-only attestation and classify ' +
-      'the observed state. Do not resend the migration, do not run migration repair, and do not ' +
-      'compensate.',
+      'The acknowledgement was lost. Observe the target read-only and classify the content, ' +
+      'then reconcile with the owner. Do not resend the migration, do not run migration repair, ' +
+      'and do not compensate. No classification can exceed provider_attestation_required until ' +
+      'the provider-bound adapter exists.',
   }
 }

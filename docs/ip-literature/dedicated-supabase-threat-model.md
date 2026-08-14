@@ -82,8 +82,15 @@ A credential reaching a log, an error message, a receipt, a test fixture, or the
 by a test that checks four distinct failure messages against three placeholder values. The redacted
 `describeLiteratureBinding()` view is what callers are expected to log. The preflight and postflight
 hold no credential at all: they evaluate an operator-captured observation document, and
-`assertObservationCarriesNoSecret()` rejects any document containing an `sb_secret_…`,
-`sb_publishable_…`, or JWT-shaped value. Rehearsal child processes are spawned with every
+`assertDecodedEvidenceCarriesNoSecret()` rejects any document whose decoded keys **or decoded
+string values** carry an `sb_secret_…`/`sb_publishable_…` marker, a JWT-shaped or
+inline-credential value, or the prohibited secret vocabulary (secret, token, password,
+authorization, bearer, api key, connection string, database URL, service role, …) —
+case-insensitively, with a closed allowance list for the exact role name `service_role` in role
+positions, PostgreSQL ACL grammar entries, and the contract's own `serviceRoleExecute` field.
+Rejected content is never echoed into an error message; legitimate catalog content that would
+otherwise trip the vocabulary is represented as a typed, exact value rather than by weakening the
+screening. Rehearsal child processes are spawned with every
 `LITERATURE_SUPABASE_*`, `SUPABASE_*`, `PG*`, `POSTGRES_*`, `DOCKER_*`, `DATABASE_URL`, and
 `NEXT_PUBLIC_SUPABASE_URL` variable stripped. Test fixtures use self-describing placeholders; the
 JWTs the classifier tests are constructed at runtime, so no credential-shaped literal is committed.
@@ -227,10 +234,13 @@ this: hashing proves bytes did not change, not which database produced them.
 1. **The evidence body cannot name its own target.** There is no `projectRef` or `hostname` field in
    the schema, and the schema is `.strict()`, so a document adding one is rejected as an unknown
    field. Relabelling is unrepresentable, not merely detected.
-2. **Identity comes from the adapter.** `LiteratureProviderAttestation.providerProjectRef`
-   originates in a project-scoped connector context and is compared against the approved ref, along
-   with the provider URL, query-bundle identity, repository commit, migration path and checksum,
-   content checksum, completeness, and a 10-minute freshness window.
+2. **Identity comes from the adapter.** The future adapter's project ref originates in a
+   project-scoped connector context; the bindings it must carry (provider URL, query-plan
+   identity, repository commit, migration path and checksum, content checksum, completeness, a
+   10-minute freshness window) are recorded as inert data in
+   `LITERATURE_LAYER3_REQUIRED_BINDINGS`. No exported type or evaluator can represent or judge a
+   satisfied attestation today — the second review showed any such surface is forgeable while the
+   adapter is absent, so it was removed rather than hardened.
 
 **Status: honestly blocked.** The provider adapter is deliberately unimplemented —
 `captureLiteratureProviderAttestation()` always reports `provider_adapter_not_implemented`, so every
@@ -245,16 +255,21 @@ the migration cannot be applied. That is the intended state.
 A function whose signature and ACLs are untouched but whose body was replaced; a changed owner,
 column default, constraint, trigger or index definition; a flipped forced-RLS flag.
 
-**Controls (code).** The comparator binds a generated, committed artifact covering 13 catalog
-sections with an exact row count and checksum each — including function definitions (by SHA-256),
-owners, strictness, parallel safety, leakproof state, full `proconfig`, raw ACL rows, columns with
-defaults and identity/generated state, constraint definitions, trigger definitions and enabled
-state, index definitions and validity, schema and default privileges, and role attributes including
-`BYPASSRLS`. The rehearsal proves detection end to end: scenario `R17` replaces
-`literature_admin_stats_v1`'s body while keeping its signature and ACLs, and the comparison fails.
+**Controls (code).** The comparator binds a generated, committed artifact covering the 9
+foundation-owned catalog sections with an exact row count and checksum each — including function
+definitions (by SHA-256), owners, strictness, parallel safety, leakproof state, full `proconfig`,
+raw ACL rows, columns with defaults and identity/generated state, constraint definitions, trigger
+definitions and enabled state, index definitions and validity, and the full table-privilege grid.
+Global state the migration does not own is deliberately outside the exact artifact (H-1): `pg_trgm`
+and role attributes (including `BYPASSRLS`) are checked semantically as scoped managed
+prerequisites, and default/schema privileges are checked as a pre/post delta that must be empty
+across the apply. The rehearsal proves detection end to end: scenario `R25` replaces
+`literature_admin_stats_v1`'s body while keeping its signature and ACLs and the comparison fails;
+`R14` detects a tampered role attribute through the scoped checks; `R15` detects a new
+default-privilege grant through the delta.
 
 Empty or missing evidence is never read as "nothing granted": the privilege grid emits an explicit
-`granted` boolean for all 224 (table, role, privilege) combinations, and `R18` proves an emptied
+`granted` boolean for all 224 (table, role, privilege) combinations, and `R26` proves an emptied
 array fails.
 
 ## T21 — Evidence-document parsing attacks
@@ -262,22 +277,32 @@ array fails.
 A document that parses differently than it reads: duplicate keys, unknown fields surviving a cast,
 wrong types becoming an uncontrolled `TypeError`, or a credential hidden behind Unicode escapes.
 
-**Controls (code).** A custom recursive-descent JSON parser rejects duplicate keys outright rather
-than resolving last-value-wins. A strict zod schema rejects unknown fields (top-level and nested),
-missing fields, wrong types, non-object catalog rows, partial catalog sections, and unexpected extra
-sections. Credential screening runs **after** decoding, recursively over every key and value, with
-case-normalised patterns — so `sb\u005fsecret_…` and `SB_SeCrEt_…` are caught identically to the
-plain form. Every failure is a typed `LiteratureEvidenceError` with a code.
+**Controls (code).** A custom, JSON-compliant recursive-descent parser rejects duplicate keys
+outright rather than resolving last-value-wins, and rejects unescaped control characters
+(U+0000–U+001F) inside strings as RFC 8259 requires. Every row of every catalog section has its own
+`.strict()` runtime schema with exact field types, so unknown nested fields (including any casing
+or Unicode-escaped spelling of `projectRef`/`hostname`), missing fields, numeric names, malformed
+booleans, and malformed arrays are all controlled schema violations — never a later raw
+`TypeError`. The evidence documents are phase-specific: the preflight schema has no
+`totalRowCount`, the postflight schema requires it, and each binds the identity of the exact query
+plan that produced it. Credential screening runs **after** decoding, recursively over every key and
+value, with case-normalised patterns — so `sb\u005fsecret_…` and `SB_SeCrEt_…` are caught
+identically to the plain form. Every failure is a typed `LiteratureEvidenceError` with a code.
 
 ## T22 — A success verdict for an unproven or wrong target
 
-The postflight printing `applied_correct` / `proceed` and only later emitting a warning.
+The postflight printing a success verdict, or an authoritative-looking flag, and only later
+emitting a warning.
 
-**Controls (code).** Target attestation is the _first_ check in `classifyLiteratureRollout`, before
-any catalog reasoning. An unattested, wrong, stale, or incomplete attestation yields
-`provider_attestation_required` with `stop_read_only_reconciliation`. There is no branch that
-reaches `applied_correct` without `status: 'attested'`, and the postflight exits non-zero for every
-classification except `applied_correct`, so the verdict and the exit status always agree.
+**Controls (code).** The success verdicts no longer exist. After the second review demonstrated
+that any evaluator accepting attestation-shaped input is forgeable while the adapter is absent,
+every production verdict union was stripped of its success members: the preflight resolves only to
+`blocked` or `provider_attestation_required`; the postflight classification is always
+`provider_attestation_required` with next action `stop_read_only_reconciliation`, plus an
+explicitly `*_nonauthoritative` content assessment; and both CLIs exit nonzero unconditionally. A
+forged plain object, a bare attested-status literal, an `as any` cast, or a deserialized fixture
+has nothing to flip — the adversarial `authority-lockdown` suite replays every bypass shape from
+the review against every exported symbol and asserts no success token can appear.
 
 ## Residual risks accepted
 

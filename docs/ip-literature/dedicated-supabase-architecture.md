@@ -169,10 +169,25 @@ it is not discovered as a surprise.
 ## Security posture of the foundation schema
 
 Verified against a real PostgreSQL 17 target by the disposable rehearsal, not asserted from reading
-the SQL. The byte-exact contract lives in the generated artifact
-`foundation-catalog-expectations.json` (13 catalog sections, each with an exact row count and
-checksum), which binds function bodies, owners, column defaults, constraint/trigger/index
-definitions, the full 224-row privilege grid, and role attributes:
+the SQL. The catalog contract is split by ownership so the disposable baseline is never passed off
+as the managed-project baseline (review finding H-1):
+
+- **Exact, foundation-owned** — the generated artifact `foundation-catalog-expectations.json`
+  binds the 9 catalog sections the migration itself creates or alters (relations, columns,
+  constraints, functions by definition SHA-256, triggers, indexes, policies, the full 224-row
+  table-privilege grid, and types), each with an exact row count and checksum.
+- **Scoped managed prerequisites** — checked semantically, never byte-exactly: `pg_trgm` must be
+  absent or installed in exactly the `extensions` schema before the apply (installed anywhere else
+  is rejected — `CREATE EXTENSION IF NOT EXISTS` would not relocate it), installed in exactly
+  `extensions` afterwards with its version observed but not pinned; the three API roles must exist,
+  not be superusers, and carry the expected `BYPASSRLS` shape.
+- **Pre/post global-state deltas** — default privileges and schema privileges, which the migration
+  does not touch, must be _unchanged across the apply_. No fixed inventory is asserted, because the
+  managed project ships baseline extensions and `pg_default_acl` rows of its own; the rehearsal
+  proves the empty delta in the disposable, and the managed delta remains an execution-time,
+  provider-bound requirement that cannot produce success in this PR.
+
+The foundation-owned invariants:
 
 - 8 tables, all with row-level security **enabled** and **zero policies**. Access is by
   `service_role` bypassing RLS, not by any policy. A policy appearing on these tables is drift.
@@ -187,15 +202,19 @@ definitions, the full 224-row privilege grid, and role attributes:
 
 | Command                                   | What it does                                                                         |
 | ----------------------------------------- | ------------------------------------------------------------------------------------ |
-| `npm run literature:dedicated:rehearse`   | Applies the migration to a throwaway PostgreSQL 17 container and proves 23 scenarios |
+| `npm run literature:dedicated:rehearse`   | Applies the migration to a throwaway PostgreSQL 17 container and proves 41 scenarios |
 | `npm run literature:dedicated:preflight`  | Read-only. Proves repository and target state before anything is applied             |
 | `npm run literature:dedicated:postflight` | Read-only. Classifies the target after an attempt, including a lost acknowledgement  |
 | `npm run literature:dedicated:test`       | The unit and contract suites                                                         |
 
 The preflight and postflight **hold no credential and open no connection.** The operator captures a
-read-only observation separately (`--print-observation-sql` emits the exact statements, each wrapped
-in `BEGIN READ ONLY`) and the verifiers evaluate that JSON document offline. This means no code
-path in this repository can log, store, or transmit the Literature secret.
+read-only observation separately (`npm run literature:dedicated:preflight -- --print-query-plans`
+emits the three phase-specific query plans — preflight, postflight existence probe, postflight
+complete — each statement wrapped in `BEGIN READ ONLY` and each plan carrying its own SHA-256
+identity) and the verifiers evaluate that JSON document offline. This means no code path in this
+repository can log, store, or transmit the Literature secret. While the provider-bound Layer-3
+adapter is unimplemented, both commands terminate at `provider_attestation_required` and exit
+nonzero for every input: there is no success verdict in this PR.
 
 The rehearsal container publishes **no port**, so it has no TCP surface and cannot collide with the
 protected real-local database on 55322.

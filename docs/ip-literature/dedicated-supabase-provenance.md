@@ -39,17 +39,24 @@ pretend otherwise.
 
 ## What a real attestation must bind
 
-When Layer 3 is implemented, `LiteratureProviderAttestation` must carry all of:
+The second independent review established that no exported type or evaluator may represent a
+satisfied attestation while the adapter is absent — a structurally typed object is always forgeable
+through a cast or a deserialized fixture. The future bindings therefore live only as inert data
+(`LITERATURE_LAYER3_REQUIRED_BINDINGS`): nothing consumes them as an input, and holding a value
+shaped like them grants nothing. When Layer 3 is implemented — in its own, separately reviewed
+PR — the adapter must bind all of:
 
-- `mechanism` — exactly `supabase_project_scoped_read_only_mcp_v1`
-- `providerProjectRef` — **from the adapter context**, never from a document body
-- `providerProjectUrl` — the provider-returned identity
-- `queryBundleSha256` — identity of the exact read-only bundle that produced the evidence
-- `repositoryCommit` — the owner-approved commit
-- `migrationPath` and `migrationSha256`
-- `capturedAt` — checked against a 10-minute freshness window
-- `contentSha256` — recomputed locally from the evidence
-- `completeness` — anything but `complete` fails
+- the capture mechanism, exactly `supabase_project_scoped_read_only_mcp_v1`
+- the project ref, **from the adapter context**, never from a document body
+- the provider-returned project URL
+- the identity (SHA-256) of the exact phase query plan that produced the evidence
+- the owner-approved repository commit
+- the migration path and SHA-256
+- the capture timestamp, checked against a 10-minute freshness window
+- the canonical checksum of the evidence content
+- capture completeness — anything but complete fails
+- migration history taken from the provider's project-scoped `list_migrations` operation, never
+  from a manually fabricated SQL result
 
 The capture channel must be project-scoped to `itcttmkxdxvwmwcmzmey`, read-only, without
 account-wide project selection during capture, and without any mutating tool in scope.
@@ -73,12 +80,18 @@ re-ingestible** to produce an authoritative PASS: feeding it back through the pr
 `provider_attestation_required`, and feeding it through the postflight yields
 `provider_attestation_required` as a _classification_, not a warning appended to a success.
 
-The verdict names were chosen so no caller can misread them:
+The verdict names were chosen so no caller can misread them, and the unions contain **no success
+member at all** — the second correction removed `ready_to_apply`, `applied_correct`, and `proceed`
+from production code entirely rather than trying to guard them:
 
-- `blocked`
-- `repository_checks_passed_nonauthoritative`
-- `provider_attestation_required`
-- `ready_to_apply` — unreachable today
+- preflight: `blocked` or `provider_attestation_required`, with layer summaries
+  `repository_checks_passed_nonauthoritative` / `content_checks_passed_nonauthoritative`
+- postflight: classification `provider_attestation_required`, next action
+  `stop_read_only_reconciliation`, plus a `*_nonauthoritative` content assessment
+  (e.g. `catalog_matches_expected_nonauthoritative`)
+
+The future provider-adapter PR will introduce the first success-capable verdict, under its own
+independent review.
 
 ## Migration-history fidelity
 
