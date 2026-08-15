@@ -220,6 +220,7 @@ export default async function LiteratureAdminPage({
         title={capabilityT('bannerTitle')}
         description={capabilityT(`state.${stats.capability.state}`)}
         projectLabel={capabilityT('projectLabel')}
+        reasonLabel={capabilityT('reason')}
       />
 
       <section
@@ -503,7 +504,20 @@ export default async function LiteratureAdminPage({
 
         {queue.error ? (
           <Card className="border-destructive/40">
-            <CardContent className="p-6 text-sm">{t('queue.unavailable')}</CardContent>
+            <CardContent className="p-6 text-sm">
+              {/*
+                Not one generic sentence for every failure. A rejected filter, an unconfigured
+                deployment, a missing foundation, and a transient outage all land here and call for
+                different responses, so the capability says which one it was.
+              */}
+              <LiteratureCapabilityNotice
+                capability={queue.capability}
+                title={t('queue.unavailable')}
+                description={capabilityT(`state.${queue.capability.state}`)}
+                projectLabel={capabilityT('projectLabel')}
+                reasonLabel={capabilityT('reason')}
+              />
+            </CardContent>
           </Card>
         ) : queue.data ? (
           <>

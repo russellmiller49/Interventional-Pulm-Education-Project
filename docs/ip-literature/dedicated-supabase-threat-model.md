@@ -1,5 +1,16 @@
 # Threat model — dedicated Literature Supabase bootstrap
 
+> **Superseded in part by the production bring-up.** This document was written while the production
+> runtime was deliberately inactive. That is no longer the state of the system: the foundation
+> migration has been applied to `IP_Literature` (provider-recorded version `20260815223259`) and
+> `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is now `activated_by_reviewed_cutover`, so a correctly
+> configured deployment constructs a real client for the dedicated project. T3, T23, and open
+> residual 6 below are annotated inline where their present-tense claims changed. Every _validation_
+> control described here — byte-exact URL, single approved ref, prohibited main-project ref,
+> `sb_secret_…` credential class, fail-closed partial configuration, no main-project fallback — is
+> unchanged and still in force, and a new per-operation capability allowlist withholds every write
+> path.
+
 Scope: binding the application to the dedicated `IP_Literature` project, and the later
 foundation-migration rollout and Railway cutover. Everything here describes controls that exist in
 the repository today plus the ones the runbook requires of a human operator.
@@ -56,8 +67,17 @@ Variables set on the wrong Railway service, or on preview instead of production.
 the authorization record and to re-read the variables back after setting them. **Controls (code).**
 If the variables land somewhere that is not the approved project, the resolver fails closed rather
 than reading it; a preview or branch hostname is not the byte-exact approved value and is refused
-with `noncanonical_production_url`. While the production runtime is not activated (T23), variables
-on the wrong service cannot activate a client anywhere.
+with `noncanonical_production_url`.
+
+**Changed by the production bring-up.** This paragraph previously leaned on T23 — the runtime being
+inactive — to argue that misplaced variables could not reach a client anywhere. That argument no
+longer holds, and it was the load-bearing half of this control. The correct production values on
+the _wrong_ service now do construct a privileged client against `IP_Literature` on the first
+Literature request — the byte-exact URL gate does not help, because the values are correct.
+What bounds the blast radius instead is the capability allowlist: the resulting client carries only
+the four foundation reads, so a misplaced deployment can read draft records behind its own
+site-admin gate but cannot mutate the corpus. Naming the service and environment in the
+authorization record, and reading the variables back afterwards, is now the primary control.
 
 **Residual (open).** Nothing in this repository can observe Railway. Setting the right values on the
 wrong service produces a Literature module that is _not configured_ on the intended service — a
@@ -372,20 +392,23 @@ gold-set operations — so setting the documented Railway variables would have a
 mutation against `IP_Literature` before the separately reviewed capability-gating / cutover package
 exists. Railway variables being unset today is a fact about the environment, not a control.
 
-**Controls (code).** Validation and activation are separated. `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`
-is a source constant currently set to `not_activated`; while it holds that value, a strict
-configuration that passes every check resolves to the typed state `not_activated` /
-`dedicated_runtime_not_activated` instead of `bound`, and carries **no** `secretKey` field for a
-caller to misuse. `createLiteratureAdmin()` reaches `createClient` only when the binding is `bound`,
-the mode is exactly `local`, and the URL is on the explicit canonical local-host allowlist
-(`localhost`, `127.0.0.1`, `[::1]` — never the wildcard bind address `0.0.0.0`, and never an alias
-spelling such as `127.1`, `0177.0.0.1`, or `2130706433`, which are refused on the raw authority
-before URL normalization could map them onto the list) — three agreeing gates, none of which any
-environment variable can satisfy for a remote host. A test suite mocks
-Supabase client construction and asserts, across no-variable / partial / exactly-valid / invalid
-configurations, that `createClient` is never called, that the existing read and mutating server
-functions all return "not configured", and that `.rpc()` and `.from()` are never invoked — while a
-loopback local configuration still constructs exactly its intended client.
+**Controls (code) — as of the production bring-up.** Validation and activation are still separated,
+and `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is still a source constant — but it now holds
+`activated_by_reviewed_cutover`, so a strict configuration that passes every check resolves to
+`bound` and `createLiteratureAdmin()` does construct a remote client. The canonical local-host
+allowlist now applies to local mode only; for a strict production binding the surviving target gate
+is the byte-exact canonical URL plus the approved-ref and credential-class checks.
+
+The control that replaces "no client exists" is narrower and is enforced separately:
+`createLiteratureAdmin()` is module-private, and callers obtain a client only through
+`literatureClientForOperation`, which consults the closed source-controlled allowlist
+`LITERATURE_ACTIVATED_OPERATIONS` — `article_search`, `article_detail`, `admin_stats`,
+`review_queue_read`. `article_curation`, `gold_set_read`, and `gold_set_mutation` are withheld, so
+the mutating RPCs named above are unreachable from any web request at any configuration. The test
+suite mocks Supabase client construction and asserts that no-variable, partial, wrong-project,
+legacy-credential, and slash-less configurations still construct nothing; that the exactly valid
+configuration constructs exactly one client for the approved URL and ref; and that in that same
+working configuration the withheld operations still reach neither `.rpc()` nor `.from()`.
 
 Activation is deliberately **not** an environment variable: a second variable would have recreated
 the same defect one level down. Only a reviewed code change in the capability-gating / cutover PR
@@ -428,6 +451,9 @@ of them survive, and an extra `literature_`-named table is still reported as dri
    evidence rather than assuming the filename version.
 5. **Admin gold-set surfaces would error against a foundation-only database.** This is why the
    runbook gates Railway cutover behind a separate capability-gating package (M-4).
-6. **The production Literature runtime is disabled** (T23). Correct variables produce no client
-   until the capability-gating / cutover package flips the activation constant, so production
-   Literature stays "not configured" in the meantime.
+6. **The production Literature runtime is activated** (T23, revised). Correct variables now produce
+   a read-only client for the dedicated project. Residual: a deployment holding the correct values
+   can read draft Literature records — behind its own site-admin gate — on whatever service carries
+   them, and no repository control can observe which service that is. Writes remain unreachable
+   through the capability allowlist, and ingestion is an operator CLI rather than an application
+   operation.

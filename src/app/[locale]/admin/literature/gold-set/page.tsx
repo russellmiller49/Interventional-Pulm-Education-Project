@@ -11,6 +11,7 @@ import { GoldSetTestUnlockButton } from '@/features/literature/components/GoldSe
 import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
 import { literatureGoldBatchQuerySchema } from '@/features/literature/schemas/gold-set'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
+import { literatureRuntimeMode } from '@/features/literature/server/database-client'
 import {
   listLiteratureGoldSetBatches,
   loadLiteratureGoldReviewItem,
@@ -89,6 +90,7 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
               title={capabilityT('bannerTitle')}
               description={capabilityT(`state.${batchesResult.capability.state}`)}
               projectLabel={capabilityT('projectLabel')}
+              reasonLabel={capabilityT('reason')}
             />
           </CardContent>
         </Card>
@@ -96,6 +98,8 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
     )
   }
 
+  // Only a local-mode runtime can be repaired by starting the local Supabase stack.
+  const localMode = literatureRuntimeMode() === 'local'
   const batches = batchesResult.data ?? []
   const selectedBatch = batches.find((batch) => batch.id === filters.batchId) ?? batches[0]
   const testLocked =
@@ -162,8 +166,20 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
       {batchesResult.error || itemResult.error ? (
         <Card className="border-destructive/40">
           <CardContent className="p-5 text-sm">
-            {batchesResult.error ?? itemResult.error}. Start the isolated database with{' '}
-            <code>npm run literature:local:start</code>, then restart the development server.
+            {/*
+              The local-stack instruction that used to live here was printed for every failure,
+              including in a deployed environment where `npm run literature:local:start` is not a
+              remedy an operator can act on. The reported reason is shown instead, and the local
+              hint only where the runtime is actually in local mode.
+            */}
+            {batchesResult.error ?? itemResult.error}
+            {localMode ? (
+              <>
+                {' '}
+                Start the isolated database with <code>npm run literature:local:start</code>, then
+                restart the development server.
+              </>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

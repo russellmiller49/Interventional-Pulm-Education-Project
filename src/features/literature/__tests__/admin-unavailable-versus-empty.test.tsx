@@ -40,20 +40,32 @@ describe('the shared count display', () => {
     expect(literatureCountDisplay('foundation_ready_populated', 25, UNAVAILABLE)).toBe(25)
   })
 
-  it.each(
-    LITERATURE_CAPABILITY_STATES.filter(
-      (state) => state !== 'foundation_ready_empty' && state !== 'foundation_ready_populated',
-    ),
-  )('renders %s as unavailable, even when a number is available', (state) => {
-    // The second argument is deliberately a real number: a stale or partially populated value must
-    // not leak through a state that did not measure it.
-    expect(literatureCountDisplay(state as LiteratureCapabilityState, 0, UNAVAILABLE)).toBe(
-      UNAVAILABLE,
-    )
-    expect(literatureCountDisplay(state as LiteratureCapabilityState, 132_350, UNAVAILABLE)).toBe(
-      UNAVAILABLE,
-    )
+  const MEASURED_STATES: LiteratureCapabilityState[] = [
+    'foundation_ready_empty',
+    'foundation_ready_populated',
+    // A filtered read measures its own result set: the number is real, and the state simply makes
+    // no claim about the size of the corpus.
+    'foundation_ready_filtered',
+  ]
+
+  it('renders a filtered count as a number, without claiming a corpus size', () => {
+    expect(literatureCountDisplay('foundation_ready_filtered', 0, UNAVAILABLE)).toBe(0)
+    expect(literatureCountDisplay('foundation_ready_filtered', 7, UNAVAILABLE)).toBe(7)
   })
+
+  it.each(LITERATURE_CAPABILITY_STATES.filter((state) => !MEASURED_STATES.includes(state)))(
+    'renders %s as unavailable, even when a number is available',
+    (state) => {
+      // The second argument is deliberately a real number: a stale or partially populated value
+      // must not leak through a state that did not measure it.
+      expect(literatureCountDisplay(state as LiteratureCapabilityState, 0, UNAVAILABLE)).toBe(
+        UNAVAILABLE,
+      )
+      expect(literatureCountDisplay(state as LiteratureCapabilityState, 132_350, UNAVAILABLE)).toBe(
+        UNAVAILABLE,
+      )
+    },
+  )
 })
 
 describe('the administration page cannot reintroduce a misleading zero', () => {
@@ -66,15 +78,29 @@ describe('the administration page cannot reintroduce a misleading zero', () => {
     expect(executable).toContain('literatureCountDisplay(stats.capability.state')
   })
 
-  it('applies no nullish-zero fallback to a stats value', () => {
-    // The exact shape of the original defect: `stats.data?.x ?? 0`, `relevance[state] ?? 0`,
-    // `visibility[state] ?? 0`, `sourceKindCounts[k] ?? 0`.
-    const offenders = [
-      ...executable.matchAll(
-        /(stats\.data\?[^\n]*|relevance\[[^\]]*\]|visibility\[[^\]]*\])\s*\?\?\s*0/gu,
-      ),
-    ].map((match) => match[0])
+  it('applies no nullish-zero fallback anywhere', () => {
+    /*
+     * A blanket ban rather than a pattern match on the four shapes the defect happened to take.
+     *
+     * The earlier version enumerated `stats.data?.x ?? 0`, `relevance[state] ?? 0`, and friends,
+     * which is exactly the wrong shape for this guard: the same defect reintroduced through a local
+     * alias — `const rel = stats.data?.relevanceCounts ?? {}` then `rel.unreviewed ?? 0` — matches
+     * none of those patterns. Every legitimate count on this page goes through
+     * `literatureCountDisplay`, so the honest invariant is that the page contains no `?? 0` at all.
+     */
+    const offenders = [...executable.matchAll(/[^\n]*\?\?\s*0[^\n]*/gu)].map((match) =>
+      match[0].trim(),
+    )
     expect(offenders).toEqual([])
+  })
+
+  it('renders a count only through the helper, for every count it shows', () => {
+    // `?? {}` on the counts maps is fine and still present — an absent map is genuinely empty when
+    // the read succeeded. What matters is that reading OUT of those maps goes through the helper.
+    const reads = [...executable.matchAll(/\{(relevance|visibility)\[[^\]]*\]\}/gu)].map(
+      (match) => match[0],
+    )
+    expect(reads).toEqual([])
   })
 
   it('renders the capability state rather than only an error string', () => {

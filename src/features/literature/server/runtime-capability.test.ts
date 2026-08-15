@@ -19,6 +19,7 @@ import {
   capabilityFromArticleCount,
   capabilityFromBinding,
   capabilityFromFailure,
+  capabilityFromFilteredRead,
   capabilityNotObserved,
   classifyLiteratureQueryFailure,
   type LiteratureCapabilityState,
@@ -34,10 +35,26 @@ describe('only measured states carry counts', () => {
   const COUNT_BEARING: LiteratureCapabilityState[] = [
     'foundation_ready_empty',
     'foundation_ready_populated',
+    // A filtered read measures its own result set, so its number is real; what it withholds is any
+    // claim about the size of the corpus.
+    'foundation_ready_filtered',
   ]
 
   it.each([...LITERATURE_CAPABILITY_STATES])('%s carries counts only when measured', (state) => {
     expect(capabilityCarriesCounts(state)).toBe(COUNT_BEARING.includes(state))
+  })
+
+  it('does not let a filtered zero look like an empty corpus', () => {
+    // Both carry counts, so both render digits — but only `foundation_ready_empty` is a statement
+    // about the corpus. Conflating them would report "no articles" for a search that simply
+    // matched nothing.
+    expect(capabilityFromFilteredRead('itcttmkxdxvwmwcmzmey').state).toBe(
+      'foundation_ready_filtered',
+    )
+    expect(capabilityFromArticleCount(0, 'itcttmkxdxvwmwcmzmey').state).toBe(
+      'foundation_ready_empty',
+    )
+    expect(capabilityFromFilteredRead('itcttmkxdxvwmwcmzmey').message).toMatch(/active filters/iu)
   })
 
   it('never lets an unreadable database look like an empty one', () => {

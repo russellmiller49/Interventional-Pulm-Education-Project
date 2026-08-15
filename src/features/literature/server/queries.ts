@@ -11,6 +11,7 @@ import { literatureClientForOperation } from './database-client'
 import {
   capabilityFromArticleCount,
   capabilityFromFailure,
+  capabilityFromFilteredRead,
   capabilityNotObserved,
 } from './runtime-capability'
 import type {
@@ -247,6 +248,26 @@ export function validateKnownLiteratureFilters(query: LiteratureSearchQuery) {
   }
 }
 
+/**
+ * Whether a search observed the whole corpus rather than a slice of it.
+ *
+ * Only such a search can report `foundation_ready_empty` / `foundation_ready_populated` honestly;
+ * anything narrower measures its own result set. `adminPreview` is excluded from the test on
+ * purpose — it widens visibility rather than narrowing the rows, so an unfiltered admin-preview
+ * search still speaks for the corpus.
+ */
+function searchIsUnfiltered(query: LiteratureSearchQuery): boolean {
+  return (
+    !query.q &&
+    query.journalIds.length === 0 &&
+    query.topicIds.length === 0 &&
+    query.publicationTypes.length === 0 &&
+    query.yearFrom === null &&
+    query.yearTo === null &&
+    !query.landmarkOnly
+  )
+}
+
 export async function searchLiterature(
   query: LiteratureSearchQuery,
 ): Promise<LiteratureCapabilityResult<LiteratureSearchResponse>> {
@@ -331,8 +352,11 @@ export async function searchLiterature(
       adminPreview: query.adminPreview,
     },
     error: null,
-    // A page of results proves the foundation is present; `total` decides empty from populated.
-    capability: capabilityFromArticleCount(total, projectRef),
+    // The search applies filters (and a query string), so `total` measures the result set, not the
+    // corpus. Only an unfiltered, queryless search can speak for the corpus as a whole.
+    capability: searchIsUnfiltered(query)
+      ? capabilityFromArticleCount(total, projectRef)
+      : capabilityFromFilteredRead(projectRef),
   }
 }
 
@@ -340,7 +364,7 @@ async function loadAssociations(pmids: string[]) {
   const acquired = literatureClientForOperation('article_detail')
   const client = acquired.client
   if (!client || pmids.length === 0) {
-    return { sources: [] as SourceRow[], topics: [] as TopicAssignmentRow[] }
+    return { sources: [] as SourceRow[], topics: [] as TopicAssignmentRow[], failure: null }
   }
 
   const [sourcesResult, topicsResult] = await Promise.all([
@@ -359,12 +383,25 @@ async function loadAssociations(pmids: string[]) {
   ])
 
   if (sourcesResult.error || topicsResult.error) {
-    throw new Error('Unable to load literature associations.')
+    // Deliberately not a throw. This runs inside `Promise.all` alongside the article and event
+    // reads, so throwing here rejected the whole detail load and escaped the capability model
+    // entirely — the page 500'd instead of reporting which state it was in. Associations are
+    // supplementary; the caller reports the failure through its own classified capability.
+    console.error('Literature associations failed', {
+      sourcesCode: sourcesResult.error?.code,
+      topicsCode: topicsResult.error?.code,
+    })
+    return {
+      sources: [] as SourceRow[],
+      topics: [] as TopicAssignmentRow[],
+      failure: sourcesResult.error ?? topicsResult.error,
+    }
   }
 
   return {
     sources: (sourcesResult.data ?? []) as SourceRow[],
     topics: (topicsResult.data ?? []) as TopicAssignmentRow[],
+    failure: null,
   }
 }
 
@@ -394,15 +431,14 @@ export async function getLiteratureArticle(
       .limit(100),
   ])
 
-  if (articleResult.error || eventsResult.error) {
+  const readFailure = articleResult.error ?? eventsResult.error ?? associations.failure
+  if (readFailure) {
     console.error('Literature article lookup failed', {
       articleCode: articleResult.error?.code,
       eventCode: eventsResult.error?.code,
+      associationCode: associations.failure?.code,
     })
-    const capability = capabilityFromFailure(articleResult.error ?? eventsResult.error, {
-      projectRef,
-      surface: 'foundation',
-    })
+    const capability = capabilityFromFailure(readFailure, { projectRef, surface: 'foundation' })
     return { data: null, error: capability.message, capability }
   }
   if (!articleResult.data) {
@@ -638,10 +674,10 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
       pageCount: total === 0 ? 0 : Math.ceil(total / filters.pageSize),
     },
     error: null,
-    // The queue counts rows matching the active filters, which can legitimately be zero while the
-    // corpus is populated, so the capability is reported from the unfiltered corpus signal the
-    // administration page already loads separately rather than from `total`.
-    capability: capabilityFromArticleCount(total, projectRef),
+    // `total` counts rows matching the active filters, which is legitimately zero while the corpus
+    // is populated. The capability therefore reports a reachable foundation and a filtered count,
+    // and leaves the corpus-population claim to the administration statistics call.
+    capability: capabilityFromFilteredRead(projectRef),
   }
 }
 

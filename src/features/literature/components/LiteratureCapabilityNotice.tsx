@@ -20,6 +20,7 @@ type Tone = 'ok' | 'info' | 'warn'
 const TONE_BY_STATE: Record<LiteratureCapabilityState, Tone> = {
   foundation_ready_populated: 'ok',
   foundation_ready_empty: 'ok',
+  foundation_ready_filtered: 'ok',
   gold_workflow_unavailable: 'info',
   write_capability_withheld: 'info',
   not_observed: 'info',
@@ -48,6 +49,15 @@ export interface LiteratureCapabilityNoticeProps {
   description: string
   /** Localized label for the project line, e.g. `t('capability.projectLabel')`. */
   projectLabel: string
+  /**
+   * Localized label for the specific reason line, e.g. `t('capability.reason')`.
+   *
+   * When supplied, the capability's own `message` is shown beneath the per-state description. The
+   * state sentence is generic by construction — `not_configured` covers unset, partial, wrong
+   * project, and wrong credential class alike — so without this an operator is told *that* the
+   * database is unconfigured but never *which* of those it is.
+   */
+  reasonLabel?: string
   className?: string
 }
 
@@ -56,6 +66,7 @@ export function LiteratureCapabilityNotice({
   title,
   description,
   projectLabel,
+  reasonLabel,
   className,
 }: LiteratureCapabilityNoticeProps) {
   const tone = TONE_BY_STATE[capability.state]
@@ -73,6 +84,11 @@ export function LiteratureCapabilityNotice({
         <div className="space-y-1">
           <p className="font-semibold">{title}</p>
           <p className="leading-6 text-muted-foreground">{description}</p>
+          {reasonLabel && capability.message && capability.message !== description ? (
+            <p className="leading-6 text-muted-foreground">
+              <span className="font-medium">{reasonLabel}:</span> {capability.message}
+            </p>
+          ) : null}
           {capability.projectRef ? (
             <p className="text-xs text-muted-foreground">
               {projectLabel}: <code>{capability.projectRef}</code>

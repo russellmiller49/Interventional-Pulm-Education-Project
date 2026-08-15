@@ -51,9 +51,14 @@ const read = (path: string) => readFileSync(join(ROOT, path), 'utf8')
  * an ancestor layout's. Admin pages have no shared layout and must each carry one.
  */
 function isGated(path: string, source: string): boolean {
-  if (source.includes('requireLiteratureSiteAdmin')) return true
+  // The gate must be CALLED, not merely imported. `source.includes('requireLiteratureSiteAdmin')`
+  // was satisfied by the import line on its own, so a page that imported the helper and forgot to
+  // await it passed. Match an actual awaited invocation.
+  if (/await requireLiteratureSiteAdminPage\s*\(/u.test(source)) return true
   if (!path.startsWith(LITERATURE_PAGE_ROOT)) return false
-  return read(`${LITERATURE_PAGE_ROOT}/layout.tsx`).includes('requireLiteratureSiteAdminPage')
+  return /await requireLiteratureSiteAdminPage\s*\(/u.test(
+    read(`${LITERATURE_PAGE_ROOT}/layout.tsx`),
+  )
 }
 
 describe('every Literature surface is behind the site-admin gate', () => {
@@ -77,15 +82,21 @@ describe('every Literature surface is behind the site-admin gate', () => {
     // The gate must run before any query helper, not merely appear somewhere in the file.
     const gateAt = source.indexOf('await requireLiteratureSiteAdminApi()')
     expect(`${path}: gate present`).toBe(gateAt >= 0 ? `${path}: gate present` : `${path}: missing`)
-    for (const query of [
-      'searchLiterature(',
-      'getLiteratureArticle(',
-      'curateLiteratureArticle(',
-    ]) {
-      const queryAt = source.indexOf(query)
-      if (queryAt < 0) continue
-      expect(`${path} ${query} after gate: ${queryAt > gateAt}`).toBe(
-        `${path} ${query} after gate: true`,
+
+    // Every server call this route makes, discovered from the source rather than from a hardcoded
+    // list. The previous fixed list of three helpers matched nothing in the gold-set and
+    // bulk-review routes, so those cases asserted nothing at all while still reporting as passing.
+    const calls = [
+      ...source.matchAll(
+        /\b(searchLiterature|getLiteratureArticle|curateLiteratureArticle|loadLiterature[A-Za-z]*|listLiterature[A-Za-z]*|saveLiterature[A-Za-z]*|updateLiterature[A-Za-z]*|freezeLiterature[A-Za-z]*|unlockLiterature[A-Za-z]*|exportLiterature[A-Za-z]*)\s*\(/gu,
+      ),
+    ]
+    expect(`${path}: server calls found = ${calls.length > 0}`).toBe(
+      `${path}: server calls found = true`,
+    )
+    for (const call of calls) {
+      expect(`${path} ${call[1]} after gate: ${call.index! > gateAt}`).toBe(
+        `${path} ${call[1]} after gate: true`,
       )
     }
   })
@@ -108,10 +119,18 @@ describe('draft records are excluded from the default search path', () => {
   const migration = read(FOUNDATION_MIGRATION)
 
   it('filters the non-preview search to published records', () => {
-    // `search_literature_v1` takes `p_admin_preview`; the non-preview branch is what any future
-    // public surface would reach, and it must never see a draft.
-    expect(migration).toMatch(/p_admin_preview/u)
-    expect(migration).toMatch(/visibility_state\s*=\s*'published'/u)
+    // Anchored to the search function body. Matching `visibility_state = 'published'` anywhere in
+    // a 1158-line migration proved nothing — the curation RPC contains that string too, so the
+    // assertion passed for reasons unrelated to search visibility.
+    const start = migration.indexOf('create or replace function public.search_literature_v1')
+    expect(`search_literature_v1 defined: ${start >= 0}`).toBe('search_literature_v1 defined: true')
+    const body = migration.slice(start)
+    const end = body.indexOf('\n$$;')
+    const searchBody = end > 0 ? body.slice(0, end) : body
+
+    expect(searchBody).toMatch(/p_admin_preview/u)
+    // The non-preview branch gates on the flag and restricts visibility in the same predicate.
+    expect(searchBody).toMatch(/p_admin_preview[\s\S]{0,200}visibility_state\s*=\s*'published'/u)
   })
 
   it('defaults new rows to draft and unreviewed', () => {

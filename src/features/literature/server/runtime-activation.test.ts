@@ -330,7 +330,7 @@ describe('the activation contract withholds writes and the gold-set workflow', (
     expect(fromMock).not.toHaveBeenCalled()
   })
 
-  it('reaches the search and stats RPCs, and only those', async () => {
+  it('reaches the search RPC and reports a real zero as a measurement', async () => {
     // Distinct from the stub above: these two are expected to reach the client, so the mock
     // answers instead of throwing.
     const answering = {
@@ -360,6 +360,39 @@ describe('the activation contract withholds writes and the gold-set workflow', (
     expect(search.data?.total).toBe(0)
     expect(search.capability.state).toBe('foundation_ready_empty')
     expect(capabilityCarriesCounts(search.capability.state)).toBe(true)
+  })
+
+  it('reaches the stats RPC and distinguishes a real zero from an unreadable one', async () => {
+    const answering = {
+      rpc: jest.fn(async () => ({
+        data: { total_articles: 0, with_abstract: 0, without_abstract: 0 },
+        error: null,
+      })),
+      from: jest.fn(() => {
+        throw new Error('unexpected table read')
+      }),
+    }
+    createClientMock.mockReturnValueOnce(answering as never)
+    const ok = await loadLiteratureAdminStats()
+    expect(answering.rpc).toHaveBeenCalledWith('literature_admin_stats_v1')
+    expect(ok.data?.totalArticles).toBe(0)
+    expect(ok.capability.state).toBe('foundation_ready_empty')
+    expect(capabilityCarriesCounts(ok.capability.state)).toBe(true)
+
+    // Same zero on the page, entirely different meaning: the RPC failed because the object is not
+    // there. This must never reach the UI as a count.
+    const failing = {
+      rpc: jest.fn(async () => ({
+        data: null,
+        error: { code: 'PGRST202', message: 'no function' },
+      })),
+      from: jest.fn(),
+    }
+    createClientMock.mockReturnValueOnce(failing as never)
+    const missing = await loadLiteratureAdminStats()
+    expect(missing.data).toBeNull()
+    expect(missing.capability.state).toBe('foundation_missing')
+    expect(capabilityCarriesCounts(missing.capability.state)).toBe(false)
   })
 })
 

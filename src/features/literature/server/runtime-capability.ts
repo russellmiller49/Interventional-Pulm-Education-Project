@@ -38,6 +38,11 @@ export const LITERATURE_CAPABILITY_STATES = [
   'foundation_ready_empty',
   /** The foundation is present and holds articles. */
   'foundation_ready_populated',
+  /**
+   * The foundation answered a **filtered** read. Counts are real for that filter, and nothing is
+   * claimed about the size of the corpus as a whole.
+   */
+  'foundation_ready_filtered',
   /** The gold-set review workflow's deferred schema and RPCs are absent from this project. */
   'gold_workflow_unavailable',
   /**
@@ -67,6 +72,7 @@ export type LiteratureCapabilityState = (typeof LITERATURE_CAPABILITY_STATES)[nu
 const COUNT_BEARING_STATES: ReadonlySet<LiteratureCapabilityState> = new Set([
   'foundation_ready_empty',
   'foundation_ready_populated',
+  'foundation_ready_filtered',
 ])
 
 /**
@@ -171,8 +177,8 @@ const FAILURE_MESSAGES: Record<LiteratureFailureKind, string> = {
     'The dedicated Literature project does not contain the function this view needs. Apply the ' +
     'foundation migration before expecting data.',
   permission_denied:
-    'The dedicated Literature project refused the request. Check that the configured credential ' +
-    'is the backend secret key for that project.',
+    'The dedicated Literature project answered and refused the request. Check that the configured ' +
+    'credential is the backend secret key for that project.',
   unclassified_failure:
     'The dedicated Literature project did not answer this request. This is not a report of zero ' +
     'records; retry, and check the project status if it persists.',
@@ -209,6 +215,28 @@ export function capabilityFromFailure(
     reason: kind,
     message: FAILURE_MESSAGES[kind],
     projectRef: options.projectRef,
+  }
+}
+
+/**
+ * The capability for a successful read whose row count is **filtered**.
+ *
+ * Zero rows from a filtered search or review queue means the filters matched nothing. It does not
+ * mean the corpus is empty, and it does not mean the corpus is populated either — the query never
+ * measured that. Reusing `foundation_ready_empty` or `foundation_ready_populated` here would assert
+ * a corpus fact from a filtered observation, which is the `?? 0` mistake one level up.
+ *
+ * The state still carries counts, because the filtered total *is* a real measurement of the
+ * filtered set; what it withholds is the claim about the whole corpus.
+ */
+export function capabilityFromFilteredRead(projectRef: string | null): LiteratureCapability {
+  return {
+    state: 'foundation_ready_filtered',
+    reason: null,
+    message:
+      'The dedicated Literature project answered this query. The row count shown reflects the ' +
+      'active filters, not the size of the corpus.',
+    projectRef,
   }
 }
 

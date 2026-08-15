@@ -81,11 +81,17 @@ export type LiteratureRuntimeOperation =
   | 'gold_set_mutation'
 
 /**
- * The operations this build carries. Source-controlled and closed: an operation absent from this
- * list gets no client, whatever the environment says.
+ * The operations carried against the **dedicated hosted project**. Source-controlled and closed: an
+ * operation absent from this list gets no client there, whatever the environment says.
  *
  * All four are read-only against the foundation schema. Adding a write here is a reviewed code
  * change, deliberately not a configuration change.
+ *
+ * This list scopes the *strict* contract only. The local Supabase stack has every Literature
+ * migration applied — gold-set tables, review RPCs, the lot — so applying a foundation-only
+ * allowlist to it would break the established local curation and gold-set workflow and, worse,
+ * tell a developer that a workflow sitting in their own database "is not installed". Local mode
+ * therefore keeps full capability; see `literatureOperationActivated`.
  */
 export const LITERATURE_ACTIVATED_OPERATIONS = [
   'article_search',
@@ -250,36 +256,49 @@ export type LiteratureClientResult =
  * told the workflow is not installed, not that the database is unconfigured.
  */
 /**
- * Whether this build carries the operation at all.
+ * Whether this build carries the operation against the currently selected target.
  *
- * Pure, synchronous, and independent of configuration, so a surface can decide whether to *offer*
- * an action without opening a connection. The administration page uses it to hide the gold-set
- * entry point: an action that can only fail is worse than an absent one, and finding that out
- * requires no round trip.
+ * Synchronous and connectionless, so a surface can decide whether to *offer* an action without a
+ * round trip: the administration page uses it to hide the gold-set entry point and the curation
+ * form, because an action whose only possible outcome is an error is worse than an absent one.
+ *
+ * Mode-aware on purpose. The allowlist describes what the *dedicated hosted project* supports
+ * under its foundation-only schema; the local stack has every migration and keeps every operation.
  */
-export function literatureOperationActivated(operation: LiteratureRuntimeOperation): boolean {
+export function literatureOperationActivated(
+  operation: LiteratureRuntimeOperation,
+  environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
+): boolean {
+  if (literatureRuntimeMode(environment) === 'local') return true
   return ACTIVATED_OPERATION_SET.has(operation)
 }
 
 export function literatureClientForOperation(
   operation: LiteratureRuntimeOperation,
 ): LiteratureClientResult {
-  if (!ACTIVATED_OPERATION_SET.has(operation)) {
-    const withheld = WITHHELD_OPERATIONS[operation as keyof typeof WITHHELD_OPERATIONS]
-    const binding = resolveLiteratureDatabaseBinding()
+  const binding = resolveLiteratureDatabaseBinding()
+
+  // The binding is judged first. Reporting "the gold-set workflow is not installed in this
+  // project" to a deployment that has no project configured at all would name a cause that does
+  // not exist and send an operator looking at a database instead of at their variables.
+  if (binding.status !== 'bound') {
+    return { client: null, capability: capabilityFromBinding(describeLiteratureBinding(binding)) }
+  }
+
+  if (binding.mode !== 'local' && !ACTIVATED_OPERATION_SET.has(operation)) {
+    const withheld = WITHHELD_OPERATIONS[operation as LiteratureWithheldOperation]
     return {
       client: null,
       capability: capabilityForWithheldOperation(
-        binding.status === 'unbound' ? null : binding.projectRef,
+        binding.projectRef,
         withheld.state,
         withheld.detail,
       ),
     }
   }
 
-  const binding = resolveLiteratureDatabaseBinding()
   const client = createLiteratureAdmin()
-  if (!client || binding.status !== 'bound') {
+  if (!client) {
     return { client: null, capability: capabilityFromBinding(describeLiteratureBinding(binding)) }
   }
   return { client, capability: null, projectRef: binding.projectRef }

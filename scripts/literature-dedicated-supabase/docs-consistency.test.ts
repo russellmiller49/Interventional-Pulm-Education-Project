@@ -47,6 +47,7 @@ const DOCUMENTS = [
 
 const RUNBOOK = 'dedicated-supabase-rollout-runbook.md'
 const ARCHITECTURE = 'dedicated-supabase-architecture.md'
+const THREAT_MODEL = 'dedicated-supabase-threat-model.md'
 
 async function readDocument(name: string) {
   return readFile(resolve(ROOT, DOCS_DIRECTORY, name), 'utf8')
@@ -363,18 +364,33 @@ describe('the documents state that activation is a code change, not a variable',
     expect(environmentExample).toMatch(/No write path is carried/u)
   })
 
-  it('marks the preparation-era documents as superseded rather than leaving them present-tense', async () => {
-    // These five documents record the foundation rollout and stay accurate as that record. Both
-    // documents that asserted the runtime was inactive now carry a superseded banner pointing at
-    // the activation, so an operator opening either one is not told a stale present-tense fact.
-    for (const name of [RUNBOOK, ARCHITECTURE]) {
+  it('marks every preparation-era document that claimed an inactive runtime as superseded', async () => {
+    // These documents record the foundation rollout and stay accurate as that record. Each one that
+    // asserted the runtime was inactive now carries a superseded banner, so an operator opening any
+    // of them is not told a stale present-tense fact. The threat model is included deliberately: it
+    // is the document that describes what can reach the production project, and it was the one this
+    // change originally missed.
+    for (const name of [RUNBOOK, ARCHITECTURE, THREAT_MODEL]) {
       const body = await readDocument(name)
       expect(`${name}: ${/^> \*\*Superseded/mu.test(body)}`).toBe(`${name}: true`)
       expect(body).toContain('production bring-up')
     }
-    // The threat model's reason code still exists in the contract's failure vocabulary.
-    expect(await readDocument('dedicated-supabase-threat-model.md')).toContain(
-      'dedicated_runtime_not_activated',
-    )
+  })
+
+  it('leaves no document asserting that the runtime is inactive', async () => {
+    // The exact sentences that were false after activation. A superseded banner is not a licence to
+    // leave the body contradicting it.
+    const stale = [
+      /production runtime is not activated/iu,
+      /the production Literature runtime is disabled/iu,
+      /currently set to `not_activated`/u,
+      /cannot activate a client anywhere/iu,
+    ]
+    for (const [name, body] of await readAllDocuments()) {
+      for (const pattern of stale) {
+        const hit = pattern.exec(body)?.[0] ?? ''
+        expect(`${name}: ${hit}`).toBe(`${name}: `)
+      }
+    }
   })
 })

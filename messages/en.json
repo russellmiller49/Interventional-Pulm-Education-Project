@@ -2316,8 +2316,14 @@
         "gold_workflow_unavailable": "The gold-set review workflow is not installed in this project. Its migrations are deliberately deferred.",
         "write_capability_withheld": "This build carries no Literature write path. Curation and gold-set changes are unavailable by design.",
         "temporarily_unavailable": "The dedicated Literature project did not answer. Counts are unavailable rather than zero.",
-        "not_observed": "The request was rejected before it reached the database, so nothing was measured."
+        "not_observed": "The request was rejected before it reached the database, so nothing was measured.",
+        "foundation_ready_filtered": "The foundation schema is present and answered this query. The counts shown reflect the active filters, not the size of the corpus."
       },
+      "curation": {
+        "title": "Curation is not available in this build",
+        "body": "This deployment reads the dedicated Literature project for review and verification only. It carries no Literature write path, so curation decisions cannot be saved here. Enabling them is a separate reviewed change."
+      },
+      "reason": "Reported reason",
       "goldSet": {
         "title": "Gold-set review workflow is not installed",
         "body": "This deployment reads the dedicated Literature project, which carries the foundation schema only. The gold-set review tables and functions are part of a separate, deliberately deferred migration set, so there is nothing to review here yet.",
