@@ -19,6 +19,7 @@ import {
   searchAtlas,
   validateAtlasFilters,
 } from '@/features/device-intelligence/server/atlas.server'
+import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,6 +52,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
   const facets = getAtlasFacets()
   const overview = getAtlasOverview()
   const results = unknownFilter ? null : searchAtlas(query)
+  const statusLabels = await getProductStatusLabels(locale)
 
   return (
     <div className="container space-y-6 py-8 md:py-10">
@@ -66,6 +68,9 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
           <p className="text-xs text-muted-foreground">{t('cohortRule')}</p>
         </div>
         <p className="text-xs leading-5 text-muted-foreground">{t('exclusionNote')}</p>
+        {/* D2B: the atlas now includes products whose current availability is unestablished,
+            so the index says up front what the market/safety labels do and do not mean. */}
+        <p className="text-xs leading-5 text-muted-foreground">{t('statusNote')}</p>
       </header>
 
       <Card>
@@ -114,6 +119,8 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
             <AtlasResultsTable
               locale={locale}
               items={results.items}
+              statusByProductId={results.statusByProductId}
+              statusLabels={statusLabels}
               labels={{
                 product: t('table.product'),
                 manufacturer: t('table.manufacturer'),
@@ -121,6 +128,7 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
                 catalogNumber: t('table.catalogNumber'),
                 size: t('table.size'),
                 evidence: t('table.evidence'),
+                status: t('table.status'),
                 notRecorded: tCommon('notRecorded'),
                 verifiedSource: tCommon('badges.verifiedSource'),
                 region: t('resultsRegionLabel'),

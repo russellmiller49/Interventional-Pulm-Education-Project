@@ -9,9 +9,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { VerificationBadge } from '@/features/preference-cards/components/VerificationBadge'
 import { EvidenceBadge, FactRow } from '@/features/device-intelligence/components/EvidenceBadge'
+import {
+  MarketSafetyPanel,
+  ProductStatusBadges,
+} from '@/features/device-intelligence/components/ProductStatus'
 import { PRODUCT_ID_PATTERN } from '@/features/device-intelligence/domain/atlas-cohort'
 import { isExemplarProcedureCode } from '@/features/device-intelligence/domain/exemplars'
 import { getAtlasProductDetail } from '@/features/device-intelligence/server/atlas.server'
+import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +48,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const detail = getAtlasProductDetail(productId)
   if (!detail) notFound()
   const { product } = detail
+  const statusLabels = await getProductStatusLabels(locale)
 
   const verificationLabels = {
     verified: tVerification('verified'),
@@ -117,6 +123,9 @@ export default async function DeviceDetailPage({ params }: PageProps) {
             regulatoryNote={product.regulatoryNote}
             labels={verificationLabels}
           />
+          {/* D2B: compact market/safety marks in the header; the full statement, its
+              snapshot date, and the required disclaimers live in the panel below. */}
+          <ProductStatusBadges status={detail.status} labels={statusLabels} />
           {[product.product_kind, product.primary_category, product.subcategory]
             .filter((value): value is string => Boolean(value))
             .map((value) => (
@@ -202,6 +211,8 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </div>
+
+      <MarketSafetyPanel status={detail.status} labels={statusLabels} />
 
       <section className="space-y-3" aria-label={t('rolesHeading')}>
         <h2 className="text-2xl font-semibold tracking-tight">{t('rolesHeading')}</h2>

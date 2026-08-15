@@ -1,0 +1,37 @@
+{
+  "artifact_kind": "device_intelligence_d2b_inclusion_review_summary",
+  "format_version": 1,
+  "research_as_of_date": "2026-08-13",
+  "source_artifact": {
+    "path": "data/ip-preference-cards/research/us-status/2026-08-13/us-status-evidence-proposals.json",
+    "sha256": "1fe01cecc6f3c5e9cdac336fe2838c9d88d486add485455b24155a4e82bfbd2d"
+  },
+  "counts": {
+    "catalog_products": 1532,
+    "atlas_cohort_products": 1331,
+    "previously_included": 753,
+    "newly_included": 578,
+    "excluded_candidate_grade": 200,
+    "excluded_unknown_grade": 1,
+    "owner_excluded": 0,
+    "newly_included_market_status": {
+      "confirmed_current_us": 10,
+      "current_status_conflicted": 18,
+      "current_status_unverified": 526,
+      "likely_current_us": 24
+    },
+    "newly_included_safety_display": {
+      "active_safety_notice": 23,
+      "historical_safety_notice": 2,
+      "no_exact_action_found_as_of_snapshot": 533,
+      "safety_identity_review_required": 9,
+      "safety_status_unverified": 11
+    },
+    "newly_included_recommendation_gate": {
+      "blocked_active_safety_action": 23,
+      "clear": 521,
+      "review_required": 34
+    },
+    "newly_included_with_authored_options": 541
+  }
+}

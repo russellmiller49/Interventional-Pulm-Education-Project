@@ -7,14 +7,23 @@ import type {
   ProcedureWorkspace,
   WorkspaceRequirement,
 } from '@/features/device-intelligence/server/procedures.server'
+import { safetyDisplayIsMaterialOnCards } from '@/features/device-intelligence/domain/product-status'
 import { EvidenceBadge } from './EvidenceBadge'
 import { LinkTabs } from './LinkTabs'
+import { SafetyBadge, type ProductStatusLabels } from './ProductStatus'
 
 /**
  * The read-only requirement browser: one authored requirement list, viewable by setup zone
  * or by procedural phase (URL-param link tabs — keyboard-accessible anchors, no client JS).
  * Every card quotes the authored texts verbatim and badges the coverage-ladder state; links
- * go only to device pages inside the D1 atlas cohort.
+ * go only to device pages inside the D2B atlas cohort.
+ *
+ * D2B: authored options now include products whose current availability is unestablished, and
+ * an option carrying a matched FDA safety action gets a compact safety badge here. Market
+ * status is deliberately NOT badged on these dense requirement cards — availability
+ * uncertainty must never read as a compatibility or eligibility statement — and lives on the
+ * device page one click away. The badge is display only: `selectable` and `eligibilityStatus`
+ * remain the canonical governed values and no ordering or default changes because of it.
  */
 
 export type RequirementView = 'zones' | 'phases'
@@ -39,10 +48,12 @@ export async function RequirementBrowser({
   locale,
   workspace,
   view,
+  statusLabels,
 }: {
   locale: string
   workspace: ProcedureWorkspace
   view: RequirementView
+  statusLabels: ProductStatusLabels
 }) {
   const t = await getTranslations('deviceIntelligence.workspace')
   const tCommon = await getTranslations('deviceIntelligence.common')
@@ -111,6 +122,7 @@ export async function RequirementBrowser({
               locale={locale}
               requirement={requirement}
               coverageLabels={coverageLabels}
+              statusLabels={statusLabels}
               labels={{
                 order: t('requirement.order'),
                 section: t('requirement.section'),
@@ -130,6 +142,7 @@ export async function RequirementBrowser({
                   count: requirement.withheldAuthoredOptionCount,
                   selectable: requirement.withheldSelectableOptionCount,
                 }),
+                optionSafetyNote: t('requirement.optionSafetyNote'),
                 selectable: tCommon('badges.authoredSelectable'),
                 nonSelectable: tCommon('badges.authoredNonSelectable'),
                 zoneLabel: t(`setupZones.${requirement.setupZone}` as 'setupZones.unassigned'),
@@ -169,11 +182,13 @@ function RequirementCard({
   locale,
   requirement,
   coverageLabels,
+  statusLabels,
   labels,
 }: {
   locale: string
   requirement: WorkspaceRequirement
   coverageLabels: Record<string, string>
+  statusLabels: ProductStatusLabels
   labels: {
     order: string
     section: string
@@ -190,6 +205,7 @@ function RequirementCard({
     authoredOptions: string
     noAuthoredOptions: string
     optionsWithheld: string
+    optionSafetyNote: string
     selectable: string
     nonSelectable: string
     zoneLabel: string
@@ -302,9 +318,17 @@ function RequirementCard({
                   >
                     {option.selectable ? labels.selectable : labels.nonSelectable}
                   </EvidenceBadge>
+                  <SafetyBadge status={option.status} labels={statusLabels} />
                 </li>
               ))}
             </ul>
+          ) : null}
+          {requirement.authoredOptions.some((option) =>
+            safetyDisplayIsMaterialOnCards(option.status.safetyDisplay),
+          ) ? (
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {labels.optionSafetyNote}
+            </p>
           ) : null}
           {requirement.withheldAuthoredOptionCount > 0 ? (
             <p className="mt-1 text-xs italic text-muted-foreground">{labels.optionsWithheld}</p>

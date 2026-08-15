@@ -45,7 +45,9 @@ import {
   type ReadinessProjection,
 } from '@/features/device-intelligence/domain/readiness'
 import { requiresLaserPathwayDisclosure } from '@/features/device-intelligence/domain/laser-pathway'
+import type { ProductStatusView } from '@/features/device-intelligence/domain/product-status'
 import { getAtlasCatalogStore } from './atlas-store.server'
+import { getProductStatus } from './product-status.server'
 import {
   getRawStatementsForRoles,
   getTypedRuleConditionsForRoles,
@@ -271,12 +273,18 @@ export function getExemplarProcedureIndex(): ExemplarProcedureIndexEntry[] {
 }
 
 /**
- * An authored option the PUBLIC workspace may identify. Only products inside the D1 atlas
+ * An authored option the PUBLIC workspace may identify. Only products inside the D2B atlas
  * cohort get one of these (Codex C-02): the cohort wall is applied here, at the server
- * view-model boundary, so a candidate-grade or hidden product's id, name, manufacturer, and
- * catalog number never enter the workspace view model, the RSC payload, or any rendered
- * attribute. Non-cohort authored options surface only as the aggregate withheld counts on
- * the requirement.
+ * view-model boundary, so a candidate-grade or unknown-grade product's id, name,
+ * manufacturer, and catalog number never enter the workspace view model, the RSC payload, or
+ * any rendered attribute. Non-cohort authored options surface only as the aggregate withheld
+ * counts on the requirement.
+ *
+ * D2B widens WHICH products clear that wall — a hidden verified-source authored option is now
+ * identifiable — and adds the market/safety `status` beside each option. `selectable` and
+ * `eligibilityStatus` remain the canonical governed values, copied verbatim: D2B does not
+ * reorder, promote, demote, or default any option, and the status is display metadata that
+ * no selection logic reads.
  */
 export interface WorkspaceOptionLink {
   productId: string
@@ -285,6 +293,7 @@ export interface WorkspaceOptionLink {
   catalogNumber: string | null
   selectable: boolean
   eligibilityStatus: string | null
+  status: ProductStatusView
 }
 
 export interface WorkspaceRequirement {
@@ -541,7 +550,9 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
 
   // The C-02 cohort wall: identities come from the ATLAS store only. A non-cohort option
   // row never yields an option link — its product id is not read at all on this path — so
-  // no hidden identity can ride into the view model inside a nominally redacted object.
+  // no withheld identity can ride into the view model inside a nominally redacted object.
+  // Under D2B the store admits hidden verified-source products, so those options now
+  // resolve; candidate- and unknown-grade options stay withheld exactly as before.
   const toCohortOptionLink = (option: SlotProductOptionRecord): WorkspaceOptionLink | null => {
     const product = atlasStore.productById.get(option.product_id)
     if (!product) return null
@@ -552,6 +563,7 @@ export function getProcedureWorkspace(procedureCode: string): ProcedureWorkspace
       catalogNumber: product.catalog_number,
       selectable: option.selectable === true,
       eligibilityStatus: option.eligibility_status,
+      status: getProductStatus(product.product_id),
     }
   }
 

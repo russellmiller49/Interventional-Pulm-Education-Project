@@ -10,7 +10,7 @@ import { getProcedureWorkspace } from '@/features/device-intelligence/server/pro
 import { normalizeIdentifier } from '@/features/preference-cards/server/catalog-store'
 
 /**
- * Codex C-02 / C-03 — the D1 cohort wall, adversarially and data-wide.
+ * Codex C-02 / C-03 — the cohort wall, adversarially and data-wide, re-pinned for D2B.
  *
  * C-02: non-cohort product identities must not enter the PUBLIC procedure-workspace view
  * model at all — not as options, keys, aria/title fodder, or debug fields — while the
@@ -18,7 +18,13 @@ import { normalizeIdentifier } from '@/features/preference-cards/server/catalog-
  *
  * C-03: raw compatibility statements (and the product record's own free-text note) must not
  * print a non-cohort product's exact identity on any public atlas surface, including via
- * nominally unresolved textual participants such as "BF-MP190F".
+ * nominally unresolved textual participants.
+ *
+ * D2B does NOT weaken either wall — it moves the population behind it. "Non-cohort" now means
+ * candidate-grade, unknown-grade, or explicitly owner-excluded. Statements that used to be
+ * withheld because they named a HIDDEN VERIFIED-SOURCE product (the Olympus BF-MP190F scope)
+ * are now displayable, and that is correct precisely because the referenced product is itself
+ * inside the D2B cohort — asserted below rather than assumed.
  */
 
 interface ProductRow {
@@ -131,22 +137,31 @@ describe('C-02 — the workspace view model is cohort-walled at the server bound
     expect(serialized).not.toContain('PRD-F43B951B75')
     expect(serialized).not.toContain('Micro Retrieval Net')
 
-    // SLOT-115310F554 (Retrieval basket/net): 7 authored options — 3 cohort-identifiable,
-    // 4 withheld (2 hidden verified Karl Storz baskets + 2 candidate/hidden nets), none of
-    // the withheld ones selectable. The slot is never presented as option-free.
+    // SLOT-115310F554 (Retrieval basket/net): 7 authored options. Under D1 only 3 were
+    // identifiable and 4 were withheld; D2B admits the 2 hidden verified-source Karl Storz
+    // baskets, so 5 are identifiable and the 2 candidate-grade nets stay withheld. None of
+    // the withheld ones is selectable, and the slot is never presented as option-free.
     const retrieval = workspace.requirements.find(
       (requirement) => requirement.sourceSlotId === 'SLOT-115310F554',
     )!
-    expect(retrieval.authoredOptions).toHaveLength(3)
-    expect(retrieval.withheldAuthoredOptionCount).toBe(4)
+    expect(retrieval.authoredOptions).toHaveLength(5)
+    expect(retrieval.withheldAuthoredOptionCount).toBe(2)
     expect(retrieval.withheldSelectableOptionCount).toBe(0)
-    // The hidden product's direct atlas route stays a 404 (null detail).
+    // The candidate-grade product's direct atlas route stays a 404 (null detail).
     expect(getAtlasProductDetail('PRD-F43B951B75')).toBeNull()
   })
 })
 
 describe('C-03 — exact non-cohort identifiers never reach public compatibility output', () => {
-  it('withholds the GuideSheath statements that textually identify the hidden BF-MP190F scope', () => {
+  it('now RENDERS the GuideSheath statements, because BF-MP190F joined the cohort', () => {
+    // The D1 withholding was correct under the D1 cohort and is wrong under D2B: the scope
+    // it protected is a verified-source product the atlas now serves on its own page. The
+    // permission is checked, not assumed — the referenced product must really be in-cohort.
+    const referenced = getAtlasProductDetail('PRD-CB1622624D')
+    expect(referenced).not.toBeNull()
+    expect(referenced!.product.verification_grade).toBe('verified_source')
+    expect(referenced!.product.catalog_number).toBe('BF-MP190F')
+
     for (const { productId, ruleId } of GUIDE_SHEATH_CASES) {
       const detail = getAtlasProductDetail(productId)!
       const statement = detail.rawCompatibilityStatements.find(
@@ -155,19 +170,39 @@ describe('C-03 — exact non-cohort identifiers never reach public compatibility
       expect({ productId, ruleId, withheld: statement.withheld }).toEqual({
         productId,
         ruleId,
-        withheld: true,
+        withheld: false,
       })
-      // The record's own free-text note ("… not compatible with BF-MP190F.") is withheld
-      // from the view model too, and the flag says so honestly.
-      expect(detail.compatibilityTextWithheld).toBe(true)
-      expect(detail.product.compatibility_text).toBeNull()
-      // Nothing serialized identifies the hidden product.
-      const serialized = JSON.stringify(detail)
-      expect(serialized).not.toContain('BF-MP190F')
-      expect(serialized).not.toContain('PRD-CB1622624D')
+      // The record's own free-text note is displayed again, verbatim.
+      expect(detail.compatibilityTextWithheld).toBe(false)
+      expect(detail.product.compatibility_text).toContain('BF-MP190F')
     }
-    // The hidden bronchoscope itself stays outside the atlas entirely.
-    expect(getAtlasProductDetail('PRD-CB1622624D')).toBeNull()
+  })
+
+  it('still withholds a statement or note that names a candidate-grade product', () => {
+    // The wall is armed, not merely dormant: a candidate-grade product's exact catalog
+    // number is still recognized as a non-cohort identity wherever it appears in free text.
+    // PRD-F43B951B75 (Micro Retrieval Net, MED-194-NET) is candidate-grade and stays outside.
+    expect(getAtlasProductDetail('PRD-F43B951B75')).toBeNull()
+    expect(textReferencesNonCohortIdentity('MED-194-NET')).toBe(true)
+    expect(textReferencesNonCohortIdentity('Use with the MED-194-NET retrieval net.')).toBe(true)
+    expect(textReferencesNonCohortIdentity('PRD-F43B951B75')).toBe(true)
+  })
+
+  it('carries no withheld statement in the committed data — and says so explicitly', () => {
+    // A measured fact, not an assumption: no compatibility row or product note in the
+    // committed catalog names a candidate/unknown product by exact identifier today, so the
+    // wall withholds nothing. The armed-ness of the wall is proven by the unit assertions
+    // above; this pins the data state so a future import that DOES name one is visible.
+    const atlas = getAtlasCatalogStore()
+    const withheld: string[] = []
+    for (const product of atlas.products) {
+      const detail = getAtlasProductDetail(product.product_id)!
+      if (detail.compatibilityTextWithheld) withheld.push(`${product.product_id}:note`)
+      for (const statement of detail.rawCompatibilityStatements) {
+        if (statement.withheld) withheld.push(`${product.product_id}:${statement.ruleId}`)
+      }
+    }
+    expect(withheld).toEqual([])
   })
 
   it('keeps ordinary cohort-safe raw statements rendering verbatim', () => {
@@ -205,14 +240,16 @@ describe('C-03 — exact non-cohort identifiers never reach public compatibility
   })
 
   it('recognizes identities deterministically — exact identifiers only, never fuzzily', () => {
-    // The hidden bronchoscope's catalog number, alone or inside a sentence.
-    expect(textReferencesNonCohortIdentity('BF-MP190F')).toBe(true)
-    expect(
-      textReferencesNonCohortIdentity('The GuideSheath is not compatible with BF-MP190F.'),
-    ).toBe(true)
-    // A cohort product's own catalog number is not a leak.
+    // A candidate-grade product's catalog number, alone or inside a sentence.
+    expect(textReferencesNonCohortIdentity('MED-194-NET')).toBe(true)
+    expect(textReferencesNonCohortIdentity('The kit is not compatible with MED-194-NET.')).toBe(
+      true,
+    )
+    // A cohort product's own catalog number is not a leak — including one D2B just admitted.
     expect(textReferencesNonCohortIdentity('K-404')).toBe(false)
-    // Short numeric fragments in prose are not deterministic identifier recognitions.
+    expect(textReferencesNonCohortIdentity('BF-MP190F')).toBe(false)
+    // Short numeric fragments in prose are not deterministic identifier recognitions, even
+    // though "332" is a candidate-grade product's catalog number.
     expect(textReferencesNonCohortIdentity('Working length 332 mm')).toBe(false)
     expect(textReferencesNonCohortIdentity(null)).toBe(false)
     expect(textReferencesNonCohortIdentity('')).toBe(false)

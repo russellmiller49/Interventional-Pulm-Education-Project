@@ -14,7 +14,9 @@ import {
   type UseDetail,
 } from '@/features/preference-cards/server/catalog'
 import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
+import type { ProductStatusView } from '@/features/device-intelligence/domain/product-status'
 import { getAtlasCatalogStore } from './atlas-store.server'
+import { getProductStatus, getProductStatusMap } from './product-status.server'
 import {
   getRawStatementsForProduct,
   getTypedRuleConditionsForRoles,
@@ -24,13 +26,27 @@ import {
 } from './compatibility.server'
 
 /**
- * Read-only atlas queries: the existing catalog query layer evaluated over the D1 cohort
+ * Read-only atlas queries: the existing catalog query layer evaluated over the D2B cohort
  * store. No second search implementation, no second joins — `catalog.ts` functions with the
  * cohort store passed as their store parameter.
+ *
+ * D2B adds one thing on top: the compact market-status / safety overlay, resolved per
+ * returned product. It is attached beside the catalog rows rather than merged into them, so
+ * the shared preference-card list types stay exactly as the preserved surfaces expect.
  */
 
-export function searchAtlas(query: CatalogSearchQuery): CatalogSearchResponse {
-  return searchCatalog(query, getAtlasCatalogStore())
+export interface AtlasSearchResponse extends CatalogSearchResponse {
+  /** Market/safety status for every product in `items`. Total: an unresearched product
+   *  resolves to the honest "not recently verified" default, never to nothing. */
+  statusByProductId: Record<string, ProductStatusView>
+}
+
+export function searchAtlas(query: CatalogSearchQuery): AtlasSearchResponse {
+  const response = searchCatalog(query, getAtlasCatalogStore())
+  return {
+    ...response,
+    statusByProductId: getProductStatusMap(response.items.map((item) => item.productId)),
+  }
 }
 
 export function getAtlasFacets(): CatalogFacets {
@@ -57,7 +73,7 @@ export interface AtlasProductDetail extends ProductDetail {
   typedRuleConditions: TypedRuleCondition[]
   /**
    * True when the product record's own free-text compatibility note was withheld from this
-   * public view because it exactly names a product outside the D1 cohort (Codex C-03). The
+   * public view because it exactly names a product outside the D2B cohort (Codex C-03). The
    * page renders a generic explanation instead; `product.compatibility_text` is nulled in
    * the returned copy so the identity cannot ride along in the serialized view model.
    */
@@ -71,13 +87,18 @@ export interface AtlasProductDetail extends ProductDetail {
    * list is drawn from, never a second selection rule.
    */
   primaryRole: { roleCode: string; roleName: string; description: string | null } | null
+  /**
+   * D2B market-status and safety overlay for this product. Metadata about the product, never
+   * a gate on it: a blocked or review-required product renders the same page with a notice.
+   */
+  status: ProductStatusView
 }
 
 /**
  * The atlas device detail. Returns null — and the route 404s — for any product outside the
- * D1 cohort, because the cohort store simply does not contain it. Existing direct-link
- * (public-unlisted) and admin surfaces keep rendering those products through the full
- * store, unchanged.
+ * D2B cohort (candidate-grade, unknown-grade, or explicitly owner-excluded), because the
+ * cohort store simply does not contain it. Existing direct-link (public-unlisted) and admin
+ * surfaces keep rendering those products through the full store, unchanged.
  */
 export function getAtlasProductDetail(productId: string): AtlasProductDetail | null {
   const store = getAtlasCatalogStore()
@@ -142,18 +163,21 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
     compatibilityTextWithheld,
     procedureStatusByCode,
     primaryRole,
+    status: getProductStatus(productId),
   }
 }
 
 export interface AtlasUseDetail {
   detail: UseDetail
   typedRuleConditions: TypedRuleCondition[]
+  /** Market/safety status for every product listed on the role page. */
+  statusByProductId: Record<string, ProductStatusView>
 }
 
 /**
  * The atlas role view: role identity and taxonomy come from the full role table (roles are
- * public taxonomy), while the product listing runs over the cohort store, so only D1-visible
- * products appear.
+ * public taxonomy), while the product listing runs over the cohort store, so only
+ * D2B-cohort products appear.
  */
 export function getAtlasUseDetail(roleCode: string): AtlasUseDetail | null {
   const detail = getUseDetail(roleCode, getAtlasCatalogStore())
@@ -161,5 +185,8 @@ export function getAtlasUseDetail(roleCode: string): AtlasUseDetail | null {
   return {
     detail,
     typedRuleConditions: getTypedRuleConditionsForRoles([detail.role.role_code]),
+    statusByProductId: getProductStatusMap(
+      detail.manufacturerGroups.flatMap((group) => group.items.map((item) => item.productId)),
+    ),
   }
 }

@@ -185,8 +185,11 @@ describe('D1 accessibility and required warnings', () => {
         { ...template, id: 'SYNTH-DIVERGENT', section: 'Long-term drainage' },
       ],
     }
+    const { getProductStatusLabels } =
+      await import('@/features/device-intelligence/server/status-labels.server')
+    const statusLabels = await getProductStatusLabels('en')
     const { getByText, container } = await renderPage(
-      RequirementBrowser({ locale: 'en', workspace: synthetic, view: 'zones' }),
+      RequirementBrowser({ locale: 'en', workspace: synthetic, view: 'zones', statusLabels }),
     )
     // The jest next-intl mock returns the raw ICU message for plural keys, so the assertion
     // pins the stable prefix rather than the interpolated count.

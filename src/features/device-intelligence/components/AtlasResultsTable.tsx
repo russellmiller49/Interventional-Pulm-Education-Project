@@ -2,20 +2,34 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import type { CatalogListItem } from '@/features/preference-cards/server/catalog'
+import {
+  UNRESEARCHED_PRODUCT_STATUS,
+  type ProductStatusView,
+} from '@/features/device-intelligence/domain/product-status'
 import { EvidenceBadge } from './EvidenceBadge'
+import { ProductStatusBadges, type ProductStatusLabels } from './ProductStatus'
 
 /**
  * Atlas results as an accessible table (card list on narrow screens via horizontal scroll
  * inside the container, never page overflow). Missing values render an explicit label —
  * thin data must not look like an empty shelf.
+ *
+ * D2B adds one compact market/safety column. It is deliberately the LAST column and made of
+ * small badges: under the inclusion-first policy most rows carry an uncertainty label, and
+ * uncertainty must not visually outweigh the product's name, manufacturer, kind, or catalog
+ * number.
  */
 export function AtlasResultsTable({
   locale,
   items,
+  statusByProductId,
+  statusLabels,
   labels,
 }: {
   locale: string
   items: CatalogListItem[]
+  statusByProductId: Record<string, ProductStatusView>
+  statusLabels: ProductStatusLabels
   labels: {
     product: string
     manufacturer: string
@@ -23,6 +37,7 @@ export function AtlasResultsTable({
     catalogNumber: string
     size: string
     evidence: string
+    status: string
     notRecorded: string
     verifiedSource: string
     /** Accessible name for the scrollable region wrapping the table. */
@@ -37,7 +52,7 @@ export function AtlasResultsTable({
       aria-label={labels.region}
       className="overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <table className="w-full min-w-[760px] border-collapse text-sm">
+      <table className="w-full min-w-[900px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/40 text-left">
             <th scope="col" className="px-3 py-2 font-semibold">
@@ -57,6 +72,9 @@ export function AtlasResultsTable({
             </th>
             <th scope="col" className="px-3 py-2 font-semibold">
               {labels.evidence}
+            </th>
+            <th scope="col" className="px-3 py-2 font-semibold">
+              {labels.status}
             </th>
           </tr>
         </thead>
@@ -99,6 +117,12 @@ export function AtlasResultsTable({
                   // asserted, so a non-cohort item could never wear a false badge.
                   <EvidenceBadge state="unknown">{item.verificationTier}</EvidenceBadge>
                 )}
+              </td>
+              <td className="px-3 py-2">
+                <ProductStatusBadges
+                  status={statusByProductId[item.productId] ?? UNRESEARCHED_PRODUCT_STATUS}
+                  labels={statusLabels}
+                />
               </td>
             </tr>
           ))}

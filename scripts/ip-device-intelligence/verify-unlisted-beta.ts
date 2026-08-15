@@ -492,9 +492,27 @@ export function deriveAliasFixture(): { deprecated: string; canonical: string } 
   return { deprecated, canonical }
 }
 
+/**
+ * Next.js streams the RSC flight payload as a sequence of `self.__next_f.push([n,"…"])`
+ * script tags whose split points fall at arbitrary byte offsets — including the middle of a
+ * product id. Scanning the raw HTML therefore does two wrong things at once: it invents a
+ * phantom identifier (a cohort id cut in half reads as an unknown id) and, far worse, it can
+ * HIDE a real non-cohort id whose characters straddle a seam. Rejoining the chunks restores
+ * the original flight string before any identity scan runs, so the scan is strictly more
+ * sensitive, never less.
+ */
+const RSC_FLIGHT_SEAM = /"\]\)<\/script><script[^>]*>self\.__next_f\.push\(\[\d+,"/g
+
+export function stitchFlightChunks(body: string): string {
+  return body.replace(RSC_FLIGHT_SEAM, '')
+}
+
 async function fetchPath(baseUrl: string, pathname: string) {
   const response = await fetch(`${baseUrl}${pathname}`, { redirect: 'manual' })
-  const body = response.status === 200 || response.status === 404 ? await response.text() : ''
+  const body =
+    response.status === 200 || response.status === 404
+      ? stitchFlightChunks(await response.text())
+      : ''
   return { response, body }
 }
 
@@ -688,7 +706,7 @@ async function runOnChecks(baseUrl: string, repoRoot: string): Promise<CheckResu
   // an empty body. The navigation surface for an unauthenticated visitor is whatever /en
   // resolves to after redirects.
   const homeResponse = await fetch(`${baseUrl}/en`, { redirect: 'follow' })
-  const homeBody = await homeResponse.text()
+  const homeBody = stitchFlightChunks(await homeResponse.text())
   check(
     results,
     'home navigation resolves and does not link the D1 routes',

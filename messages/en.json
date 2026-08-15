@@ -8252,7 +8252,7 @@
       "notRecorded": "not recorded",
       "unlistedNote": "Phase D1 preview — this page is public-unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
       "noEquivalenceNote": "Shared clinical-role membership and manufacturer product-line groupings are catalog-discovery facts. They are never clinical equivalence, procurement substitution, or formulary claims.",
-      "compatibilityWithheldNote": "This compatibility statement is withheld from the public atlas because it references a product outside the Phase D1 atlas cohort. Products outside the cohort are not identified on this surface.",
+      "compatibilityWithheldNote": "This compatibility statement is withheld from the public atlas because it references a product outside the Device Atlas cohort. Products outside the cohort are not identified on this surface.",
       "draftTitle": "DRAFT PROTOTYPE — NOT APPROVED FOR CLINICAL USE",
       "draftDisclaimer": "This procedure content is a governance-draft prototype rendered from release-pinned data. It has not completed clinician review.",
       "badges": {
@@ -8272,14 +8272,81 @@
       },
       "rescueAuthoringGapNote": "Rescue modelling in this release consists only of: {modules}. No rescue module for this procedure has been authored yet — absence here is an authoring gap, not a clinical statement that rescue planning is unnecessary."
     },
+    "status": {
+      "panelHeading": "Market and safety status",
+      "marketHeading": "Market status",
+      "safetyHeading": "Safety status",
+      "gateHeading": "Recommendation gate",
+      "gateNote": "This gate reflects market and safety status only. It is not evidence of clinical compatibility, clinical suitability, or availability, and it never affects whether a product is listed.",
+      "confidenceLabel": "Research confidence:",
+      "snapshotLabel": "U.S. status research snapshot:",
+      "notResearched": "This product was not covered by the U.S. status research snapshot, so its current availability and its FDA safety-action status have not been verified.",
+      "orderabilityNote": "Market status describes distribution evidence recorded at the research snapshot. It does not establish present orderability, local availability, formulary status, procurement, or clinical suitability.",
+      "lotSpecificNote": "Safety notices may be lot-specific: a notice shown here does not necessarily apply to every unit or lot of this product.",
+      "referenceCodesLabel": "FDA recall number(s):",
+      "activeNoticeHeading": "Active FDA safety action",
+      "marketBadgeA11yPrefix": "Market status:",
+      "safetyBadgeA11yPrefix": "Safety status:",
+      "confidenceValue": {
+        "high": "high",
+        "moderate": "moderate",
+        "low": "low"
+      },
+      "market": {
+        "confirmed_current_us": "Current U.S. distribution supported",
+        "likely_current_us": "Likely current in the U.S.; orderability not established",
+        "current_status_unverified": "Current availability not recently verified",
+        "current_status_conflicted": "Market status uncertain",
+        "historical_or_discontinued": "Historical or no longer distributed",
+        "not_applicable_noncommercial_or_local": "Commercial market status not applicable"
+      },
+      "marketBadge": {
+        "confirmed_current_us": "Current U.S. distribution supported",
+        "likely_current_us": "Likely current in the U.S.",
+        "current_status_unverified": "Availability not verified",
+        "current_status_conflicted": "Market status uncertain",
+        "historical_or_discontinued": "Historical or no longer distributed",
+        "not_applicable_noncommercial_or_local": "Market status not applicable"
+      },
+      "safety": {
+        "active_safety_notice": "Active FDA safety action",
+        "historical_safety_notice": "Past FDA safety action",
+        "safety_identity_review_required": "Safety match needs identity review",
+        "safety_status_unverified": "Safety actions not verified",
+        "no_exact_action_found_as_of_snapshot": "No exact safety action found at snapshot"
+      },
+      "safetyDetail": {
+        "active_safety_notice": "An FDA safety action matched this product exactly and was recorded as active at the research snapshot.",
+        "historical_safety_notice": "An FDA safety action matched this product exactly and was recorded as no longer active at the research snapshot. It is shown as history, not as a current action.",
+        "safety_identity_review_required": "An FDA safety action was matched only at product-family or ambiguous identity level, not to this exact product. The match needs identity review before it is interpreted, so no action number is shown here.",
+        "safety_status_unverified": "FDA safety actions have not been verified for this product. That is an unverified status, not a finding that no action exists.",
+        "no_exact_action_found_as_of_snapshot": "No FDA safety action matched this product exactly at the research snapshot. That is a search result on that date, not a statement that this product is free of safety actions."
+      },
+      "scope": {
+        "lot_specific": "Reported scope: specific lots.",
+        "product_wide": "Reported scope: product-wide.",
+        "family_level": "Reported scope: product family.",
+        "unknown": "Reported scope: not stated in the source record."
+      },
+      "gate": {
+        "clear": "Clear",
+        "review_required": "Review required",
+        "blocked_active_safety_action": "Blocked — active safety action"
+      },
+      "gateDetail": {
+        "clear": "No market or safety flag is recorded against presenting this product as an option.",
+        "review_required": "Market or safety status needs review before this product is presented as a default or a recommended option. The product stays listed, searchable, and described in full.",
+        "blocked_active_safety_action": "While an active safety action is matched to this product, it must not be presented as a default or a recommended option. The product stays listed, searchable, and described in full."
+      }
+    },
     "devices": {
       "metadataTitle": "Device Atlas",
       "metadataDescription": "Read-only atlas of verified interventional pulmonology devices with source citations.",
       "title": "Device Atlas",
-      "intro": "A read-only reference of interventional pulmonology devices, restricted to catalog products whose specifications trace to a verified source and which are cleared for prototype display. Every fact carries its citation.",
-      "cohortBadge": "{count} verified products",
-      "cohortRule": "Cohort rule: verification_grade = verified_source AND visibility_state = prototype_visible.",
-      "exclusionNote": "Candidate-grade and hidden catalog products are not shown here. They remain reviewable on the existing public-unlisted (direct-link) catalog surfaces.",
+      "intro": "A read-only reference of interventional pulmonology devices. Every catalog product whose specifications trace to a verified source appears here, whether or not its current U.S. availability has been established. Current market status and FDA safety actions are shown as labels on the product, never as reasons to omit it. Every fact carries its citation.",
+      "cohortBadge": "{count} verified-source products",
+      "cohortRule": "Cohort rule: verification_grade = verified_source, minus explicit reviewed owner exclusions. Current availability is not a condition of inclusion.",
+      "exclusionNote": "Candidate-grade and unknown-grade catalog products are not shown here. They remain reviewable on the existing public-unlisted (direct-link) catalog surfaces.",
       "form": {
         "search": "Search",
         "searchPlaceholder": "Name, manufacturer, or catalog number…",
@@ -8302,14 +8369,16 @@
         "kind": "Kind / category",
         "catalogNumber": "Catalog number",
         "size": "Size / specification",
-        "evidence": "Evidence"
+        "evidence": "Evidence",
+        "status": "Market / safety status"
       },
       "pagination": {
         "next": "Next",
         "page": "Page",
         "previous": "Previous"
       },
-      "resultsRegionLabel": "Results table (scrolls horizontally)"
+      "resultsRegionLabel": "Results table (scrolls horizontally)",
+      "statusNote": "Market-status and safety labels come from a dated U.S. status research snapshot, named on each product page. They describe the evidence at that date; they do not establish present orderability, and an absence of findings is not a clean bill of health."
     },
     "device": {
       "notFound": "Device not found",
@@ -8366,7 +8435,7 @@
       "guidanceVerbatim": "Quoted verbatim from the governed role table; never paraphrased.",
       "guidanceGenericNote": "Authored selection guidance is generic educational content from the governed role table. Wording that mentions a formulary or hospital stocking is template language only — it does not establish that any hospital carries, stocks, prefers, approves, or uses any product.",
       "productsHeading": "Atlas products mapped to this role ({count, plural, one {# product} other {# products}})",
-      "cohortNote": "Only the Phase D1 atlas cohort is listed here (verified source, prototype-visible). Additional mapped products may exist on the existing public-unlisted (direct-link) catalog surfaces. Counts reflect catalog-ingestion coverage, not market availability.",
+      "cohortNote": "Only the Device Atlas cohort is listed here (verified source, minus explicit reviewed owner exclusions). Candidate-grade and unknown-grade mapped products may exist on the existing public-unlisted (direct-link) catalog surfaces. Counts reflect catalog-ingestion coverage, not market availability.",
       "manufacturerProducts": "{count, plural, one {# product} other {# products}}",
       "noCohortProducts": "No products in the D1 atlas cohort are mapped to this role.",
       "proceduresHeading": "Procedures and slots using this role",
@@ -8456,7 +8525,8 @@
         "proposalsDisclaimer": "Unreviewed machine-derived suggestions. Never selectable; never satisfy coverage or readiness.",
         "authoredOptions": "Authored options",
         "noAuthoredOptions": "No authored options exist for this requirement.",
-        "optionsWithheld": "{count, plural, one {# authored option} other {# authored options}} ({selectable} selectable) withheld from this public view — products outside the Phase D1 atlas cohort are not identified here."
+        "optionsWithheld": "{count, plural, one {# authored option} other {# authored options}} ({selectable} selectable) withheld from this public view — products outside the Device Atlas cohort are not identified here.",
+        "optionSafetyNote": "A safety label beside an option reports an FDA safety action matched to that product at the research snapshot. It is not a statement about compatibility, and it does not change which options this release authors as selectable."
       },
       "setupZones": {
         "room_capital_equipment": "Room / capital equipment",
