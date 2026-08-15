@@ -4,15 +4,28 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import { PathwayLanding } from '@/features/learning-module/curriculum'
 import { Link } from '@/i18n/navigation'
 
+import { ecmoPathwayComposition } from '../content/pathwayResolver'
 import type { SupportMode } from '../engine/types'
+import { EcmoContinueCta } from './EcmoContinueCta'
 
 const trackLabel: Readonly<Record<SupportMode, string>> = {
-  vv: 'VV · respiratory support',
-  va: 'VA · circulatory and respiratory support',
+  vv: 'VV · for failing lungs · gas exchange in series',
+  va: 'VA · for a failing heart · flow in parallel',
 }
 
 export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: SupportMode }) {
   const other: SupportMode = supportMode === 'vv' ? 'va' : 'vv'
+  const { foundations, consoleOrientation, drills, capstone } = ecmoPathwayComposition(supportMode)
+  // Counted from the registry, like every other count on this surface, so the note cannot drift
+  // into describing a shape the pathway no longer has.
+  const compositionLine = [
+    `${foundations} foundations`,
+    consoleOrientation === 1
+      ? 'console orientation seventh'
+      : `${consoleOrientation} console orientation sections`,
+    `${drills} drills`,
+    capstone === 1 ? 'integration capstone' : `${capstone} integration capstones`,
+  ].join(' · ')
 
   return (
     <>
@@ -38,8 +51,8 @@ export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: 
         }
         eyebrow={`${supportMode.toUpperCase()} track · one continuous pathway`}
         intro="The first four sections are shared by both tracks: what extracorporeal support substitutes for, the circuit as a flow path, what a centrifugal pump does to the pressures around it, and why blood flow and sweep are not interchangeable. The track then adds its own physiology and its normal state before the console appears, and only then works the failure patterns. Move in order or open any section directly."
-        startLabel="Start with the physiology"
-        sectionsNote={`Console orientation sits seventh, not first. The other track (${other.toUpperCase()}) shares the first four sections.`}
+        startCta={<EcmoContinueCta supportMode={supportMode} />}
+        sectionsNote={`${compositionLine} · Working the first four covers them for the other track (${other.toUpperCase()}) too.`}
         notice={
           <aside
             role="note"
