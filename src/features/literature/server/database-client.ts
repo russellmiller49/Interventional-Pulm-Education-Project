@@ -269,7 +269,17 @@ export function literatureOperationActivated(
   operation: LiteratureRuntimeOperation,
   environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): boolean {
-  if (literatureRuntimeMode(environment) === 'local') return true
+  // Judged on the resolved binding, not on the mode string.
+  //
+  // Testing `literatureRuntimeMode(...) === 'local'` was enough to widen this: a deployed
+  // environment that set LITERATURE_SUPABASE_RUNTIME_MODE=local alongside the production URL
+  // reported every operation as carried, so the page offered the gold-set button and the curation
+  // form — while `literatureClientForOperation` correctly refused the same configuration, because
+  // local mode never binds to a remote host. That is exactly the always-failing control this
+  // function exists to prevent. Local mode widens capability only when it actually bound to a
+  // local target.
+  const binding = resolveLiteratureDedicatedBinding(environment, literatureRuntimeMode(environment))
+  if (binding.status === 'bound' && binding.mode === 'local') return true
   return ACTIVATED_OPERATION_SET.has(operation)
 }
 

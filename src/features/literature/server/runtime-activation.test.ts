@@ -305,6 +305,55 @@ describe('the activation contract withholds writes and the gold-set workflow', (
     expect(createClientMock).not.toHaveBeenCalled()
   })
 
+  it('does not let a local-mode label widen capability against a remote target', () => {
+    /*
+     * The regression this pins: `literatureOperationActivated` once consulted only the runtime-mode
+     * string, so a deployed environment that set LITERATURE_SUPABASE_RUNTIME_MODE=local next to the
+     * production URL reported gold-set and curation as carried. The page then offered a button and
+     * a form whose every use fails, because local mode never binds to a remote host — the precise
+     * always-failing control the capability check exists to prevent.
+     */
+    const mislabelled = {
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: APPROVED_URL,
+      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    }
+    expect(literatureOperationActivated('gold_set_read', mislabelled)).toBe(false)
+    expect(literatureOperationActivated('article_curation', mislabelled)).toBe(false)
+    // The reads stay carried, because they are on the strict allowlist regardless of the label.
+    expect(literatureOperationActivated('article_search', mislabelled)).toBe(true)
+  })
+
+  it('carries every operation for a genuinely bound local target', () => {
+    // The local Supabase stack has all Literature migrations, so nothing is withheld there.
+    const local = {
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
+      LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    }
+    for (const operation of [
+      'article_search',
+      'article_detail',
+      'admin_stats',
+      'review_queue_read',
+      'article_curation',
+      'gold_set_read',
+      'gold_set_mutation',
+    ] as const) {
+      expect(`${operation}: ${literatureOperationActivated(operation, local)}`).toBe(
+        `${operation}: true`,
+      )
+    }
+  })
+
+  it('withholds the deferred operations for an unconfigured deployment', () => {
+    // No binding at all must not read as "local", which would be the same widening by another route.
+    expect(literatureOperationActivated('gold_set_read', {})).toBe(false)
+    expect(literatureOperationActivated('article_curation', {})).toBe(false)
+  })
+
   it('reaches no RPC from the curation or gold-set server functions', async () => {
     const results = [
       await curateLiteratureArticle(
