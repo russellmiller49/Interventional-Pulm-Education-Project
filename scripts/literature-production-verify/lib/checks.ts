@@ -38,7 +38,9 @@ import {
   LITERATURE_PRODUCTION_CATALOG_TOTALS,
   LITERATURE_PRODUCTION_MIGRATION,
   LITERATURE_PUBLICLY_VISIBLE_STATE,
+  LITERATURE_RELEVANCE_STATES,
   LITERATURE_UNPRIVILEGED_ROLES,
+  LITERATURE_VISIBILITY_STATES,
 } from './identity'
 import { describeObservation, isObserved, type Observation } from './observation'
 import type {
@@ -598,19 +600,37 @@ export function checkDistributions(
 ): CheckResult[] {
   const results: CheckResult[] = []
 
-  for (const [id, title, distribution] of [
+  for (const [id, title, distribution, vocabulary] of [
     [
       'V32-relevance-distribution',
       'the relevance-state distribution sums to the corpus',
       relevance,
+      LITERATURE_RELEVANCE_STATES,
     ],
     [
       'V33-visibility-distribution',
       'the visibility-state distribution sums to the corpus',
       visibility,
+      LITERATURE_VISIBILITY_STATES,
     ],
   ] as const) {
     const entries = Object.entries(distribution)
+    // Judged against the documented vocabulary rather than whatever keys arrived. Summing the
+    // keys handed in would make the check agree with itself: a caller that supplied three of the
+    // four relevance states would produce a sum that matched, and the missing state's rows would
+    // simply never be counted on either side.
+    const missingStates = vocabulary.filter((state: string) => !(state in distribution))
+    if (missingStates.length > 0) {
+      results.push(
+        indeterminate(
+          id,
+          title,
+          `No verdict: no count was taken for ${missingStates.join(', ')}. The sum can only be ` +
+            'compared against the corpus when every documented state was counted.',
+        ),
+      )
+      continue
+    }
     // Narrowed once, up front. Summing over `observedEntries` means there is no branch in this
     // function where a non-observed count could contribute a `0` to the total — the arithmetic
     // below simply cannot see one.
@@ -689,6 +709,23 @@ function rowCount(rows: unknown): number | null {
   return Array.isArray(rows) ? rows.length : null
 }
 
+/**
+ * The window count `search_literature_v1` puts on every row it returns.
+ *
+ * Zero rows legitimately means zero matches — that is the one case where an empty page *is* the
+ * answer. Any other shape returns `null`, and the caller reports missing evidence rather than
+ * falling back to the page length.
+ */
+function reportedTotal(rows: unknown): number | null {
+  if (!Array.isArray(rows)) return null
+  if (rows.length === 0) return 0
+  const first: unknown = rows[0]
+  if (first === null || typeof first !== 'object') return null
+  const raw = (first as Record<string, unknown>).total_count
+  const parsed = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : Number.NaN
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null
+}
+
 export function checkSearchBehaviour(
   blankAdminPreview: Observation<unknown[]>,
   keywordSearch: Observation<unknown[]>,
@@ -728,26 +765,49 @@ export function checkSearchBehaviour(
       'keyword search executes and is a subset of the corpus',
       keywordSearch,
       (rows) => {
+        const keywordId = 'V41-keyword-search'
+        const keywordTitle = 'keyword search executes and is a subset of the corpus'
         const count = rowCount(rows)
         if (count === null) {
+          return fail(keywordId, keywordTitle, 'The RPC returned a non-array payload.')
+        }
+        // The page length is not the match count. `search_literature_v1` returns at most
+        // `p_page_size` rows, each carrying the window count in `total_count` — comparing the page
+        // length against the corpus made the subset claim vacuous for any corpus larger than a
+        // page. The reported total is what the claim is actually about.
+        const matched = reportedTotal(rows)
+        if (matched === null) {
           return fail(
-            'V41-keyword-search',
-            'keyword search executes and is a subset of the corpus',
-            'The RPC returned a non-array payload.',
+            keywordId,
+            keywordTitle,
+            'The RPC returned rows without a `total_count`, so the number of matches is unknown ' +
+              'and the subset claim cannot be judged from the page length alone.',
           )
         }
-        if (isObserved(totalArticles) && count > totalArticles.value) {
+        if (!isObserved(totalArticles)) {
+          return indeterminate(
+            keywordId,
+            keywordTitle,
+            `No verdict: the RPC reported ${matched} match(es), but the corpus total was not ` +
+              `observed (${describeObservation(totalArticles)}), so "a subset of the corpus" is ` +
+              'not something this run can check.',
+          )
+        }
+        if (matched > totalArticles.value) {
           return fail(
-            'V41-keyword-search',
-            'keyword search executes and is a subset of the corpus',
-            `Keyword search returned ${count} rows from a corpus of ${totalArticles.value}.`,
+            keywordId,
+            keywordTitle,
+            `Keyword search reports ${matched} match(es) from a corpus of ` +
+              `${totalArticles.value}. More matches than rows means an indexing or join defect.`,
+            { matched, corpus: totalArticles.value },
           )
         }
         return pass(
-          'V41-keyword-search',
-          'keyword search executes and is a subset of the corpus',
-          `${count} row(s) matched.`,
-          { rows: count },
+          keywordId,
+          keywordTitle,
+          `${matched} match(es) from a corpus of ${totalArticles.value}; ${count} returned on the ` +
+            'first page.',
+          { matched, returned: count, corpus: totalArticles.value },
         )
       },
     ),
@@ -759,12 +819,17 @@ export function checkSearchBehaviour(
       'the admin stats RPC agrees with the counted corpus',
       adminStats,
       (stats) => {
-        const reported = Number(stats.total_articles)
+        // `typeof`, not `Number(...)`: `Number(null)` is `0` and `Number.isInteger(0)` is true, so
+        // a stats payload carrying `total_articles: null` would have been read as a reported zero
+        // and could "agree" with an empty corpus the RPC never actually counted.
+        const raw = stats.total_articles
+        const reported = typeof raw === 'number' ? raw : Number.NaN
         if (!Number.isInteger(reported)) {
           return fail(
             'V42-admin-stats',
             'the admin stats RPC agrees with the counted corpus',
-            'The stats payload carried no integer `total_articles`.',
+            'The stats payload carried no integer `total_articles`. A null or absent value is ' +
+              'reported as missing evidence, never as a count of zero.',
           )
         }
         if (!isObserved(totalArticles)) {
@@ -878,6 +943,16 @@ export interface CorpusSnapshot {
   readonly insertedTotal: number
   readonly updatedTotal: number
   readonly duplicateTotal: number
+  /**
+   * The most recent `started_at` across all batches.
+   *
+   * Present because a batch *count* is not evidence that a second import ran. `import-nbib.ts`
+   * skips an identical completed file outright, writing nothing; with `--force` it resets the
+   * existing row in place rather than adding one. Either way the count is unchanged, so a check
+   * that required it to grow would fail the documented workflow. A `--force` replay does move
+   * `started_at`, which is the one observable trace there is.
+   */
+  readonly latestBatchStartedAt?: string | null
 }
 
 /**
@@ -903,36 +978,61 @@ export function checkCanaryIdempotency(
         'cannot be inferred from one.',
     )
   }
+
   const problems: string[] = []
   if (current.value.totalArticles !== baseline.value.totalArticles) {
     problems.push(
       `the corpus moved from ${baseline.value.totalArticles} to ${current.value.totalArticles}`,
     )
   }
-  const newInserts = current.value.insertedTotal - baseline.value.insertedTotal
-  if (newInserts !== 0) {
-    problems.push(`the second run inserted ${newInserts} row(s)`)
-  }
-  if (current.value.batchCount <= baseline.value.batchCount) {
+  // An *increase* means rows were inserted that the importer did not recognise as already
+  // present. A decrease is normal: `--force` resets the batch row in place, so its counters are
+  // recomputed rather than accumulated.
+  if (current.value.insertedTotal > baseline.value.insertedTotal) {
     problems.push(
-      'no new batch was recorded, so no second run is evidenced — this check compares two runs ' +
-        'and there is only one',
+      `inserts rose from ${baseline.value.insertedTotal} to ${current.value.insertedTotal}`,
     )
   }
-  return problems.length === 0
-    ? pass(
-        id,
-        title,
-        `The corpus stayed at ${current.value.totalArticles} and the second run inserted 0 rows.`,
-        {
-          total: current.value.totalArticles,
-          newBatches: current.value.batchCount - baseline.value.batchCount,
-        },
-      )
-    : fail(id, title, `Not idempotent: ${problems.join('; ')}.`, {
-        baseline: baseline.value,
-        current: current.value,
-      })
+  if (problems.length > 0) {
+    return fail(id, title, `Not idempotent: ${problems.join('; ')}.`, {
+      baseline: baseline.value,
+      current: current.value,
+    })
+  }
+
+  // The numbers agree. Whether they agree *because a second import ran and changed nothing* or
+  // because nothing ran at all is a different question, and the database can only answer it when
+  // the replay left a trace.
+  const replayEvidenced =
+    current.value.batchCount > baseline.value.batchCount ||
+    (current.value.latestBatchStartedAt != null &&
+      baseline.value.latestBatchStartedAt != null &&
+      current.value.latestBatchStartedAt !== baseline.value.latestBatchStartedAt)
+
+  if (!replayEvidenced) {
+    return indeterminate(
+      id,
+      title,
+      `The corpus is unchanged at ${current.value.totalArticles} and nothing new was inserted, ` +
+        'but the database shows no trace of a second import between the two captures: no new ' +
+        'batch, and no batch start time moved. `import-nbib.ts` skips an identical completed ' +
+        'file without writing anything, so a plain re-run is invisible here. Replay with ' +
+        '`--force`, which resets the batch row and moves its start time, to make the second run ' +
+        'observable — otherwise this reports what it can see, which is not idempotency.',
+    )
+  }
+
+  return pass(
+    id,
+    title,
+    `A second import is evidenced and the corpus stayed at ${current.value.totalArticles} with ` +
+      'no new inserts.',
+    {
+      total: current.value.totalArticles,
+      insertedBefore: baseline.value.insertedTotal,
+      insertedAfter: current.value.insertedTotal,
+    },
+  )
 }
 
 /* ------------------------------------------------------------------------------------------- *
@@ -1467,19 +1567,38 @@ export function checkApplicationAccessControl(
   const apiTitle = 'an anonymous request to the Literature API is refused'
 
   return [
-    fromObservation(pageId, pageTitle, anonymousAdminPage, (probe) =>
-      probe.status === 307 || probe.status === 302 || probe.status === 303 || probe.status === 401
-        ? pass(pageId, pageTitle, `HTTP ${probe.status} — redirected to sign-in or refused.`, {
+    fromObservation(pageId, pageTitle, anonymousAdminPage, (probe) => {
+      if (probe.status === 401 || probe.status === 403) {
+        return pass(pageId, pageTitle, `HTTP ${probe.status} — refused.`, { status: probe.status })
+      }
+      if (probe.status === 302 || probe.status === 303 || probe.status === 307) {
+        // "It redirected" is not "it redirected to sign-in". A platform access gate sends every
+        // path to an SSO login and an apex domain sends everything to `www`; both would otherwise
+        // certify that the Literature admin page is gated without Literature having been reached.
+        const target = probe.location ?? ''
+        if (/\/(?:login|sign-?in|auth)(?:[/?#]|$)/iu.test(target)) {
+          return pass(pageId, pageTitle, `HTTP ${probe.status} to ${target} — the sign-in page.`, {
             status: probe.status,
+            location: target,
           })
-        : fail(
-            pageId,
-            pageTitle,
-            `HTTP ${probe.status}. The page is gated by both middleware and its layout, so an ` +
-              'anonymous 200 means one of those gates is not running.',
-            { status: probe.status },
-          ),
-    ),
+        }
+        return fail(
+          pageId,
+          pageTitle,
+          `HTTP ${probe.status} to ${target || '(no Location header)'}, which is not the ` +
+            "application's sign-in page. A redirect somewhere else — a platform access gate, an " +
+            'apex-to-www hop — says nothing about whether the Literature gate ran.',
+          { status: probe.status, location: target },
+        )
+      }
+      return fail(
+        pageId,
+        pageTitle,
+        `HTTP ${probe.status}. The page is gated by both middleware and its layout, so an ` +
+          'anonymous 200 means one of those gates is not running.',
+        { status: probe.status },
+      )
+    }),
     fromObservation(apiId, apiTitle, anonymousSearchApi, (probe) =>
       probe.status === 401 && probe.errorCode === 'LITERATURE_ACCESS_DENIED'
         ? pass(apiId, apiTitle, 'HTTP 401 LITERATURE_ACCESS_DENIED.', { status: probe.status })

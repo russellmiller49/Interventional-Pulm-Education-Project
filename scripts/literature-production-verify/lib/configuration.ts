@@ -154,9 +154,33 @@ export function resolveVerificationConfiguration(
       credential,
     },
     applicationBaseUrl: normalizeBaseUrl(environment.LITERATURE_VERIFY_APP_BASE_URL),
-    adminCookie: environment.LITERATURE_VERIFY_ADMIN_COOKIE?.trim() || null,
+    adminCookie: resolveAdminCookie(
+      environment.LITERATURE_VERIFY_ADMIN_COOKIE,
+      normalizeBaseUrl(environment.LITERATURE_VERIFY_APP_BASE_URL),
+    ),
     anonymousKey: environment.LITERATURE_VERIFY_ANON_KEY?.trim() || null,
   }
+}
+
+/**
+ * The site-admin session cookie, or `null` when sending it would put it on the wire in the clear.
+ *
+ * A mistyped `http://` origin — or an operator reaching for a deployment over plain HTTP — would
+ * otherwise have carried a live admin session across four requests unencrypted. Loopback is
+ * exempt: nothing leaves the machine. Everything else must be `https:` or the cookie is withheld,
+ * and the application checks that need it report no verdict rather than being paid for with a
+ * credential disclosure.
+ */
+function resolveAdminCookie(value: string | undefined, baseUrl: string | null): string | null {
+  const cookie = value?.trim()
+  if (!cookie) return null
+  if (baseUrl === null) return cookie
+  const parsed = new URL(baseUrl)
+  const loopback =
+    parsed.hostname === 'localhost' ||
+    parsed.hostname === '127.0.0.1' ||
+    parsed.hostname === '[::1]'
+  return parsed.protocol === 'https:' || loopback ? cookie : null
 }
 
 function normalizeBaseUrl(value: string | undefined): string | null {

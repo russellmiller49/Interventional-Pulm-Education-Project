@@ -10,11 +10,13 @@
  */
 
 import {
+  checkApplicationAccessControl,
   checkApplicationRuntime,
   checkBatchReconciliation,
   checkCanaryCount,
   checkCanaryIdempotency,
   checkCatalogInventory,
+  checkDistributions,
   checkFoundationEmpty,
   checkFoundationPopulated,
   checkFullCorpus,
@@ -192,15 +194,20 @@ describe('canary idempotency compares two runs', () => {
     insertedTotal: 25,
     updatedTotal: 0,
     duplicateTotal: 0,
+    latestBatchStartedAt: '2026-08-15T00:00:00.000Z',
   })
 
-  it('passes when a second run inserted nothing and the corpus did not move', () => {
+  it('passes on the trace a --force replay actually leaves', () => {
+    // `import-nbib.ts` resets the existing batch row in place rather than adding one, so the batch
+    // count holds, the inserted counter is recomputed downward, and `started_at` moves. A check
+    // that demanded a *new* batch row would have failed the documented workflow every time.
     const current = observed({
       totalArticles: 25,
-      batchCount: 2,
-      insertedTotal: 25,
+      batchCount: 1,
+      insertedTotal: 0,
       updatedTotal: 25,
-      duplicateTotal: 25,
+      duplicateTotal: 0,
+      latestBatchStartedAt: '2026-08-15T01:00:00.000Z',
     })
     expect(checkCanaryIdempotency(baseline, current).outcome).toBe('pass')
   })
@@ -212,18 +219,22 @@ describe('canary idempotency compares two runs', () => {
       insertedTotal: 50,
       updatedTotal: 0,
       duplicateTotal: 0,
+      latestBatchStartedAt: '2026-08-15T01:00:00.000Z',
     })
     const result = checkCanaryIdempotency(baseline, current)
     expect(result.outcome).toBe('fail')
-    expect(result.detail).toMatch(/inserted 25 row/u)
+    expect(result.detail).toMatch(/the corpus moved from 25 to 50/u)
+    expect(result.detail).toMatch(/inserts rose from 25 to 50/u)
   })
 
-  it('fails when no second run is evidenced rather than passing vacuously', () => {
-    // Same numbers as the baseline and no new batch: nothing ran, so nothing was proven, and a
-    // check that passed here would certify idempotency from a single run.
+  it('reports no verdict when nothing evidences a second run, rather than passing vacuously', () => {
+    // Identical snapshots: the numbers agree, and they would agree just as well if no second
+    // import had ever run. A plain re-run is skipped by the importer without writing anything, so
+    // the database genuinely cannot tell — and saying so is the honest answer.
     const result = checkCanaryIdempotency(baseline, baseline)
-    expect(result.outcome).toBe('fail')
-    expect(result.detail).toMatch(/no new batch was recorded/u)
+    expect(result.outcome).toBe('indeterminate')
+    expect(result.detail).toMatch(/no trace of a second import/u)
+    expect(result.detail).toMatch(/`--force`/u)
   })
 
   it('is indeterminate without a baseline', () => {
@@ -555,6 +566,110 @@ describe('full-corpus reconciliation', () => {
   })
 })
 
+describe('a null in a stats payload is not a count of zero', () => {
+  it('reports missing evidence rather than agreement with an invented zero', () => {
+    // `Number(null)` is 0 and `Number.isInteger(0)` is true, so a null `total_articles` would
+    // otherwise have been read as a reported zero and could "agree" with an empty corpus the RPC
+    // never actually counted.
+    const results = checkSearchBehaviour(
+      observed([]),
+      observed([]),
+      observed({ total_articles: null }),
+      observed(0),
+    )
+    const stats = results.find((result) => result.id === 'V42-admin-stats')
+    expect(stats?.outcome).toBe('fail')
+    expect(stats?.detail).toMatch(/never as a count of zero/u)
+  })
+})
+
+describe('keyword search is judged on matches, not on a page of them', () => {
+  it('compares the RPC-reported total rather than the page length', () => {
+    // A corpus of 5,000 with a defective index reporting 6,100 matches: the page holds 20 rows, so
+    // a length comparison would have passed.
+    const page = Array.from({ length: 20 }, () => ({ total_count: 6100 }))
+    const results = checkSearchBehaviour(
+      observed([]),
+      observed(page),
+      observed({ total_articles: 5000 }),
+      observed(5000),
+    )
+    const keyword = results.find((result) => result.id === 'V41-keyword-search')
+    expect(keyword?.outcome).toBe('fail')
+    expect(keyword?.detail).toMatch(/6100 match/u)
+  })
+
+  it('reports no verdict when the corpus total was not observed', () => {
+    const results = checkSearchBehaviour(
+      observed([]),
+      observed([{ total_count: 3 }]),
+      observed({ total_articles: 3 }),
+      failed('count_absent', 'no exact total'),
+    )
+    expect(outcomeOf(results, 'V41-keyword-search')).toBe('indeterminate')
+  })
+
+  it('treats zero matches as a real answer', () => {
+    const results = checkSearchBehaviour(
+      observed([]),
+      observed([]),
+      observed({ total_articles: 25 }),
+      observed(25),
+    )
+    expect(outcomeOf(results, 'V41-keyword-search')).toBe('pass')
+  })
+})
+
+describe('a redirect is only a gate when it points at sign-in', () => {
+  const anonymousApi = observed({
+    status: 401,
+    errorCode: 'LITERATURE_ACCESS_DENIED',
+    body: {},
+    location: null,
+  })
+
+  it('passes on a redirect to the application sign-in page', () => {
+    const results = checkApplicationAccessControl(
+      observed({
+        status: 307,
+        errorCode: null,
+        body: '',
+        location: '/en/login?next=%2Fliterature',
+      }),
+      anonymousApi,
+    )
+    expect(outcomeOf(results, 'V91-anonymous-page')).toBe('pass')
+  })
+
+  it.each([
+    ['a platform access gate', 'https://sso.example.com/authorize?client_id=abc'],
+    ['an apex-to-www hop', 'https://www.example.test/en/admin/literature'],
+    ['no Location header at all', null],
+  ])('fails on %s, which says nothing about the Literature gate', (_label, location) => {
+    const results = checkApplicationAccessControl(
+      observed({ status: 307, errorCode: null, body: '', location }),
+      anonymousApi,
+    )
+    expect(outcomeOf(results, 'V91-anonymous-page')).toBe('fail')
+  })
+})
+
+describe('the state distributions are judged against the documented vocabulary', () => {
+  it('reports no verdict when a documented state was never counted', () => {
+    // Summing only the keys handed in would make the check agree with itself: the uncounted
+    // state's rows would be missing from both sides of the comparison.
+    const partial = { unreviewed: observed(20), candidate: observed(5), included: observed(0) }
+    const results = checkDistributions(
+      partial,
+      { draft: observed(25), published: observed(0), hidden: observed(0) },
+      observed(25),
+    )
+    const relevance = results.find((result) => result.id === 'V32-relevance-distribution')
+    expect(relevance?.outcome).toBe('indeterminate')
+    expect(relevance?.detail).toMatch(/excluded/u)
+  })
+})
+
 describe('search behaviour', () => {
   it('treats an empty admin preview as a successful read, not an error', () => {
     const results = checkSearchBehaviour(
@@ -607,7 +722,12 @@ describe('the gold workflow declines rather than breaks', () => {
   it('passes when the database reports the RPC absent and the API declines cleanly', () => {
     const results = checkGoldWorkflowUnavailable(
       unavailable('the target reports no such database object (PostgREST PGRST202)'),
-      observed({ status: 404, errorCode: 'LITERATURE_GOLD_SET_EXPORT_FAILED', body: {} }),
+      observed({
+        status: 404,
+        errorCode: 'LITERATURE_GOLD_SET_EXPORT_FAILED',
+        body: {},
+        location: null,
+      }),
     )
     expect(results.every((result) => result.outcome === 'pass')).toBe(true)
   })
@@ -615,7 +735,12 @@ describe('the gold workflow declines rather than breaks', () => {
   it('fails when the API leaks a raw failure with no error envelope', () => {
     const results = checkGoldWorkflowUnavailable(
       unavailable('PGRST202'),
-      observed({ status: 500, errorCode: null, body: 'PGRST202: could not find the function' }),
+      observed({
+        status: 500,
+        errorCode: null,
+        body: 'PGRST202: could not find the function',
+        location: null,
+      }),
     )
     const application = results.find((result) => result.id === 'V96-gold-declines-cleanly')
     expect(application?.outcome).toBe('fail')
@@ -629,6 +754,7 @@ describe('the gold workflow declines rather than breaks', () => {
         status: 404,
         errorCode: 'LITERATURE_GOLD_SET_EXPORT_FAILED',
         body: {},
+        location: null,
       }),
     )
     expect(outcomeOf(results, 'V95-gold-absent-in-database')).toBe('fail')
@@ -646,7 +772,12 @@ describe('the gold workflow declines rather than breaks', () => {
 describe('the application reports its own state truthfully', () => {
   it('passes the not-configured scenario on a structured 503', () => {
     const result = checkApplicationRuntime(
-      observed({ status: 503, errorCode: 'LITERATURE_SEARCH_UNAVAILABLE', body: {} }),
+      observed({
+        status: 503,
+        errorCode: 'LITERATURE_SEARCH_UNAVAILABLE',
+        body: {},
+        location: null,
+      }),
       'not_configured',
     )
     expect(result.outcome).toBe('pass')
@@ -655,7 +786,7 @@ describe('the application reports its own state truthfully', () => {
   it('fails the not-configured scenario on a bare 500', () => {
     // "Not configured" and "broken" must not look the same to an operator.
     const result = checkApplicationRuntime(
-      observed({ status: 500, errorCode: null, body: 'Internal Server Error' }),
+      observed({ status: 500, errorCode: null, body: 'Internal Server Error', location: null }),
       'not_configured',
     )
     expect(result.outcome).toBe('fail')
@@ -663,7 +794,12 @@ describe('the application reports its own state truthfully', () => {
   })
 
   it('reads the same 503 as a failure once the runtime is meant to be serving', () => {
-    const probe = observed({ status: 503, errorCode: 'LITERATURE_SEARCH_UNAVAILABLE', body: {} })
+    const probe = observed({
+      status: 503,
+      errorCode: 'LITERATURE_SEARCH_UNAVAILABLE',
+      body: {},
+      location: null,
+    })
     expect(checkApplicationRuntime(probe, 'not_configured').outcome).toBe('pass')
     expect(checkApplicationRuntime(probe, 'configured').outcome).toBe('fail')
   })
