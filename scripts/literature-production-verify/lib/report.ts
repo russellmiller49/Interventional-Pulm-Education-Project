@@ -43,7 +43,7 @@ export function renderScenarioRun(run: ScenarioRun): string {
 }
 
 export interface ReceiptEnvelope {
-  readonly schemaVersion: 'literature-production-verification/1.0.0'
+  readonly schemaVersion: 'literature-production-verification/1.1.0'
   readonly scenario: string
   readonly verdict: RunVerdict
   readonly target: { url: string; projectRef: string; credentialPresent: boolean }
@@ -51,6 +51,19 @@ export interface ReceiptEnvelope {
   readonly checks: readonly CheckResult[]
   readonly summary: ScenarioRun['summary']
   readonly stopReason: string | null
+  /**
+   * The corpus snapshot this run observed, or `null` when it could not be taken.
+   *
+   * Present so a receipt can be handed straight back as the next run's `--baseline`. The file an
+   * operator is told to keep and the file the idempotency check can read are now the same file.
+   */
+  readonly snapshot: {
+    totalArticles: number
+    batchCount: number
+    insertedTotal: number
+    updatedTotal: number
+    duplicateTotal: number
+  } | null
   /**
    * Stamped by the caller from `Date.now()`. Present so a receipt can be filed, and deliberately
    * not read by any check — nothing here is authorization, and a timestamp must not look like it.

@@ -28,7 +28,7 @@
  * observe what it needed has proven nothing, and a shell `&&` chain must not read it as success.
  */
 
-import { readFile, writeFile } from 'node:fs/promises'
+import { access, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import {
@@ -64,25 +64,63 @@ import type {
 const ROOT = process.cwd()
 const DEFAULT_KEYWORD = 'bronchoscopy'
 
-function flagValue(name: string): string | undefined {
+/** A flag's value, or a refusal describing why the argument list is not usable. */
+type FlagResult = { value: string | undefined } | { error: string }
+
+/**
+ * Read one flag's value.
+ *
+ * Two things it deliberately refuses rather than guesses at:
+ *
+ *   - `--flag=value`. Only the space-separated form is read, so accepting the joined form silently
+ *     would mean `--receipt=evidence.json` runs to completion, prints a normal report and a normal
+ *     exit code, and writes no file. The only signal would be the *absence* of a line, which is
+ *     exactly the kind of thing nobody notices until the evidence is needed.
+ *   - A value that is itself a flag. `--receipt --json` would otherwise take `--json` as the
+ *     receipt path and write the receipt to a file called `--json`.
+ */
+function flagValue(name: string): FlagResult {
+  const joined = process.argv.find((argument) => argument.startsWith(`${name}=`))
+  if (joined !== undefined) {
+    return {
+      error: `${name}=<value> is not supported. Use the space-separated form: ${name} <value>.`,
+    }
+  }
   const index = process.argv.indexOf(name)
-  return index >= 0 ? process.argv[index + 1] : undefined
+  if (index < 0) return { value: undefined }
+  const next = process.argv[index + 1]
+  if (next === undefined || next.startsWith('--')) {
+    return { error: `${name} requires a value; the next argument was ${next ?? '(nothing)'}.` }
+  }
+  return { value: next }
 }
 
 /**
- * Read an operator-supplied evidence file.
+ * Read an operator-supplied evidence file, and check its shape.
  *
  * An absent file is `skipped`, not `failed`: the operator chose not to supply it, and the checks
- * that need it report `indeterminate` rather than inventing a default. An unreadable or malformed
- * file is `failed`, because that is a different problem and hiding it would be worse.
+ * that need it report `indeterminate` rather than inventing a default. An unreadable file is
+ * `failed`.
+ *
+ * The shape check is the part that was missing. Casting parsed JSON to `T` and handing it to a
+ * check meant that a file which merely *parsed* — the provider's `list_migrations` response saved
+ * as it came back, `{"migrations": [...]}` rather than a bare array — reached `entries.map(...)`
+ * on a plain object and threw. The run then aborted with an empty report, no verdict, and no
+ * receipt, over a file that was one unwrapping away from correct. A shape mismatch is now a
+ * `failed` observation, so the check reports `indeterminate` and every other check still runs.
  */
-async function readEvidence<T>(path: string | undefined, label: string): Promise<Observation<T>> {
+async function readEvidence<T>(
+  path: string | undefined,
+  label: string,
+  hasExpectedShape: (value: unknown) => boolean,
+  expectedShape: string,
+): Promise<Observation<T>> {
   if (!path) {
     return skipped(`no ${label} file was supplied`)
   }
+  let parsed: unknown
   try {
-    const body = await readFile(resolve(ROOT, path), 'utf8')
-    return observed(JSON.parse(body) as T)
+    parsed = JSON.parse(await readFile(resolve(ROOT, path), 'utf8')) as unknown
   } catch (error) {
     return failed(
       'evidence_unreadable',
@@ -90,6 +128,67 @@ async function readEvidence<T>(path: string | undefined, label: string): Promise
         `${error instanceof Error ? error.message : String(error)}`,
     )
   }
+  if (!hasExpectedShape(parsed)) {
+    return failed(
+      'evidence_wrong_shape',
+      `The ${label} file parsed but is not the expected shape (${expectedShape}). It is reported ` +
+        'as unusable rather than being read as an empty or partial answer.',
+    )
+  }
+  return observed(parsed as T)
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isMigrationHistory(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => isObject(entry) && typeof entry.version === 'string')
+  )
+}
+
+function isCatalogAttestation(value: unknown): boolean {
+  if (!isObject(value)) return false
+  return ['tables', 'functions', 'indexes', 'triggers', 'policies', 'rlsEnabledTables'].every(
+    (key) => Array.isArray(value[key]),
+  )
+}
+
+function isCorpusExpectation(value: unknown): boolean {
+  return (
+    isObject(value) &&
+    typeof value.sourceRecordCount === 'number' &&
+    typeof value.sourceDistinctPmidCount === 'number' &&
+    Array.isArray(value.sourceFiles)
+  )
+}
+
+/**
+ * Extract the corpus snapshot from a `--baseline` file.
+ *
+ * The baseline an operator supplies is the receipt a previous run wrote — that is what the runbook
+ * tells them to keep, and there is nothing else for them to supply. Reading it as a bare snapshot
+ * meant `baseline.totalArticles` was `undefined`, `25 - undefined` was `NaN`, and the idempotency
+ * check reported a confident "not idempotent: the corpus moved from undefined to 25". A wrong
+ * answer dressed as a finding.
+ *
+ * Both forms are accepted now: a receipt envelope (`{ snapshot: {...} }`) and a bare snapshot,
+ * for a baseline captured by hand.
+ */
+function extractSnapshot(value: unknown): unknown {
+  if (isObject(value) && isObject(value.snapshot)) return value.snapshot
+  return value
+}
+
+function isCorpusSnapshot(value: unknown): boolean {
+  return (
+    isObject(value) &&
+    typeof value.totalArticles === 'number' &&
+    typeof value.batchCount === 'number' &&
+    typeof value.insertedTotal === 'number'
+  )
 }
 
 function usage(): string {
@@ -133,7 +232,28 @@ async function main() {
     return
   }
 
-  const scenarioId = flagValue('--scenario')
+  // Every flag is read up front, so a malformed argument list stops the run before a single
+  // request goes out rather than half way through one.
+  const flags = {
+    scenario: flagValue('--scenario'),
+    pmid: flagValue('--pmid'),
+    keyword: flagValue('--keyword'),
+    migrationHistory: flagValue('--migration-history'),
+    catalog: flagValue('--catalog'),
+    corpus: flagValue('--corpus'),
+    baseline: flagValue('--baseline'),
+    receipt: flagValue('--receipt'),
+  }
+  const flagError = Object.values(flags).find(
+    (result): result is { error: string } => 'error' in result,
+  )
+  if (flagError) {
+    writeError(`${flagError.error}\n`)
+    return
+  }
+  const value = (result: FlagResult) => ('error' in result ? undefined : result.value)
+
+  const scenarioId = value(flags.scenario)
   const scenario = scenarioId ? scenarioById(scenarioId) : null
   if (!scenario) {
     writeError(
@@ -143,6 +263,20 @@ async function main() {
     return
   }
 
+  // A PMID is `\d{1,12}`, the same rule the application's own route applies. Validating it here
+  // is not pedantry: `--pmid` is echoed into the report and the receipt, so an arbitrary token
+  // parked in it would be written out verbatim — which is precisely what the credential guard
+  // exists to prevent, and which that guard cannot catch for a credential shape it has never seen.
+  const detailPmid = value(flags.pmid) ?? null
+  if (detailPmid !== null && !/^\d{1,12}$/u.test(detailPmid)) {
+    writeError(
+      '--pmid must be a PubMed identifier (1 to 12 digits). It is echoed into the report and the ' +
+        'receipt, so anything else is refused rather than written out.\n',
+    )
+    return
+  }
+  const keyword = value(flags.keyword) ?? DEFAULT_KEYWORD
+
   const environment = process.env as LiteratureVerificationEnvironment
   const configuration = resolveVerificationConfiguration(environment)
   if (configuration.status === 'refused') {
@@ -150,22 +284,22 @@ async function main() {
     return
   }
 
-  const detailPmid = flagValue('--pmid') ?? null
-  const keyword = flagValue('--keyword') ?? DEFAULT_KEYWORD
-
   const transport = createReadOnlyTransport({
     origin: configuration.database.url,
     credential: configuration.database.credential,
   })
-  // A separate transport with no privileged credential. When the operator supplies a publishable
-  // key it is used; otherwise the probe runs with no key at all, which is the stronger test.
-  const anonymousTransport = createAnonymousTransport(
-    configuration.database.url,
-    configuration.anonymousKey,
-  )
+  // Only ever built from a key that is structurally unprivileged. Without one, the exposure probes
+  // are skipped and their checks report no verdict — see `createAnonymousTransport`.
+  const anonymous = createAnonymousTransport(configuration.database.url, configuration.anonymousKey)
 
   const [database, application] = await Promise.all([
-    collectDatabaseObservations({ transport, anonymousTransport, detailPmid, keyword }),
+    collectDatabaseObservations({
+      transport,
+      anonymousTransport: anonymous.transport,
+      anonymousProbeRefusal: anonymous.detail,
+      detailPmid,
+      keyword,
+    }),
     collectApplicationObservations({
       baseUrl: configuration.applicationBaseUrl,
       adminCookie: configuration.adminCookie,
@@ -177,12 +311,33 @@ async function main() {
   const [migrationHistory, catalogAttestation, corpusExpectation, baselineSnapshot] =
     await Promise.all([
       readEvidence<readonly MigrationHistoryEntry[]>(
-        flagValue('--migration-history'),
+        value(flags.migrationHistory),
         'migration history',
+        isMigrationHistory,
+        'a JSON array of { version, name? } entries, as list_migrations returns them',
       ),
-      readEvidence<CatalogAttestation>(flagValue('--catalog'), 'catalog attestation'),
-      readEvidence<CorpusExpectation>(flagValue('--corpus'), 'corpus expectation'),
-      readEvidence<CorpusSnapshot>(flagValue('--baseline'), 'baseline snapshot'),
+      readEvidence<CatalogAttestation>(
+        value(flags.catalog),
+        'catalog attestation',
+        isCatalogAttestation,
+        'an object with tables, functions, indexes, triggers, policies and rlsEnabledTables arrays',
+      ),
+      readEvidence<CorpusExpectation>(
+        value(flags.corpus),
+        'corpus expectation',
+        isCorpusExpectation,
+        'an object with sourceRecordCount, sourceDistinctPmidCount and sourceFiles',
+      ),
+      readEvidence<CorpusSnapshot>(
+        value(flags.baseline),
+        'baseline snapshot',
+        (parsed) => isCorpusSnapshot(extractSnapshot(parsed)),
+        'a receipt written by a prior run, or a bare corpus snapshot',
+      ).then((observation) =>
+        observation.status === 'observed'
+          ? observed(extractSnapshot(observation.value) as CorpusSnapshot)
+          : observation,
+      ),
     ])
 
   const run = runScenario(scenario, {
@@ -201,8 +356,9 @@ async function main() {
     detailPmid,
   })
 
+  const currentSnapshot = currentSnapshotFrom(database)
   const envelope = {
-    schemaVersion: 'literature-production-verification/1.0.0' as const,
+    schemaVersion: 'literature-production-verification/1.1.0' as const,
     scenario: run.scenario,
     verdict: run.verdict,
     target: describeTarget(configuration.database),
@@ -210,19 +366,45 @@ async function main() {
     checks: run.checks,
     summary: run.summary,
     stopReason: run.stopReason,
+    // The receipt carries the snapshot so it can be handed straight back as the next run's
+    // `--baseline`. Without it, the file the runbook tells an operator to keep was not something
+    // `--baseline` could read, and feeding it back produced an idempotency "failure" made of
+    // `undefined` and `NaN`.
+    snapshot: currentSnapshot.status === 'observed' ? currentSnapshot.value : null,
     capturedAt: new Date().toISOString(),
     notAuthorization: RECEIPT_NOT_AUTHORIZATION,
   }
 
   writeOut(process.argv.includes('--json') ? renderReceipt(envelope) : renderScenarioRun(run))
 
-  const receiptPath = flagValue('--receipt')
+  const receiptPath = value(flags.receipt)
   if (receiptPath) {
-    await writeFile(resolve(ROOT, receiptPath), renderReceipt(envelope), 'utf8')
+    const resolvedReceiptPath = resolve(ROOT, receiptPath)
+    // Never silently replace evidence. Re-using a receipt path out of habit would destroy the
+    // very run-1 receipt a later `--baseline` depends on, with no prompt and no backup.
+    if (await pathExists(resolvedReceiptPath)) {
+      writeError(
+        `\n${receiptPath} already exists. Receipts are evidence and are never overwritten; ` +
+          'choose a new path.\n',
+      )
+      process.exitCode = 1
+      return
+    }
+    await writeFile(resolvedReceiptPath, renderReceipt(envelope), 'utf8')
     writeOut(`\nReceipt written to ${receiptPath} (redacted).\n`)
   }
 
   process.exitCode = exitCodeForVerdict(run.verdict)
+}
+
+/** Whether a path already exists, for the receipt overwrite guard. */
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path)
+    return true
+  } catch {
+    return false
+  }
 }
 
 /** The snapshot the idempotency check compares a baseline against. */

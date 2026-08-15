@@ -38,11 +38,14 @@ What the application may **do** with that client is a second, separate gate:
 
 The consequence for planning:
 
-| Bring-up state                                    | Reachable today | Needs                                                     |
-| ------------------------------------------------- | --------------- | --------------------------------------------------------- |
-| Database verification (scenarios 2–8 below)       | **Yes**         | the three variables in your shell                         |
-| Application reports "not configured" (scenario 1) | **Yes**         | a deployment with the variables unset                     |
-| Application serves Literature records to an admin | **Yes**         | a deployment with the variables set, and imported records |
+| Bring-up state                                    | Reachable today | Needs                                                                                            |
+| ------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------ |
+| Database verification (scenarios 2–8 below)       | **Yes**         | the three variables exported in your shell                                                       |
+| Application reports "not configured" (scenario 1) | **Yes**         | a deployment with the variables unset, an admin cookie, and the three variables exported locally |
+| Application serves Literature records to an admin | **Yes**         | a deployment with the variables set, and imported records                                        |
+
+Every scenario resolves the database target first, so the three variables must be exported even for
+the application-only scenario — the tool refuses to run against a configuration it cannot identify.
 
 **So the Monday demo of 25 draft records in the admin UI no longer depends on a package that has
 not shipped.** It depends on three things in order: this branch merged and deployed, the Railway
@@ -85,30 +88,49 @@ LITERATURE_SUPABASE_EXPECTED_PROJECT_REF=itcttmkxdxvwmwcmzmey
 The URL is compared byte for byte, trailing slash included. No trimming, no case folding, no
 `:443`, no dot path.
 
-Optional, for the application-layer scenarios:
+For the application-layer scenarios (1, 4, 7):
 
 ```
 LITERATURE_VERIFY_APP_BASE_URL=https://<the deployed origin>
 LITERATURE_VERIFY_ADMIN_COOKIE=<a site-admin session cookie header>
-LITERATURE_VERIFY_ANON_KEY=<a publishable key, to prove an anonymous caller is refused>
 ```
 
-Export them; never pass them as flags. Without `LITERATURE_VERIFY_ANON_KEY` the anonymous probe
-still runs with no key at all, which is the stronger test.
+`LITERATURE_VERIFY_ADMIN_COOKIE` is **required** for `V90-runtime-state`, not optional. Every
+Literature route — including the ones named "public" — sits behind `requireLiteratureSiteAdminApi`,
+so an unauthenticated request is answered `401` by the auth gate and the runtime never gets to say
+whether it is configured. Without the cookie, `V90` reports no verdict.
+
+For the exposure checks (`V82`, `V83`):
+
+```
+LITERATURE_VERIFY_ANON_KEY=<the project publishable key>
+```
+
+Also **required**, for a reason worth understanding. A request carrying _no_ `apikey` is rejected
+by the Supabase API gateway before PostgreSQL ever sees it, so its `401` proves nothing about
+row-level security or about what `anon` may select — it would pass identically on a project where
+someone had run `grant select on public.literature_articles to anon`. Without a publishable key the
+probes are skipped and the checks report no verdict, rather than a denial the gateway produced.
+
+The key is checked before use: a `sb_secret_…` or legacy service-role value in that variable is
+refused rather than used, because an "anonymous" probe authenticated as `service_role` would read
+rows successfully and report an exposure that does not exist.
+
+Export all of these; never pass them as flags.
 
 ### Flags
 
-| Flag                         | Meaning                                               |
-| ---------------------------- | ----------------------------------------------------- |
-| `--scenario <id>`            | required; see the table below                         |
-| `--migration-history <path>` | provider `list_migrations` output, as a JSON array    |
-| `--catalog <path>`           | connector-captured catalog attestation                |
-| `--corpus <path>`            | declared source expectation, for `full-corpus`        |
-| `--baseline <path>`          | a receipt from a prior run, for canary idempotency    |
-| `--receipt <path>`           | write a redacted receipt of this run                  |
-| `--pmid <pmid>`              | a known PMID for the article-detail spot check        |
-| `--keyword <word>`           | keyword for the search check (default `bronchoscopy`) |
-| `--json`                     | print the receipt envelope instead of the report      |
+| Flag                         | Meaning                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `--scenario <id>`            | required; see the table below                                                                       |
+| `--migration-history <path>` | provider `list_migrations` output, as a JSON array                                                  |
+| `--catalog <path>`           | connector-captured catalog attestation                                                              |
+| `--corpus <path>`            | declared source expectation, for `full-corpus`                                                      |
+| `--baseline <path>`          | a receipt written by a prior run, for canary idempotency                                            |
+| `--receipt <path>`           | write a redacted receipt of this run                                                                |
+| `--pmid <pmid>`              | a PMID (1–12 digits) for the article-detail spot check; one is sampled from the corpus when omitted |
+| `--keyword <word>`           | keyword for the search check (default `bronchoscopy`)                                               |
+| `--json`                     | print the receipt envelope instead of the report                                                    |
 
 ---
 
@@ -133,16 +155,16 @@ being reported as "0 public results, exclusion verified."
 
 ## Scenarios
 
-| #   | `--scenario`             | Claims                                                                                            | Needs                     |
-| --- | ------------------------ | ------------------------------------------------------------------------------------------------- | ------------------------- |
-| 1   | `runtime-not-configured` | the deployment truthfully declines with a structured 503, and no Literature URL is in the sitemap | app base URL              |
-| 2   | `foundation-empty`       | approved project, exactly one migration, full schema, zero rows                                   | database                  |
-| 3   | `foundation-populated`   | non-empty corpus, consistent states, search vectors, provenance, receipts                         | database                  |
-| 4   | `gold-unavailable`       | the gold RPCs are absent and the API declines cleanly                                             | database + app            |
-| 5   | `canary`                 | exactly 25 unreviewed drafts, receipted, none public, second run added nothing                    | database (+ `--baseline`) |
-| 6   | `full-corpus`            | declared source files and counts reconcile with the destination                                   | database + `--corpus`     |
-| 7   | `public-exclusion`       | no draft is reachable by any unauthenticated path                                                 | database + app            |
-| 8   | `batch-reconciliation`   | every batch left a receipt and the receipts account for the corpus                                | database                  |
+| #   | `--scenario`             | Claims                                                                                            | Needs                             |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | `runtime-not-configured` | the deployment truthfully declines with a structured 503, and no Literature URL is in the sitemap | app base URL **and** admin cookie |
+| 2   | `foundation-empty`       | approved project, exactly one migration, full schema, zero rows                                   | database                          |
+| 3   | `foundation-populated`   | non-empty corpus, consistent states, search vectors, provenance, receipts                         | database                          |
+| 4   | `gold-unavailable`       | the gold RPCs are absent and the API declines cleanly                                             | database + app                    |
+| 5   | `canary`                 | exactly 25 unreviewed drafts, receipted, none public, second run added nothing                    | database (+ `--baseline`)         |
+| 6   | `full-corpus`            | declared source files and counts reconcile with the destination                                   | database + `--corpus`             |
+| 7   | `public-exclusion`       | no draft is reachable by any unauthenticated path                                                 | database + app + anon key         |
+| 8   | `batch-reconciliation`   | every batch left a receipt and the receipts account for the corpus                                | database                          |
 
 Run them in order. That is how you find out _which_ step broke rather than that something did.
 
@@ -264,6 +286,11 @@ So `foundation-populated`, `canary`, and `full-corpus` **stop**: verdict `stoppe
 reported, nonzero exit. `batch-reconciliation` does not stop, because reporting the ambiguity is
 its whole job.
 
+A failure that is _not_ the ambiguity outranks the stop. An anonymous caller reading draft rows
+does not become less urgent because an import was also left half-finished, so a run with both
+reports `not_verified` — with the stop reason still printed alongside it, because the ambiguity is
+still the thing to fix first.
+
 Response:
 
 1. Run `--scenario batch-reconciliation --json --receipt evidence/ambiguity.json`.
@@ -288,11 +315,20 @@ believing the status is how a short corpus gets certified.
 Redaction is applied at one output boundary and covers both registered credential literals and
 credential shapes echoed back by the target.
 
-Every receipt carries `notAuthorization`, in full text, because a receipt outlives the terminal it
-was printed in:
+It also carries the corpus `snapshot`, so the receipt from one run is exactly what `--baseline`
+reads on the next. The file you are told to keep and the file the idempotency check can consume are
+the same file. A receipt path that already exists is refused rather than overwritten — evidence is
+not replaced silently.
+
+Every receipt carries a `notAuthorization` sentence, because a receipt outlives the terminal it was
+printed in. It opens:
 
 > This receipt records what was observed. It authorizes nothing: not a canary, not an import, not
-> a Railway change, and not a deployment.
+> a Railway change, and not a deployment. …
+
+The full text lives in `RECEIPT_NOT_AUTHORIZATION` in
+[`lib/report.ts`](../../scripts/literature-production-verify/lib/report.ts); the receipt is the
+authority on its own wording, not this quotation.
 
 ---
 

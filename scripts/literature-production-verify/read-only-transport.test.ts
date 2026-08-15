@@ -13,6 +13,7 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
+import { createAnonymousTransport } from './lib/collect'
 import {
   FORBIDDEN_RPCS,
   PERMITTED_READ_ONLY_RPCS,
@@ -188,5 +189,46 @@ describe('the package as a whole issues no mutating request', () => {
       )
       expect(`${relativePath}: ${callOrImport.test(body)}`).toBe(`${relativePath}: false`)
     }
+  })
+})
+
+describe('the anonymous probe transport is built only from an unprivileged key', () => {
+  const ORIGIN_URL = 'https://itcttmkxdxvwmwcmzmey.supabase.co/'
+
+  it('refuses to build one with no key at all', () => {
+    // A keyless request is rejected by the Supabase API gateway before PostgreSQL sees it, so its
+    // 401 says nothing about row-level security. Building a transport anyway would have made the
+    // exposure checks pass vacuously.
+    const result = createAnonymousTransport(ORIGIN_URL, null)
+    expect(result.transport).toBeNull()
+    expect(result.refusal).toBe('no_publishable_key')
+    expect(result.detail).toMatch(/gateway/u)
+  })
+
+  it.each([
+    ['a secret key', 'sb_secret_TESTONLYaaaaaaaaaaaaaaaaaaaa'],
+    [
+      'a legacy service-role JWT',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.TESTONLYsig',
+    ],
+  ])('refuses %s, which would report an exposure that does not exist', (_label, credential) => {
+    // The realistic mistake: the secret pasted into LITERATURE_VERIFY_ANON_KEY. The "anonymous"
+    // probe would then read rows as service_role, V82 would report a public exposure, and an
+    // operator following the containment procedure would pull production variables over a typo.
+    const result = createAnonymousTransport(ORIGIN_URL, credential)
+    expect(result.transport).toBeNull()
+    expect(result.refusal).toBe('credential_is_privileged')
+  })
+
+  it('refuses a credential it cannot show to be unprivileged', () => {
+    expect(createAnonymousTransport(ORIGIN_URL, 'some-opaque-local-key').refusal).toBe(
+      'credential_class_unknown',
+    )
+  })
+
+  it('builds one from a publishable key', () => {
+    const result = createAnonymousTransport(ORIGIN_URL, 'sb_publishable_TESTONLYbbbbbbbbbbbb')
+    expect(result.transport).not.toBeNull()
+    expect(result.refusal).toBeNull()
   })
 })
