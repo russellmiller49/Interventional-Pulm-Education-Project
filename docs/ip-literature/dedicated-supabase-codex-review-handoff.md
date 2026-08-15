@@ -1,4 +1,4 @@
-# Independent review handoff — dedicated Literature Supabase bootstrap (fourth correction pass)
+# Independent review handoff — dedicated Literature Supabase bootstrap (fifth correction pass)
 
 For a fresh reviewer with no context from the implementing sessions.
 
@@ -16,10 +16,21 @@ states.
 
 A **fourth** independent review returned **BLOCKED** on four remaining findings: a
 `__proto__`/dotted-path/arbitrary-object evidence-boundary bypass, `0.0.0.0` surviving on the
-local client allowlist, a stale live PR body, and a suite-wide Jest timeout increase. This
-document lists **all four** corrections and asks you to **re-run the exact reproductions**. The
-goal is to decide whether the PR is safe to merge — **not** whether the migration should be
-applied, which is separately gated and, in this PR, structurally impossible.
+local client allowlist, a stale live PR body, and a suite-wide Jest timeout increase.
+
+A **fifth** independent review returned **BLOCKED** on six bounded findings: a duplicate-key error
+echoing the supplied key, a CLI test wrapper that could orphan a `git` descendant, alias spellings
+of the loopback address surviving WHATWG normalization onto the local allowlist, an ACL grammar
+that only ran when secret screening happened to look, an inconsistent rollout sequence, and a PR
+body claiming more than the diff supported.
+
+This document lists **all** of those corrections and asks you to **re-run the exact
+reproductions**. The goal is to decide whether the PR is safe to merge — **not** whether the
+migration should be applied, which is separately gated and, in this PR, structurally impossible.
+
+The rollout sequence in force is option B: **Layer 3 before the migration authorization.** It is
+stated in full under "Fifth correction pass — 5" below, and identically in the runbook, provenance
+note, architecture note, and live PR body.
 
 ## Setup
 
@@ -354,15 +365,132 @@ Your reproduction: `cli-exit-status.test.ts` set `jest.setTimeout(120_000)` whil
 claimed no timeout increase.
 
 **Correction.** The suite-wide timeout is removed entirely; nothing replaces it — no per-test
-Jest timeout, no retry, no `forceExit`, no worker reduction. Each subprocess invocation runs in
-its own test within Jest's ordinary 5 s default. Containment is a **child-process** timeout
-(`spawn` `timeout: 4000, killSignal: 'SIGKILL'`), chosen from measured durations (≈0.09–0.12 s
-direct, ≈0.21 s under eight-way contention) as a hung-process guard below the Jest default. The
-CLIs are spawned as `node --import tsx` so the killed process is the working process — no wrapper
-to orphan a grandchild. An adversarial test runs a review-owned hanging child that would write a
-marker file if it survived: the child is SIGKILLed, the wrapper reports a controlled failure, the
-PID is gone, and the marker never appears. Search the PR diff for `jest.setTimeout`,
-per-test timeouts, retries, and `forceExit`: the expected count of PR-added occurrences is zero.
+Jest timeout, no retry, no `forceExit`, and no worker reduction in any test file. Each subprocess
+invocation runs in its own test within Jest's ordinary 5 s default. Containment is a
+**child-process** timeout (4 000 ms, `SIGKILL`), chosen from measured durations (≈0.09–0.12 s
+direct, ≈0.21 s under eight-way contention) as a hung-process guard below the Jest default. An
+adversarial test runs a review-owned hanging child that would write a marker file if it survived:
+the child is SIGKILLed, the wrapper reports a controlled failure, the PID is gone, and the marker
+never appears. Search the PR diff for `jest.setTimeout`, per-test timeouts, retries, and
+`forceExit`: the expected count of PR-added occurrences is zero.
+
+The one worker-policy string this PR adds anywhere is the `--runInBand` in the convenience
+`literature:dedicated:test` script in `package.json`. It is convenience, not concealment: the same
+paths pass under Jest's default worker count and under `--maxWorkers=50%` — both commands are in
+"Gates to re-run" below, and this handoff makes no zero-occurrence claim about worker policy.
+
+(The fifth correction below replaced the containment mechanism — `spawn`'s own `timeout` option —
+with a group-directed kill, and left the budget and the absence of Jest policy changes exactly as
+they are.)
+
+## Fifth correction pass — six bounded findings
+
+A **fifth** independent review returned **BLOCKED** on six findings. This pass corrects exactly
+those six and adds no new architecture, provider adapter, migration executor, authorization model,
+parsing framework, or threat-model expansion.
+
+### 1. Duplicate-key errors echoed the attacker-supplied key (finding 1)
+
+Your reproduction: an evidence document repeating a credential-shaped key produced
+`The evidence document repeats the key "sb_secret_…"`, and the preflight CLI printed that message
+to stdout.
+
+**Correction.** The duplicate-key failure now carries a **character offset** and an explicit
+statement that the key is redacted — nothing drawn from the document itself. Re-run with
+credential-shaped duplicate keys (secret-prefixed, publishable-prefixed, JWT-shaped,
+`Authorization: Bearer …`, a connection string with an inline password, and a bare vocabulary
+word), at the top level and nested inside a catalog row, and check the thrown error, stdout, and
+stderr. `evidence-schema.test.ts` carries the parser matrix; `cli-exit-status.test.ts` runs both
+CLIs against three such documents and asserts nothing leaks into either stream.
+
+### 2. Containment killed the CLI but could orphan its `git` descendant (finding 2)
+
+Your reproduction: `spawn`'s `timeout` option signals only the direct child, and the preflight
+spawns `git` (`gatherRepositoryFacts`), so a wedged invocation left a descendant running after the
+test that "contained" it had finished.
+
+**Correction.** Each CLI runs in an **operation-owned process group** (`detached`, so the child
+leads the group and every descendant joins it), and the containment timeout signals the whole
+group with `process.kill(-pid, 'SIGKILL')`. Where process groups do not exist (Windows) or the
+group signal cannot be delivered, an explicit direct-child kill is the fallback. The containment
+timer is cleared on close and `unref`ed, so nothing leaks.
+
+Re-run the focused regression: a fake CLI spawns a harmless `git` stand-in that would write a
+marker file 1.5 s later, then wedges. The test asserts the direct process **and** the descendant
+are gone, the marker is never written, and no child-process handle remains. Flip `detached` off
+locally and the descendant survives — that is the defect the test detects. A second test asserts
+the opposite direction: a concurrent invocation running beside the killed one is untouched — it
+exits 0, unsignalled, and completes its own work — so the group signal reaches exactly one
+operation and never the runner. **No Jest timeout, retry, `forceExit`, skip, or worker-policy
+change was added.**
+
+### 3. WHATWG normalization widened the local allowlist (finding 3)
+
+Your reproduction: `LITERATURE_SUPABASE_RUNTIME_MODE=local` with `http://127.1:55321` —
+or `127.0.1`, `127.000.000.001`, `0177.0.0.1`, `0x7f.1`, `2130706433` — returned `bound` and
+constructed a client, because the URL parser rewrites every one of those to the string
+`127.0.0.1` before the allowlist sees it.
+
+**Correction.** The **raw** authority is judged first, before any `URL` is constructed: only
+`localhost` (ASCII-case-insensitively — a URI host is case-insensitive by definition), `127.0.0.1`,
+and `[::1]`, with an optional in-range port and no userinfo, are admitted. The URL is then parsed
+and revalidated exactly as before, so both gates must agree. Alias spellings stop with their own
+reason, `noncanonical_local_url_authority`; the wildcard (`0.0.0.0`, `[::]`) and remote-host
+refusals keep the reasons the fourth review gave them. **No DNS resolution is performed.**
+`runtime-activation.test.ts` proves each rejected spelling constructs no client — `createClient`
+uncalled, `.rpc()` and `.from()` unreachable, every server function still returning "not
+configured".
+
+### 4. The ACL grammar ran only when secret screening happened to look (finding 4)
+
+Your reproduction: `not-an-acl-entry` inside `catalog.functions[0].acl[0]` was accepted. The
+canonical grammar was consulted only from inside the screener's position allowance, which runs
+only for values that already match the secret vocabulary, so a malformed but innocuous entry was
+never checked against it.
+
+**Correction.** The grammar is now applied by the **row schemas**, to every non-null member of
+`catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`, at the schema stage —
+before screening runs and regardless of the value's content. Re-run with malformed non-secret
+entries (`not-an-acl-entry`, an empty entry, a missing grantor, an internal space, trailing
+content, prose, a hyphenated grantee, a null or non-string member) and with the genuine catalog
+entries as positive controls (`service_role=X/supabase_admin`, `=X/supabase_admin`,
+`postgres=arwdDxt/postgres`, the grant-option asterisk, quoted role names). Each malformed input
+is refused with one input-independent message; the rehearsal's `R41` scenario still parses a real
+post-apply catalog through the same schema.
+
+### 5. The rollout sequence disagreed between documents (finding 5)
+
+The implemented design is option B — **Layer 3 is required before the migration authorization** —
+but the runbook ran the preflight before the authorization and the PR body listed the migration
+before Layer 3.
+
+**Correction.** One sequence, stated identically in the runbook, the provenance note, the
+architecture note, this handoff, and the live PR body:
+
+1. Merge this preparation PR after independent review.
+2. Implement and independently review Layer 3.
+3. Obtain the exact owner migration authorization.
+4. Run the provider-bound preflight.
+5. Apply exactly the foundation migration.
+6. Run the provider-bound postflight, and stop.
+7. Implement and deploy capability gating, while the runtime stays disabled.
+8. Obtain the Railway authorization and cut over.
+9. Stop, before any canary or ingestion.
+
+No document describes step 5 as executable through the CLIs in this repository. They hold no
+credential, open no connection, apply nothing, and exit nonzero on every invocation.
+
+### 6. The live PR body claimed more than the diff supported (finding 6)
+
+It claimed zero PR-added worker-policy occurrences while `package.json` adds a convenience
+`literature:dedicated:test` command that uses `--runInBand`, and its current-main inventory named
+only `src/features/device-intelligence/**`.
+
+**Correction.** The body is one current record. It states plainly that the convenience command
+uses `--runInBand` **and** that the same suites pass under default workers and under
+`--maxWorkers=50%`, so the flag is convenience rather than concealment; and the current-main
+inventory names both `src/features/device-intelligence/**` and `docs/ip-device-intelligence/**`.
+One validation section, one safety attestation, one future-package sequence.
 
 ## Earlier documentation corrections
 
@@ -381,8 +509,10 @@ npx eslint scripts/literature-dedicated-supabase src/features/literature
 npx prettier --check .
 npx jest scripts/literature-dedicated-supabase src/features/literature
 npx jest scripts/literature-dedicated-supabase/cli-exit-status.test.ts   # spawns real subprocesses
+npx jest scripts/literature-dedicated-supabase/evidence-schema.test.ts
 npx jest scripts/literature-dedicated-supabase/catalog-scope.test.ts
 npx jest scripts/literature-dedicated-supabase/docs-consistency.test.ts
+npx jest src/features/literature/server/dedicated-project-contract.test.ts
 npx jest src/features/literature/server/runtime-activation.test.ts
 npx jest scripts/literature --maxWorkers=2
 npx jest --maxWorkers=2
@@ -390,6 +520,18 @@ npm run build
 git diff --check
 npm run literature:dedicated:rehearse   # repeat three times; all scenarios must pass each time
 ```
+
+`npm run literature:dedicated:test` is a convenience alias for the dedicated suites and passes
+`--runInBand`. It is convenience, not concealment: run the same paths under Jest's default worker
+count and under `--maxWorkers=50%` and they pass identically.
+
+```bash
+npx jest scripts/literature-dedicated-supabase src/features/literature/dedicated-supabase src/features/literature/server
+npx jest scripts/literature-dedicated-supabase src/features/literature/dedicated-supabase src/features/literature/server --maxWorkers=50%
+```
+
+While the CLI suite runs, watch for leaked processes — `pgrep -f 'literature-dedicated-supabase'`
+after it finishes must be empty.
 
 ## The protected catalog-expectation suite
 
@@ -402,8 +544,9 @@ PR #104 caused a failure.
 
 ## What a good review returns
 
-For each finding — B-1/M-3, H-1, H-2 (collisions), H-2 (schemas), H-3, H-5, L-1, M-2, and the six
-third-review findings above — corrected, or a specific counter-example. Flag anything that would
+For each finding — B-1/M-3, H-1, H-2 (collisions), H-2 (schemas), H-3, H-5, L-1, M-2, the six
+third-review findings, the four fourth-review findings, and the six fifth-review findings above —
+corrected, or a specific counter-example. Flag anything that would
 let _any_ input produce a success verdict or a zero exit status from production code while the
 provider adapter is absent; let a hand-authored file authorize a migration; let an environment
 variable construct a production Literature client or reach a mutating RPC; let Literature data

@@ -4,6 +4,7 @@ import { LITERATURE_CATALOG_SECTIONS } from './lib/foundation-catalog'
 import type { LiteratureCatalogSection } from './lib/foundation-catalog'
 import {
   LITERATURE_ACL_BEARING_CATALOG_SECTIONS,
+  LITERATURE_ACL_ENTRY_PATTERN,
   LITERATURE_CATALOG_ROW_SCHEMAS,
   LITERATURE_ROLE_BEARING_CATALOG_SECTIONS,
   LiteratureEvidenceError,
@@ -803,6 +804,82 @@ describe('JSON-compliant strict parser (H-2)', () => {
     expectCode(() => parseLiteraturePreflightEvidence(raw), 'duplicate_json_key')
   })
 
+  /**
+   * Fifth review, finding 1 — the duplicate-key failure was the one message that quoted the
+   * document's own bytes back (`repeats the key "…"`). A repeated key is attacker-supplied text at
+   * a position no schema vouches for, and this message reaches CLI stdout and any log that
+   * captures it, so the key is now redacted and only a character offset survives.
+   */
+  describe('duplicate-key failures redact the supplied key (fifth review, finding 1)', () => {
+    const CREDENTIAL_SHAPED_DUPLICATE_KEYS: [string, string][] = [
+      ['a secret-prefixed key', 'sb_secret_LEAKED_FROM_A_DUPLICATE_KEY'],
+      ['a publishable-prefixed key', 'sb_publishable_LEAKED_FROM_A_DUPLICATE_KEY'],
+      ['a JWT-shaped key', 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.LEAKEDSIG'],
+      ['an authorization header key', 'Authorization: Bearer LEAKEDBEARERTOKEN'],
+      ['a connection-string key', 'postgresql://postgres:LEAKEDPASSWORD@db.example.com:5432/x'],
+      ['a vocabulary key', 'LITERATURE_SUPABASE_SECRET_KEY'],
+    ]
+
+    it.each(CREDENTIAL_SHAPED_DUPLICATE_KEYS)(
+      'never echoes %s or its value at the top level',
+      (_label, duplicateKey) => {
+        const encoded = JSON.stringify(duplicateKey)
+        const value = 'LEAKEDVALUEfromTheDuplicateMember'
+        const raw = `{${encoded}:${JSON.stringify(value)},${encoded}:${JSON.stringify(value)}}`
+
+        const error = expectCode(() => parseLiteraturePreflightEvidence(raw), 'duplicate_json_key')
+        expect(error.message).not.toContain(duplicateKey)
+        expect(error.message).not.toContain(value)
+        // Not even a fragment: the distinctive token is what a leak would look like.
+        expect(error.message).not.toContain('LEAKED')
+        // What survives is a structural locator and an explicit statement of the redaction.
+        expect(error.message).toMatch(/character offset \d+/u)
+        expect(error.message).toContain('redacted')
+      },
+    )
+
+    it.each(CREDENTIAL_SHAPED_DUPLICATE_KEYS)(
+      'never echoes %s nested inside a catalog row',
+      (_label, duplicateKey) => {
+        const encoded = JSON.stringify(duplicateKey)
+        const value = 'LEAKEDVALUEfromTheDuplicateMember'
+        const member = `${encoded}:${JSON.stringify(value)}`
+        const raw = JSON.stringify(validPostflight()).replace(
+          '"schema":"public","name":"literature_articles"',
+          `"schema":"public",${member},${member},"name":"literature_articles"`,
+        )
+
+        const error = expectCode(() => parseLiteraturePostflightEvidence(raw), 'duplicate_json_key')
+        expect(error.message).not.toContain(duplicateKey)
+        expect(error.message).not.toContain(value)
+        expect(error.message).not.toContain('LEAKED')
+      },
+    )
+
+    it('reports an offset that locates the repetition without reproducing it', () => {
+      const raw = '{"aaaa":1,"bbbb":2,"bbbb":3}'
+      const error = expectCode(() => parseLiteraturePreflightEvidence(raw), 'duplicate_json_key')
+      // The second `"bbbb"` opens at index 19 of that literal.
+      expect(error.message).toContain('character offset 19')
+      expect(error.message).not.toContain('bbbb')
+    })
+
+    it('still echoes nothing when a reserved structural key carries a credential payload', () => {
+      // The reserved-key message names only the three schema-owned spellings it refuses; the
+      // payload riding on that key is never reproduced. Unchanged by this correction, asserted
+      // here so the two redaction paths are checked together.
+      const error = expectCode(
+        () =>
+          parseLiteraturePreflightEvidence(
+            '{"__proto__":{"owner":"sb_secret_LEAKED"},"__proto__":{"owner":"sb_secret_LEAKED"}}',
+          ),
+        'reserved_structural_key',
+      )
+      expect(error.message).not.toContain('LEAKED')
+      expect(error.message).not.toContain('sb_secret')
+    })
+  })
+
   it('rejects malformed JSON with a typed error', () => {
     expectCode(() => parseLiteraturePreflightEvidence('{"a":'), 'malformed_json')
     expectCode(() => parseLiteraturePreflightEvidence('{} trailing'), 'malformed_json')
@@ -1017,8 +1094,10 @@ describe('post-decode credential screening (M-2, over the schema-normalized grap
       ).not.toThrow()
     })
 
-    it('rejects a malformed ACL value inside an ACL array', () => {
-      // Vocabulary matches but the ACL grammar does not, so the position allowance does not apply.
+    it('rejects a vocabulary-matching malformed ACL value inside an ACL array', () => {
+      // The grammar is now structural, so these die at the schema stage — before screening runs —
+      // rather than by failing the screener's position allowance. Either way the position
+      // allowance never applies to a value that is not a real ACL entry.
       for (const malformed of [
         'password=foo/grantor extra',
         'password=foo',
@@ -1028,12 +1107,21 @@ describe('post-decode credential screening (M-2, over the schema-normalized grap
       ]) {
         expectCode(
           () => parsePost(postflightWith('functions', 'acl', [malformed])),
-          'credential_shaped_value',
+          'schema_violation',
         )
       }
     })
 
-    it('rejects every credential shape inside an ACL array, which has no shape allowance', () => {
+    it('rejects credential shapes inside an ACL array, which has no shape allowance', () => {
+      // Grammar-conforming credential shapes reach the screener and are refused there: the ACL
+      // position allows the *grammar*, never a credential.
+      for (const planted of ['sb_secret_planted=r/postgres', 'sb_publishable_planted=r/postgres']) {
+        expectCode(
+          () => parsePost(postflightWith('functions', 'acl', [planted])),
+          'credential_shaped_value',
+        )
+      }
+      // Credential shapes that are not even ACL-shaped now die one stage earlier, structurally.
       for (const planted of [
         'sb_secret_planted',
         'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoieCJ9.zz',
@@ -1042,7 +1130,7 @@ describe('post-decode credential screening (M-2, over the schema-normalized grap
       ]) {
         expectCode(
           () => parsePost(postflightWith('functions', 'acl', [planted])),
-          'credential_shaped_value',
+          'schema_violation',
         )
       }
     })
@@ -1122,5 +1210,147 @@ describe('post-decode credential screening (M-2, over the schema-normalized grap
 
   it('does not false-positive on ordinary catalog content', () => {
     expect(() => parsePost(validPostflight())).not.toThrow()
+  })
+})
+
+/**
+ * Fifth review, finding 4 — the canonical PostgreSQL ACL grammar is a structural rule.
+ *
+ * It used to be consulted only from inside the screener's position allowance, which runs only for
+ * values that already match the secret vocabulary. A malformed but innocuous entry — the review's
+ * example was `not-an-acl-entry` — matched no vocabulary, so nothing ever checked it against the
+ * grammar and it rode into the catalog comparison as content. The row schemas now validate every
+ * non-null member of `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`,
+ * before screening runs and regardless of what the value contains.
+ */
+describe('ACL grammar is enforced structurally (fifth review, finding 4)', () => {
+  /** Malformed and carrying **no** secret vocabulary and no credential shape whatsoever. */
+  const MALFORMED_NON_SECRET_ENTRIES: [string, string][] = [
+    ['the review example', 'not-an-acl-entry'],
+    ['an empty entry', ''],
+    ['a grantee with no assignment', 'postgres'],
+    ['privileges with no grantor', 'postgres=arwdDxt'],
+    ['a grantor with no privileges clause', 'postgres/postgres'],
+    ['an internal space', 'postgres=arwd Dxt/postgres'],
+    ['trailing content', 'postgres=arwdDxt/postgres extra'],
+    ['leading whitespace', ' postgres=arwdDxt/postgres'],
+    ['a hyphenated grantee', 'not-a-role=r/postgres'],
+    ['a dotted grantor', 'postgres=r/pg.example'],
+    ['an assignment with neither side', '='],
+    ['prose', 'the function is executable by everyone'],
+  ]
+
+  it.each(MALFORMED_NON_SECRET_ENTRIES)(
+    'is invisible to secret screening, proved by accepting it verbatim elsewhere: %s',
+    (_label, entry) => {
+      // The point of the finding: the screener has no objection to any of these — each is
+      // accepted, unchanged, at an ordinary screened string position. Nothing about
+      // secret-vocabulary screening can therefore be what rejects them inside an ACL array.
+      expect(() => parsePost(postflightWith('relations', 'owner', entry))).not.toThrow()
+    },
+  )
+
+  it.each(MALFORMED_NON_SECRET_ENTRIES)(
+    'rejects %s in catalog.functions[0].acl[0] at the schema stage',
+    (_label, entry) => {
+      const error = expectCode(
+        () => parsePost(postflightWith('functions', 'acl', [entry])),
+        'schema_violation',
+      )
+      expect(error.message).toContain('$.catalog.functions[0].acl[0]')
+    },
+  )
+
+  it.each(MALFORMED_NON_SECRET_ENTRIES)(
+    'rejects %s in catalog.defaultPrivileges[0].acl[0] at the schema stage',
+    (_label, entry) => {
+      const error = expectCode(
+        () => parsePost(postflightWith('defaultPrivileges', 'acl', [entry])),
+        'schema_violation',
+      )
+      expect(error.message).toContain('$.catalog.defaultPrivileges[0].acl[0]')
+    },
+  )
+
+  it('reports one input-independent message, so no rejected entry is ever echoed', () => {
+    for (const section of ['functions', 'defaultPrivileges'] as const) {
+      const messages = new Set(
+        MALFORMED_NON_SECRET_ENTRIES.map(
+          ([, entry]) =>
+            expectCode(() => parsePost(postflightWith(section, 'acl', [entry])), 'schema_violation')
+              .message,
+        ),
+      )
+      // Twelve different malformed inputs, one message: the text is built from the schema's
+      // expectation, never from the document.
+      expect(messages.size).toBe(1)
+    }
+  })
+
+  it('rejects a malformed member sitting beside genuine ones', () => {
+    expectCode(
+      () =>
+        parsePost(
+          postflightWith('functions', 'acl', [
+            'service_role=X/supabase_admin',
+            'not-an-acl-entry',
+            '=X/supabase_admin',
+          ]),
+        ),
+      'schema_violation',
+    )
+  })
+
+  it('rejects a null member while still accepting a wholly null functions ACL', () => {
+    expectCode(
+      () => parsePost(postflightWith('functions', 'acl', ['=X/supabase_admin', null])),
+      'schema_violation',
+    )
+    expect(() => parsePost(postflightWith('functions', 'acl', null))).not.toThrow()
+  })
+
+  it('rejects a non-string member', () => {
+    expectCode(() => parsePost(postflightWith('functions', 'acl', [5])), 'schema_violation')
+    expectCode(
+      () => parsePost(postflightWith('defaultPrivileges', 'acl', [{ grantee: 'postgres' }])),
+      'schema_violation',
+    )
+  })
+
+  it('still accepts the genuine catalog entries the inspection SQL emits', () => {
+    // Positive controls: real `aclitem[]` renderings — PUBLIC (empty grantee), a named grantee,
+    // the grant-option asterisk, a quoted role, and the full privilege string.
+    expect(() =>
+      parsePost(
+        postflightWith('functions', 'acl', [
+          'service_role=X/supabase_admin',
+          '=X/supabase_admin',
+          'supabase_admin=X/supabase_admin',
+          'postgres=X*/postgres',
+          '"postgres"=X/"supabase_admin"',
+        ]),
+      ),
+    ).not.toThrow()
+    expect(() =>
+      parsePost(
+        postflightWith('defaultPrivileges', 'acl', [
+          'postgres=arwdDxt/postgres',
+          'supabase_admin=arwdDxtm/supabase_admin',
+        ]),
+      ),
+    ).not.toThrow()
+    // And the unmodified genuine rows still parse.
+    expect(() => parsePost(validPostflight())).not.toThrow()
+    expect(VALID_ROWS.functions.acl).toEqual(['service_role=X/supabase_admin', '=X/supabase_admin'])
+    expect(VALID_ROWS.defaultPrivileges.acl).toEqual(['postgres=arwdDxt/postgres'])
+  })
+
+  it('exports one grammar, used by the schema and by the screening allowance alike', () => {
+    for (const [, entry] of MALFORMED_NON_SECRET_ENTRIES) {
+      expect(LITERATURE_ACL_ENTRY_PATTERN.test(entry)).toBe(false)
+    }
+    for (const entry of ['service_role=X/supabase_admin', '=X/supabase_admin']) {
+      expect(LITERATURE_ACL_ENTRY_PATTERN.test(entry)).toBe(true)
+    }
   })
 })

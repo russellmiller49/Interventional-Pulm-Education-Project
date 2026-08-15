@@ -18,6 +18,24 @@ Supabase Auth. The split is enforced in code, not by convention — see "Runtime
 (`[db] major_version = 17`). As of 2026-08-13 it holds zero public tables and zero recorded
 migrations, and it is deliberately not connected to GitHub or Railway.
 
+## Rollout sequence
+
+Layer 3 comes **before** the migration authorization. The nine steps, identical in every document:
+
+1. Merge this preparation PR after independent review.
+2. Implement and independently review Layer 3.
+3. Obtain the exact owner migration authorization.
+4. Run the provider-bound preflight.
+5. Apply exactly the foundation migration.
+6. Run the provider-bound postflight, and stop.
+7. Implement and deploy capability gating, while the runtime stays disabled.
+8. Obtain the Railway authorization and cut over.
+9. Stop, before any canary or ingestion.
+
+The [rollout runbook](./dedicated-supabase-rollout-runbook.md) carries the operational detail of
+each step. Nothing in this repository can perform step 5: the CLIs described below hold no
+credential, open no connection, apply nothing, and exit nonzero on every invocation.
+
 ## Why a dedicated project
 
 The Literature corpus is a 132,350-record bibliographic dataset with its own import pipeline,
@@ -73,11 +91,21 @@ byte for byte, **trailing slash included** — https only, default port, no user
 fragment, root path only, no trailing-dot host. (The host/ref itself is
 `itcttmkxdxvwmwcmzmey.supabase.co`; that form is a description of the target, never the
 configuration value.) The credential must be a current-model `sb_secret_…` key. Local mode permits
-**only the canonical local hosts** — `localhost`, `127.0.0.1`, and `[::1]`, as Node's URL parser
-serializes them. It never accepts an arbitrary remote host, and it refuses `0.0.0.0` and `[::]`
-outright: those are unspecified wildcard _bind_ addresses, not loopback destinations. Near-local
-spellings (`*.localhost`, `localhost.localdomain`, other `127/8` aliases, IPv4-mapped IPv6 forms)
-are refused as well. No DNS resolution is consulted.
+**only the canonical local hosts** — `localhost`, `127.0.0.1`, and `[::1]`. It never accepts an
+arbitrary remote host, and it refuses `0.0.0.0` and `[::]` outright: those are unspecified wildcard
+_bind_ addresses, not loopback destinations. Near-local spellings (`*.localhost`,
+`localhost.localdomain`, other `127/8` aliases, IPv4-mapped IPv6 forms) are refused as well. No DNS
+resolution is consulted.
+
+Those three hosts are checked **twice, against two different things**. The raw
+`LITERATURE_SUPABASE_URL` authority must already be one of the canonical spellings — matched
+before any URL is constructed — and the parsed `URL.hostname` must then also be on the allowlist.
+The raw check exists because WHATWG host parsing is a normalizer: it rewrites `127.1`, `127.0.1`,
+`127.000.000.001`, `0177.0.0.1`, `0x7f.1`, and the bare integer `2130706433` all into the string
+`127.0.0.1`, so a check written only against the parsed hostname accepted every one of them. Alias
+spellings now stop with their own reason, `noncanonical_local_url_authority`. `localhost` is
+matched ASCII-case-insensitively — a URI host is case-insensitive by definition, so `LOCALHOST` is
+the same name rather than a different spelling of the same address.
 
 A `secret` classification is a credential-_class_ check, not authentication. The credential is only
 truly accepted when the Supabase provider validates it.
@@ -90,7 +118,8 @@ truly accepted when the Supabase provider validates it.
 While it holds that value, a strict configuration that passes every check resolves to the typed
 state `not_activated` / `dedicated_runtime_not_activated` rather than `bound`, and
 `createLiteratureAdmin()` returns `null`. `createClient` is reachable only for a `local`-mode URL
-on the explicit canonical local-host allowlist (`localhost`, `127.0.0.1`, `[::1]`), so:
+whose raw authority and parsed hostname are both on the canonical local-host allowlist
+(`localhost`, `127.0.0.1`, `[::1]`), so:
 
 - setting the three documented production variables validates them and constructs nothing;
 - no privileged remote Literature client exists in this PR, and no mutating RPC
@@ -100,9 +129,11 @@ on the explicit canonical local-host allowlist (`localhost`, `127.0.0.1`, `[::1]
 
 Activation is deliberately _not_ another environment variable — a deployment must not be able to
 switch on remote mutation without a reviewed change. The separate capability-gating / cutover
-package is the first change permitted to flip the constant, after the foundation migration, the
-Layer-3 provider work, capability gating, independent review, and an explicit Railway
-authorization.
+package is the first change permitted to flip the constant, and it comes after — in this order —
+the Layer-3 provider work and its independent review, the owner migration authorization, the
+foundation migration itself, and a separate explicit Railway authorization. The
+[rollout runbook](./dedicated-supabase-rollout-runbook.md) states that sequence in full; this note
+does not restate it in a second, drift-prone form.
 
 ### Failure states are typed, not collapsed
 
@@ -119,7 +150,7 @@ contract ever puts a credential into a message, an error, or a diagnostics paylo
 
 Current consumers (`server/queries.ts`, `server/gold-set.ts`) still use the nullable
 `createLiteratureAdmin()`. Adopting the typed result is the job of the separate capability-gating
-package — see step 12 of the runbook.
+package — step 7 of the runbook's sequence.
 
 ### Credential model
 

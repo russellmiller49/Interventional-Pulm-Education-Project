@@ -231,6 +231,83 @@ describe('local development still gets exactly its loopback client', () => {
   })
 })
 
+/**
+ * Fifth review, finding 3 — an alias spelling of the loopback address never gets a client.
+ *
+ * Each of these is a raw authority the WHATWG URL parser rewrites to `127.0.0.1`, so before the
+ * raw-authority gate they satisfied the normalized allowlist and reached `createClient`. The
+ * claim under test is the same one the fourth review asked for: not "the control flow looks
+ * right" but "`createClient` is never called and `.rpc()`/`.from()` are never reached".
+ */
+describe('alias spellings of the loopback address never get a client (fifth review)', () => {
+  it.each([
+    ['the two-part shorthand 127.1', 'http://127.1:55321'],
+    ['the three-part shorthand 127.0.1', 'http://127.0.1:55321'],
+    ['zero-padded 127.000.000.001', 'http://127.000.000.001:55321'],
+    ['octal 0177.0.0.1', 'http://0177.0.0.1:55321'],
+    ['hexadecimal 0x7f.1', 'http://0x7f.1:55321'],
+    ['the bare integer 2130706433', 'http://2130706433:55321'],
+  ])('local mode with %s stays unbound and constructs nothing', (_label, url) => {
+    applyEnvironment({
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: url,
+      LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    })
+    expect(describeLiteratureDatabaseBinding()).toMatchObject({
+      status: 'unbound',
+      reason: 'noncanonical_local_url_authority',
+    })
+    expect(createLiteratureAdmin()).toBeNull()
+    expect(createClientMock).not.toHaveBeenCalled()
+    expect(rpcMock).not.toHaveBeenCalled()
+    expect(fromMock).not.toHaveBeenCalled()
+  })
+
+  it('leaves every existing read and mutating server function without a client or an RPC', async () => {
+    applyEnvironment({
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: 'http://2130706433:55321',
+      LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    })
+
+    const results = [
+      await searchLiterature({
+        q: '',
+        journalIds: [],
+        topicIds: [],
+        yearFrom: null,
+        yearTo: null,
+        publicationTypes: [],
+        landmarkOnly: false,
+        sort: 'relevance',
+        page: 1,
+        pageSize: 20,
+        adminPreview: false,
+      } as unknown as Parameters<typeof searchLiterature>[0]),
+      await getLiteratureArticle('12345678'),
+      await loadLiteratureAdminStats(),
+      await curateLiteratureArticle(
+        '12345678',
+        {} as unknown as Parameters<typeof curateLiteratureArticle>[1],
+        { id: 'placeholder-user', email: null } as unknown as Parameters<
+          typeof curateLiteratureArticle
+        >[2],
+      ),
+      await listLiteratureGoldSetBatches(),
+    ]
+
+    for (const result of results) {
+      expect(result.data).toBeNull()
+      expect(result.error).toBe('The literature database is not configured.')
+    }
+    expect(createClientMock).not.toHaveBeenCalled()
+    expect(rpcMock).not.toHaveBeenCalled()
+    expect(fromMock).not.toHaveBeenCalled()
+  })
+})
+
 describe('a wildcard bind address never gets a client (fourth review)', () => {
   it.each([
     ['0.0.0.0', 'http://0.0.0.0:55321', 'wildcard_address_not_permitted'],

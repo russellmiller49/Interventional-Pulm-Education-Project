@@ -31,11 +31,12 @@ import {
  * exact local-mode loopback target. Strict mode never resolves to `bound` (see
  * `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`), and two further guards here refuse anything that is
  * not `mode === 'local'` with a URL on the canonical local-host allowlist (`localhost`,
- * `127.0.0.1`, `[::1]` — never a wildcard bind address). So the existing list, detail,
- * curation, and gold-set callers receive `null` in every deployed configuration — the same "not
- * configured" path they already handle — and no privileged remote RPC is reachable. Setting the
- * documented Railway variables changes none of that; only the future capability-gating / cutover
- * PR can.
+ * `127.0.0.1`, `[::1]` — never a wildcard bind address, and never an alias spelling such as
+ * `127.1` or `2130706433` that only URL normalization would have made acceptable). So the existing
+ * list, detail, curation, and gold-set callers receive `null` in every deployed configuration —
+ * the same "not configured" path they already handle — and no privileged remote RPC is reachable.
+ * Setting the documented Railway variables changes none of that; only the future
+ * capability-gating / cutover PR can.
  */
 type LiteratureDatabaseEnvironment = LiteratureDedicatedEnvironment
 
@@ -124,7 +125,8 @@ function assertServerOnly() {
  *      not activated, because strict resolves to `not_activated` instead;
  *   2. the resolved mode is exactly `local`;
  *   3. the URL is on the explicit canonical local-host allowlist (`localhost`, `127.0.0.1`,
- *      `[::1]`; `0.0.0.0` is a wildcard bind address and is refused).
+ *      `[::1]`) both as raw text and after parsing — `0.0.0.0` is a wildcard bind address and is
+ *      refused, and so is any alias spelling the URL parser would have normalized onto the list.
  *
  * Callers already treat `null` as "the literature database is not configured", so a deployed
  * environment degrades to that honest state rather than to a remote client.

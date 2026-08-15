@@ -24,6 +24,29 @@ with a perfect checksum is still a document someone typed.
 Layer 1 and Layer 2 passing means "this repository and this document are internally consistent". It
 does **not** mean "the approved project is empty". Only Layer 3 can say that.
 
+## Where Layer 3 sits in the rollout
+
+Layer 3 is implemented and independently reviewed **before** the owner is asked to authorize the
+migration — not after it, and not alongside it. The reason is the finding above: until a
+provider-bound adapter exists, no one can say which database an observation came from, so an
+authorization granted earlier would be an authorization to act on evidence that cannot be
+attributed. The nine steps, identical in every document:
+
+1. Merge this preparation PR after independent review.
+2. Implement and independently review Layer 3.
+3. Obtain the exact owner migration authorization.
+4. Run the provider-bound preflight.
+5. Apply exactly the foundation migration.
+6. Run the provider-bound postflight, and stop.
+7. Implement and deploy capability gating, while the runtime stays disabled.
+8. Obtain the Railway authorization and cut over.
+9. Stop, before any canary or ingestion.
+
+Step 5 is a provider operation through the approved mechanism. The CLIs in this repository cannot
+perform it and are not a route to it: they hold no credential, open no connection, apply nothing,
+and exit nonzero on every invocation. See the
+[rollout runbook](./dedicated-supabase-rollout-runbook.md) for the operational detail.
+
 ## Why Layer 3 is deliberately absent
 
 Implementing it honestly requires an authenticated, project-scoped, read-only Supabase adapter.

@@ -222,6 +222,78 @@ describe('brittle numeric claims are absent rather than merely correct', () => {
   })
 })
 
+/**
+ * Fifth review, finding 5 — one rollout sequence, stated identically everywhere.
+ *
+ * The implemented design is option B: Layer 3 is required *before* the migration authorization.
+ * The documents had drifted apart on that point (the runbook ran the preflight before the
+ * authorization; other records listed the migration before Layer 3), which is exactly the kind of
+ * disagreement an operator resolves by picking whichever document they happened to open. The nine
+ * steps are pinned here so a future edit to one document fails this suite instead.
+ */
+describe('the rollout sequence is one sequence (fifth review, finding 5)', () => {
+  const CANONICAL_SEQUENCE = [
+    'Merge this preparation PR after independent review.',
+    'Implement and independently review Layer 3.',
+    'Obtain the exact owner migration authorization.',
+    'Run the provider-bound preflight.',
+    'Apply exactly the foundation migration.',
+    'Run the provider-bound postflight, and stop.',
+    'Implement and deploy capability gating, while the runtime stays disabled.',
+    'Obtain the Railway authorization and cut over.',
+    'Stop, before any canary or ingestion.',
+  ] as const
+
+  /** Every document that states the sequence. The threat model refers to it without restating. */
+  const SEQUENCE_DOCUMENTS = [
+    RUNBOOK,
+    ARCHITECTURE,
+    'dedicated-supabase-provenance.md',
+    'dedicated-supabase-codex-review-handoff.md',
+  ] as const
+
+  it.each(SEQUENCE_DOCUMENTS)('%s states all nine steps, in order', async (name) => {
+    const body = await readDocument(name)
+    const positions = CANONICAL_SEQUENCE.map((step) => body.indexOf(step))
+
+    const missing = CANONICAL_SEQUENCE.filter((_step, index) => positions[index] < 0)
+    expect(`${name}: ${missing.join(' | ')}`).toBe(`${name}: `)
+
+    for (let index = 1; index < positions.length; index += 1) {
+      expect(
+        `${name} step ${index + 1} after step ${index}: ${positions[index] > positions[index - 1]}`,
+      ).toBe(`${name} step ${index + 1} after step ${index}: true`)
+    }
+  })
+
+  it('places Layer 3 before the migration authorization in every document', async () => {
+    for (const name of SEQUENCE_DOCUMENTS) {
+      const body = await readDocument(name)
+      const layerThree = body.indexOf(CANONICAL_SEQUENCE[1])
+      const authorization = body.indexOf(CANONICAL_SEQUENCE[2])
+      const apply = body.indexOf(CANONICAL_SEQUENCE[4])
+      expect(`${name}: ${layerThree < authorization && authorization < apply}`).toBe(
+        `${name}: true`,
+      )
+    }
+  })
+
+  it('numbers the runbook sections to match, with no stale cross-reference', async () => {
+    const runbook = await readDocument(RUNBOOK)
+    const headings = [...runbook.matchAll(/^### (\d+)\. (.+)$/gmu)].map((match) => [
+      Number(match[1]),
+      match[2],
+    ]) as [number, string][]
+    expect(headings.map(([number]) => number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    // Every heading is the canonical step text, minus its terminal period.
+    expect(headings.map(([, title]) => `${title}.`)).toEqual([...CANONICAL_SEQUENCE])
+    // No prose may point at a step number the sequence no longer has.
+    for (const reference of runbook.matchAll(/\bstep (\d+)/gu)) {
+      expect(`${reference[0]}: ${Number(reference[1]) <= 9}`).toBe(`${reference[0]}: true`)
+    }
+  })
+})
+
 describe('documented flags and commands exist', () => {
   it('names only flags the CLIs actually read', async () => {
     const [preflight, postflight] = await Promise.all([

@@ -72,6 +72,21 @@
  * secret screening over the schema-normalized, parser-owned graph → business rules. Unknown
  * fields therefore fail at the schema stage; schema failure messages are sanitized so they never
  * echo unrecognized key names or decoded values.
+ *
+ * **Fifth correction — two narrow holes in that layering.**
+ *
+ *   1. **No supplied key survives into a duplicate-key message.** The duplicate-key failure was
+ *      the one place a rejected document's own bytes were still quoted back
+ *      (`repeats the key "…"`), and that message reaches CLI stdout and any log capturing it. A
+ *      duplicate key is attacker-supplied text at a position no schema vouches for, so it is now
+ *      reported by character offset alone, with the key redacted.
+ *   2. **The ACL grammar is a structural rule, not a screening side effect.** The canonical
+ *      `grantee=privileges/grantor` grammar used to be consulted only from inside the screener's
+ *      position allowance, so it ran only for values that already matched the secret vocabulary;
+ *      a malformed but innocuous entry such as `not-an-acl-entry` was never checked. Every
+ *      non-null member of `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`
+ *      is now validated by the row schema itself — before screening runs, and regardless of what
+ *      the value contains.
  */
 
 import { z } from 'zod'
@@ -184,6 +199,7 @@ class StrictJsonParser {
     }
     for (;;) {
       this.skipWhitespace()
+      const keyOffset = this.index
       const key = this.parseString()
       if (RESERVED_STRUCTURAL_KEYS.has(key)) {
         // Checked on the *decoded* key, so Unicode-escaped spellings are equally refused.
@@ -194,10 +210,15 @@ class StrictJsonParser {
         )
       }
       if (seen.has(key)) {
+        // Fifth review, finding 1: the offending key is **never** echoed. A duplicate key is
+        // attacker-supplied text at a position no schema vouches for — it may be a credential
+        // spelling, and this message reaches the CLI's stdout, an operator's terminal, and any
+        // log that captures it. The character offset locates the repetition for a human without
+        // reproducing one byte of the supplied key or its value.
         throw new LiteratureEvidenceError(
           'duplicate_json_key',
-          `The evidence document repeats the key ${JSON.stringify(key)}. Duplicate keys are ` +
-            'rejected rather than resolved last-value-wins.',
+          `The evidence document repeats an object key at character offset ${keyOffset}. The key ` +
+            'itself is redacted. Duplicate keys are rejected rather than resolved last-value-wins.',
         )
       }
       seen.add(key)
@@ -416,7 +437,22 @@ function isServiceRoleExecuteKeyPath(path: readonly LiteratureEvidencePathSegmen
   )
 }
 
-const ACL_ENTRY_PATTERN =
+/**
+ * The canonical PostgreSQL ACL entry grammar: `grantee=privileges/grantor`, with an empty grantee
+ * meaning `PUBLIC` and `*` marking a grant option. It is the *only* shape `pg_catalog`'s
+ * `aclitem[]` columns render, so every member of an `acl` array either matches it or is not a
+ * catalog observation at all.
+ *
+ * Fifth review, finding 4 — this grammar is now enforced **structurally**, by the row schemas
+ * below, on every non-null `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`
+ * member, and therefore independently of secret-vocabulary screening. Previously it was consulted
+ * only from inside the screener's position allowance, so it ran only for values that already
+ * tripped the vocabulary: a malformed, non-secret entry such as `not-an-acl-entry` was never
+ * checked against it and rode into the catalog comparison as content. Enforcement now happens at
+ * the schema stage — before screening runs at all — and the screener keeps its own use of the same
+ * single constant as defence in depth.
+ */
+export const LITERATURE_ACL_ENTRY_PATTERN =
   /^(?:"?[A-Za-z_][A-Za-z0-9_]*"?)?=[A-Za-z*]*\/"?[A-Za-z_][A-Za-z0-9_]*"?$/u
 
 /** A path segment may be rendered in an error message only if it is a plain identifier. */
@@ -440,7 +476,7 @@ function renderEvidencePath(path: readonly LiteratureEvidencePathSegment[]): str
  */
 function allowedAtPath(path: readonly LiteratureEvidencePathSegment[], value: string): boolean {
   if (isRoleNamePath(path)) return value === LITERATURE_EXACT_ROLE_NAME_ALLOWANCE
-  if (isAclMemberPath(path)) return ACL_ENTRY_PATTERN.test(value)
+  if (isAclMemberPath(path)) return LITERATURE_ACL_ENTRY_PATTERN.test(value)
   return false
 }
 
@@ -519,6 +555,18 @@ function assertParsedEvidenceCarriesNoSecret(
 
 const sha256Hex = z.string().regex(/^[a-f0-9]{64}$/u)
 
+/**
+ * One ACL array member. The message names the expected grammar and never echoes the received
+ * value; `invalid_string` is on the echo-safe issue list precisely because its message is built
+ * from the schema's expectation, not from the document.
+ */
+const aclEntry = z
+  .string()
+  .regex(
+    LITERATURE_ACL_ENTRY_PATTERN,
+    'must be a PostgreSQL ACL entry of the form grantee=privileges/grantor',
+  )
+
 const extensionRow = z
   .object({ name: z.string(), schema: z.string(), version: z.string() })
   .strict()
@@ -583,7 +631,9 @@ const functionRow = z
     leakproof: z.boolean(),
     config: z.array(z.string()).nullable(),
     definition: z.string(),
-    acl: z.array(z.string()).nullable(),
+    // Nullable as a whole (a function with no explicit ACL renders `null`); every member of a
+    // non-null array must satisfy the canonical grammar.
+    acl: z.array(aclEntry).nullable(),
     publicExecute: z.boolean(),
     anonExecute: z.boolean(),
     authenticatedExecute: z.boolean(),
@@ -648,7 +698,7 @@ const defaultPrivilegeRow = z
     owner: z.string(),
     schema: z.string(),
     objectType: z.string(),
-    acl: z.array(z.string()),
+    acl: z.array(aclEntry),
   })
   .strict()
 

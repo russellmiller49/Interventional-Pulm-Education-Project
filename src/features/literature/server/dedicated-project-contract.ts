@@ -35,8 +35,9 @@
  * never to `bound`. The switch is `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`, a **source
  * constant** — deliberately not another environment variable, so no value an operator can set
  * turns the production client on. Flipping it is a code change belonging to the future
- * capability-gating / cutover PR, after the foundation migration, the Layer-3 provider work,
- * capability gating, independent review, and an explicit Railway authorization.
+ * capability-gating / cutover PR, which comes after — in this order — the Layer-3 provider work
+ * and its independent review, the owner migration authorization, the foundation migration itself,
+ * and an explicit, separate Railway authorization. See the rollout runbook's sequence.
  */
 
 /** The approved dedicated Literature production project (`IP_Literature`). */
@@ -91,6 +92,92 @@ export const LITERATURE_PERMITTED_LOCAL_HOSTNAMES = ['localhost', '127.0.0.1', '
 const PERMITTED_LOCAL_HOSTNAME_SET: ReadonlySet<string> = new Set(
   LITERATURE_PERMITTED_LOCAL_HOSTNAMES,
 )
+
+/* ------------------------------------------------------------------------------------------- *
+ * The raw local authority gate (fifth review, finding 3)
+ *
+ * Comparing `URL.hostname` against the allowlist above is necessary but not sufficient, because
+ * the WHATWG host parser is a *normalizer*: it rewrites `127.1`, `127.0.1`, `127.000.000.001`,
+ * `0177.0.0.1`, `0x7f.1`, and the bare integer `2130706433` all into the string `127.0.0.1`. Every
+ * one of those spellings therefore satisfied a check written against the normalized output — the
+ * allowlist looked closed while the set of accepted *inputs* was open.
+ *
+ * So the raw text is judged first, before any URL is constructed: only the documented canonical
+ * authority spellings are admitted, and everything else is refused without normalization getting a
+ * say. The normalized allowlist then runs as before, so both must agree.
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * The raw authority host spellings the local contract supports, written exactly as an operator
+ * writes them. Closed, and enumerated rather than derived: there is no rule here that a future
+ * numeric or shorthand form could satisfy by accident.
+ *
+ * `localhost` is matched ASCII-case-insensitively — a URI host is case-insensitive by definition,
+ * so `LOCALHOST` is the same *name*, not an alias resolving to the same address by a different
+ * spelling. The two IP literals are matched byte for byte; every other numeric spelling of the
+ * loopback address is rejected precisely because it is a different spelling.
+ */
+export const LITERATURE_CANONICAL_RAW_LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'] as const
+
+const CANONICAL_RAW_LOCAL_HOST_SET: ReadonlySet<string> = new Set(
+  LITERATURE_CANONICAL_RAW_LOCAL_HOSTS,
+)
+
+/** A port is optional; when present it must be a plain decimal in range, with no leading zero. */
+function isCanonicalRawPort(port: string): boolean {
+  if (port === '') return true
+  if (!/^[1-9][0-9]{0,4}$/u.test(port)) return false
+  return Number(port) <= 65535
+}
+
+/**
+ * Whether the *raw* URL text carries one of the documented canonical local authorities.
+ *
+ * The authority is taken as the text between `://` and the first `/`, `?`, `#`, or `\` — the same
+ * terminators the WHATWG authority state uses for a special scheme — so userinfo, an extra host,
+ * or a backslash trick lands inside the extracted string and fails the exact comparison instead of
+ * being normalized away. No `URL` is constructed and no DNS lookup is performed.
+ */
+export function hasCanonicalRawLocalAuthority(rawUrl: string): boolean {
+  const separator = rawUrl.indexOf('://')
+  if (separator < 0) return false
+
+  let end = rawUrl.length
+  for (let index = separator + 3; index < rawUrl.length; index += 1) {
+    const character = rawUrl[index]
+    if (character === '/' || character === '?' || character === '#' || character === '\\') {
+      end = index
+      break
+    }
+  }
+  const authority = rawUrl.slice(separator + 3, end)
+
+  let host = authority
+  let port = ''
+  if (authority.startsWith('[')) {
+    const closing = authority.indexOf(']')
+    if (closing < 0) return false
+    host = authority.slice(0, closing + 1)
+    const remainder = authority.slice(closing + 1)
+    if (remainder !== '') {
+      if (!remainder.startsWith(':')) return false
+      port = remainder.slice(1)
+    }
+  } else {
+    const colon = authority.indexOf(':')
+    if (colon >= 0) {
+      host = authority.slice(0, colon)
+      port = authority.slice(colon + 1)
+      // A second colon means userinfo or a malformed authority, never a canonical local target.
+      if (port.includes(':')) return false
+    }
+  }
+
+  // ASCII-only lowercasing: no locale rule and no Unicode folding can map another host onto one
+  // of these spellings.
+  const normalizedHost = host.replaceAll(/[A-Z]/gu, (letter) => letter.toLowerCase())
+  return CANONICAL_RAW_LOCAL_HOST_SET.has(normalizedHost) && isCanonicalRawPort(port)
+}
 
 /** Wildcard/unspecified addresses: valid to bind a listener to, never a client destination. */
 const UNSPECIFIED_WILDCARD_HOSTNAMES: ReadonlySet<string> = new Set(['0.0.0.0', '[::]'])
@@ -225,6 +312,11 @@ export type LiteratureBindingFailureReason =
   | 'loopback_not_permitted_in_production'
   /** The URL names a wildcard bind address (0.0.0.0 or [::]), which is never a destination. */
   | 'wildcard_address_not_permitted'
+  /**
+   * The raw authority is an alias spelling (`127.1`, `0x7f.1`, `2130706433`, …) that only the URL
+   * parser's normalization would have turned into a canonical local host.
+   */
+  | 'noncanonical_local_url_authority'
   /** Local mode accepts the canonical local hosts only; another host was supplied. */
   | 'remote_host_not_permitted_in_local_mode'
   /** The credential is a publishable/anon/unclassifiable key. */
@@ -345,7 +437,22 @@ export interface ParsedLiteratureTarget {
   pathname: string
   hasUserInfo: boolean
   hasQueryOrFragment: boolean
-  /** Exactly on the canonical local allowlist — the only client-permitting sense of "local". */
+  /**
+   * The **raw** authority was one of the documented canonical local spellings, judged before the
+   * URL parser normalized anything. False for `127.1`, `0x7f.1`, `2130706433`, and every other
+   * alias the parser would have rewritten into an allowlisted hostname.
+   */
+  hasCanonicalRawLocalAuthority: boolean
+  /**
+   * The URL parser's `hostname` is on the canonical allowlist. On its own this says nothing about
+   * how the authority was spelled — it is true for `127.1` and `0x7f.1` too — so it is used only
+   * to tell an alias spelling apart from an ordinary remote host when reporting a refusal.
+   */
+  normalizesToPermittedLocalHostname: boolean
+  /**
+   * Exactly on the canonical local allowlist — the only client-permitting sense of "local".
+   * Requires the raw spelling *and* the normalized hostname to agree.
+   */
   isPermittedLocalHost: boolean
   /** A wildcard/unspecified bind address (`0.0.0.0`, `[::]`). Never a permitted destination. */
   isUnspecifiedWildcardHost: boolean
@@ -360,9 +467,14 @@ export interface ParsedLiteratureTarget {
  * fields so callers can fail closed with a specific reason.
  */
 export function parseLiteratureTargetUrl(url: string): ParsedLiteratureTarget | null {
+  const raw = url.trim()
+  // Judged on the raw text, before the URL parser can normalize an alias spelling into a
+  // hostname the allowlist recognises (fifth review, finding 3).
+  const rawLocalAuthority = hasCanonicalRawLocalAuthority(raw)
+
   let parsed: URL
   try {
-    parsed = new URL(url.trim())
+    parsed = new URL(raw)
   } catch {
     return null
   }
@@ -376,7 +488,11 @@ export function parseLiteratureTargetUrl(url: string): ParsedLiteratureTarget | 
     pathname: parsed.pathname,
     hasUserInfo: parsed.username !== '' || parsed.password !== '',
     hasQueryOrFragment: parsed.search !== '' || parsed.hash !== '',
-    isPermittedLocalHost: PERMITTED_LOCAL_HOSTNAME_SET.has(hostname),
+    hasCanonicalRawLocalAuthority: rawLocalAuthority,
+    normalizesToPermittedLocalHostname: PERMITTED_LOCAL_HOSTNAME_SET.has(hostname),
+    // Both gates must agree: the operator wrote a documented canonical authority *and* it parses
+    // to a canonical loopback destination.
+    isPermittedLocalHost: rawLocalAuthority && PERMITTED_LOCAL_HOSTNAME_SET.has(hostname),
     isUnspecifiedWildcardHost: UNSPECIFIED_WILDCARD_HOSTNAMES.has(hostname),
     isLocalShapedHost: isLocalShapedHostname(hostname),
     projectRef: hosted ? hosted[1] : null,
@@ -389,14 +505,16 @@ export function isWellFormedProjectRef(value: string): boolean {
 
 /**
  * The explicit canonical local-host allowlist that the single client-constructing path checks:
- * exactly `localhost`, `127.0.0.1`, and `[::1]`, in Node's own `URL.hostname` rendering.
+ * exactly `localhost`, `127.0.0.1`, and `[::1]` — as the operator spelled them in the raw value
+ * *and* in Node's own `URL.hostname` rendering.
  *
  * `resolveLiteratureDedicatedBinding` already refuses every other host in local mode, so this is
  * a second, independent statement of the same rule at the point of construction: while the
  * production runtime is not activated, a Supabase client may only ever be built for a canonical
- * loopback destination — never a wildcard bind address such as `0.0.0.0`, and never a remote
- * host. Two agreeing gates are what makes "no remote client exists in this PR" checkable rather
- * than inferred from control flow.
+ * loopback destination — never a wildcard bind address such as `0.0.0.0`, never an alias spelling
+ * such as `127.1` or `2130706433` that only normalization makes look canonical, and never a
+ * remote host. Two agreeing gates are what makes "no remote client exists in this PR" checkable
+ * rather than inferred from control flow.
  */
 export function isPermittedLocalRuntimeUrl(url: string): boolean {
   const target = parseLiteratureTargetUrl(url)
@@ -477,10 +595,11 @@ function strictUrlFailure(
  *
  * The strict contract requires all three dedicated variables, exactly the canonical hosted origin,
  * and a current-model `sb_secret_…` credential. Local mode keeps the same structural rules but
- * accepts the canonical local hosts (`localhost`, `127.0.0.1`, `[::1]`), legacy service-role
- * JWTs, opaque local keys, and the legacy variable name so the existing local Supabase workflow
- * keeps working unchanged. Local mode never accepts a remote host, and never a wildcard bind
- * address such as `0.0.0.0`.
+ * accepts the canonical local hosts (`localhost`, `127.0.0.1`, `[::1]`, spelled canonically in the
+ * raw value), legacy service-role JWTs, opaque local keys, and the legacy variable name so the
+ * existing local Supabase workflow keeps working unchanged. Local mode never accepts a remote
+ * host, never a wildcard bind address such as `0.0.0.0`, and never an alias spelling of the
+ * loopback address that only the URL parser's normalization would have made acceptable.
  */
 export function resolveLiteratureDedicatedBinding(
   environment: LiteratureDedicatedEnvironment,
@@ -610,7 +729,7 @@ export function resolveLiteratureDedicatedBinding(
           'a loopback destination; local mode accepts only localhost, 127.0.0.1, or [::1].',
       )
     }
-    if (!target.isPermittedLocalHost) {
+    if (!target.normalizesToPermittedLocalHostname) {
       return failure(
         mode,
         'remote_host_not_permitted_in_local_mode',
@@ -618,6 +737,22 @@ export function resolveLiteratureDedicatedBinding(
           `localhost, 127.0.0.1, and [::1]; ${target.hostname} is refused.`,
       )
     }
+    if (!target.hasCanonicalRawLocalAuthority) {
+      // Fifth review: the host only *normalizes* to an allowlisted spelling — `127.1`, `0x7f.1`,
+      // `2130706433`, and friends. That gets its own reason so the refusal is diagnosable and is
+      // not reported as "some remote host". The raw value is deliberately not echoed.
+      return failure(
+        mode,
+        'noncanonical_local_url_authority',
+        'LITERATURE_SUPABASE_URL must spell its authority canonically: local mode accepts only ' +
+          'localhost, 127.0.0.1, or [::1], written exactly. Shorthand, zero-padded, octal, ' +
+          'hexadecimal, and bare-integer spellings of the loopback address are refused before ' +
+          'the URL parser is allowed to normalize them.',
+      )
+    }
+    // Those two refusals are exactly the conjunction `isPermittedLocalHost` encodes, so anything
+    // reaching this point satisfies the same predicate the client-constructing path re-checks
+    // independently in `isPermittedLocalRuntimeUrl`.
   }
 
   if (LITERATURE_PROHIBITED_PROJECT_REFS.includes(expectedRef)) {

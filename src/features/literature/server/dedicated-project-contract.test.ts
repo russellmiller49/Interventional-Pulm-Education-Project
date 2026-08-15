@@ -5,10 +5,13 @@ import {
   LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
   LITERATURE_CANONICAL_PRODUCTION_ORIGIN,
   LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+  LITERATURE_CANONICAL_RAW_LOCAL_HOSTS,
   LITERATURE_MAIN_APPLICATION_PROJECT_REF,
+  LITERATURE_PERMITTED_LOCAL_HOSTNAMES,
   LITERATURE_PRODUCTION_RUNTIME_ACTIVATION,
   classifyLiteratureCredential,
   describeLiteratureBinding,
+  hasCanonicalRawLocalAuthority,
   isPermittedLocalRuntimeUrl,
   parseLiteratureTargetUrl,
   resolveLiteratureDedicatedBinding,
@@ -231,11 +234,153 @@ describe('local mode', () => {
     ['the canonical hostname form', 'http://localhost:55321'],
     ['IPv4 loopback', 'http://127.0.0.1:55321'],
     ['bracketed IPv6 loopback', 'http://[::1]:55321'],
-    ['uppercase LOCALHOST, canonicalized to localhost by the URL parser', 'http://LOCALHOST:55321'],
+    // A URI host is case-insensitive by definition, so this is the same *name* rather than an
+    // alias spelling; it is on the raw allowlist explicitly, not by way of normalization.
+    [
+      'uppercase LOCALHOST, an explicitly supported spelling of the same name',
+      'http://LOCALHOST:55321',
+    ],
+    ['the default port omitted', 'http://localhost'],
+    ['https with a port', 'https://127.0.0.1:55321'],
+    ['a path after the authority', 'http://localhost:55321/'],
   ])('still binds %s', (_label, url) => {
     expect(resolve(localEnvironment({ LITERATURE_SUPABASE_URL: url }), 'local').status).toBe(
       'bound',
     )
+  })
+
+  /**
+   * Fifth review, finding 3 — the raw authority is judged before the URL parser normalizes it.
+   *
+   * The reproduction: WHATWG host parsing rewrites `127.1`, `127.0.1`, `127.000.000.001`,
+   * `0177.0.0.1`, `0x7f.1`, and the bare integer `2130706433` all to the string `127.0.0.1`, so
+   * each satisfied an allowlist written against the normalized hostname. The set of accepted
+   * *inputs* was open while the allowlist looked closed.
+   */
+  describe('alias spellings of the loopback address are refused (fifth review, finding 3)', () => {
+    const ALIAS_SPELLINGS: [string, string][] = [
+      ['the two-part shorthand 127.1', 'http://127.1:55321'],
+      ['the three-part shorthand 127.0.1', 'http://127.0.1:55321'],
+      ['zero-padded 127.000.000.001', 'http://127.000.000.001:55321'],
+      ['octal 0177.0.0.1', 'http://0177.0.0.1:55321'],
+      ['hexadecimal 0x7f.1', 'http://0x7f.1:55321'],
+      ['fully hexadecimal 0x7f000001', 'http://0x7f000001:55321'],
+      ['the bare integer 2130706433', 'http://2130706433:55321'],
+    ]
+
+    it.each(ALIAS_SPELLINGS)('refuses %s with the noncanonical-authority reason', (_label, url) => {
+      expect(resolve(localEnvironment({ LITERATURE_SUPABASE_URL: url }), 'local')).toMatchObject({
+        status: 'unbound',
+        reason: 'noncanonical_local_url_authority',
+      })
+    })
+
+    it.each(ALIAS_SPELLINGS)(
+      'confirms %s is a spelling the URL parser would have accepted',
+      (_label, url) => {
+        // Without the raw gate these all present as an allowlisted hostname. That is the finding.
+        const target = parseLiteratureTargetUrl(url)
+        expect(target?.hostname).toBe('127.0.0.1')
+        expect(target?.normalizesToPermittedLocalHostname).toBe(true)
+        expect(target?.hasCanonicalRawLocalAuthority).toBe(false)
+        expect(target?.isPermittedLocalHost).toBe(false)
+      },
+    )
+
+    it('refuses the same spellings at the client-construction gate', () => {
+      for (const [, url] of ALIAS_SPELLINGS) {
+        expect(isPermittedLocalRuntimeUrl(url)).toBe(false)
+      }
+    })
+
+    it.each([
+      ['a userinfo-prefixed authority', 'http://user:pw@127.0.0.1:55321'],
+      ['an empty userinfo marker', 'http://@127.0.0.1:55321'],
+      ['a backslash-separated second host', 'http://evil.example.com\\@127.0.0.1:55321'],
+      ['a trailing-dot localhost', 'http://localhost.:55321'],
+      ['an uppercase hexadecimal spelling', 'http://0X7F.1:55321'],
+      ['a leading-zero port', 'http://localhost:055321'],
+      ['an out-of-range port', 'http://localhost:99999'],
+    ])('refuses %s before any normalization', (_label, url) => {
+      expect(parseLiteratureTargetUrl(url)?.hasCanonicalRawLocalAuthority ?? false).toBe(false)
+      expect(isPermittedLocalRuntimeUrl(url)).toBe(false)
+      expect(resolve(localEnvironment({ LITERATURE_SUPABASE_URL: url }), 'local').status).toBe(
+        'unbound',
+      )
+    })
+
+    it('keeps the wildcard and remote refusals on their own reasons', () => {
+      // The new reason is for alias spellings only; the fourth review's distinctions survive.
+      expect(
+        resolve(localEnvironment({ LITERATURE_SUPABASE_URL: 'http://0.0.0.0:55321' }), 'local'),
+      ).toMatchObject({ reason: 'wildcard_address_not_permitted' })
+      expect(
+        resolve(localEnvironment({ LITERATURE_SUPABASE_URL: 'http://127.0.0.2:55321' }), 'local'),
+      ).toMatchObject({ reason: 'remote_host_not_permitted_in_local_mode' })
+    })
+
+    it('never echoes the rejected raw authority in the failure message', () => {
+      const binding = resolve(
+        localEnvironment({ LITERATURE_SUPABASE_URL: 'http://2130706433:55321' }),
+        'local',
+      )
+      expect(binding.status).toBe('unbound')
+      if (binding.status !== 'unbound') throw new Error('expected an unbound result')
+      expect(binding.message).not.toContain('2130706433')
+    })
+
+    it('exposes the raw gate as a closed, directly testable predicate', () => {
+      // The raw allowlist and the normalized allowlist are the same three hosts, written once
+      // each: the raw one is what an operator types, the normalized one is what Node renders.
+      expect([...LITERATURE_CANONICAL_RAW_LOCAL_HOSTS]).toEqual([
+        ...LITERATURE_PERMITTED_LOCAL_HOSTNAMES,
+      ])
+
+      for (const accepted of [
+        'http://localhost',
+        'http://localhost:55321',
+        'https://LOCALHOST:55321/rest/v1',
+        'http://127.0.0.1:1',
+        'http://127.0.0.1:65535',
+        'http://[::1]:55321',
+        'http://[::1]',
+      ]) {
+        expect(hasCanonicalRawLocalAuthority(accepted)).toBe(true)
+      }
+
+      for (const refused of [
+        '',
+        'localhost:55321',
+        'http:/localhost',
+        'http://127.1',
+        'http://2130706433',
+        'http://0.0.0.0',
+        'http://[::]',
+        'http://[::ffff:127.0.0.1]',
+        'http://db.localhost',
+        'http://localhost.localdomain',
+        'http://user@localhost',
+        'http://localhost:0',
+        'http://localhost:65536',
+        'http://localhost:abc',
+        'http://[::1',
+        'https://itcttmkxdxvwmwcmzmey.supabase.co/',
+      ]) {
+        expect(hasCanonicalRawLocalAuthority(refused)).toBe(false)
+      }
+    })
+
+    it('performs no DNS resolution, so an unresolvable name is still just refused', () => {
+      // A name that cannot resolve is refused by spelling alone, not by lookup failure.
+      expect(
+        resolve(
+          localEnvironment({
+            LITERATURE_SUPABASE_URL: 'http://localhost.invalid.invalid:55321',
+          }),
+          'local',
+        ),
+      ).toMatchObject({ status: 'unbound', reason: 'remote_host_not_permitted_in_local_mode' })
+    })
   })
 
   describe('the wildcard bind address is not a destination (fourth review)', () => {

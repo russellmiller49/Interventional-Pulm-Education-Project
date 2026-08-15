@@ -15,8 +15,10 @@ provider-bound target attestation (Layer 3) is not implemented, so the preflight
 anything better than `provider_attestation_required`. See
 [provenance](./dedicated-supabase-provenance.md).
 
-Three separate owner authorizations are needed, in order: the migration, the capability-gating
+Three separate owner authorizations are needed, in this order: the migration, the capability-gating
 package, and the Railway cutover. None is implied by merging this PR, and none implies another.
+Layer 3 must exist and have been independently reviewed **before** the migration authorization is
+sought — see the sequence below.
 
 ## Target
 
@@ -69,30 +71,61 @@ applied-SQL checksum in the attestation. Never write or repair migration history
 
 ## Sequence
 
-### 1. Merge after independent review
+Nine steps, in exactly this order. The load-bearing property is that **Layer 3 comes before the
+migration authorization**: until a provider-bound adapter exists, nothing can establish which
+database was observed, so an authorization obtained earlier would be an authorization to act on
+evidence no one can attribute. Every other document states the same nine steps in the same order.
+
+1. Merge this preparation PR after independent review.
+2. Implement and independently review Layer 3.
+3. Obtain the exact owner migration authorization.
+4. Run the provider-bound preflight.
+5. Apply exactly the foundation migration.
+6. Run the provider-bound postflight, and stop.
+7. Implement and deploy capability gating, while the runtime stays disabled.
+8. Obtain the Railway authorization and cut over.
+9. Stop, before any canary or ingestion.
+
+### 1. Merge this preparation PR after independent review
 
 Merge this PR only after the independent review in
 [`dedicated-supabase-codex-review-handoff.md`](./dedicated-supabase-codex-review-handoff.md)
 completes. Record the resulting `main` commit — it becomes the owner-approved commit.
 
-> After this merges and until the capability-gating package of step 12 ships, production Literature
+> After this merges and until the capability-gating package of step 7 ships, production Literature
 > reports _not configured_ rather than silently reading `Endoreels` — and it reports that even if
-> the step-13 variables are set, because the production runtime is not activated. Both render no
+> the step-8 variables are set, because the production runtime is not activated. Both render no
 > articles; the new behaviour is the honest one.
 
-### 2. Implement Layer 3
+### 2. Implement and independently review Layer 3
 
 A separate, independently reviewed change must implement the project-scoped read-only Supabase
-adapter (`supabase_project_scoped_read_only_mcp_v1`). Until then the preflight blocks and no
-migration may be applied. **Do not work around this with a hand-written JSON file.**
+adapter (`supabase_project_scoped_read_only_mcp_v1`). **Nothing after this step may begin until it
+has shipped and been reviewed.** Until then the preflight blocks, the postflight classifies as
+`provider_attestation_required`, and no migration may be applied. **Do not work around this with a
+hand-written JSON file.**
 
-### 3. Verify the primary checkout
+The CLIs in this repository are not a migration path. They hold no credential, open no connection,
+apply nothing, and exit nonzero on every invocation; the migration is applied by the provider
+through the approved mechanism, never through them.
 
-From the **primary checkout** (`…/Interventional-Pulm-Education-Project`), on `main`, clean, with
+### 3. Obtain the exact owner migration authorization
+
+The owner must state, in writing, all seven of: project name `IP_Literature`; project ref
+`itcttmkxdxvwmwcmzmey`; the migration path; the migration SHA-256; the owner-approved commit; the
+application mechanism `supabase_connector_apply_migration_v1`; and that exactly one migration
+operation is permitted.
+
+### 4. Run the provider-bound preflight
+
+Four parts, all before anything is applied.
+
+**4a. Verify the primary checkout.** From the **primary checkout**
+(`…/Interventional-Pulm-Education-Project`), on `main`, clean, with
 `HEAD == origin/main == the owner-approved commit`, exactly. A descendant is not accepted; if `main`
 has moved, obtain a new authorization.
 
-### 4. Print the phase-specific query plans
+**4b. Print the phase-specific query plans.**
 
 ```bash
 npm run literature:dedicated:preflight -- --print-query-plans
@@ -105,17 +138,16 @@ relation unconditionally), the **postflight existence probe**, and the **postfli
 plan** (history versions, full catalog, prerequisites, and the row count, valid only after the
 probe proved the referenced relations present). Every statement is wrapped in
 `BEGIN READ ONLY; SET TRANSACTION READ ONLY; … ROLLBACK;`. The identities are distinct, so one
-phase's capture cannot be substituted for another's. In the future authoritative gate, migration
-history comes from the provider's project-scoped `list_migrations` operation, not from a manually
+phase's capture cannot be substituted for another's. In the authoritative gate, migration history
+comes from the provider's project-scoped `list_migrations` operation, not from a manually
 assembled SQL result.
 
-### 5. Capture evidence through the connector
+**4c. Capture evidence through the connector.** Run the appropriate plan through the project-scoped
+read-only connector from step 2. The evidence documents have **no** `projectRef` or `hostname`
+field — target identity comes from the adapter, not the body, and a document that declares its own
+project is rejected. Never paste a credential anywhere.
 
-Run the appropriate plan through the project-scoped read-only connector. The evidence documents
-have **no** `projectRef` or `hostname` field — target identity comes from the adapter, not the
-body, and a document that declares its own project is rejected. Never paste a credential anywhere.
-
-### 6. Run the read-only preflight
+**4d. Run the preflight.**
 
 ```bash
 npm run literature:dedicated:preflight -- \
@@ -127,29 +159,25 @@ npm run literature:dedicated:preflight -- \
 Every Layer 1 (repository) and Layer 2 (evidence content) check can pass **non-authoritatively**.
 While the provider-bound Layer-3 adapter is unimplemented, the best reachable verdict is
 `provider_attestation_required`, and **no migration may be applied on the strength of this
-repository's output**. The success verdict does not exist in this PR; the future, separately
-reviewed provider-adapter PR introduces the first one. The preflight applies nothing.
+repository's output**. The success verdict does not exist in this PR; the separately reviewed
+provider-adapter PR of step 2 introduces the first one. The preflight applies nothing.
 
 **Every invocation of both CLIs exits nonzero** — including
 `--print-query-plans`, which still prints the plans but is not a success. Do not chain either
 command with `&&`; there is no passing exit status to chain on.
 
-### 7. Obtain the migration authorization
+### 5. Apply exactly the foundation migration
 
-The owner must state, in writing, all seven of: project name `IP_Literature`; project ref
-`itcttmkxdxvwmwcmzmey`; the migration path; the migration SHA-256; the owner-approved commit; the
-application mechanism `supabase_connector_apply_migration_v1`; and that exactly one migration
-operation is permitted.
+One `apply_migration` call through the approved mechanism, carrying exactly the immutable SQL
+bytes. No retry.
 
-### 8. Apply exactly the authorized migration
+**If the acknowledgement is lost, do not retry.** Go to step 6. Do not resend, do not repair
+history, do not compensate.
 
-One `apply_migration` call, carrying exactly the immutable SQL bytes. No retry.
+### 6. Run the provider-bound postflight, and stop
 
-### 9. If the acknowledgement is lost, do not retry
-
-Go to step 10. Do not resend, do not repair history, do not compensate.
-
-### 10. Re-capture evidence and run the postflight
+Re-capture evidence through the connector first, exactly as in step 4c, using the postflight
+existence probe and then the postflight complete plan.
 
 ```bash
 npm run literature:dedicated:postflight -- --owner-approved-commit <sha> --evidence <path.json>
@@ -169,24 +197,23 @@ for the human reconciling with the owner:
 | `content_observation_incomplete_nonauthoritative` | The observation itself did not complete           |
 
 No assessment authorizes anything: each is a statement about a document, not a proven database.
-The provider-bound gate in the future adapter PR is the only thing that will ever turn content
-into a decision.
+The provider-bound gate from step 2 is the only thing that will ever turn content into a decision.
 
-### 11. Produce a durable receipt
+**Produce a durable receipt.** Record the migration path and SHA-256, the project ref, the
+query-plan identities, the owner-approved commit, the mechanism, the classification, the catalog
+artifact checksum, and the timestamp. Never record a credential. **A persisted receipt is audit
+evidence and can never be re-ingested to authorize anything.**
 
-Record the migration path and SHA-256, the project ref, the query-plan identities, the
-owner-approved commit, the mechanism, the classification, the catalog artifact checksum, and the
-timestamp. Never record a credential. **A persisted receipt is audit evidence and can never be
-re-ingested to authorize anything.**
+**Then stop.** The foundation migration does NOT authorize Railway cutover.
 
-### 12. Stop. The foundation migration does NOT authorize Railway cutover.
+### 7. Implement and deploy capability gating, while the runtime stays disabled
 
 > The runtime enforces this, not just the runbook. While
 > `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is `not_activated`, a valid strict configuration
 > resolves to `not_activated` / `dedicated_runtime_not_activated` and **no Supabase client is
-> constructed**. Setting the variables in step 13 before the capability-gating package ships
-> changes nothing at runtime: the Literature module keeps reporting "not configured" and no
-> mutating RPC is reachable. Activation is a reviewed code change, not a variable.
+> constructed**. Setting the step-8 variables before the capability-gating package ships changes
+> nothing at runtime: the Literature module keeps reporting "not configured" and no mutating RPC
+> is reachable. Activation is a reviewed code change, not a variable.
 
 This is the M-4 correction. Cutting Railway over immediately after the migration would expose the
 admin gold-set route, whose RPCs the foundation migration does not create — it would render raw
@@ -204,9 +231,10 @@ Before any Railway change:
    constant that lets a production Literature client be constructed at all.
 3. Merge and deploy it.
 
-Keep the dedicated Railway variables **unset** until that is done.
+Keep the dedicated Railway variables **unset** until that is done, and keep the runtime disabled
+for the whole of this step: deploying the gating work is not the cutover.
 
-### 13. Obtain a separate Railway authorization, then set the variables
+### 8. Obtain the Railway authorization and cut over
 
 The exact raw values, byte for byte — the URL includes the **trailing slash**, which the strict
 contract requires:
@@ -228,14 +256,14 @@ is what production wants. Do **not** change `NEXT_PUBLIC_SUPABASE_URL`, `SUPABAS
 
 No CSP change is required: the Literature client is server-side only.
 
-### 14. Deploy the reviewed commit and verify
+Then deploy the reviewed commit and verify:
 
 - Authenticated Literature list, search, and detail return a **legitimate empty corpus**, not an error.
 - The admin surface shows the gated empty state, not a raw RPC error.
 - Public and anonymous paths remain closed.
 - No `NEXT_PUBLIC_*` Literature variable exists.
 
-### 15. Stop
+### 9. Stop, before any canary or ingestion
 
 Do not ingest a canary. Do not import the corpus.
 

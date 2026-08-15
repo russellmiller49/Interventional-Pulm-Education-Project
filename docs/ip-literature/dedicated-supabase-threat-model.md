@@ -109,10 +109,15 @@ ACL grammar in `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].a
 `serviceRoleExecute` key on a `catalog.functions[*]` row. The same byte sequence in `owner`,
 `definition`, `name`, `type`, `schema`, a function body, an index or trigger definition, or
 anywhere else is rejected — closing `{owner: "password=foo/grantor"}` and
-`{definition: "token=abc/grantor"}`. A malformed ACL value inside a real ACL array is still
-rejected, and credential _shapes_ (`sb_secret_…`, JWTs, inline-credential connection strings) have
-no allowance at any path. The section lists are derived from the row schemas themselves by a test,
-so a schema change cannot silently widen the allowance.
+`{definition: "token=abc/grantor"}`. Credential _shapes_ (`sb_secret_…`, JWTs, inline-credential
+connection strings) have no allowance at any path. The section lists are derived from the row
+schemas themselves by a test, so a schema change cannot silently widen the allowance.
+
+A malformed ACL value inside a real ACL array is rejected **before** any of that, by the row
+schema (fifth review): the canonical `grantee=privileges/grantor` grammar is applied to every
+non-null member of the two ACL arrays regardless of whether the value trips the vocabulary. It
+previously ran only from inside the position allowance, so a malformed but innocuous entry such as
+`not-an-acl-entry` was never checked against it.
 
 Rehearsal child processes are spawned with every
 `LITERATURE_SUPABASE_*`, `SUPABASE_*`, `PG*`, `POSTGRES_*`, `DOCKER_*`, `DATABASE_URL`, and
@@ -316,7 +321,9 @@ object, array, boxed string, `Proxy`, getter carrier, and conversion carrier is 
 `typeof` check before any property access, trap, or coercion can run, and no production surface
 accepts a decoded object — the screener is module-private and no arbitrary-object scanner is
 exported. A custom, JSON-compliant recursive-descent parser rejects duplicate keys outright
-rather than resolving last-value-wins, rejects unescaped control characters (U+0000–U+001F)
+rather than resolving last-value-wins — reporting a character offset with the repeated key
+**redacted**, so a credential-shaped key cannot ride out through the error message or the CLI
+stdout that prints it (fifth review) — rejects unescaped control characters (U+0000–U+001F)
 inside strings as RFC 8259 requires, and rejects the reserved structural keys
 `__proto__`/`prototype`/`constructor` at every depth, checked on the _decoded_ key. Decoded
 objects are materialized as `Object.create(null)` with members installed by
@@ -371,8 +378,10 @@ configuration that passes every check resolves to the typed state `not_activated
 `dedicated_runtime_not_activated` instead of `bound`, and carries **no** `secretKey` field for a
 caller to misuse. `createLiteratureAdmin()` reaches `createClient` only when the binding is `bound`,
 the mode is exactly `local`, and the URL is on the explicit canonical local-host allowlist
-(`localhost`, `127.0.0.1`, `[::1]` — never the wildcard bind address `0.0.0.0`) — three agreeing
-gates, none of which any environment variable can satisfy for a remote host. A test suite mocks
+(`localhost`, `127.0.0.1`, `[::1]` — never the wildcard bind address `0.0.0.0`, and never an alias
+spelling such as `127.1`, `0177.0.0.1`, or `2130706433`, which are refused on the raw authority
+before URL normalization could map them onto the list) — three agreeing gates, none of which any
+environment variable can satisfy for a remote host. A test suite mocks
 Supabase client construction and asserts, across no-variable / partial / exactly-valid / invalid
 configurations, that `createClient` is never called, that the existing read and mutating server
 functions all return "not configured", and that `.rpc()` and `.from()` are never invoked — while a
