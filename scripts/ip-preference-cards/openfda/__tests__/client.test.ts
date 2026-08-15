@@ -42,12 +42,25 @@ describe('openFDA API client', () => {
     const cacheDir = await temporaryCacheDirectory()
     directories.push(cacheDir)
     const fetchImpl = jest.fn(async () => jsonResponse({ error: { code: 'NOT_FOUND' } }, 404))
-    const result = await client(cacheDir, fetchImpl as typeof fetch).request({
+    const result = await client(cacheDir, fetchImpl as typeof fetch, {
+      cacheReferencePrefix: 'local-data/ip-preference-cards/us-status/2026-08-13/openfda/udi',
+    }).request({
       search: 'catalog_number:"NONE"',
       limit: 1,
     })
     expect(result.records).toEqual([])
     expect(result.httpStatus).toBe(404)
+    expect(result).toMatchObject({
+      requestSearch: 'catalog_number:"NONE"',
+      requestLimit: 1,
+      requestSkip: 0,
+      responseSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+      rawCacheReference: expect.stringMatching(
+        /^local-data\/ip-preference-cards\/us-status\/2026-08-13\/openfda\/udi\/[a-f0-9]{64}\.json$/,
+      ),
+    })
+    expect(result.requestUrl).not.toContain(API_KEY)
+    expect(new URL(result.requestUrl).searchParams.get('search')).toBe(result.requestSearch)
     expect(fetchImpl).toHaveBeenCalledTimes(1)
   })
 
@@ -98,13 +111,88 @@ describe('openFDA API client', () => {
     const cacheDir = await temporaryCacheDirectory()
     directories.push(cacheDir)
     const fetchImpl = jest.fn(async () => jsonResponse(openFdaApiResponse()))
-    const api = client(cacheDir, fetchImpl as typeof fetch)
+    const api = client(cacheDir, fetchImpl as typeof fetch, {
+      cacheReferencePrefix: 'local-data/ip-preference-cards/us-status/2026-08-13/openfda/udi',
+    })
     const request = { search: 'catalog_number:"CAT-001"', limit: 1 }
     const first = await api.request(request)
     const second = await api.request(request)
     expect(first.fromCache).toBe(false)
     expect(second.fromCache).toBe(true)
+    expect(second).toMatchObject({
+      requestUrl: first.requestUrl,
+      requestSearch: first.requestSearch,
+      requestLimit: first.requestLimit,
+      requestSkip: first.requestSkip,
+      responseSha256: first.responseSha256,
+      rawCacheReference: first.rawCacheReference,
+    })
+    expect(first.responseSha256).toMatch(/^[a-f0-9]{64}$/)
+    expect(first.rawCacheReference).toMatch(
+      /^local-data\/ip-preference-cards\/us-status\/2026-08-13\/openfda\/udi\/[a-f0-9]{64}\.json$/,
+    )
+    expect(first.requestUrl).not.toContain(API_KEY)
+    expect(new URL(first.requestUrl).searchParams.get('search')).toBe(first.requestSearch)
     expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+
+  it('preserves dataset metadata and isolates paginated cache entries by skip', async () => {
+    const cacheDir = await temporaryCacheDirectory()
+    directories.push(cacheDir)
+    const fetchImpl = jest.fn(async (request: URL | RequestInfo) => {
+      const url = new URL(String(request))
+      const skip = Number(url.searchParams.get('skip') ?? '0')
+      return jsonResponse({
+        meta: {
+          last_updated: '2026-08-03',
+          results: { skip, limit: 1, total: 2 },
+        },
+        results: [
+          {
+            public_device_record_key: `record-${skip}`,
+            brand_name: 'Acme Biopsy',
+          },
+        ],
+      })
+    })
+    const api = client(cacheDir, fetchImpl as typeof fetch)
+    const first = await api.request({ search: 'catalog_number:"CAT-001"', limit: 1 })
+    const second = await api.request({
+      search: 'catalog_number:"CAT-001"',
+      limit: 1,
+      skip: 1,
+    })
+    const secondReplay = await api.request({
+      search: 'catalog_number:"CAT-001"',
+      limit: 1,
+      skip: 1,
+    })
+
+    expect(first).toMatchObject({ datasetLastUpdated: '2026-08-03', resultTotal: 2 })
+    expect(second.records[0].public_device_record_key).toBe('record-1')
+    expect(secondReplay.fromCache).toBe(true)
+    expect(await readdir(cacheDir)).toHaveLength(2)
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it('serializes request pacing across concurrent cache misses', async () => {
+    const cacheDir = await temporaryCacheDirectory()
+    directories.push(cacheDir)
+    const sleep = jest.fn(async () => undefined)
+    const fetchImpl = jest.fn(async () => jsonResponse(openFdaApiResponse()))
+    const api = client(cacheDir, fetchImpl as typeof fetch, {
+      requestsPerSecond: 1,
+      now: () => 0,
+      sleep,
+    })
+
+    await Promise.all([
+      api.request({ search: 'catalog_number:"CAT-001"', limit: 1 }),
+      api.request({ search: 'catalog_number:"CAT-002"', limit: 1 }),
+    ])
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+    expect(sleep).toHaveBeenCalledWith(1_000)
   })
 
   it('rejects a cache entry whose response hash no longer matches', async () => {
@@ -156,5 +244,20 @@ describe('openFDA API client', () => {
       expect(error).toBeInstanceOf(OpenFdaClientError)
       expect((error as Error).message).not.toContain(API_KEY)
     }
+  })
+
+  it('fails closed without retrying a malformed successful response', async () => {
+    const cacheDir = await temporaryCacheDirectory()
+    directories.push(cacheDir)
+    const fetchImpl = jest.fn(async () => jsonResponse({ results: 'not-an-array' }))
+
+    await expect(
+      client(cacheDir, fetchImpl as typeof fetch).request({
+        search: 'catalog_number:"MALFORMED"',
+        limit: 1,
+      }),
+    ).rejects.toThrow(OpenFdaClientError)
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(await readdir(cacheDir)).toEqual([])
   })
 })

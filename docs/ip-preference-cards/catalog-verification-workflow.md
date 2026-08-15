@@ -39,9 +39,10 @@ POST /api/preference-cards/clinical-use-review/export
 POST /api/preference-cards/clinical-use-review/import?filename=<workbook.xlsx>&locale=<locale>
 ```
 
-The catalog-QA landing page covers the effective 1,474-product merged catalog rather than only
-the 1,221 workbook backlog rows. Products added after the workbook snapshot are explicitly
-marked as having no backlog row.
+The catalog-QA landing page covers the effective 1,532-product merged catalog rather than only
+the 1,221 workbook backlog rows. The remaining 311 reviewed additions are explicitly marked as
+having no backlog row. Across the current catalog, 779 products are hidden and 753 are
+prototype-visible.
 
 The product workspace joins:
 
@@ -52,7 +53,7 @@ The product workspace joins:
 - mapped product roles and authored procedure-slot uses; and
 - unreviewed exact-slot proposals for the product.
 
-The exact-slot review route exposes all 429 deterministic proposals with procedure, slot,
+The exact-slot review route exposes all 831 deterministic proposals with procedure, slot,
 role, requiredness, product verification/visibility, source locator, and GUDID distribution
 context, including conflicts. Every proposal remains `unreviewed`, `selectable: false`, and
 `visible_by_default: false`.
@@ -70,20 +71,104 @@ product. After a completed workbook is imported, the reviewer can also generate 
 workbook containing only current proposals that lack a valid completed decision in that
 preview.
 
+## Current U.S. status research proposals
+
+Current U.S. status research is a third, isolated recommendation layer. It computes a
+deterministic cohort from all 779 hidden products, preserves the distinction between hidden
+`verified_source` products and hidden `candidate`/`unknown` products, and writes only dated
+artifacts under `data/ip-preference-cards/research/us-status/<YYYY-MM-DD>/`. It is not an
+application route, server action, runtime data source, or automatic extension of either workbook
+workflow.
+
+Each product packet keeps UDI/GUDID distribution, registration/listing, marketing authorization
+or exemption, official manufacturer U.S. evidence, and FDA safety-action context separate.
+Registration is not approval, authorization is not current distribution, recall is not
+discontinuation, and the absence of a manufacturer page is not negative evidence. See
+[`openfda-enrichment.md`](./openfda-enrichment.md#dated-current-us-status-research-proposal-only)
+for the local commands, dated output root, and ignored raw cache.
+
+### Current-distribution evidence policy
+
+A current exact manufacturer webpage or document is **not** mandatory for
+`current_us_distribution_supported`. The state is anchored on the FDA's own current
+commercial-distribution record for the exact device. A product may receive it when product
+identity is exact, a current exact GUDID configuration reports in commercial distribution, the
+GUDID snapshot is current, all relevant exact configurations were retrieved, there is no mixed or
+ended configuration conflict, and there is no affirmative discontinuation or other material
+distribution conflict. The independent invariant audit must also pass.
+
+Confidence is a separate question from the state:
+
+- **high** — a second exact current source corroborates the GUDID evidence: an exact current FDA
+  registration/listing, or an exact current official manufacturer U.S. source.
+- **moderate** — current exact GUDID distribution evidence and reliable exact identity, with no
+  second exact current source.
+
+There is no low-confidence variant of the supported state. A product whose evidence does not reach
+moderate stays in an unresolved research state instead.
+
+A manufacturer document may establish exact identity and configuration without establishing
+current distribution. That source is classified `identity_only` in the reviewed manufacturer
+source registry and produces the manufacturer finding `exact_identity_only_not_current`; it is
+never admitted as current-distribution evidence, and it is never reported as a current family
+source. Current distribution is also not present orderability: no proposal claims that a product
+can be ordered today or is in stock, and every positive carries an explicit open question asking
+whether it is presently orderable and from which distributor.
+
+An invariant failure that reports _missing_ evidence rather than _contradictory_ evidence returns
+the product to an unresolved state. Only a genuine source conflict is reported as
+`current_status_conflicted`, so a reviewer is never told that sources disagree when nothing was
+found to disagree with.
+
+Every run binds its governed inputs into `input_hashes`, including the optional `--selection`
+file's path and SHA-256 when a selection narrows the evaluated cohort. A selected-subset run is
+therefore never indistinguishable from a whole-cohort run, and editing the selection changes the
+recorded input identity.
+
+### Market status and safety action are independent axes
+
+Distribution status answers "is this product currently distributed in the United States?" and FDA
+safety-action status answers "is there an official FDA safety action on this exact product right
+now?". Neither answer is allowed to stand in for the other:
+
+- A recall never moves a product to `not_currently_distributed_supported` and never changes
+  `current_us_distribution_supported`. The distribution invariant audit is deliberately blind to
+  safety evidence, which the `recall_excluded_from_distribution` invariant enforces.
+- A recall can still hold ordinary prototype-visibility review. A product under an active exact
+  FDA safety action keeps its distribution state and receives
+  `keep_hidden_pending_active_safety_action_review` rather than `review_for_prototype_visibility`.
+  It is not marked `keep_hidden_conflicting`, because an active recall is not a distribution
+  conflict.
+- A lot-limited action is recorded as `lot_specific`. That does not mean every unit is recalled,
+  that the product is unsafe product-wide, or that it has left the market.
+
+Neither `review_for_prototype_visibility` nor `review_as_not_currently_distributed` may be
+proposed until the safety-action search has completed for the exact identity and has left no exact
+active action outstanding. A search that did not run or that failed is recorded as
+`not_searched`/`query_error` and can never be reported as `no_exact_action_found`.
+
+The resulting clinician-review rows and status files are research proposals with
+`canonical_change_applied: false`. There is no runtime import, reviewer-to-catalog apply endpoint,
+visibility release, verification promotion, slot/role change, formulary decision, or governed
+release mutation in this work package. A safety hold is likewise a research proposal: it is a
+recommendation that a physician/governance safety review occur before any visibility decision, not
+a clinical, procurement, or product-suitability determination.
+
 ## Full-catalog clinical-use workbook
 
-The full-catalog workbook is deliberately separate from the 429-row proposal workbook. The
+The full-catalog workbook is deliberately separate from the 831-row proposal workbook. The
 application's current effective catalog is generated, source-controlled data rather than a live
 Supabase catalog database. Its current review surface contains:
 
-- 1,474 catalog products;
-- 1,567 current `Product_Roles` mappings; and
-- 2,073 current canonical `Slot_Product_Options` assignments.
+- 1,532 catalog products: 779 hidden and 753 prototype-visible;
+- 1,622 current `Product_Roles` mappings; and
+- 2,035 current canonical `Slot_Product_Options` assignments.
 
-All 1,176 products with canonical exact-slot assignments are absent from the proposal workbook,
-so a clinically incorrect current assignment must be reviewed through this full-catalog
-workflow. The `Catalog Products` sheet also includes the remaining products, including products
-whose current roles do not correspond to a procedure slot.
+The 1,176 products with canonical exact-slot assignments and the 401 products represented in the
+proposal workbook are no longer disjoint: 157 products appear in both. A clinically incorrect
+current assignment must still be reviewed through this full-catalog workflow. The
+`Catalog Products` sheet also includes the remaining products, including products whose current
+roles do not correspond to a procedure slot.
 
 The macro-free format-version-1 workbook contains:
 
@@ -297,10 +382,11 @@ database mutation action. Workbook export, import, preview, stale acknowledgemen
 download, and unreviewed-workbook generation remain non-applying operations.
 
 Protected canonical artifacts remain guarded by
-`scripts/ip-preference-cards/protected-artifacts.test.ts`. Any later decision layer should be
-an independent, strictly validated overlay with reviewer identity, timestamp, rationale,
-selected evidence, and stale-input protection. GUDID acceptance must remain unable to change
-visibility or imply local approval.
+`scripts/ip-preference-cards/protected-artifacts.test.ts` and
+`scripts/ip-preference-cards/us-status/__tests__/safety-boundaries.test.ts`. Any later decision
+layer should be an independent, strictly validated overlay with reviewer identity, timestamp,
+rationale, selected evidence, and stale-input protection. GUDID acceptance must remain unable to
+change visibility or imply local approval.
 
 ## Verification
 
@@ -318,7 +404,7 @@ src/features/preference-cards/__tests__/slot-option-review.test.tsx
 
 The tests pin:
 
-- 1,474 unique effective products, including 253 post-workbook additions;
+- 1,532 unique effective products, including 311 post-workbook additions;
 - 1,221 workbook backlog rows;
 - strong-candidate aggregation by unique product;
 - weak-match isolation;
@@ -328,11 +414,11 @@ The tests pin:
 - text search across current strong and weak candidate DIs;
 - product/source relationship failures and mixed unknown distribution states;
 - strict backlog schema behavior;
-- 1,567 current product-role mappings and 2,073 canonical exact-slot assignments in the
+- 1,622 current product-role mappings and 2,035 canonical exact-slot assignments in the
   full-catalog workbook;
 - deterministic six-artifact clinical-use provenance, strict role/slot workbook validation,
   and normalized discriminated review records;
-- 429 nonselectable exact-slot proposals affecting 192 products and 40 slots;
-- 287 required-slot proposals;
-- 4 not-in-distribution, 2 conflicting, and 0 otherwise unresolved distribution signals; and
+- 831 nonselectable exact-slot proposals affecting 401 products and 108 slots;
+- 426 required-slot proposals;
+- 32 not-in-distribution, 7 conflicting, and 231 unknown distribution signals; and
 - the absence of approval/apply controls.

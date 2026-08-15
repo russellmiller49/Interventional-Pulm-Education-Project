@@ -99,6 +99,7 @@ export interface OpenFdaQueryCliOptions {
   concurrency: number
   cohortPath: string | null
   outputDirectory: string
+  anonymous: boolean
 }
 
 function argumentValue(args: string[], index: number, option: string): string {
@@ -132,6 +133,7 @@ export function parseOpenFdaQueryArgs(args: string[]): OpenFdaQueryCliOptions {
     concurrency: 3,
     cohortPath: null,
     outputDirectory: DEFAULT_OUTPUT_DIRECTORY,
+    anonymous: false,
   }
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]
@@ -175,6 +177,9 @@ export function parseOpenFdaQueryArgs(args: string[]): OpenFdaQueryCliOptions {
         break
       case '--dry-run':
         options.dryRun = true
+        break
+      case '--anonymous':
+        options.anonymous = true
         break
       default:
         throw new Error(`Unknown option: ${argument}`)
@@ -493,9 +498,9 @@ export async function runOpenFdaQueryEnrichment(
     return null
   }
 
-  loadOpenFdaLocalEnvironment()
-  const apiKey = process.env.OPENFDA_API_KEY?.trim() ?? ''
-  if (!apiKey) {
+  if (!options.anonymous) loadOpenFdaLocalEnvironment()
+  const apiKey = options.anonymous ? '' : (process.env.OPENFDA_API_KEY?.trim() ?? '')
+  if (!options.anonymous && !apiKey) {
     throw new Error(
       'OPENFDA_API_KEY is required for batch enrichment. Store it in your local environment; never use a NEXT_PUBLIC_ variable.',
     )
@@ -505,7 +510,8 @@ export async function runOpenFdaQueryEnrichment(
     apiKey,
     cacheDir: process.env.OPENFDA_CACHE_DIR ?? DEFAULT_CACHE_DIRECTORY,
     requestsPerSecond: environmentNumber('OPENFDA_REQUESTS_PER_SECOND', 3),
-    maxAttempts: Math.trunc(environmentNumber('OPENFDA_MAX_RETRIES', 5)),
+    // The environment variable describes retries after the initial attempt.
+    maxAttempts: Math.trunc(environmentNumber('OPENFDA_MAX_RETRIES', 5)) + 1,
     timeoutMs: Math.trunc(environmentNumber('OPENFDA_TIMEOUT_MS', 30_000)),
   })
   const enriched = await mapWithConcurrency(selected, options.concurrency, (product) =>
@@ -542,7 +548,7 @@ export async function runOpenFdaQueryEnrichment(
     started_at: startedAt,
     completed_at: new Date().toISOString(),
     openfda_endpoint: OPENFDA_ENDPOINT,
-    api_key_used: true,
+    api_key_used: Boolean(apiKey),
   }
   const classifiedCount =
     summary.high_confidence_count +
@@ -566,7 +572,7 @@ export async function runOpenFdaQueryEnrichment(
   await mkdir(outputDirectory, { recursive: true })
   const proposalsJson = await formatJson(proposals)
   const summaryJson = await formatJson(summary)
-  if (proposalsJson.includes(apiKey) || summaryJson.includes(apiKey)) {
+  if (apiKey && (proposalsJson.includes(apiKey) || summaryJson.includes(apiKey))) {
     throw new Error('Secret-safety assertion failed; refusing to write openFDA output.')
   }
   await Promise.all([

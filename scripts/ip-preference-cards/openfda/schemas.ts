@@ -23,6 +23,7 @@ export const openFdaIdentifierSchema = z
     unit_of_use_id: z.string().optional(),
     quantity_per_package: z.string().optional(),
     package_status: z.string().optional(),
+    package_discontinue_date: z.string().optional(),
     package_type: z.string().optional(),
   })
   .passthrough()
@@ -107,6 +108,7 @@ export const openFdaCacheEntrySchema = z
     retrieved_at: z.string().datetime(),
     request_search: z.string(),
     limit: z.number().int().min(1).max(100),
+    request_skip: z.number().int().min(0).max(25_000).optional(),
     http_status: z.number().int(),
     attempt_count: z.number().int().min(1),
     response_sha256: z.string().regex(/^[a-f0-9]{64}$/),

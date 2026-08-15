@@ -71,16 +71,25 @@ Supported selection and execution options:
 --refresh
 --exhaustive
 --dry-run
+--anonymous
 --concurrency 3
 ```
 
-Generate the checked-in 25-product calibration audit after the documented initial, final, cached, and targeted-refresh outputs exist:
+`--anonymous` is an explicit low-quota fallback. Authenticated batch execution remains the
+default and fails closed when the local key is absent.
+
+Generate the checked-in historical 25-product calibration audit after the documented initial,
+final, cached, and targeted-refresh outputs exist:
 
 ```bash
 npm run ip-cards:openfda:calibrate
 ```
 
-The calibration definition is schema-checked for exactly 25 unique products and its intended challenge-category counts. Query output directories are restricted to `data/ip-preference-cards/generated/openfda/`.
+The calibration definition is schema-checked for exactly 25 unique products and its intended
+challenge-category counts. Query output directories are restricted to
+`data/ip-preference-cards/generated/openfda/`. That calibration and its report preserve the
+earlier 1,474-product identity-enrichment snapshot; they are historical evidence, not the current
+catalog baseline.
 
 Regenerate CSV reports from an existing validated proposal file:
 
@@ -93,6 +102,135 @@ Inspect the current bulk-download manifest without downloading ZIPs:
 ```bash
 npm run ip-cards:openfda:download
 ```
+
+## Dated current U.S. status research (proposal only)
+
+The current normalized catalog contains 1,532 products: 779 are hidden and 753 are
+prototype-visible. The deterministic research cohort includes all 779 hidden products and keeps
+their reasons separate: 578 hidden `verified_source` products are specification-sourced with
+current U.S. status pending, while 200 hidden `candidate` products and one hidden `unknown`
+product still require identity or specification work.
+
+The current U.S. status research package builds on the existing exact-query, local-filtering,
+cache, retry, and alias infrastructure without writing to the ordinary
+`generated/openfda/` proposal queue. Use a new explicit snapshot date for each evidence pass:
+
+```bash
+research_snapshot=2026-08-13
+research_root="data/ip-preference-cards/research/us-status/${research_snapshot}"
+
+npm run ip-cards:us-status:cohort -- \
+  --output "${research_root}/cohort-manifest.json"
+npm run ip-cards:us-status:calibration-cohort -- \
+  --manifest "${research_root}/cohort-manifest.json" \
+  --output "${research_root}/calibration-cohort.json"
+npm run ip-cards:us-status:manufacturer-sources -- \
+  --snapshot "${research_snapshot}" \
+  --output "${research_root}/manufacturer-source-snapshot.json"
+
+# Run the stratified calibration selection first.
+npm run ip-cards:us-status:research -- \
+  --snapshot "${research_snapshot}" \
+  --cohort "${research_root}/cohort-manifest.json" \
+  --manufacturer-source-manifest "${research_root}/manufacturer-source-snapshot.json" \
+  --selection "${research_root}/calibration-cohort.json" \
+  --output-dir "${research_root}/calibration/status-50"
+npm run ip-cards:us-status:calibration-review -- \
+  --cohort "${research_root}/calibration-cohort.json" \
+  --proposals "${research_root}/calibration/status-50/us-status-evidence-proposals.json" \
+  --output-dir "${research_root}/calibration/status-50"
+
+# After calibration review gates pass, process the full computed hidden cohort.
+npm run ip-cards:us-status:research -- \
+  --snapshot "${research_snapshot}" \
+  --cohort "${research_root}/cohort-manifest.json" \
+  --manufacturer-source-manifest "${research_root}/manufacturer-source-snapshot.json" \
+  --output-dir "${research_root}"
+```
+
+Compact, schema-validated proposals, review CSVs, source manifests, run summaries, and methodology
+files stay under `data/ip-preference-cards/research/us-status/<YYYY-MM-DD>/`. Raw openFDA responses,
+manufacturer page/document bodies, extracted text, and cache metadata stay in the ignored
+`local-data/ip-preference-cards/us-status/` tree. A refresh must use a new dated snapshot rather
+than silently replacing historical evidence.
+
+The evidence layers remain independent:
+
+1. exact identity and UDI/GUDID configuration/distribution evidence;
+2. FDA registration and listing;
+3. marketing authorization or classification/exemption evidence;
+4. exact official manufacturer U.S. pages or documents; and
+5. official FDA safety actions as separate safety context.
+
+Registration/listing is not approval, historical authorization is not current distribution, a
+recall is not evidence of discontinuation, and website absence is not a negative finding. Exact
+positive and negative current-status proposals require the package's independent invariants and
+remain recommendations for human review.
+
+A current exact manufacturer source is not mandatory for `current_us_distribution_supported`: the
+state is anchored on current exact GUDID commercial-distribution evidence, and a second exact
+current source (an exact current FDA listing or an exact current manufacturer U.S. source) raises
+confidence from `moderate` to `high` rather than gating the state. A manufacturer document
+registered as `identity_only` establishes exact identity and configuration only; it yields the
+manufacturer finding `exact_identity_only_not_current` and never counts as current distribution or
+as a current family source. No proposal claims present orderability or stock in any case. See
+[`catalog-verification-workflow.md`](./catalog-verification-workflow.md#current-distribution-evidence-policy)
+for the full policy.
+
+Every run records its governed inputs in `input_hashes`. When `--selection` narrows the evaluated
+cohort — as the calibration run above does — the selection file's path and SHA-256 are recorded
+too, so a selected-subset run is never indistinguishable from a whole-cohort run and editing the
+selection changes the recorded input identity.
+
+### FDA safety-action layer
+
+The safety layer reads two official FDA systems through the same cache/retry/provenance client as
+the other layers, using two additional endpoint-scoped caches under
+`local-data/ip-preference-cards/us-status/<snapshot>/openfda/`:
+
+| System                   | Endpoint                  | Contributes                                          |
+| ------------------------ | ------------------------- | ---------------------------------------------------- |
+| Enforcement Report       | `device/enforcement.json` | classification, ongoing/terminated status, lot codes |
+| Recall Enterprise System | `device/recall.json`      | recall status, posted date, linked submissions       |
+
+No manufacturer page, press release, or general web search result is admitted as safety authority,
+and no page or API body is committed: only normalized records, bounded `code_info` excerpts, and
+source provenance (request search, response SHA-256, retrieval timestamp, portable cache
+reference) reach the dated artifacts.
+
+A safety action is tied to a product only through an exact governed identifier — the catalog/REF
+number, or a device identifier of the exact device including its package configuration. Evidence
+linked only by a shared clearance or family name is recorded as `family_or_ambiguous_action` and
+is never presented as an exact-product action, which keeps an adjacent SKU in the same clearance
+family from contaminating the determination.
+
+The layer records four fields, none of which collapse into one another:
+
+- `safety_search_status`: `searched` | `not_searched` | `query_error`
+- `safety_action_state`: `active_exact_product_action` | `historical_exact_product_action` |
+  `family_or_ambiguous_action` | `no_exact_action_found` | `unknown`
+- `safety_action_scope`: `lot_specific` | `product_wide` | `family_level` | `unknown`
+- `visibility_review_eligibility`: `eligible_for_owner_review` | `hold_active_safety_action` |
+  `hold_safety_search_incomplete` | `hold_safety_identity_ambiguous` | `not_applicable`
+
+A disagreement between the two FDA systems about whether the same action is still open resolves to
+`unknown` and holds review rather than picking a side. A historical (terminated) exact action is
+retained as safety context and does not by itself block ordinary review. Safety evidence never
+contributes to the distribution conclusion; it can only hold the review disposition.
+
+### Inaccessible manufacturer sources
+
+A manufacturer fetch that times out or fails transport-level is recorded with
+`retrieval_status: "inaccessible"`, a null `content_sha256`, `identity_scope: "context_only"`, and
+no matched identifiers. The SHA-256 of an empty body describes nothing about the document, so it is
+not committed as a content hash, and an unread source supports neither a current-distribution nor a
+discontinuation claim.
+
+Every research artifact records `canonical_change_applied: false`. These commands have no apply
+endpoint or importer and cannot change catalog visibility, verification grade, selectability,
+roles, compatibility, formulary state, release pointers, ledgers, or feature flags. They are local
+research commands only: no current U.S. status script or openFDA endpoint is invoked from CI,
+build, postinstall, application startup, a route, a server action, or a client component.
 
 ## Ordered query plan
 
@@ -160,6 +298,10 @@ Files:
 - `unmatched-products.csv`;
 - `query-errors.csv`;
 - `manifest-snapshot.json`.
+
+The top-level checked-in run and the named 25-product calibration artifacts preserve the earlier
+1,474-product catalog era. Keep them as historical retrieval evidence; use the dated current U.S.
+status research root for the 1,532-product baseline.
 
 Calibration artifacts additionally include:
 

@@ -1,0 +1,388 @@
+{
+  "format_version": 1,
+  "artifact_kind": "current_us_status_run_summary",
+  "method_version": "current-us-status-evidence-v1",
+  "research_as_of_date": "2026-08-13",
+  "proposal_artifact_sha256": "1fe01cecc6f3c5e9cdac336fe2838c9d88d486add485455b24155a4e82bfbd2d",
+  "source_manifest_sha256": "087d622821b172fe572dd258e282489d43e5fc18c8b72940ba805f0dbfeea4a3",
+  "input_hashes": [
+    {
+      "input_id": "catalog-products",
+      "path": "data/ip-preference-cards/generated/catalog-products.json",
+      "sha256": "0bad1db25c47015a7da2f6dd4162cd897506a5be89a9383f7191f87cdeee4f33"
+    },
+    {
+      "input_id": "cohort-manifest",
+      "path": "data/ip-preference-cards/research/us-status/2026-08-13/cohort-manifest.json",
+      "sha256": "5fdcecf3bec186496fd7346284d69965a5802188d994256c4c33de905cc88402"
+    },
+    {
+      "input_id": "manufacturer-source-manifest",
+      "path": "data/ip-preference-cards/research/us-status/2026-08-13/manufacturer-source-snapshot.json",
+      "sha256": "85a13ed07b3aa5a236375fabb9fef6d3304d836b4d7ed5484d9125fee9db7e85"
+    },
+    {
+      "input_id": "verification-backlog-stale-context",
+      "path": "data/ip-preference-cards/generated/verification-backlog.json",
+      "sha256": "25ab658850a5df620986d4596d5043f40e46d17132493dd62d7adaffc36c1b38"
+    }
+  ],
+  "dataset_snapshots": [
+    {
+      "dataset_id": "manufacturer-072a41bf9afde52e-SRC021",
+      "layer": "manufacturer",
+      "endpoint": "https://www.richard-wolf.com/mam/data/Typo3/Kataloge/Broncho-_Thorako-_Mediastinoskopie/Thorakale_Endoskopie_en.pdf",
+      "as_of_date": "2025-01-01",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:31:03.835Z",
+      "content_sha256": "fb8e5bc743c8b1f7efaddaa3da5eb8a2530ccd9a070282f353301d7aa84c0c74",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-09f1ce0e4dacf500-SRC039",
+      "layer": "manufacturer",
+      "endpoint": "https://medical.olympusamerica.com/sites/default/files/us/files/pdf/OER-Pro-Brochure.pdf",
+      "as_of_date": "2015-01-01",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:27.363Z",
+      "content_sha256": "c0e40c60145f033f973899e15ac044d99a717229ed37f1bfca69a3b78723015c",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-2e1966dab42dc18a-SRC013",
+      "layer": "manufacturer",
+      "endpoint": "https://www.micro-tech-medical.com/products/Tracheal-Bronchial-Stents.html",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:37.842Z",
+      "content_sha256": "380ed76e6600e27c762271a2e4764ae556a915573f020181dd1cb03c8fe00d60",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-34c16e7b65a0fed0-SRC030",
+      "layer": "manufacturer",
+      "endpoint": "https://www.karlstorz.com/us/en/thoracic-surgery-and-pulmonology.htm",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:37.392Z",
+      "content_sha256": "26e24605159f9a944fa0dbe5723726900f3237d89d12472bb96e52a12cc4e524",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-3d4a407155d59481-SRC037",
+      "layer": "manufacturer",
+      "endpoint": "https://www.intuitive.com/en-us/-/media/ISI/Intuitive/Pdf/intuitive-ion-system-brochure-1051118.pdf",
+      "as_of_date": "2019-03-01",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:34.497Z",
+      "content_sha256": "d02032286070b4dd9d8fbd985a7bdca8af8edf52b89ff177db3bfcb2c8a9c43d",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-5048be6aa9ae5186-SRC032",
+      "layer": "manufacturer",
+      "endpoint": "https://www.verathon.com/single-use-bronchoscopes",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:33:47.226Z",
+      "content_sha256": "2902cccb31138016ddbb8179addd8295595efcfc622373dd4c0f3be1dc27426f",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-5ba6302c264d669a-SRC023",
+      "layer": "manufacturer",
+      "endpoint": "https://www.cookmedical.com/products/cc_aebs_webds/",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:38.160Z",
+      "content_sha256": "1ced9494065f37ef9713429469bc85ae2920e5822baa432722edb2dc065a2cb8",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-5d22e06227a5d309-SRC007",
+      "layer": "manufacturer",
+      "endpoint": "https://medical.olympusamerica.com/products/evis-exera-bronchoscopy/visualization",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:26.953Z",
+      "content_sha256": "15d0c9a0073efa8601b641679b04fef695cfd7dfaf6a0596ceb12ce5fa311efe",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-5dcab87ba4b67929-SRC040",
+      "layer": "manufacturer",
+      "endpoint": "https://content.medical.olympusamerica.com/sites/default/files/us/files/pdf/SVS-Air-Leak-Product-Order-Information_FINAL.pdf",
+      "as_of_date": "2020-03-01",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:26.870Z",
+      "content_sha256": "e940cd6e49e343c407bd042ecd7b18588471934fa11790c0e18b5e6ec28776d4",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-5ecda77d951fb59b-SRC031",
+      "layer": "manufacturer",
+      "endpoint": "https://teleflex.com/usa/en/product-areas/interventional/drainage/arrow-diagnostic-drainage-products/MC-006078_Interventional_DND_Product_Line_Brochure_Final.pdf",
+      "as_of_date": "2020-12-01",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:34.311Z",
+      "content_sha256": "ac61a306976a2888da63b86a75dcfe0e75f3a8c2caf82c6e18e7967449981ca6",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-68f0fa238b09338a-SRC034",
+      "layer": "manufacturer",
+      "endpoint": "https://www.sonosite.com/sites/default/files/Sonosite_LX_product_brochure_MKT03597_US_rev_C.pdf",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:33:46.913Z",
+      "content_sha256": null,
+      "record_count": 0
+    },
+    {
+      "dataset_id": "manufacturer-6bb37942921abbee-SRC042",
+      "layer": "manufacturer",
+      "endpoint": "https://novatech.fr/en/steritalc/steritalc",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:27.994Z",
+      "content_sha256": "f9c1c952465c1cde42d08217d0ac5304473804dbafccccf4ee6859febf1b4851",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-6e15baa06b30c8b4-SRC035",
+      "layer": "manufacturer",
+      "endpoint": "https://www.sonosite.com/products/sonosite-px",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:33:46.885Z",
+      "content_sha256": null,
+      "record_count": 0
+    },
+    {
+      "dataset_id": "manufacturer-88949554cdb50897-SRC022",
+      "layer": "manufacturer",
+      "endpoint": "https://content.medical.olympusamerica.com/products/accessory-solutions",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:26.954Z",
+      "content_sha256": "d972ccb12bbcec09d5b3c9dc782d08d6a46562d84ae7f33680dda0f8eff964aa",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-8ad1c808e931d87f-SRC041",
+      "layer": "manufacturer",
+      "endpoint": "https://novatech.fr/en/ews/ews",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:27.846Z",
+      "content_sha256": "37f16811101f8c76127e8d0f6fdaff820f15b83b31c474ba9f711b1357789b94",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-8df2faf5864138a1-SRC020",
+      "layer": "manufacturer",
+      "endpoint": "https://www.cookmedical.com/products/cc_utpt_webds/",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:34.369Z",
+      "content_sha256": "66c8a46074b85592aac502e16dc47ec914e7c3d8a828942df60b4d530df7dd30",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-adf5c4a8a4f64491-SRC017",
+      "layer": "manufacturer",
+      "endpoint": "https://us.erbe-med.com/fileadmin/user_upload/documents/PDF/Catalogs/complete_Catalogs/85100-100_EN_Product-catalog.pdf",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:35:42.872Z",
+      "content_sha256": null,
+      "record_count": 0
+    },
+    {
+      "dataset_id": "manufacturer-adf5c4a8a4f64491-SRC019",
+      "layer": "manufacturer",
+      "endpoint": "https://us.erbe-med.com/fileadmin/user_upload/documents/PDF/Catalogs/complete_Catalogs/85100-100_EN_Product-catalog.pdf",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:35:42.872Z",
+      "content_sha256": null,
+      "record_count": 0
+    },
+    {
+      "dataset_id": "manufacturer-ae63f148a3c83005-SRC037",
+      "layer": "manufacturer",
+      "endpoint": "https://www.intuitive.com/en-us/products-and-services/ion",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:34.513Z",
+      "content_sha256": "d02032286070b4dd9d8fbd985a7bdca8af8edf52b89ff177db3bfcb2c8a9c43d",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-b80bf1b41b76ea51-SRC029",
+      "layer": "manufacturer",
+      "endpoint": "https://medical.olympusamerica.com/procedure/peripheral-bronchoscopy-radial-ebus",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:26.461Z",
+      "content_sha256": "907e7a5e547a76bf2f3b47f850652dbd29822db903f6225a0f8e1160801f31c6",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-c116d17a501b604a-SRC018",
+      "layer": "manufacturer",
+      "endpoint": "https://us.erbe-med.com/fileadmin/user_upload/documents/PDF/USA/MKT-5074_ERBECRYO-2_2023-06.pdf",
+      "as_of_date": "2023-06-01",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:31.764Z",
+      "content_sha256": "26075dbf5d5fa7421b69655e7ee9b0def4b62e621d395a554ced5ec24e6c3444",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "manufacturer-ed3a75f7002012d6-SRC039",
+      "layer": "manufacturer",
+      "endpoint": "https://medical.olympusamerica.com/customer-resources/cleaning-disinfection-sterilization/reprocessing-products",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:30:26.378Z",
+      "content_sha256": "8cde7f1f8d90189794dbc2a25d6416d76ce986b8f2e9dd1aa1239db1850fe3cd",
+      "record_count": 1
+    },
+    {
+      "dataset_id": "openfda-510k",
+      "layer": "authorization",
+      "endpoint": "https://api.fda.gov/device/510k.json",
+      "as_of_date": "2026-08-03",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:37:25.052Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-classification",
+      "layer": "authorization",
+      "endpoint": "https://api.fda.gov/device/classification.json",
+      "as_of_date": "2026-08-03",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:35:59.243Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-enforcement",
+      "layer": "safety_action",
+      "endpoint": "https://api.fda.gov/device/enforcement.json",
+      "as_of_date": "2026-08-05",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-15T00:42:07.757Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-pma",
+      "layer": "authorization",
+      "endpoint": "https://api.fda.gov/device/pma.json",
+      "as_of_date": "2026-08-03",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:37:15.516Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-recall",
+      "layer": "safety_action",
+      "endpoint": "https://api.fda.gov/device/recall.json",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-15T00:42:15.522Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-registrationlisting",
+      "layer": "registration_listing",
+      "endpoint": "https://api.fda.gov/device/registrationlisting.json",
+      "as_of_date": "2026-08-03",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:35:59.111Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-udi",
+      "layer": "udi_distribution",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "as_of_date": "2026-08-03",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-14T05:12:19.305Z",
+      "content_sha256": null,
+      "record_count": null
+    }
+  ],
+  "counts": {
+    "product_count": 779,
+    "research_state_counts": {
+      "current_us_distribution_supported": 34,
+      "not_currently_distributed_supported": 0,
+      "historically_authorized_current_status_unresolved": 25,
+      "current_status_conflicted": 18,
+      "identity_unresolved": 243,
+      "insufficient_evidence": 458,
+      "not_applicable_noncommercial_or_local": 1
+    },
+    "confidence_counts": {
+      "high": 11,
+      "moderate": 67,
+      "low": 701
+    },
+    "safety_search_status_counts": {
+      "searched": 737,
+      "not_searched": 42,
+      "query_error": 0
+    },
+    "safety_action_state_counts": {
+      "active_exact_product_action": 47,
+      "historical_exact_product_action": 2,
+      "family_or_ambiguous_action": 10,
+      "no_exact_action_found": 678,
+      "unknown": 42
+    },
+    "visibility_review_eligibility_counts": {
+      "eligible_for_owner_review": 28,
+      "hold_active_safety_action": 3,
+      "hold_safety_search_incomplete": 0,
+      "hold_safety_identity_ambiguous": 3,
+      "not_applicable": 745
+    },
+    "review_disposition_counts": {
+      "review_for_prototype_visibility": 28,
+      "keep_hidden_conflicting": 18,
+      "keep_hidden_identity_unresolved": 243,
+      "keep_hidden_insufficient_evidence": 483,
+      "keep_hidden_pending_active_safety_action_review": 3,
+      "keep_hidden_pending_safety_review": 3,
+      "review_as_not_currently_distributed": 0,
+      "review_as_noncommercial_or_local": 1
+    },
+    "exact_safety_action_product_count": 49,
+    "query_error_product_count": 196,
+    "source_record_count": 5446,
+    "udi_configuration_count": 842,
+    "safety_action_record_count": 236,
+    "conflicted_product_count": 250
+  },
+  "execution": {
+    "products_requested": 779,
+    "products_processed": 779,
+    "fda_api_requests": 0,
+    "manufacturer_requests": 21,
+    "cache_hits": 5641,
+    "cache_misses": 0,
+    "retry_count": 0,
+    "query_error_count": 199,
+    "started_at": "2026-08-15T16:37:55.755Z",
+    "completed_at": "2026-08-15T16:37:58.334Z",
+    "raw_cache_committed": false
+  },
+  "canonical_change_applied": false
+}
