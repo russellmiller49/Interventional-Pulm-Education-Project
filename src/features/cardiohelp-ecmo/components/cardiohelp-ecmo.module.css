@@ -5189,6 +5189,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  /*
+    Section titles are full sentences, so the label is capped and allowed to wrap rather than
+    stretching the hero into one unreadable line. Two or three short lines beside the secondary
+    action reads better than one long one, and it keeps both actions on screen when the pane
+    narrows.
+  */
+  max-width: 34rem;
   padding: 0.7rem 1.1rem;
   color: var(--navy);
   text-decoration: none;

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
 import { cardiohelpDeviceProfile, cardiohelpEcmoPublicationStatus } from '../content/deviceProfile'
@@ -19,6 +20,7 @@ import {
   ecmoPathwayGroups,
   ecmoWorkedSectionIds,
   nextIncompleteSectionLink,
+  type EcmoPathwayGroup,
 } from '../content/pathwayResolver'
 import { orderedCaseScenarioIds } from '../content/curriculum'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
@@ -68,6 +70,24 @@ function savedActivityLink(progress: ProgressV2): SavedActivityLink | null {
     query: { case: lastVisited.scenarioId, track: lastVisited.supportMode },
     label: clinicalCase.title,
   }
+}
+
+/**
+ * Which sections a group holds, and how long they run.
+ *
+ * Positions come from the canonical order, not from counting within the group, so the numbers a
+ * learner reads here are the same ones the pathway rail and the section headers show them.
+ */
+function groupSpanLabel(group: EcmoPathwayGroup, track: SupportMode): string {
+  const order = criticalCareLearningPathway('cardiohelp-ecmo', track).sections
+  const positions = group.sections.map(
+    (section) => order.findIndex((candidate) => candidate.id === section.id) + 1,
+  )
+  const minutes = group.sections.reduce((total, section) => total + section.minutes, 0)
+  const first = Math.min(...positions)
+  const last = Math.max(...positions)
+  const span = first === last ? `Section ${first}` : `Sections ${first}–${last}`
+  return `${span} · ${minutes} minutes`
 }
 
 /** The composition line, counted from the registry so it cannot drift out of step with it. */
@@ -263,6 +283,14 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                   <span aria-hidden="true">{index + 1}</span>
                   <div>
                     <h3>{group.title}</h3>
+                    {/*
+                      The span leads, and the unit's own summary follows. The summaries were
+                      authored to describe a unit's drills and cases, and the first unit now also
+                      carries the six physiology sections that come before its drill — so a learner
+                      reading only the summary would not know the runway was there. Saying which
+                      sections a group holds is the part that has to be exact.
+                    */}
+                    <p>{groupSpanLabel(group, track)}</p>
                     <p>{group.summary}</p>
                   </div>
                   {group.capstoneScenarioId ? (
