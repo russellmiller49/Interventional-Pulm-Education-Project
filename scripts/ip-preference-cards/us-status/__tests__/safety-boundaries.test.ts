@@ -289,7 +289,7 @@ describe('current U.S. status research safety boundaries', () => {
     )
     const researchImport = /scripts[\\/]ip-preference-cards[\\/]us-status(?:[\\/]|\b)/i
     const fdaEndpoint =
-      /api\.fda\.gov\/device\/(?:udi|registrationlisting|510k|pma|denovo|hde|recall|classification)\.json/i
+      /api\.fda\.gov\/device\/(?:udi|registrationlisting|510k|pma|denovo|hde|recall|enforcement|classification)\.json/i
     const violations: string[] = []
 
     for (const filename of applicationFiles) {

@@ -27,6 +27,8 @@ export const US_STATUS_REVIEW_DISPOSITIONS = [
   'keep_hidden_conflicting',
   'keep_hidden_identity_unresolved',
   'keep_hidden_insufficient_evidence',
+  'keep_hidden_pending_active_safety_action_review',
+  'keep_hidden_pending_safety_review',
   'review_as_not_currently_distributed',
   'review_as_noncommercial_or_local',
 ] as const
@@ -114,18 +116,77 @@ export interface ManufacturerEvidence {
   finding: ManufacturerFinding
 }
 
-export const RECALL_FINDINGS = [
-  'active_recall',
-  'completed_recall',
-  'no_result',
-  'not_searched',
+/**
+ * Safety-action evidence is a separate axis from market distribution.
+ *
+ * An FDA safety action never establishes that a product is discontinued, and it never
+ * establishes that a product is currently distributed. It is therefore excluded from the
+ * distribution classification (`recall_excluded_from_distribution`) while still being able to
+ * hold ordinary prototype-visibility review until a physician/governance safety review occurs.
+ */
+export const SAFETY_SEARCH_STATUSES = ['searched', 'not_searched', 'query_error'] as const
+
+export type SafetySearchStatus = (typeof SAFETY_SEARCH_STATUSES)[number]
+
+export const SAFETY_ACTION_STATES = [
+  'active_exact_product_action',
+  'historical_exact_product_action',
+  'family_or_ambiguous_action',
+  'no_exact_action_found',
+  'unknown',
 ] as const
 
-export type RecallFinding = (typeof RECALL_FINDINGS)[number]
+export type SafetyActionState = (typeof SAFETY_ACTION_STATES)[number]
 
-export interface RecallEvidence {
-  search_completed: boolean
-  finding: RecallFinding
+export const SAFETY_ACTION_SCOPES = [
+  'lot_specific',
+  'product_wide',
+  'family_level',
+  'unknown',
+] as const
+
+export type SafetyActionScope = (typeof SAFETY_ACTION_SCOPES)[number]
+
+export const VISIBILITY_REVIEW_ELIGIBILITIES = [
+  'eligible_for_owner_review',
+  'hold_active_safety_action',
+  'hold_safety_search_incomplete',
+  'hold_safety_identity_ambiguous',
+  'not_applicable',
+] as const
+
+export type VisibilityReviewEligibility = (typeof VISIBILITY_REVIEW_ELIGIBILITIES)[number]
+
+export interface SafetyActionEvidence {
+  search_status: SafetySearchStatus
+  action_state: SafetyActionState
+  action_scope: SafetyActionScope
+  /** Every exact-identity safety record carries the source IDs needed to re-verify it. */
+  exact_action_sources_traceable: boolean
+}
+
+export const SAFETY_REVIEW_GATE_FAILURES = [
+  'active_exact_safety_action_present',
+  'safety_action_identity_ambiguous',
+  'safety_action_source_traceability_incomplete',
+  'safety_search_not_performed',
+  'safety_search_query_error',
+] as const
+
+export type SafetyReviewGateFailure = (typeof SAFETY_REVIEW_GATE_FAILURES)[number]
+
+/**
+ * The mandatory safety gate for a positive or negative owner-review disposition.
+ *
+ * It is deliberately separate from {@link HighConfidenceInvariantAudit}: the distribution audit
+ * must stay blind to safety evidence, otherwise a recall would drive the distribution
+ * classification, which `recall_excluded_from_distribution` forbids. Both gates must pass before
+ * a product is offered to a human reviewer as an ordinary visibility candidate.
+ */
+export interface SafetyReviewGate {
+  performed: boolean
+  eligibility: VisibilityReviewEligibility
+  failures: SafetyReviewGateFailure[]
 }
 
 export interface ExplicitConflictEvidence {
@@ -155,7 +216,7 @@ export interface UsStatusClassificationInput {
   registration_listing: RegistrationListingEvidence
   authorization: AuthorizationEvidence
   manufacturer: ManufacturerEvidence
-  recall: RecallEvidence
+  safety_action: SafetyActionEvidence
   conflicts: ExplicitConflictEvidence
   independent_invariants: IndependentInvariantEvidence
   explicitly_noncommercial_or_local: boolean
@@ -187,7 +248,7 @@ export interface UsStatusLayerAssessments {
   registration_listing: RegistrationListingAssessment
   authorization: AuthorizationFinding
   manufacturer: ManufacturerFinding
-  recall: RecallFinding
+  safety_action: SafetyActionState
 }
 
 export const HIGH_CONFIDENCE_INVARIANT_FAILURES = [
@@ -229,9 +290,11 @@ export interface UsStatusClassificationResult {
   research_state: UsStatusResearchState
   confidence: UsStatusConfidence
   proposed_human_review_disposition: UsStatusReviewDisposition
+  visibility_review_eligibility: VisibilityReviewEligibility
   reason_codes: string[]
   layer_assessments: UsStatusLayerAssessments
   invariant_audit: HighConfidenceInvariantAudit
+  safety_review_gate: SafetyReviewGate
   canonical_change_applied: false
 }
 
@@ -301,8 +364,13 @@ function normalizedManufacturer(evidence: ManufacturerEvidence): ManufacturerFin
   return evidence.search_completed ? evidence.finding : 'not_searched'
 }
 
-function normalizedRecall(evidence: RecallEvidence): RecallFinding {
-  return evidence.search_completed ? evidence.finding : 'not_searched'
+/**
+ * An incomplete or failed safety search can never be reported as a searched absence. Only a
+ * completed search may claim `no_exact_action_found`.
+ */
+function normalizedSafetyAction(evidence: SafetyActionEvidence): SafetyActionState {
+  if (evidence.search_status !== 'searched') return 'unknown'
+  return evidence.action_state === 'unknown' ? 'unknown' : evidence.action_state
 }
 
 function layerAssessments(input: UsStatusClassificationInput): UsStatusLayerAssessments {
@@ -316,8 +384,50 @@ function layerAssessments(input: UsStatusClassificationInput): UsStatusLayerAsse
     registration_listing: assessRegistrationListing(input.registration_listing),
     authorization: normalizedAuthorization(input.authorization),
     manufacturer: normalizedManufacturer(input.manufacturer),
-    recall: normalizedRecall(input.recall),
+    safety_action: normalizedSafetyAction(input.safety_action),
   }
+}
+
+/**
+ * Evaluates the mandatory safety gate for a product that the distribution layers would otherwise
+ * offer to a human reviewer as a positive or negative candidate.
+ *
+ * A historical (terminated) exact action is retained as safety context but does not block ordinary
+ * review; only a currently active exact action, an unresolved safety identity, or an incomplete
+ * safety search holds the candidate.
+ */
+function safetyReviewGate(evidence: SafetyActionEvidence): SafetyReviewGate {
+  const state = normalizedSafetyAction(evidence)
+  const failures = new Set<SafetyReviewGateFailure>()
+  if (evidence.search_status === 'not_searched') failures.add('safety_search_not_performed')
+  if (evidence.search_status === 'query_error') failures.add('safety_search_query_error')
+  if (state === 'active_exact_product_action') failures.add('active_exact_safety_action_present')
+  if (state === 'family_or_ambiguous_action' || state === 'unknown') {
+    failures.add('safety_action_identity_ambiguous')
+  }
+  if (!evidence.exact_action_sources_traceable) {
+    failures.add('safety_action_source_traceability_incomplete')
+  }
+
+  const searchIncomplete =
+    failures.has('safety_search_not_performed') ||
+    failures.has('safety_search_query_error') ||
+    failures.has('safety_action_source_traceability_incomplete')
+  const eligibility: VisibilityReviewEligibility = failures.has(
+    'active_exact_safety_action_present',
+  )
+    ? 'hold_active_safety_action'
+    : searchIncomplete
+      ? 'hold_safety_search_incomplete'
+      : failures.has('safety_action_identity_ambiguous')
+        ? 'hold_safety_identity_ambiguous'
+        : 'eligible_for_owner_review'
+
+  return { performed: true, eligibility, failures: [...failures].sort() }
+}
+
+function notApplicableSafetyGate(): SafetyReviewGate {
+  return { performed: false, eligibility: 'not_applicable', failures: [] }
 }
 
 function officialDistributionSearchComplete(input: UsStatusClassificationInput): boolean {
@@ -454,12 +564,29 @@ const IDENTITY_INVARIANT_FAILURES = new Set<HighConfidenceInvariantFailure>([
   'manufacturer_conflict_present',
 ])
 
-function dispositionFor(state: UsStatusResearchState): UsStatusReviewDisposition {
+/**
+ * Maps a research state to the disposition a human reviewer receives.
+ *
+ * The two distribution-review dispositions are gated on the mandatory safety search: an ordinary
+ * positive or negative visibility review is only offered once the safety axis has been resolved
+ * for the exact identity. Holding review never changes the distribution state itself.
+ */
+function dispositionFor(
+  state: UsStatusResearchState,
+  safetyGate: SafetyReviewGate,
+): UsStatusReviewDisposition {
   switch (state) {
     case 'current_us_distribution_supported':
-      return 'review_for_prototype_visibility'
     case 'not_currently_distributed_supported':
-      return 'review_as_not_currently_distributed'
+      if (safetyGate.eligibility === 'hold_active_safety_action') {
+        return 'keep_hidden_pending_active_safety_action_review'
+      }
+      if (safetyGate.eligibility !== 'eligible_for_owner_review') {
+        return 'keep_hidden_pending_safety_review'
+      }
+      return state === 'current_us_distribution_supported'
+        ? 'review_for_prototype_visibility'
+        : 'review_as_not_currently_distributed'
     case 'current_status_conflicted':
       return 'keep_hidden_conflicting'
     case 'identity_unresolved':
@@ -500,26 +627,41 @@ function emptyInvariantAudit(): HighConfidenceInvariantAudit {
   }
 }
 
+const SAFETY_REASON_CODES: Record<SafetyActionState, string | null> = {
+  active_exact_product_action: 'active_exact_safety_action_recorded_as_separate_safety_context',
+  historical_exact_product_action:
+    'historical_exact_safety_action_recorded_as_separate_safety_context',
+  family_or_ambiguous_action: 'family_or_ambiguous_safety_action_is_not_an_exact_product_action',
+  no_exact_action_found: null,
+  unknown: null,
+}
+
 function result(
   state: UsStatusResearchState,
   layers: UsStatusLayerAssessments,
   reasons: string[],
   audit: HighConfidenceInvariantAudit = emptyInvariantAudit(),
+  safetyGate: SafetyReviewGate = notApplicableSafetyGate(),
 ): UsStatusClassificationResult {
   const reasonCodes = new Set(reasons)
   if (layers.authorization === 'premarket_exempt') {
     reasonCodes.add('premarket_exempt_pathway_is_not_a_negative_finding')
   }
-  if (layers.recall === 'active_recall' || layers.recall === 'completed_recall') {
-    reasonCodes.add('recall_recorded_as_separate_safety_context')
+  const safetyReason = SAFETY_REASON_CODES[layers.safety_action]
+  if (safetyReason) reasonCodes.add(safetyReason)
+  if (safetyGate.performed) {
+    reasonCodes.add('safety_action_search_is_not_distribution_evidence')
+    for (const failure of safetyGate.failures) reasonCodes.add(failure)
   }
   return {
     research_state: state,
     confidence: confidenceFor(state, layers.authorization),
-    proposed_human_review_disposition: dispositionFor(state),
+    proposed_human_review_disposition: dispositionFor(state, safetyGate),
+    visibility_review_eligibility: safetyGate.eligibility,
     reason_codes: [...reasonCodes].sort(),
     layer_assessments: layers,
     invariant_audit: audit,
+    safety_review_gate: safetyGate,
     canonical_change_applied: false,
   }
 }
@@ -572,6 +714,8 @@ export function classifyUsStatusProposal(
         audit,
       )
     }
+    // The safety gate runs only after the distribution audit has already resolved the state, so
+    // safety evidence can hold review without ever moving the distribution conclusion.
     return result(
       provisionalState,
       layers,
@@ -589,6 +733,7 @@ export function classifyUsStatusProposal(
             'manufacturer_search_completed',
           ],
       audit,
+      safetyReviewGate(input.safety_action),
     )
   }
 

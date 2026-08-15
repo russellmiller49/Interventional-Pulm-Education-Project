@@ -6,11 +6,27 @@ This dated research package is proposal-only. It changes no canonical product, v
 
 The package evaluates 50 products selected from the deterministic hidden-product manifest. Hidden verified-source products are current-U.S.-status pending; hidden candidate and unknown products remain identity/specification pending.
 
+## Two independent axes
+
+Market/distribution status and FDA safety-action status are separate axes and are never substituted for one another.
+
+- A safety action (recall) is **not** discontinuation evidence. It never moves a product to `not_currently_distributed_supported` and never changes `current_us_distribution_supported`. This is enforced by the `recall_excluded_from_distribution` invariant, and the distribution invariant audit is deliberately blind to safety evidence.
+- A safety action **can** hold ordinary prototype-visibility review. A product under an active exact FDA safety action keeps its distribution state and receives `keep_hidden_pending_active_safety_action_review` instead of `review_for_prototype_visibility`.
+- A lot-limited action is recorded as `lot_specific`. That does not mean every unit of the product is recalled, that the product is unsafe product-wide, or that it left the market.
+
 ## Evidence hierarchy
 
-Exact identity is required before a current-status conclusion. UDI/GUDID distribution, registration/listing, marketing authorization or exemption, official manufacturer U.S. evidence, and recall context remain separate layers. A registration/listing is not approval, historical authorization is not current distribution, and a recall is not discontinuation evidence. Website absence is never a negative finding.
+Exact identity is required before a current-status conclusion. UDI/GUDID distribution, registration/listing, marketing authorization or exemption, official manufacturer U.S. evidence, and FDA safety actions remain separate layers. A registration/listing is not approval, historical authorization is not current distribution, and a recall is not discontinuation evidence. Website absence is never a negative finding.
 
 Potential positive proposals require exact identity, current official FDA distribution or exact listing evidence, an exact current official manufacturer U.S. source, no unresolved conflict, and a passing independent invariant audit. Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.
+
+## Mandatory safety gate
+
+Neither `review_for_prototype_visibility` nor `review_as_not_currently_distributed` may be proposed until the FDA safety-action search has completed for the exact identity and has left no exact active action outstanding. The safety search reads two official FDA systems, `device/enforcement` and `device/recall`; a disagreement between them about whether the same action is still open resolves to `unknown` and holds review rather than picking a side.
+
+A safety action is tied to a product only through an exact governed identifier (catalog/REF number, or a DI of the exact device including its package configuration). Evidence linked only by shared clearance or family name is recorded as `family_or_ambiguous_action` and never presented as an exact-product action. A completed search that finds nothing exact is `no_exact_action_found`; a search that did not run or failed stays `not_searched`/`query_error` and can never be reported as an absence.
+
+A historical (terminated) exact action is retained as safety context and does not by itself block ordinary review.
 
 ## Results
 
@@ -22,5 +38,39 @@ Potential positive proposals require exact identity, current official FDA distri
 - insufficient evidence: 22
 - not applicable noncommercial/local: 1
 - products with query errors: 6
+
+### Safety-action search
+
+- searched: 42
+- not searched: 8
+- query error: 0
+
+### Safety-action state
+
+- active exact product action: 7
+- historical exact product action: 0
+- family or ambiguous action: 1
+- no exact action found: 34
+- unknown: 8
+- products with an exact-product safety record: 7
+
+### Visibility-review eligibility
+
+- eligible for owner review: 0
+- hold, active safety action: 0
+- hold, safety search incomplete: 0
+- hold, safety identity ambiguous: 0
+- not applicable: 50
+
+### Proposed human-review dispositions
+
+- review for prototype visibility: 0
+- review as not currently distributed: 0
+- keep hidden pending active safety-action review: 0
+- keep hidden pending safety review: 0
+- keep hidden conflicting: 3
+- keep hidden identity unresolved: 24
+- keep hidden insufficient evidence: 22
+- review as noncommercial/local: 1
 
 Every output row has `canonical_change_applied: false`. The clinician-review CSV contains blank reviewer and second-review fields and has no applying importer or endpoint.

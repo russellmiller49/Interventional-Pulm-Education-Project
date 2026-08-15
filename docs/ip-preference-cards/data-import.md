@@ -198,10 +198,16 @@ coverage metric.
 
 The dated current U.S. status workflow builds a hidden-product cohort and combines exact identity,
 UDI/GUDID distribution, registration/listing, authorization or exemption, official manufacturer
-U.S. evidence, and separate recall context. Its compact artifacts stay under
+U.S. evidence, and a separate official FDA safety-action layer. Its compact artifacts stay under
 `data/ip-preference-cards/research/us-status/<YYYY-MM-DD>/`; raw API and manufacturer-source data
 stay in ignored `local-data/ip-preference-cards/us-status/`. Every result is a nonapplying research
 proposal with `canonical_change_applied: false`.
+
+Market status and safety action stay independent. A recall never establishes that a product is
+discontinued and never changes its distribution state, but an active exact FDA safety action does
+hold ordinary prototype-visibility review until a physician/governance safety review occurs. A
+completed safety search is required before either the positive or the negative distribution review
+disposition is proposed.
 
 Neither proposal layer runs during import, CI, build, postinstall, application startup, a public
 route, or a server action. Neither has an apply endpoint or changes generated catalog data,

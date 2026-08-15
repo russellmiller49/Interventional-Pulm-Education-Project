@@ -1,7 +1,11 @@
 import {
+  SAFETY_ACTION_SCOPES,
+  SAFETY_ACTION_STATES,
+  SAFETY_SEARCH_STATUSES,
   US_STATUS_CONFIDENCE_VALUES,
   US_STATUS_RESEARCH_STATES,
   US_STATUS_REVIEW_DISPOSITIONS,
+  VISIBILITY_REVIEW_ELIGIBILITIES,
   classifyUsStatusProposal,
   type HighConfidenceInvariantFailure,
   type IndependentInvariantEvidence,
@@ -50,9 +54,11 @@ function baseInput(): UsStatusClassificationInput {
       search_completed: true,
       finding: 'current_exact_official_us_product',
     },
-    recall: {
-      search_completed: true,
-      finding: 'no_result',
+    safety_action: {
+      search_status: 'searched',
+      action_state: 'no_exact_action_found',
+      action_scope: 'unknown',
+      exact_action_sources_traceable: true,
     },
     conflicts: {
       model: false,
@@ -98,8 +104,31 @@ describe('current U.S. status proposal classification', () => {
       'keep_hidden_conflicting',
       'keep_hidden_identity_unresolved',
       'keep_hidden_insufficient_evidence',
+      'keep_hidden_pending_active_safety_action_review',
+      'keep_hidden_pending_safety_review',
       'review_as_not_currently_distributed',
       'review_as_noncommercial_or_local',
+    ])
+    expect(SAFETY_SEARCH_STATUSES).toEqual(['searched', 'not_searched', 'query_error'])
+    expect(SAFETY_ACTION_STATES).toEqual([
+      'active_exact_product_action',
+      'historical_exact_product_action',
+      'family_or_ambiguous_action',
+      'no_exact_action_found',
+      'unknown',
+    ])
+    expect(SAFETY_ACTION_SCOPES).toEqual([
+      'lot_specific',
+      'product_wide',
+      'family_level',
+      'unknown',
+    ])
+    expect(VISIBILITY_REVIEW_ELIGIBILITIES).toEqual([
+      'eligible_for_owner_review',
+      'hold_active_safety_action',
+      'hold_safety_search_incomplete',
+      'hold_safety_identity_ambiguous',
+      'not_applicable',
     ])
   })
 
@@ -329,15 +358,199 @@ describe('current U.S. status proposal classification', () => {
     expect(result.reason_codes).toContain('no_result_is_not_discontinuation_evidence')
   })
 
-  it('keeps recall evidence as safety context and never uses it as distribution evidence', () => {
+  it('keeps safety-action evidence as safety context and never uses it as distribution evidence', () => {
     const input = baseInput()
     makeNoCurrentStatusEvidence(input)
-    input.recall.finding = 'active_recall'
+    input.safety_action.action_state = 'active_exact_product_action'
+    input.safety_action.action_scope = 'lot_specific'
 
     const result = classifyUsStatusProposal(input)
     expect(result.research_state).toBe('insufficient_evidence')
-    expect(result.layer_assessments.recall).toBe('active_recall')
-    expect(result.reason_codes).toContain('recall_recorded_as_separate_safety_context')
+    expect(result.layer_assessments.safety_action).toBe('active_exact_product_action')
+    expect(result.reason_codes).toContain(
+      'active_exact_safety_action_recorded_as_separate_safety_context',
+    )
+  })
+
+  describe('mandatory safety gate', () => {
+    it('keeps distribution supported but holds visibility review for an active lot-specific action', () => {
+      const input = baseInput()
+      input.safety_action = {
+        search_status: 'searched',
+        action_state: 'active_exact_product_action',
+        action_scope: 'lot_specific',
+        exact_action_sources_traceable: true,
+      }
+
+      const result = classifyUsStatusProposal(input)
+
+      // Axis 1 — distribution is untouched by the safety action.
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.confidence).toBe('high')
+      expect(result.invariant_audit).toMatchObject({ passed: true, failures: [] })
+      // Axis 2 — ordinary visibility review is held.
+      expect(result.visibility_review_eligibility).toBe('hold_active_safety_action')
+      expect(result.proposed_human_review_disposition).toBe(
+        'keep_hidden_pending_active_safety_action_review',
+      )
+      expect(result.proposed_human_review_disposition).not.toBe('review_for_prototype_visibility')
+      expect(result.proposed_human_review_disposition).not.toBe('keep_hidden_conflicting')
+      expect(result.safety_review_gate.failures).toContain('active_exact_safety_action_present')
+      expect(result.canonical_change_applied).toBe(false)
+    })
+
+    it('retains a completed exact action as historical safety context without blocking review', () => {
+      const input = baseInput()
+      input.safety_action.action_state = 'historical_exact_product_action'
+      input.safety_action.action_scope = 'lot_specific'
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.layer_assessments.safety_action).toBe('historical_exact_product_action')
+      expect(result.reason_codes).toContain(
+        'historical_exact_safety_action_recorded_as_separate_safety_context',
+      )
+      expect(result.visibility_review_eligibility).toBe('eligible_for_owner_review')
+      expect(result.proposed_human_review_disposition).toBe('review_for_prototype_visibility')
+    })
+
+    it('allows ordinary review when a completed search found no exact action', () => {
+      const result = classifyUsStatusProposal(baseInput())
+
+      expect(result.layer_assessments.safety_action).toBe('no_exact_action_found')
+      expect(result.visibility_review_eligibility).toBe('eligible_for_owner_review')
+      expect(result.proposed_human_review_disposition).toBe('review_for_prototype_visibility')
+      expect(result.safety_review_gate.failures).toEqual([])
+    })
+
+    it('withholds an ordinary disposition when the safety search was never performed', () => {
+      const input = baseInput()
+      input.safety_action = {
+        search_status: 'not_searched',
+        action_state: 'unknown',
+        action_scope: 'unknown',
+        exact_action_sources_traceable: true,
+      }
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.visibility_review_eligibility).toBe('hold_safety_search_incomplete')
+      expect(result.proposed_human_review_disposition).toBe('keep_hidden_pending_safety_review')
+      expect(result.safety_review_gate.failures).toContain('safety_search_not_performed')
+      // An absent search is never reported as a searched absence.
+      expect(result.layer_assessments.safety_action).not.toBe('no_exact_action_found')
+    })
+
+    it('holds review when the safety search returned a query error', () => {
+      const input = baseInput()
+      input.safety_action = {
+        search_status: 'query_error',
+        action_state: 'unknown',
+        action_scope: 'unknown',
+        exact_action_sources_traceable: true,
+      }
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.visibility_review_eligibility).toBe('hold_safety_search_incomplete')
+      expect(result.proposed_human_review_disposition).toBe('keep_hidden_pending_safety_review')
+      expect(result.safety_review_gate.failures).toContain('safety_search_query_error')
+      expect(result.safety_review_gate.failures).not.toContain('safety_search_not_performed')
+    })
+
+    it('records family-only safety evidence as ambiguous rather than an exact action', () => {
+      const input = baseInput()
+      input.safety_action.action_state = 'family_or_ambiguous_action'
+      input.safety_action.action_scope = 'family_level'
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.layer_assessments.safety_action).toBe('family_or_ambiguous_action')
+      expect(result.layer_assessments.safety_action).not.toBe('active_exact_product_action')
+      expect(result.reason_codes).toContain(
+        'family_or_ambiguous_safety_action_is_not_an_exact_product_action',
+      )
+      expect(result.visibility_review_eligibility).toBe('hold_safety_identity_ambiguous')
+      expect(result.proposed_human_review_disposition).toBe('keep_hidden_pending_safety_review')
+    })
+
+    it('holds review when an exact safety action is not fully source-traceable', () => {
+      const input = baseInput()
+      input.safety_action.exact_action_sources_traceable = false
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.visibility_review_eligibility).toBe('hold_safety_search_incomplete')
+      expect(result.safety_review_gate.failures).toContain(
+        'safety_action_source_traceability_incomplete',
+      )
+    })
+
+    it('never lets a safety action create the negative distribution state', () => {
+      const input = baseInput()
+      makeNoCurrentStatusEvidence(input)
+      input.safety_action.action_state = 'active_exact_product_action'
+      input.safety_action.action_scope = 'product_wide'
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.research_state).toBe('insufficient_evidence')
+      expect(result.research_state).not.toBe('not_currently_distributed_supported')
+      expect(result.research_state).not.toBe('current_status_conflicted')
+    })
+
+    it('requires a completed safety search before a negative distribution review', () => {
+      const negative = (): UsStatusClassificationInput => {
+        const input = baseInput()
+        input.udi_distribution.configurations = [configuration('DI-1', 'not_in_distribution')]
+        input.manufacturer.finding = 'no_result'
+        return input
+      }
+
+      const searched = classifyUsStatusProposal(negative())
+      expect(searched.research_state).toBe('not_currently_distributed_supported')
+      expect(searched.proposed_human_review_disposition).toBe('review_as_not_currently_distributed')
+
+      const unsearched = negative()
+      unsearched.safety_action = {
+        search_status: 'not_searched',
+        action_state: 'unknown',
+        action_scope: 'unknown',
+        exact_action_sources_traceable: true,
+      }
+      const held = classifyUsStatusProposal(unsearched)
+      expect(held.research_state).toBe('not_currently_distributed_supported')
+      expect(held.proposed_human_review_disposition).toBe('keep_hidden_pending_safety_review')
+      expect(held.proposed_human_review_disposition).not.toBe('review_as_not_currently_distributed')
+    })
+
+    it('leaves the safety gate not applicable for non-review states', () => {
+      const input = baseInput()
+      makeNoCurrentStatusEvidence(input)
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.safety_review_gate).toEqual({
+        performed: false,
+        eligibility: 'not_applicable',
+        failures: [],
+      })
+      expect(result.visibility_review_eligibility).toBe('not_applicable')
+    })
+
+    it('cannot reach an ordinary review disposition without an exact identity', () => {
+      const input = baseInput()
+      input.identity.match_method = 'family_or_name_only'
+
+      const result = classifyUsStatusProposal(input)
+
+      expect(result.proposed_human_review_disposition).toBe('keep_hidden_identity_unresolved')
+      expect(result.visibility_review_eligibility).toBe('not_applicable')
+    })
   })
 
   it('uses the noncommercial/local state only when explicitly identified', () => {

@@ -1,6 +1,6 @@
 import type { UdiRecordEvidence } from '../acquire-fda-evidence'
 import type { UsStatusEvidenceSource } from '../proposal-schemas'
-import { allSourcesTraceable, buildUdiSources } from '../run-us-status-research'
+import { allSourcesTraceable, buildUdiSources, datasetSnapshots } from '../run-us-status-research'
 
 const SEARCH = 'catalog_number:"CAT-100"'
 const REQUEST_URL = `https://api.fda.gov/device/udi.json?search=${encodeURIComponent(SEARCH)}&limit=100`
@@ -22,6 +22,7 @@ function fdaSource(overrides: Partial<UsStatusEvidenceSource> = {}): UsStatusEvi
     raw_cache_reference: RAW_CACHE_REFERENCE,
     identity_scope: 'exact_product',
     temporal_scope: 'current',
+    retrieval_status: 'retrieved',
     us_specific: true,
     exact_identifier_text: ['CAT-100'],
     factual_summary: 'Manufacturer-submitted UDI identity record.',
@@ -100,5 +101,55 @@ describe('current-U.S.-status FDA provenance', () => {
         }),
       ]),
     ).toBe(false)
+  })
+})
+
+describe('manufacturer dataset snapshots', () => {
+  const EMPTY_BODY_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+  function manufacturerRow(overrides: Record<string, unknown> = {}) {
+    return {
+      catalog_source_id: 'SRC017',
+      source_url: 'https://example-manufacturer.test/catalog.pdf',
+      publication_or_revision_date: '2026-01-15',
+      retrieved_at: '2026-08-13T18:00:00.000Z',
+      http_status: 200,
+      http_ok: true,
+      body_sha256: 'b'.repeat(64),
+      ...overrides,
+    }
+  }
+
+  function snapshotFor(overrides: Record<string, unknown> = {}) {
+    const rows = datasetSnapshots(
+      [],
+      {
+        sources: [manufacturerRow(overrides)],
+        unique_url_count: 1,
+      } as never,
+      '2026-08-13',
+    )
+    return rows[0]
+  }
+
+  it('counts a successfully retrieved manufacturer document as one record', () => {
+    expect(snapshotFor()).toMatchObject({
+      layer: 'manufacturer',
+      content_sha256: 'b'.repeat(64),
+      record_count: 1,
+    })
+  })
+
+  it('never represents an empty response body as a retrieved manufacturer record', () => {
+    expect(
+      snapshotFor({ http_status: 0, http_ok: false, body_sha256: EMPTY_BODY_SHA256 }),
+    ).toMatchObject({ content_sha256: null, record_count: 0 })
+  })
+
+  it('does not count a failed fetch even when the body hash is non-empty', () => {
+    expect(snapshotFor({ http_status: 404, http_ok: false })).toMatchObject({
+      content_sha256: null,
+      record_count: 0,
+    })
   })
 })

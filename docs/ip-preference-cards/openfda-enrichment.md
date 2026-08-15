@@ -160,12 +160,56 @@ The evidence layers remain independent:
 2. FDA registration and listing;
 3. marketing authorization or classification/exemption evidence;
 4. exact official manufacturer U.S. pages or documents; and
-5. recall information as separate safety context.
+5. official FDA safety actions as separate safety context.
 
 Registration/listing is not approval, historical authorization is not current distribution, a
 recall is not evidence of discontinuation, and website absence is not a negative finding. Exact
 positive and negative current-status proposals require the package's independent invariants and
 remain recommendations for human review.
+
+### FDA safety-action layer
+
+The safety layer reads two official FDA systems through the same cache/retry/provenance client as
+the other layers, using two additional endpoint-scoped caches under
+`local-data/ip-preference-cards/us-status/<snapshot>/openfda/`:
+
+| System                   | Endpoint                  | Contributes                                          |
+| ------------------------ | ------------------------- | ---------------------------------------------------- |
+| Enforcement Report       | `device/enforcement.json` | classification, ongoing/terminated status, lot codes |
+| Recall Enterprise System | `device/recall.json`      | recall status, posted date, linked submissions       |
+
+No manufacturer page, press release, or general web search result is admitted as safety authority,
+and no page or API body is committed: only normalized records, bounded `code_info` excerpts, and
+source provenance (request search, response SHA-256, retrieval timestamp, portable cache
+reference) reach the dated artifacts.
+
+A safety action is tied to a product only through an exact governed identifier — the catalog/REF
+number, or a device identifier of the exact device including its package configuration. Evidence
+linked only by a shared clearance or family name is recorded as `family_or_ambiguous_action` and
+is never presented as an exact-product action, which keeps an adjacent SKU in the same clearance
+family from contaminating the determination.
+
+The layer records four fields, none of which collapse into one another:
+
+- `safety_search_status`: `searched` | `not_searched` | `query_error`
+- `safety_action_state`: `active_exact_product_action` | `historical_exact_product_action` |
+  `family_or_ambiguous_action` | `no_exact_action_found` | `unknown`
+- `safety_action_scope`: `lot_specific` | `product_wide` | `family_level` | `unknown`
+- `visibility_review_eligibility`: `eligible_for_owner_review` | `hold_active_safety_action` |
+  `hold_safety_search_incomplete` | `hold_safety_identity_ambiguous` | `not_applicable`
+
+A disagreement between the two FDA systems about whether the same action is still open resolves to
+`unknown` and holds review rather than picking a side. A historical (terminated) exact action is
+retained as safety context and does not by itself block ordinary review. Safety evidence never
+contributes to the distribution conclusion; it can only hold the review disposition.
+
+### Inaccessible manufacturer sources
+
+A manufacturer fetch that times out or fails transport-level is recorded with
+`retrieval_status: "inaccessible"`, a null `content_sha256`, `identity_scope: "context_only"`, and
+no matched identifiers. The SHA-256 of an empty body describes nothing about the document, so it is
+not committed as a content hash, and an unread source supports neither a current-distribution nor a
+discontinuation claim.
 
 Every research artifact records `canonical_change_applied: false`. These commands have no apply
 endpoint or importer and cannot change catalog visibility, verification grade, selectability,

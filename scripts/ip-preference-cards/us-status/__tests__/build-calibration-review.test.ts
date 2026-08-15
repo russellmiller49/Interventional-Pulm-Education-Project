@@ -109,7 +109,17 @@ function proposalProduct({
         exact_product_source_confirmed: exactManufacturerSource,
         current_us_source_confirmed: currentUsSource,
       },
+      safety_action: {
+        search_status: 'searched',
+        action_state: 'no_exact_action_found',
+        action_scope: 'unknown',
+        excluded_from_distribution_assessment: true,
+        records: [] as Array<{ match_scope: string }>,
+      },
     },
+    proposed_human_review_disposition: 'keep_hidden_insufficient_evidence',
+    visibility_review_eligibility: 'not_applicable',
+    safety_review_gate: { performed: false, eligibility: 'not_applicable', failures: [] },
     sources: [],
     conflicts: {
       identity: conflicts.identity ?? false,
@@ -392,6 +402,45 @@ describe('calibration review artifact', () => {
       'active_distribution_evidence_present_for_negative',
     ])
     expect(artifact.summary.schema_errors).toMatchObject({ product_count: 1, error_count: 1 })
+  })
+
+  it('independently rejects an ordinary review disposition that skipped the safety gate', () => {
+    const inputs = syntheticInputs()
+    const target = inputs.proposals.products[0]
+    target.proposed_human_review_disposition = 'review_for_prototype_visibility'
+    target.layer_results.safety_action = {
+      ...target.layer_results.safety_action,
+      search_status: 'not_searched',
+      action_state: 'unknown',
+    }
+
+    const artifact = buildCalibrationReview(inputs.cohort, inputs.proposals)
+    const row = artifact.products.find(
+      (entry) => entry.product_id === target.canonical_identity.product_id,
+    )!
+
+    expect(row.adjudication).toBe('invariant_or_schema_error')
+    expect(row.schema_errors).toContain('ordinary_review_without_completed_safety_search')
+    expect(row.schema_errors).toContain('ordinary_review_without_passing_safety_gate')
+  })
+
+  it('independently rejects an ordinary review disposition under an active exact safety action', () => {
+    const inputs = syntheticInputs()
+    const target = inputs.proposals.products[0]
+    target.proposed_human_review_disposition = 'review_for_prototype_visibility'
+    target.layer_results.safety_action = {
+      ...target.layer_results.safety_action,
+      action_state: 'active_exact_product_action',
+      action_scope: 'lot_specific',
+      records: [{ match_scope: 'exact_product' }],
+    }
+
+    const artifact = buildCalibrationReview(inputs.cohort, inputs.proposals)
+    const row = artifact.products.find(
+      (entry) => entry.product_id === target.canonical_identity.product_id,
+    )!
+
+    expect(row.schema_errors).toContain('ordinary_review_under_active_exact_safety_action')
   })
 
   it('is stable across input order and emits a quoted, stable CSV', () => {

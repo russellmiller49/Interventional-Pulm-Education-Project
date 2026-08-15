@@ -81,16 +81,40 @@ application route, server action, runtime data source, or automatic extension of
 workflow.
 
 Each product packet keeps UDI/GUDID distribution, registration/listing, marketing authorization
-or exemption, official manufacturer U.S. evidence, and recall context separate. Registration is
-not approval, authorization is not current distribution, recall is not discontinuation, and the
-absence of a manufacturer page is not negative evidence. See
+or exemption, official manufacturer U.S. evidence, and FDA safety-action context separate.
+Registration is not approval, authorization is not current distribution, recall is not
+discontinuation, and the absence of a manufacturer page is not negative evidence. See
 [`openfda-enrichment.md`](./openfda-enrichment.md#dated-current-us-status-research-proposal-only)
 for the local commands, dated output root, and ignored raw cache.
+
+### Market status and safety action are independent axes
+
+Distribution status answers "is this product currently distributed in the United States?" and FDA
+safety-action status answers "is there an official FDA safety action on this exact product right
+now?". Neither answer is allowed to stand in for the other:
+
+- A recall never moves a product to `not_currently_distributed_supported` and never changes
+  `current_us_distribution_supported`. The distribution invariant audit is deliberately blind to
+  safety evidence, which the `recall_excluded_from_distribution` invariant enforces.
+- A recall can still hold ordinary prototype-visibility review. A product under an active exact
+  FDA safety action keeps its distribution state and receives
+  `keep_hidden_pending_active_safety_action_review` rather than `review_for_prototype_visibility`.
+  It is not marked `keep_hidden_conflicting`, because an active recall is not a distribution
+  conflict.
+- A lot-limited action is recorded as `lot_specific`. That does not mean every unit is recalled,
+  that the product is unsafe product-wide, or that it has left the market.
+
+Neither `review_for_prototype_visibility` nor `review_as_not_currently_distributed` may be
+proposed until the safety-action search has completed for the exact identity and has left no exact
+active action outstanding. A search that did not run or that failed is recorded as
+`not_searched`/`query_error` and can never be reported as `no_exact_action_found`.
 
 The resulting clinician-review rows and status files are research proposals with
 `canonical_change_applied: false`. There is no runtime import, reviewer-to-catalog apply endpoint,
 visibility release, verification promotion, slot/role change, formulary decision, or governed
-release mutation in this work package.
+release mutation in this work package. A safety hold is likewise a research proposal: it is a
+recommendation that a physician/governance safety review occur before any visibility decision, not
+a clinical, procurement, or product-suitability determination.
 
 ## Full-catalog clinical-use workbook
 

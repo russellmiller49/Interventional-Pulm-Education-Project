@@ -12,12 +12,22 @@ import type { CatalogProductInput, VerificationBacklogInput } from '../openfda/t
 import {
   acquireSupplementalEvidence,
   acquireUdiEvidence,
+  allKnownIdentifiers,
   type SupplementalProductEvidence,
   type UdiAcquisitionResult,
   type UdiRecordEvidence,
 } from './acquire-fda-evidence'
 import {
+  acquireSafetyActionEvidence,
+  SAFETY_ACTION_ENDPOINTS,
+  type SafetyActionAcquisitionResult,
+} from './acquire-fda-safety-actions'
+import {
   classifyUsStatusProposal,
+  SAFETY_ACTION_STATES,
+  SAFETY_SEARCH_STATUSES,
+  US_STATUS_REVIEW_DISPOSITIONS,
+  VISIBILITY_REVIEW_ELIGIBILITIES,
   type ManufacturerFinding,
   type UsStatusClassificationInput,
 } from './classification'
@@ -53,6 +63,8 @@ const BACKLOG_PATH = 'data/ip-preference-cards/generated/verification-backlog.js
 const OUTPUT_ROOT = path.resolve('data/ip-preference-cards/research/us-status')
 const CACHE_ROOT = 'local-data/ip-preference-cards/us-status'
 const METHOD_VERSION = 'current-us-status-evidence-v1'
+/** SHA-256 of an empty body: an inaccessible fetch, never a retrieved document. */
+const EMPTY_BODY_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 const catalogSchema = z
   .object({
@@ -337,9 +349,12 @@ async function evaluateManufacturerSources(
       textCache.set(row.text_cache_reference, promise)
     }
     const searchableText = await promise
-    const matches = identifiers.filter((identifier) =>
-      exactIdentifierMatchInExtractedText(identifier, searchableText),
-    )
+    const accessible = row.http_ok && row.http_status > 0
+    const matches = accessible
+      ? identifiers.filter((identifier) =>
+          exactIdentifierMatchInExtractedText(identifier, searchableText),
+        )
+      : []
     evaluated.push({ row, matches })
     const sourceId = `manufacturer:${product.product_id}:${sourceIdPart(row.catalog_source_id)}:${index + 1}`
     sources.push({
@@ -353,21 +368,31 @@ async function evaluateManufacturerSources(
       url: row.source_url,
       publisher: row.publisher,
       title: row.title,
-      as_of_date: dateOnly(row.publication_or_revision_date),
+      as_of_date: accessible ? dateOnly(row.publication_or_revision_date) : null,
       retrieved_at: row.retrieved_at,
-      content_sha256: row.body_sha256,
+      // An inaccessible fetch has no retrieved body, so it carries no content hash: the SHA-256 of
+      // an empty response describes nothing about the document and must not read as evidence.
+      content_sha256: accessible ? row.body_sha256 : null,
       request_search: null,
       raw_cache_reference: null,
-      identity_scope: matches.length > 0 ? 'exact_product' : 'family_or_proprietary_name',
-      temporal_scope:
-        row.current_status_signal === 'historical_only'
+      identity_scope: !accessible
+        ? 'context_only'
+        : matches.length > 0
+          ? 'exact_product'
+          : 'family_or_proprietary_name',
+      temporal_scope: !accessible
+        ? 'undated'
+        : row.current_status_signal === 'historical_only'
           ? 'historical'
           : row.current_status_signal === 'current_catalog_or_product_page'
             ? 'current'
             : 'undated',
+      retrieval_status: accessible ? 'retrieved' : 'inaccessible',
       us_specific: row.us_specific,
-      exact_identifier_text: matches,
-      factual_summary: `${row.factual_summary} Limitation: ${row.limitations}`,
+      exact_identifier_text: accessible ? matches : [],
+      factual_summary: accessible
+        ? `${row.factual_summary} Limitation: ${row.limitations}`
+        : `This official manufacturer source was not retrieved (HTTP status ${row.http_status}; ${row.fetch_error ?? 'no response body'}). No content was read, so it establishes nothing about this product and supports neither a current-distribution nor a discontinuation claim. The registry expectation for this URL was: ${row.factual_summary}`,
     })
   }
   const currentExactUs = evaluated.some(
@@ -447,6 +472,7 @@ export function buildUdiSources(
     raw_cache_reference: provenance.raw_cache_reference,
     identity_scope: record.exact_identity ? 'exact_product' : 'family_or_proprietary_name',
     temporal_scope: 'current',
+    retrieval_status: 'retrieved',
     us_specific: true,
     exact_identifier_text: [
       record.primary_di,
@@ -598,6 +624,7 @@ function supplementalSources(
         : source.current_or_historical === 'current'
           ? 'current'
           : 'undated',
+    retrieval_status: 'retrieved',
     us_specific: true,
     exact_identifier_text: source.exact_query ? [source.exact_query] : [],
     factual_summary: `${source.match_basis}; authorization and listing are assessed separately from distribution.`,
@@ -694,13 +721,16 @@ function rationale(
   identityMethod: UsStatusEvidenceProposal['identity_match_method'],
   manufacturerFinding: ManufacturerFinding,
   udiAssessment: UsStatusEvidenceProposal['layer_results']['udi_distribution']['assessment'],
+  safety: SafetyActionAcquisitionResult,
+  eligibility: UsStatusEvidenceProposal['visibility_review_eligibility'],
 ): string {
   const prefix = `Identity method: ${identityMethod}. UDI assessment: ${udiAssessment}. Manufacturer finding: ${manufacturerFinding}.`
+  const safetyNote = safetyRationale(safety, eligibility)
   switch (state) {
     case 'current_us_distribution_supported':
-      return `${prefix} Exact current FDA evidence and an exact current official manufacturer U.S. source passed the independent invariants; this is a review proposal only.`
+      return `${prefix} Exact current FDA evidence and an exact current official manufacturer U.S. source passed the independent invariants; this is a review proposal only.${safetyNote}`
     case 'not_currently_distributed_supported':
-      return `${prefix} Every retrieved exact UDI configuration is ended and the completed manufacturer search found no conflicting current U.S. source; this remains a review proposal.`
+      return `${prefix} Every retrieved exact UDI configuration is ended and the completed manufacturer search found no conflicting current U.S. source; this remains a review proposal.${safetyNote}`
     case 'historically_authorized_current_status_unresolved':
       return `${prefix} Marketing authorization is documented separately, but current U.S. distribution is unresolved.`
     case 'current_status_conflicted':
@@ -720,11 +750,55 @@ function rationale(
   }
 }
 
+/**
+ * Safety sentence appended to a positive or negative rationale.
+ *
+ * It states the safety hold without restating it as a market conclusion: an active recall is
+ * reported as a safety action on specified lots, never as discontinuation.
+ */
+function safetyRationale(
+  safety: SafetyActionAcquisitionResult,
+  eligibility: UsStatusEvidenceProposal['visibility_review_eligibility'],
+): string {
+  const exact = safety.records.filter((record) => record.match_scope === 'exact_product')
+  const references = exact.map((record) => record.recall_number).sort()
+  switch (eligibility) {
+    case 'hold_active_safety_action':
+      return ` An active exact FDA safety action (${references.join(', ')}; scope ${safety.action_scope}) applies to this exact product, so ordinary prototype-visibility review is held pending physician/governance safety review. The safety action does not establish that the product is discontinued or no longer distributed.`
+    case 'hold_safety_search_incomplete':
+      return ' The mandatory FDA safety-action search did not complete for this exact identity, so no ordinary visibility-review disposition is proposed.'
+    case 'hold_safety_identity_ambiguous':
+      return ' Only family-level or unresolved FDA safety evidence was found, so an exact safety determination is not available and ordinary visibility review is held.'
+    case 'eligible_for_owner_review':
+      return exact.length > 0
+        ? ` A completed FDA safety-action search found only historical exact safety actions (${references.join(', ')}), retained as safety context.`
+        : ' A completed FDA safety-action search found no exact current safety action for this identity.'
+    case 'not_applicable':
+      return ''
+  }
+}
+
 function unresolvedQuestions(
   state: UsStatusEvidenceProposal['research_state'],
   manufacturerFinding: ManufacturerFinding,
+  eligibility: UsStatusEvidenceProposal['visibility_review_eligibility'],
 ): string[] {
   const questions: string[] = []
+  if (eligibility === 'hold_active_safety_action') {
+    questions.push(
+      'Has a physician/governance safety review cleared the active exact FDA safety action, including which lots are affected and whether any unaffected configuration remains appropriate to model?',
+    )
+  }
+  if (eligibility === 'hold_safety_search_incomplete') {
+    questions.push(
+      'What is the exact current FDA safety-action status for this identifier once the safety search completes?',
+    )
+  }
+  if (eligibility === 'hold_safety_identity_ambiguous') {
+    questions.push(
+      'Does the family-level or unresolved FDA safety action apply to this exact catalog product?',
+    )
+  }
   if (state === 'identity_unresolved')
     questions.push('Can the manufacturer confirm the exact U.S. catalog/model identity?')
   if (state === 'current_status_conflicted')
@@ -746,12 +820,65 @@ function unresolvedQuestions(
   return [...new Set(questions)].sort()
 }
 
+/**
+ * Identifiers used to tie an official FDA safety action to this exact product.
+ *
+ * Catalog/reference identifiers come from the canonical row; device identifiers come only from
+ * UDI records already confirmed as the exact device, so a package DI of the exact device counts
+ * while an adjacent SKU's DI never enters the safety search.
+ */
+export function safetySearchIdentifiers(
+  catalog: CatalogRow,
+  backlog: VerificationBacklogInput | null,
+  udi: UdiAcquisitionResult,
+): string[] {
+  const exactRecords = udi.records.filter((record) => record.exact_identity)
+  const deviceIdentifiers = exactRecords.flatMap((record) => [
+    record.primary_di,
+    ...record.identifiers.flatMap((identifier) => [identifier.id, identifier.unit_of_use_id]),
+  ])
+  return [
+    ...new Set(
+      [...allKnownIdentifiers(catalog, backlog), ...deviceIdentifiers].filter(
+        (value): value is string => Boolean(value && value.trim()),
+      ),
+    ),
+  ].sort()
+}
+
+function safetySources(
+  productId: string,
+  safety: SafetyActionAcquisitionResult,
+): UsStatusEvidenceSource[] {
+  return safety.sources.map((source) => ({
+    source_id: `${productId}:${source.source_id}`,
+    layer: 'safety_action' as const,
+    source_type: 'official_fda_api' as const,
+    endpoint: source.endpoint,
+    url: source.request_url,
+    publisher: 'U.S. Food and Drug Administration',
+    title: `Official FDA ${source.system} safety-action query`,
+    as_of_date: dateOnly(source.dataset_as_of),
+    retrieved_at: source.retrieved_at,
+    content_sha256: source.response_sha256,
+    request_search: source.exact_query,
+    raw_cache_reference: source.raw_cache_reference,
+    identity_scope: source.identity_scope,
+    temporal_scope: source.temporal_scope,
+    retrieval_status: 'retrieved',
+    us_specific: true,
+    exact_identifier_text: source.exact_identifier_text,
+    factual_summary: `${source.factual_summary} A safety action is recorded as safety context only and is excluded from the distribution assessment.`,
+  }))
+}
+
 async function researchProduct({
   cohortProduct,
   catalog,
   backlog,
   udiClient,
   supplementalClients,
+  safetyClients,
   manufacturerManifest,
   textCache,
   snapshot,
@@ -767,6 +894,7 @@ async function researchProduct({
     pma: OpenFdaClient
     classification: OpenFdaClient
   }
+  safetyClients: { enforcement: OpenFdaClient; recall: OpenFdaClient }
   manufacturerManifest: ManufacturerSourceManifest
   textCache: Map<string, Promise<string>>
   snapshot: string
@@ -776,6 +904,12 @@ async function researchProduct({
   const supplemental = await acquireSupplementalEvidence({
     udi,
     clients: supplementalClients,
+    refresh,
+  })
+  const safety = await acquireSafetyActionEvidence({
+    exactIdentifiers: safetySearchIdentifiers(catalog, backlog, udi),
+    submissionNumbers: supplemental.authorization.submission_numbers,
+    clients: safetyClients,
     refresh,
   })
   const manufacturer = await evaluateManufacturerSources(
@@ -789,9 +923,13 @@ async function researchProduct({
     buildUdiSources(cohortProduct.product_id, record, udiAsOf),
   )
   const otherFdaSources = supplementalSources(cohortProduct.product_id, supplemental)
-  const sources = [...udiSources, ...otherFdaSources, ...manufacturer.sources].sort((left, right) =>
-    left.source_id.localeCompare(right.source_id),
-  )
+  const safetyActionSources = safetySources(cohortProduct.product_id, safety)
+  const sources = [
+    ...udiSources,
+    ...otherFdaSources,
+    ...safetyActionSources,
+    ...manufacturer.sources,
+  ].sort((left, right) => left.source_id.localeCompare(right.source_id))
   const packageConflict = mixedDistribution(configs)
   const officialDistributionConflict = packageConflict || supplemental.registration.conflict
   const currentNonUsApplicabilityConflict =
@@ -883,7 +1021,12 @@ async function researchProduct({
       search_completed: manufacturer.searchCompleted,
       finding: manufacturer.finding,
     },
-    recall: { search_completed: false, finding: 'not_searched' },
+    safety_action: {
+      search_status: safety.search_status,
+      action_state: safety.action_state,
+      action_scope: safety.action_scope,
+      exact_action_sources_traceable: safety.exact_action_sources_traceable,
+    },
     conflicts: {
       model: conflicts.model,
       manufacturer: conflicts.manufacturer,
@@ -922,6 +1065,12 @@ async function researchProduct({
         : [],
     ),
     ...supplemental.query_issues,
+    ...safety.query_issues.map((issue) => ({
+      layer: 'safety_action' as const,
+      endpoint: issue.endpoint,
+      exact_query: issue.exact_query,
+      message: issue.message,
+    })),
   ]
   const queryErrors = queryIssues.map((issue, index) => ({
     layer: issue.layer,
@@ -1001,11 +1150,18 @@ async function researchProduct({
         official_discontinuation_confirmed: manufacturer.officialDiscontinuationConfirmed,
         source_ids: manufacturer.sourceIds,
       },
-      recall: {
-        search_completed: false,
-        finding: 'not_searched',
+      safety_action: {
+        search_status: safety.search_status,
+        action_state: safety.action_state,
+        action_scope: safety.action_scope,
         excluded_from_distribution_assessment: true,
-        records: [],
+        exact_action_sources_traceable: safety.exact_action_sources_traceable,
+        searched_identifiers: safety.searched_identifiers,
+        skipped_short_identifiers: safety.skipped_short_identifiers,
+        records: safety.records.map((record) => ({
+          ...record,
+          source_ids: record.source_ids.map((id) => `${cohortProduct.product_id}:${id}`),
+        })),
       },
     },
     sources,
@@ -1016,10 +1172,18 @@ async function researchProduct({
       udi.identity_match_method,
       manufacturer.finding,
       classified.layer_assessments.udi_distribution,
+      safety,
+      classified.visibility_review_eligibility,
     ),
-    unresolved_questions: unresolvedQuestions(classified.research_state, manufacturer.finding),
+    unresolved_questions: unresolvedQuestions(
+      classified.research_state,
+      manufacturer.finding,
+      classified.visibility_review_eligibility,
+    ),
     proposed_human_review_disposition: classified.proposed_human_review_disposition,
+    visibility_review_eligibility: classified.visibility_review_eligibility,
     invariant_audit: classified.invariant_audit,
+    safety_review_gate: classified.safety_review_gate,
     query_error: { present: queryErrors.length > 0, errors: queryErrors },
     canonical_change_applied: false,
   }
@@ -1042,16 +1206,37 @@ async function researchProduct({
         `${snapshot}T00:00:00.000Z`,
     }
   }
+  for (const [dataset, asOf] of Object.entries(safety.dataset_snapshots)) {
+    if (!asOf) continue
+    datasetSnapshots[dataset] = {
+      asOf,
+      retrievedAt:
+        safetyActionSources.find((source) => source.endpoint.includes(dataset))?.retrieved_at ??
+        `${snapshot}T00:00:00.000Z`,
+    }
+  }
   return {
     proposal: parsed,
     metrics: {
-      fdaApiRequests: udi.metrics.apiRequests + supplemental.metrics.apiRequests,
-      cacheHits: udi.metrics.cacheHits + supplemental.metrics.cacheHits,
-      cacheMisses: udi.metrics.cacheMisses + supplemental.metrics.cacheMisses,
-      retries: udi.metrics.retries + supplemental.metrics.retries,
+      fdaApiRequests:
+        udi.metrics.apiRequests + supplemental.metrics.apiRequests + safety.metrics.apiRequests,
+      cacheHits: udi.metrics.cacheHits + supplemental.metrics.cacheHits + safety.metrics.cacheHits,
+      cacheMisses:
+        udi.metrics.cacheMisses + supplemental.metrics.cacheMisses + safety.metrics.cacheMisses,
+      retries: udi.metrics.retries + supplemental.metrics.retries + safety.metrics.retries,
     },
     datasetSnapshots,
   }
+}
+
+function countBy<T extends string>(
+  values: readonly T[],
+  pick: (product: UsStatusEvidenceProposal) => T,
+  products: UsStatusEvidenceProposal[],
+): Record<T, number> {
+  return Object.fromEntries(
+    values.map((value) => [value, products.filter((product) => pick(product) === value).length]),
+  ) as Record<T, number>
 }
 
 function proposalCounts(products: UsStatusEvidenceProposal[]): UsStatusProposalCounts {
@@ -1060,6 +1245,35 @@ function proposalCounts(products: UsStatusEvidenceProposal[]): UsStatusProposalC
   const confidence = (value: UsStatusEvidenceProposal['confidence']) =>
     products.filter((product) => product.confidence === value).length
   return {
+    safety_search_status_counts: countBy(
+      SAFETY_SEARCH_STATUSES,
+      (product) => product.layer_results.safety_action.search_status,
+      products,
+    ),
+    safety_action_state_counts: countBy(
+      SAFETY_ACTION_STATES,
+      (product) => product.layer_results.safety_action.action_state,
+      products,
+    ),
+    visibility_review_eligibility_counts: countBy(
+      VISIBILITY_REVIEW_ELIGIBILITIES,
+      (product) => product.visibility_review_eligibility,
+      products,
+    ),
+    review_disposition_counts: countBy(
+      US_STATUS_REVIEW_DISPOSITIONS,
+      (product) => product.proposed_human_review_disposition,
+      products,
+    ),
+    exact_safety_action_product_count: products.filter((product) =>
+      product.layer_results.safety_action.records.some(
+        (record) => record.match_scope === 'exact_product',
+      ),
+    ).length,
+    safety_action_record_count: products.reduce(
+      (count, product) => count + product.layer_results.safety_action.records.length,
+      0,
+    ),
     product_count: products.length,
     research_state_counts: {
       current_us_distribution_supported: state('current_us_distribution_supported'),
@@ -1095,7 +1309,7 @@ function inputHashes(entries: Array<[string, string, string]>): UsStatusInputHas
     .sort((left, right) => left.input_id.localeCompare(right.input_id))
 }
 
-function datasetSnapshots(
+export function datasetSnapshots(
   results: ProductResearchResult[],
   manufacturerManifest: ManufacturerSourceManifest,
   snapshot: string,
@@ -1114,8 +1328,8 @@ function datasetSnapshots(
         ? 'udi_distribution'
         : id === 'registrationlisting'
           ? 'registration_listing'
-          : id === 'classification'
-            ? 'authorization'
+          : id === 'enforcement' || id === 'recall'
+            ? 'safety_action'
             : 'authorization',
     endpoint: `https://api.fda.gov/device/${id}.json`,
     as_of_date: safeDate(value.asOf, snapshot),
@@ -1125,6 +1339,10 @@ function datasetSnapshots(
     record_count: null,
   }))
   for (const row of manufacturerManifest.sources) {
+    // An inaccessible manufacturer fetch is not a retrieved record. Recording it as one would
+    // present an empty body as successful evidence; it is kept in the manifest for transparency
+    // with a zero record count so it can never read as a supporting document.
+    const retrievedDocument = row.http_ok && row.body_sha256 !== EMPTY_BODY_SHA256
     rows.push({
       dataset_id: `manufacturer-${sha256(row.source_url).slice(0, 16)}-${sourceIdPart(row.catalog_source_id)}`,
       layer: 'manufacturer',
@@ -1132,11 +1350,54 @@ function datasetSnapshots(
       as_of_date: dateOnly(row.publication_or_revision_date) ?? snapshot,
       last_updated_at: null,
       retrieved_at: row.retrieved_at,
-      content_sha256: row.body_sha256,
-      record_count: 1,
+      content_sha256: retrievedDocument ? row.body_sha256 : null,
+      record_count: retrievedDocument ? 1 : 0,
     })
   }
   return rows.sort((left, right) => left.dataset_id.localeCompare(right.dataset_id))
+}
+
+/**
+ * Reviewer-facing safety summary.
+ *
+ * It reports the safety axis on its own terms and never restates a recall as a market-status
+ * conclusion.
+ */
+/**
+ * Distinct exact-product safety actions for a product.
+ *
+ * The same recall is reported by both official FDA systems, so it is deduplicated by recall
+ * number: a reviewer should see one action, not one row per FDA endpoint.
+ */
+function exactSafetyActionReferences(
+  product: UsStatusEvidenceProposal,
+): Array<{ recall_number: string; label: string }> {
+  const byRecallNumber = new Map<string, { recall_number: string; label: string }>()
+  for (const record of product.layer_results.safety_action.records) {
+    if (record.match_scope !== 'exact_product') continue
+    if (byRecallNumber.has(record.recall_number)) continue
+    byRecallNumber.set(record.recall_number, {
+      recall_number: record.recall_number,
+      label: `${record.recall_number} (event ${record.event_id ?? 'unknown'})`,
+    })
+  }
+  return [...byRecallNumber.values()].sort((left, right) =>
+    left.recall_number.localeCompare(right.recall_number),
+  )
+}
+
+function safetyReviewSummary(product: UsStatusEvidenceProposal): string {
+  const safety = product.layer_results.safety_action
+  const exact = safety.records.filter((record) => record.match_scope === 'exact_product')
+  const head = `Safety search: ${safety.search_status}; action state: ${safety.action_state}; scope: ${safety.action_scope}; review eligibility: ${product.visibility_review_eligibility}.`
+  if (exact.length === 0) return `${head} No exact-product FDA safety action matched this identity.`
+  return `${head} ${exact
+    .map(
+      (record) =>
+        `${record.recall_number} (event ${record.event_id ?? 'unknown'}, ${record.classification ?? 'unclassified'}, status ${record.recall_status}, initiated ${record.initiation_date ?? 'unknown'}, matched ${record.matched_identifiers.join('/')})`,
+    )
+    .sort()
+    .join('; ')}. A safety action is not discontinuation evidence.`
 }
 
 function reviewRow(product: UsStatusEvidenceProposal): UsStatusReviewRow {
@@ -1153,6 +1414,14 @@ function reviewRow(product: UsStatusEvidenceProposal): UsStatusReviewRow {
     rationale: product.rationale,
     official_fda_evidence_summary: `UDI: ${product.layer_results.udi_distribution.assessment}; listing: ${product.layer_results.registration_listing.assessment}; authorization: ${product.layer_results.authorization.finding}.`,
     official_manufacturer_evidence_summary: `Manufacturer finding: ${product.layer_results.manufacturer.finding}; exact source: ${product.layer_results.manufacturer.exact_product_source_confirmed}.`,
+    official_fda_safety_action_summary: safetyReviewSummary(product),
+    safety_search_status: product.layer_results.safety_action.search_status,
+    safety_action_state: product.layer_results.safety_action.action_state,
+    safety_action_scope: product.layer_results.safety_action.action_scope,
+    safety_action_references: exactSafetyActionReferences(product).map(
+      (reference) => reference.label,
+    ),
+    visibility_review_eligibility: product.visibility_review_eligibility,
     conflicts,
     source_links: product.sources.map((source) => ({
       source_id: source.source_id,
@@ -1184,6 +1453,13 @@ function flatCsvRow(product: UsStatusEvidenceProposal): Record<string, unknown> 
     authorization_finding: product.layer_results.authorization.finding,
     manufacturer_finding: product.layer_results.manufacturer.finding,
     conflict_flags: product.conflicts.details.map((detail) => detail.conflict_type).join('|'),
+    safety_search_status: product.layer_results.safety_action.search_status,
+    safety_action_state: product.layer_results.safety_action.action_state,
+    safety_action_scope: product.layer_results.safety_action.action_scope,
+    safety_action_references: exactSafetyActionReferences(product)
+      .map((reference) => reference.recall_number)
+      .join('|'),
+    visibility_review_eligibility: product.visibility_review_eligibility,
     rationale: product.rationale,
     unresolved_questions: product.unresolved_questions.join('|'),
     proposed_human_review_disposition: product.proposed_human_review_disposition,
@@ -1206,6 +1482,11 @@ const CSV_COLUMNS = [
   'authorization_finding',
   'manufacturer_finding',
   'conflict_flags',
+  'safety_search_status',
+  'safety_action_state',
+  'safety_action_scope',
+  'safety_action_references',
+  'visibility_review_eligibility',
   'rationale',
   'unresolved_questions',
   'proposed_human_review_disposition',
@@ -1215,7 +1496,11 @@ const CSV_COLUMNS = [
 
 function methodology(artifact: UsStatusEvidenceArtifact): string {
   const counts = artifact.counts.research_state_counts
-  return `# Current U.S. status evidence methodology\n\nThis dated research package is proposal-only. It changes no canonical product, visibility, verification, selectability, role, compatibility, formulary, release, or feature-flag data.\n\n## Cohort\n\nThe package evaluates ${artifact.counts.product_count} products selected from the deterministic hidden-product manifest. Hidden verified-source products are current-U.S.-status pending; hidden candidate and unknown products remain identity/specification pending.\n\n## Evidence hierarchy\n\nExact identity is required before a current-status conclusion. UDI/GUDID distribution, registration/listing, marketing authorization or exemption, official manufacturer U.S. evidence, and recall context remain separate layers. A registration/listing is not approval, historical authorization is not current distribution, and a recall is not discontinuation evidence. Website absence is never a negative finding.\n\nPotential positive proposals require exact identity, current official FDA distribution or exact listing evidence, an exact current official manufacturer U.S. source, no unresolved conflict, and a passing independent invariant audit. Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.\n\n## Results\n\n- current U.S. distribution supported: ${counts.current_us_distribution_supported}\n- not currently distributed supported: ${counts.not_currently_distributed_supported}\n- historically authorized, current status unresolved: ${counts.historically_authorized_current_status_unresolved}\n- current status conflicted: ${counts.current_status_conflicted}\n- identity unresolved: ${counts.identity_unresolved}\n- insufficient evidence: ${counts.insufficient_evidence}\n- not applicable noncommercial/local: ${counts.not_applicable_noncommercial_or_local}\n- products with query errors: ${artifact.counts.query_error_product_count}\n\nEvery output row has \`canonical_change_applied: false\`. The clinician-review CSV contains blank reviewer and second-review fields and has no applying importer or endpoint.\n`
+  const safetySearch = artifact.counts.safety_search_status_counts
+  const safetyState = artifact.counts.safety_action_state_counts
+  const eligibility = artifact.counts.visibility_review_eligibility_counts
+  const dispositions = artifact.counts.review_disposition_counts
+  return `# Current U.S. status evidence methodology\n\nThis dated research package is proposal-only. It changes no canonical product, visibility, verification, selectability, role, compatibility, formulary, release, or feature-flag data.\n\n## Cohort\n\nThe package evaluates ${artifact.counts.product_count} products selected from the deterministic hidden-product manifest. Hidden verified-source products are current-U.S.-status pending; hidden candidate and unknown products remain identity/specification pending.\n\n## Two independent axes\n\nMarket/distribution status and FDA safety-action status are separate axes and are never substituted for one another.\n\n- A safety action (recall) is **not** discontinuation evidence. It never moves a product to \`not_currently_distributed_supported\` and never changes \`current_us_distribution_supported\`. This is enforced by the \`recall_excluded_from_distribution\` invariant, and the distribution invariant audit is deliberately blind to safety evidence.\n- A safety action **can** hold ordinary prototype-visibility review. A product under an active exact FDA safety action keeps its distribution state and receives \`keep_hidden_pending_active_safety_action_review\` instead of \`review_for_prototype_visibility\`.\n- A lot-limited action is recorded as \`lot_specific\`. That does not mean every unit of the product is recalled, that the product is unsafe product-wide, or that it left the market.\n\n## Evidence hierarchy\n\nExact identity is required before a current-status conclusion. UDI/GUDID distribution, registration/listing, marketing authorization or exemption, official manufacturer U.S. evidence, and FDA safety actions remain separate layers. A registration/listing is not approval, historical authorization is not current distribution, and a recall is not discontinuation evidence. Website absence is never a negative finding.\n\nPotential positive proposals require exact identity, current official FDA distribution or exact listing evidence, an exact current official manufacturer U.S. source, no unresolved conflict, and a passing independent invariant audit. Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.\n\n## Mandatory safety gate\n\nNeither \`review_for_prototype_visibility\` nor \`review_as_not_currently_distributed\` may be proposed until the FDA safety-action search has completed for the exact identity and has left no exact active action outstanding. The safety search reads two official FDA systems, \`device/enforcement\` and \`device/recall\`; a disagreement between them about whether the same action is still open resolves to \`unknown\` and holds review rather than picking a side.\n\nA safety action is tied to a product only through an exact governed identifier (catalog/REF number, or a DI of the exact device including its package configuration). Evidence linked only by shared clearance or family name is recorded as \`family_or_ambiguous_action\` and never presented as an exact-product action. A completed search that finds nothing exact is \`no_exact_action_found\`; a search that did not run or failed stays \`not_searched\`/\`query_error\` and can never be reported as an absence.\n\nA historical (terminated) exact action is retained as safety context and does not by itself block ordinary review.\n\n## Results\n\n- current U.S. distribution supported: ${counts.current_us_distribution_supported}\n- not currently distributed supported: ${counts.not_currently_distributed_supported}\n- historically authorized, current status unresolved: ${counts.historically_authorized_current_status_unresolved}\n- current status conflicted: ${counts.current_status_conflicted}\n- identity unresolved: ${counts.identity_unresolved}\n- insufficient evidence: ${counts.insufficient_evidence}\n- not applicable noncommercial/local: ${counts.not_applicable_noncommercial_or_local}\n- products with query errors: ${artifact.counts.query_error_product_count}\n\n### Safety-action search\n\n- searched: ${safetySearch.searched}\n- not searched: ${safetySearch.not_searched}\n- query error: ${safetySearch.query_error}\n\n### Safety-action state\n\n- active exact product action: ${safetyState.active_exact_product_action}\n- historical exact product action: ${safetyState.historical_exact_product_action}\n- family or ambiguous action: ${safetyState.family_or_ambiguous_action}\n- no exact action found: ${safetyState.no_exact_action_found}\n- unknown: ${safetyState.unknown}\n- products with an exact-product safety record: ${artifact.counts.exact_safety_action_product_count}\n\n### Visibility-review eligibility\n\n- eligible for owner review: ${eligibility.eligible_for_owner_review}\n- hold, active safety action: ${eligibility.hold_active_safety_action}\n- hold, safety search incomplete: ${eligibility.hold_safety_search_incomplete}\n- hold, safety identity ambiguous: ${eligibility.hold_safety_identity_ambiguous}\n- not applicable: ${eligibility.not_applicable}\n\n### Proposed human-review dispositions\n\n- review for prototype visibility: ${dispositions.review_for_prototype_visibility}\n- review as not currently distributed: ${dispositions.review_as_not_currently_distributed}\n- keep hidden pending active safety-action review: ${dispositions.keep_hidden_pending_active_safety_action_review}\n- keep hidden pending safety review: ${dispositions.keep_hidden_pending_safety_review}\n- keep hidden conflicting: ${dispositions.keep_hidden_conflicting}\n- keep hidden identity unresolved: ${dispositions.keep_hidden_identity_unresolved}\n- keep hidden insufficient evidence: ${dispositions.keep_hidden_insufficient_evidence}\n- review as noncommercial/local: ${dispositions.review_as_noncommercial_or_local}\n\nEvery output row has \`canonical_change_applied: false\`. The clinician-review CSV contains blank reviewer and second-review fields and has no applying importer or endpoint.\n`
 }
 
 async function preserveInitialExecutionOnCacheReplay(
@@ -1288,9 +1573,9 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
   const cacheReferenceRoot = `${CACHE_ROOT}/${options.snapshot}/openfda`
   const clientOptions = {
     apiKey,
-    // Five endpoint-specific clients share the process. Capping each at 0.5 RPS keeps the
+    // Seven endpoint-specific clients share the process. Capping each at 0.4 RPS keeps the
     // aggregate worst-case rate below the existing three-request-per-second safety target.
-    requestsPerSecond: 0.5,
+    requestsPerSecond: 0.4,
     maxAttempts: 5,
     timeoutMs: 30_000,
   }
@@ -1329,6 +1614,22 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
       apiSchemaVersion: 'device-classification-v1',
     }),
   }
+  const safetyClients = {
+    enforcement: new OpenFdaClient({
+      ...clientOptions,
+      cacheDir: path.join(cacheRoot, 'enforcement'),
+      cacheReferencePrefix: `${cacheReferenceRoot}/enforcement`,
+      endpoint: SAFETY_ACTION_ENDPOINTS.device_enforcement,
+      apiSchemaVersion: 'device-enforcement-v1',
+    }),
+    recall: new OpenFdaClient({
+      ...clientOptions,
+      cacheDir: path.join(cacheRoot, 'recall'),
+      cacheReferencePrefix: `${cacheReferenceRoot}/recall`,
+      endpoint: SAFETY_ACTION_ENDPOINTS.device_recall,
+      apiSchemaVersion: 'device-recall-v1',
+    }),
+  }
   const textCache = new Map<string, Promise<string>>()
   const results = await mapWithConcurrency(
     selected,
@@ -1342,6 +1643,7 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
         backlog: backlogById.get(cohortProduct.product_id) ?? null,
         udiClient,
         supplementalClients,
+        safetyClients,
         manufacturerManifest,
         textCache,
         snapshot: options.snapshot,
@@ -1449,6 +1751,12 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
     'rationale',
     'official_fda_evidence_summary',
     'official_manufacturer_evidence_summary',
+    'official_fda_safety_action_summary',
+    'safety_search_status',
+    'safety_action_state',
+    'safety_action_scope',
+    'safety_action_references',
+    'visibility_review_eligibility',
     'conflicts',
     'source_links',
     'proposed_human_review_disposition',
@@ -1463,6 +1771,7 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
     reviews.map((review) => ({
       ...review,
       conflicts: review.conflicts.join('|'),
+      safety_action_references: review.safety_action_references.join('|'),
       source_links: review.source_links.map((source) => source.url).join('|'),
       second_review_required: review.second_review.required,
       second_review_decision: review.second_review.decision,
@@ -1470,8 +1779,11 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
     })),
     reviewColumns,
   )
-  const csvOutputs: Array<[string, UsStatusEvidenceProposal['research_state'] | 'query_error']> = [
+  const csvOutputs: Array<
+    [string, UsStatusEvidenceProposal['research_state'] | 'query_error' | 'safety_action_hold']
+  > = [
     ['current-us-supported.csv', 'current_us_distribution_supported'],
+    ['safety-action-holds.csv', 'safety_action_hold'],
     ['not-current-supported.csv', 'not_currently_distributed_supported'],
     ['historical-authorization-only.csv', 'historically_authorized_current_status_unresolved'],
     ['conflicts.csv', 'current_status_conflicted'],
@@ -1495,7 +1807,10 @@ export async function runUsStatusResearch(options: ResearchCliOptions): Promise<
             .filter((product) =>
               state === 'query_error'
                 ? product.query_error.present
-                : product.research_state === state,
+                : state === 'safety_action_hold'
+                  ? product.visibility_review_eligibility !== 'eligible_for_owner_review' &&
+                    product.visibility_review_eligibility !== 'not_applicable'
+                  : product.research_state === state,
             )
             .map(flatCsvRow),
           CSV_COLUMNS,

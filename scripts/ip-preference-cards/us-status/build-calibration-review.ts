@@ -115,6 +115,24 @@ const proposalProductSchema = z
             current_us_source_confirmed: z.boolean(),
           })
           .passthrough(),
+        safety_action: z
+          .object({
+            search_status: z.enum(['searched', 'not_searched', 'query_error']),
+            action_state: requiredString,
+            action_scope: requiredString,
+            excluded_from_distribution_assessment: z.literal(true),
+            records: z.array(z.object({ match_scope: requiredString }).passthrough()),
+          })
+          .passthrough(),
+      })
+      .passthrough(),
+    proposed_human_review_disposition: requiredString,
+    visibility_review_eligibility: requiredString,
+    safety_review_gate: z
+      .object({
+        performed: z.boolean(),
+        eligibility: requiredString,
+        failures: z.array(requiredString),
       })
       .passthrough(),
     sources: z.array(z.unknown()),
@@ -375,7 +393,56 @@ function relationshipSchemaErrors(cohort: CohortProduct, proposal: ProposalProdu
   ) {
     errors.push('manufacturer_search_marker_mismatch')
   }
+  errors.push(...safetyGateErrors(proposal))
   return [...new Set(errors)].sort((left, right) => left.localeCompare(right))
+}
+
+const ORDINARY_REVIEW_DISPOSITIONS = new Set([
+  'review_for_prototype_visibility',
+  'review_as_not_currently_distributed',
+])
+
+/**
+ * Independent re-check of the mandatory safety gate.
+ *
+ * This deliberately repeats the classifier's own rule rather than trusting it: a positive or
+ * negative human-review candidate must have a completed safety search and no exact active safety
+ * action, and safety evidence must stay excluded from the distribution assessment.
+ */
+function safetyGateErrors(proposal: ProposalProduct): string[] {
+  const errors: string[] = []
+  const safety = proposal.layer_results.safety_action
+  const gate = proposal.safety_review_gate
+  if (proposal.visibility_review_eligibility !== gate.eligibility) {
+    errors.push('visibility_review_eligibility_mismatch')
+  }
+  if (safety.search_status !== 'searched' && safety.action_state !== 'unknown') {
+    errors.push('incomplete_safety_search_reported_a_resolved_state')
+  }
+  if (safety.action_state === 'no_exact_action_found' && safety.search_status !== 'searched') {
+    errors.push('absent_safety_search_reported_as_no_exact_action')
+  }
+  if (ORDINARY_REVIEW_DISPOSITIONS.has(proposal.proposed_human_review_disposition)) {
+    if (safety.search_status !== 'searched') {
+      errors.push('ordinary_review_without_completed_safety_search')
+    }
+    if (safety.action_state === 'active_exact_product_action') {
+      errors.push('ordinary_review_under_active_exact_safety_action')
+    }
+    if (gate.eligibility !== 'eligible_for_owner_review') {
+      errors.push('ordinary_review_without_passing_safety_gate')
+    }
+  }
+  if (
+    gate.eligibility === 'hold_active_safety_action' &&
+    proposal.proposed_human_review_disposition !== 'keep_hidden_pending_active_safety_action_review'
+  ) {
+    errors.push('active_safety_action_hold_missing_disposition')
+  }
+  if (!safety.excluded_from_distribution_assessment) {
+    errors.push('safety_action_not_excluded_from_distribution')
+  }
+  return errors
 }
 
 function activeConflictFlags(proposal: ProposalProduct): string[] {

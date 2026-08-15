@@ -5,11 +5,16 @@ import {
   EXACT_IDENTITY_MATCH_METHODS,
   HIGH_CONFIDENCE_INVARIANT_FAILURES,
   MANUFACTURER_FINDINGS,
-  RECALL_FINDINGS,
+  SAFETY_ACTION_SCOPES,
+  SAFETY_ACTION_STATES,
+  SAFETY_REVIEW_GATE_FAILURES,
+  SAFETY_SEARCH_STATUSES,
   US_STATUS_CONFIDENCE_VALUES,
   US_STATUS_RESEARCH_STATES,
   US_STATUS_REVIEW_DISPOSITIONS,
+  VISIBILITY_REVIEW_ELIGIBILITIES,
 } from './classification'
+import { SAFETY_ACTION_SYSTEMS } from './acquire-fda-safety-actions'
 import { COHORT_PARTITIONS, IDENTIFIER_COMPLETENESS_VALUES } from './types'
 
 const requiredString = z.string().min(1)
@@ -62,7 +67,7 @@ export const SOURCE_LAYERS = [
   'registration_listing',
   'authorization',
   'manufacturer',
-  'recall',
+  'safety_action',
 ] as const
 
 export const SOURCE_TYPES = [
@@ -79,6 +84,15 @@ export const SOURCE_IDENTITY_SCOPES = [
 ] as const
 
 export const SOURCE_TEMPORAL_SCOPES = ['current', 'historical', 'undated'] as const
+
+/**
+ * Whether the source body was actually retrieved.
+ *
+ * An inaccessible fetch (timeout, transport failure, unsupported body) is recorded so that an
+ * empty response can never be presented as retrieved content. The SHA-256 of an empty body is not
+ * evidence about the document.
+ */
+export const SOURCE_RETRIEVAL_STATUSES = ['retrieved', 'inaccessible'] as const
 
 export const CONFLICT_TYPES = [
   'identity',
@@ -234,30 +248,153 @@ export const usStatusManufacturerResultSchema = z
   })
   .strict()
 
-export const usStatusRecallRecordSchema = z
+export const usStatusSafetyActionRecordSchema = z
   .object({
+    system: z.enum(SAFETY_ACTION_SYSTEMS),
     recall_number: requiredString,
+    event_id: nullableString,
     recall_status: requiredString,
+    status_disposition: z.enum(['active', 'historical', 'unknown']),
     classification: nullableString,
+    recalling_firm: nullableString,
+    product_description: requiredString,
+    reason_for_recall: nullableString,
     initiation_date: isoDateSchema.nullable(),
+    posted_date: isoDateSchema.nullable(),
+    report_date: isoDateSchema.nullable(),
     termination_date: isoDateSchema.nullable(),
-    exact_identity: z.boolean(),
+    product_code: nullableString,
+    submission_numbers: z.array(requiredString),
+    match_scope: z.enum(['exact_product', 'family_or_proprietary_name']),
+    matched_identifiers: z.array(requiredString),
     match_basis: requiredString,
+    scope: z.enum(SAFETY_ACTION_SCOPES),
+    affected_lot_identifier_count: z.number().int().nonnegative(),
+    code_info_excerpt: nullableString,
+    exact_query: requiredString,
     source_ids: z.array(requiredString).min(1),
   })
   .strict()
+  .superRefine((value, context) => {
+    if (value.match_scope === 'exact_product' && value.matched_identifiers.length === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['matched_identifiers'],
+        message: 'An exact-product safety action requires at least one matched exact identifier.',
+      })
+    }
+    if (value.match_scope === 'family_or_proprietary_name' && value.scope !== 'family_level') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['scope'],
+        message: 'A family or ambiguous safety action must carry family_level scope.',
+      })
+    }
+  })
 
-export const usStatusRecallResultSchema = z
+/**
+ * Safety-action layer result.
+ *
+ * `excluded_from_distribution_assessment` stays a literal `true`: a recall never establishes that
+ * a product is discontinued, and it never establishes that a product is currently distributed.
+ */
+export const usStatusSafetyActionResultSchema = z
   .object({
-    search_completed: z.boolean(),
-    finding: z.enum(RECALL_FINDINGS),
+    search_status: z.enum(SAFETY_SEARCH_STATUSES),
+    action_state: z.enum(SAFETY_ACTION_STATES),
+    action_scope: z.enum(SAFETY_ACTION_SCOPES),
     excluded_from_distribution_assessment: z.literal(true),
-    records: z.array(usStatusRecallRecordSchema),
+    exact_action_sources_traceable: z.boolean(),
+    searched_identifiers: z.array(requiredString),
+    skipped_short_identifiers: z.array(requiredString),
+    records: z.array(usStatusSafetyActionRecordSchema),
   })
   .strict()
+  .superRefine((value, context) => {
+    const exact = value.records.filter((record) => record.match_scope === 'exact_product')
+    if (value.search_status !== 'searched' && value.action_state !== 'unknown') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['action_state'],
+        message: 'An incomplete or failed safety search cannot report a resolved action state.',
+      })
+    }
+    if (value.action_state === 'no_exact_action_found' && value.search_status !== 'searched') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['action_state'],
+        message: 'Absence of a safety search is not the same as no exact action found.',
+      })
+    }
+    if (value.action_state === 'no_exact_action_found' && exact.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['action_state'],
+        message: 'An exact safety record contradicts no_exact_action_found.',
+      })
+    }
+    if (
+      (value.action_state === 'active_exact_product_action' ||
+        value.action_state === 'historical_exact_product_action') &&
+      exact.length === 0
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['action_state'],
+        message: 'An exact-product safety action state requires at least one exact safety record.',
+      })
+    }
+    if (
+      value.action_state === 'active_exact_product_action' &&
+      !value.exact_action_sources_traceable
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['exact_action_sources_traceable'],
+        message: 'An active exact safety action must be fully source-traceable.',
+      })
+    }
+  })
+
+export const usStatusSafetyReviewGateSchema = z
+  .object({
+    performed: z.boolean(),
+    eligibility: z.enum(VISIBILITY_REVIEW_ELIGIBILITIES),
+    failures: z.array(z.enum(SAFETY_REVIEW_GATE_FAILURES)),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (!value.performed && (value.eligibility !== 'not_applicable' || value.failures.length > 0)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'An unperformed safety gate must be not_applicable with no failures.',
+      })
+    }
+    if (value.performed && value.eligibility === 'not_applicable') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['eligibility'],
+        message: 'A performed safety gate must resolve to an eligibility or a hold.',
+      })
+    }
+    if (value.eligibility === 'eligible_for_owner_review' && value.failures.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['failures'],
+        message: 'An eligible safety gate cannot carry failures.',
+      })
+    }
+    if (value.eligibility.startsWith('hold_') && value.failures.length === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['failures'],
+        message: 'A safety hold requires at least one recorded failure.',
+      })
+    }
+  })
 
 export function isPortableOpenFdaRawCacheReference(value: string): boolean {
-  return /^local-data\/ip-preference-cards\/us-status\/\d{4}-\d{2}-\d{2}\/openfda\/(?:udi|registrationlisting|510k|pma|classification)\/[a-f0-9]{64}\.json$/.test(
+  return /^local-data\/ip-preference-cards\/us-status\/\d{4}-\d{2}-\d{2}\/openfda\/(?:udi|registrationlisting|510k|pma|classification|enforcement|recall)\/[a-f0-9]{64}\.json$/.test(
     value,
   )
 }
@@ -278,13 +415,45 @@ export const usStatusEvidenceSourceSchema = z
     raw_cache_reference: nullableString,
     identity_scope: z.enum(SOURCE_IDENTITY_SCOPES),
     temporal_scope: z.enum(SOURCE_TEMPORAL_SCOPES),
+    retrieval_status: z.enum(SOURCE_RETRIEVAL_STATUSES),
     us_specific: z.boolean().nullable(),
     exact_identifier_text: z.array(requiredString),
     factual_summary: requiredString,
   })
   .strict()
   .superRefine((value, context) => {
+    if (value.retrieval_status === 'inaccessible') {
+      if (value.content_sha256 !== null) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['content_sha256'],
+          message:
+            'An inaccessible source must not record a content hash; the hash of an empty body is not evidence.',
+        })
+      }
+      if (value.identity_scope !== 'context_only') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['identity_scope'],
+          message: 'An inaccessible source cannot establish exact or family identity.',
+        })
+      }
+      if (value.exact_identifier_text.length > 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['exact_identifier_text'],
+          message: 'An inaccessible source cannot report matched exact identifiers.',
+        })
+      }
+    }
     if (value.source_type !== 'official_fda_api') return
+    if (value.retrieval_status !== 'retrieved') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['retrieval_status'],
+        message: 'An official FDA API source is only recorded when its response was retrieved.',
+      })
+    }
     if (value.content_sha256 === null) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -412,6 +581,15 @@ export const usStatusQueryErrorSchema = z
     }
   })
 
+/**
+ * The two dispositions that hand a product to a human reviewer as an ordinary distribution
+ * decision. Both are gated on the mandatory safety search.
+ */
+const ORDINARY_REVIEW_DISPOSITIONS = new Set<(typeof US_STATUS_REVIEW_DISPOSITIONS)[number]>([
+  'review_for_prototype_visibility',
+  'review_as_not_currently_distributed',
+])
+
 export const usStatusEvidenceProposalSchema = z
   .object({
     canonical_identity: usStatusCanonicalIdentitySchema,
@@ -425,7 +603,7 @@ export const usStatusEvidenceProposalSchema = z
         registration_listing: usStatusRegistrationListingResultSchema,
         authorization: usStatusAuthorizationResultSchema,
         manufacturer: usStatusManufacturerResultSchema,
-        recall: usStatusRecallResultSchema,
+        safety_action: usStatusSafetyActionResultSchema,
       })
       .strict(),
     sources: z.array(usStatusEvidenceSourceSchema),
@@ -434,11 +612,101 @@ export const usStatusEvidenceProposalSchema = z
     rationale: requiredString,
     unresolved_questions: z.array(requiredString),
     proposed_human_review_disposition: z.enum(US_STATUS_REVIEW_DISPOSITIONS),
+    visibility_review_eligibility: z.enum(VISIBILITY_REVIEW_ELIGIBILITIES),
     invariant_audit: usStatusInvariantAuditSchema,
+    safety_review_gate: usStatusSafetyReviewGateSchema,
     query_error: usStatusQueryErrorSchema,
     canonical_change_applied: z.literal(false),
   })
   .strict()
+  .superRefine((value, context) => {
+    const safety = value.layer_results.safety_action
+    const gate = value.safety_review_gate
+    if (value.visibility_review_eligibility !== gate.eligibility) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['visibility_review_eligibility'],
+        message: 'visibility_review_eligibility must equal the safety gate eligibility.',
+      })
+    }
+    if (gate.performed) {
+      const required: Array<[boolean, (typeof SAFETY_REVIEW_GATE_FAILURES)[number]]> = [
+        [
+          safety.action_state === 'active_exact_product_action',
+          'active_exact_safety_action_present',
+        ],
+        [safety.search_status === 'not_searched', 'safety_search_not_performed'],
+        [safety.search_status === 'query_error', 'safety_search_query_error'],
+        [
+          safety.action_state === 'family_or_ambiguous_action' || safety.action_state === 'unknown',
+          'safety_action_identity_ambiguous',
+        ],
+        [!safety.exact_action_sources_traceable, 'safety_action_source_traceability_incomplete'],
+      ]
+      for (const [applies, failure] of required) {
+        if (applies !== gate.failures.includes(failure)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['safety_review_gate', 'failures'],
+            message: `The safety gate must record ${failure} exactly when the safety-action layer implies it.`,
+          })
+        }
+      }
+    }
+    // The central correction: an ordinary positive or negative visibility review may only be
+    // proposed once the safety search completed and left no exact active action outstanding.
+    if (ORDINARY_REVIEW_DISPOSITIONS.has(value.proposed_human_review_disposition)) {
+      if (gate.eligibility !== 'eligible_for_owner_review') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['proposed_human_review_disposition'],
+          message:
+            'An ordinary visibility-review disposition requires a passing mandatory safety gate.',
+        })
+      }
+      if (safety.search_status !== 'searched') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['proposed_human_review_disposition'],
+          message:
+            'An ordinary visibility-review disposition requires a completed safety-action search.',
+        })
+      }
+      if (safety.action_state === 'active_exact_product_action') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['proposed_human_review_disposition'],
+          message:
+            'A product under an active exact FDA safety action cannot be an ordinary visibility-review candidate.',
+        })
+      }
+    }
+    if (
+      gate.eligibility === 'hold_active_safety_action' &&
+      value.proposed_human_review_disposition !== 'keep_hidden_pending_active_safety_action_review'
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['proposed_human_review_disposition'],
+        message:
+          'An active safety-action hold requires the active-safety-action review disposition.',
+      })
+    }
+    // A safety action is never a distribution conclusion in either direction.
+    if (
+      safety.action_state === 'active_exact_product_action' &&
+      value.research_state === 'not_currently_distributed_supported' &&
+      value.layer_results.udi_distribution.assessment !== 'all_exact_configurations_ended' &&
+      value.layer_results.manufacturer.finding !== 'exact_official_discontinuation'
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['research_state'],
+        message:
+          'A safety action alone cannot establish that a product is not currently distributed.',
+      })
+    }
+  })
 
 const researchStateCountsSchema = z
   .object({
@@ -460,14 +728,38 @@ const confidenceCountsSchema = z
   })
   .strict()
 
+function countsByEnum<T extends readonly [string, ...string[]]>(
+  values: T,
+): z.ZodObject<Record<T[number], z.ZodNumber>> {
+  return z
+    .object(
+      Object.fromEntries(values.map((value) => [value, z.number().int().nonnegative()])) as Record<
+        T[number],
+        z.ZodNumber
+      >,
+    )
+    .strict() as z.ZodObject<Record<T[number], z.ZodNumber>>
+}
+
+const safetySearchStatusCountsSchema = countsByEnum(SAFETY_SEARCH_STATUSES)
+const safetyActionStateCountsSchema = countsByEnum(SAFETY_ACTION_STATES)
+const visibilityReviewEligibilityCountsSchema = countsByEnum(VISIBILITY_REVIEW_ELIGIBILITIES)
+const reviewDispositionCountsSchema = countsByEnum(US_STATUS_REVIEW_DISPOSITIONS)
+
 export const usStatusProposalCountsSchema = z
   .object({
     product_count: z.number().int().nonnegative(),
     research_state_counts: researchStateCountsSchema,
     confidence_counts: confidenceCountsSchema,
+    safety_search_status_counts: safetySearchStatusCountsSchema,
+    safety_action_state_counts: safetyActionStateCountsSchema,
+    visibility_review_eligibility_counts: visibilityReviewEligibilityCountsSchema,
+    review_disposition_counts: reviewDispositionCountsSchema,
+    exact_safety_action_product_count: z.number().int().nonnegative(),
     query_error_product_count: z.number().int().nonnegative(),
     source_record_count: z.number().int().nonnegative(),
     udi_configuration_count: z.number().int().nonnegative(),
+    safety_action_record_count: z.number().int().nonnegative(),
     conflicted_product_count: z.number().int().nonnegative(),
   })
   .strict()
@@ -616,6 +908,64 @@ export const usStatusEvidenceArtifactSchema = z
         0,
       ),
     )
+    for (const status of SAFETY_SEARCH_STATUSES) {
+      addCountIssue(
+        context,
+        ['counts', 'safety_search_status_counts', status],
+        value.counts.safety_search_status_counts[status],
+        value.products.filter(
+          (product) => product.layer_results.safety_action.search_status === status,
+        ).length,
+      )
+    }
+    for (const state of SAFETY_ACTION_STATES) {
+      addCountIssue(
+        context,
+        ['counts', 'safety_action_state_counts', state],
+        value.counts.safety_action_state_counts[state],
+        value.products.filter(
+          (product) => product.layer_results.safety_action.action_state === state,
+        ).length,
+      )
+    }
+    for (const eligibility of VISIBILITY_REVIEW_ELIGIBILITIES) {
+      addCountIssue(
+        context,
+        ['counts', 'visibility_review_eligibility_counts', eligibility],
+        value.counts.visibility_review_eligibility_counts[eligibility],
+        value.products.filter((product) => product.visibility_review_eligibility === eligibility)
+          .length,
+      )
+    }
+    for (const disposition of US_STATUS_REVIEW_DISPOSITIONS) {
+      addCountIssue(
+        context,
+        ['counts', 'review_disposition_counts', disposition],
+        value.counts.review_disposition_counts[disposition],
+        value.products.filter(
+          (product) => product.proposed_human_review_disposition === disposition,
+        ).length,
+      )
+    }
+    addCountIssue(
+      context,
+      ['counts', 'exact_safety_action_product_count'],
+      value.counts.exact_safety_action_product_count,
+      value.products.filter((product) =>
+        product.layer_results.safety_action.records.some(
+          (record) => record.match_scope === 'exact_product',
+        ),
+      ).length,
+    )
+    addCountIssue(
+      context,
+      ['counts', 'safety_action_record_count'],
+      value.counts.safety_action_record_count,
+      value.products.reduce(
+        (count, product) => count + product.layer_results.safety_action.records.length,
+        0,
+      ),
+    )
     addCountIssue(
       context,
       ['counts', 'conflicted_product_count'],
@@ -721,6 +1071,12 @@ export const usStatusReviewRowSchema = z
     rationale: requiredString,
     official_fda_evidence_summary: requiredString,
     official_manufacturer_evidence_summary: requiredString,
+    official_fda_safety_action_summary: requiredString,
+    safety_search_status: z.enum(SAFETY_SEARCH_STATUSES),
+    safety_action_state: z.enum(SAFETY_ACTION_STATES),
+    safety_action_scope: z.enum(SAFETY_ACTION_SCOPES),
+    safety_action_references: z.array(requiredString),
+    visibility_review_eligibility: z.enum(VISIBILITY_REVIEW_ELIGIBILITIES),
     conflicts: z.array(requiredString),
     source_links: z.array(reviewSourceLinkSchema),
     proposed_human_review_disposition: z.enum(US_STATUS_REVIEW_DISPOSITIONS),
@@ -750,8 +1106,9 @@ export type UsStatusRegistrationListingResult = z.infer<
 export type UsStatusAuthorizationRecord = z.infer<typeof usStatusAuthorizationRecordSchema>
 export type UsStatusAuthorizationResult = z.infer<typeof usStatusAuthorizationResultSchema>
 export type UsStatusManufacturerResult = z.infer<typeof usStatusManufacturerResultSchema>
-export type UsStatusRecallRecord = z.infer<typeof usStatusRecallRecordSchema>
-export type UsStatusRecallResult = z.infer<typeof usStatusRecallResultSchema>
+export type UsStatusSafetyActionRecord = z.infer<typeof usStatusSafetyActionRecordSchema>
+export type UsStatusSafetyActionResult = z.infer<typeof usStatusSafetyActionResultSchema>
+export type UsStatusSafetyReviewGate = z.infer<typeof usStatusSafetyReviewGateSchema>
 export type UsStatusEvidenceSource = z.infer<typeof usStatusEvidenceSourceSchema>
 export type UsStatusConflict = z.infer<typeof usStatusConflictSchema>
 export type UsStatusInvariantAudit = z.infer<typeof usStatusInvariantAuditSchema>

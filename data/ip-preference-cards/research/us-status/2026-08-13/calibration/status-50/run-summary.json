@@ -3,8 +3,8 @@
   "artifact_kind": "current_us_status_run_summary",
   "method_version": "current-us-status-evidence-v1",
   "research_as_of_date": "2026-08-13",
-  "proposal_artifact_sha256": "3bba5b79ad1888263cc6113e15be03638a199956338d8786f0f09665af889fd6",
-  "source_manifest_sha256": "9293052e6e7e78a4e0a6bb527454bb6cbf4ff107aa4a427bb873c99cce773892",
+  "proposal_artifact_sha256": "c147c1a986d69074428f0de61e7a813b561ba45cd903016b8f4cef2e4a84f573",
+  "source_manifest_sha256": "0cd3525a3e3a030256db54480730eaf5412ab3e3374b516b98bca8af241ecb15",
   "input_hashes": [
     {
       "input_id": "catalog-products",
@@ -135,8 +135,8 @@
       "as_of_date": "2026-08-13",
       "last_updated_at": null,
       "retrieved_at": "2026-08-14T05:33:46.913Z",
-      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "record_count": 1
+      "content_sha256": null,
+      "record_count": 0
     },
     {
       "dataset_id": "manufacturer-6bb37942921abbee-SRC042",
@@ -155,8 +155,8 @@
       "as_of_date": "2026-08-13",
       "last_updated_at": null,
       "retrieved_at": "2026-08-14T05:33:46.885Z",
-      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "record_count": 1
+      "content_sha256": null,
+      "record_count": 0
     },
     {
       "dataset_id": "manufacturer-88949554cdb50897-SRC022",
@@ -195,8 +195,8 @@
       "as_of_date": "2026-08-13",
       "last_updated_at": null,
       "retrieved_at": "2026-08-14T05:35:42.872Z",
-      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "record_count": 1
+      "content_sha256": null,
+      "record_count": 0
     },
     {
       "dataset_id": "manufacturer-adf5c4a8a4f64491-SRC019",
@@ -205,8 +205,8 @@
       "as_of_date": "2026-08-13",
       "last_updated_at": null,
       "retrieved_at": "2026-08-14T05:35:42.872Z",
-      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "record_count": 1
+      "content_sha256": null,
+      "record_count": 0
     },
     {
       "dataset_id": "manufacturer-ae63f148a3c83005-SRC037",
@@ -269,6 +269,26 @@
       "record_count": null
     },
     {
+      "dataset_id": "openfda-enforcement",
+      "layer": "safety_action",
+      "endpoint": "https://api.fda.gov/device/enforcement.json",
+      "as_of_date": "2026-08-05",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-15T00:36:09.013Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
+      "dataset_id": "openfda-recall",
+      "layer": "safety_action",
+      "endpoint": "https://api.fda.gov/device/recall.json",
+      "as_of_date": "2026-08-13",
+      "last_updated_at": null,
+      "retrieved_at": "2026-08-15T00:36:15.899Z",
+      "content_sha256": null,
+      "record_count": null
+    },
+    {
       "dataset_id": "openfda-registrationlisting",
       "layer": "registration_listing",
       "endpoint": "https://api.fda.gov/device/registrationlisting.json",
@@ -305,9 +325,40 @@
       "moderate": 3,
       "low": 46
     },
+    "safety_search_status_counts": {
+      "searched": 42,
+      "not_searched": 8,
+      "query_error": 0
+    },
+    "safety_action_state_counts": {
+      "active_exact_product_action": 7,
+      "historical_exact_product_action": 0,
+      "family_or_ambiguous_action": 1,
+      "no_exact_action_found": 34,
+      "unknown": 8
+    },
+    "visibility_review_eligibility_counts": {
+      "eligible_for_owner_review": 0,
+      "hold_active_safety_action": 0,
+      "hold_safety_search_incomplete": 0,
+      "hold_safety_identity_ambiguous": 0,
+      "not_applicable": 50
+    },
+    "review_disposition_counts": {
+      "review_for_prototype_visibility": 0,
+      "keep_hidden_conflicting": 3,
+      "keep_hidden_identity_unresolved": 24,
+      "keep_hidden_insufficient_evidence": 22,
+      "keep_hidden_pending_active_safety_action_review": 0,
+      "keep_hidden_pending_safety_review": 0,
+      "review_as_not_currently_distributed": 0,
+      "review_as_noncommercial_or_local": 1
+    },
+    "exact_safety_action_product_count": 7,
     "query_error_product_count": 6,
-    "source_record_count": 157,
+    "source_record_count": 387,
     "udi_configuration_count": 74,
+    "safety_action_record_count": 32,
     "conflicted_product_count": 19
   },
   "execution": {
@@ -315,12 +366,12 @@
     "products_processed": 50,
     "fda_api_requests": 0,
     "manufacturer_requests": 21,
-    "cache_hits": 162,
+    "cache_hits": 392,
     "cache_misses": 0,
     "retry_count": 0,
     "query_error_count": 7,
-    "started_at": "2026-08-14T06:41:38.924Z",
-    "completed_at": "2026-08-14T06:41:39.190Z",
+    "started_at": "2026-08-15T04:43:40.941Z",
+    "completed_at": "2026-08-15T04:43:41.278Z",
     "raw_cache_committed": false
   },
   "canonical_change_applied": false
