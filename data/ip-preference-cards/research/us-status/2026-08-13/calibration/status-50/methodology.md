@@ -18,7 +18,22 @@ Market/distribution status and FDA safety-action status are separate axes and ar
 
 Exact identity is required before a current-status conclusion. UDI/GUDID distribution, registration/listing, marketing authorization or exemption, official manufacturer U.S. evidence, and FDA safety actions remain separate layers. A registration/listing is not approval, historical authorization is not current distribution, and a recall is not discontinuation evidence. Website absence is never a negative finding.
 
-Potential positive proposals require exact identity, current official FDA distribution or exact listing evidence, an exact current official manufacturer U.S. source, no unresolved conflict, and a passing independent invariant audit. Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.
+## Current-distribution evidence policy
+
+A current exact manufacturer webpage or document is **not** mandatory for `current_us_distribution_supported`. The state is anchored on the FDA's own current commercial-distribution record for the exact device. A product may receive it when product identity is exact; a current exact GUDID configuration reports in commercial distribution; the GUDID snapshot is current; all relevant exact configurations were retrieved; there is no mixed or ended configuration conflict; and there is no affirmative discontinuation or other material distribution conflict. The independent invariant audit must also pass.
+
+Confidence is a separate question from the state:
+
+- **high** — a second exact current source corroborates the GUDID evidence: an exact current FDA registration/listing, or an exact current official manufacturer U.S. source.
+- **moderate** — current exact GUDID distribution evidence and reliable exact identity, with no second exact current source.
+
+There is no low-confidence variant of the supported state. A product whose evidence does not reach moderate stays in an unresolved research state instead.
+
+A manufacturer document may establish exact identity and configuration without establishing current distribution; that is recorded as `exact_identity_only_not_current` and is never admitted as current-distribution evidence. Current distribution is also not present orderability: no proposal claims that a product can be ordered today, and every positive carries an explicit open question about it.
+
+Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.
+
+An invariant failure that reports missing evidence rather than contradictory evidence returns the product to an unresolved state; only a genuine source conflict is reported as `current_status_conflicted`.
 
 ## Mandatory safety gate
 

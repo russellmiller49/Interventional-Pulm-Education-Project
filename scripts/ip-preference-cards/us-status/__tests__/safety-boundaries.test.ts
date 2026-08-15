@@ -118,8 +118,10 @@ const manufacturerSourceManifestSafetySchema = z
   })
   .passthrough()
 
-const ARTIFACT_CSV_FILENAMES = new Set([
+/** Sheets that share the per-state column contract below. */
+const STATE_CSV_FILENAMES = new Set([
   'current-us-supported.csv',
+  'safety-action-holds.csv',
   'not-current-supported.csv',
   'historical-authorization-only.csv',
   'conflicts.csv',
@@ -127,8 +129,53 @@ const ARTIFACT_CSV_FILENAMES = new Set([
   'insufficient-evidence.csv',
   'noncommercial-or-local.csv',
   'query-errors.csv',
-  'clinician-review.csv',
 ])
+
+/**
+ * Every governed reviewer-facing CSV the research package emits.
+ *
+ * `safety-action-holds.csv` is one of them: it is the sheet a reviewer opens to see which
+ * products are held for safety review, so it needs the same row, formula-safety, schema, and
+ * non-applying protections as the state CSVs, not weaker ones because it was added later.
+ */
+const ARTIFACT_CSV_FILENAMES = new Set([
+  ...STATE_CSV_FILENAMES,
+  'clinician-review.csv',
+  'calibration-review.csv',
+])
+
+/** The governed column contract for every per-state CSV, including the safety-hold sheet. */
+const STATE_CSV_COLUMNS = [
+  'product_id',
+  'manufacturer',
+  'product_name',
+  'catalog_number',
+  'model_number',
+  'research_state',
+  'confidence',
+  'identity_match_method',
+  'udi_assessment',
+  'listing_assessment',
+  'authorization_finding',
+  'manufacturer_finding',
+  'conflict_flags',
+  'safety_search_status',
+  'safety_action_state',
+  'safety_action_scope',
+  'safety_action_references',
+  'visibility_review_eligibility',
+  'rationale',
+  'unresolved_questions',
+  'proposed_human_review_disposition',
+  'source_urls',
+  'canonical_change_applied',
+]
+
+/**
+ * A spreadsheet treats a leading `=`, `+`, `-`, `@`, tab, or carriage return as a formula. Every
+ * emitted cell must be neutralized, or an FDA free-text field could execute on open.
+ */
+const FORMULA_TRIGGER = /^[=+\-@\t\r]/
 
 function sha256(contents: Buffer | string): string {
   return createHash('sha256').update(contents).digest('hex')
@@ -421,9 +468,43 @@ describe('current U.S. status research safety boundaries', () => {
       const header = rows[0] ?? []
       const canonicalColumn = header.indexOf('canonical_change_applied')
       expect(canonicalColumn).toBeGreaterThanOrEqual(0)
+      if (STATE_CSV_FILENAMES.has(path.basename(filename))) {
+        expect(header).toEqual(STATE_CSV_COLUMNS)
+      }
       for (const row of rows.slice(1)) {
         expect(row).toHaveLength(header.length)
         expect(row[canonicalColumn]).toBe('false')
+        expect(row.filter((cell) => FORMULA_TRIGGER.test(cell))).toEqual([])
+      }
+    }
+  })
+
+  it('protects the safety-action hold sheet exactly like every other governed review CSV', () => {
+    const holdSheets = filesUnder(RESEARCH_ROOT).filter(
+      (filename) => path.basename(filename) === 'safety-action-holds.csv',
+    )
+    expect(ARTIFACT_CSV_FILENAMES.has('safety-action-holds.csv')).toBe(true)
+    expect(holdSheets.length).toBeGreaterThan(0)
+
+    for (const filename of holdSheets) {
+      const rows = parseCsv(readFileSync(filename, 'utf8'))
+      expect(rows[0]).toEqual(STATE_CSV_COLUMNS)
+      const eligibilityColumn = STATE_CSV_COLUMNS.indexOf('visibility_review_eligibility')
+      const canonicalColumn = STATE_CSV_COLUMNS.indexOf('canonical_change_applied')
+      const dispositionColumn = STATE_CSV_COLUMNS.indexOf('proposed_human_review_disposition')
+
+      for (const row of rows.slice(1)) {
+        expect(row).toHaveLength(STATE_CSV_COLUMNS.length)
+        expect(row[canonicalColumn]).toBe('false')
+        expect(row.filter((cell) => FORMULA_TRIGGER.test(cell))).toEqual([])
+        // The sheet exists to list held products, so every row must actually be held.
+        expect(['eligible_for_owner_review', 'not_applicable']).not.toContain(
+          row[eligibilityColumn],
+        )
+        expect([
+          'review_for_prototype_visibility',
+          'review_as_not_currently_distributed',
+        ]).not.toContain(row[dispositionColumn])
       }
     }
   })

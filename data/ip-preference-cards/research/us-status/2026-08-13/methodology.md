@@ -18,7 +18,22 @@ Market/distribution status and FDA safety-action status are separate axes and ar
 
 Exact identity is required before a current-status conclusion. UDI/GUDID distribution, registration/listing, marketing authorization or exemption, official manufacturer U.S. evidence, and FDA safety actions remain separate layers. A registration/listing is not approval, historical authorization is not current distribution, and a recall is not discontinuation evidence. Website absence is never a negative finding.
 
-Potential positive proposals require exact identity, current official FDA distribution or exact listing evidence, an exact current official manufacturer U.S. source, no unresolved conflict, and a passing independent invariant audit. Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.
+## Current-distribution evidence policy
+
+A current exact manufacturer webpage or document is **not** mandatory for `current_us_distribution_supported`. The state is anchored on the FDA's own current commercial-distribution record for the exact device. A product may receive it when product identity is exact; a current exact GUDID configuration reports in commercial distribution; the GUDID snapshot is current; all relevant exact configurations were retrieved; there is no mixed or ended configuration conflict; and there is no affirmative discontinuation or other material distribution conflict. The independent invariant audit must also pass.
+
+Confidence is a separate question from the state:
+
+- **high** — a second exact current source corroborates the GUDID evidence: an exact current FDA registration/listing, or an exact current official manufacturer U.S. source.
+- **moderate** — current exact GUDID distribution evidence and reliable exact identity, with no second exact current source.
+
+There is no low-confidence variant of the supported state. A product whose evidence does not reach moderate stays in an unresolved research state instead.
+
+A manufacturer document may establish exact identity and configuration without establishing current distribution; that is recorded as `exact_identity_only_not_current` and is never admitted as current-distribution evidence. Current distribution is also not present orderability: no proposal claims that a product can be ordered today, and every positive carries an explicit open question about it.
+
+Potential negatives require affirmative exact evidence, completed manufacturer research, no current conflict, and the same independent audit.
+
+An invariant failure that reports missing evidence rather than contradictory evidence returns the product to an unresolved state; only a genuine source conflict is reported as `current_status_conflicted`.
 
 ## Mandatory safety gate
 
@@ -30,12 +45,12 @@ A historical (terminated) exact action is retained as safety context and does no
 
 ## Results
 
-- current U.S. distribution supported: 3
+- current U.S. distribution supported: 34
 - not currently distributed supported: 0
-- historically authorized, current status unresolved: 32
+- historically authorized, current status unresolved: 25
 - current status conflicted: 18
 - identity unresolved: 243
-- insufficient evidence: 482
+- insufficient evidence: 458
 - not applicable noncommercial/local: 1
 - products with query errors: 196
 
@@ -56,21 +71,21 @@ A historical (terminated) exact action is retained as safety context and does no
 
 ### Visibility-review eligibility
 
-- eligible for owner review: 0
+- eligible for owner review: 28
 - hold, active safety action: 3
 - hold, safety search incomplete: 0
-- hold, safety identity ambiguous: 0
-- not applicable: 776
+- hold, safety identity ambiguous: 3
+- not applicable: 745
 
 ### Proposed human-review dispositions
 
-- review for prototype visibility: 0
+- review for prototype visibility: 28
 - review as not currently distributed: 0
 - keep hidden pending active safety-action review: 3
-- keep hidden pending safety review: 0
+- keep hidden pending safety review: 3
 - keep hidden conflicting: 18
 - keep hidden identity unresolved: 243
-- keep hidden insufficient evidence: 514
+- keep hidden insufficient evidence: 483
 - review as noncommercial/local: 1
 
 Every output row has `canonical_change_applied: false`. The clinician-review CSV contains blank reviewer and second-review fields and has no applying importer or endpoint.

@@ -17,7 +17,12 @@
     {
       "input_id": "manufacturer-source-manifest",
       "path": "data/ip-preference-cards/research/us-status/2026-08-13/manufacturer-source-snapshot.json",
-      "sha256": "c484391ee7b1bb61d4c2e57b69806bd5d3ee661116dc8be503907d684a06011c"
+      "sha256": "85a13ed07b3aa5a236375fabb9fef6d3304d836b4d7ed5484d9125fee9db7e85"
+    },
+    {
+      "input_id": "product-selection",
+      "path": "data/ip-preference-cards/research/us-status/2026-08-13/calibration-cohort.json",
+      "sha256": "e4c190f1edb46daddc98c7dc2a34203d1cf4f24080efea8604062baa070d43ac"
     },
     {
       "input_id": "verification-backlog-stale-context",

@@ -17,7 +17,12 @@
     {
       "input_id": "manufacturer-source-manifest",
       "path": "data/ip-preference-cards/research/us-status/2026-08-13/manufacturer-source-snapshot.json",
-      "sha256": "c484391ee7b1bb61d4c2e57b69806bd5d3ee661116dc8be503907d684a06011c"
+      "sha256": "85a13ed07b3aa5a236375fabb9fef6d3304d836b4d7ed5484d9125fee9db7e85"
+    },
+    {
+      "input_id": "product-selection",
+      "path": "data/ip-preference-cards/research/us-status/2026-08-13/calibration-cohort.json",
+      "sha256": "e4c190f1edb46daddc98c7dc2a34203d1cf4f24080efea8604062baa070d43ac"
     },
     {
       "input_id": "verification-backlog-stale-context",
@@ -809,7 +814,7 @@
         },
         "manufacturer": {
           "search_completed": true,
-          "finding": "family_only_current",
+          "finding": "no_result",
           "exact_product_source_confirmed": false,
           "current_us_source_confirmed": false,
           "official_discontinuation_confirmed": false,
@@ -898,7 +903,7 @@
         "details": []
       },
       "reason_codes": ["no_exact_identity_evidence"],
-      "rationale": "Identity method: none. UDI assessment: no_exact_result. Manufacturer finding: family_only_current. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
+      "rationale": "Identity method: none. UDI assessment: no_exact_result. Manufacturer finding: no_result. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
       "unresolved_questions": [
         "Is there a current official U.S. product page, labeling document, or discontinuation notice for this exact identifier?"
       ],
@@ -1719,7 +1724,7 @@
         },
         "manufacturer": {
           "search_completed": true,
-          "finding": "family_only_current",
+          "finding": "no_result",
           "exact_product_source_confirmed": false,
           "current_us_source_confirmed": false,
           "official_discontinuation_confirmed": false,
@@ -1808,7 +1813,7 @@
         "details": []
       },
       "reason_codes": ["no_exact_identity_evidence"],
-      "rationale": "Identity method: none. UDI assessment: no_exact_result. Manufacturer finding: family_only_current. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
+      "rationale": "Identity method: none. UDI assessment: no_exact_result. Manufacturer finding: no_result. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
       "unresolved_questions": [
         "Is there a current official U.S. product page, labeling document, or discontinuation notice for this exact identifier?"
       ],
@@ -2229,7 +2234,7 @@
         },
         "manufacturer": {
           "search_completed": true,
-          "finding": "family_only_current",
+          "finding": "no_result",
           "exact_product_source_confirmed": false,
           "current_us_source_confirmed": false,
           "official_discontinuation_confirmed": false,
@@ -2318,7 +2323,7 @@
         "details": []
       },
       "reason_codes": ["no_exact_identity_evidence"],
-      "rationale": "Identity method: none. UDI assessment: no_exact_result. Manufacturer finding: family_only_current. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
+      "rationale": "Identity method: none. UDI assessment: no_exact_result. Manufacturer finding: no_result. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
       "unresolved_questions": [
         "Is there a current official U.S. product page, labeling document, or discontinuation notice for this exact identifier?"
       ],
@@ -9832,7 +9837,7 @@
         },
         "manufacturer": {
           "search_completed": true,
-          "finding": "family_only_current",
+          "finding": "no_result",
           "exact_product_source_confirmed": false,
           "current_us_source_confirmed": false,
           "official_discontinuation_confirmed": false,
@@ -10210,7 +10215,7 @@
         "no_result_is_not_discontinuation_evidence",
         "searches_did_not_establish_current_status"
       ],
-      "rationale": "Identity method: exact_manufacturer_catalog_number. UDI assessment: all_exact_configurations_active. Manufacturer finding: family_only_current. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
+      "rationale": "Identity method: exact_manufacturer_catalog_number. UDI assessment: all_exact_configurations_active. Manufacturer finding: no_result. Completed or permitted searches did not establish enough exact current-status evidence; no result is not a discontinuation finding.",
       "unresolved_questions": [
         "Is there a current official U.S. product page, labeling document, or discontinuation notice for this exact identifier?"
       ],
@@ -15496,7 +15501,7 @@
         },
         "manufacturer": {
           "search_completed": true,
-          "finding": "family_only_current",
+          "finding": "no_result",
           "exact_product_source_confirmed": false,
           "current_us_source_confirmed": false,
           "official_discontinuation_confirmed": false,
@@ -15686,7 +15691,7 @@
         ]
       },
       "reason_codes": ["exact_identity_unresolved"],
-      "rationale": "Identity method: family_or_name_only. UDI assessment: no_exact_result. Manufacturer finding: family_only_current. Plausible records could not be tied conservatively to the exact catalog product.",
+      "rationale": "Identity method: family_or_name_only. UDI assessment: no_exact_result. Manufacturer finding: no_result. Plausible records could not be tied conservatively to the exact catalog product.",
       "unresolved_questions": [
         "Can the manufacturer confirm the exact U.S. catalog/model identity?"
       ],

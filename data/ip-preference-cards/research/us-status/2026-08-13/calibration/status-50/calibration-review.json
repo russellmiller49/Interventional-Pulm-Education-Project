@@ -13,7 +13,7 @@
     {
       "input_id": "status_proposals",
       "path": "data/ip-preference-cards/research/us-status/2026-08-13/calibration/status-50/us-status-evidence-proposals.json",
-      "sha256": "c147c1a986d69074428f0de61e7a813b561ba45cd903016b8f4cef2e4a84f573"
+      "sha256": "4084dbc85821711766837853fbbe24ace6b0da644bbc1ba19ec1a7cb7c98c905"
     }
   ],
   "summary": {
@@ -88,8 +88,8 @@
     "manufacturer_research": {
       "search_completed_count": 32,
       "search_completion_rate": 0.64,
-      "successful_source_research_count": 28,
-      "success_rate_of_completed_searches": 0.875,
+      "successful_source_research_count": 23,
+      "success_rate_of_completed_searches": 0.71875,
       "exact_product_source_confirmed_count": 9,
       "current_us_source_confirmed_count": 6
     },
@@ -172,7 +172,7 @@
       "confidence": "low",
       "identity_match_method": "none",
       "manual_review_status": "manually_inspected",
-      "inspection_note": "Aspirator for Collecting Secretions with Cut-Off Hole: identity=none; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=family_only_current (search completed); active conflict flags=none; classification=insufficient_evidence.",
+      "inspection_note": "Aspirator for Collecting Secretions with Cut-Off Hole: identity=none; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=no_result (search completed); active conflict flags=none; classification=insufficient_evidence.",
       "adjudication": "supported_as_classified",
       "challenge_tags": [
         "adjacent_sku_trap",
@@ -187,8 +187,8 @@
       "udi_distribution_assessment": "no_exact_result",
       "exact_udi_configuration_count": 0,
       "manufacturer_search_completed": true,
-      "manufacturer_finding": "family_only_current",
-      "manufacturer_source_found": true,
+      "manufacturer_finding": "no_result",
+      "manufacturer_source_found": false,
       "live_status_conflict": false,
       "has_any_conflict_flag": false,
       "active_conflict_flags": [],
@@ -323,7 +323,7 @@
       "confidence": "low",
       "identity_match_method": "none",
       "manual_review_status": "manually_inspected",
-      "inspection_note": "Aspirator for Collecting Secretions without Cut-Off Hole: identity=none; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=family_only_current (search completed); active conflict flags=none; classification=insufficient_evidence.",
+      "inspection_note": "Aspirator for Collecting Secretions without Cut-Off Hole: identity=none; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=no_result (search completed); active conflict flags=none; classification=insufficient_evidence.",
       "adjudication": "supported_as_classified",
       "challenge_tags": [
         "adjacent_sku_trap",
@@ -338,8 +338,8 @@
       "udi_distribution_assessment": "no_exact_result",
       "exact_udi_configuration_count": 0,
       "manufacturer_search_completed": true,
-      "manufacturer_finding": "family_only_current",
-      "manufacturer_source_found": true,
+      "manufacturer_finding": "no_result",
+      "manufacturer_source_found": false,
       "live_status_conflict": false,
       "has_any_conflict_flag": false,
       "active_conflict_flags": [],
@@ -400,7 +400,7 @@
       "confidence": "low",
       "identity_match_method": "none",
       "manual_review_status": "manually_inspected",
-      "inspection_note": "Single-Use Plastic Collection Device, Pack of 100: identity=none; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=family_only_current (search completed); active conflict flags=none; classification=insufficient_evidence.",
+      "inspection_note": "Single-Use Plastic Collection Device, Pack of 100: identity=none; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=no_result (search completed); active conflict flags=none; classification=insufficient_evidence.",
       "adjudication": "supported_as_classified",
       "challenge_tags": [
         "device_intelligence_exemplar",
@@ -414,8 +414,8 @@
       "udi_distribution_assessment": "no_exact_result",
       "exact_udi_configuration_count": 0,
       "manufacturer_search_completed": true,
-      "manufacturer_finding": "family_only_current",
-      "manufacturer_source_found": true,
+      "manufacturer_finding": "no_result",
+      "manufacturer_source_found": false,
       "live_status_conflict": false,
       "has_any_conflict_flag": false,
       "active_conflict_flags": [],
@@ -1060,7 +1060,7 @@
       "confidence": "low",
       "identity_match_method": "exact_manufacturer_catalog_number",
       "manual_review_status": "manually_inspected",
-      "inspection_note": "Autoclavable Plastic Cannula, Pack of 5: identity=exact_manufacturer_catalog_number; UDI=all_exact_configurations_active (4 exact configurations: 4 active, 0 ended, 0 unknown); manufacturer=family_only_current (search completed); active conflict flags=none; classification=insufficient_evidence.",
+      "inspection_note": "Autoclavable Plastic Cannula, Pack of 5: identity=exact_manufacturer_catalog_number; UDI=all_exact_configurations_active (4 exact configurations: 4 active, 0 ended, 0 unknown); manufacturer=no_result (search completed); active conflict flags=none; classification=insufficient_evidence.",
       "adjudication": "supported_as_classified",
       "challenge_tags": [
         "adjacent_sku_trap",
@@ -1076,8 +1076,8 @@
       "udi_distribution_assessment": "all_exact_configurations_active",
       "exact_udi_configuration_count": 4,
       "manufacturer_search_completed": true,
-      "manufacturer_finding": "family_only_current",
-      "manufacturer_source_found": true,
+      "manufacturer_finding": "no_result",
+      "manufacturer_source_found": false,
       "live_status_conflict": false,
       "has_any_conflict_flag": false,
       "active_conflict_flags": [],
@@ -1606,7 +1606,7 @@
       "confidence": "low",
       "identity_match_method": "family_or_name_only",
       "manual_review_status": "manually_inspected",
-      "inspection_note": "Application Cannula for Thoracic Drainage: identity=family_or_name_only; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=family_only_current (search completed); active conflict flags=identity|manufacturer; classification=identity_unresolved.",
+      "inspection_note": "Application Cannula for Thoracic Drainage: identity=family_or_name_only; UDI=no_exact_result (0 exact configurations: 0 active, 0 ended, 0 unknown); manufacturer=no_result (search completed); active conflict flags=identity|manufacturer; classification=identity_unresolved.",
       "adjudication": "supported_as_classified",
       "challenge_tags": [
         "adjacent_sku_trap",
@@ -1621,8 +1621,8 @@
       "udi_distribution_assessment": "no_exact_result",
       "exact_udi_configuration_count": 0,
       "manufacturer_search_completed": true,
-      "manufacturer_finding": "family_only_current",
-      "manufacturer_source_found": true,
+      "manufacturer_finding": "no_result",
+      "manufacturer_source_found": false,
       "live_status_conflict": false,
       "has_any_conflict_flag": true,
       "active_conflict_flags": ["identity", "manufacturer"],

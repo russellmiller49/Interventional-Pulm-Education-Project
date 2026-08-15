@@ -49,11 +49,11 @@
     "title": "ERBECRYO 2 with Flexible Single-Use Cryoprobes",
     "publication_or_revision_date": "2023-06",
     "us_specific": true,
-    "current_status_signal": "current_catalog_or_product_page",
+    "current_status_signal": "identity_only",
     "exact_identifier_basis": "The U.S. brochure's product-data table gives exact product numbers for the cryoprobes and ERBECRYO 2 accessories.",
     "expected_identifier_examples": ["20402-401", "20402-410", "20402-411", "20410-004"],
-    "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number.",
-    "limitations": "The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+    "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication.",
+    "limitations": "A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
   },
   {
     "catalog_source_id": "SRC019",

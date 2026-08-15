@@ -87,6 +87,44 @@ discontinuation, and the absence of a manufacturer page is not negative evidence
 [`openfda-enrichment.md`](./openfda-enrichment.md#dated-current-us-status-research-proposal-only)
 for the local commands, dated output root, and ignored raw cache.
 
+### Current-distribution evidence policy
+
+A current exact manufacturer webpage or document is **not** mandatory for
+`current_us_distribution_supported`. The state is anchored on the FDA's own current
+commercial-distribution record for the exact device. A product may receive it when product
+identity is exact, a current exact GUDID configuration reports in commercial distribution, the
+GUDID snapshot is current, all relevant exact configurations were retrieved, there is no mixed or
+ended configuration conflict, and there is no affirmative discontinuation or other material
+distribution conflict. The independent invariant audit must also pass.
+
+Confidence is a separate question from the state:
+
+- **high** — a second exact current source corroborates the GUDID evidence: an exact current FDA
+  registration/listing, or an exact current official manufacturer U.S. source.
+- **moderate** — current exact GUDID distribution evidence and reliable exact identity, with no
+  second exact current source.
+
+There is no low-confidence variant of the supported state. A product whose evidence does not reach
+moderate stays in an unresolved research state instead.
+
+A manufacturer document may establish exact identity and configuration without establishing
+current distribution. That source is classified `identity_only` in the reviewed manufacturer
+source registry and produces the manufacturer finding `exact_identity_only_not_current`; it is
+never admitted as current-distribution evidence, and it is never reported as a current family
+source. Current distribution is also not present orderability: no proposal claims that a product
+can be ordered today or is in stock, and every positive carries an explicit open question asking
+whether it is presently orderable and from which distributor.
+
+An invariant failure that reports _missing_ evidence rather than _contradictory_ evidence returns
+the product to an unresolved state. Only a genuine source conflict is reported as
+`current_status_conflicted`, so a reviewer is never told that sources disagree when nothing was
+found to disagree with.
+
+Every run binds its governed inputs into `input_hashes`, including the optional `--selection`
+file's path and SHA-256 when a selection narrows the evaluated cohort. A selected-subset run is
+therefore never indistinguishable from a whole-cohort run, and editing the selection changes the
+recorded input identity.
+
 ### Market status and safety action are independent axes
 
 Distribution status answers "is this product currently distributed in the United States?" and FDA

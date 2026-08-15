@@ -132,7 +132,7 @@ describe('current U.S. status proposal classification', () => {
     ])
   })
 
-  it('supports current distribution only with exact identity, complete FDA evidence, and a current exact official U.S. manufacturer source', () => {
+  it('supports current distribution with exact identity, complete FDA evidence, and a second exact current source', () => {
     const result = classifyUsStatusProposal(baseInput())
 
     expect(result).toMatchObject({
@@ -149,7 +149,26 @@ describe('current U.S. status proposal classification', () => {
     })
   })
 
-  it('can use an exact current listing as distribution evidence without treating listing as approval', () => {
+  it('can use an exact current listing as the second exact current source without treating listing as approval', () => {
+    const input = baseInput()
+    input.manufacturer.finding = 'family_only_current'
+    input.registration_listing = {
+      search_completed: true,
+      snapshot_current: true,
+      match_scope: 'exact_product',
+      listing_status: 'current',
+      establishment_registration_current: true,
+      conflict: false,
+    }
+
+    const result = classifyUsStatusProposal(input)
+    expect(result.research_state).toBe('current_us_distribution_supported')
+    expect(result.confidence).toBe('high')
+    expect(result.layer_assessments.registration_listing).toBe('exact_current_listing')
+    expect(result.layer_assessments.authorization).toBe('not_found')
+  })
+
+  it('does not let an exact current listing alone establish current distribution without GUDID evidence', () => {
     const input = baseInput()
     input.udi_distribution.configurations = []
     input.registration_listing = {
@@ -162,9 +181,8 @@ describe('current U.S. status proposal classification', () => {
     }
 
     const result = classifyUsStatusProposal(input)
-    expect(result.research_state).toBe('current_us_distribution_supported')
-    expect(result.layer_assessments.registration_listing).toBe('exact_current_listing')
-    expect(result.layer_assessments.authorization).toBe('not_found')
+    expect(result.research_state).not.toBe('current_us_distribution_supported')
+    expect(result.layer_assessments.udi_distribution).toBe('no_exact_result')
   })
 
   it('does not let a family-level listing independently establish current distribution', () => {
@@ -173,17 +191,153 @@ describe('current U.S. status proposal classification', () => {
     input.registration_listing.match_scope = 'family_or_proprietary_name'
     input.registration_listing.listing_status = 'current'
     input.registration_listing.establishment_registration_current = true
+    input.manufacturer.finding = 'family_only_current'
 
     const result = classifyUsStatusProposal(input)
     expect(result.research_state).toBe('insufficient_evidence')
     expect(result.layer_assessments.registration_listing).toBe('family_current_listing')
   })
 
-  it('does not support a positive when the manufacturer corroboration is absent', () => {
-    const input = baseInput()
-    input.manufacturer.finding = 'no_result'
+  describe('owner-approved evidence policy: a current manufacturer source is not mandatory', () => {
+    it('supports current distribution at moderate confidence on current exact GUDID evidence alone', () => {
+      const input = baseInput()
+      input.manufacturer.finding = 'no_result'
+      input.registration_listing.match_scope = 'family_or_proprietary_name'
+      input.registration_listing.listing_status = 'current'
+      input.registration_listing.establishment_registration_current = true
 
-    expect(classifyUsStatusProposal(input).research_state).toBe('insufficient_evidence')
+      const result = classifyUsStatusProposal(input)
+      expect(result).toMatchObject({
+        research_state: 'current_us_distribution_supported',
+        confidence: 'moderate',
+        proposed_human_review_disposition: 'review_for_prototype_visibility',
+        invariant_audit: { performed: true, passed: true, failures: [] },
+      })
+      expect(result.layer_assessments.udi_distribution).toBe('all_exact_configurations_active')
+      expect(result.reason_codes).toContain('current_exact_gudid_commercial_distribution')
+      expect(result.reason_codes).toContain(
+        'no_second_exact_current_source_confidence_capped_at_moderate',
+      )
+    })
+
+    it.each([
+      ['an exact current FDA listing', 'registration_listing'],
+      ['an exact current manufacturer U.S. source', 'manufacturer'],
+    ] as const)('raises the same evidence to high only with %s', (_label, layer) => {
+      const moderate = baseInput()
+      moderate.manufacturer.finding = 'no_result'
+      moderate.registration_listing.match_scope = 'family_or_proprietary_name'
+      moderate.registration_listing.listing_status = 'current'
+      moderate.registration_listing.establishment_registration_current = true
+      expect(classifyUsStatusProposal(moderate).confidence).toBe('moderate')
+
+      const high = JSON.parse(JSON.stringify(moderate)) as UsStatusClassificationInput
+      if (layer === 'registration_listing') {
+        high.registration_listing.match_scope = 'exact_product'
+        high.registration_listing.establishment_registration_current = true
+      } else {
+        high.manufacturer.finding = 'current_exact_official_us_product'
+      }
+
+      const result = classifyUsStatusProposal(high)
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.confidence).toBe('high')
+      expect(result.reason_codes).toContain('second_exact_current_source_corroborates_distribution')
+    })
+
+    it('does not treat an historical manufacturer identity document as current distribution evidence', () => {
+      const input = baseInput()
+      // An identity-only manufacturer document names the exact product and configuration but
+      // makes no claim that it is distributed today.
+      input.manufacturer.finding = 'exact_identity_only_not_current'
+
+      const result = classifyUsStatusProposal(input)
+      expect(result.research_state).toBe('current_us_distribution_supported')
+      expect(result.confidence).toBe('moderate')
+      expect(result.layer_assessments.manufacturer).toBe('exact_identity_only_not_current')
+      expect(result.reason_codes).not.toContain(
+        'second_exact_current_source_corroborates_distribution',
+      )
+    })
+
+    it('never claims current orderability for a supported product', () => {
+      const withSecondSource = classifyUsStatusProposal(baseInput())
+      const gudidOnly = baseInput()
+      gudidOnly.manufacturer.finding = 'no_result'
+
+      for (const result of [withSecondSource, classifyUsStatusProposal(gudidOnly)]) {
+        expect(result.research_state).toBe('current_us_distribution_supported')
+        // Orderability is recorded as unknown, and no reason code asserts the opposite.
+        expect(result.reason_codes).toContain('current_orderability_not_established')
+        for (const affirmative of [
+          'current_orderability_confirmed',
+          'currently_orderable',
+          'in_stock',
+          'available_to_order',
+        ]) {
+          expect(result.reason_codes).not.toContain(affirmative)
+        }
+      }
+    })
+
+    it('keeps an unresolved product unresolved rather than giving it a low-confidence positive', () => {
+      const input = baseInput()
+      input.manufacturer.finding = 'no_result'
+      input.independent_invariants.evidence_packet_complete = false
+
+      const result = classifyUsStatusProposal(input)
+      expect(result.research_state).toBe('insufficient_evidence')
+      expect(result.confidence).toBe('low')
+      expect(result.research_state).not.toBe('current_us_distribution_supported')
+    })
+
+    it('keeps a moderate GUDID-only positive intact under an active recall and holds review only', () => {
+      const input = baseInput()
+      input.manufacturer.finding = 'no_result'
+      const withoutRecall = classifyUsStatusProposal(input)
+
+      input.safety_action = {
+        search_status: 'searched',
+        action_state: 'active_exact_product_action',
+        action_scope: 'lot_specific',
+        exact_action_sources_traceable: true,
+      }
+      const withRecall = classifyUsStatusProposal(input)
+
+      // The recall moves neither the distribution state nor its confidence...
+      expect(withRecall.research_state).toBe(withoutRecall.research_state)
+      expect(withRecall.research_state).toBe('current_us_distribution_supported')
+      expect(withRecall.confidence).toBe('moderate')
+      expect(withRecall.layer_assessments.udi_distribution).toBe(
+        withoutRecall.layer_assessments.udi_distribution,
+      )
+      // ...it only holds the visibility review.
+      expect(withRecall.visibility_review_eligibility).toBe('hold_active_safety_action')
+      expect(withRecall.proposed_human_review_disposition).toBe(
+        'keep_hidden_pending_active_safety_action_review',
+      )
+      expect(withRecall.research_state).not.toBe('not_currently_distributed_supported')
+    })
+
+    it('still rejects a positive when an affirmative discontinuation stands against active GUDID evidence', () => {
+      const input = baseInput()
+      input.manufacturer.finding = 'exact_official_discontinuation'
+
+      const result = classifyUsStatusProposal(input)
+      expect(result.research_state).toBe('current_status_conflicted')
+      expect(result.invariant_audit.failures).toContain('discontinuation_conflict_present')
+    })
+
+    it('still rejects a positive when an exact inactive FDA listing stands against active GUDID evidence', () => {
+      const input = baseInput()
+      input.manufacturer.finding = 'no_result'
+      input.registration_listing.match_scope = 'exact_product'
+      input.registration_listing.listing_status = 'inactive'
+
+      const result = classifyUsStatusProposal(input)
+      expect(result.research_state).toBe('current_status_conflicted')
+      expect(result.invariant_audit.failures).toContain('distribution_conflict_present')
+    })
   })
 
   it('does not support a positive from incomplete FDA-layer searches', () => {
@@ -283,9 +437,7 @@ describe('current U.S. status proposal classification', () => {
 
     const result = classifyUsStatusProposal(input)
     expect(result.research_state).toBe('current_status_conflicted')
-    expect(result.invariant_audit.failures).toContain(
-      'active_distribution_evidence_present_for_negative',
-    )
+    expect(result.invariant_audit.failures).toContain('discontinuation_conflict_present')
   })
 
   it('keeps historical authorization separate when current distribution is unresolved', () => {
@@ -567,6 +719,9 @@ describe('current U.S. status proposal classification', () => {
     })
   })
 
+  // A missing-evidence failure and a contradictory-evidence failure are not the same finding.
+  // Only the second may be reported to a reviewer as `current_status_conflicted`; the first means
+  // the product is simply unresolved.
   const independentInvariantCases: Array<
     [keyof IndependentInvariantEvidence, HighConfidenceInvariantFailure, UsStatusResearchState]
   > = [
@@ -574,24 +729,20 @@ describe('current U.S. status proposal classification', () => {
     [
       'exact_configuration_inventory_complete',
       'exact_configuration_inventory_incomplete',
-      'current_status_conflicted',
+      'insufficient_evidence',
     ],
-    [
-      'package_levels_distinguished',
-      'package_levels_not_distinguished',
-      'current_status_conflicted',
-    ],
-    ['evidence_packet_complete', 'evidence_packet_incomplete', 'current_status_conflicted'],
-    ['all_sources_traceable', 'source_traceability_incomplete', 'current_status_conflicted'],
+    ['package_levels_distinguished', 'package_levels_not_distinguished', 'insufficient_evidence'],
+    ['evidence_packet_complete', 'evidence_packet_incomplete', 'insufficient_evidence'],
+    ['all_sources_traceable', 'source_traceability_incomplete', 'insufficient_evidence'],
     [
       'registration_authorization_separated',
       'registration_authorization_not_separated',
-      'current_status_conflicted',
+      'insufficient_evidence',
     ],
     [
       'recall_excluded_from_distribution',
       'recall_not_separated_from_distribution',
-      'current_status_conflicted',
+      'insufficient_evidence',
     ],
   ]
 
@@ -613,6 +764,16 @@ describe('current U.S. status proposal classification', () => {
       expect(result.reason_codes).toContain('high_confidence_invariant_failed')
     },
   )
+
+  it('never reports a missing-evidence invariant failure as a source conflict', () => {
+    const input = baseInput()
+    input.independent_invariants.evidence_packet_complete = false
+
+    const result = classifyUsStatusProposal(input)
+    expect(result.research_state).toBe('insufficient_evidence')
+    expect(result.research_state).not.toBe('current_status_conflicted')
+    expect(result.reason_codes).toContain('evidence_packet_incomplete')
+  })
 
   it.each([
     ['identity', 'identity_conflict_present', 'identity_unresolved'],
@@ -640,7 +801,8 @@ describe('current U.S. status proposal classification', () => {
     input.independent_invariants.all_sources_traceable = false
 
     const result = classifyUsStatusProposal(input)
-    expect(result.research_state).toBe('current_status_conflicted')
+    expect(result.research_state).toBe('insufficient_evidence')
+    expect(result.research_state).not.toBe('not_currently_distributed_supported')
     expect(result.invariant_audit).toMatchObject({
       performed: true,
       provisional_state: 'not_currently_distributed_supported',

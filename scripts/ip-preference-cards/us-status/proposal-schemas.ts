@@ -692,6 +692,31 @@ export const usStatusEvidenceProposalSchema = z
           'An active safety-action hold requires the active-safety-action review disposition.',
       })
     }
+    // Owner-approved evidence policy, re-enforced at the artifact boundary so a classifier
+    // regression cannot quietly widen the supported state or overstate its confidence.
+    if (value.research_state === 'current_us_distribution_supported') {
+      if (value.layer_results.udi_distribution.assessment !== 'all_exact_configurations_active') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['research_state'],
+          message:
+            'current_us_distribution_supported requires current exact GUDID commercial-distribution evidence.',
+        })
+      }
+      const secondExactCurrentSource =
+        value.layer_results.registration_listing.assessment === 'exact_current_listing' ||
+        value.layer_results.manufacturer.finding === 'current_exact_official_us_product'
+      const expected = secondExactCurrentSource ? 'high' : 'moderate'
+      if (value.confidence !== expected) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['confidence'],
+          message: secondExactCurrentSource
+            ? 'A supported current-distribution state with a second exact current source is high confidence.'
+            : 'Without a second exact current source, a supported current-distribution state is capped at moderate confidence.',
+        })
+      }
+    }
     // A safety action is never a distribution conclusion in either direction.
     if (
       safety.action_state === 'active_exact_product_action' &&

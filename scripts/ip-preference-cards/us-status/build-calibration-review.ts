@@ -855,11 +855,15 @@ const CSV_COLUMNS: Array<keyof CalibrationReviewRow> = [
 ]
 
 function csvCell(value: unknown): string {
-  const text = Array.isArray(value)
+  const raw = Array.isArray(value)
     ? value.join('|')
     : value === null || value === undefined
       ? ''
       : String(value)
+  // A spreadsheet reads a leading `=`, `+`, `-`, `@`, tab, or carriage return as a formula, and
+  // these cells carry free text from FDA and manufacturer sources. Neutralize before quoting, the
+  // same way the governed review CSVs do.
+  const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 

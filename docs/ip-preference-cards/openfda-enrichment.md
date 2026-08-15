@@ -167,6 +167,21 @@ recall is not evidence of discontinuation, and website absence is not a negative
 positive and negative current-status proposals require the package's independent invariants and
 remain recommendations for human review.
 
+A current exact manufacturer source is not mandatory for `current_us_distribution_supported`: the
+state is anchored on current exact GUDID commercial-distribution evidence, and a second exact
+current source (an exact current FDA listing or an exact current manufacturer U.S. source) raises
+confidence from `moderate` to `high` rather than gating the state. A manufacturer document
+registered as `identity_only` establishes exact identity and configuration only; it yields the
+manufacturer finding `exact_identity_only_not_current` and never counts as current distribution or
+as a current family source. No proposal claims present orderability or stock in any case. See
+[`catalog-verification-workflow.md`](./catalog-verification-workflow.md#current-distribution-evidence-policy)
+for the full policy.
+
+Every run records its governed inputs in `input_hashes`. When `--selection` narrows the evaluated
+cohort — as the calibration run above does — the selection file's path and SHA-256 are recorded
+too, so a selected-subset run is never indistinguishable from a whole-cohort run and editing the
+selection changes the recorded input identity.
+
 ### FDA safety-action layer
 
 The safety layer reads two official FDA systems through the same cache/retry/provenance client as

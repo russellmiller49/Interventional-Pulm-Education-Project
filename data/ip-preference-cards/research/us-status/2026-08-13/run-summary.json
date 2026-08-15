@@ -3,8 +3,8 @@
   "artifact_kind": "current_us_status_run_summary",
   "method_version": "current-us-status-evidence-v1",
   "research_as_of_date": "2026-08-13",
-  "proposal_artifact_sha256": "1aa6482d07b4c138f671b074e417d1c0b62ee76ff0ba10505634035fdfaf51ec",
-  "source_manifest_sha256": "3d80ad0d218de8885826f26e07f99052bfca71d6d7f26525a8c02ce17dc13ef7",
+  "proposal_artifact_sha256": "1fe01cecc6f3c5e9cdac336fe2838c9d88d486add485455b24155a4e82bfbd2d",
+  "source_manifest_sha256": "087d622821b172fe572dd258e282489d43e5fc18c8b72940ba805f0dbfeea4a3",
   "input_hashes": [
     {
       "input_id": "catalog-products",
@@ -19,7 +19,7 @@
     {
       "input_id": "manufacturer-source-manifest",
       "path": "data/ip-preference-cards/research/us-status/2026-08-13/manufacturer-source-snapshot.json",
-      "sha256": "c484391ee7b1bb61d4c2e57b69806bd5d3ee661116dc8be503907d684a06011c"
+      "sha256": "85a13ed07b3aa5a236375fabb9fef6d3304d836b4d7ed5484d9125fee9db7e85"
     },
     {
       "input_id": "verification-backlog-stale-context",
@@ -322,18 +322,18 @@
   "counts": {
     "product_count": 779,
     "research_state_counts": {
-      "current_us_distribution_supported": 3,
+      "current_us_distribution_supported": 34,
       "not_currently_distributed_supported": 0,
-      "historically_authorized_current_status_unresolved": 32,
+      "historically_authorized_current_status_unresolved": 25,
       "current_status_conflicted": 18,
       "identity_unresolved": 243,
-      "insufficient_evidence": 482,
+      "insufficient_evidence": 458,
       "not_applicable_noncommercial_or_local": 1
     },
     "confidence_counts": {
-      "high": 4,
-      "moderate": 50,
-      "low": 725
+      "high": 11,
+      "moderate": 67,
+      "low": 701
     },
     "safety_search_status_counts": {
       "searched": 737,
@@ -348,19 +348,19 @@
       "unknown": 42
     },
     "visibility_review_eligibility_counts": {
-      "eligible_for_owner_review": 0,
+      "eligible_for_owner_review": 28,
       "hold_active_safety_action": 3,
       "hold_safety_search_incomplete": 0,
-      "hold_safety_identity_ambiguous": 0,
-      "not_applicable": 776
+      "hold_safety_identity_ambiguous": 3,
+      "not_applicable": 745
     },
     "review_disposition_counts": {
-      "review_for_prototype_visibility": 0,
+      "review_for_prototype_visibility": 28,
       "keep_hidden_conflicting": 18,
       "keep_hidden_identity_unresolved": 243,
-      "keep_hidden_insufficient_evidence": 514,
+      "keep_hidden_insufficient_evidence": 483,
       "keep_hidden_pending_active_safety_action_review": 3,
-      "keep_hidden_pending_safety_review": 0,
+      "keep_hidden_pending_safety_review": 3,
       "review_as_not_currently_distributed": 0,
       "review_as_noncommercial_or_local": 1
     },
@@ -380,8 +380,8 @@
     "cache_misses": 0,
     "retry_count": 0,
     "query_error_count": 199,
-    "started_at": "2026-08-15T04:43:37.617Z",
-    "completed_at": "2026-08-15T04:43:40.613Z",
+    "started_at": "2026-08-15T16:37:55.755Z",
+    "completed_at": "2026-08-15T16:37:58.334Z",
     "raw_cache_committed": false
   },
   "canonical_change_applied": false

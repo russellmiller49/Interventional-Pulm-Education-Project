@@ -3,8 +3,8 @@
   "artifact_kind": "current_us_status_run_summary",
   "method_version": "current-us-status-evidence-v1",
   "research_as_of_date": "2026-08-13",
-  "proposal_artifact_sha256": "c147c1a986d69074428f0de61e7a813b561ba45cd903016b8f4cef2e4a84f573",
-  "source_manifest_sha256": "0cd3525a3e3a030256db54480730eaf5412ab3e3374b516b98bca8af241ecb15",
+  "proposal_artifact_sha256": "4084dbc85821711766837853fbbe24ace6b0da644bbc1ba19ec1a7cb7c98c905",
+  "source_manifest_sha256": "d801cfc83c5680bdd42e4f844700f9fda91f26e3341c67eb7dcaf42c3750a1b5",
   "input_hashes": [
     {
       "input_id": "catalog-products",
@@ -19,7 +19,12 @@
     {
       "input_id": "manufacturer-source-manifest",
       "path": "data/ip-preference-cards/research/us-status/2026-08-13/manufacturer-source-snapshot.json",
-      "sha256": "c484391ee7b1bb61d4c2e57b69806bd5d3ee661116dc8be503907d684a06011c"
+      "sha256": "85a13ed07b3aa5a236375fabb9fef6d3304d836b4d7ed5484d9125fee9db7e85"
+    },
+    {
+      "input_id": "product-selection",
+      "path": "data/ip-preference-cards/research/us-status/2026-08-13/calibration-cohort.json",
+      "sha256": "e4c190f1edb46daddc98c7dc2a34203d1cf4f24080efea8604062baa070d43ac"
     },
     {
       "input_id": "verification-backlog-stale-context",
@@ -370,8 +375,8 @@
     "cache_misses": 0,
     "retry_count": 0,
     "query_error_count": 7,
-    "started_at": "2026-08-15T04:43:40.941Z",
-    "completed_at": "2026-08-15T04:43:41.278Z",
+    "started_at": "2026-08-15T16:39:50.783Z",
+    "completed_at": "2026-08-15T16:39:51.062Z",
     "raw_cache_committed": false
   },
   "canonical_change_applied": false

@@ -99,9 +99,18 @@ export interface AuthorizationEvidence {
   finding: AuthorizationFinding
 }
 
+/**
+ * Manufacturer-layer findings.
+ *
+ * A manufacturer document can establish exact identity and configuration without establishing
+ * that the product is currently distributed or presently orderable. That case is
+ * `exact_identity_only_not_current`: it is exact evidence about *what the product is*, and it is
+ * deliberately not admitted as current-distribution evidence.
+ */
 export const MANUFACTURER_FINDINGS = [
   'current_exact_official_us_product',
   'exact_official_discontinuation',
+  'exact_identity_only_not_current',
   'family_only_current',
   'current_non_us',
   'conflicting',
@@ -263,7 +272,6 @@ export const HIGH_CONFIDENCE_INVARIANT_FAILURES = [
   'distribution_conflict_present',
   'discontinuation_conflict_present',
   'official_distribution_evidence_incomplete',
-  'manufacturer_corroboration_incomplete',
   'manufacturer_search_incomplete',
   'current_non_us_manufacturer_applicability_unresolved',
   'active_distribution_evidence_present_for_negative',
@@ -515,14 +523,22 @@ function invariantAudit(
   if (input.conflicts.distribution || input.registration_listing.conflict) {
     failures.add('distribution_conflict_present')
   }
-  if (input.conflicts.discontinuation || layers.manufacturer === 'conflicting') {
+  if (
+    input.conflicts.discontinuation ||
+    layers.manufacturer === 'conflicting' ||
+    // With the manufacturer layer no longer required to corroborate a positive, an affirmative
+    // exact discontinuation has to be caught here instead of by the primary classifier's
+    // conflict ladder, which a provisional positive now bypasses.
+    (positive && layers.manufacturer === 'exact_official_discontinuation')
+  ) {
     failures.add('discontinuation_conflict_present')
+  }
+  // Likewise for an exact inactive FDA listing standing against active GUDID distribution.
+  if (positive && layers.registration_listing === 'exact_inactive_listing') {
+    failures.add('distribution_conflict_present')
   }
   if (!officialDistributionSearchComplete(input)) {
     failures.add('official_distribution_evidence_incomplete')
-  }
-  if (positive && !manufacturerCurrent) {
-    failures.add('manufacturer_corroboration_incomplete')
   }
   if (!positive && !input.manufacturer.search_completed) {
     failures.add('manufacturer_search_incomplete')
@@ -565,6 +581,22 @@ const IDENTITY_INVARIANT_FAILURES = new Set<HighConfidenceInvariantFailure>([
 ])
 
 /**
+ * Invariant failures that report contradictory evidence, as opposed to missing evidence.
+ *
+ * Only these justify `current_status_conflicted`. A failure that merely says a layer was not
+ * searched, or that a source is untraceable, is an absence of evidence: calling that a conflict
+ * would tell a reviewer that sources disagree when in fact nothing was found to disagree with.
+ */
+const CONFLICT_INVARIANT_FAILURES = new Set<HighConfidenceInvariantFailure>([
+  'package_status_conflict',
+  'distribution_conflict_present',
+  'discontinuation_conflict_present',
+  'ended_distribution_evidence_present_for_positive',
+  'active_distribution_evidence_present_for_negative',
+  'current_non_us_manufacturer_applicability_unresolved',
+])
+
+/**
  * Maps a research state to the disposition a human reviewer receives.
  *
  * The two distribution-review dispositions are gated on the mandatory safety search: an ordinary
@@ -599,19 +631,46 @@ function dispositionFor(
   }
 }
 
+/**
+ * A second exact current source, independent of the GUDID commercial-distribution record.
+ *
+ * Either an exact current FDA registration/listing or an exact current official manufacturer U.S.
+ * source qualifies. Family-level or non-U.S. evidence does not: it is not exact, so it cannot
+ * corroborate the exact product's current U.S. status.
+ */
+export function hasSecondExactCurrentSource(layers: UsStatusLayerAssessments): boolean {
+  return (
+    layers.registration_listing === 'exact_current_listing' ||
+    layers.manufacturer === 'current_exact_official_us_product'
+  )
+}
+
+/**
+ * Confidence for a supported current-distribution state.
+ *
+ * Current exact GUDID commercial-distribution evidence plus reliable exact identity supports the
+ * state at `moderate`; a second exact current source raises it to `high`. There is no `low`
+ * variant of the supported state — a product whose evidence does not reach `moderate` stays in an
+ * unresolved research state instead.
+ */
+function positiveConfidence(layers: UsStatusLayerAssessments): UsStatusConfidence {
+  return hasSecondExactCurrentSource(layers) ? 'high' : 'moderate'
+}
+
 function confidenceFor(
   state: UsStatusResearchState,
-  authorization: AuthorizationFinding,
+  layers: UsStatusLayerAssessments,
 ): UsStatusConfidence {
   switch (state) {
     case 'current_us_distribution_supported':
+      return positiveConfidence(layers)
     case 'not_currently_distributed_supported':
     case 'not_applicable_noncommercial_or_local':
       return 'high'
     case 'current_status_conflicted':
       return 'moderate'
     case 'historically_authorized_current_status_unresolved':
-      return authorization === 'family_level_authorization' ? 'low' : 'moderate'
+      return layers.authorization === 'family_level_authorization' ? 'low' : 'moderate'
     case 'identity_unresolved':
     case 'insufficient_evidence':
       return 'low'
@@ -655,7 +714,7 @@ function result(
   }
   return {
     research_state: state,
-    confidence: confidenceFor(state, layers.authorization),
+    confidence: confidenceFor(state, layers),
     proposed_human_review_disposition: dispositionFor(state, safetyGate),
     visibility_review_eligibility: safetyGate.eligibility,
     reason_codes: [...reasonCodes].sort(),
@@ -679,17 +738,16 @@ export function classifyUsStatusProposal(
 
   const exactIdentity = hasExactIdentity(input.identity)
   const officialSearchComplete = officialDistributionSearchComplete(input)
-  const currentOfficialEvidence =
-    layers.udi_distribution === 'all_exact_configurations_active' ||
-    layers.registration_listing === 'exact_current_listing'
+  // Owner-approved evidence policy: a current exact manufacturer webpage or document is not
+  // mandatory. The supported state is anchored on the FDA's own current commercial-distribution
+  // record for the exact device — every exact configuration retrieved, current snapshot, active,
+  // and no mixed/ended split. A second exact current source raises confidence but is not the gate.
+  const currentGudidDistribution = layers.udi_distribution === 'all_exact_configurations_active'
   const negativeEvidence =
     layers.udi_distribution === 'all_exact_configurations_ended' ||
     layers.manufacturer === 'exact_official_discontinuation'
   const provisionalPositive = Boolean(
-    exactIdentity &&
-    officialSearchComplete &&
-    currentOfficialEvidence &&
-    layers.manufacturer === 'current_exact_official_us_product',
+    exactIdentity && officialSearchComplete && currentGudidDistribution,
   )
   const provisionalNegative = Boolean(
     exactIdentity &&
@@ -698,61 +756,95 @@ export function classifyUsStatusProposal(
     input.manufacturer.search_completed,
   )
 
+  let audit = emptyInvariantAudit()
+  let carriedReasons: string[] = []
+
   if (provisionalPositive || provisionalNegative) {
     const provisionalState = provisionalPositive
       ? 'current_us_distribution_supported'
       : 'not_currently_distributed_supported'
-    const audit = invariantAudit(input, layers, provisionalState)
-    if (!audit.passed) {
-      const identityFailure = audit.failures.some((failure) =>
-        IDENTITY_INVARIANT_FAILURES.has(failure),
-      )
+    audit = invariantAudit(input, layers, provisionalState)
+    if (audit.passed) {
+      // The safety gate runs only after the distribution audit has already resolved the state, so
+      // safety evidence can hold review without ever moving the distribution conclusion.
       return result(
-        identityFailure ? 'identity_unresolved' : 'current_status_conflicted',
+        provisionalState,
         layers,
-        ['high_confidence_invariant_failed', ...audit.failures],
+        provisionalPositive
+          ? [
+              'exact_identity_confirmed',
+              'current_exact_gudid_commercial_distribution',
+              hasSecondExactCurrentSource(layers)
+                ? 'second_exact_current_source_corroborates_distribution'
+                : 'no_second_exact_current_source_confidence_capped_at_moderate',
+              // Distribution is not orderability. Nothing in this evidence set says a buyer can
+              // place an order for this SKU today, and the proposal never implies that it does.
+              'current_orderability_not_established',
+            ]
+          : [
+              'exact_identity_confirmed',
+              layers.udi_distribution === 'all_exact_configurations_ended'
+                ? 'all_exact_udi_configurations_ended'
+                : 'exact_official_manufacturer_discontinuation',
+              'manufacturer_search_completed',
+            ],
         audit,
+        safetyReviewGate(input.safety_action),
       )
     }
-    // The safety gate runs only after the distribution audit has already resolved the state, so
-    // safety evidence can hold review without ever moving the distribution conclusion.
-    return result(
-      provisionalState,
-      layers,
-      provisionalPositive
-        ? [
-            'exact_identity_confirmed',
-            'current_official_distribution_or_listing_supported',
-            'current_exact_official_us_manufacturer_source',
-          ]
-        : [
-            'exact_identity_confirmed',
-            layers.udi_distribution === 'all_exact_configurations_ended'
-              ? 'all_exact_udi_configurations_ended'
-              : 'exact_official_manufacturer_discontinuation',
-            'manufacturer_search_completed',
-          ],
-      audit,
-      safetyReviewGate(input.safety_action),
-    )
+
+    carriedReasons = ['high_confidence_invariant_failed', ...audit.failures]
+    if (audit.failures.some((failure) => IDENTITY_INVARIANT_FAILURES.has(failure))) {
+      return result('identity_unresolved', layers, carriedReasons, audit)
+    }
+    if (audit.failures.some((failure) => CONFLICT_INVARIANT_FAILURES.has(failure))) {
+      return result('current_status_conflicted', layers, carriedReasons, audit)
+    }
+    // Completeness-only failure: evidence is missing, not contradictory. Fall through to the
+    // ordinary ladder so the product lands in an unresolved state rather than being reported to a
+    // reviewer as a conflict between sources that never disagreed.
   }
 
   if (input.identity.conflict || input.identity.match_method === 'family_or_name_only') {
-    return result('identity_unresolved', layers, ['exact_identity_unresolved'])
+    return result(
+      'identity_unresolved',
+      layers,
+      [...carriedReasons, 'exact_identity_unresolved'],
+      audit,
+    )
   }
   if (!exactIdentity) {
-    return result('insufficient_evidence', layers, ['no_exact_identity_evidence'])
+    return result(
+      'insufficient_evidence',
+      layers,
+      [...carriedReasons, 'no_exact_identity_evidence'],
+      audit,
+    )
   }
   if (hasStatusConflict(input, layers)) {
-    return result('current_status_conflicted', layers, ['current_status_evidence_conflict'])
+    return result(
+      'current_status_conflicted',
+      layers,
+      [...carriedReasons, 'current_status_evidence_conflict'],
+      audit,
+    )
   }
   if (isAuthorizationSupported(layers.authorization)) {
-    return result('historically_authorized_current_status_unresolved', layers, [
-      'authorization_supported_but_current_distribution_unresolved',
-    ])
+    return result(
+      'historically_authorized_current_status_unresolved',
+      layers,
+      [...carriedReasons, 'authorization_supported_but_current_distribution_unresolved'],
+      audit,
+    )
   }
-  return result('insufficient_evidence', layers, [
-    'no_result_is_not_discontinuation_evidence',
-    'searches_did_not_establish_current_status',
-  ])
+  return result(
+    'insufficient_evidence',
+    layers,
+    [
+      ...carriedReasons,
+      'no_result_is_not_discontinuation_evidence',
+      'searches_did_not_establish_current_status',
+    ],
+    audit,
+  )
 }

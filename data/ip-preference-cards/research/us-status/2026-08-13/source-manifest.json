@@ -17,7 +17,7 @@
     {
       "input_id": "manufacturer-source-manifest",
       "path": "data/ip-preference-cards/research/us-status/2026-08-13/manufacturer-source-snapshot.json",
-      "sha256": "c484391ee7b1bb61d4c2e57b69806bd5d3ee661116dc8be503907d684a06011c"
+      "sha256": "85a13ed07b3aa5a236375fabb9fef6d3304d836b4d7ed5484d9125fee9db7e85"
     },
     {
       "input_id": "verification-backlog-stale-context",
@@ -593,11 +593,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20402-411"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-0577F2977F:SRC021:1",
@@ -993,11 +993,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-0E6A5953F1:SRC021:1",
@@ -3313,11 +3313,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20410-004"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-3236D0CEDC:SRC021:1",
@@ -5073,11 +5073,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-5B0D81C458:SRC021:1",
@@ -5273,11 +5273,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20402-202"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-5E2713887A:SRC021:1",
@@ -5733,11 +5733,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-6C99AA9B16:SRC021:1",
@@ -6633,11 +6633,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20402-410"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-7E17F5F17E:SRC031:1",
@@ -7333,11 +7333,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20180-010"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-9143E639BA:SRC031:1",
@@ -7733,11 +7733,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-9B0EE44246:SRC021:1",
@@ -8073,11 +8073,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20402-401"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-A2F4A953C4:SRC021:1",
@@ -8413,11 +8413,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20410-011"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-AACBA3F0AD:SRC022:1",
@@ -8933,11 +8933,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20402-300"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-B6A919EF32:SRC021:1",
@@ -9593,11 +9593,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-C3FDFF59E0:SRC019:1",
@@ -9753,11 +9753,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "exact_product",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": ["20402-008"],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-C717487CFD:SRC021:1",
@@ -10313,11 +10313,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-D063F090C6:SRC017:1",
@@ -10593,11 +10593,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-D58A0A54AA:SRC021:1",
@@ -10833,11 +10833,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-DA3218ED45:SRC017:1",
@@ -11913,11 +11913,11 @@
       "request_search": null,
       "raw_cache_reference": null,
       "identity_scope": "family_or_proprietary_name",
-      "temporal_scope": "current",
+      "temporal_scope": "undated",
       "retrieval_status": "retrieved",
       "us_specific": true,
       "exact_identifier_text": [],
-      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number. Limitation: The brochure remains official U.S. evidence but is not a live ordering system and does not state stock, orderability, or whether every accessory remains distributed without change."
+      "factual_summary": "Erbe USA's June 2023 brochure identifies the ERBECRYO 2 system, three single-use cryoprobes, and related accessories by exact product number, establishing exact product identity and configuration as of that publication. Limitation: A dated brochure is a point-in-time publication, not a live catalog. It is retained as exact official identity/configuration evidence and is deliberately not admitted as current-distribution evidence: it does not state that any product is distributed today, and it states nothing about stock or orderability."
     },
     {
       "source_id": "manufacturer:PRD-F1712066B6:SRC030:1",

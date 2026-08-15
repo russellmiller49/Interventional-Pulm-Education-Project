@@ -599,7 +599,24 @@ describe('mandatory safety gate at the schema boundary', () => {
     return {
       ...base,
       research_state: 'current_us_distribution_supported',
+      // Second exact current source present (exact current FDA listing), so high confidence.
       confidence: 'high',
+      layer_results: {
+        ...base.layer_results,
+        udi_distribution: {
+          ...base.layer_results.udi_distribution,
+          assessment: 'all_exact_configurations_active',
+          configurations: base.layer_results.udi_distribution.configurations.map(
+            (configuration) => ({
+              ...configuration,
+              commercial_distribution_status: 'in_distribution' as const,
+              commercial_distribution_end_date: null,
+              package_status: null,
+              package_discontinue_date: null,
+            }),
+          ),
+        },
+      },
       conflicts: {
         ...base.conflicts,
         package_configuration: false,
