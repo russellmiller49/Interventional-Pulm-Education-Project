@@ -425,6 +425,12 @@ function currentSnapshotFrom(
     insertedTotal: batches.reduce((sum, batch) => sum + batch.inserted_count, 0),
     updatedTotal: batches.reduce((sum, batch) => sum + batch.updated_count, 0),
     duplicateTotal: batches.reduce((sum, batch) => sum + batch.duplicate_count, 0),
+    // The one trace a `--force` replay leaves: the batch row is reset in place, so its start time
+    // moves while the batch count does not.
+    latestBatchStartedAt: batches.reduce<string | null>(
+      (latest, batch) => (latest === null || batch.started_at > latest ? batch.started_at : latest),
+      null,
+    ),
   })
 }
 

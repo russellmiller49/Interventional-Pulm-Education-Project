@@ -87,6 +87,10 @@ LITERATURE_VERIFY_APP_BASE_URL=https://<the deployed origin>
 LITERATURE_VERIFY_ADMIN_COOKIE=<a site-admin session cookie header>
 ```
 
+The base URL must be `https:` for any non-loopback host. `LITERATURE_VERIFY_ADMIN_COOKIE` is a live
+admin session, and it is withheld rather than sent in the clear over `http:` — the checks that need
+it then report no verdict, which is the right price.
+
 `LITERATURE_VERIFY_ADMIN_COOKIE` is **required** for `V90-runtime-state`, not optional. Every
 Literature route — including the ones named "public" — sits behind `requireLiteratureSiteAdminApi`,
 so an unauthenticated request is answered `401` by the auth gate and the runtime never gets to say

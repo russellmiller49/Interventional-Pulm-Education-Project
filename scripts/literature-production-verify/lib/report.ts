@@ -63,6 +63,7 @@ export interface ReceiptEnvelope {
     insertedTotal: number
     updatedTotal: number
     duplicateTotal: number
+    latestBatchStartedAt?: string | null
   } | null
   /**
    * Stamped by the caller from `Date.now()`. Present so a receipt can be filed, and deliberately

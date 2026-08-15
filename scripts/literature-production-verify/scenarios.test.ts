@@ -91,7 +91,7 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
       importErrors: observed(0),
       adminStats: observed({ total_articles: LITERATURE_CANARY_RECORD_COUNT }),
       blankAdminPreview: observed(pmids.map((pmid) => ({ pmid }))),
-      keywordSearch: observed([{ pmid: pmids[0] }]),
+      keywordSearch: observed([{ pmid: pmids[0], total_count: 1 }]),
       publicSearch: observed([]),
       articleDetail: observed([
         { pmid: pmids[0], relevance_state: 'unreviewed', visibility_state: 'draft' },
@@ -102,39 +102,50 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
       anonymousRpcRead: denied,
     },
     application: {
-      anonymousAdminPage: observed({ status: 307, errorCode: null, body: '' }),
+      anonymousAdminPage: observed({
+        status: 307,
+        errorCode: null,
+        body: '',
+        location: '/en/login?next=%2Fadmin%2Fliterature',
+      }),
       anonymousSearchApi: observed({
         status: 401,
         errorCode: 'LITERATURE_ACCESS_DENIED',
         body: {},
+        location: null,
       }),
-      adminSearchApi: observed({ status: 200, errorCode: null, body: {} }),
-      adminBlankPreviewApi: observed({ status: 200, errorCode: null, body: {} }),
-      adminKeywordApi: observed({ status: 200, errorCode: null, body: {} }),
-      adminArticleApi: observed({ status: 200, errorCode: null, body: {} }),
+      adminSearchApi: observed({ status: 200, errorCode: null, body: {}, location: null }),
+      adminBlankPreviewApi: observed({ status: 200, errorCode: null, body: {}, location: null }),
+      adminKeywordApi: observed({ status: 200, errorCode: null, body: {}, location: null }),
+      adminArticleApi: observed({ status: 200, errorCode: null, body: {}, location: null }),
       goldSetExportApi: observed({
         status: 404,
         errorCode: 'LITERATURE_GOLD_SET_EXPORT_FAILED',
         body: {},
+        location: null,
       }),
       sitemap: observed('<?xml version="1.0"?><urlset></urlset>'),
     },
     migrationHistory: observed([{ version: '20260815223259', name: 'add_literature_explorer' }]),
     catalogAttestation: skipped('no catalog attestation was supplied'),
     corpusExpectation: skipped('no corpus expectation was supplied'),
+    // A `--force` replay: same batch row, reset in place, so the count holds and the start time
+    // moves. That is the trace the importer actually leaves.
     baselineSnapshot: observed({
       totalArticles: LITERATURE_CANARY_RECORD_COUNT,
-      batchCount: 0,
-      insertedTotal: 0,
+      batchCount: 1,
+      insertedTotal: LITERATURE_CANARY_RECORD_COUNT,
       updatedTotal: 0,
       duplicateTotal: 0,
+      latestBatchStartedAt: '2026-08-15T00:00:00.000Z',
     }),
     currentSnapshot: observed({
       totalArticles: LITERATURE_CANARY_RECORD_COUNT,
       batchCount: 1,
       insertedTotal: 0,
-      updatedTotal: 0,
+      updatedTotal: LITERATURE_CANARY_RECORD_COUNT,
       duplicateTotal: 0,
+      latestBatchStartedAt: '2026-08-15T01:00:00.000Z',
     }),
     detailPmid: pmids[0],
     ...overrides,
@@ -311,6 +322,7 @@ describe('the not-configured scenario is its own claim', () => {
           status: 503,
           errorCode: 'LITERATURE_SEARCH_UNAVAILABLE',
           body: {},
+          location: null,
         }),
       },
     }
@@ -335,7 +347,12 @@ describe('the not-configured scenario is its own claim', () => {
       ...input,
       application: {
         ...input.application,
-        adminSearchApi: observed({ status: 500, errorCode: null, body: 'Internal Server Error' }),
+        adminSearchApi: observed({
+          status: 500,
+          errorCode: null,
+          body: 'Internal Server Error',
+          location: null,
+        }),
       },
     })
     expect(run.verdict).toBe('not_verified')

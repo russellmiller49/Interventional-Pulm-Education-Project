@@ -29,7 +29,8 @@ npx tsx scripts/literature-production-verify/verify.ts \
   --scenario canary --receipt evidence/monday-canary-1.json
 ```
 
-Run the import a second time, then:
+Run the import a second time **with `--force`** (a plain re-run is skipped without writing
+anything, which leaves the database with no trace for the idempotency check to read), then:
 
 ```bash
 npx tsx scripts/literature-production-verify/verify.ts \

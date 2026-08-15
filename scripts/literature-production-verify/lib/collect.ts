@@ -245,7 +245,22 @@ async function selectAllRows<T>(
       )
     }
     collected.push(...(parsed as T[]))
-    if (collected.length >= total) return observed(collected)
+    // Compared on *distinct* rows, not on how many arrived. Offset paging over a table that is
+    // being written can return the same row on two pages while dropping another, and a length
+    // comparison would accept that as complete — the set would be the right size and the wrong
+    // rows. Every read here is ordered by a unique key, so duplicates mean concurrent writes.
+    const distinct = new Set(collected.map((row) => JSON.stringify(row))).size
+    if (distinct >= total) {
+      if (distinct < collected.length) {
+        return failed(
+          'read_unstable',
+          `${table} returned ${collected.length} row(s) of which only ${distinct} are distinct, ` +
+            'so paging overlapped — the table was being written while it was read. Nothing ' +
+            'derived from a set assembled that way is reported.',
+        )
+      }
+      return observed(collected)
+    }
     if (parsed.length === 0) {
       return failed(
         'read_truncated',
@@ -610,6 +625,15 @@ export interface ApplicationProbe {
   readonly status: number
   readonly errorCode: string | null
   readonly body: unknown
+  /**
+   * The `Location` header of a redirect.
+   *
+   * Captured because "it redirected" is not the same claim as "it redirected to sign-in". A
+   * platform-level access gate (Railway or Vercel deployment protection) 307s every path to an
+   * SSO login, and an apex domain 302s to `www` — both would otherwise have certified that the
+   * Literature admin page is gated when nothing about Literature had been exercised.
+   */
+  readonly location: string | null
 }
 
 export interface ApplicationObservations {
@@ -691,6 +715,7 @@ export async function collectApplicationObservations(
         status: response.status,
         errorCode: typeof errorEnvelope === 'string' ? errorEnvelope : null,
         body: parsed ?? text.slice(0, 2000),
+        location: response.headers.get('location'),
       })
     } catch (error) {
       return failed(
