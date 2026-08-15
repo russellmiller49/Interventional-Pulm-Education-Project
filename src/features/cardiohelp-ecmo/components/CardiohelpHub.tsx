@@ -153,7 +153,16 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 them below, or take the challenge.
               </p>
             )}
-            <Link className={styles.hubBrowseAll} href={`${cardiohelpEcmoNavBase}/learn`}>
+            {/*
+              Carries the track, like the primary action and every chip beside it. Without it the
+              landing falls back to VV, so a learner who had just chosen VA would be shown the VV
+              pathway by the second of the two actions on this screen — the same disagreement
+              between entry surfaces this package exists to remove.
+            */}
+            <Link
+              className={styles.hubBrowseAll}
+              href={{ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track } }}
+            >
               Browse all {ecmoPathwayComposition(track).total} sections
             </Link>
           </div>

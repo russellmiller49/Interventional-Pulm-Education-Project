@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
@@ -206,7 +206,25 @@ describe('the hub counts what the registry actually holds', () => {
     const browse = screen.getByRole('link', {
       name: `Browse all ${ecmoPathwayComposition('vv').total} sections`,
     })
-    expect(browse).toHaveAttribute('href', '/cardiohelp-ecmo/learn')
+    expect(browse).toHaveAttribute('href', '/cardiohelp-ecmo/learn?track=vv')
+  })
+
+  it('keeps both entry actions on the same track when the learner switches track', () => {
+    // The browse link originally carried no track at all, and the landing falls back to VV, so
+    // choosing VA and then browsing showed the VV pathway — one screen disagreeing with itself
+    // about which pathway the learner had just entered.
+    const { container } = render(<CardiohelpHub />)
+    const browseHref = () =>
+      screen.getByRole('link', { name: /^Browse all \d+ sections$/ }).getAttribute('href')
+
+    expect(browseHref()).toContain('track=vv')
+
+    fireEvent.click(screen.getByRole('radio', { name: /Peripheral VA ECMO/ }))
+
+    expect(browseHref()).toContain('track=va')
+    // And the primary action agrees with it.
+    const primaryHref = primaryCta(container).getAttribute('href')
+    expect(primaryHref).toContain('track=va')
   })
 })
 
