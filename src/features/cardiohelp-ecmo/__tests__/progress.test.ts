@@ -9,7 +9,9 @@ import {
   recordScenarioResult,
   setLastCaseForMode,
   setLastLessonForMode,
+  setLastStation,
   setLastVisited,
+  withMastery,
 } from '../engine/progress'
 
 describe('CARDIOHELP ECMO progress', () => {
@@ -246,6 +248,35 @@ describe('CARDIOHELP ECMO foundation traversal', () => {
     expect(
       parseProgress(JSON.stringify({ ...base, completedFoundationSectionIds: { a: 'b' } })),
     ).toBeNull()
+  })
+
+  it('survives every writer in the module, and a JSON round trip afterwards', () => {
+    // The field is optional, so the one way it could be lost silently is a writer that rebuilds an
+    // envelope from named fields instead of spreading the previous one. Driving all of them in
+    // sequence is cheaper than trusting that no future writer will be written that way.
+    let progress = recordFoundationSectionCompleted(
+      createDefaultProgress(),
+      'why-extracorporeal-support',
+    )
+    progress = setLastStation(progress, 'sweep')
+    progress = recordLearnLessonCompleted(progress, 'startup-sensor-orientation')
+    progress = setLastVisited(progress, {
+      section: 'learn',
+      scenarioId: 'startup-sensor-orientation',
+      supportMode: 'vv',
+    })
+    progress = setLastLessonForMode(progress, 'vv', 'startup-sensor-orientation')
+    progress = setLastCaseForMode(progress, 'vv', 'clinical-vv-initiation-ards')
+    progress = recordScenarioResult(progress, {
+      scenarioId: 'clinical-vv-initiation-ards',
+      score: 90,
+      criticalError: false,
+      completed: true,
+    })
+    progress = withMastery(progress, ['startup-sensor-orientation'])
+
+    expect(progress.completedFoundationSectionIds).toEqual(['why-extracorporeal-support'])
+    expect(parseProgress(JSON.stringify(progress))).toEqual(progress)
   })
 
   it('leaves a migrated v1 payload without foundation history rather than inventing any', () => {
