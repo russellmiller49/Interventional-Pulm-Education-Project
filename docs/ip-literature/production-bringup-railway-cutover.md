@@ -12,21 +12,30 @@ document, or by a passing verification run.
 
 ## Precondition, stated plainly
 
-Setting these variables does not turn the Literature runtime on.
+Setting these variables **does** connect the Literature read path. Treat this as a live change.
 
-`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a source constant, currently `'not_activated'`. A
-byte-perfect production configuration resolves to `not_activated`, no Supabase client is
-constructed, and the application answers "not configured" on every Literature route. That is by
-design: the third review found that a valid configuration would otherwise have activated
-privileged remote mutation with no reviewed change in between, so activation was moved out of the
-environment and into code.
+`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a source constant, and on this branch it is
+`'activated_by_reviewed_cutover'`. A byte-perfect production configuration resolves to `bound`, a
+Supabase client is constructed, and the Literature routes read `IP_Literature` instead of answering
+"not configured".
 
-Step 7 — "Implement and deploy capability gating, while the runtime stays disabled" — is the first
-change permitted to flip that constant. **Until it has shipped and been reviewed, adding these
-three variables changes nothing an operator can see except that the configuration is now valid.**
+Activation being a constant rather than a variable is unchanged and still load-bearing: the third
+review found that a valid configuration would otherwise have activated privileged remote mutation
+with no reviewed change in between, so activation lives in code. Flipping it relaxed no validation
+rule — these three values are still checked byte-for-byte against the canonical URL, against the
+single approved ref, against the prohibited main-project ref, and for the `sb_secret_…` credential
+class, and a partial set still fails closed with no fallback to `Endoreels`.
 
-That is still worth doing, and it is the point of the deploy-first step below: it proves the
-configuration is correct while the runtime is provably inert.
+What these variables cannot do is grant write access. `LITERATURE_ACTIVATED_OPERATIONS` carries the
+four foundation reads only; curation writes and every gold-set operation are withheld, and
+ingestion is an operator CLI rather than an application operation. So the blast radius of getting
+this wrong is a service that can _read_ draft Literature records behind its own site-admin gate —
+which is why the service and environment must be named in the authorization record and read back
+afterwards.
+
+The deploy-first step below is still worth doing, and its purpose has changed: it proves the
+application reports "not configured" honestly _before_ the variables exist, so that the change
+after they are set is attributable.
 
 ---
 

@@ -2,14 +2,18 @@
 
 Ten minutes, on the conference network, before anyone is watching.
 
-**Precondition — read before you plan the demo.** Items 2–7 require the capability-gating package
-(step 7 of the rollout sequence) to have shipped. Until it has,
-`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is `'not_activated'`, the runtime constructs no client,
-and the admin Literature page reports "not configured" no matter what is in Railway. See
+**Precondition — read before you plan the demo.** Items 2–7 require three things, in order: this
+branch merged and deployed, the Railway authorization with the three dedicated variables set, and
+the canary import. The capability-gating package is no longer a blocker —
+`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is `'activated_by_reviewed_cutover'`, so a deployment
+carrying the three variables reads `IP_Literature`. See
 [`production-bringup-railway-cutover.md`](./production-bringup-railway-cutover.md).
 
-If step 7 has not shipped, run the **fallback** at the bottom instead. It is a real demo of a real
-state, and it is honest.
+If any of those three is missing, run the **fallback** at the bottom instead. It is a real demo of
+a real state, and it is honest. Note which state you are in before you plan the talk: with the
+variables unset the page reports "not configured"; with them set and no records imported it reports
+`foundation_ready_empty` — a measured zero rather than a fabricated one, which is itself the point
+worth demonstrating.
 
 ---
 

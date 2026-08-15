@@ -383,8 +383,14 @@ describe('the documents state that activation is a code change, not a variable',
     const stale = [
       /production runtime is not activated/iu,
       /the production Literature runtime is disabled/iu,
-      /currently set to `not_activated`/u,
+      // Broad on purpose. The first version of this guard matched only "currently set to
+      // `not_activated`" and sailed past the architecture note's "currently `not_activated`",
+      // which is the same false claim with two words removed.
+      /currently[^.\n]{0,20}`not_activated`/u,
       /cannot activate a client anywhere/iu,
+      /runtime constructs no client/iu,
+      /does not turn the Literature runtime on/iu,
+      /validates them and constructs nothing/iu,
     ]
     for (const [name, body] of await readAllDocuments()) {
       for (const pattern of stale) {

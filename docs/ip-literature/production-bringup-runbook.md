@@ -12,35 +12,43 @@ hold Literature data.
 
 ## Read this first: what the deployed application can and cannot do today
 
-The three Railway variables do **not** turn the Literature runtime on.
+The three Railway variables **do** connect the Literature read path — but only the read path, and
+only to one project.
 
 `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` in
 [`src/features/literature/server/dedicated-project-contract.ts`](../../src/features/literature/server/dedicated-project-contract.ts)
-is a **source constant**, currently `'not_activated'`. With a byte-perfect production
-configuration, `resolveLiteratureDedicatedBinding` returns `not_activated` rather than `bound`,
-`createLiteratureAdmin()` returns `null`, and every Literature route answers "not configured".
-This is deliberate — it is the third review's fix for a design where setting variables would have
-activated privileged remote mutation with no reviewed change in between.
+is a **source constant**, and on this branch it is `'activated_by_reviewed_cutover'`. With a
+byte-perfect production configuration, `resolveLiteratureDedicatedBinding` returns `bound` and the
+application reads `IP_Literature`. Activation being a constant rather than a variable is still the
+third review's fix, and it still holds: no value an operator can set turns the runtime on, and
+nothing about the variables was relaxed to activate it — the byte-exact canonical URL, the single
+approved ref, the prohibited main-project ref, the `sb_secret_…` credential class, and fail-closed
+partial configuration all still apply, with no fallback to `Endoreels`.
+
+What the application may **do** with that client is a second, separate gate:
+`LITERATURE_ACTIVATED_OPERATIONS` in
+[`src/features/literature/server/database-client.ts`](../../src/features/literature/server/database-client.ts).
+
+| Capability                                        | Reachable | Note                                                |
+| ------------------------------------------------- | --------- | --------------------------------------------------- |
+| Article search / list, detail, admin stats, queue | **Yes**   | the four foundation reads                           |
+| Curation writes (`curate_literature_article_v1`)  | **No**    | withheld — this build carries no write path         |
+| Any gold-set read or write                        | **No**    | withheld — its migrations are deliberately deferred |
+| Ingestion from a web request                      | **No**    | ingestion is an operator CLI only                   |
 
 The consequence for planning:
 
-| Bring-up state                                    | Reachable today | Needs                             |
-| ------------------------------------------------- | --------------- | --------------------------------- |
-| Database verification (scenarios 2–8 below)       | **Yes**         | the three variables in your shell |
-| Application reports "not configured" (scenario 1) | **Yes**         | a deployment                      |
-| Application serves Literature records to an admin | **No**          | step 7 of the rollout sequence    |
+| Bring-up state                                    | Reachable today | Needs                                                     |
+| ------------------------------------------------- | --------------- | --------------------------------------------------------- |
+| Database verification (scenarios 2–8 below)       | **Yes**         | the three variables in your shell                         |
+| Application reports "not configured" (scenario 1) | **Yes**         | a deployment with the variables unset                     |
+| Application serves Literature records to an admin | **Yes**         | a deployment with the variables set, and imported records |
 
-Step 7 of the canonical sequence in
-[`dedicated-supabase-rollout-runbook.md`](./dedicated-supabase-rollout-runbook.md) is
-"Implement and deploy capability gating, while the runtime stays disabled." That package is the
-first change permitted to set the activation constant, and it must ship and be reviewed before
-step 8, "Obtain the Railway authorization and cut over."
-
-**So the Monday demo of 25 draft records in the admin UI depends on the capability-gating package
-existing.** If it has not shipped, the honest Monday state is scenario 1 — a deployment that
-truthfully declines — and the database evidence in scenarios 2–8, which the tool below produces
-without the application being involved at all. Plan for that, or land step 7 first. See
-[`production-bringup-monday-smoke.md`](./production-bringup-monday-smoke.md).
+**So the Monday demo of 25 draft records in the admin UI no longer depends on a package that has
+not shipped.** It depends on three things in order: this branch merged and deployed, the Railway
+authorization and the three variables, and the canary import. Until records exist the admin page
+shows `foundation_ready_empty` — a measured zero, stated as such — rather than a fabricated one.
+See [`production-bringup-monday-smoke.md`](./production-bringup-monday-smoke.md).
 
 ---
 
