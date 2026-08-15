@@ -1,0 +1,209 @@
+# Literature production bring-up: Railway cutover checklist
+
+**Status:** checklist only. Nothing here has been executed, and this document does not authorize
+executing it. The Railway cutover is step 8 of the canonical rollout sequence in
+[`dedicated-supabase-rollout-runbook.md`](./dedicated-supabase-rollout-runbook.md) and requires its
+own owner authorization — one that is not implied by the migration authorization, by this
+document, or by a passing verification run.
+
+**No raw secret value appears in this file, and none may be added to it.**
+
+---
+
+## Precondition, stated plainly
+
+Setting these variables does not turn the Literature runtime on.
+
+`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a source constant, currently `'not_activated'`. A
+byte-perfect production configuration resolves to `not_activated`, no Supabase client is
+constructed, and the application answers "not configured" on every Literature route. That is by
+design: the third review found that a valid configuration would otherwise have activated
+privileged remote mutation with no reviewed change in between, so activation was moved out of the
+environment and into code.
+
+Step 7 — "Implement and deploy capability gating, while the runtime stays disabled" — is the first
+change permitted to flip that constant. **Until it has shipped and been reviewed, adding these
+three variables changes nothing an operator can see except that the configuration is now valid.**
+
+That is still worth doing, and it is the point of the deploy-first step below: it proves the
+configuration is correct while the runtime is provably inert.
+
+---
+
+## The three variables
+
+Exactly three. No fallback, no alias, no fourth.
+
+| Variable                                   | Value                                                                   |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| `LITERATURE_SUPABASE_URL`                  | `https://itcttmkxdxvwmwcmzmey.supabase.co/`                             |
+| `LITERATURE_SUPABASE_SECRET_KEY`           | the `sb_secret_…` backend key from the `IP_Literature` project settings |
+| `LITERATURE_SUPABASE_EXPECTED_PROJECT_REF` | `itcttmkxdxvwmwcmzmey`                                                  |
+
+Notes that matter more than they look:
+
+- **The URL is compared byte for byte, trailing slash included.** No trimming, no case folding, no
+  `:443`, no dot path, no percent-encoding variant. A missing trailing slash is a refusal, not a
+  near miss.
+- **The credential must be the current `sb_secret_…` model.** A legacy service-role JWT is refused
+  in the strict contract. A publishable key is refused always.
+- **The expected ref exists so the client can prove which project it reached.** It is not
+  redundant with the URL: the two are compared, and a disagreement is a refusal.
+- Copy the secret from the Supabase dashboard into the Railway variable UI directly. Do not paste
+  it into a shell, a note, a ticket, or this repository.
+
+### Scope
+
+- **Service:** the production application service only.
+- **Environment:** `production` only. Do not add these to preview, staging, or PR environments —
+  a preview deployment resolves the strict contract and would then be pointed at the production
+  Literature project.
+- **Main authentication stays on `Endoreels`.** `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` keep their
+  current values and are **not** touched. They are not Literature fallbacks and never were — the
+  Literature contract reads none of them — but site authentication and site-admin identity depend
+  on them.
+
+### Variables that must NOT be set
+
+| Variable                               | Why                                                                                                                                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LITERATURE_SUPABASE_RUNTIME_MODE`     | the value `local` relaxes the strict contract; anything else is inert but pointless                                                                                                   |
+| `LITERATURE_SUPABASE_SERVICE_ROLE_KEY` | the legacy alias — refused outright in strict mode, and setting it alongside the secret key to a different value resolves to `ambiguous_credentials` rather than to either credential |
+
+No variable whose name contains `ACTIVAT` may be introduced. `.env.example` already asserts this.
+
+---
+
+## Sequence
+
+Each numbered step completes before the next begins.
+
+### 1. Deploy once with the variables absent
+
+Deploy the current build with **no** Literature variables set, and verify the truthful
+not-configured state:
+
+```bash
+LITERATURE_VERIFY_APP_BASE_URL=https://<production origin> \
+  npx tsx scripts/literature-production-verify/verify.ts --scenario runtime-not-configured
+```
+
+Expect `V90-runtime-state` to pass on **503 `LITERATURE_SEARCH_UNAVAILABLE`** — a structured
+refusal. A bare 500 with no error envelope fails this check, and it should: "not configured" and
+"broken" must not look the same to an operator.
+
+This step exists so the next one has a baseline. Without it, a post-cutover failure is
+indistinguishable from a deployment that was already failing.
+
+### 2. Obtain the separate Railway authorization
+
+In writing, from the owner, naming:
+
+- the service and the `production` environment;
+- the three variable names, and that exactly three are being added;
+- the project ref `itcttmkxdxvwmwcmzmey`;
+- that the main-application variables are untouched and authentication stays on `Endoreels`;
+- that no canary, no import, and no ingestion is authorized by this.
+
+The migration authorization does not cover this. Neither does a passing verification run — a
+verification is a precondition for asking, never a substitute for the answer.
+
+### 3. Add only the three variables
+
+In the Railway UI, in the production environment of the production service. Add. Do not edit,
+rename, or remove anything else.
+
+### 4. Redeploy
+
+Trigger a redeploy so the new environment is picked up.
+
+### 5. Verify the empty-foundation state
+
+Against the database:
+
+```bash
+npx tsx scripts/literature-production-verify/verify.ts \
+  --scenario foundation-empty \
+  --migration-history evidence/list-migrations.json \
+  --catalog evidence/catalog.json \
+  --receipt evidence/foundation-empty.json
+```
+
+Expect `verified`: the approved project, exactly one migration (`20260815223259`,
+`add_literature_explorer`), all 8 tables present, zero rows everywhere.
+
+Against the application:
+
+```bash
+LITERATURE_VERIFY_APP_BASE_URL=https://<production origin> \
+  npx tsx scripts/literature-production-verify/verify.ts --scenario runtime-not-configured
+```
+
+**Before capability gating ships, this still passes** — the runtime is deliberately inert, so the
+application still declines. That is the correct result, not a failure of the cutover. What the
+cutover bought you is that the configuration is now provably valid, which the database scenario
+above demonstrates independently of the application.
+
+After capability gating ships, this scenario is expected to _fail_ and the application-serving
+checks take over. That inversion is the observable signal that step 7 landed.
+
+### 6. Stop
+
+The cutover authorizes the variables and nothing further. **No canary until separately
+authorized.** No import, no ingestion, no data of any kind written to `IP_Literature`.
+
+---
+
+## Rollback and containment
+
+Literature runtime access is removed by **removing the three variables**. That is the entire
+mechanism, and it is deliberate: the failure mode being contained is Literature data becoming
+reachable, and the fastest true statement about a deployment with no Literature variables is that
+it cannot reach the Literature project at all.
+
+Automatic rollback is **not implemented and must not be.** A tool that removes production
+variables on a signal is a tool that can remove them on a false one, and the containment action
+here is cheap for a human and unattended for a machine.
+
+### When to contain
+
+Immediately, without waiting for a diagnosis, if any of these is observed:
+
+- `V82-anonymous-table` or `V83-anonymous-rpc` fails — an anonymous caller reached Literature rows.
+- `V84-sitemap-exclusion` fails — a draft article URL is being advertised.
+- `V92-anonymous-api` fails — an unauthenticated request got past the site-admin gate.
+- `V01-project-ref` fails against a live deployment — the application is pointed at the wrong
+  project.
+
+Everything else — a count mismatch, a receipt gap, an ambiguous batch, a failed read — is
+investigated, not contained. Those are wrong answers; the four above are exposures.
+
+### Containment procedure
+
+1. In the Railway production environment, delete `LITERATURE_SUPABASE_URL`,
+   `LITERATURE_SUPABASE_SECRET_KEY`, and `LITERATURE_SUPABASE_EXPECTED_PROJECT_REF`.
+2. Redeploy.
+3. Confirm the deployment is back to declining:
+
+   ```bash
+   LITERATURE_VERIFY_APP_BASE_URL=https://<production origin> \
+     npx tsx scripts/literature-production-verify/verify.ts \
+     --scenario runtime-not-configured --receipt evidence/containment.json
+   ```
+
+   Expect `verified`, and file the receipt.
+
+4. Leave the main-application variables alone. Removing them takes site authentication down and
+   contains nothing.
+5. If a credential may have been exposed, rotate the `IP_Literature` secret key in the Supabase
+   dashboard **after** the variables are removed, and treat the old key as compromised regardless
+   of whether exposure was confirmed.
+6. Only after containment, investigate. The database remains readable with the tool from a local
+   shell, which is the point of keeping verification independent of the deployment.
+
+### What containment does not do
+
+It does not delete data, revoke the migration, or change the database. `IP_Literature` is
+untouched: the same rows, the same schema, the same one recorded migration. Re-enabling is
+steps 2–5 of the sequence above, including a fresh authorization.
