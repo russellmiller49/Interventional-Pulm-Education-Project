@@ -89,6 +89,18 @@ function parseLastVisited(value: unknown): LastVisitedActivity | undefined | nul
   }
 }
 
+/**
+ * Foundation traversal ids, parsed the way `lastVisited` is parsed.
+ *
+ * `undefined` means the key was absent — every envelope written before this field existed — and
+ * the field stays off the parsed object rather than being invented as an empty array. Anything
+ * present but malformed rejects the whole envelope, which is how every other field here behaves.
+ */
+function parseFoundationSectionIds(value: unknown): string[] | undefined | null {
+  if (value === undefined) return undefined
+  return parseStringArray(value)
+}
+
 interface SharedProgressFields {
   lastStation: ProgressV2['lastStation']
   completedLabs: string[]
@@ -142,11 +154,15 @@ export function parseProgress(serialized: string | null | undefined): ProgressV2
     const lastLessonScenarioIdByMode = parseScenarioIdByMode(candidate.lastLessonScenarioIdByMode)
     const lastCaseScenarioIdByMode = parseScenarioIdByMode(candidate.lastCaseScenarioIdByMode)
     const lastVisited = parseLastVisited(candidate.lastVisited)
+    const completedFoundationSectionIds = parseFoundationSectionIds(
+      candidate.completedFoundationSectionIds,
+    )
     if (
       !completedLearnLessonIds ||
       !lastLessonScenarioIdByMode ||
       !lastCaseScenarioIdByMode ||
-      lastVisited === null
+      lastVisited === null ||
+      completedFoundationSectionIds === null
     ) {
       return null
     }
@@ -158,6 +174,7 @@ export function parseProgress(serialized: string | null | undefined): ProgressV2
       lastLessonScenarioIdByMode,
       lastCaseScenarioIdByMode,
       ...(lastVisited ? { lastVisited } : {}),
+      ...(completedFoundationSectionIds ? { completedFoundationSectionIds } : {}),
     }
   } catch {
     return null
@@ -201,6 +218,35 @@ export function recordLearnLessonCompleted(progress: ProgressV2, scenarioId: str
 
 export function setLastVisited(progress: ProgressV2, visit: LastVisitedActivity): ProgressV2 {
   return { ...progress, lastVisited: visit }
+}
+
+/**
+ * Marks a foundation section as worked. Returns the same object when it already was, so a repeat
+ * commit is not a write.
+ */
+export function recordFoundationSectionCompleted(
+  progress: ProgressV2,
+  sectionId: string,
+): ProgressV2 {
+  const worked = progress.completedFoundationSectionIds ?? []
+  if (worked.includes(sectionId)) return progress
+  return { ...progress, completedFoundationSectionIds: [...worked, sectionId] }
+}
+
+/**
+ * The one storage write the foundation activity performs.
+ *
+ * It lives here, beside the rest of the persistence, rather than inline in the component: the
+ * component should say what happened ("this section was worked") and not how progress is stored.
+ * It is deliberately idempotent and deliberately narrow — it can only ever add a section id, and
+ * it touches no scenario result, score, mastery flag, or Practice pointer.
+ */
+export function persistFoundationSectionCompleted(sectionId: string): void {
+  if (typeof window === 'undefined') return
+  const progress = readProgress()
+  const next = recordFoundationSectionCompleted(progress, sectionId)
+  if (next === progress) return
+  writeProgress(next)
 }
 
 export function setLastLessonForMode(

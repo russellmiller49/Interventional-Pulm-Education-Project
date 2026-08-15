@@ -693,6 +693,21 @@ export interface ProgressV2 {
   lastLessonScenarioIdByMode: Readonly<Partial<Record<SupportMode, string>>>
   lastCaseScenarioIdByMode: Readonly<Partial<Record<SupportMode, string>>>
   lastVisited?: LastVisitedActivity
+  /**
+   * Foundation section ids the learner has worked, recorded when they commit that section's
+   * transfer answer.
+   *
+   * Worked, not mastered. It exists so the seven foundation sections in each track's pathway can
+   * take part in "what comes next", which they could not while they persisted nothing at all — a
+   * resolver walking the seventeen-section order would otherwise stall on section one forever. It
+   * feeds navigation and nothing else: no score, no mastery, no credit, no Practice progress, and
+   * nothing in the shared critical-care envelope.
+   *
+   * Optional on purpose, and shaped exactly like `lastVisited`: envelopes written before this
+   * field existed stay valid and load unchanged, so the storage key and `version: 2` did not have
+   * to move.
+   */
+  completedFoundationSectionIds?: readonly string[]
 }
 
 export type SimulationAction =

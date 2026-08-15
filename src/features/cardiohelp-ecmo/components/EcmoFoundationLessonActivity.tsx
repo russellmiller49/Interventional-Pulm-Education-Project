@@ -40,6 +40,7 @@ import {
   ecmoFoundationRestoreAction,
   ecmoFoundationSessionReducer,
 } from '../session/foundationSession'
+import { persistFoundationSectionCompleted } from '../engine/progress'
 import type { SupportMode } from '../engine/types'
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
@@ -49,7 +50,7 @@ import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
 import workspaceStyles from './EcmoFoundationWorkspace.module.css'
 
 /**
- * The Learn activity for the seven interactive foundation sections.
+ * The Learn activity for the ten interactive foundation sections.
  *
  * These were static prose pages with no simulator at all, which meant the sections that teach the
  * circuit were the only ones a learner could not look at a circuit while reading. This activity
@@ -60,8 +61,11 @@ import workspaceStyles from './EcmoFoundationWorkspace.module.css'
  * source is a single atomic dispatch, so a restored-but-untouched frame is never rendered and the
  * ordering of a restore and the actions applied to it does not depend on React's scheduling.
  *
- * Nothing here records a scenario result, writes mastery, or touches Practice progress: a preview
- * is a state to read, not a drill being worked.
+ * Exactly one thing is persisted, and only when the learner commits the transfer answer: this
+ * section's id, marking it worked so that it can take part in "what comes next". Nothing here
+ * records a scenario result, writes mastery, or touches Practice progress — a preview is a state
+ * to read, not a drill being worked — and nothing at all is written by opening, reading, or
+ * navigating a section.
  */
 
 const PHASES: readonly CriticalCareActivityPhase[] = [
@@ -174,8 +178,9 @@ function EcmoFoundationLessonWorkspace({
    * re-runs the resolver when the learner walks the phase navigation.
    *
    * It resolves a state, and only a state. No earlier prediction, transfer answer, snapshot,
-   * interaction record or control sequence is reconstructed, nothing is read from storage, and the
-   * note below says so wherever the lesson opens anywhere other than the first phase.
+   * interaction record or control sequence is reconstructed, no stored progress is consulted to
+   * resolve it, and the note below says so wherever the lesson opens anywhere other than the first
+   * phase.
    */
   const initialVariant = ecmoFoundationInitialVariant(runtime, supportMode, initialPhase)
 
@@ -403,6 +408,22 @@ function EcmoFoundationLessonWorkspace({
     [items.transfer.choices, committedTransferId],
   )
 
+  /**
+   * Committing the transfer answer is also the point at which this section counts as worked.
+   *
+   * It is the last thing a learner does here and the only one that requires having read the
+   * section, which is why it carries the marker rather than the "continue to next section" link:
+   * that link does not render on the last section of the pathway, so recording there would leave
+   * a finished learner permanently one section short of done.
+   */
+  const commitTransfer = useCallback(
+    (choiceId: string) => {
+      setCommittedTransferId(choiceId)
+      persistFoundationSectionCompleted(sectionId)
+    },
+    [sectionId],
+  )
+
   if (!section) return null
 
   const primary = (
@@ -611,7 +632,7 @@ function EcmoFoundationLessonWorkspace({
                 className="rounded-xl border px-3 py-2 text-left text-sm"
                 aria-pressed={committedTransferId === choice.id}
                 disabled={committedTransferId !== null}
-                onClick={() => setCommittedTransferId(choice.id)}
+                onClick={() => commitTransfer(choice.id)}
               >
                 {choice.label}
               </button>
