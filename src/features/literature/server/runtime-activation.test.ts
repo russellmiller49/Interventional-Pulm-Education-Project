@@ -230,3 +230,28 @@ describe('local development still gets exactly its loopback client', () => {
     })
   })
 })
+
+describe('a wildcard bind address never gets a client (fourth review)', () => {
+  it.each([
+    ['0.0.0.0', 'http://0.0.0.0:55321', 'wildcard_address_not_permitted'],
+    ['[::]', 'http://[::]:55321', 'wildcard_address_not_permitted'],
+    [
+      'a .localhost subdomain',
+      'http://db.localhost:55321',
+      'remote_host_not_permitted_in_local_mode',
+    ],
+    ['a 127/8 alias', 'http://127.0.0.2:55321', 'remote_host_not_permitted_in_local_mode'],
+  ])('local mode with %s stays unbound and constructs nothing', (_label, url, reason) => {
+    applyEnvironment({
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: url,
+      LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    })
+    expect(describeLiteratureDatabaseBinding()).toMatchObject({ status: 'unbound', reason })
+    expect(createLiteratureAdmin()).toBeNull()
+    expect(createClientMock).not.toHaveBeenCalled()
+    expect(rpcMock).not.toHaveBeenCalled()
+    expect(fromMock).not.toHaveBeenCalled()
+  })
+})

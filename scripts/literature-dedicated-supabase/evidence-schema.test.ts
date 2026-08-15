@@ -7,7 +7,6 @@ import {
   LITERATURE_CATALOG_ROW_SCHEMAS,
   LITERATURE_ROLE_BEARING_CATALOG_SECTIONS,
   LiteratureEvidenceError,
-  assertDecodedEvidenceCarriesNoSecret,
   parseLiteraturePostflightEvidence,
   parseLiteraturePreflightEvidence,
 } from './lib/evidence-schema'
@@ -163,6 +162,18 @@ function validPostflight(overrides: Record<string, unknown> = {}) {
   }
 }
 
+/** A postflight document with one catalog row field overridden (or an unknown field added). */
+function postflightWith(
+  section: LiteratureCatalogSection,
+  field: string,
+  value: unknown,
+  extraRow: Record<string, unknown> = {},
+) {
+  const catalog = populatedCatalog()
+  catalog[section] = [{ ...VALID_ROWS[section], ...extraRow, [field]: value }]
+  return validPostflight({ catalog })
+}
+
 function parsePre(value: unknown) {
   return parseLiteraturePreflightEvidence(JSON.stringify(value))
 }
@@ -191,6 +202,13 @@ describe('phase-specific documents (L-1)', () => {
 
   it('accepts a well-formed postflight document, which requires totalRowCount', () => {
     expect(parsePost(validPostflight()).totalRowCount).toBe(0)
+  })
+
+  it('materializes parsed fields as ordinary own properties, never inherited ones', () => {
+    const document = parsePre(validPreflight())
+    expect(Object.hasOwn(document, 'schemaVersion')).toBe(true)
+    expect(Object.hasOwn(document, 'catalog')).toBe(true)
+    expect(Object.hasOwn(document, 'migrationHistory')).toBe(true)
   })
 
   it('rejects a totalRowCount smuggled into the preflight document', () => {
@@ -229,6 +247,354 @@ describe('phase-specific documents (L-1)', () => {
 
   it('rejects a malformed query-plan hash', () => {
     expectCode(() => parsePre(validPreflight({ queryPlanSha256: 'nope' })), 'schema_violation')
+  })
+})
+
+/**
+ * Fourth review, finding 1A/1D — the authoritative parsers accept only primitive JSON text.
+ *
+ * Every object shape is refused *before* any coercion, reflection, or property access, so a
+ * hostile carrier's traps, getters, and conversion hooks can never run. The scanner that used to
+ * accept an arbitrary decoded object is no longer exported at all; these tests exercise the only
+ * remaining boundary, the two full parsers.
+ */
+describe('the parsers accept primitive JSON text only (fourth review)', () => {
+  const parsers = [
+    ['preflight', parseLiteraturePreflightEvidence],
+    ['postflight', parseLiteraturePostflightEvidence],
+  ] as const
+
+  function feed(parser: (raw: string) => unknown, input: unknown) {
+    return () => parser(input as string)
+  }
+
+  it.each(parsers)('%s rejects a plain object shaped like valid evidence', (_label, parser) => {
+    expectCode(feed(parser, validPreflight()), 'nonstring_input')
+    expectCode(feed(parser, validPostflight()), 'nonstring_input')
+  })
+
+  it.each(parsers)('%s rejects a null-prototype object', (_label, parser) => {
+    const nullProto = Object.assign(
+      Object.create(null) as Record<string, unknown>,
+      validPreflight(),
+    )
+    expectCode(feed(parser, nullProto), 'nonstring_input')
+  })
+
+  it.each(parsers)(
+    '%s rejects arrays, numbers, booleans, null, and undefined',
+    (_label, parser) => {
+      for (const input of [[], [validPreflight()], 5, 0, true, false, null, undefined]) {
+        expectCode(feed(parser, input), 'nonstring_input')
+      }
+    },
+  )
+
+  it.each(parsers)('%s rejects functions and class instances', (_label, parser) => {
+    class EvidenceCarrier {
+      readonly schemaVersion = 'literature-dedicated-preflight-observation/3.0.0'
+    }
+    expectCode(
+      feed(parser, () => JSON.stringify(validPreflight())),
+      'nonstring_input',
+    )
+    expectCode(feed(parser, new EvidenceCarrier()), 'nonstring_input')
+  })
+
+  it.each(parsers)(
+    '%s rejects a boxed String without invoking its conversions',
+    (_label, parser) => {
+      let conversions = 0
+      class CountingBoxedString extends String {
+        override toString(): string {
+          conversions += 1
+          return super.toString()
+        }
+        override valueOf(): string {
+          conversions += 1
+          return super.valueOf()
+        }
+      }
+      const boxed = new CountingBoxedString(JSON.stringify(validPreflight()))
+      expectCode(feed(parser, boxed), 'nonstring_input')
+      expect(conversions).toBe(0)
+    },
+  )
+
+  it.each(parsers)('%s rejects a getter carrier before any getter runs', (_label, parser) => {
+    let reads = 0
+    const carrier = {
+      get schemaVersion() {
+        reads += 1
+        return 'literature-dedicated-preflight-observation/3.0.0'
+      },
+    }
+    expectCode(feed(parser, carrier), 'nonstring_input')
+    expect(reads).toBe(0)
+  })
+
+  it.each(parsers)('%s rejects a conversion carrier before any hook runs', (_label, parser) => {
+    let conversions = 0
+    const raw = JSON.stringify(validPreflight())
+    const carrier = {
+      toString() {
+        conversions += 1
+        return raw
+      },
+      valueOf() {
+        conversions += 1
+        return raw
+      },
+      [Symbol.toPrimitive]() {
+        conversions += 1
+        return raw
+      },
+    }
+    expectCode(feed(parser, carrier), 'nonstring_input')
+    expect(conversions).toBe(0)
+  })
+
+  it.each(parsers)('%s rejects a Proxy before any trap runs', (_label, parser) => {
+    let traps = 0
+    // A handler whose *handler* is a Proxy: reading any trap name counts, so every possible
+    // trap invocation — get, has, ownKeys, getPrototypeOf, anything — increments the counter.
+    const trapCountingHandler = new Proxy(
+      {},
+      {
+        get: (_target, trapName) => {
+          traps += 1
+          return Reflect[trapName as keyof typeof Reflect]
+        },
+      },
+    ) as ProxyHandler<object>
+    const hostile = new Proxy({ ...validPreflight() }, trapCountingHandler)
+    expectCode(feed(parser, hostile), 'nonstring_input')
+    expect(traps).toBe(0)
+  })
+
+  it.each(parsers)('%s rejects a Proxy that hides its keys, untouched', (_label, parser) => {
+    let traps = 0
+    const hidden = new Proxy(
+      { plantedOwner: 'sb_secret_hidden' },
+      {
+        ownKeys(target) {
+          traps += 1
+          return Reflect.ownKeys(target).filter(() => false)
+        },
+        get(target, key) {
+          traps += 1
+          return Reflect.get(target, key)
+        },
+        getOwnPropertyDescriptor(target, key) {
+          traps += 1
+          return Reflect.getOwnPropertyDescriptor(target, key)
+        },
+        has(target, key) {
+          traps += 1
+          return Reflect.has(target, key)
+        },
+        getPrototypeOf(target) {
+          traps += 1
+          return Reflect.getPrototypeOf(target)
+        },
+      },
+    )
+    expectCode(feed(parser, hidden), 'nonstring_input')
+    expect(traps).toBe(0)
+  })
+
+  it.each(parsers)('%s rejects a Proxy that synthesizes keys, untouched', (_label, parser) => {
+    let traps = 0
+    const synthesizing = new Proxy(
+      {},
+      {
+        ownKeys() {
+          traps += 1
+          return [
+            'schemaVersion',
+            'catalog',
+            'prerequisites',
+            'migrationHistory',
+            'queryPlanSha256',
+          ]
+        },
+        get() {
+          traps += 1
+          return 'synthesized'
+        },
+        getOwnPropertyDescriptor() {
+          traps += 1
+          return { value: 'synthesized', enumerable: true, configurable: true, writable: true }
+        },
+      },
+    )
+    expectCode(feed(parser, synthesizing), 'nonstring_input')
+    expect(traps).toBe(0)
+  })
+
+  it.each(parsers)('%s rejects a throwing Proxy without letting it throw', (_label, parser) => {
+    const throwingHandler = new Proxy(
+      {},
+      {
+        get: () => {
+          throw new Error('hostile trap invoked')
+        },
+      },
+    ) as ProxyHandler<object>
+    const hostile = new Proxy({}, throwingHandler)
+    // Were any trap consulted, the raised error would be the hostile one, not the typed
+    // LiteratureEvidenceError this asserts on.
+    expectCode(feed(parser, hostile), 'nonstring_input')
+  })
+})
+
+/**
+ * Fourth review, finding 1B — reserved structural keys are unrepresentable.
+ *
+ * The review reproduction wrapped a fully valid document (with a credential-shaped relation
+ * owner) as `{"__proto__": <document>}`: assignment-based construction turned that key into a
+ * prototype swap, `Object.entries` saw no own fields, and the strict schema read every required
+ * field through the polluted prototype. Construction is now `Object.create(null)` +
+ * `Object.defineProperty`, and `__proto__` / `prototype` / `constructor` are rejected outright
+ * at every depth — checked on the *decoded* key, so escaped spellings die identically.
+ */
+describe('reserved structural keys (fourth review)', () => {
+  const wrap = (inner: string) => `{"__proto__":${inner}}`
+
+  it('rejects the exact review reproduction: a valid document wrapped in __proto__', () => {
+    expectCode(
+      () => parseLiteraturePreflightEvidence(wrap(JSON.stringify(validPreflight()))),
+      'reserved_structural_key',
+    )
+    expectCode(
+      () => parseLiteraturePostflightEvidence(wrap(JSON.stringify(validPostflight()))),
+      'reserved_structural_key',
+    )
+  })
+
+  it('rejects the wrapper carrying a credential-shaped relation owner, without echoing it', () => {
+    const smuggled = postflightWith('relations', 'owner', 'password=foo/grantor')
+    const error = expectCode(
+      () => parseLiteraturePostflightEvidence(wrap(JSON.stringify(smuggled))),
+      'reserved_structural_key',
+    )
+    expect(error.message).not.toContain('password')
+  })
+
+  it('rejects the wrapper carrying a credential-shaped function definition', () => {
+    const smuggled = postflightWith('functions', 'definition', 'token=abc/grantor')
+    expectCode(
+      () => parseLiteraturePostflightEvidence(wrap(JSON.stringify(smuggled))),
+      'reserved_structural_key',
+    )
+  })
+
+  it('never pollutes any prototype while rejecting the wrapper', () => {
+    expectCode(
+      () => parseLiteraturePreflightEvidence(wrap(JSON.stringify(validPreflight()))),
+      'reserved_structural_key',
+    )
+    expect(({} as Record<string, unknown>).schemaVersion).toBeUndefined()
+    expect(({} as Record<string, unknown>).catalog).toBeUndefined()
+    expect(Object.hasOwn(Object.prototype, 'schemaVersion')).toBe(false)
+    expect(Object.hasOwn(Object.prototype, 'catalog')).toBe(false)
+  })
+
+  it('rejects __proto__ nested at any depth', () => {
+    const raw = JSON.stringify(validPreflight()).replace(
+      '"tableExists":false',
+      '"__proto__":{"polluted":true},"tableExists":false',
+    )
+    expectCode(() => parseLiteraturePreflightEvidence(raw), 'reserved_structural_key')
+  })
+
+  it('rejects prototype and constructor keys, top-level and nested', () => {
+    expectCode(
+      () => parseLiteraturePreflightEvidence('{"prototype":{}}'),
+      'reserved_structural_key',
+    )
+    expectCode(
+      () => parseLiteraturePreflightEvidence('{"constructor":{}}'),
+      'reserved_structural_key',
+    )
+    const nested = JSON.stringify(validPreflight()).replace(
+      '"tableExists":false',
+      '"constructor":{"prototype":{}},"tableExists":false',
+    )
+    expectCode(() => parseLiteraturePreflightEvidence(nested), 'reserved_structural_key')
+  })
+
+  it('rejects Unicode-escaped spellings of every reserved key', () => {
+    // "\u005f\u005fproto\u005f\u005f" decodes to "__proto__", and so on: the check runs on the
+    // decoded key, after escape processing.
+    expectCode(
+      () => parseLiteraturePreflightEvidence('{"\\u005f\\u005fproto\\u005f\\u005f":{}}'),
+      'reserved_structural_key',
+    )
+    expectCode(
+      () => parseLiteraturePreflightEvidence('{"\\u0070rototype":{}}'),
+      'reserved_structural_key',
+    )
+    expectCode(
+      () => parseLiteraturePreflightEvidence('{"\\u0063onstructor":{}}'),
+      'reserved_structural_key',
+    )
+  })
+
+  it('rejects duplicated reserved keys on the first occurrence', () => {
+    expectCode(
+      () => parseLiteraturePreflightEvidence('{"__proto__":1,"__proto__":2}'),
+      'reserved_structural_key',
+    )
+  })
+})
+
+/**
+ * Fourth review, finding 1C — a literal key spelled like a path is one segment, not a path.
+ *
+ * The screener's traversal path is now structured segments, so a decoded key literally named
+ * `catalog.functions[0].acl[0]` can never collide with the five-segment ACL allowance. All of
+ * these die at the strict schema stage as unknown fields — with sanitized messages that never
+ * echo the spoofed key or its credential-shaped value.
+ */
+describe('dotted-path and bracket spoof keys (fourth review)', () => {
+  it.each([
+    ['dot-and-bracket', 'catalog.functions[0].acl[0]'],
+    ['default-privileges variant', 'catalog.defaultPrivileges[0].acl[0]'],
+    ['rendered-root variant', '$.catalog.functions[0].acl[0]'],
+    ['all-dots variant', 'catalog.functions.0.acl.0'],
+    ['all-brackets variant', 'catalog[functions][0][acl][0]'],
+    ['role-position variant', 'catalog.tablePrivileges[0].role'],
+  ])('rejects a top-level %s spoof key without echoing anything', (_label, spoofKey) => {
+    const error = expectCode(
+      () => parsePost(validPostflight({ [spoofKey]: 'password=foo/grantor' })),
+      'schema_violation',
+    )
+    expect(error.message).not.toContain('password')
+    expect(error.message).not.toContain(spoofKey)
+  })
+
+  it('rejects a spoof key inside a catalog row', () => {
+    const error = expectCode(
+      () => parsePost(postflightWith('functions', 'acl[0]', 'password=foo/grantor')),
+      'schema_violation',
+    )
+    expect(error.message).not.toContain('password')
+    expect(error.message).not.toContain('acl[0]')
+  })
+
+  it('rejects literal numeric-looking object keys', () => {
+    expectCode(() => parsePre(validPreflight({ '0': 'password=foo/grantor' })), 'schema_violation')
+    // A section replaced by an object with numeric keys is not an array and dies as a type error.
+    expectCode(
+      () =>
+        parsePre(
+          validPreflight({
+            catalog: { ...emptyCatalog(), functions: { '0': VALID_ROWS.functions } },
+          }),
+        ),
+      'schema_violation',
+    )
   })
 })
 
@@ -391,6 +757,36 @@ describe('strict catalog structure (H-2)', () => {
       'schema_violation',
     )
   })
+
+  it('sanitizes strict-schema failures: unknown key names are counted, never echoed', () => {
+    const error = expectCode(() => parsePre(validPreflight({ password: 'x' })), 'schema_violation')
+    expect(error.message).not.toContain('password')
+    expect(error.message).toContain('unrecognized key')
+
+    const nested = expectCode(
+      () =>
+        parsePre(
+          validPreflight({
+            prerequisites: {
+              availableExtensions: [],
+              roles: [],
+              schemas: [],
+              api_key: 'x',
+            },
+          }),
+        ),
+      'schema_violation',
+    )
+    expect(nested.message).not.toContain('api_key')
+  })
+
+  it('sanitizes enum failures: the received value is never echoed', () => {
+    const error = expectCode(
+      () => parsePost(postflightWith('relations', 'relkind', 'sb_secret_smuggled')),
+      'schema_violation',
+    )
+    expect(error.message).not.toContain('sb_secret')
+  })
 })
 
 describe('JSON-compliant strict parser (H-2)', () => {
@@ -432,12 +828,23 @@ describe('JSON-compliant strict parser (H-2)', () => {
   })
 })
 
-describe('post-decode credential screening (M-2)', () => {
-  it('rejects a top-level secret-shaped value', () => {
+describe('post-decode credential screening (M-2, over the schema-normalized graph)', () => {
+  it('rejects a secret-shaped value in a schema-legal string position', () => {
     expectCode(
-      () => parsePre(validPreflight({ queryPlanSha256: 'sb_secret_0000' })),
+      () => parsePost(postflightWith('relations', 'owner', 'sb_secret_0000')),
       'credential_shaped_value',
     )
+  })
+
+  it('fails a secret-shaped value at the schema stage when the position is format-bound', () => {
+    // Screening runs after the strict schema (fourth-review ordering), so a credential shape in
+    // a format-constrained field dies as a sanitized schema violation — equally controlled,
+    // equally unechoed.
+    const error = expectCode(
+      () => parsePre(validPreflight({ queryPlanSha256: 'sb_secret_0000' })),
+      'schema_violation',
+    )
+    expect(error.message).not.toContain('sb_secret')
   })
 
   it('rejects a nested secret-shaped value', () => {
@@ -475,22 +882,14 @@ describe('post-decode credential screening (M-2)', () => {
 
   it('rejects a JWT-shaped value and an inline-credential connection string', () => {
     expectCode(
-      () => assertDecodedEvidenceCarriesNoSecret({ x: `eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoieCJ9.zz` }),
+      () =>
+        parsePost(postflightWith('relations', 'owner', 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoieCJ9.zz')),
       'credential_shaped_value',
     )
     expectCode(
-      () => assertDecodedEvidenceCarriesNoSecret({ x: 'postgresql://user:pw@host/db' }),
+      () => parsePost(postflightWith('functions', 'definition', 'postgresql://user:pw@host/db')),
       'credential_shaped_value',
     )
-  })
-
-  it('rejects a credential-shaped key without echoing it', () => {
-    const error = expectCode(
-      () => assertDecodedEvidenceCarriesNoSecret({ nested: { password: 'x' } }),
-      'credential_shaped_value',
-    )
-    expect(error.message).not.toContain('password')
-    expect(error.message).toContain('[redacted-key]')
   })
 
   describe('prohibited vocabulary in decoded string values', () => {
@@ -510,89 +909,58 @@ describe('post-decode credential screening (M-2)', () => {
       ['service role free text', 'use the service role for this'],
       ['service-role', 'service-role'],
       ['mixed case', 'PaSsWoRd'],
-    ])('rejects %s as a decoded value', (_label, value) => {
+    ])('rejects %s as a decoded value in a schema-legal position', (_label, value) => {
       const error = expectCode(
-        () => assertDecodedEvidenceCarriesNoSecret({ harmlessKey: value }),
+        () => parsePost(postflightWith('relations', 'owner', value)),
         'credential_shaped_value',
       )
       // Never echo the rejected content.
       expect(error.message).not.toContain(value)
     })
 
-    it('rejects vocabulary in values nested inside arrays and objects', () => {
+    it('rejects vocabulary in values nested inside arrays', () => {
       expectCode(
-        () => assertDecodedEvidenceCarriesNoSecret({ a: [{ b: ['fine', 'Password!'] }] }),
+        () => parsePost(postflightWith('functions', 'config', ['fine', 'Password!'])),
         'credential_shaped_value',
       )
     })
 
     it('rejects a Unicode-escaped vocabulary value after decoding', () => {
-      const raw = '{"a":"\\u0070assword"}'
-      expectCode(() => parseLiteraturePreflightEvidence(raw), 'credential_shaped_value')
+      const raw = JSON.stringify(postflightWith('relations', 'owner', 'PLACEHOLDER')).replace(
+        '"PLACEHOLDER"',
+        '"\\u0070assword"',
+      )
+      expectCode(() => parseLiteraturePostflightEvidence(raw), 'credential_shaped_value')
     })
   })
 
   describe('typed non-secret allowances instead of weakened screening', () => {
-    it('permits the exact role name service_role in role positions', () => {
-      expect(() =>
-        assertDecodedEvidenceCarriesNoSecret(
-          { role: 'service_role', granted: true },
-          '$.catalog.tablePrivileges[0]',
-        ),
-      ).not.toThrow()
-    })
-
-    it('permits PostgreSQL ACL grammar entries', () => {
-      expect(() =>
-        assertDecodedEvidenceCarriesNoSecret(
-          { acl: ['service_role=arwdDxt/supabase_admin', '=X/supabase_admin'] },
-          '$.catalog.functions[0]',
-        ),
-      ).not.toThrow()
-    })
-
-    it('permits the contract-owned serviceRoleExecute field name', () => {
-      expect(() =>
-        assertDecodedEvidenceCarriesNoSecret(
-          { serviceRoleExecute: true },
-          '$.catalog.functions[0]',
-        ),
-      ).not.toThrow()
-    })
-
     it('still rejects service_role embedded in free text or padded forms', () => {
       expectCode(
-        () => assertDecodedEvidenceCarriesNoSecret({ x: 'service_role_key_material' }),
+        () => parsePost(postflightWith('relations', 'owner', 'service_role_key_material')),
         'credential_shaped_value',
       )
       expectCode(
-        () => assertDecodedEvidenceCarriesNoSecret({ x: ' service_role ' }),
+        () => parsePost(postflightWith('relations', 'owner', ' service_role ')),
         'credential_shaped_value',
       )
+    })
+
+    it('accepts serviceRoleExecute exactly where the functions row schema declares it', () => {
+      // populatedCatalog carries functions[0].serviceRoleExecute — the allowance's only home.
+      expect(() => parsePost(validPostflight())).not.toThrow()
     })
   })
 
   /**
    * Third review, finding 2. The allowances above used to apply wherever a string appeared, so an
    * ACL-shaped string in `owner` or `definition` — `password=foo/grantor`, `token=abc/grantor` —
-   * passed screening inside otherwise valid evidence. Position is now part of the allowance.
+   * passed screening inside otherwise valid evidence. Position is now part of the allowance, and
+   * since the fourth correction the position is an exact *segment sequence*, not a string match.
    *
-   * These run through the **full parser**, not only the scanner, because that is the surface the
-   * preflight and postflight actually use.
+   * These run through the **full parser**, the only remaining screening surface.
    */
   describe('allowances are position-specific (third review, finding 2)', () => {
-    /** A postflight document with one catalog row field overridden. */
-    function postflightWith(
-      section: LiteratureCatalogSection,
-      field: string,
-      value: unknown,
-      extraRow: Record<string, unknown> = {},
-    ) {
-      const catalog = populatedCatalog()
-      catalog[section] = [{ ...VALID_ROWS[section], ...extraRow, [field]: value }]
-      return validPostflight({ catalog })
-    }
-
     it.each([
       ['relations', 'owner', 'password=foo/grantor'],
       ['relations', 'name', 'authorization=abc/grantor'],
@@ -665,11 +1033,18 @@ describe('post-decode credential screening (M-2)', () => {
       }
     })
 
-    it('rejects a credential shape inside an ACL array, which has no position allowance', () => {
-      expectCode(
-        () => parsePost(postflightWith('functions', 'acl', ['sb_secret_planted'])),
-        'credential_shaped_value',
-      )
+    it('rejects every credential shape inside an ACL array, which has no shape allowance', () => {
+      for (const planted of [
+        'sb_secret_planted',
+        'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoieCJ9.zz',
+        'bearer abcdefghijklmnop',
+        'postgresql://user:pw@host/db',
+      ]) {
+        expectCode(
+          () => parsePost(postflightWith('functions', 'acl', [planted])),
+          'credential_shaped_value',
+        )
+      }
     })
 
     it('rejects the literal service_role outside a role position', () => {
@@ -700,19 +1075,14 @@ describe('post-decode credential screening (M-2)', () => {
       ).not.toThrow()
     })
 
-    it('rejects a serviceRoleExecute key outside a functions row', () => {
-      expectCode(
-        () => assertDecodedEvidenceCarriesNoSecret({ serviceRoleExecute: true }),
-        'credential_shaped_value',
+    it('rejects a serviceRoleExecute key outside a functions row, at the schema stage', () => {
+      // An unknown key now dies at the strict schema (fourth-review ordering); the message is
+      // sanitized so not even the key's name appears.
+      const error = expectCode(
+        () => parsePost(postflightWith('relations', 'serviceRoleExecute', true)),
+        'schema_violation',
       )
-      expectCode(
-        () =>
-          assertDecodedEvidenceCarriesNoSecret(
-            { serviceRoleExecute: true },
-            '$.catalog.relations[0]',
-          ),
-        'credential_shaped_value',
-      )
+      expect(error.message).not.toContain('serviceRoleExecute')
     })
 
     it.each([

@@ -1,4 +1,4 @@
-# Independent review handoff — dedicated Literature Supabase bootstrap (third correction pass)
+# Independent review handoff — dedicated Literature Supabase bootstrap (fourth correction pass)
 
 For a fresh reviewer with no context from the implementing sessions.
 
@@ -12,9 +12,14 @@ A **third** independent review confirmed the authority lockdown holds and return
 six remaining findings: a CLI exit-status hole, non-position-specific ACL allowances, an exact
 catalog comparison that included unrelated public objects, a production runtime that variables
 alone could activate, an exact URL missing its trailing slash in prose, and stale documentation
-states. This document lists **all three** corrections and asks you to **re-run the exact
-reproductions**. The goal is to decide whether the PR is safe to merge — **not** whether the
-migration should be applied, which is separately gated and, in this PR, structurally impossible.
+states.
+
+A **fourth** independent review returned **BLOCKED** on four remaining findings: a
+`__proto__`/dotted-path/arbitrary-object evidence-boundary bypass, `0.0.0.0` surviving on the
+local client allowlist, a stale live PR body, and a suite-wide Jest timeout increase. This
+document lists **all four** corrections and asks you to **re-run the exact reproductions**. The
+goal is to decide whether the PR is safe to merge — **not** whether the migration should be
+applied, which is separately gated and, in this PR, structurally impossible.
 
 ## Setup
 
@@ -133,8 +138,9 @@ Strict mode compares the **raw** `LITERATURE_SUPABASE_URL` byte-for-byte against
 `LITERATURE_CANONICAL_PRODUCTION_URL_EXACT` = `https://itcttmkxdxvwmwcmzmey.supabase.co/` —
 trailing slash included — _before any parsing_. No trim, case fold, dot-path resolution,
 percent-decoding, or `:443` normalization runs first; parsing happens only after exact equality,
-as secondary defense. Local mode keeps its own loopback allowlist and does not share the
-production path. Re-run every variant: no slash, `HTTPS://`, `Https://`, whitespace, `:443`,
+as secondary defense. Local mode keeps its own canonical local-host allowlist (`localhost`,
+`127.0.0.1`, `[::1]`; `0.0.0.0` and `[::]` are refused as wildcard bind addresses) and does not
+share the production path. Re-run every variant: no slash, `HTTPS://`, `Https://`, whitespace, `:443`,
 `/./`, `/%2e`, `/%2E`, `http://`, userinfo, path, query, fragment, trailing-dot host,
 alternate/main/custom host — each must fail with the typed reason `noncanonical_production_url`,
 and the raw value is never echoed.
@@ -157,14 +163,18 @@ future authoritative gate is documented as coming from provider `list_migrations
 
 ## M-2 — complete decoded-value vocabulary
 
-`assertDecodedEvidenceCarriesNoSecret` scans decoded keys **and decoded string values**,
-case-insensitively, for: secret, token, password/passwd, credential, authorization, bearer, api
-key, private key, connection string, database URL, service role, the Supabase key prefixes,
-JWT-shaped values, and inline-credential connection strings. The decoded values `"password"` and
-`"Authorization"` are rejected. Rejected content is never echoed — offending path segments render
-as `[redacted-key]`. Legitimate catalog content is admitted through typed exact allowances rather
-than weakened screening, and since the third correction those allowances are **position-specific**
-(see finding 2 below); free text containing the tokens is still rejected everywhere.
+The parsers' module-private screener (`assertParsedEvidenceCarriesNoSecret`; the previously
+exported arbitrary-object scanner was removed by the fourth correction) scans decoded keys **and
+decoded string values**, case-insensitively, for: secret, token, password/passwd, credential,
+authorization, bearer, api key, private key, connection string, database URL, service role, the
+Supabase key prefixes, JWT-shaped values, and inline-credential connection strings. The decoded
+values `"password"` and `"Authorization"` are rejected. Rejected content is never echoed —
+offending path segments render as `[redacted-key]`. Legitimate catalog content is admitted
+through typed exact allowances rather than weakened screening, and since the third correction
+those allowances are **position-specific** (see finding 2 below); free text containing the tokens
+is still rejected everywhere. Screening is exercised through
+`parseLiteraturePreflightEvidence` / `parseLiteraturePostflightEvidence`, the only parsing
+surfaces that exist.
 
 ## H-5 — total runtime input handling
 
@@ -195,8 +205,9 @@ these.
 Your reproduction: `{owner: "password=foo/grantor"}` and `{definition: "token=abc/grantor"}`
 matched the ACL grammar and survived screening anywhere in the document.
 
-**Correction.** `assertDecodedEvidenceCarriesNoSecret` threads the decoded structural path through
-its recursion, and each allowance is bound to exact paths: ACL grammar only in
+**Correction.** The screener threads the decoded structural path through its recursion — since
+the fourth correction as structured `(string | number)` segments rather than a concatenated
+string — and each allowance is bound to exact paths: ACL grammar only in
 `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`; the literal `service_role`
 only in `catalog.{tablePrivileges,schemaPrivileges,roleAttributes}[*].role` and
 `prerequisites.roles[*]`; the `serviceRoleExecute` **key** only on a `catalog.functions[*]` row.
@@ -240,7 +251,8 @@ Your reproduction: the runtime validated the dedicated project and then called
 `not_activated`. Strict mode validates everything and then returns the typed state `not_activated`
 / `dedicated_runtime_not_activated`, which carries no `secretKey`. `createLiteratureAdmin()`
 reaches `createClient` only when the binding is `bound` **and** the mode is exactly `local`
-**and** the URL is on the loopback allowlist. No environment variable introduced by this PR can
+**and** the URL is on the canonical local-host allowlist (`localhost`, `127.0.0.1`, `[::1]` —
+never `0.0.0.0`). No environment variable introduced by this PR can
 activate the remote client; activation requires a code change in the future capability-gating /
 cutover PR.
 
@@ -276,10 +288,87 @@ per-layer check count, or scenario count may appear anywhere; every documented C
 in a CLI source; and the exact URL must carry its trailing slash in all five documents and
 `.env.example`.
 
+## Fourth correction pass — the four findings above
+
+### 1. The evidence boundary takes JSON text only (high)
+
+Your reproduction: `{"__proto__": <valid document>}` with a credential-shaped relation owner —
+assignment-based construction swapped the decoded object's prototype, `Object.entries` saw no own
+fields, the strict schema read every required field through the polluted prototype, and both
+parsers accepted the credential-shaped value. Separately: a literal key spelled
+`catalog.functions[0].acl[0]` collided with the concatenated screening path, and the exported
+scanner accepted an arbitrary object/`Proxy` that could hide its keys from reflection.
+
+**Correction.** Architectural, not a denylist patch:
+
+- the parsers accept **`typeof input === 'string'` only**, refusing every object, array, boxed
+  `String`, `Proxy`, getter carrier, and conversion carrier _before_ any property access,
+  coercion, or reflection — no `String(input)` or `JSON.stringify(input)` ever runs on the input;
+- decoded objects are built as `Object.create(null)` with `Object.defineProperty` own enumerable
+  data members (never `result[key] = value`), duplicates tracked in a separate `Set`;
+- the reserved structural keys `__proto__`/`prototype`/`constructor` are rejected at every depth
+  on the decoded key (Unicode-escaped spellings included) with the controlled code
+  `reserved_structural_key`;
+- screening paths are structured `readonly (string | number)[]` segments matched as exact
+  sequences, so a dotted/bracketed literal key is one segment and can never satisfy an allowance;
+- `assertDecodedEvidenceCarriesNoSecret` is **gone from the export surface**; the renamed
+  module-private screener runs only on the schema-normalized parser-owned graph inside
+  `parseEvidence`;
+- the fail-closed order is: string admission → safe decode → strict schema (sanitized messages
+  that never echo unknown keys or received values) → secret screening → business rules.
+
+Re-run: the `__proto__` wrapper (top-level and nested, plain and Unicode-escaped, with valid and
+credential-carrying payloads), `prototype`/`constructor` keys, duplicate reserved keys, dotted and
+bracketed spoof keys, numeric-looking keys, and every non-string parser input (plain object,
+null-prototype object, boxed `String`, trap-counting `Proxy`, key-hiding `Proxy`, key-synthesizing
+`Proxy`, throwing `Proxy`, getter carrier, `toString`/`valueOf`/`Symbol.toPrimitive` carrier) —
+asserting zero trap/getter/conversion invocations. `evidence-schema.test.ts` carries the full
+matrix; genuine ACL/role/`serviceRoleExecute` content must still pass at its exact positions and
+nowhere else.
+
+### 2. `0.0.0.0` is not a local destination (medium)
+
+Your reproduction: `LITERATURE_SUPABASE_RUNTIME_MODE=local` +
+`LITERATURE_SUPABASE_URL=http://0.0.0.0:55321` returned `bound` and constructed a client.
+
+**Correction.** The permissive local check is now a closed canonical allowlist — exactly
+`localhost`, `127.0.0.1`, `[::1]` as Node 20's `URL.hostname` serializes them (pinned by test).
+`0.0.0.0` and `[::]` are refused with their own reason, `wildcard_address_not_permitted`;
+`*.localhost`, `localhost.localdomain`, other `127/8` aliases, IPv4-mapped IPv6 forms, and every
+remote host are refused with `remote_host_not_permitted_in_local_mode`. No DNS resolution. The
+broad "local-shaped" detection survives only as strict-mode refusal diagnostics, where it can
+only reject. `runtime-activation.test.ts` proves the wildcard configurations construct nothing
+(`createClient` uncalled, `.rpc()`/`.from()` unreachable) and strict/deployed environments still
+resolve `not_activated`.
+
+### 3. One canonical current record in the live PR body (low)
+
+The live PR body retained superseded current-sounding validation claims alongside the corrected
+ones. It has been rewritten from scratch: one current-state record, one canonical validation
+section with the fourth-pass measurements, the four findings and their corrections, one safety
+attestation, and a clearly labeled superseded-historical table. No stale count reads as current.
+
+### 4. No Jest timeout increase (low)
+
+Your reproduction: `cli-exit-status.test.ts` set `jest.setTimeout(120_000)` while the PR body
+claimed no timeout increase.
+
+**Correction.** The suite-wide timeout is removed entirely; nothing replaces it — no per-test
+Jest timeout, no retry, no `forceExit`, no worker reduction. Each subprocess invocation runs in
+its own test within Jest's ordinary 5 s default. Containment is a **child-process** timeout
+(`spawn` `timeout: 4000, killSignal: 'SIGKILL'`), chosen from measured durations (≈0.09–0.12 s
+direct, ≈0.21 s under eight-way contention) as a hung-process guard below the Jest default. The
+CLIs are spawned as `node --import tsx` so the killed process is the working process — no wrapper
+to orphan a grandchild. An adversarial test runs a review-owned hanging child that would write a
+marker file if it survived: the child is SIGKILLed, the wrapper reports a controlled failure, the
+PID is gone, and the marker never appears. Search the PR diff for `jest.setTimeout`,
+per-test timeouts, retries, and `forceExit`: the expected count of PR-added occurrences is zero.
+
 ## Earlier documentation corrections
 
 - The architecture note names the actual flag (`--print-query-plans`) and the split catalog scopes.
-- The threat model names the actual function `assertDecodedEvidenceCarriesNoSecret()`.
+- The threat model names the actual screening function (now the module-private
+  `assertParsedEvidenceCarriesNoSecret`, renamed and unexported by the fourth correction).
 - The runbook and provenance notes state that no success verdict exists in this PR and describe
   the non-authoritative content assessments.
 

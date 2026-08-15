@@ -227,6 +227,45 @@ describe('local mode', () => {
     ).toMatchObject({ status: 'unbound', reason: 'remote_host_not_permitted_in_local_mode' })
   })
 
+  it.each([
+    ['the canonical hostname form', 'http://localhost:55321'],
+    ['IPv4 loopback', 'http://127.0.0.1:55321'],
+    ['bracketed IPv6 loopback', 'http://[::1]:55321'],
+    ['uppercase LOCALHOST, canonicalized to localhost by the URL parser', 'http://LOCALHOST:55321'],
+  ])('still binds %s', (_label, url) => {
+    expect(resolve(localEnvironment({ LITERATURE_SUPABASE_URL: url }), 'local').status).toBe(
+      'bound',
+    )
+  })
+
+  describe('the wildcard bind address is not a destination (fourth review)', () => {
+    it.each([
+      ['0.0.0.0', 'http://0.0.0.0:55321'],
+      ['[::]', 'http://[::]:55321'],
+      ['the IPv4 shorthand 0, which the URL parser canonicalizes to 0.0.0.0', 'http://0:55321'],
+    ])('refuses %s with the wildcard-specific reason', (_label, url) => {
+      expect(resolve(localEnvironment({ LITERATURE_SUPABASE_URL: url }), 'local')).toMatchObject({
+        status: 'unbound',
+        reason: 'wildcard_address_not_permitted',
+      })
+    })
+  })
+
+  describe('only the canonical local hosts are on the allowlist (fourth review)', () => {
+    it.each([
+      ['a .localhost subdomain', 'http://db.localhost:55321'],
+      ['localhost.localdomain', 'http://localhost.localdomain:55321'],
+      ['a 127/8 alias other than 127.0.0.1', 'http://127.0.0.2:55321'],
+      ['a 0/8 address other than the wildcard', 'http://0.0.0.1:55321'],
+      ['the IPv4-mapped IPv6 loopback', 'http://[::ffff:127.0.0.1]:55321'],
+    ])('refuses %s as not on the allowlist', (_label, url) => {
+      expect(resolve(localEnvironment({ LITERATURE_SUPABASE_URL: url }), 'local')).toMatchObject({
+        status: 'unbound',
+        reason: 'remote_host_not_permitted_in_local_mode',
+      })
+    })
+  })
+
   it('still refuses a publishable credential', () => {
     expect(
       resolve(localEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY }), 'local'),
@@ -471,13 +510,12 @@ describe('production runtime activation (third review, finding 4)', () => {
     expect(resolve(strictEnvironment())).toMatchObject({ status: 'not_activated' })
   })
 
-  it('allows only loopback URLs through the local runtime allowlist', () => {
+  it('allows only the canonical local hosts through the local runtime allowlist', () => {
     for (const permitted of [
       'http://127.0.0.1:55321',
       'http://localhost:55321',
       'https://localhost:55321',
       'http://[::1]:55321',
-      'http://db.localhost:55321',
     ]) {
       expect(isPermittedLocalRuntimeUrl(permitted)).toBe(true)
     }
@@ -489,8 +527,32 @@ describe('production runtime activation (third review, finding 4)', () => {
       'http://user:pw@127.0.0.1:55321',
       'not-a-url',
       '',
+      // Fourth review: wildcard bind addresses and near-local hostnames are not destinations
+      // this contract permits a client for.
+      'http://0.0.0.0:55321',
+      'http://[::]:55321',
+      'http://0:55321',
+      'http://0.0.0.1:55321',
+      'http://127.0.0.2:55321',
+      'http://db.localhost:55321',
+      'http://localhost.localdomain:55321',
+      'http://[::ffff:127.0.0.1]:55321',
     ]) {
       expect(isPermittedLocalRuntimeUrl(refused)).toBe(false)
     }
+  })
+
+  it('pins the Node URL.hostname representations the allowlist is written against', () => {
+    // The allowlist compares against WHATWG URL hostname serialization: lowercased names,
+    // IPv4 shorthand expanded, IPv6 bracketed. These assertions pin that representation so a
+    // future runtime change would surface here rather than silently widening the allowlist.
+    expect(parseLiteratureTargetUrl('http://LOCALHOST:1')?.hostname).toBe('localhost')
+    expect(parseLiteratureTargetUrl('http://127.1:1')?.hostname).toBe('127.0.0.1')
+    expect(parseLiteratureTargetUrl('http://[::1]:1')?.hostname).toBe('[::1]')
+    expect(parseLiteratureTargetUrl('http://0:1')?.hostname).toBe('0.0.0.0')
+    expect(parseLiteratureTargetUrl('http://[::]:1')?.hostname).toBe('[::]')
+    expect(parseLiteratureTargetUrl('http://[::ffff:127.0.0.1]:1')?.hostname).toBe(
+      '[::ffff:7f00:1]',
+    )
   })
 })

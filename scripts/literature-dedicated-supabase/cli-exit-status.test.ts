@@ -7,13 +7,18 @@
  * `process.exitCode = 1`, so that one invocation exited 0. A shell `&&` chain, a CI step, or a
  * `set -e` script would have read a query-plan dump as a passing preflight.
  *
- * These are **subprocess** tests: they spawn the real CLIs through `tsx`, exactly as
- * `npm run literature:dedicated:preflight` does, and assert on the actual process exit status and
+ * These are **subprocess** tests: they spawn the real CLIs through the same `tsx` loader that
+ * `npm run literature:dedicated:preflight` uses, and assert on the actual process exit status and
  * the actual stdout. Source-scanning would not have caught the original defect; running it does.
+ *
+ * Fourth review, finding 4 — this suite previously widened the Jest timeout to 120 s. That is
+ * gone: every invocation runs inside Jest's ordinary default test budget, and a hung child is
+ * contained by the child process's own timeout/kill mechanism (`CHILD_TIMEOUT_MS` below), which
+ * is itself exercised by an adversarial hanging-child test at the bottom of the suite.
  */
 
 import { spawn } from 'node:child_process'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { access, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -27,30 +32,73 @@ const ROOT = process.cwd()
 const PREFLIGHT = 'scripts/literature-dedicated-supabase/preflight.ts'
 const POSTFLIGHT = 'scripts/literature-dedicated-supabase/postflight.ts'
 
-// Spawning tsx and type-stripping two CLIs is slower than an in-process assertion; the whole point
-// of this suite is that it exercises the real process boundary.
-jest.setTimeout(120_000)
+/**
+ * Containment timeout for one CLI child process — a hung-process guard, not a performance
+ * guarantee.
+ *
+ * Measured before choosing (Node 20, tsx 4.7, this repository): one direct
+ * `node --import tsx preflight.ts` invocation completes in ≈0.09–0.12 s, and eight simultaneous
+ * invocations complete in ≈0.21 s each. 4 000 ms is ≈19× the contended measurement while staying
+ * below Jest's ordinary 5 000 ms per-test default, so a child that hits it is genuinely wedged:
+ * it is SIGKILLed, the test fails with a controlled message, and nothing is left behind.
+ */
+const CHILD_TIMEOUT_MS = 4_000
+const CHILD_KILL_SIGNAL = 'SIGKILL' as const
+/** Bound captured output so a runaway child cannot balloon test memory. */
+const MAX_CAPTURED_OUTPUT_CHARACTERS = 1_000_000
 
 interface CommandResult {
   code: number | null
+  signal: NodeJS.Signals | null
+  pid: number | undefined
   stdout: string
   stderr: string
 }
 
-function runCli(script: string, argumentList: readonly string[]): Promise<CommandResult> {
+/**
+ * Spawn one contained child: no shell, bounded output capture, and a hard kill once `timeoutMs`
+ * elapses (Node's own child-process timeout mechanism, so no timer of ours can leak). A killed
+ * child surfaces as `code: null` plus the kill signal, which every assertion path treats as a
+ * controlled failure — never as success.
+ */
+function runContained(
+  command: string,
+  argumentList: readonly string[],
+  timeoutMs: number,
+): Promise<CommandResult> {
   return new Promise((settle, fail) => {
-    const child = spawn('npx', ['tsx', script, ...argumentList], {
+    const child = spawn(command, argumentList, {
       cwd: ROOT,
       env: { ...process.env, NO_COLOR: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: timeoutMs,
+      killSignal: CHILD_KILL_SIGNAL,
     })
     let stdout = ''
     let stderr = ''
-    child.stdout.on('data', (chunk: Buffer) => (stdout += chunk.toString('utf8')))
-    child.stderr.on('data', (chunk: Buffer) => (stderr += chunk.toString('utf8')))
+    child.stdout.on('data', (chunk: Buffer) => {
+      if (stdout.length < MAX_CAPTURED_OUTPUT_CHARACTERS) stdout += chunk.toString('utf8')
+    })
+    child.stderr.on('data', (chunk: Buffer) => {
+      if (stderr.length < MAX_CAPTURED_OUTPUT_CHARACTERS) stderr += chunk.toString('utf8')
+    })
     child.on('error', fail)
-    child.on('close', (code) => settle({ code, stdout, stderr }))
+    child.on('close', (code, signal) => settle({ code, signal, pid: child.pid, stdout, stderr }))
   })
+}
+
+/**
+ * Run one real CLI invocation. `node --import tsx` is the same loader the `tsx` binary wraps
+ * (and what the npm scripts resolve to), invoked directly so the spawned process IS the process
+ * doing the work — the containment timeout kills the whole invocation, with no wrapper process
+ * that could orphan a grandchild.
+ */
+function runCli(script: string, argumentList: readonly string[]): Promise<CommandResult> {
+  return runContained(
+    process.execPath,
+    ['--import', 'tsx', script, ...argumentList],
+    CHILD_TIMEOUT_MS,
+  )
 }
 
 /**
@@ -75,6 +123,13 @@ function expectNoAuthoritativeSuccess(result: CommandResult) {
 }
 
 function expectBlocked(result: CommandResult) {
+  if (result.code === null) {
+    // The containment guard killed a wedged child. A controlled failure, never a success.
+    throw new Error(
+      `CLI invocation did not exit on its own within ${CHILD_TIMEOUT_MS} ms and was killed ` +
+        `(signal: ${String(result.signal)})`,
+    )
+  }
   expect(result.code).not.toBe(0)
   expect(result.code).toBeGreaterThan(0)
   expectNoAuthoritativeSuccess(result)
@@ -240,6 +295,44 @@ describe('every postflight invocation exits nonzero', () => {
         invalidEvidence,
       ]),
     )
+  })
+})
+
+describe('the containment guard itself (fourth review, finding 4)', () => {
+  it('kills a hanging child, reports a controlled failure, and leaves nothing behind', async () => {
+    const marker = join(temporaryRoot, 'hang-survived.marker')
+    const hangScript = join(temporaryRoot, 'hang.cjs')
+    // A review-owned child that ignores nothing, hangs on an interval, and — if containment ever
+    // failed — would prove its survival by writing a marker file 1.5 s in.
+    await writeFile(
+      hangScript,
+      [
+        "const { writeFileSync } = require('node:fs')",
+        'const marker = process.argv[2]',
+        "setTimeout(() => { writeFileSync(marker, 'survived') }, 1500)",
+        'setInterval(() => {}, 1000)',
+      ].join('\n'),
+      'utf8',
+    )
+
+    const startedAt = Date.now()
+    const result = await runContained(process.execPath, [hangScript, marker], 300)
+
+    // Killed promptly by the configured signal, with no exit status of its own.
+    expect(result.code).toBeNull()
+    expect(result.signal).toBe(CHILD_KILL_SIGNAL)
+    expect(Date.now() - startedAt).toBeLessThan(1500)
+
+    // The wrapper's assertion path treats the kill as an explicit failure, never a success.
+    expect(() => expectBlocked(result)).toThrow(/did not exit on its own/u)
+
+    // The process is truly gone: signal 0 probes existence without sending anything.
+    expect(result.pid).toBeDefined()
+    expect(() => process.kill(result.pid as number, 0)).toThrow()
+
+    // And it stays gone: wait past the would-be marker write, then prove it never happened.
+    await new Promise((resolveSleep) => setTimeout(resolveSleep, 1400))
+    await expect(access(marker)).rejects.toThrow()
   })
 })
 

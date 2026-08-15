@@ -30,7 +30,8 @@ import {
  * Literature, and while the production runtime is not activated it can only reach that call for an
  * exact local-mode loopback target. Strict mode never resolves to `bound` (see
  * `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`), and two further guards here refuse anything that is
- * not `mode === 'local'` with a URL on the loopback allowlist. So the existing list, detail,
+ * not `mode === 'local'` with a URL on the canonical local-host allowlist (`localhost`,
+ * `127.0.0.1`, `[::1]` — never a wildcard bind address). So the existing list, detail,
  * curation, and gold-set callers receive `null` in every deployed configuration — the same "not
  * configured" path they already handle — and no privileged remote RPC is reachable. Setting the
  * documented Railway variables changes none of that; only the future capability-gating / cutover
@@ -122,7 +123,8 @@ function assertServerOnly() {
  *   1. the binding resolved to `bound` — impossible in strict mode while the production runtime is
  *      not activated, because strict resolves to `not_activated` instead;
  *   2. the resolved mode is exactly `local`;
- *   3. the URL is on the explicit loopback allowlist.
+ *   3. the URL is on the explicit canonical local-host allowlist (`localhost`, `127.0.0.1`,
+ *      `[::1]`; `0.0.0.0` is a wildcard bind address and is refused).
  *
  * Callers already treat `null` as "the literature database is not configured", so a deployed
  * environment degrades to that honest state rather than to a remote client.

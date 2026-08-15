@@ -88,8 +88,9 @@ A credential reaching a log, an error message, a receipt, a test fixture, or the
 **Controls (code).** No function in the contract interpolates a credential into a message — asserted
 by a test that checks four distinct failure messages against three placeholder values. The redacted
 `describeLiteratureBinding()` view is what callers are expected to log. The preflight and postflight
-hold no credential at all: they evaluate an operator-captured observation document, and
-`assertDecodedEvidenceCarriesNoSecret()` rejects any document whose decoded keys **or decoded
+hold no credential at all: they evaluate an operator-captured observation document, and the
+parsers' module-private screener (`assertParsedEvidenceCarriesNoSecret`, fourth review — no
+arbitrary-object scanner is exported at all) rejects any document whose decoded keys **or decoded
 string values** carry an `sb_secret_…`/`sb_publishable_…` marker, a JWT-shaped or
 inline-credential value, or the prohibited secret vocabulary (secret, token, password,
 authorization, bearer, api key, connection string, database URL, service role, …) —
@@ -99,8 +100,10 @@ Rejected content is never echoed into an error message; legitimate catalog conte
 otherwise trip the vocabulary is represented as a typed, exact value rather than by weakening the
 screening.
 
-Each allowance is **position-specific** (third review). The scanner carries the decoded structural
-path, and a vocabulary match is admitted only at the exact path where that content is legitimate:
+Each allowance is **position-specific** (third review) and, since the fourth correction, matched
+against **structured path segments** — a `readonly (string | number)[]`, so a field name, an
+array index, and a literal key that merely _contains_ dots or brackets are different things. A
+vocabulary match is admitted only at the exact segment sequence where that content is legitimate:
 ACL grammar in `catalog.functions[*].acl[*]` and `catalog.defaultPrivileges[*].acl[*]`, the literal
 `service_role` in the three catalog `role` positions and `prerequisites.roles[*]`, and the
 `serviceRoleExecute` key on a `catalog.functions[*]` row. The same byte sequence in `owner`,
@@ -303,17 +306,30 @@ array fails.
 ## T21 — Evidence-document parsing attacks
 
 A document that parses differently than it reads: duplicate keys, unknown fields surviving a cast,
-wrong types becoming an uncontrolled `TypeError`, or a credential hidden behind Unicode escapes.
+wrong types becoming an uncontrolled `TypeError`, a credential hidden behind Unicode escapes, a
+`__proto__` wrapper that swaps the decoded object's prototype so the strict schema reads required
+fields through it, a literal key spelled like a path (`catalog.functions[0].acl[0]`) colliding
+with a screening allowance, or a hostile object/`Proxy` handed to a parsing surface directly.
 
-**Controls (code).** A custom, JSON-compliant recursive-descent parser rejects duplicate keys
-outright rather than resolving last-value-wins, and rejects unescaped control characters
-(U+0000–U+001F) inside strings as RFC 8259 requires. Every row of every catalog section has its own
+**Controls (code).** The parsers accept **primitive JSON text only** (fourth review): every
+object, array, boxed string, `Proxy`, getter carrier, and conversion carrier is refused by a
+`typeof` check before any property access, trap, or coercion can run, and no production surface
+accepts a decoded object — the screener is module-private and no arbitrary-object scanner is
+exported. A custom, JSON-compliant recursive-descent parser rejects duplicate keys outright
+rather than resolving last-value-wins, rejects unescaped control characters (U+0000–U+001F)
+inside strings as RFC 8259 requires, and rejects the reserved structural keys
+`__proto__`/`prototype`/`constructor` at every depth, checked on the _decoded_ key. Decoded
+objects are materialized as `Object.create(null)` with members installed by
+`Object.defineProperty` as ordinary own enumerable data properties, so no decoded key can alter a
+prototype. Every row of every catalog section has its own
 `.strict()` runtime schema with exact field types, so unknown nested fields (including any casing
 or Unicode-escaped spelling of `projectRef`/`hostname`), missing fields, numeric names, malformed
 booleans, and malformed arrays are all controlled schema violations — never a later raw
-`TypeError`. The evidence documents are phase-specific: the preflight schema has no
-`totalRowCount`, the postflight schema requires it, and each binds the identity of the exact query
-plan that produced it. Credential screening runs **after** decoding, recursively over every key and
+`TypeError`, and never a message that echoes an unknown key name or a received value. The
+evidence documents are phase-specific: the preflight schema has no `totalRowCount`, the
+postflight schema requires it, and each binds the identity of the exact query plan that produced
+it. Credential screening runs **after** the schema, over the schema-normalized parser-owned
+graph with structured-segment paths, recursively over every key and
 value, with case-normalised patterns — so `sb\u005fsecret_…` and `SB_SeCrEt_…` are caught
 identically to the plain form. Every failure is a typed `LiteratureEvidenceError` with a code.
 
@@ -354,7 +370,8 @@ is a source constant currently set to `not_activated`; while it holds that value
 configuration that passes every check resolves to the typed state `not_activated` /
 `dedicated_runtime_not_activated` instead of `bound`, and carries **no** `secretKey` field for a
 caller to misuse. `createLiteratureAdmin()` reaches `createClient` only when the binding is `bound`,
-the mode is exactly `local`, and the URL is on the explicit loopback allowlist — three agreeing
+the mode is exactly `local`, and the URL is on the explicit canonical local-host allowlist
+(`localhost`, `127.0.0.1`, `[::1]` — never the wildcard bind address `0.0.0.0`) — three agreeing
 gates, none of which any environment variable can satisfy for a remote host. A test suite mocks
 Supabase client construction and asserts, across no-variable / partial / exactly-valid / invalid
 configurations, that `createClient` is never called, that the existing read and mutating server

@@ -40,6 +40,38 @@
  * can only ever come from a provider-bound adapter (Layer 3, not implemented in this PR); a
  * document that tries to declare its own project is rejected as carrying an unknown field. That is
  * the structural half of the B-1 fix — relabelling is not merely detected, it is unrepresentable.
+ *
+ * **Fourth correction — the boundary takes JSON text only, built prototype-safe, screened over
+ * structured paths.** The fourth independent review demonstrated three holes in the previous
+ * layering: `{"__proto__": <valid document>}` polluted the decoded object's prototype (the
+ * assignment `result[key] = value` *changed the prototype* instead of defining a member, so the
+ * strict schema read every required field through the polluted prototype and a credential-shaped
+ * owner survived); a literal decoded key spelled `catalog.functions[0].acl[0]` collided with the
+ * concatenated string path the screener matched allowances against; and the exported
+ * arbitrary-object scanner could be handed a `Proxy` that hides its keys from reflection.
+ *
+ * All three are now structural, not patched:
+ *
+ *   1. **Primitive-string admission.** The parsers accept only `typeof input === 'string'`. Every
+ *      object, array, boxed `String`, `Proxy`, getter carrier, conversion carrier, function, and
+ *      class instance is refused *before* any property access, coercion, or reflection — no
+ *      `String(input)`, no `JSON.stringify(input)`, no trap can run. There is no alternate
+ *      production parser that accepts a decoded object, and the screener is module-private.
+ *   2. **Prototype-safe construction.** Every decoded JSON object is materialized as
+ *      `Object.create(null)` and members are installed with `Object.defineProperty` as ordinary
+ *      own enumerable data properties; duplicate keys are tracked in a separate `Set`. The
+ *      reserved structural keys `__proto__`, `prototype`, and `constructor` — which no evidence
+ *      schema contains — are rejected outright at every depth with a controlled error.
+ *   3. **Structured screening paths.** The screener's traversal path is a `readonly
+ *      (string | number)[]` of real segments, and every allowance matches exact segment
+ *      sequences, distinguishing field names from array indexes. A key literally named
+ *      `catalog.functions[0].acl[0]` is one string segment and can never satisfy the
+ *      five-segment ACL allowance.
+ *
+ * The fail-closed order is: string admission → safe decoding → strict schema validation →
+ * secret screening over the schema-normalized, parser-owned graph → business rules. Unknown
+ * fields therefore fail at the schema stage; schema failure messages are sanitized so they never
+ * echo unrecognized key names or decoded values.
  */
 
 import { z } from 'zod'
@@ -48,7 +80,9 @@ import { LITERATURE_CATALOG_SECTIONS } from './foundation-catalog'
 import type { LiteratureCatalogSection } from './foundation-catalog'
 
 export type LiteratureEvidenceErrorCode =
+  | 'nonstring_input'
   | 'duplicate_json_key'
+  | 'reserved_structural_key'
   | 'malformed_json'
   | 'schema_violation'
   | 'credential_shaped_value'
@@ -74,12 +108,31 @@ export class LiteratureEvidenceError extends Error {
  * literal newline, tab, or NUL inside a string is a parse error here, never silently accepted.
  * ------------------------------------------------------------------------------------------- */
 
+/**
+ * JSON object keys that address an object's prototype machinery rather than ordinary data. No
+ * valid evidence schema contains any of them, so they are refused at every object depth — a
+ * decoded `__proto__` member must never exist even transiently, not merely be screened later.
+ */
+const RESERVED_STRUCTURAL_KEYS: ReadonlySet<string> = new Set([
+  '__proto__',
+  'prototype',
+  'constructor',
+])
+
 class StrictJsonParser {
   private index = 0
 
   constructor(private readonly text: string) {}
 
   static parse(text: string): unknown {
+    // Defence in depth behind the parsers' own admission gate: this class only ever reasons about
+    // a primitive string, never about an object that could carry traps or conversion hooks.
+    if (typeof text !== 'string') {
+      throw new LiteratureEvidenceError(
+        'nonstring_input',
+        'Evidence must be supplied as JSON text (a primitive string).',
+      )
+    }
     const parser = new StrictJsonParser(text)
     parser.skipWhitespace()
     const value = parser.parseValue()
@@ -120,7 +173,9 @@ class StrictJsonParser {
 
   private parseObject(): Record<string, unknown> {
     this.expect('{')
-    const result: Record<string, unknown> = {}
+    // Null-prototype destination: no decoded key can collide with Object.prototype machinery,
+    // and every member is installed below as an ordinary own enumerable data property.
+    const result: Record<string, unknown> = Object.create(null) as Record<string, unknown>
     const seen = new Set<string>()
     this.skipWhitespace()
     if (this.text[this.index] === '}') {
@@ -130,6 +185,14 @@ class StrictJsonParser {
     for (;;) {
       this.skipWhitespace()
       const key = this.parseString()
+      if (RESERVED_STRUCTURAL_KEYS.has(key)) {
+        // Checked on the *decoded* key, so Unicode-escaped spellings are equally refused.
+        throw new LiteratureEvidenceError(
+          'reserved_structural_key',
+          'The evidence document uses a reserved structural key (__proto__, prototype, or ' +
+            'constructor), which no evidence schema contains.',
+        )
+      }
       if (seen.has(key)) {
         throw new LiteratureEvidenceError(
           'duplicate_json_key',
@@ -140,7 +203,14 @@ class StrictJsonParser {
       seen.add(key)
       this.skipWhitespace()
       this.expect(':')
-      result[key] = this.parseValue()
+      // Never `result[key] = value`: for exotic keys plain assignment resolves through prototype
+      // machinery instead of defining data. defineProperty always creates the own data member.
+      Object.defineProperty(result, key, {
+        value: this.parseValue(),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      })
       this.skipWhitespace()
       if (this.text[this.index] === ',') {
         this.index += 1
@@ -290,95 +360,151 @@ export const LITERATURE_EXACT_ROLE_NAME_ALLOWANCE = 'service_role'
  * trigger definition, a `service_role` value outside a role position, and a `serviceRoleExecute`
  * key outside a function row.
  */
-const ACL_MEMBER_PATH_PATTERN = new RegExp(
-  String.raw`^\$\.catalog\.(?:${LITERATURE_ACL_BEARING_CATALOG_SECTIONS.join(
-    '|',
-  )})\[\d+\]\.acl\[\d+\]$`,
-  'u',
+/**
+ * A structural traversal path: real segments, not a concatenated string. A field name and an
+ * array index are different segment kinds, and a user-authored key that *contains* dots or
+ * brackets — `catalog.functions[0].acl[0]` as one literal key — is one string segment that can
+ * never equal a multi-segment allowance sequence.
+ */
+type LiteratureEvidencePathSegment = string | number
+
+const ACL_BEARING_SECTION_SET: ReadonlySet<string> = new Set(
+  LITERATURE_ACL_BEARING_CATALOG_SECTIONS,
 )
 
-const ROLE_NAME_PATH_PATTERN = new RegExp(
-  String.raw`^\$\.(?:catalog\.(?:${LITERATURE_ROLE_BEARING_CATALOG_SECTIONS.join(
-    '|',
-  )})\[\d+\]\.role|prerequisites\.roles\[\d+\])$`,
-  'u',
+const ROLE_BEARING_SECTION_SET: ReadonlySet<string> = new Set(
+  LITERATURE_ROLE_BEARING_CATALOG_SECTIONS,
 )
 
-const SERVICE_ROLE_EXECUTE_KEY_PATH_PATTERN = /^\$\.catalog\.functions\[\d+\]\.serviceRoleExecute$/u
+/** Exact segment sequence `catalog.<acl section>[n].acl[m]` — the only ACL-grammar positions. */
+function isAclMemberPath(path: readonly LiteratureEvidencePathSegment[]): boolean {
+  return (
+    path.length === 5 &&
+    path[0] === 'catalog' &&
+    typeof path[1] === 'string' &&
+    ACL_BEARING_SECTION_SET.has(path[1]) &&
+    typeof path[2] === 'number' &&
+    path[3] === 'acl' &&
+    typeof path[4] === 'number'
+  )
+}
+
+/** Exact `catalog.<role section>[n].role` or `prerequisites.roles[n]` — the only role positions. */
+function isRoleNamePath(path: readonly LiteratureEvidencePathSegment[]): boolean {
+  return (
+    (path.length === 4 &&
+      path[0] === 'catalog' &&
+      typeof path[1] === 'string' &&
+      ROLE_BEARING_SECTION_SET.has(path[1]) &&
+      typeof path[2] === 'number' &&
+      path[3] === 'role') ||
+    (path.length === 3 &&
+      path[0] === 'prerequisites' &&
+      path[1] === 'roles' &&
+      typeof path[2] === 'number')
+  )
+}
+
+/** Exact `catalog.functions[n].serviceRoleExecute` — this contract's own key, nowhere else. */
+function isServiceRoleExecuteKeyPath(path: readonly LiteratureEvidencePathSegment[]): boolean {
+  return (
+    path.length === 4 &&
+    path[0] === 'catalog' &&
+    path[1] === 'functions' &&
+    typeof path[2] === 'number' &&
+    path[3] === 'serviceRoleExecute'
+  )
+}
 
 const ACL_ENTRY_PATTERN =
   /^(?:"?[A-Za-z_][A-Za-z0-9_]*"?)?=[A-Za-z*]*\/"?[A-Za-z_][A-Za-z0-9_]*"?$/u
 
-function redactedKeyPath(parentPath: string): string {
-  return `${parentPath}.[redacted-key]`
+/** A path segment may be rendered in an error message only if it is a plain identifier. */
+const RENDERABLE_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/u
+
+function renderEvidencePath(path: readonly LiteratureEvidencePathSegment[]): string {
+  let rendered = '$'
+  for (const segment of path) {
+    if (typeof segment === 'number') rendered += `[${segment}]`
+    else if (RENDERABLE_SEGMENT_PATTERN.test(segment)) rendered += `.${segment}`
+    else rendered += '.[redacted-key]'
+  }
+  return rendered
 }
 
 /**
- * Whether a vocabulary-matching string is admissible **at this exact path**.
+ * Whether a vocabulary-matching string is admissible **at this exact segment sequence**.
  *
  * Position is part of the allowance, not an afterthought: the same byte sequence that is a valid
  * grant inside an `acl` array is a rejected secret in `owner` or `definition`.
  */
-function allowedAtPath(path: string, value: string): boolean {
-  if (ROLE_NAME_PATH_PATTERN.test(path)) return value === LITERATURE_EXACT_ROLE_NAME_ALLOWANCE
-  if (ACL_MEMBER_PATH_PATTERN.test(path)) return ACL_ENTRY_PATTERN.test(value)
+function allowedAtPath(path: readonly LiteratureEvidencePathSegment[], value: string): boolean {
+  if (isRoleNamePath(path)) return value === LITERATURE_EXACT_ROLE_NAME_ALLOWANCE
+  if (isAclMemberPath(path)) return ACL_ENTRY_PATTERN.test(value)
   return false
 }
 
 /**
- * Recursively screen decoded evidence for anything credential-shaped, in keys and values.
+ * Recursively screen the schema-normalized evidence graph for anything credential-shaped, in
+ * keys and values.
  *
- * Runs after decoding, so `sb_secret_…`, `SB_SECRET_…`, and `sb_secret_…` are caught
- * identically. The `path` parameter is the decoded structural path of `value`; it is threaded
- * through every recursion so allowances stay position-specific. Never echoes the offending key or
- * value: messages carry only a path whose offending segment is redacted.
+ * Module-private on purpose (fourth review): an exported scanner accepting an arbitrary decoded
+ * object cannot reliably exclude `Proxy` behavior through reflection alone, so no such surface
+ * exists. This runs only on the parser-owned graph — decoded by the prototype-safe parser above
+ * and normalized by a strict phase schema — inside `parseEvidence`, and it is exercised through
+ * `parseLiteraturePreflightEvidence` / `parseLiteraturePostflightEvidence` alone.
+ *
+ * Runs post-decode, so `sb_secret_…` written with Unicode escapes or mixed case is caught
+ * identically. Never echoes the offending key or value: messages carry only a rendered path whose
+ * non-identifier segments are redacted.
  */
-export function assertDecodedEvidenceCarriesNoSecret(value: unknown, path = '$'): void {
+function assertParsedEvidenceCarriesNoSecret(
+  value: unknown,
+  path: readonly LiteratureEvidencePathSegment[] = [],
+): void {
   if (typeof value === 'string') {
     // Credential *shapes* have no allowance anywhere, including inside an ACL array.
     for (const pattern of CREDENTIAL_VALUE_PATTERNS) {
       if (pattern.test(value)) {
         throw new LiteratureEvidenceError(
           'credential_shaped_value',
-          `The evidence document contains a credential-shaped value at ${path}. Remove it; the ` +
-            'verifiers never need a credential.',
+          `The evidence document contains a credential-shaped value at ` +
+            `${renderEvidencePath(path)}. Remove it; the verifiers never need a credential.`,
         )
       }
     }
     if (SECRET_VOCABULARY_PATTERN.test(value) && !allowedAtPath(path, value)) {
       throw new LiteratureEvidenceError(
         'credential_shaped_value',
-        `The evidence document contains prohibited secret vocabulary in the value at ${path}. ` +
-          'Remove it; if genuine catalog content requires such a token, represent it as a ' +
-          'canonical hash or a typed non-secret value instead.',
+        `The evidence document contains prohibited secret vocabulary in the value at ` +
+          `${renderEvidencePath(path)}. Remove it; if genuine catalog content requires such a ` +
+          'token, represent it as a canonical hash or a typed non-secret value instead.',
       )
     }
     return
   }
   if (Array.isArray(value)) {
     value.forEach((entry, index) => {
-      assertDecodedEvidenceCarriesNoSecret(entry, `${path}[${index}]`)
+      assertParsedEvidenceCarriesNoSecret(entry, [...path, index])
     })
     return
   }
   if (value && typeof value === 'object') {
     for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-      const childPath = `${path}.${key}`
-      if (!SERVICE_ROLE_EXECUTE_KEY_PATH_PATTERN.test(childPath)) {
-        if (CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(key))) {
+      const childPath: readonly LiteratureEvidencePathSegment[] = [...path, key]
+      if (!isServiceRoleExecuteKeyPath(childPath)) {
+        if (
+          CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(key)) ||
+          SECRET_VOCABULARY_PATTERN.test(key)
+        ) {
           throw new LiteratureEvidenceError(
             'credential_shaped_value',
-            `The evidence document contains a credential-shaped key at ${redactedKeyPath(path)}.`,
-          )
-        }
-        if (SECRET_VOCABULARY_PATTERN.test(key)) {
-          throw new LiteratureEvidenceError(
-            'credential_shaped_value',
-            `The evidence document contains a credential-shaped key at ${redactedKeyPath(path)}.`,
+            `The evidence document contains a credential-shaped key at ` +
+              `${renderEvidencePath([...path, '[redacted-key]'])}.`,
           )
         }
       }
-      assertDecodedEvidenceCarriesNoSecret(entry, childPath)
+      assertParsedEvidenceCarriesNoSecret(entry, childPath)
     }
   }
 }
@@ -657,25 +783,72 @@ export type LiteraturePostflightEvidenceDocument = z.infer<
   typeof literaturePostflightEvidenceSchema
 >
 
+/**
+ * Zod issue codes whose stock message is known to embed only schema-declared expectations —
+ * never the decoded document's own keys or values. Everything outside this list gets a generic
+ * substitute, because e.g. `unrecognized_keys` names the offending keys and `invalid_enum_value`
+ * echoes the received value, either of which could smuggle credential-shaped content into an
+ * error message.
+ */
+const ECHO_SAFE_ZOD_ISSUE_CODES: ReadonlySet<string> = new Set([
+  z.ZodIssueCode.invalid_type,
+  z.ZodIssueCode.invalid_literal,
+  z.ZodIssueCode.invalid_string,
+  z.ZodIssueCode.too_small,
+  z.ZodIssueCode.too_big,
+  z.ZodIssueCode.custom,
+])
+
+function schemaViolation(issue: z.ZodIssue): LiteratureEvidenceError {
+  // Issue paths contain only schema-declared field names and array indexes (unknown keys surface
+  // as `unrecognized_keys` on the *parent* path), but render defensively anyway.
+  const path = renderEvidencePath(issue.path)
+  const detail =
+    issue.code === z.ZodIssueCode.unrecognized_keys
+      ? `${issue.keys.length} unrecognized key(s) are present and the schema is strict`
+      : ECHO_SAFE_ZOD_ISSUE_CODES.has(issue.code)
+        ? issue.message
+        : `the value is not permitted here (${issue.code})`
+  return new LiteratureEvidenceError(
+    'schema_violation',
+    `Evidence document rejected at ${path}: ${detail}.`,
+  )
+}
+
+/**
+ * The one evidence pipeline, in fail-closed order:
+ *
+ *   1. primitive-string admission — refused before any property access, trap, or coercion;
+ *   2. duplicate-aware, prototype-safe JSON decoding into null-prototype own-data objects;
+ *   3. strict phase-specific schema validation (unknown fields die here, sanitized messages);
+ *   4. secret screening over the schema-normalized, parser-owned result;
+ *   5. only then do callers apply business rules.
+ */
 function parseEvidence<Schema extends z.ZodTypeAny>(raw: string, schema: Schema): z.infer<Schema> {
+  if (typeof raw !== 'string') {
+    // The one total check that cannot invoke hostile behavior: `typeof` runs no trap, getter,
+    // or conversion hook. Boxed strings, Proxies, and every other object shape stop here.
+    throw new LiteratureEvidenceError(
+      'nonstring_input',
+      'Evidence must be supplied as JSON text (a primitive string). Objects, arrays, boxed ' +
+        'strings, and proxies are refused before any property access or coercion.',
+    )
+  }
   const decoded = StrictJsonParser.parse(raw)
-  assertDecodedEvidenceCarriesNoSecret(decoded)
 
   const result = schema.safeParse(decoded)
   if (!result.success) {
-    const first = result.error.issues[0]
-    throw new LiteratureEvidenceError(
-      'schema_violation',
-      `Evidence document rejected at ${first.path.join('.') || '$'}: ${first.message}.`,
-    )
+    throw schemaViolation(result.error.issues[0])
   }
+
+  assertParsedEvidenceCarriesNoSecret(result.data)
   return result.data as z.infer<Schema>
 }
 
 /**
- * Parse a preflight evidence document: duplicate-key and control-character rejection, post-decode
- * credential screening, then the strict phase schema. Every failure is a
- * `LiteratureEvidenceError` with a code.
+ * Parse a preflight evidence document from JSON text: string admission, duplicate-key /
+ * control-character / reserved-key rejection, the strict phase schema, then credential screening
+ * over the normalized result. Every failure is a `LiteratureEvidenceError` with a code.
  */
 export function parseLiteraturePreflightEvidence(raw: string): LiteraturePreflightEvidenceDocument {
   return parseEvidence(raw, literaturePreflightEvidenceSchema)

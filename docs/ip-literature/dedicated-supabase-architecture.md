@@ -73,7 +73,11 @@ byte for byte, **trailing slash included** — https only, default port, no user
 fragment, root path only, no trailing-dot host. (The host/ref itself is
 `itcttmkxdxvwmwcmzmey.supabase.co`; that form is a description of the target, never the
 configuration value.) The credential must be a current-model `sb_secret_…` key. Local mode permits
-a loopback target **and only a loopback target**; it never accepts an arbitrary remote host.
+**only the canonical local hosts** — `localhost`, `127.0.0.1`, and `[::1]`, as Node's URL parser
+serializes them. It never accepts an arbitrary remote host, and it refuses `0.0.0.0` and `[::]`
+outright: those are unspecified wildcard _bind_ addresses, not loopback destinations. Near-local
+spellings (`*.localhost`, `localhost.localdomain`, other `127/8` aliases, IPv4-mapped IPv6 forms)
+are refused as well. No DNS resolution is consulted.
 
 A `secret` classification is a credential-_class_ check, not authentication. The credential is only
 truly accepted when the Supabase provider validates it.
@@ -86,7 +90,7 @@ truly accepted when the Supabase provider validates it.
 While it holds that value, a strict configuration that passes every check resolves to the typed
 state `not_activated` / `dedicated_runtime_not_activated` rather than `bound`, and
 `createLiteratureAdmin()` returns `null`. `createClient` is reachable only for a `local`-mode URL
-on the explicit loopback allowlist, so:
+on the explicit canonical local-host allowlist (`localhost`, `127.0.0.1`, `[::1]`), so:
 
 - setting the three documented production variables validates them and constructs nothing;
 - no privileged remote Literature client exists in this PR, and no mutating RPC

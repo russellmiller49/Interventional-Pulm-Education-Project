@@ -243,6 +243,7 @@ describe('documented flags and commands exist', () => {
       '--no-align',
       '--tuples-only',
       '--silent',
+      '--import', // Node's loader flag, named when describing how the CLI tests spawn tsx.
     ])
     for (const flag of documentedFlags) {
       if (foreign.has(flag)) continue

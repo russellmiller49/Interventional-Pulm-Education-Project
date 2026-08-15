@@ -78,7 +78,37 @@ const PROJECT_REF_PATTERN = /^[a-z]{20}$/u
 /** Hosted Supabase API hostnames carry the project ref in the leftmost label. */
 const SUPABASE_HOST_PATTERN = /^([a-z]{20})\.supabase\.(?:co|in)$/u
 
-const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '[::1]', '0.0.0.0'])
+/**
+ * The canonical local hostnames the relaxed local contract accepts, exactly as Node 20's WHATWG
+ * `URL.hostname` renders them: letters lowercased, IPv4 shorthand expanded, IPv6 bracketed. This
+ * is a closed *destination* allowlist, not a "looks local" heuristic (fourth review): `0.0.0.0`
+ * and `[::]` are unspecified wildcard *bind* addresses, not loopback destinations, and
+ * `*.localhost`, `localhost.localdomain`, other `127/8` aliases, and IPv4-mapped IPv6 forms are
+ * deliberately absent. No DNS resolution is ever consulted.
+ */
+export const LITERATURE_PERMITTED_LOCAL_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'] as const
+
+const PERMITTED_LOCAL_HOSTNAME_SET: ReadonlySet<string> = new Set(
+  LITERATURE_PERMITTED_LOCAL_HOSTNAMES,
+)
+
+/** Wildcard/unspecified addresses: valid to bind a listener to, never a client destination. */
+const UNSPECIFIED_WILDCARD_HOSTNAMES: ReadonlySet<string> = new Set(['0.0.0.0', '[::]'])
+
+/**
+ * Local-*shaped* hostnames in the broad diagnostic sense. Used only to pick the strict contract's
+ * refusal reason (defence in depth behind the byte-exact production gate) — everything here is
+ * refused in strict mode, and this breadth never feeds the permissive local allowlist above.
+ */
+function isLocalShapedHostname(hostname: string): boolean {
+  return (
+    PERMITTED_LOCAL_HOSTNAME_SET.has(hostname) ||
+    UNSPECIFIED_WILDCARD_HOSTNAMES.has(hostname) ||
+    hostname === 'localhost.localdomain' ||
+    hostname.endsWith('.localhost') ||
+    /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/u.test(hostname)
+  )
+}
 
 /**
  * How a privileged credential is classified. Classification is structural only — it inspects the
@@ -193,7 +223,9 @@ export type LiteratureBindingFailureReason =
   | 'unapproved_production_project_ref'
   /** A loopback or local URL was presented under the strict contract. */
   | 'loopback_not_permitted_in_production'
-  /** Local mode accepts loopback only; a remote host was supplied. */
+  /** The URL names a wildcard bind address (0.0.0.0 or [::]), which is never a destination. */
+  | 'wildcard_address_not_permitted'
+  /** Local mode accepts the canonical local hosts only; another host was supplied. */
   | 'remote_host_not_permitted_in_local_mode'
   /** The credential is a publishable/anon/unclassifiable key. */
   | 'invalid_credential_class'
@@ -313,7 +345,12 @@ export interface ParsedLiteratureTarget {
   pathname: string
   hasUserInfo: boolean
   hasQueryOrFragment: boolean
-  isLoopback: boolean
+  /** Exactly on the canonical local allowlist — the only client-permitting sense of "local". */
+  isPermittedLocalHost: boolean
+  /** A wildcard/unspecified bind address (`0.0.0.0`, `[::]`). Never a permitted destination. */
+  isUnspecifiedWildcardHost: boolean
+  /** Local-shaped in the broad diagnostic sense. Refused in strict mode; never permits anything. */
+  isLocalShapedHost: boolean
   projectRef: string | null
 }
 
@@ -339,7 +376,9 @@ export function parseLiteratureTargetUrl(url: string): ParsedLiteratureTarget | 
     pathname: parsed.pathname,
     hasUserInfo: parsed.username !== '' || parsed.password !== '',
     hasQueryOrFragment: parsed.search !== '' || parsed.hash !== '',
-    isLoopback: LOOPBACK_HOSTNAMES.has(hostname) || hostname.endsWith('.localhost'),
+    isPermittedLocalHost: PERMITTED_LOCAL_HOSTNAME_SET.has(hostname),
+    isUnspecifiedWildcardHost: UNSPECIFIED_WILDCARD_HOSTNAMES.has(hostname),
+    isLocalShapedHost: isLocalShapedHostname(hostname),
     projectRef: hosted ? hosted[1] : null,
   }
 }
@@ -349,12 +388,14 @@ export function isWellFormedProjectRef(value: string): boolean {
 }
 
 /**
- * The explicit loopback allowlist that the single client-constructing path checks.
+ * The explicit canonical local-host allowlist that the single client-constructing path checks:
+ * exactly `localhost`, `127.0.0.1`, and `[::1]`, in Node's own `URL.hostname` rendering.
  *
- * `resolveLiteratureDedicatedBinding` already refuses a remote host in local mode, so this is a
- * second, independent statement of the same rule at the point of construction: while the
- * production runtime is not activated, a Supabase client may only ever be built for a loopback
- * target. Two agreeing gates are what makes "no remote client exists in this PR" checkable rather
+ * `resolveLiteratureDedicatedBinding` already refuses every other host in local mode, so this is
+ * a second, independent statement of the same rule at the point of construction: while the
+ * production runtime is not activated, a Supabase client may only ever be built for a canonical
+ * loopback destination — never a wildcard bind address such as `0.0.0.0`, and never a remote
+ * host. Two agreeing gates are what makes "no remote client exists in this PR" checkable rather
  * than inferred from control flow.
  */
 export function isPermittedLocalRuntimeUrl(url: string): boolean {
@@ -362,7 +403,7 @@ export function isPermittedLocalRuntimeUrl(url: string): boolean {
   if (!target) return false
   if (target.protocol !== 'http:' && target.protocol !== 'https:') return false
   if (target.hasUserInfo) return false
-  return target.isLoopback
+  return target.isPermittedLocalHost
 }
 
 function failure(
@@ -412,10 +453,10 @@ function strictUrlFailure(
       message: `LITERATURE_SUPABASE_URL must address the project root; path ${target.pathname} is refused.`,
     }
   }
-  if (target.isLoopback) {
+  if (target.isLocalShapedHost) {
     return {
       reason: 'loopback_not_permitted_in_production',
-      message: `LITERATURE_SUPABASE_URL resolves to the loopback host ${target.hostname}, which is never a valid hosted Literature target.`,
+      message: `LITERATURE_SUPABASE_URL resolves to the local host ${target.hostname}, which is never a valid hosted Literature target.`,
     }
   }
   if (target.hostname !== LITERATURE_CANONICAL_PRODUCTION_HOSTNAME) {
@@ -436,9 +477,10 @@ function strictUrlFailure(
  *
  * The strict contract requires all three dedicated variables, exactly the canonical hosted origin,
  * and a current-model `sb_secret_…` credential. Local mode keeps the same structural rules but
- * accepts loopback targets, legacy service-role JWTs, opaque local keys, and the legacy variable
- * name so the existing local Supabase workflow keeps working unchanged. Local mode never accepts a
- * remote host.
+ * accepts the canonical local hosts (`localhost`, `127.0.0.1`, `[::1]`), legacy service-role
+ * JWTs, opaque local keys, and the legacy variable name so the existing local Supabase workflow
+ * keeps working unchanged. Local mode never accepts a remote host, and never a wildcard bind
+ * address such as `0.0.0.0`.
  */
 export function resolveLiteratureDedicatedBinding(
   environment: LiteratureDedicatedEnvironment,
@@ -558,11 +600,22 @@ export function resolveLiteratureDedicatedBinding(
         'LITERATURE_SUPABASE_URL must not embed a username or password.',
       )
     }
-    if (!target.isLoopback) {
+    if (target.isUnspecifiedWildcardHost) {
+      // Fourth review: 0.0.0.0 (and [::]) is an unspecified wildcard *bind* address, not a
+      // loopback destination. It gets its own reason so the refusal is diagnosable.
+      return failure(
+        mode,
+        'wildcard_address_not_permitted',
+        `LITERATURE_SUPABASE_URL names ${target.hostname}, a wildcard bind address rather than ` +
+          'a loopback destination; local mode accepts only localhost, 127.0.0.1, or [::1].',
+      )
+    }
+    if (!target.isPermittedLocalHost) {
       return failure(
         mode,
         'remote_host_not_permitted_in_local_mode',
-        `LITERATURE_SUPABASE_RUNTIME_MODE=local accepts loopback targets only; ${target.hostname} is refused.`,
+        'LITERATURE_SUPABASE_RUNTIME_MODE=local accepts only the canonical local hosts ' +
+          `localhost, 127.0.0.1, and [::1]; ${target.hostname} is refused.`,
       )
     }
   }
