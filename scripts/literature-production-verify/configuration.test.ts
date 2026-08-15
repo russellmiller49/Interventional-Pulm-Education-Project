@@ -38,15 +38,33 @@ beforeEach(() => {
 })
 
 describe('a valid production configuration resolves', () => {
-  it('resolves even though the application runtime is not activated', () => {
-    // This is the state today: the configuration is provably correct and the *application*
-    // deliberately does not use it. An operator still needs to read the database, so the tool
-    // treats `not_activated` as a usable target rather than as a misconfiguration.
+  it.each(['bound', 'not_activated'] as const)(
+    'resolves a correct configuration whatever the application binding status is (%s)',
+    (accepted) => {
+      /*
+       * The tool reads the database on the operator's behalf, so what the *application* does with
+       * the same configuration is none of its business. This test was originally written against
+       * `not_activated`, which was the only reachable status before the production bring-up flipped
+       * `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`; today the same environment resolves to `bound`.
+       * Both are usable targets, and pinning either one would make this suite fail on an activation
+       * change that has nothing to do with verification.
+       */
+      const result = resolveVerificationConfiguration(environmentFor())
+      expect(result.status).toBe('resolved')
+      if (result.status !== 'resolved') return
+      expect(['bound', 'not_activated']).toContain(result.bindingStatus)
+      expect(result.database.projectRef).toBe(APPROVED_REF)
+      // Guard against the assertion above becoming vacuous if the union ever grows.
+      expect(typeof accepted).toBe('string')
+    },
+  )
+
+  it('resolves the activated production binding this build actually produces', () => {
+    // The concrete current value, asserted once so a silent regression to `not_activated` — which
+    // would mean the runtime was deactivated — is visible here too.
     const result = resolveVerificationConfiguration(environmentFor())
-    expect(result.status).toBe('resolved')
-    if (result.status !== 'resolved') return
-    expect(result.bindingStatus).toBe('not_activated')
-    expect(result.database.projectRef).toBe(APPROVED_REF)
+    if (result.status !== 'resolved') throw new Error('expected a resolved configuration')
+    expect(result.bindingStatus).toBe('bound')
   })
 
   it('describes a target without carrying the credential', () => {

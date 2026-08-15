@@ -106,6 +106,8 @@
     "literature:dedicated:postflight": "tsx scripts/literature-dedicated-supabase/postflight.ts",
     "literature:dedicated:rehearse": "tsx scripts/literature-dedicated-supabase/rehearse-foundation.ts",
     "literature:dedicated:test": "jest --runInBand scripts/literature-dedicated-supabase src/features/literature/dedicated-supabase src/features/literature/server",
+    "literature:production:verify": "tsx scripts/literature-production-verify/verify.ts",
+    "literature:production:verify:test": "jest --runInBand scripts/literature-production-verify",
     "rose:qupath": "tsx scripts/rapid-onsite-cytology/open-slide-in-qupath.ts",
     "rose:qupath:convert": "node scripts/rapid-onsite-cytology/qupath-geojson-to-shapes.mjs",
     "precompress:assets": "node scripts/precompress-module-assets.mjs",
