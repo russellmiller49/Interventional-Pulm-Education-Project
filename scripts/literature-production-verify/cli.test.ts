@@ -17,7 +17,7 @@
 
 import { spawn } from 'node:child_process'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import type { AddressInfo } from 'node:net'
@@ -214,6 +214,34 @@ describe('the command refuses before it reads anything', () => {
     expect(result.stderr).toMatch(/runtime-not-configured/u)
   })
 
+  it('refuses --flag=value rather than silently ignoring it', async () => {
+    // Previously this ran to completion, printed a normal report and a normal exit code, and
+    // wrote no receipt. The only signal was the absence of a line.
+    const result = await runCli(['--scenario=foundation-empty'], {})
+    expect(result.code).not.toBe(0)
+    expect(result.stderr).toMatch(/space-separated form/u)
+  })
+
+  it('refuses a flag whose value is the next flag', async () => {
+    // `--receipt --json` would otherwise write the receipt to a file named `--json`.
+    const result = await runCli(['--scenario', 'foundation-empty', '--receipt', '--json'], {})
+    expect(result.code).not.toBe(0)
+    expect(result.stderr).toMatch(/requires a value/u)
+  })
+
+  it('refuses a --pmid that is not a PubMed identifier', async () => {
+    // `--pmid` is echoed into the report and the receipt, so an arbitrary token parked in it would
+    // be written out verbatim — which the credential guard cannot catch for a shape it has never
+    // seen.
+    const result = await runCli(
+      ['--scenario', 'foundation-populated', '--pmid', 'glpat-TESTONLY-unshaped-token'],
+      {},
+    )
+    expect(result.code).not.toBe(0)
+    expect(result.stderr).toMatch(/1 to 12 digits/u)
+    expect(`${result.stdout}${result.stderr}`).not.toContain('TESTONLY')
+  })
+
   it('reports not_configured when no Literature variable is set', async () => {
     const result = await runCli(['--scenario', 'foundation-empty'], {})
     expect(result.code).not.toBe(0)
@@ -333,7 +361,7 @@ describe('receipts are written redacted', () => {
     )
     expect(result.stdout).not.toContain(LOCAL_CREDENTIAL)
     const parsed = JSON.parse(result.stdout) as { schemaVersion: string }
-    expect(parsed.schemaVersion).toBe('literature-production-verification/1.0.0')
+    expect(parsed.schemaVersion).toBe('literature-production-verification/1.1.0')
   })
 
   it('reports a silently truncated row set rather than a count derived from it', async () => {
@@ -353,6 +381,58 @@ describe('receipts are written redacted', () => {
     } finally {
       await shortReading.close()
     }
+  })
+
+  it('reports a wrong-shaped evidence file as one unusable check, not an aborted run', async () => {
+    // The natural mistake: saving the provider's list_migrations response as it came back,
+    // {"migrations":[...]}, rather than the bare array. It parses, so the previous code cast it
+    // and reached entries.map on a plain object — the run died with an empty report and no
+    // verdict over a file that was one unwrapping away from correct.
+    const wrongShape = join(directory, 'wrapped-migrations.json')
+    await writeFile(
+      wrongShape,
+      JSON.stringify({ migrations: [{ version: '20260815223259' }] }),
+      'utf8',
+    )
+    const result = await runCli(
+      ['--scenario', 'foundation-empty', '--migration-history', wrongShape],
+      localModeEnvironment(stub.origin),
+    )
+    expect(result.code).not.toBe(0)
+    expect(result.stdout).toMatch(/not the expected shape/u)
+    // Every other check still ran.
+    expect(result.stdout).toMatch(/V20-schema-present/u)
+    expect(result.stdout).toMatch(/verdict:/u)
+  })
+
+  it('round-trips its own receipt as the next run --baseline', async () => {
+    // The file the runbook tells an operator to keep and the file --baseline can read are the
+    // same file. Previously they were not, and feeding the receipt back produced a confident
+    // "not idempotent: the corpus moved from undefined to 25".
+    const first = join(directory, 'round-trip-1.json')
+    await runCli(['--scenario', 'canary', '--receipt', first], localModeEnvironment(stub.origin))
+    const receipt = JSON.parse(await readFile(first, 'utf8')) as { snapshot: unknown }
+    expect(receipt.snapshot).not.toBeNull()
+
+    const second = await runCli(
+      ['--scenario', 'canary', '--baseline', first],
+      localModeEnvironment(stub.origin),
+    )
+    expect(second.stdout).not.toMatch(/undefined/u)
+    expect(second.stdout).not.toMatch(/NaN/u)
+  })
+
+  it('refuses to overwrite an existing receipt', async () => {
+    // Re-using a path out of habit would destroy the run-1 receipt a later --baseline depends on.
+    const existing = join(directory, 'already-there.json')
+    await writeFile(existing, '{"important":"prior evidence"}', 'utf8')
+    const result = await runCli(
+      ['--scenario', 'foundation-empty', '--receipt', existing],
+      localModeEnvironment(stub.origin),
+    )
+    expect(result.code).not.toBe(0)
+    expect(result.stderr).toMatch(/never overwritten/u)
+    expect(await readFile(existing, 'utf8')).toContain('prior evidence')
   })
 
   it('reports a malformed evidence file rather than proceeding without it', async () => {

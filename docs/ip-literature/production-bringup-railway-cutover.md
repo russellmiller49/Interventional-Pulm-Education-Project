@@ -28,6 +28,13 @@ three variables changes nothing an operator can see except that the configuratio
 That is still worth doing, and it is the point of the deploy-first step below: it proves the
 configuration is correct while the runtime is provably inert.
 
+**Sequencing note.** The canonical rollout runbook puts capability gating (step 7) before the
+Railway authorization (step 8), and nothing here changes that order. Step 1 below deploys with the
+variables **absent** — it is a baseline measurement, not an early cutover. Adding the three
+variables happens at step 3, after the step-2 authorization, and that authorization is the owner's
+to give or withhold on their own reading of whether step 7 has landed. Do not treat the deploy-first
+framing as licence to add the variables early.
+
 ---
 
 ## The three variables
@@ -50,7 +57,12 @@ Notes that matter more than they look:
 - **The expected ref exists so the client can prove which project it reached.** It is not
   redundant with the URL: the two are compared, and a disagreement is a refusal.
 - Copy the secret from the Supabase dashboard into the Railway variable UI directly. Do not paste
-  it into a shell, a note, a ticket, or this repository.
+  it into a note, a ticket, or this repository, and never into a command line.
+- The verification steps below need the same secret **exported in the operator's own shell**, which
+  is a different thing from putting it in a command line: `export LITERATURE_SUPABASE_SECRET_KEY=…`
+  (or a `.env` file that is git-ignored) keeps it out of `ps`, out of shell history when the shell
+  is configured to ignore leading spaces, and out of every log the tool writes. The tool refuses a
+  credential passed as an argument for exactly that reason.
 
 ### Scope
 
@@ -88,6 +100,11 @@ not-configured state:
 LITERATURE_VERIFY_APP_BASE_URL=https://<production origin> \
   npx tsx scripts/literature-production-verify/verify.ts --scenario runtime-not-configured
 ```
+
+Requires, in the environment: the three Literature variables (every scenario identifies its target
+before anything else) and `LITERATURE_VERIFY_ADMIN_COOKIE`. The cookie is not optional here — every
+Literature route sits behind the site-admin gate, so an unauthenticated request is answered `401`
+by that gate and the runtime never gets to report whether it is configured.
 
 Expect `V90-runtime-state` to pass on **503 `LITERATURE_SEARCH_UNAVAILABLE`** — a structured
 refusal. A bare 500 with no error envelope fails this check, and it should: "not configured" and
@@ -145,8 +162,11 @@ application still declines. That is the correct result, not a failure of the cut
 cutover bought you is that the configuration is now provably valid, which the database scenario
 above demonstrates independently of the application.
 
-After capability gating ships, this scenario is expected to _fail_ and the application-serving
-checks take over. That inversion is the observable signal that step 7 landed.
+After capability gating ships, this scenario is expected to _fail_ — `V90-runtime-state` will see a
+`200` where it expected the `503`. That inversion is the observable signal that step 7 landed, and
+it is the only signal this tool produces about it: there is no scenario that affirms "the
+application now serves Literature". Confirming that is the Monday smoke checklist's job, through
+the admin UI.
 
 ### 6. Stop
 
@@ -173,11 +193,13 @@ Immediately, without waiting for a diagnosis, if any of these is observed:
 - `V82-anonymous-table` or `V83-anonymous-rpc` fails — an anonymous caller reached Literature rows.
 - `V84-sitemap-exclusion` fails — a draft article URL is being advertised.
 - `V92-anonymous-api` fails — an unauthenticated request got past the site-admin gate.
-- `V01-project-ref` fails against a live deployment — the application is pointed at the wrong
-  project.
+  Note what is **not** on that list: `V01-project-ref`. That check inspects the _operator's own
+  environment_, not the deployment's — a typo in your shell fails it while a correctly configured
+  production service carries on working. Fix your shell and re-run; do not pull production variables
+  over it.
 
 Everything else — a count mismatch, a receipt gap, an ambiguous batch, a failed read — is
-investigated, not contained. Those are wrong answers; the four above are exposures.
+investigated, not contained. Those are wrong answers; the three above are exposures.
 
 ### Containment procedure
 

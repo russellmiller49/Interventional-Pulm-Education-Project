@@ -17,6 +17,7 @@
  *     the observation. The same statuses from an authenticated read are `failed`.
  */
 
+import { classifyLiteratureCredential } from '../../../src/features/literature/server/dedicated-project-contract'
 import {
   LITERATURE_CANARY_RELEVANCE_STATE,
   LITERATURE_CANARY_VISIBILITY_STATE,
@@ -63,7 +64,29 @@ function postgrestErrorCode(body: string): string | null {
  * Returns `null` when the response is a success the caller should parse; otherwise a non-observed
  * observation with the reason preserved.
  */
-function interpretFailure<T>(result: TransportResult): Observation<T> | null {
+/**
+ * Which "no such object" answers this particular read is allowed to treat as genuine absence.
+ *
+ * The distinction is load-bearing and easy to get wrong by being generous. `PGRST202` means
+ * PostgREST could not find the function *in its schema cache*, and a stale cache produces it just
+ * as readily as a function that was never created. Treating it as absence everywhere would make a
+ * `search_literature_v1` that failed to load look like a capability that is intentionally off —
+ * the scenario would sail past a broken search RPC rather than reporting it.
+ *
+ * So absence is only accepted where absence is the thing being asked about: table probes, where
+ * `PGRST205` is how a project without the foundation answers, and the single gold-workflow probe,
+ * whose expected answer is that the function does not exist. Everywhere else a 404 is a failure.
+ */
+type AbsenceMeaning = 'absence_is_evidence' | 'absence_is_failure'
+
+const RELATION_ABSENCE_CODES = new Set(['PGRST205', '42P01'])
+const FUNCTION_ABSENCE_CODES = new Set(['PGRST202'])
+
+function interpretFailure<T>(
+  result: TransportResult,
+  absence: AbsenceMeaning,
+  absenceCodes: ReadonlySet<string>,
+): Observation<T> | null {
   if (result.outcome === 'refused') {
     return failed(`transport_refused_${result.reason}`, result.message)
   }
@@ -74,10 +97,7 @@ function interpretFailure<T>(result: TransportResult): Observation<T> | null {
     return null
   }
   const code = postgrestErrorCode(result.body)
-  // PGRST205: no such table. PGRST202: no such function. 42P01: the relation does not exist.
-  // All three are the target reporting genuine absence, which is a different fact from a read
-  // that broke — and the missing-schema versus empty-schema distinction depends on the difference.
-  if (code === 'PGRST202' || code === 'PGRST205' || code === '42P01') {
+  if (code !== null && absence === 'absence_is_evidence' && absenceCodes.has(code)) {
     return unavailable(`the target reports no such database object (PostgREST ${code})`)
   }
   return failed(
@@ -106,7 +126,7 @@ async function countRows(
     query: { select: '*', limit: '0', ...filters },
     headers: { Prefer: 'count=exact' },
   })
-  const failure = interpretFailure<number>(result)
+  const failure = interpretFailure<number>(result, 'absence_is_evidence', RELATION_ABSENCE_CODES)
   if (failure) return failure
   if (result.outcome !== 'responded') {
     return failed('unreachable_branch', 'A successful transport result was not a response.')
@@ -149,7 +169,7 @@ async function selectRows<T>(
     query,
     headers: { Prefer: 'count=exact' },
   })
-  const failure = interpretFailure<T[]>(result)
+  const failure = interpretFailure<T[]>(result, 'absence_is_evidence', RELATION_ABSENCE_CODES)
   if (failure) return failure
   if (result.outcome !== 'responded') {
     return failed('unreachable_branch', 'A successful transport result was not a response.')
@@ -207,7 +227,7 @@ async function selectAllRows<T>(
       query: { ...query, limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) },
       headers: { Prefer: 'count=exact' },
     })
-    const failure = interpretFailure<T[]>(result)
+    const failure = interpretFailure<T[]>(result, 'absence_is_evidence', RELATION_ABSENCE_CODES)
     if (failure) return failure
     if (result.outcome !== 'responded') {
       return failed('unreachable_branch', 'A successful transport result was not a response.')
@@ -241,14 +261,24 @@ async function selectAllRows<T>(
   )
 }
 
+/**
+ * Call a `STABLE` function.
+ *
+ * `absence` is required rather than defaulted, so every call site states whether a 404 from this
+ * RPC means "intentionally not here" or "something is wrong". The runtime RPCs pass
+ * `absence_is_failure`: a `PGRST202` for `search_literature_v1` is a stale schema cache or a
+ * signature mismatch, not a capability that was meant to be off, and reporting it as absence would
+ * let a scenario walk past a search RPC that does not work.
+ */
 async function callStableRpc<T>(
   transport: ReadOnlyTransport,
   name: string,
+  absence: AbsenceMeaning,
   query: Readonly<Record<string, string>> = {},
 ): Promise<Observation<T>> {
   // GET, so PostgREST will only ever execute a STABLE or IMMUTABLE function.
   const result = await transport.request({ method: 'GET', path: `/rest/v1/rpc/${name}`, query })
-  const failure = interpretFailure<T>(result)
+  const failure = interpretFailure<T>(result, absence, FUNCTION_ABSENCE_CODES)
   if (failure) return failure
   if (result.outcome !== 'responded') {
     return failed('unreachable_branch', 'A successful transport result was not a response.')
@@ -318,6 +348,15 @@ export interface DatabaseObservations {
   readonly publicSearch: Observation<unknown[]>
   readonly articleDetail: Observation<ArticleSummary[]>
   readonly goldWorkflow: Observation<unknown>
+  /**
+   * The PMID the article-detail check actually used.
+   *
+   * When the operator supplies `--pmid` it is that. Otherwise one is read from the corpus, so a
+   * healthy populated corpus can reach `verified` without the operator having to know a PMID by
+   * heart — previously `V43` was permanently `indeterminate` without the flag, which meant
+   * `foundation-populated` and `canary` could never report `verified` from the documented command.
+   */
+  readonly resolvedDetailPmid: string | null
   readonly anonymousTableRead: Observation<AnonymousProbe>
   readonly anonymousRpcRead: Observation<AnonymousProbe>
 }
@@ -331,8 +370,10 @@ export interface AnonymousProbe {
 
 export interface CollectDatabaseOptions {
   readonly transport: ReadOnlyTransport
-  /** A separate, credential-free (or publishable-key) transport for the anonymous probes. */
+  /** A publishable-key transport for the exposure probes, or `null` when one was refused. */
   readonly anonymousTransport: ReadOnlyTransport | null
+  /** Why no anonymous transport exists, carried through to the check's `indeterminate` detail. */
+  readonly anonymousProbeRefusal?: string | null
   /** A PMID to fetch as an article-detail spot check, when the corpus is populated. */
   readonly detailPmid: string | null
   /** The keyword the keyword-search check uses. */
@@ -410,44 +451,85 @@ export async function collectDatabaseObservations(
       order: 'pmid.asc,batch_id.asc',
     }),
     countRows(transport, 'literature_import_errors'),
-    callStableRpc<Record<string, unknown>>(transport, 'literature_admin_stats_v1'),
-    callStableRpc<unknown[]>(transport, 'search_literature_v1', {
+    callStableRpc<Record<string, unknown>>(
+      transport,
+      'literature_admin_stats_v1',
+      'absence_is_failure',
+    ),
+    callStableRpc<unknown[]>(transport, 'search_literature_v1', 'absence_is_failure', {
       p_admin_preview: 'true',
       p_page_size: '20',
     }),
-    callStableRpc<unknown[]>(transport, 'search_literature_v1', {
+    callStableRpc<unknown[]>(transport, 'search_literature_v1', 'absence_is_failure', {
       p_query: options.keyword,
       p_admin_preview: 'true',
       p_page_size: '20',
     }),
-    callStableRpc<unknown[]>(transport, 'search_literature_v1', {
+    callStableRpc<unknown[]>(transport, 'search_literature_v1', 'absence_is_failure', {
       p_admin_preview: 'false',
       p_page_size: '20',
     }),
-    callStableRpc<unknown>(transport, LITERATURE_GOLD_PROBE_RPC),
+    // The one call where a 404 is the expected, correct answer.
+    callStableRpc<unknown>(transport, LITERATURE_GOLD_PROBE_RPC, 'absence_is_evidence'),
   ])
 
   const sourceRowCount = await countRows(transport, 'literature_article_sources')
 
-  const articleDetail = options.detailPmid
-    ? await selectRows<ArticleSummary>(transport, 'literature_articles', {
-        select: 'pmid,relevance_state,visibility_state',
-        pmid: `eq.${options.detailPmid}`,
+  // A PMID to spot-check. Supplied, or read from the corpus — reading one back by primary key is
+  // exactly the path the check is meant to exercise, and an empty corpus yields none, which
+  // correctly leaves the check without a verdict rather than inventing one.
+  const sampledPmid =
+    options.detailPmid ??
+    (await (async () => {
+      const sample = await selectRows<{ pmid: string }>(transport, 'literature_articles', {
+        select: 'pmid',
+        order: 'pmid.asc',
         limit: '1',
       })
-    : skipped<ArticleSummary[]>('no PMID was supplied for the article-detail spot check')
+      return sample.status === 'observed' ? (sample.value[0]?.pmid ?? null) : null
+    })())
 
+  const articleDetail = sampledPmid
+    ? await selectRows<ArticleSummary>(transport, 'literature_articles', {
+        select: 'pmid,relevance_state,visibility_state',
+        pmid: `eq.${sampledPmid}`,
+        limit: '1',
+      })
+    : skipped<ArticleSummary[]>(
+        'no PMID was supplied and none could be read from the corpus for the detail spot check',
+      )
+
+  /**
+   * The anonymous probes need a real publishable key, and skip without one.
+   *
+   * This is the correction that matters most in this file. A request carrying no `apikey` at all
+   * is rejected by the Supabase API gateway *before it reaches PostgreSQL*, so the 401 it returns
+   * says nothing whatsoever about row-level security or about what `anon` may select. Recording
+   * that 401 as a denial made `V82` and `V83` — the two checks that carry the strongest safety
+   * claim in the package — pass identically whether the database was locked down or whether
+   * someone had run `grant select on public.literature_articles to anon`.
+   *
+   * A vacuous pass on an exposure check is worse than no check: it is a check an operator would
+   * reasonably rely on. So without a publishable key the probes are `skipped`, the checks report
+   * `indeterminate`, and the scenario cannot reach `verified` until someone supplies a key that
+   * actually reaches Postgres as the `anon` role.
+   */
+  const anonymousProbesUnavailable = skipped<AnonymousProbe>(
+    options.anonymousProbeRefusal ??
+      'no anonymous transport was configured, so nothing was proven about what an unauthenticated ' +
+        'caller can reach',
+  )
   const anonymousTableRead = options.anonymousTransport
     ? await probeAnonymously(options.anonymousTransport, '/rest/v1/literature_articles', {
         select: 'pmid',
         limit: '1',
       })
-    : skipped<AnonymousProbe>('no anonymous transport was configured')
+    : anonymousProbesUnavailable
   const anonymousRpcRead = options.anonymousTransport
     ? await probeAnonymously(options.anonymousTransport, '/rest/v1/rpc/search_literature_v1', {
         p_page_size: '1',
       })
-    : skipped<AnonymousProbe>('no anonymous transport was configured')
+    : anonymousProbesUnavailable
 
   return {
     tableReachability: Object.fromEntries(tableEntries),
@@ -466,6 +548,7 @@ export async function collectDatabaseObservations(
     keywordSearch,
     publicSearch,
     articleDetail,
+    resolvedDetailPmid: sampledPmid,
     goldWorkflow,
     anonymousTableRead,
     anonymousRpcRead,
@@ -689,11 +772,74 @@ export async function collectApplicationObservations(
   }
 }
 
-/** Build the anonymous transport, if the operator asked for one. */
+export type AnonymousTransportRefusal =
+  | 'no_publishable_key'
+  | 'credential_is_privileged'
+  | 'credential_class_unknown'
+
+export interface AnonymousTransportResult {
+  transport: ReadOnlyTransport | null
+  refusal: AnonymousTransportRefusal | null
+  detail: string | null
+}
+
+/**
+ * Build the transport the exposure probes use, or refuse and explain why.
+ *
+ * Two refusals, both of which would otherwise produce a confidently wrong answer:
+ *
+ *   - **No key.** Covered above: a keyless request never reaches PostgreSQL, so it cannot test
+ *     what `anon` may read.
+ *   - **A privileged key.** If `LITERATURE_VERIFY_ANON_KEY` is set to the secret key — pasted into
+ *     the wrong variable, which is a very ordinary mistake — the "anonymous" probe authenticates
+ *     as `service_role`, reads rows successfully, and `V82` reports a public exposure that does
+ *     not exist. An operator following the containment procedure would then pull the production
+ *     variables over a typo.
+ *
+ * The credential is classified by the same structural classifier the runtime contract uses. The
+ * classification is not proof of anything — it never verifies a signature — but a key that
+ * *announces itself* as privileged has no business in this variable, and refusing it costs an
+ * operator one correction instead of an unnecessary outage.
+ */
 export function createAnonymousTransport(
   origin: string,
   anonymousKey: string | null,
   fetchImplementation?: typeof fetch,
-): ReadOnlyTransport {
-  return createReadOnlyTransport({ origin, credential: anonymousKey, fetchImplementation })
+): AnonymousTransportResult {
+  if (anonymousKey === null || anonymousKey === '') {
+    return {
+      transport: null,
+      refusal: 'no_publishable_key',
+      detail:
+        'LITERATURE_VERIFY_ANON_KEY is not set, so no request can be made as the anon role. The ' +
+        'exposure checks report no verdict rather than a denial the API gateway produced.',
+    }
+  }
+
+  const credentialClass = classifyLiteratureCredential(anonymousKey)
+  if (credentialClass === 'secret' || credentialClass === 'legacy_service_role') {
+    return {
+      transport: null,
+      refusal: 'credential_is_privileged',
+      detail:
+        `LITERATURE_VERIFY_ANON_KEY holds a ${credentialClass} credential. A privileged key in ` +
+        'that variable would let the "anonymous" probe read rows as service_role and report an ' +
+        'exposure that does not exist. Set it to the project publishable key, or leave it unset.',
+    }
+  }
+  if (credentialClass !== 'publishable' && credentialClass !== 'legacy_anon') {
+    return {
+      transport: null,
+      refusal: 'credential_class_unknown',
+      detail:
+        `LITERATURE_VERIFY_ANON_KEY holds a ${credentialClass} credential, which cannot be shown ` +
+        'to be unprivileged. The exposure checks need a key that is known to be browser-safe.',
+    }
+  }
+
+  return {
+    transport: createReadOnlyTransport({ origin, credential: anonymousKey, fetchImplementation }),
+    refusal: null,
+    detail: null,
+  }
 }

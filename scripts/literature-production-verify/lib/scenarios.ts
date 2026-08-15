@@ -139,7 +139,7 @@ export const SCENARIOS: readonly Scenario[] = [
         input.database.adminStats,
         input.database.totalArticles,
       ),
-      checkArticleDetail(input.database.articleDetail, input.detailPmid),
+      checkArticleDetail(input.database.articleDetail, input.database.resolvedDetailPmid),
       ...checkBatchReconciliation(input.database.batches),
       checkReceiptConsistency(input.database.batches, input.database.totalArticles),
       ...checkSourceProvenance(
@@ -193,7 +193,7 @@ export const SCENARIOS: readonly Scenario[] = [
         input.database.adminStats,
         input.database.totalArticles,
       ),
-      checkArticleDetail(input.database.articleDetail, input.detailPmid),
+      checkArticleDetail(input.database.articleDetail, input.database.resolvedDetailPmid),
       ...checkPublicExclusion(
         input.database.publicSearch,
         input.database.publiclyVisibleCount,
@@ -304,9 +304,23 @@ export interface ScenarioRun {
   readonly verdict: RunVerdict
   readonly checks: readonly CheckResult[]
   readonly summary: { pass: number; fail: number; indeterminate: number }
-  /** Present when `verdict` is `stopped`. */
+  /**
+   * Set whenever an unreceipted batch was observed in a scenario that stops on one — including
+   * when the verdict is `not_verified`, because the ambiguity is still the thing to fix first
+   * even when something else failed alongside it.
+   */
   readonly stopReason: string | null
 }
+
+/**
+ * Checks that *are* the ambiguity, rather than consequences of it.
+ *
+ * The distinction decides whether an unreceipted batch reads as `stopped` or as `not_verified`.
+ * `V60` failing is the ambiguity restated, so a run whose only failure is `V60` is a stop. Any
+ * other failure is a separate finding that must be the headline — an anonymous caller reading
+ * draft rows does not become less urgent because an import was also left half-finished.
+ */
+const AMBIGUITY_CHECK_IDS: readonly string[] = ['V60-no-ambiguous-batch']
 
 /**
  * Run one scenario and reduce its checks to a verdict.
@@ -325,13 +339,20 @@ export function runScenario(scenario: Scenario, input: VerificationInput): Scena
   }
 
   const stopped = scenario.stopsOnAmbiguousBatch && hasAmbiguousBatch(input.database.batches)
-  const verdict: RunVerdict = stopped
-    ? 'stopped'
-    : summary.fail > 0
+  const failuresBeyondTheAmbiguity = checks.filter(
+    (check) => check.outcome === 'fail' && !AMBIGUITY_CHECK_IDS.includes(check.id),
+  ).length
+
+  const verdict: RunVerdict =
+    failuresBeyondTheAmbiguity > 0
       ? 'not_verified'
-      : summary.indeterminate > 0
-        ? 'indeterminate'
-        : 'verified'
+      : stopped
+        ? 'stopped'
+        : summary.fail > 0
+          ? 'not_verified'
+          : summary.indeterminate > 0
+            ? 'indeterminate'
+            : 'verified'
 
   return {
     scenario: scenario.id,
@@ -342,7 +363,7 @@ export function runScenario(scenario: Scenario, input: VerificationInput): Scena
     summary,
     stopReason: stopped
       ? 'At least one import batch has no receipt. Every count this scenario would report ' +
-        'depends on batches whose outcome was never recorded, so no verdict is issued. Run the ' +
+        'depends on batches whose outcome was never recorded, so no count is reported. Run the ' +
         'batch-reconciliation scenario, resolve the batch by hand, and only then re-run this one.'
       : null,
   }

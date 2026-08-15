@@ -948,6 +948,15 @@ export interface BatchReconciliation {
   readonly duplicateTotal: number
   readonly errorTotal: number
   readonly recordsReadTotal: number
+  /**
+   * `records_read` summed over completed batches only.
+   *
+   * A file that failed part way and was retried leaves two receipts, both of which read the same
+   * source records. Summing every batch would double-count them and report a source/destination
+   * gap on a corpus that reconciles perfectly. Only the batches that completed describe what was
+   * actually taken from the source.
+   */
+  readonly completedRecordsReadTotal: number
 }
 
 export function reconcileBatches(batches: readonly BatchReceipt[]): BatchReconciliation {
@@ -967,6 +976,9 @@ export function reconcileBatches(batches: readonly BatchReceipt[]): BatchReconci
     duplicateTotal: batches.reduce((sum, batch) => sum + batch.duplicate_count, 0),
     errorTotal: batches.reduce((sum, batch) => sum + batch.error_count, 0),
     recordsReadTotal: batches.reduce((sum, batch) => sum + batch.records_read, 0),
+    completedRecordsReadTotal: batches
+      .filter((batch) => batch.status === 'completed')
+      .reduce((sum, batch) => sum + batch.records_read, 0),
   }
 }
 
@@ -1194,10 +1206,10 @@ export function checkFullCorpus(
     }
     const reconciliation = reconcileBatches(batches.value)
     const problems: string[] = []
-    if (reconciliation.recordsReadTotal !== expectation.value.sourceRecordCount) {
+    if (reconciliation.completedRecordsReadTotal !== expectation.value.sourceRecordCount) {
       problems.push(
-        `receipts read ${reconciliation.recordsReadTotal} record(s), the source declares ` +
-          `${expectation.value.sourceRecordCount}`,
+        `completed receipts read ${reconciliation.completedRecordsReadTotal} record(s), the ` +
+          `source declares ${expectation.value.sourceRecordCount}`,
       )
     }
     if (totalArticles.value !== expectation.value.sourceDistinctPmidCount) {
@@ -1210,16 +1222,16 @@ export function checkFullCorpus(
       ? pass(
           countId,
           countTitle,
-          `${totalArticles.value} article(s) from ${reconciliation.recordsReadTotal} source ` +
-            'record(s), as declared.',
+          `${totalArticles.value} article(s) from ` +
+            `${reconciliation.completedRecordsReadTotal} source record(s), as declared.`,
           {
             corpus: totalArticles.value,
-            recordsRead: reconciliation.recordsReadTotal,
+            recordsRead: reconciliation.completedRecordsReadTotal,
           },
         )
       : fail(countId, countTitle, problems.join('; '), {
           corpus: totalArticles.value,
-          recordsRead: reconciliation.recordsReadTotal,
+          recordsRead: reconciliation.completedRecordsReadTotal,
           expected: expectation.value.sourceDistinctPmidCount,
         })
   })()
@@ -1565,5 +1577,12 @@ export interface VerificationInput {
   readonly corpusExpectation: Observation<CorpusExpectation>
   readonly baselineSnapshot: Observation<CorpusSnapshot>
   readonly currentSnapshot: Observation<CorpusSnapshot>
+  /**
+   * The PMID the operator asked for, or `null`.
+   *
+   * The checks read `database.resolvedDetailPmid` instead, which is this value when it was given
+   * and a PMID sampled from the corpus otherwise. Kept here for the receipt, so a reader can tell
+   * a spot check that was directed from one that was sampled.
+   */
   readonly detailPmid: string | null
 }

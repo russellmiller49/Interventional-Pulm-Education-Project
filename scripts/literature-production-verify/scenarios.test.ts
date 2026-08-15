@@ -96,6 +96,7 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
       articleDetail: observed([
         { pmid: pmids[0], relevance_state: 'unreviewed', visibility_state: 'draft' },
       ]),
+      resolvedDetailPmid: pmids[0],
       goldWorkflow: unavailable('the target reports no such database object (PostgREST PGRST202)'),
       anonymousTableRead: denied,
       anonymousRpcRead: denied,
@@ -138,6 +139,10 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
     detailPmid: pmids[0],
     ...overrides,
   }
+}
+
+function outcomeOfCheck(checks: readonly { id: string; outcome: string }[], id: string) {
+  return checks.find((check) => check.id === id)?.outcome
 }
 
 function runById(id: ScenarioId, input: VerificationInput) {
@@ -244,6 +249,24 @@ describe('an ambiguous batch stops the scenarios that depend on counts', () => {
     expect(run.checks.find((check) => check.id === 'V60-no-ambiguous-batch')?.outcome).toBe('fail')
   })
 
+  it('lets a separate failure outrank the stop, so an exposure is not buried', () => {
+    // An interrupted import and an anonymous caller reading rows are two independent facts. The
+    // stop exists so an untrustworthy *count* is not reported; it was never meant to demote the
+    // one finding that needs acting on immediately.
+    const input = ambiguous(healthyCanaryInput())
+    const run = runById('canary', {
+      ...input,
+      database: {
+        ...input.database,
+        anonymousTableRead: observed({ status: 200, denied: false, rowsReturned: 11 }),
+      },
+    })
+    expect(run.verdict).toBe('not_verified')
+    expect(outcomeOfCheck(run.checks, 'V82-anonymous-table')).toBe('fail')
+    // The ambiguity is still reported alongside it rather than replaced by it.
+    expect(run.stopReason).toMatch(/no receipt/u)
+  })
+
   it('does not stop scenarios whose claim does not rest on a count', () => {
     // Public exclusion is about reachability, not totals, and an unreconciled batch does not make
     // "an anonymous caller was refused" any less true.
@@ -254,6 +277,26 @@ describe('an ambiguous batch stops the scenarios that depend on counts', () => {
   it('never reports verified for a stopped scenario, even with every check passing', () => {
     const run = runById('canary', ambiguous(healthyCanaryInput()))
     expect(run.verdict).not.toBe('verified')
+  })
+})
+
+describe('the exposure checks refuse to conclude without a real anon key', () => {
+  it('reports no verdict when the anonymous probe was skipped', () => {
+    // The correction that matters most: a keyless request is refused by the Supabase API gateway
+    // before PostgreSQL sees it, so recording that 401 as a denial would have made V82 and V83
+    // pass identically on a project where `anon` had been granted select.
+    const input = healthyCanaryInput()
+    const run = runById('public-exclusion', {
+      ...input,
+      database: {
+        ...input.database,
+        anonymousTableRead: skipped('no publishable key was configured'),
+        anonymousRpcRead: skipped('no publishable key was configured'),
+      },
+    })
+    expect(run.verdict).toBe('indeterminate')
+    expect(outcomeOfCheck(run.checks, 'V82-anonymous-table')).toBe('indeterminate')
+    expect(outcomeOfCheck(run.checks, 'V83-anonymous-rpc')).toBe('indeterminate')
   })
 })
 
