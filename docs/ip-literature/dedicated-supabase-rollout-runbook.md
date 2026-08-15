@@ -1,5 +1,14 @@
 # Rollout runbook — dedicated Literature Supabase project
 
+> **Superseded in part by the production bring-up.** This document records the _foundation
+> rollout_ sequence, and stays accurate as that record. Two of its statements are no longer
+> present-tense facts: the foundation migration **has been applied** to `IP_Literature`
+> (provider-recorded version `20260815223259`, name `add_literature_explorer`), and the production
+> Literature runtime **is activated** — `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is now
+> `activated_by_reviewed_cutover`, so the three dedicated variables connect the read path instead
+> of being validated and ignored. Activation is still a source constant rather than a variable.
+> For the stages that follow the migration, use the production bring-up operator runbook.
+
 Status: **not executable.** This describes a future sequence. No step below has been performed, and
 nothing in this repository will perform any of them on its own.
 

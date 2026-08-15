@@ -7,6 +7,8 @@ import type {
   LiteratureVisibilityState,
 } from '@/features/literature/types'
 
+import type { LiteratureCapability } from './runtime-capability'
+
 export interface LiteratureDisplayTopic {
   id: string
   labelEn: string
@@ -159,3 +161,14 @@ export interface LiteratureAdminStats {
 }
 
 export type LiteratureServerResult<T> = { data: T; error: null } | { data: null; error: string }
+
+/**
+ * A server result that also states the runtime capability it was produced under.
+ *
+ * Used by every surface that renders counts. Carrying the capability alongside the data is what
+ * lets a view distinguish "the corpus is empty" from "the query failed" without inspecting an error
+ * string, which is how the misleading `?? 0` fallbacks got written in the first place.
+ */
+export type LiteratureCapabilityResult<T> = LiteratureServerResult<T> & {
+  capability: LiteratureCapability
+}

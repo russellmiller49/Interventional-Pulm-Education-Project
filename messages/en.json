@@ -2303,6 +2303,27 @@
   "literature": {
     "title": "IP Literature Explorer",
     "draftBadge": "Admin preview",
+    "capability": {
+      "unavailableValue": "Unavailable",
+      "unavailableHint": "This value could not be read. It is not a report of zero.",
+      "bannerTitle": "Literature database status",
+      "projectLabel": "Dedicated project",
+      "state": {
+        "not_configured": "Not configured. This deployment has no dedicated Literature database settings, so nothing was read. Counts are unavailable rather than zero.",
+        "foundation_missing": "The dedicated Literature project is reachable, but its foundation tables are absent. Counts are unavailable rather than zero.",
+        "foundation_ready_empty": "The foundation schema is present and holds no records yet. The zeros below are measurements.",
+        "foundation_ready_populated": "The foundation schema is present and holds records.",
+        "gold_workflow_unavailable": "The gold-set review workflow is not installed in this project. Its migrations are deliberately deferred.",
+        "write_capability_withheld": "This build carries no Literature write path. Curation and gold-set changes are unavailable by design.",
+        "temporarily_unavailable": "The dedicated Literature project did not answer. Counts are unavailable rather than zero.",
+        "not_observed": "The request was rejected before it reached the database, so nothing was measured."
+      },
+      "goldSet": {
+        "title": "Gold-set review workflow is not installed",
+        "body": "This deployment reads the dedicated Literature project, which carries the foundation schema only. The gold-set review tables and functions are part of a separate, deliberately deferred migration set, so there is nothing to review here yet.",
+        "back": "Back to Literature administration"
+      }
+    },
     "loading": "Loading literature…",
     "workflow": {
       "relevance": {

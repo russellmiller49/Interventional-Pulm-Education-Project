@@ -7,10 +7,16 @@ import type {
   LiteratureSearchQuery,
 } from '@/features/literature/schemas/search'
 
-import { createLiteratureAdmin } from './database-client'
+import { literatureClientForOperation } from './database-client'
+import {
+  capabilityFromArticleCount,
+  capabilityFromFailure,
+  capabilityNotObserved,
+} from './runtime-capability'
 import type {
   LiteratureAdminStats,
   LiteratureArticleDetail,
+  LiteratureCapabilityResult,
   LiteratureCurationEventDisplay,
   LiteratureDisplayTopic,
   LiteratureReviewQueueItem,
@@ -243,16 +249,26 @@ export function validateKnownLiteratureFilters(query: LiteratureSearchQuery) {
 
 export async function searchLiterature(
   query: LiteratureSearchQuery,
-): Promise<LiteratureServerResult<LiteratureSearchResponse>> {
+): Promise<LiteratureCapabilityResult<LiteratureSearchResponse>> {
+  const acquired = literatureClientForOperation('article_search')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
   try {
     validateKnownLiteratureFilters(query)
   } catch {
-    return { data: null, error: 'One or more search filters are invalid.' }
-  }
-
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+    // A rejected filter is a fact about the request, not about the corpus, so the capability says
+    // the database was never asked rather than inventing an empty result or an outage.
+    return {
+      data: null,
+      error: 'One or more search filters are invalid.',
+      capability: capabilityNotObserved(
+        projectRef,
+        'The search was rejected before it reached the Literature database.',
+      ),
+    }
   }
 
   const { data, error } = await client.rpc('search_literature_v1', {
@@ -271,7 +287,8 @@ export async function searchLiterature(
 
   if (error) {
     console.error('Literature search failed', { code: error.code })
-    return { data: null, error: 'Literature search is temporarily unavailable.' }
+    const capability = capabilityFromFailure(error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   const rows = (data ?? []) as SearchRow[]
@@ -314,11 +331,14 @@ export async function searchLiterature(
       adminPreview: query.adminPreview,
     },
     error: null,
+    // A page of results proves the foundation is present; `total` decides empty from populated.
+    capability: capabilityFromArticleCount(total, projectRef),
   }
 }
 
 async function loadAssociations(pmids: string[]) {
-  const client = createLiteratureAdmin()
+  const acquired = literatureClientForOperation('article_detail')
+  const client = acquired.client
   if (!client || pmids.length === 0) {
     return { sources: [] as SourceRow[], topics: [] as TopicAssignmentRow[] }
   }
@@ -350,11 +370,12 @@ async function loadAssociations(pmids: string[]) {
 
 export async function getLiteratureArticle(
   pmid: string,
-): Promise<LiteratureServerResult<LiteratureArticleDetail | null>> {
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+): Promise<LiteratureCapabilityResult<LiteratureArticleDetail | null>> {
+  const acquired = literatureClientForOperation('article_detail')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
   }
+  const { client, projectRef } = acquired
 
   const [articleResult, associations, eventsResult] = await Promise.all([
     client
@@ -378,10 +399,16 @@ export async function getLiteratureArticle(
       articleCode: articleResult.error?.code,
       eventCode: eventsResult.error?.code,
     })
-    return { data: null, error: 'Unable to load the literature article.' }
+    const capability = capabilityFromFailure(articleResult.error ?? eventsResult.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
   }
   if (!articleResult.data) {
-    return { data: null, error: null }
+    // A successful lookup that matched nothing. The foundation answered, so this is a real
+    // "no such article", not an outage — the detail page renders its not-found state.
+    return { data: null, error: null, capability: capabilityFromArticleCount(0, projectRef) }
   }
 
   const row = articleResult.data as ArticleRow
@@ -421,27 +448,34 @@ export async function getLiteratureArticle(
       curationEvents: ((eventsResult.data ?? []) as CurationEventRow[]).map(curationEventDisplay),
     },
     error: null,
+    capability: capabilityFromArticleCount(1, projectRef),
   }
 }
 
 export async function loadLiteratureAdminStats(): Promise<
-  LiteratureServerResult<LiteratureAdminStats>
+  LiteratureCapabilityResult<LiteratureAdminStats>
 > {
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+  const acquired = literatureClientForOperation('admin_stats')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
   }
+  const { client, projectRef } = acquired
 
   const { data, error } = await client.rpc('literature_admin_stats_v1')
   if (error || !data || typeof data !== 'object') {
     console.error('Literature statistics failed', { code: error?.code })
-    return { data: null, error: 'Unable to load literature statistics.' }
+    // An RPC that answered with a non-object is not a zero either; it is an unusable answer, and
+    // `classifyLiteratureQueryFailure` reports the null-error case as unclassified rather than
+    // guessing that the migration is missing.
+    const capability = capabilityFromFailure(error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   const value = data as Record<string, unknown>
+  const totalArticles = Number(value.total_articles) || 0
   return {
     data: {
-      totalArticles: Number(value.total_articles) || 0,
+      totalArticles,
       withAbstract: Number(value.with_abstract) || 0,
       withoutAbstract: Number(value.without_abstract) || 0,
       relevanceCounts: numberRecord(value.relevance_counts),
@@ -461,11 +495,12 @@ export async function loadLiteratureAdminStats(): Promise<
           : null,
     },
     error: null,
+    capability: capabilityFromArticleCount(totalArticles, projectRef),
   }
 }
 
 export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQuery): Promise<
-  LiteratureServerResult<{
+  LiteratureCapabilityResult<{
     items: LiteratureReviewQueueItem[]
     total: number
     page: number
@@ -473,16 +508,24 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
     pageCount: number
   }>
 > {
+  const acquired = literatureClientForOperation('review_queue_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
   if (
     (filters.topicId && !topicById.has(filters.topicId)) ||
     (filters.journalId && !knownJournalIds.has(filters.journalId))
   ) {
-    return { data: null, error: 'One or more review filters are invalid.' }
-  }
-
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+    return {
+      data: null,
+      error: 'One or more review filters are invalid.',
+      capability: capabilityNotObserved(
+        projectRef,
+        'The review-queue request was rejected before it reached the Literature database.',
+      ),
+    }
   }
 
   const relationFields = [
@@ -548,7 +591,8 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
 
   if (result.error) {
     console.error('Literature review queue failed', { code: result.error.code })
-    return { data: null, error: 'Unable to load the literature review queue.' }
+    const capability = capabilityFromFailure(result.error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   const rows = (result.data ?? []) as unknown as ArticleRow[]
@@ -594,6 +638,10 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
       pageCount: total === 0 ? 0 : Math.ceil(total / filters.pageSize),
     },
     error: null,
+    // The queue counts rows matching the active filters, which can legitimately be zero while the
+    // corpus is populated, so the capability is reported from the unfiltered corpus signal the
+    // administration page already loads separately rather than from `total`.
+    capability: capabilityFromArticleCount(total, projectRef),
   }
 }
 
@@ -601,14 +649,25 @@ export async function curateLiteratureArticle(
   pmid: string,
   update: LiteratureAdminArticleUpdate,
   actor: User,
-): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  if (update.topicDecisions?.some((decision) => !topicById.has(decision.topicId))) {
-    return { data: null, error: 'One or more topic decisions are invalid.' }
+): Promise<LiteratureCapabilityResult<Record<string, unknown>>> {
+  // Withheld by the activation contract, so this returns before any argument is inspected: the
+  // build carries no Literature write path, and saying so is more useful than validating a payload
+  // that can never be sent.
+  const acquired = literatureClientForOperation('article_curation')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
   }
+  const { client, projectRef } = acquired
 
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+  if (update.topicDecisions?.some((decision) => !topicById.has(decision.topicId))) {
+    return {
+      data: null,
+      error: 'One or more topic decisions are invalid.',
+      capability: capabilityNotObserved(
+        projectRef,
+        'The curation request was rejected before it reached the Literature database.',
+      ),
+    }
   }
 
   const { data, error } = await client.rpc('curate_literature_article_v1', {
@@ -624,11 +683,13 @@ export async function curateLiteratureArticle(
 
   if (error) {
     console.error('Literature curation failed', { code: error.code })
-    return { data: null, error: 'Unable to save the literature curation decision.' }
+    const capability = capabilityFromFailure(error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   return {
     data: data && typeof data === 'object' ? (data as Record<string, unknown>) : { pmid },
     error: null,
+    capability: capabilityFromArticleCount(1, projectRef),
   }
 }

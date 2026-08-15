@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { ArrowLeft, Database, Download, FlaskConical, LockKeyhole, ShieldCheck } from 'lucide-react'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { GoldSetBatchFreezeButton } from '@/features/literature/components/GoldSetBatchFreezeButton'
 import { GoldSetReviewWorkspace } from '@/features/literature/components/GoldSetReviewWorkspace'
 import { GoldSetTestUnlockButton } from '@/features/literature/components/GoldSetTestUnlockButton'
+import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
 import { literatureGoldBatchQuerySchema } from '@/features/literature/schemas/gold-set'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
 import {
@@ -52,6 +53,49 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
   })
   const filters = query.success ? query.data : literatureGoldBatchQuerySchema.parse({})
   const batchesResult = await listLiteratureGoldSetBatches()
+
+  /*
+   * A direct visit to this route while the workflow is absent gets a controlled state, not a raw
+   * Supabase error and not an empty review workspace.
+   *
+   * The dedicated Literature project carries the foundation migration only; the gold-set tables and
+   * `*_gold_*` RPCs come from a deliberately deferred migration set. Without this branch the page
+   * would fall through to `batches = []` and render a review shell around nothing, which reads as
+   * "no batches have been created yet" — a different and much more misleading claim than "this
+   * workflow is not installed here".
+   */
+  if (batchesResult.capability.state === 'gold_workflow_unavailable') {
+    const capabilityT = await getTranslations('literature.capability')
+    return (
+      <div className="container max-w-3xl space-y-6 py-10 md:py-16">
+        <Link
+          href="/admin/literature"
+          className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {capabilityT('goldSet.back')}
+        </Link>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+              {capabilityT('goldSet.title')}
+            </CardTitle>
+            <CardDescription>{capabilityT('goldSet.body')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LiteratureCapabilityNotice
+              capability={batchesResult.capability}
+              title={capabilityT('bannerTitle')}
+              description={capabilityT(`state.${batchesResult.capability.state}`)}
+              projectLabel={capabilityT('projectLabel')}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const batches = batchesResult.data ?? []
   const selectedBatch = batches.find((batch) => batch.id === filters.batchId) ?? batches[0]
   const testLocked =

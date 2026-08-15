@@ -22,20 +22,28 @@ describe('literature database configuration', () => {
     )
   })
 
-  it('validates the dedicated strict configuration but yields no connectable configuration', () => {
-    // Third review, finding 4: an exactly valid production configuration is validated in full and
-    // then withheld. Only the future capability-gating / cutover PR may turn it into a client.
+  it('resolves the dedicated strict configuration to a connectable dedicated target', () => {
     const environment = {
       LITERATURE_SUPABASE_URL: APPROVED_URL,
       LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
       LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
     }
-    expect(resolveLiteratureDatabaseConfiguration(environment)).toBeNull()
-    expect(describeLiteratureDatabaseBinding(environment)).toMatchObject({
-      status: 'not_activated',
-      reason: 'dedicated_runtime_not_activated',
+    // The connectable configuration exists now that the runtime is activated, and it names the
+    // dedicated project — never the main application project, whose variables are not read here at
+    // all.
+    expect(resolveLiteratureDatabaseConfiguration(environment)).toEqual({
+      url: APPROVED_URL,
+      secretKey: SECRET_KEY,
       projectRef: APPROVED_REF,
     })
+    const diagnostics = describeLiteratureDatabaseBinding(environment)
+    expect(diagnostics).toMatchObject({
+      status: 'bound',
+      projectRef: APPROVED_REF,
+      credentialClass: 'secret',
+    })
+    // Diagnostics are the log-safe view, so they must still never carry the credential.
+    expect(JSON.stringify(diagnostics)).not.toContain(SECRET_KEY)
   })
 
   it('uses the dedicated local database for the existing local workflow', () => {

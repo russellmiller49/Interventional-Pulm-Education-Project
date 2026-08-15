@@ -1,5 +1,13 @@
 # Dedicated Literature Supabase project
 
+> **Superseded in part by the production bring-up.** The status line below described a
+> preparation-only state. The foundation migration has since been applied to `IP_Literature`
+> (provider-recorded version `20260815223259`), and the production runtime is activated: the
+> three dedicated variables now connect the Literature read path. The design this document
+> describes — dedicated project, byte-exact target binding, no fallback to the main project,
+> activation as a reviewed code change rather than an environment variable — is unchanged, and the
+> capability allowlist added by the production bring-up still withholds every write path.
+
 Status: **preparation only.** Nothing in this document has been applied to any remote system.
 
 ## Decision

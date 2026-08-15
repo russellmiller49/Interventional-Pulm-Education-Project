@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 import {
   describeLiteratureBinding,
@@ -10,6 +10,11 @@ import {
   type LiteratureDedicatedEnvironment,
   type LiteratureRuntimeMode,
 } from './dedicated-project-contract'
+import {
+  capabilityForWithheldOperation,
+  capabilityFromBinding,
+  type LiteratureCapability,
+} from './runtime-capability'
 
 /**
  * The Literature data client is bound to the dedicated `IP_Literature` Supabase project.
@@ -24,19 +29,24 @@ import {
  * Anything other than the exact string `local` gets the strict hosted contract, so an unset or
  * misspelled variable in a deployed environment fails safe rather than open.
  *
- * ## No production client is constructed in this PR
+ * ## Activation and capability are two different gates
  *
- * `createLiteratureAdmin()` is the only place in the repository that calls `createClient` for
- * Literature, and while the production runtime is not activated it can only reach that call for an
- * exact local-mode loopback target. Strict mode never resolves to `bound` (see
- * `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`), and two further guards here refuse anything that is
- * not `mode === 'local'` with a URL on the canonical local-host allowlist (`localhost`,
- * `127.0.0.1`, `[::1]` — never a wildcard bind address, and never an alias spelling such as
- * `127.1` or `2130706433` that only URL normalization would have made acceptable). So the existing
- * list, detail, curation, and gold-set callers receive `null` in every deployed configuration —
- * the same "not configured" path they already handle — and no privileged remote RPC is reachable.
- * Setting the documented Railway variables changes none of that; only the future
- * capability-gating / cutover PR can.
+ * The production runtime is activated (see `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`), so a
+ * correctly configured deployment now gets a real client for the dedicated project. That is the
+ * first gate, and it is a source constant rather than a variable.
+ *
+ * The second gate is this module's own: a client is handed out **per operation**, from the closed
+ * allowlist `LITERATURE_ACTIVATED_OPERATIONS`. The dedicated project carries the foundation
+ * migration and nothing else, so only what that schema genuinely supports is carried — article
+ * search, article detail, administration statistics, and review-queue reading. Curation writes,
+ * every gold-set operation, and ingestion are withheld and return a typed capability instead of a
+ * client.
+ *
+ * That split is what makes "the app cannot mutate the corpus" checkable rather than inferred:
+ * `createLiteratureAdmin()` is the only `createClient` call for Literature in the repository, it is
+ * module-private, and the exported accessor refuses to return its result for an operation that is
+ * not on the list. Ingestion runs from an operator CLI against its own client, never through a web
+ * request.
  */
 type LiteratureDatabaseEnvironment = LiteratureDedicatedEnvironment
 
@@ -47,6 +57,87 @@ export interface LiteratureDatabaseConfiguration {
   projectRef: string
 }
 
+/**
+ * Operations the application runtime may perform against the dedicated Literature project.
+ *
+ * A closed enum rather than a boolean, because "may this build talk to Literature at all" is the
+ * wrong question during a foundation-only bring-up. The right one is "does the schema that exists
+ * support this call", and the answers differ per call site.
+ */
+export type LiteratureRuntimeOperation =
+  /** `search_literature_v1`. Created by the foundation migration. */
+  | 'article_search'
+  /** Row reads from `literature_articles` and its association tables. Foundation. */
+  | 'article_detail'
+  /** `literature_admin_stats_v1`. Foundation. */
+  | 'admin_stats'
+  /** Filtered reads for the administration review queue. Foundation. */
+  | 'review_queue_read'
+  /** `curate_literature_article_v1`. Exists in the foundation; withheld by this build. */
+  | 'article_curation'
+  /** Every gold-set read. Its migrations are deferred, so the objects do not exist. */
+  | 'gold_set_read'
+  /** Every gold-set write. Deferred, and a mutation besides. */
+  | 'gold_set_mutation'
+
+/**
+ * The operations this build carries. Source-controlled and closed: an operation absent from this
+ * list gets no client, whatever the environment says.
+ *
+ * All four are read-only against the foundation schema. Adding a write here is a reviewed code
+ * change, deliberately not a configuration change.
+ */
+export const LITERATURE_ACTIVATED_OPERATIONS = [
+  'article_search',
+  'article_detail',
+  'admin_stats',
+  'review_queue_read',
+] as const satisfies readonly LiteratureRuntimeOperation[]
+
+export type LiteratureActivatedOperation = (typeof LITERATURE_ACTIVATED_OPERATIONS)[number]
+export type LiteratureWithheldOperation = Exclude<
+  LiteratureRuntimeOperation,
+  LiteratureActivatedOperation
+>
+
+/**
+ * Why each withheld operation is withheld, and whether a migration would change that.
+ *
+ * Exhaustive by construction: the key type is every operation *not* on the activated list, so
+ * adding a `LiteratureRuntimeOperation` without deciding its status fails the type check rather
+ * than silently defaulting one way.
+ */
+const WITHHELD_OPERATIONS: Readonly<
+  Record<
+    LiteratureWithheldOperation,
+    { state: 'gold_workflow_unavailable' | 'write_capability_withheld'; detail: string }
+  >
+> = {
+  article_curation: {
+    state: 'write_capability_withheld',
+    detail:
+      'Literature curation writes are not carried by this build. The dedicated project holds the ' +
+      'foundation schema for review and verification only; enabling curation is a separate ' +
+      'reviewed change, not a configuration change.',
+  },
+  gold_set_read: {
+    state: 'gold_workflow_unavailable',
+    detail:
+      'The gold-set review workflow is not installed in the dedicated Literature project. Its ' +
+      'migrations are deliberately deferred, so its tables and functions do not exist there.',
+  },
+  gold_set_mutation: {
+    state: 'gold_workflow_unavailable',
+    detail:
+      'The gold-set review workflow is not installed in the dedicated Literature project, and ' +
+      'this build carries no Literature write path in any case.',
+  },
+}
+
+const ACTIVATED_OPERATION_SET: ReadonlySet<LiteratureRuntimeOperation> = new Set(
+  LITERATURE_ACTIVATED_OPERATIONS,
+)
+
 export function literatureRuntimeMode(
   environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
 ): LiteratureRuntimeMode {
@@ -56,13 +147,9 @@ export function literatureRuntimeMode(
 /**
  * Resolve the dedicated Literature binding as a typed result.
  *
- * Callers that need to tell "not configured" from "wrong project" from "database unavailable" —
- * the later unavailable-versus-empty UI work — should use this rather than the nullable helpers
- * below, which collapse every failure to `null`.
- *
- * Current consumers (`server/queries.ts`, `server/gold-set.ts`) still use the nullable
- * `createLiteratureAdmin()`. Adopting this typed result is the job of the separate capability
- * gating / unavailable-versus-empty package; it is deliberately not done here.
+ * Callers that need to tell "not configured" from "wrong project" from "database unavailable"
+ * should use this, or the capability helpers in `./runtime-capability`, rather than the nullable
+ * client accessor below, which collapses every failure to `null`.
  */
 export function resolveLiteratureDatabaseBinding(
   environment: LiteratureDatabaseEnvironment = process.env as LiteratureDatabaseEnvironment,
@@ -80,9 +167,7 @@ export function describeLiteratureDatabaseBinding(
 /**
  * The connectable configuration, or `null`.
  *
- * Only a `bound` binding yields one, so in strict mode this returns `null` for *every* input while
- * the production runtime is not activated — including an exactly valid production configuration,
- * which resolves to `not_activated`. Use `describeLiteratureDatabaseBinding()` when you need to
+ * Only a `bound` binding yields one. Use `describeLiteratureDatabaseBinding()` when you need to
  * tell "valid but withheld" from "misconfigured".
  */
 export function resolveLiteratureDatabaseConfiguration(
@@ -116,29 +201,31 @@ function assertServerOnly() {
 }
 
 /**
- * The privileged Literature client, or `null`.
+ * The privileged Literature client, or `null`. **Module-private on purpose.**
  *
- * Three independent conditions must all hold before `createClient` is reached, and no environment
- * variable can satisfy the first one outside local development:
+ * Two conditions must hold before `createClient` is reached:
  *
- *   1. the binding resolved to `bound` — impossible in strict mode while the production runtime is
- *      not activated, because strict resolves to `not_activated` instead;
- *   2. the resolved mode is exactly `local`;
- *   3. the URL is on the explicit canonical local-host allowlist (`localhost`, `127.0.0.1`,
- *      `[::1]`) both as raw text and after parsing — `0.0.0.0` is a wildcard bind address and is
- *      refused, and so is any alias spelling the URL parser would have normalized onto the list.
+ *   1. the binding resolved to `bound` — which in strict mode requires the byte-exact canonical
+ *      URL, the single approved project ref, an `sb_secret_…` credential, and the activation
+ *      constant set by a reviewed change;
+ *   2. in local mode only, the URL is additionally on the canonical local-host allowlist
+ *      (`localhost`, `127.0.0.1`, `[::1]`) — never a wildcard bind address such as `0.0.0.0`, and
+ *      never an alias spelling such as `127.1` or `2130706433` that only URL normalization would
+ *      have made acceptable.
  *
- * Callers already treat `null` as "the literature database is not configured", so a deployed
- * environment degrades to that honest state rather than to a remote client.
+ * Callers reach this only through `literatureClientForOperation`, which additionally requires the
+ * operation to be on the activated allowlist. Exporting this directly would let a future call site
+ * acquire a client for a withheld operation by importing one function instead of the other, which
+ * is exactly the kind of drift the split exists to prevent.
  */
-export function createLiteratureAdmin() {
+function createLiteratureAdmin(): SupabaseClient | null {
   assertServerOnly()
 
   const binding = resolveLiteratureDatabaseBinding()
   if (binding.status !== 'bound') {
     return null
   }
-  if (binding.mode !== 'local' || !isPermittedLocalRuntimeUrl(binding.url)) {
+  if (binding.mode === 'local' && !isPermittedLocalRuntimeUrl(binding.url)) {
     return null
   }
 
@@ -148,4 +235,52 @@ export function createLiteratureAdmin() {
       persistSession: false,
     },
   })
+}
+
+/** A client for the requested operation, or the typed reason there is none. */
+export type LiteratureClientResult =
+  | { client: SupabaseClient; capability: null; projectRef: string }
+  | { client: null; capability: LiteratureCapability }
+
+/**
+ * The single way application code obtains a Literature client.
+ *
+ * The operation is checked before the binding, so a withheld operation reports *why it is withheld*
+ * even in a fully configured deployment — an operator debugging a missing gold-set page should be
+ * told the workflow is not installed, not that the database is unconfigured.
+ */
+/**
+ * Whether this build carries the operation at all.
+ *
+ * Pure, synchronous, and independent of configuration, so a surface can decide whether to *offer*
+ * an action without opening a connection. The administration page uses it to hide the gold-set
+ * entry point: an action that can only fail is worse than an absent one, and finding that out
+ * requires no round trip.
+ */
+export function literatureOperationActivated(operation: LiteratureRuntimeOperation): boolean {
+  return ACTIVATED_OPERATION_SET.has(operation)
+}
+
+export function literatureClientForOperation(
+  operation: LiteratureRuntimeOperation,
+): LiteratureClientResult {
+  if (!ACTIVATED_OPERATION_SET.has(operation)) {
+    const withheld = WITHHELD_OPERATIONS[operation as keyof typeof WITHHELD_OPERATIONS]
+    const binding = resolveLiteratureDatabaseBinding()
+    return {
+      client: null,
+      capability: capabilityForWithheldOperation(
+        binding.status === 'unbound' ? null : binding.projectRef,
+        withheld.state,
+        withheld.detail,
+      ),
+    }
+  }
+
+  const binding = resolveLiteratureDatabaseBinding()
+  const client = createLiteratureAdmin()
+  if (!client || binding.status !== 'bound') {
+    return { client: null, capability: capabilityFromBinding(describeLiteratureBinding(binding)) }
+  }
+  return { client, capability: null, projectRef: binding.projectRef }
 }
