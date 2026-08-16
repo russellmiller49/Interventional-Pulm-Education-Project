@@ -149,6 +149,14 @@ export interface IngestCounters {
   inserted: number
   updated: number
   unchanged: number
+  /**
+   * Errors recorded by the operation.
+   *
+   * Always zero for an operation that reaches a receipt — the engine stops on the first failure
+   * rather than accumulating — but carried explicitly so the receipt binds the stored
+   * `error_count` instead of leaving the one counter nobody stated unchecked.
+   */
+  errors: number
 }
 
 export interface Checkpoint {
@@ -180,6 +188,25 @@ export interface Checkpoint {
   }
   importBatchCreate: CheckpointMutationStage
   finalization: CheckpointMutationStage
+  /**
+   * The exact finalization request, persisted before it is ever sent.
+   *
+   * The defect this exists to prevent: the finalization body generated a fresh `completed_at` on
+   * every attempt, while the checkpoint held the request checksum from the *first* attempt. A
+   * resume therefore sent a body that no longer matched the checksum it had written ahead, so the
+   * one artifact that was supposed to prove what had been submitted proved nothing.
+   *
+   * `body` is the canonical JSON of the request, sufficient to reconstruct it byte for byte;
+   * `completedAt` is generated once and never regenerated; `checksum` is over the request body the
+   * transport actually sends. On resume the body is reused rather than rebuilt from the clock, and
+   * a mismatch between the reconstructed body and this record is checkpoint drift — a stop, not a
+   * repair.
+   */
+  finalizationEnvelope: {
+    completedAt: string
+    body: string
+    checksum: string
+  } | null
   phase: 'prepared' | 'running' | 'confirmed_failure' | 'needs_reconciliation' | 'completed'
   beforeArticleCount: number | null
   afterArticleCount: number | null
@@ -216,6 +243,18 @@ export interface IngestReceiptBody {
   mode: IngestMode
   outcome: 'completed' | 'dry-run' | 'idempotent-replay'
   targetProjectRef: string | null
+  /**
+   * The canonical target URL, byte for byte, or `null` for a dry run.
+   *
+   * A project ref alone left the receipt unable to distinguish the approved project reached through
+   * its canonical URL from the same ref reached through anything else, and the URL is what the
+   * transport actually used.
+   */
+  targetUrl: string | null
+  /** The exact `created_by` the engine wrote, so the stored writer is a bound value, not a guess. */
+  writerIdentity: string
+  /** The cohort a canary selection was authorized from; `null` for a full-corpus operation. */
+  sourceAuthority: string | null
   completedAt: string
   sourceProjectionChecksum: string
   sourceRecordCount: number
@@ -236,11 +275,22 @@ export type ReconciliationClassification =
   | 'applied_exact'
   | 'absent_exact'
   | 'partial_or_conflicting'
+  /**
+   * The remote state contradicts itself and says nothing about whether the mutation applied.
+   *
+   * Distinct from `partial_or_conflicting`, which is a *known* disagreement about known values.
+   * This is the state a `completed` row with no `completed_at` is in: not applied, not unapplied,
+   * not comparable. It exists so that state can never again be read as `applied_exact` merely
+   * because every column anyone bothered to compare happened to match.
+   */
+  | 'ambiguous_inconsistent'
   | 'observation_incomplete'
 
 export interface ReconciliationObservation {
   subject: string
   classification: ReconciliationClassification
+  /** Why an `ambiguous_inconsistent` observation could not be resolved. Never a credential. */
+  reason?: string
 }
 
 export interface ReconciliationReceiptBody {

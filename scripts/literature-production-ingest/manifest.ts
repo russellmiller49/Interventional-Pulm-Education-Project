@@ -4,12 +4,15 @@ import { assertSha256, canonicalJson, sha256 } from './canonical'
 import {
   CANARY_MANIFEST_SCHEMA_VERSION,
   CANARY_SELECTOR_VERSION,
+  CANARY_SOURCE_AUTHORITY,
   DEFAULT_CANARY_SIZE,
   EXPECTED_DEVELOPMENT_CANDIDATE_COUNT,
 } from './constants'
 import type { CanaryCandidate, CanaryManifest, CanaryManifestBody } from './types'
 
-const SOURCE_AUTHORITY = 'owner-authorized-development-cohort-630' as const
+// The receipt binding compares a canary receipt's source authority against this same constant, so
+// the manifest and the receipt cannot disagree about which cohort was authorized.
+const SOURCE_AUTHORITY = CANARY_SOURCE_AUTHORITY
 const MAX_MANIFEST_BYTES = 64 * 1024
 const CANDIDATE_KEYS = [
   'abstractPresent',

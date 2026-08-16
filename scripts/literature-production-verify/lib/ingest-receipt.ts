@@ -36,7 +36,7 @@
 import { createHash } from 'node:crypto'
 
 /** The one schema version this package understands. Bumping the engine's must be deliberate. */
-export const INGEST_RECEIPT_SCHEMA_VERSION = 'literature-production-ingest-receipt/1.0.0'
+export const INGEST_RECEIPT_SCHEMA_VERSION = 'literature-production-ingest-receipt/1.1.0'
 
 export interface IngestCounters {
   readonly recordsRead: number
@@ -45,6 +45,7 @@ export interface IngestCounters {
   readonly inserted: number
   readonly updated: number
   readonly unchanged: number
+  readonly errors: number
 }
 
 export interface IngestReceipt {
@@ -55,6 +56,9 @@ export interface IngestReceipt {
   readonly mode: 'canary' | 'full'
   readonly outcome: 'completed' | 'dry-run' | 'idempotent-replay'
   readonly targetProjectRef: string | null
+  readonly targetUrl: string | null
+  readonly writerIdentity: string
+  readonly sourceAuthority: string | null
   readonly completedAt: string
   readonly sourceProjectionChecksum: string
   readonly sourceRecordCount: number
@@ -102,17 +106,29 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string')
 }
 
+/** Matches the engine's `MAX_BATCH_COUNT`; an unbounded array is a denial-of-service shape. */
+const MAX_BATCH_CHECKSUMS = 2_048
+
+const COUNTER_KEYS = [
+  'recordsRead',
+  'uniquePmids',
+  'duplicateOccurrences',
+  'inserted',
+  'updated',
+  'unchanged',
+  'errors',
+]
+
 function isCounters(value: unknown): value is IngestCounters {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const counters = value as Record<string, unknown>
-  return (
-    isNonNegativeInteger(counters.recordsRead) &&
-    isNonNegativeInteger(counters.uniquePmids) &&
-    isNonNegativeInteger(counters.duplicateOccurrences) &&
-    isNonNegativeInteger(counters.inserted) &&
-    isNonNegativeInteger(counters.updated) &&
-    isNonNegativeInteger(counters.unchanged)
-  )
+  // Exact key set, not a subset: an extra counter means a receipt this package does not fully
+  // understand, and a partially understood receipt is what makes a verification claim confidently
+  // wrong.
+  const keys = Object.keys(counters).sort()
+  if (keys.length !== COUNTER_KEYS.length) return false
+  if (keys.some((key, index) => key !== [...COUNTER_KEYS].sort()[index])) return false
+  return COUNTER_KEYS.every((key) => isNonNegativeInteger(counters[key]))
 }
 
 /**
@@ -126,27 +142,55 @@ export function isIngestReceipt(value: unknown): value is IngestReceipt {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const receipt = value as Record<string, unknown>
 
+  /*
+   * Structural parity with the engine's own `assertIngestReceipt`.
+   *
+   * This guard used to be strictly weaker than the one the ingestion package applies to the same
+   * artifact: it accepted any `engineVersion` and `mappingVersion` string, any array of strings as
+   * `batchChecksums` (non-hex, unbounded), an `importBatchId` unrelated to the operation id, and a
+   * canary receipt carrying no PMIDs at all. Two validators for one file format is one validator
+   * too many, and the weaker one is the one that decides whether a run reports `verified`.
+   *
+   * What stays deliberately independent is the checksum recomputation below, against this
+   * package's own canonicalizer — that duplication is the point.
+   */
+  const canary = receipt.mode === 'canary'
   return (
     receipt.schemaVersion === INGEST_RECEIPT_SCHEMA_VERSION &&
     typeof receipt.engineVersion === 'string' &&
     typeof receipt.mappingVersion === 'string' &&
     typeof receipt.operationId === 'string' &&
     receipt.operationId.length > 0 &&
-    (receipt.mode === 'canary' || receipt.mode === 'full') &&
+    (canary || receipt.mode === 'full') &&
     (receipt.outcome === 'completed' ||
       receipt.outcome === 'dry-run' ||
       receipt.outcome === 'idempotent-replay') &&
     (receipt.targetProjectRef === null || typeof receipt.targetProjectRef === 'string') &&
+    (receipt.targetUrl === null || typeof receipt.targetUrl === 'string') &&
+    typeof receipt.writerIdentity === 'string' &&
+    receipt.writerIdentity.length > 0 &&
+    (receipt.sourceAuthority === null || typeof receipt.sourceAuthority === 'string') &&
     typeof receipt.completedAt === 'string' &&
+    Number.isFinite(Date.parse(receipt.completedAt)) &&
     isSha256(receipt.sourceProjectionChecksum) &&
     isNonNegativeInteger(receipt.sourceRecordCount) &&
     (receipt.canaryManifestChecksum === null || isSha256(receipt.canaryManifestChecksum)) &&
-    (receipt.canaryPmids === undefined || isStringArray(receipt.canaryPmids)) &&
+    // A canary receipt names its records or it is not a canary receipt. Reported as a malformed
+    // receipt rather than as "no verdict on the PMIDs", which is how the absence used to read.
+    (canary
+      ? isStringArray(receipt.canaryPmids) && (receipt.canaryPmids as string[]).length > 0
+      : receipt.canaryPmids === undefined) &&
     (receipt.beforeArticleCount === null || isNonNegativeInteger(receipt.beforeArticleCount)) &&
     (receipt.afterArticleCount === null || isNonNegativeInteger(receipt.afterArticleCount)) &&
     isCounters(receipt.counters) &&
     isStringArray(receipt.batchChecksums) &&
+    (receipt.batchChecksums as string[]).length <= MAX_BATCH_CHECKSUMS &&
+    (receipt.batchChecksums as string[]).every((checksum) => isSha256(checksum)) &&
     (receipt.importBatchId === null || typeof receipt.importBatchId === 'string') &&
+    // The engine writes one batch row per operation, keyed by the operation id.
+    (receipt.outcome === 'dry-run'
+      ? receipt.importBatchId === null
+      : receipt.importBatchId === receipt.operationId) &&
     isSha256(receipt.receiptChecksum)
   )
 }

@@ -72,6 +72,13 @@ function checkpointFor(options: ReceiptFixtureOptions): Checkpoint {
     },
     importBatchCreate: stage('acknowledged'),
     finalization: stage('acknowledged'),
+    // The engine refuses to build a completed receipt without the durable finalization envelope,
+    // so a fixture that omits it is not a shape the engine would ever produce.
+    finalizationEnvelope: {
+      completedAt: CREATED_AT,
+      body: JSON.stringify({ completed_at: CREATED_AT, status: 'completed' }),
+      checksum: 'd'.repeat(64),
+    },
     phase: 'completed',
     beforeArticleCount: 0,
     afterArticleCount: options.afterArticleCount ?? recordCount,
@@ -82,6 +89,7 @@ function checkpointFor(options: ReceiptFixtureOptions): Checkpoint {
       inserted: recordCount,
       updated: 0,
       unchanged: 0,
+      errors: 0,
     },
     batches: [
       {
@@ -138,6 +146,36 @@ export function ingestReceiptFixture(options: ReceiptFixtureOptions = {}): Inges
           now: CREATED_AT,
         } as Parameters<typeof createCompletedReceiptFromCheckpoint>[0])
   return built as unknown as IngestReceipt
+}
+
+/**
+ * The provenance rows the engine writes for a receipt's claims, under that receipt's batch.
+ *
+ * `batchId` is overridable so a test can express the case the binding exists to catch: the same
+ * PMIDs, present and correct, whose provenance belongs to a different operation.
+ */
+export function provenanceForReceipt(
+  receipt: IngestReceipt,
+  batchId?: string,
+): { pmid: string; batch_id: string; source_kind: string; source_filename: string }[] {
+  return [...(receipt.canaryPmids ?? [])].map((pmid) => ({
+    pmid,
+    batch_id: batchId ?? receipt.importBatchId ?? receipt.operationId,
+    source_kind: 'unmapped',
+    source_filename: `literature-production-ingest/${receipt.mode}`,
+  }))
+}
+
+/** The live article state an import leaves behind: the foundation defaults, and nothing curated. */
+export function articleStatesForReceipt(
+  receipt: IngestReceipt,
+  overrides: Readonly<Record<string, { relevance_state?: string; visibility_state?: string }>> = {},
+): { pmid: string; relevance_state: string; visibility_state: string }[] {
+  return [...(receipt.canaryPmids ?? [])].map((pmid) => ({
+    pmid,
+    relevance_state: overrides[pmid]?.relevance_state ?? 'unreviewed',
+    visibility_state: overrides[pmid]?.visibility_state ?? 'draft',
+  }))
 }
 
 /** The batch row the engine leaves behind for that receipt. */

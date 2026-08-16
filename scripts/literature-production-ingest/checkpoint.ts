@@ -40,6 +40,7 @@ const CHECKPOINT_KEYS = [
   'batchIdentity',
   'importBatchCreate',
   'finalization',
+  'finalizationEnvelope',
   'phase',
   'beforeArticleCount',
   'afterArticleCount',
@@ -291,6 +292,72 @@ function validateMutationStage(value: unknown, label: string) {
   }
 }
 
+/**
+ * The persisted finalization request, and its agreement with the stage that sent it.
+ *
+ * Validated structurally *and* relationally: an envelope whose checksum disagrees with the stage's
+ * `requestChecksum`, or a submitted finalization with no envelope at all, is a checkpoint that
+ * cannot say what it sent. That is exactly the condition a resume must refuse rather than paper
+ * over with a freshly generated body.
+ */
+function validateFinalizationEnvelope(checkpoint: Record<string, unknown>): void {
+  const envelope = checkpoint.finalizationEnvelope
+  const stage = checkpoint.finalization as Record<string, unknown>
+
+  if (envelope === null) {
+    if (stage.state !== 'prepared' && stage.state !== 'not_required') {
+      throw new CheckpointIntegrityError(
+        'checkpoint.finalization was submitted without a persisted request envelope.',
+      )
+    }
+    if (stage.requestChecksum !== null) {
+      throw new CheckpointIntegrityError(
+        'checkpoint.finalization records a request checksum with no persisted request envelope.',
+      )
+    }
+    return
+  }
+
+  const record = asRecord(envelope, 'checkpoint.finalizationEnvelope')
+  assertExactKeys(record, ['completedAt', 'body', 'checksum'], 'checkpoint.finalizationEnvelope')
+  assertTimestamp(record.completedAt, 'checkpoint.finalizationEnvelope.completedAt')
+  assertNonEmptyString(record.body, 'checkpoint.finalizationEnvelope.body')
+  try {
+    assertSha256(record.checksum, 'checkpoint.finalizationEnvelope.checksum')
+  } catch {
+    throw new CheckpointIntegrityError('checkpoint.finalizationEnvelope.checksum is invalid.')
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(record.body as string) as unknown
+  } catch {
+    throw new CheckpointIntegrityError(
+      'checkpoint.finalizationEnvelope.body is not a reconstructable request body.',
+    )
+  }
+  const body = asRecord(parsed, 'checkpoint.finalizationEnvelope.body')
+  if (body.completed_at !== record.completedAt) {
+    throw new CheckpointIntegrityError(
+      'checkpoint.finalizationEnvelope.body carries a different completion timestamp than the ' +
+        'envelope recorded.',
+    )
+  }
+  if (body.status !== 'completed') {
+    throw new CheckpointIntegrityError(
+      'checkpoint.finalizationEnvelope.body is not a completion request.',
+    )
+  }
+  if (
+    stage.requestChecksum !== null &&
+    stage.requestChecksum !== record.checksum &&
+    stage.state !== 'not_required'
+  ) {
+    throw new CheckpointIntegrityError(
+      'checkpoint.finalization.requestChecksum disagrees with its persisted request envelope.',
+    )
+  }
+}
+
 function validateCheckpoint(value: unknown): asserts value is Checkpoint {
   const checkpoint = asRecord(value, 'checkpoint')
   assertExactKeys(checkpoint, CHECKPOINT_KEYS, 'checkpoint')
@@ -381,6 +448,7 @@ function validateCheckpoint(value: unknown): asserts value is Checkpoint {
 
   validateMutationStage(checkpoint.importBatchCreate, 'checkpoint.importBatchCreate')
   validateMutationStage(checkpoint.finalization, 'checkpoint.finalization')
+  validateFinalizationEnvelope(checkpoint)
   if (typeof checkpoint.phase !== 'string' || !CHECKPOINT_PHASES.has(checkpoint.phase)) {
     throw new CheckpointIntegrityError('checkpoint.phase is invalid.')
   }
@@ -390,7 +458,15 @@ function validateCheckpoint(value: unknown): asserts value is Checkpoint {
   const counters = asRecord(checkpoint.counters, 'checkpoint.counters')
   assertExactKeys(
     counters,
-    ['recordsRead', 'uniquePmids', 'duplicateOccurrences', 'inserted', 'updated', 'unchanged'],
+    [
+      'recordsRead',
+      'uniquePmids',
+      'duplicateOccurrences',
+      'inserted',
+      'updated',
+      'unchanged',
+      'errors',
+    ],
     'checkpoint.counters',
   )
   for (const [key, counter] of Object.entries(counters)) {

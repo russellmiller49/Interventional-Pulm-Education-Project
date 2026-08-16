@@ -15,42 +15,33 @@ import {
   DEVELOPMENT_SPLIT,
   FORBIDDEN_COHORT_COLUMNS,
   buildCandidateSql,
-  parseCandidateOutput,
+  collectCandidates,
   summarizeCandidates,
 } from './canary-candidates'
 import { EXPECTED_DEVELOPMENT_CANDIDATE_COUNT } from './constants'
-import { SOURCE_COMPLETE_PREFIX, SOURCE_IDENTITY_PREFIX, SOURCE_RECORD_PREFIX } from './source'
+import { SOURCE_RECORD_PREFIX } from './source'
 import type { CanaryCandidate } from './types'
 
-const IDENTITY = {
-  database: 'postgres',
-  user: 'postgres',
-  port: '5432',
-  readOnly: true,
-  isolation: 'repeatable read',
-}
-
-function candidateLine(candidate: Partial<CanaryCandidate> & { pmid: string }): string {
-  return `${SOURCE_RECORD_PREFIX}${JSON.stringify({
+/*
+ * Record payloads, not stdout lines.
+ *
+ * Framing, attestation, and truncation are now enforced once by `streamGuardedReadOnlyQuery` for
+ * every read that crosses the source boundary, and are covered by `source.test.ts`. What is left
+ * for this module — and therefore for these tests — is the cohort projection itself.
+ */
+function candidatePayload(candidate: Partial<CanaryCandidate> & { pmid: string }): unknown {
+  return {
     pmid: candidate.pmid,
     abstractPresent: candidate.abstractPresent ?? true,
     publicationYear: candidate.publicationYear ?? 2020,
     journal: candidate.journal ?? 'chest',
     publicationTypes: candidate.publicationTypes ?? ['Journal Article'],
-  })}`
+  }
 }
 
-function stream(lines: readonly string[], options: { complete?: boolean } = {}): string {
-  return [
-    `${SOURCE_IDENTITY_PREFIX}${JSON.stringify(IDENTITY)}`,
-    ...lines,
-    ...(options.complete === false ? [] : [`${SOURCE_COMPLETE_PREFIX}${JSON.stringify(IDENTITY)}`]),
-  ].join('\n')
-}
-
-function candidates(count: number): string[] {
+function candidates(count: number): unknown[] {
   return Array.from({ length: count }, (_, index) =>
-    candidateLine({
+    candidatePayload({
       pmid: String(30_000_000 + index),
       abstractPresent: index % 4 !== 0,
       publicationYear: 2000 + (index % 25),
@@ -110,10 +101,10 @@ describe('the candidate query never reaches the held-out split', () => {
   })
 })
 
-describe('parsing refuses anything that could yield a partial cohort', () => {
+describe('collecting refuses anything that could yield a partial cohort', () => {
   it('accepts exactly the expected development count', () => {
-    const parsed = parseCandidateOutput(stream(candidates(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT)))
-    expect(parsed.candidates).toHaveLength(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT)
+    const parsed = collectCandidates(candidates(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT))
+    expect(parsed).toHaveLength(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT)
   })
 
   it.each([
@@ -121,40 +112,30 @@ describe('parsing refuses anything that could yield a partial cohort', () => {
     ['one over', EXPECTED_DEVELOPMENT_CANDIDATE_COUNT + 1],
     ['empty', 0],
   ])('refuses a cohort that is %s', (_label, count) => {
-    expect(() => parseCandidateOutput(stream(candidates(count)))).toThrow(/exactly 630/u)
-  })
-
-  it('refuses a stream that never completed, which is the truncation signature', () => {
-    expect(() =>
-      parseCandidateOutput(
-        stream(candidates(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT), { complete: false }),
-      ),
-    ).toThrow(/did not complete/u)
-  })
-
-  it('refuses a read that did not attest a read-only transaction', () => {
-    const notReadOnly = `${SOURCE_IDENTITY_PREFIX}${JSON.stringify({ ...IDENTITY, readOnly: false })}`
-    expect(() => parseCandidateOutput([notReadOnly].join('\n'))).toThrow(/read-only/u)
+    expect(() => collectCandidates(candidates(count))).toThrow(/exactly 630/u)
   })
 
   it('refuses a row that carried a cohort field', () => {
     // The projection widening is the failure this catches: the row is dropped loudly rather than
     // being silently narrowed, because a silently ignored label means nobody noticed the widening.
-    const leaked = `${SOURCE_RECORD_PREFIX}${JSON.stringify({
+    const leaked = {
       pmid: '30000001',
       abstractPresent: true,
       publicationYear: 2020,
       journal: 'chest',
       publicationTypes: [],
       dataset_split: 'development',
-    })}`
-    expect(() => parseCandidateOutput(stream([leaked]))).toThrow(/bibliography-only/u)
+    }
+    expect(() => collectCandidates([leaked])).toThrow(/bibliography-only/u)
   })
 
   it('refuses duplicate PMIDs without echoing one', () => {
-    const duplicated = [candidateLine({ pmid: '30000001' }), candidateLine({ pmid: '30000001' })]
+    const duplicated = [
+      candidatePayload({ pmid: '30000001' }),
+      candidatePayload({ pmid: '30000001' }),
+    ]
     try {
-      parseCandidateOutput(stream(duplicated))
+      collectCandidates(duplicated)
       throw new Error('expected a refusal')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -164,15 +145,15 @@ describe('parsing refuses anything that could yield a partial cohort', () => {
   })
 
   it('refuses a malformed PMID without echoing it', () => {
-    const malformed = `${SOURCE_RECORD_PREFIX}${JSON.stringify({
+    const malformed = {
       pmid: 'not-a-pmid-SENTINEL',
       abstractPresent: true,
       publicationYear: 2020,
       journal: 'chest',
       publicationTypes: [],
-    })}`
+    }
     try {
-      parseCandidateOutput(stream([malformed]))
+      collectCandidates([malformed])
       throw new Error('expected a refusal')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -183,8 +164,9 @@ describe('parsing refuses anything that could yield a partial cohort', () => {
 
 describe('aggregates describe the set without identifying it', () => {
   it('reports counts and a year range only', () => {
-    const parsed = parseCandidateOutput(stream(candidates(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT)))
-    const summary = summarizeCandidates(parsed.candidates)
+    const summary = summarizeCandidates(
+      collectCandidates(candidates(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT)),
+    )
 
     expect(summary.count).toBe(EXPECTED_DEVELOPMENT_CANDIDATE_COUNT)
     expect(summary.abstractPresent + summary.abstractAbsent).toBe(

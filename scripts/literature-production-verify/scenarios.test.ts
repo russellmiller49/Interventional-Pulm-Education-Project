@@ -12,7 +12,6 @@
 
 import { SCENARIOS, runScenario, scenarioById, type ScenarioId } from './lib/scenarios'
 import type { VerificationInput } from './lib/checks'
-import type { BatchReceipt } from './lib/collect'
 import {
   LITERATURE_CANARY_RECORD_COUNT,
   LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
@@ -23,25 +22,6 @@ import {
 } from './lib/identity'
 import { batchRowForReceipt, ingestReceiptFixture } from './lib/ingest-receipt-fixture'
 import { failed, observed, skipped, unavailable, type Observation } from './lib/observation'
-
-function batch(overrides: Partial<BatchReceipt> = {}): BatchReceipt {
-  return {
-    id: 'b1',
-    status: 'completed',
-    source_filename: 'canary.nbib',
-    source_file_sha256: 'a'.repeat(64),
-    source_kind: 'core_journal',
-    records_read: 25,
-    unique_pmids: 25,
-    inserted_count: 25,
-    updated_count: 0,
-    duplicate_count: 0,
-    error_count: 0,
-    started_at: '2026-08-15T00:00:00.000Z',
-    completed_at: '2026-08-15T00:01:00.000Z',
-    ...overrides,
-  }
-}
 
 /** A canary-populated target where everything is exactly as it should be. */
 function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): VerificationInput {
@@ -73,6 +53,13 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
       canonicalUrl: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
     },
     database: {
+      articleStates: observed(
+        pmids.map((pmid) => ({
+          pmid,
+          relevance_state: 'unreviewed',
+          visibility_state: 'draft',
+        })),
+      ),
       tableReachability: Object.fromEntries(
         LITERATURE_FOUNDATION_TABLES.map((table) => [
           table,

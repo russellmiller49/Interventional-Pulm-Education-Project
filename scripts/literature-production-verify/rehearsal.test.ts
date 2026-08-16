@@ -42,6 +42,10 @@ import type {
   SourceJournalRow,
 } from '../literature-production-ingest/types'
 import { checkIngestReceiptBinding } from './lib/checks'
+import {
+  LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+  LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+} from './lib/identity'
 import type { BatchReceipt, SourceRow } from './lib/collect'
 import {
   isIngestReceipt,
@@ -50,7 +54,6 @@ import {
 } from './lib/ingest-receipt'
 import { observed } from './lib/observation'
 
-const APPROVED = 'itcttmkxdxvwmwcmzmey'
 const MANIFEST = 'd'.repeat(64)
 const LIMITS = { recordBatchLimit: 10, byteBatchLimit: 100_000, concurrency: 1 }
 
@@ -198,6 +201,18 @@ describe('disposable 25-record canary, executed and then verified', () => {
       observed(batches),
       observed(totalArticles),
       observed(sources),
+      {
+        projectRef: LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+        url: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+        canonicalUrl: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+      },
+      observed(
+        [...destination.articles.entries()].map(([pmid, row]) => ({
+          pmid,
+          relevance_state: row.relevance_state as string,
+          visibility_state: row.visibility_state as string,
+        })),
+      ),
     )
     const byId = Object.fromEntries(results.map((result) => [result.id, result.outcome]))
 

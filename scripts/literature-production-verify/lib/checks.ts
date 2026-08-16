@@ -49,9 +49,25 @@ import {
   type IngestReceipt,
 } from './ingest-receipt'
 import { describeObservation, isObserved, type Observation } from './observation'
+/*
+ * The binding contract, imported rather than restated.
+ *
+ * This is the one place the verification package reaches into the ingestion package for judgment,
+ * and it is deliberate: two independently-written definitions of "the receipt agrees with the row"
+ * were exactly the defect, because whichever was weaker decided the verdict. The receipt's checksum
+ * is still recomputed here against this package's own canonicalizer, which is the independence that
+ * actually matters.
+ */
+import {
+  classifyStoredBatchState,
+  describeAmbiguousBatch,
+  evaluateReceiptBinding,
+  type BindingFindingCode,
+} from '../../literature-production-ingest/receipt-binding'
 import type {
   ApplicationObservations,
   ApplicationProbe,
+  ArticleSummary,
   BatchReceipt,
   DatabaseObservations,
   SourceRow,
@@ -973,16 +989,101 @@ export function checkCanaryIdempotency(
   baseline: Observation<CorpusSnapshot>,
   current: Observation<CorpusSnapshot>,
   receipt?: Observation<IngestReceipt>,
+  batches?: Observation<readonly BatchReceipt[]>,
 ): CheckResult {
   const id = 'V52-canary-idempotent'
-  const title = 'a second identical import adds nothing'
+  const title = 'the canary is an exact initial application or an exact deterministic replay'
+
+  /*
+   * Two valid states, not one.
+   *
+   * This check assumed every canary worth verifying was a *second* run, so it demanded a baseline
+   * captured before another run and reported `indeterminate` without one. That made the first
+   * legitimate 25-record canary — the entire point of the exercise — permanently unverifiable, and
+   * because the scenario reduces one indeterminate to an indeterminate verdict, the whole canary
+   * run reported no verdict and exited nonzero on a perfectly good import.
+   *
+   * The two states are genuinely different claims and are judged separately:
+   *
+   *   1. an *initial completed operation* — one completed batch, non-null `completed_at`, exact
+   *      identity and counters, and the corpus holding exactly what it wrote. No baseline exists
+   *      because nothing ran before it, and demanding one was a category error.
+   *   2. a *deterministic replay* — the same completed operation and batch, no new batch, no
+   *      timestamp movement, no duplicated rows, and a receipt that explicitly represents the
+   *      read-only completed-operation short-circuit.
+   *
+   * Neither requires `--force`, a replacement batch, or a moved `started_at`; the engine has no
+   * `--force` and never moves `started_at`.
+   */
+  if (receipt !== undefined && isObserved(receipt) && receipt.value.outcome === 'completed') {
+    if (!isObserved(current)) {
+      return indeterminate(id, title, `No verdict: current=${describeObservation(current)}.`)
+    }
+    if (batches === undefined || !isObserved(batches)) {
+      return indeterminate(
+        id,
+        title,
+        `No verdict: batches=${batches === undefined ? 'not supplied' : describeObservation(batches)}. ` +
+          'An initial completed canary is established from the batch row it wrote.',
+      )
+    }
+    const matched = batches.value.find((batch) => batch.id === receipt.value.importBatchId)
+    if (!matched) {
+      return fail(
+        id,
+        title,
+        'The receipt reports a completed operation, but the batch it names is not in this ' +
+          'project. There is no initial application to confirm.',
+      )
+    }
+    const state = classifyStoredBatchState(matched)
+    if (state.kind !== 'completed') {
+      return fail(
+        id,
+        title,
+        'The batch this receipt names is not in a resolvable completed state. ' +
+          (state.kind === 'ambiguous' ? describeAmbiguousBatch(state.reason) : ''),
+      )
+    }
+    const otherBatches = batches.value.filter((batch) => batch.id !== matched.id)
+    if (otherBatches.length > 0) {
+      return fail(
+        id,
+        title,
+        `The receipt describes an initial application, but ${otherBatches.length} other import ` +
+          'batch(es) exist in this project. The corpus was not written by this operation alone.',
+      )
+    }
+    if (receipt.value.afterArticleCount !== current.value.totalArticles) {
+      return fail(
+        id,
+        title,
+        `The receipt recorded ${receipt.value.afterArticleCount} article(s); the corpus holds ` +
+          `${current.value.totalArticles}.`,
+      )
+    }
+    return pass(
+      id,
+      title,
+      `An exact initial application: one completed batch, completed at ${state.completedAt}, and ` +
+        `a corpus of exactly ${current.value.totalArticles}. There is no prior run to compare ` +
+        'against because this is the first, which is not a gap in the evidence.',
+      {
+        total: current.value.totalArticles,
+        operationId: receipt.value.operationId,
+        outcome: receipt.value.outcome,
+      },
+    )
+  }
+
   if (!isObserved(baseline) || !isObserved(current)) {
     return indeterminate(
       id,
       title,
       `No verdict: baseline=${describeObservation(baseline)}, ` +
-        `current=${describeObservation(current)}. Idempotency is a comparison of two runs and ` +
-        'cannot be inferred from one.',
+        `current=${describeObservation(current)}. A replay is a comparison of two runs and ` +
+        'cannot be inferred from one; an initial application is established from its completion ' +
+        'receipt instead.',
     )
   }
 
@@ -1024,26 +1125,52 @@ export function checkCanaryIdempotency(
    */
   if (receipt !== undefined && isObserved(receipt)) {
     if (receipt.value.outcome === 'idempotent-replay') {
+      /*
+       * A replay receipt is a claim that nothing was written. Confirm it against the database
+       * rather than accepting the outcome string: the same batch, no new batch, and no timestamp
+       * movement are all independently observable, and a replay that moved any of them is not the
+       * read-only short-circuit it says it is.
+       */
+      const replayProblems: string[] = []
+      if (current.value.batchCount !== baseline.value.batchCount) {
+        replayProblems.push(
+          `the batch count moved from ${baseline.value.batchCount} to ${current.value.batchCount}`,
+        )
+      }
+      if (
+        current.value.latestBatchStartedAt != null &&
+        baseline.value.latestBatchStartedAt != null &&
+        current.value.latestBatchStartedAt !== baseline.value.latestBatchStartedAt
+      ) {
+        replayProblems.push('a batch start time moved')
+      }
+      if (batches !== undefined && isObserved(batches)) {
+        const matched = batches.value.find((batch) => batch.id === receipt.value.importBatchId)
+        if (!matched) {
+          replayProblems.push('the batch the replay names is not in this project')
+        } else if (classifyStoredBatchState(matched).kind !== 'completed') {
+          replayProblems.push('the batch the replay names is not in a resolvable completed state')
+        }
+      }
+      if (replayProblems.length > 0) {
+        return fail(
+          id,
+          title,
+          `The receipt claims a read-only replay, but ${replayProblems.join('; ')}. A replay that ` +
+            'changed the database is not a replay.',
+        )
+      }
       return pass(
         id,
         title,
-        `The engine recognised the re-run as an identical operation and wrote nothing. The corpus ` +
-          `stayed at ${current.value.totalArticles} with no new inserts.`,
+        `The engine recognised the re-run as an identical operation and wrote nothing: the same ` +
+          `completed batch, no new batch, no start time moved, and the corpus still at ` +
+          `${current.value.totalArticles}.`,
         {
           total: current.value.totalArticles,
           operationId: receipt.value.operationId,
           outcome: receipt.value.outcome,
         },
-      )
-    }
-    if (receipt.value.outcome === 'completed') {
-      return fail(
-        id,
-        title,
-        `The supplied receipt reports outcome "completed", not "idempotent-replay": the engine ` +
-          'treated this run as a new operation rather than recognising it as a repeat. The ' +
-          'corpus happens to be unchanged, but this is not the replay path.',
-        { outcome: receipt.value.outcome, operationId: receipt.value.operationId },
       )
     }
   }
@@ -1489,10 +1616,14 @@ export function checkIngestReceiptBinding(
   // The provenance rows, not a second article read: they already carry every PMID, are already
   // paged to the exact Content-Range total, and are already collected for every scenario.
   sources: Observation<readonly SourceRow[]>,
+  // The project actually being read, and the live state of the articles. Without the first, a
+  // checksum-valid receipt naming a different project bound cleanly to whatever was in front of it.
+  target: TargetFacts,
+  articleStates: Observation<readonly ArticleSummary[]>,
 ): CheckResult[] {
   const results: CheckResult[] = []
   const bindId = 'V55-receipt-binds-operation'
-  const bindTitle = 'the receipt names an import batch that exists in this project'
+  const bindTitle = 'the receipt is bound to this project, this batch, and these rows'
 
   if (receipt === undefined || !isObserved(receipt)) {
     return [
@@ -1519,142 +1650,163 @@ export function checkIngestReceiptBinding(
     ]
   }
 
-  if (!isObserved(batches)) {
+  /*
+   * The shared binding contract.
+   *
+   * Everything V55 used to do by hand — and the six things it did not do — now comes from the one
+   * function the ingestion package's own `verify` command calls. A checksum-valid receipt naming
+   * Endoreels, a batch written by an unreviewed `created_by`, provenance belonging to another
+   * operation, duplicate PMID claims, drifted replay counters, and a stored mode or engine version
+   * that disagrees with the receipt are each a finding here rather than a silent pass.
+   */
+  const matchedBatch = isObserved(batches)
+    ? (batches.value.find((batch) => batch.id === receipt.value.importBatchId) ?? null)
+    : null
+  const binding = evaluateReceiptBinding(receipt.value, {
+    observedProjectRef: target.projectRef || null,
+    observedUrl: target.url || null,
+    batch: matchedBatch,
+    batchesObserved: isObserved(batches),
+    provenance: isObserved(sources) ? sources.value : null,
+    articleStates: isObserved(articleStates) ? articleStates.value : null,
+    totalArticles: isObserved(totalArticles) ? totalArticles.value : null,
+  })
+  const findingsFor = (codes: readonly BindingFindingCode[]) =>
+    binding.findings.filter((entry) => codes.includes(entry.code))
+  const renderFindings = (entries: readonly { subject: string; detail: string }[]) =>
+    entries.map((entry) => `${entry.subject}: ${entry.detail}`).join(' ')
+
+  /* --------------------------------------------------------------------------------------- *
+   * V55 — target, writer, batch existence, and reviewed identity.
+   * --------------------------------------------------------------------------------------- */
+
+  const bindCodes: readonly BindingFindingCode[] = [
+    'receipt_target_project_not_approved',
+    'receipt_target_project_not_observed',
+    'receipt_target_url_not_canonical',
+    'receipt_target_url_not_observed',
+    'receipt_engine_version_unreviewed',
+    'receipt_mapping_version_unreviewed',
+    'receipt_writer_identity_unreviewed',
+    'receipt_source_authority_unreviewed',
+    'receipt_outcome_not_bindable',
+    'receipt_batch_id_absent',
+    'receipt_batch_id_not_operation_id',
+    'batch_absent_from_project',
+    'batch_created_by_unreviewed',
+    'batch_not_completed',
+    'batch_completed_at_missing',
+    'batch_completed_at_malformed',
+  ]
+  const bindFindings = findingsFor(bindCodes)
+  if (bindFindings.length > 0) {
+    results.push(fail(bindId, bindTitle, renderFindings(bindFindings)))
+  } else if (!isObserved(batches)) {
     results.push(
       indeterminate(bindId, bindTitle, `No verdict: batches=${describeObservation(batches)}.`),
     )
-  } else if (receipt.value.importBatchId === null) {
+  } else {
     results.push(
-      indeterminate(
+      pass(
         bindId,
         bindTitle,
-        'The receipt records no import batch id, which is the shape a dry-run receipt has. There ' +
-          'is nothing to bind to a database row.',
+        `The receipt binds to import batch ${matchedBatch?.id ?? '(none)'} in project ` +
+          `${target.projectRef}, written by the reviewed ingestion writer.`,
+        { operationId: receipt.value.operationId, batchId: matchedBatch?.id ?? null },
       ),
     )
-  } else {
-    const matched = batches.value.find((batch) => batch.id === receipt.value.importBatchId)
-    if (!matched) {
-      results.push(
-        fail(
-          bindId,
-          bindTitle,
-          `The receipt names import batch ${receipt.value.importBatchId}, which does not exist in ` +
-            'this project. The corpus being read was not written by the operation this receipt ' +
-            'describes — or it was written to a different project.',
-        ),
-      )
-    } else {
-      const counterId = 'V56-receipt-counters-agree'
-      const counterTitle = 'the receipt counters match the batch row'
-      /*
-       * Only a completion receipt describes the row.
-       *
-       * A replay receipt records what the *replay* did — nothing: zero inserted, zero updated,
-       * `unchanged` equal to the corpus. The batch row still records the original operation, which
-       * did the inserting, because a replay does not rewrite it. Comparing the two is guaranteed to
-       * disagree, and that disagreement is the engine behaving correctly. What a replay must
-       * satisfy instead is that it wrote nothing.
-       */
-      const isReplay = receipt.value.outcome === 'idempotent-replay'
-      const mismatches: string[] = []
-      const compare = (label: string, fromReceipt: number, fromRow: number) => {
-        if (fromReceipt !== fromRow) mismatches.push(`${label} ${fromReceipt} vs ${fromRow}`)
-      }
-      if (isReplay) {
-        if (receipt.value.counters.inserted !== 0) {
-          mismatches.push(`replay reports ${receipt.value.counters.inserted} insert(s)`)
-        }
-        if (receipt.value.counters.updated !== 0) {
-          mismatches.push(`replay reports ${receipt.value.counters.updated} update(s)`)
-        }
-      } else {
-        compare('records read', receipt.value.counters.recordsRead, matched.records_read)
-        compare('unique PMIDs', receipt.value.counters.uniquePmids, matched.unique_pmids)
-        compare('inserted', receipt.value.counters.inserted, matched.inserted_count)
-        compare('updated', receipt.value.counters.updated, matched.updated_count)
-        compare('duplicates', receipt.value.counters.duplicateOccurrences, matched.duplicate_count)
-      }
-
-      results.push(
-        pass(
-          bindId,
-          bindTitle,
-          `The receipt binds to import batch ${matched.id}, recorded in this project.`,
-          { operationId: receipt.value.operationId, batchId: matched.id },
-        ),
-      )
-      results.push(
-        mismatches.length === 0
-          ? pass(
-              counterId,
-              counterTitle,
-              isReplay
-                ? 'The replay receipt reports no inserts and no updates, as a replay must.'
-                : 'Every counter in the receipt matches the batch row it names.',
-            )
-          : fail(
-              counterId,
-              counterTitle,
-              `The receipt and its batch row disagree: ${mismatches.join('; ')}. One of the two ` +
-                'was written or edited outside the engine.',
-            ),
-      )
-
-      // The batch `report` carries the operation identity the engine stamped into the row itself,
-      // which is the only copy of these values that did not travel through the operator's disk.
-      const report = ingestBatchReport(matched.report)
-      const reportId = 'V57-receipt-matches-batch-report'
-      const reportTitle = 'the receipt agrees with the operation identity stored in the batch row'
-      if (!report) {
-        results.push(
-          indeterminate(
-            reportId,
-            reportTitle,
-            'The batch row carries no report object, so it was written by something other than ' +
-              'the production ingestion engine. There is no stored identity to compare against.',
-          ),
-        )
-      } else {
-        const drift: string[] = []
-        if (report.operation_id !== receipt.value.operationId) {
-          drift.push('operation id')
-        }
-        if (report.source_projection_checksum !== receipt.value.sourceProjectionChecksum) {
-          drift.push('source projection checksum')
-        }
-        if (report.canary_manifest_checksum !== receipt.value.canaryManifestChecksum) {
-          drift.push('canary manifest checksum')
-        }
-        if (
-          typeof report.batch_checksums_sha256 === 'string' &&
-          report.batch_checksums_sha256 !== batchChecksumSummary(receipt.value.batchChecksums)
-        ) {
-          drift.push('batch checksum summary')
-        }
-        results.push(
-          drift.length === 0
-            ? pass(
-                reportId,
-                reportTitle,
-                'The receipt and the stored operation identity agree on every bound value.',
-              )
-            : fail(
-                reportId,
-                reportTitle,
-                `The receipt disagrees with the identity stored in the batch row on: ` +
-                  `${drift.join(', ')}. These are written at different times by the same ` +
-                  'operation, so a disagreement means the receipt does not describe this row.',
-              ),
-        )
-      }
-    }
   }
 
-  // The corpus total is the one number an operator reads off the administration page, so a receipt
-  // that disagrees with it means the corpus moved after the receipt was written.
+  /* --------------------------------------------------------------------------------------- *
+   * V56 — counters, including the replay case the previous check left almost entirely open.
+   * --------------------------------------------------------------------------------------- */
+
+  const counterId = 'V56-receipt-counters-agree'
+  const counterTitle = 'the receipt counters match the batch row'
+  const counterFindings = findingsFor([
+    'counter_drift',
+    'replay_reported_effects',
+    'error_count_nonzero',
+  ])
+  if (!matchedBatch) {
+    results.push(
+      indeterminate(
+        counterId,
+        counterTitle,
+        'No verdict: there is no matched batch row to compare counters against.',
+      ),
+    )
+  } else if (counterFindings.length > 0) {
+    results.push(fail(counterId, counterTitle, renderFindings(counterFindings)))
+  } else {
+    results.push(
+      pass(
+        counterId,
+        counterTitle,
+        receipt.value.outcome === 'idempotent-replay'
+          ? 'The replay wrote nothing, and every counter it carries still matches the operation ' +
+              'it replayed.'
+          : 'Every counter in the receipt matches the batch row it names.',
+      ),
+    )
+  }
+
+  /* --------------------------------------------------------------------------------------- *
+   * V57 — the operation identity the engine stamped into the row itself, which is the only copy
+   * of these values that did not travel through the operator's disk.
+   * --------------------------------------------------------------------------------------- */
+
+  const reportId = 'V57-receipt-matches-batch-report'
+  const reportTitle = 'the receipt agrees with the operation identity stored in the batch row'
+  const reportFindings = findingsFor([
+    'batch_report_operation_id_drift',
+    'batch_report_mode_drift',
+    'batch_report_engine_version_drift',
+    'batch_report_mapping_version_drift',
+    'batch_report_source_checksum_drift',
+    'batch_report_manifest_checksum_drift',
+    'batch_identity_source_checksum_drift',
+  ])
+  const absentReport = findingsFor(['batch_report_absent'])
+  if (!matchedBatch) {
+    results.push(
+      indeterminate(reportId, reportTitle, 'No verdict: there is no matched batch row to read.'),
+    )
+  } else if (absentReport.length > 0) {
+    results.push(fail(reportId, reportTitle, renderFindings(absentReport)))
+  } else if (reportFindings.length > 0) {
+    results.push(fail(reportId, reportTitle, renderFindings(reportFindings)))
+  } else {
+    // The batch-checksum summary is receipt-derived and is not part of the shared contract, so it
+    // is compared here, where the receipt's own batch checksums are in hand.
+    const report = ingestBatchReport(matchedBatch.report)
+    const summaryDrifted =
+      report !== null &&
+      typeof report.batch_checksums_sha256 === 'string' &&
+      report.batch_checksums_sha256 !== batchChecksumSummary(receipt.value.batchChecksums)
+    results.push(
+      summaryDrifted
+        ? fail(
+            reportId,
+            reportTitle,
+            'The receipt disagrees with the identity stored in the batch row on the batch ' +
+              'checksum summary.',
+          )
+        : pass(
+            reportId,
+            reportTitle,
+            'The receipt and the stored operation identity agree on every bound value.',
+          ),
+    )
+  }
+
+  /* --------------------------------------------------------------------------------------- *
+   * V58 — the corpus total is the one number an operator reads off the administration page.
+   * --------------------------------------------------------------------------------------- */
+
   const totalId = 'V58-receipt-matches-corpus'
   const totalTitle = 'the corpus total matches what the receipt recorded'
+  const totalFindings = findingsFor(['corpus_total_moved'])
   if (!isObserved(totalArticles)) {
     results.push(
       indeterminate(
@@ -1673,28 +1825,42 @@ export function checkIngestReceiptBinding(
     )
   } else {
     results.push(
-      receipt.value.afterArticleCount === totalArticles.value
-        ? pass(
+      totalFindings.length > 0
+        ? fail(totalId, totalTitle, renderFindings(totalFindings))
+        : pass(
             totalId,
             totalTitle,
             `Both the receipt and the database report ${totalArticles.value} article(s).`,
-          )
-        : fail(
-            totalId,
-            totalTitle,
-            `The receipt recorded ${receipt.value.afterArticleCount} article(s) after the ` +
-              `operation; the database now holds ${totalArticles.value}. The corpus moved after ` +
-              'the receipt was written, so something other than this operation has written to it.',
           ),
     )
   }
 
-  // For a canary, the receipt names the exact PMIDs. This is what turns "twenty-five drafts" into
-  // "the twenty-five the owner authorized".
+  /* --------------------------------------------------------------------------------------- *
+   * V59 — the exact claimed records, scoped to the exact batch.
+   *
+   * This is what turns "twenty-five drafts" into "the twenty-five the owner authorized". Three
+   * things it now does that it did not: it rejects a duplicated claim before anything becomes a
+   * `Set`; it compares against provenance written by *this batch* rather than by any batch; and it
+   * requires every claimed article to exist and to be draft/unreviewed.
+   * --------------------------------------------------------------------------------------- */
+
   const pmidId = 'V59-receipt-pmids-present'
-  const pmidTitle = 'every PMID the receipt claims to have written is present'
+  const pmidTitle =
+    'every PMID the receipt claims is present, in this batch, as an unreviewed draft'
   const claimed = receipt.value.canaryPmids
-  if (claimed === undefined || claimed.length === 0) {
+  const pmidFindings = findingsFor([
+    'claimed_pmids_duplicated',
+    'claimed_pmids_wrong_cardinality',
+    'claimed_pmids_malformed',
+    'provenance_missing_for_claim',
+    'provenance_extra_in_batch',
+    'provenance_claim_under_other_batch',
+    'article_missing_for_claim',
+    'article_not_draft_unreviewed',
+  ])
+  if (pmidFindings.length > 0) {
+    results.push(fail(pmidId, pmidTitle, renderFindings(pmidFindings)))
+  } else if (receipt.value.mode === 'full') {
     results.push(
       indeterminate(
         pmidId,
@@ -1702,44 +1868,38 @@ export function checkIngestReceiptBinding(
         'The receipt lists no canary PMIDs, which is expected for a full-corpus operation.',
       ),
     )
-  } else if (!isObserved(sources)) {
+  } else if (!isObserved(sources) || !isObserved(articleStates)) {
     results.push(
-      indeterminate(pmidId, pmidTitle, `No verdict: provenance=${describeObservation(sources)}.`),
+      indeterminate(
+        pmidId,
+        pmidTitle,
+        `No verdict: provenance=${describeObservation(sources)}, ` +
+          `article states=${describeObservation(articleStates)}.`,
+      ),
     )
   } else {
-    const present = new Set(sources.value.map((row) => row.pmid))
-    const claimedSet = new Set(claimed)
-    const absent = claimed.filter((pmid) => !present.has(pmid))
-    const unexpected = [...present].filter((pmid) => !claimedSet.has(pmid))
-    if (absent.length > 0) {
-      results.push(
-        fail(
-          pmidId,
-          pmidTitle,
-          `${absent.length} of the ${claimed.length} PMID(s) the receipt claims to have written ` +
-            'are not in the corpus. The identifiers are deliberately not listed here; they are in ' +
-            'the receipt.',
-        ),
-      )
-    } else if (unexpected.length > 0) {
-      results.push(
-        fail(
-          pmidId,
-          pmidTitle,
-          `All ${claimed.length} claimed PMID(s) have provenance, but ${unexpected.length} ` +
-            'further article(s) carry provenance this receipt does not account for.',
-        ),
-      )
-    } else {
-      results.push(
-        pass(
-          pmidId,
-          pmidTitle,
-          `All ${claimed.length} PMID(s) named by the receipt carry provenance, and nothing ` +
-            'else does.',
-        ),
-      )
-    }
+    results.push(
+      pass(
+        pmidId,
+        pmidTitle,
+        `All ${claimed?.length ?? 0} PMID(s) named by the receipt carry provenance under batch ` +
+          `${receipt.value.importBatchId ?? '(none)'}, nothing else does, and every one is an ` +
+          'unreviewed draft.',
+        { batchScopedProvenance: binding.batchScopedProvenanceCount },
+      ),
+    )
+  }
+
+  // Anything the contract could not judge is reported as such rather than as agreement.
+  if (binding.unobserved.length > 0) {
+    results.push(
+      indeterminate(
+        'V55b-receipt-binding-observability',
+        'every bound value was independently observed',
+        `No verdict on ${binding.unobserved.length} bound value(s): ` +
+          `${binding.unobserved.join('; ')}. An unobserved value is never treated as agreement.`,
+      ),
+    )
   }
 
   return results

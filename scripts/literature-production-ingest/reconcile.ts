@@ -1,8 +1,8 @@
 import { canonicalJson, sha256 } from './canonical'
 import { checkpointChecksum, receiptChecksum, type CheckpointStore } from './checkpoint'
-import { ENGINE_VERSION, RECONCILIATION_SCHEMA_VERSION } from './constants'
+import { ENGINE_VERSION, INGEST_WRITER_IDENTITY, RECONCILIATION_SCHEMA_VERSION } from './constants'
+import { classifyStoredBatchState, describeAmbiguousBatch } from './receipt-binding'
 import { streamPreparedBatches, type RecordMapper } from './batching'
-import { batchChecksumSummary } from './engine'
 import type { ImportBatchLookupRow, LiteratureTable, ReadRowsOptions } from './transport'
 import type {
   Checkpoint,
@@ -101,6 +101,23 @@ async function observe(
   }
 }
 
+/** `observe` for the subjects that can report *why* a state was inconclusive. */
+async function observeState(
+  subject: string,
+  operation: () => Promise<{ classification: ReconciliationClassification; reason?: string }>,
+): Promise<ReconciliationObservation> {
+  try {
+    const outcome = await operation()
+    return {
+      subject,
+      classification: outcome.classification,
+      ...(outcome.reason ? { reason: outcome.reason } : {}),
+    }
+  } catch {
+    return { subject, classification: 'observation_incomplete' }
+  }
+}
+
 function assertBatchContract(
   actual: {
     index: number
@@ -136,9 +153,18 @@ export async function reconcileCheckpoint(input: {
 
   if (unresolved(input.checkpoint.importBatchCreate)) {
     observations.push(
-      await observe('import_batch_create', async () => {
+      await observeState('import_batch_create', async () => {
         const row = await input.transport.getImportBatch(input.checkpoint.operationId)
-        if (!row) return 'absent_exact'
+        if (!row) return { classification: 'absent_exact' as const }
+        // A creation row that contradicts itself about completion is not evidence that the create
+        // applied exactly; it is a row nobody can classify. Stop before comparing columns.
+        const state = classifyStoredBatchState(row)
+        if (state.kind === 'ambiguous') {
+          return {
+            classification: 'ambiguous_inconsistent' as const,
+            reason: describeAmbiguousBatch(state.reason),
+          }
+        }
         const identity = input.checkpoint.batchIdentity
         const expectedReport = {
           engine_version: input.checkpoint.engineVersion,
@@ -165,11 +191,11 @@ export async function reconcileCheckpoint(input: {
           row.duplicate_count === 0 &&
           row.error_count === 0 &&
           row.completed_at === null &&
-          row.created_by === 'literature-production-ingest' &&
+          row.created_by === INGEST_WRITER_IDENTITY &&
           sameInstant(row.started_at, input.checkpoint.createdAt) &&
           canonicalJson(row.report) === canonicalJson(expectedReport)
-          ? 'applied_exact'
-          : 'partial_or_conflicting'
+          ? { classification: 'applied_exact' as const }
+          : { classification: 'partial_or_conflicting' as const }
       }),
     )
   }
@@ -270,34 +296,85 @@ export async function reconcileCheckpoint(input: {
 
   if (unresolved(input.checkpoint.finalization)) {
     observations.push(
-      await observe('finalization', async () => {
+      await observeState('finalization', async () => {
         const row = await input.transport.getImportBatch(input.checkpoint.operationId)
-        if (!row) return 'absent_exact'
-        if (row.status !== 'completed' || !row.report || typeof row.report !== 'object') {
-          return 'partial_or_conflicting'
+        if (!row) return { classification: 'absent_exact' as const }
+
+        /*
+         * Completion is a state that carries its timestamp.
+         *
+         * The defect this replaces: `row.status !== 'completed'` was the entire completion test, so
+         * a row marked completed with a null `completed_at` fell straight through to the counter
+         * comparison, matched it, and was classified `applied_exact`. The resume then made no
+         * finalization request at all and emitted a completed receipt for an operation nothing had
+         * confirmed. An inconsistent row is now its own outcome and it stops.
+         */
+        const state = classifyStoredBatchState(row)
+        if (state.kind === 'ambiguous') {
+          return {
+            classification: 'ambiguous_inconsistent' as const,
+            reason: describeAmbiguousBatch(state.reason),
+          }
         }
-        const expectedReport = {
-          engine_version: input.checkpoint.engineVersion,
-          mapping_version: input.checkpoint.mappingVersion,
-          operation_id: input.checkpoint.operationId,
-          mode: input.checkpoint.mode,
-          source_projection_checksum: input.checkpoint.sourceProjectionChecksum,
-          canary_manifest_checksum: input.checkpoint.canaryManifestChecksum,
-          unchanged_count: input.checkpoint.counters.unchanged,
-          before_article_count: input.checkpoint.beforeArticleCount,
-          after_article_count: input.checkpoint.afterArticleCount,
-          batch_count: batchChecksumSummary(input.checkpoint).batchCount,
-          batch_checksums_sha256: batchChecksumSummary(input.checkpoint).batchChecksumsSha256,
+        if (state.kind !== 'completed') {
+          // Not finalized. Counters that happen to look finished are not finalization; only the
+          // status and its timestamp are completion evidence.
+          return { classification: 'absent_exact' as const }
         }
-        return row.records_read === input.checkpoint.counters.recordsRead &&
-          row.unique_pmids === input.checkpoint.counters.uniquePmids &&
-          row.inserted_count === input.checkpoint.counters.inserted &&
-          row.updated_count === input.checkpoint.counters.updated &&
-          row.duplicate_count === input.checkpoint.counters.duplicateOccurrences &&
-          row.error_count === 0 &&
-          canonicalJson(row.report) === canonicalJson(expectedReport)
-          ? 'applied_exact'
-          : 'partial_or_conflicting'
+        if (row.created_by !== INGEST_WRITER_IDENTITY) {
+          return {
+            classification: 'partial_or_conflicting' as const,
+            reason:
+              'The completed batch was written by an identity other than the reviewed ' +
+              'ingestion writer.',
+          }
+        }
+        if (!row.report || typeof row.report !== 'object') {
+          return { classification: 'partial_or_conflicting' as const }
+        }
+
+        /*
+         * The expected body is the one that was written ahead, not one rebuilt from the clock.
+         *
+         * When an envelope exists, its persisted body *is* the request that was sent, so the row is
+         * compared against that rather than against a fresh derivation. A submitted finalization
+         * with no envelope cannot say what it sent and is therefore not resolvable read-only.
+         */
+        const envelope = input.checkpoint.finalizationEnvelope
+        if (!envelope) {
+          return {
+            classification: 'ambiguous_inconsistent' as const,
+            reason:
+              'The finalization was submitted without a persisted request envelope, so what was ' +
+              'sent cannot be established and the remote row cannot be compared against it.',
+          }
+        }
+        let expectedBody: Record<string, unknown>
+        try {
+          expectedBody = JSON.parse(envelope.body) as Record<string, unknown>
+        } catch {
+          return {
+            classification: 'ambiguous_inconsistent' as const,
+            reason: 'The persisted finalization request body is not reconstructable.',
+          }
+        }
+        if (!sameInstant(row.completed_at, envelope.completedAt)) {
+          return {
+            classification: 'partial_or_conflicting' as const,
+            reason:
+              'The remote completion timestamp is not the one this operation recorded before it ' +
+              'sent the request.',
+          }
+        }
+        return row.records_read === expectedBody.records_read &&
+          row.unique_pmids === expectedBody.unique_pmids &&
+          row.inserted_count === expectedBody.inserted_count &&
+          row.updated_count === expectedBody.updated_count &&
+          row.duplicate_count === expectedBody.duplicate_count &&
+          row.error_count === expectedBody.error_count &&
+          canonicalJson(row.report) === canonicalJson(expectedBody.report)
+          ? { classification: 'applied_exact' as const }
+          : { classification: 'partial_or_conflicting' }
       }),
     )
   }
@@ -346,6 +423,25 @@ export async function applyReconciliationReceipt(
   }
   if (!Array.isArray(receipt.observations) || receipt.observations.length === 0) {
     throw new Error('Reconciliation receipt contains no observations.')
+  }
+  /*
+   * Ambiguity is its own refusal, with its own message.
+   *
+   * It used to be impossible to reach: a `completed` row with no `completed_at` was classified
+   * `applied_exact` and acknowledged the stage. Now it stops here, and it says why, because the
+   * operator's next step is different from the drift case — the remote row has to be inspected and
+   * corrected by hand before anything may be resumed, and no amount of re-running will resolve it.
+   */
+  const ambiguous = receipt.observations.filter(
+    (observation) => observation.classification === 'ambiguous_inconsistent',
+  )
+  if (ambiguous.length > 0) {
+    throw new Error(
+      'Reconciliation observed an ambiguous or self-contradictory remote state and will not ' +
+        `continue: ${ambiguous
+          .map((observation) => `${observation.subject}: ${observation.reason ?? 'inconsistent'}`)
+          .join(' ')} No further mutation may be attempted until this is resolved read-only.`,
+    )
   }
   if (
     receipt.observations.some(

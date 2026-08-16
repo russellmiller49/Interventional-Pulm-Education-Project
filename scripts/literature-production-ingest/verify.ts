@@ -5,11 +5,22 @@ import { receiptChecksum } from './checkpoint'
 import {
   ARTICLE_SELECT_COLUMNS,
   APPROVED_PROJECT_REF,
+  APPROVED_PROJECT_URL,
+  CANARY_SOURCE_AUTHORITY,
   ENGINE_VERSION,
+  INGEST_WRITER_IDENTITY,
   MAPPING_VERSION,
   MAX_BATCH_COUNT,
   RECEIPT_SCHEMA_VERSION,
 } from './constants'
+import {
+  classifyStoredBatchState,
+  describeAmbiguousBatch,
+  evaluateReceiptBinding,
+  type ObservedArticleState,
+  type ObservedBatchRow,
+  type ObservedProvenanceRow,
+} from './receipt-binding'
 import { scanSourceProjection, streamPreparedBatches, type RecordMapper } from './batching'
 import { batchChecksumSummary } from './engine'
 import type {
@@ -81,6 +92,38 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
+/**
+ * Narrow a PostgREST lookup row into the shape the binding contract compares against.
+ *
+ * `ImportBatchLookupRow` carries an index signature, so every counter arrives as `unknown`. Reading
+ * them as numbers without checking would make a string `"25"` compare unequal to `25` and report
+ * counter drift for a healthy row — or, worse, make a missing column read as `undefined` and
+ * quietly satisfy a comparison somewhere. A non-numeric counter is a malformed row and says so.
+ */
+function observedBatchRow(row: ImportBatchLookupRow): ObservedBatchRow {
+  const numeric = (key: string): number => {
+    const value = row[key]
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error(`Destination import-batch column ${key} is absent or not numeric.`)
+    }
+    return value
+  }
+  return {
+    id: row.id,
+    status: row.status,
+    completed_at: typeof row.completed_at === 'string' ? row.completed_at : null,
+    created_by: typeof row.created_by === 'string' ? row.created_by : null,
+    source_file_sha256: row.source_file_sha256,
+    records_read: numeric('records_read'),
+    unique_pmids: numeric('unique_pmids'),
+    inserted_count: numeric('inserted_count'),
+    updated_count: numeric('updated_count'),
+    duplicate_count: numeric('duplicate_count'),
+    error_count: numeric('error_count'),
+    report: row.report,
+  }
+}
+
 export function assertIngestReceipt(value: unknown): asserts value is IngestReceipt {
   if (!isObject(value)) throw new Error('Ingestion receipt must be a JSON object.')
   const baseKeys = [
@@ -91,6 +134,9 @@ export function assertIngestReceipt(value: unknown): asserts value is IngestRece
     'mode',
     'outcome',
     'targetProjectRef',
+    'targetUrl',
+    'writerIdentity',
+    'sourceAuthority',
     'completedAt',
     'sourceProjectionChecksum',
     'sourceRecordCount',
@@ -141,6 +187,7 @@ export function assertIngestReceipt(value: unknown): asserts value is IngestRece
           'inserted',
           'updated',
           'unchanged',
+          'errors',
         ].sort(),
       ) ||
     Object.values(counters).some((counter) => !nonNegativeInteger(counter)) ||
@@ -166,15 +213,31 @@ export function assertIngestReceipt(value: unknown): asserts value is IngestRece
   if (
     value.outcome === 'dry-run'
       ? value.targetProjectRef !== null ||
+        value.targetUrl !== null ||
         value.importBatchId !== null ||
         value.beforeArticleCount !== null ||
         value.afterArticleCount !== null
       : value.targetProjectRef !== APPROVED_PROJECT_REF ||
+        value.targetUrl !== APPROVED_PROJECT_URL ||
         value.importBatchId !== value.operationId ||
         value.beforeArticleCount === null ||
         value.afterArticleCount === null
   ) {
     throw new Error('Ingestion receipt outcome fields are inconsistent.')
+  }
+  /*
+   * The reviewed identity, pinned rather than merely present.
+   *
+   * `writerIdentity` and `sourceAuthority` are what make the receipt say *who* wrote and *what
+   * cohort* authorized the write. Accepting any nonempty string here would make both fields
+   * decoration; they are compared to the same constants the binding contract compares the stored
+   * row against, so the receipt and the database cannot disagree about them silently.
+   */
+  if (value.writerIdentity !== INGEST_WRITER_IDENTITY) {
+    throw new Error('Ingestion receipt does not name the reviewed ingestion writer.')
+  }
+  if (value.sourceAuthority !== (value.mode === 'canary' ? CANARY_SOURCE_AUTHORITY : null)) {
+    throw new Error('Ingestion receipt does not name the authorized source cohort for its mode.')
   }
 }
 
@@ -400,8 +463,22 @@ export async function verifyCompletedIngestion(input: {
   }
 
   const importBatch = await input.transport.getImportBatch(input.checkpoint.operationId)
-  if (!importBatch || importBatch.status !== 'completed' || !isObject(importBatch.report)) {
+  if (!importBatch || !isObject(importBatch.report)) {
     throw new Error('Destination import-batch record is absent or incomplete.')
+  }
+  /*
+   * Completion is a state that carries its timestamp.
+   *
+   * `status !== 'completed'` was the whole test, so a row marked completed with a null
+   * `completed_at` verified cleanly — the same inconsistent state that reconciliation used to
+   * classify `applied_exact`. Both paths now resolve it through one classifier.
+   */
+  const storedState = classifyStoredBatchState(importBatch)
+  if (storedState.kind !== 'completed') {
+    throw new Error(
+      'Destination import-batch record is not in a resolvable completed state. ' +
+        (storedState.kind === 'ambiguous' ? describeAmbiguousBatch(storedState.reason) : ''),
+    )
   }
   const expectedReport = {
     engine_version: input.checkpoint.engineVersion,
@@ -450,6 +527,53 @@ export async function verifyCompletedIngestion(input: {
       input.receipt.counters.inserted !== 0)
   ) {
     throw new Error('Idempotent replay changed the destination article count.')
+  }
+
+  /*
+   * The shared binding, enforced in full rather than as a subset.
+   *
+   * Everything above verifies the *source* reconciles with the destination. This verifies the
+   * *receipt* is bound to what was independently observed: the exact project and canonical URL,
+   * the reviewed writer, the stored operation identity, batch-scoped provenance, duplicate claims,
+   * and the live draft/unreviewed state of every claimed article. It is the identical function the
+   * verification package's V55–V59 call, so the two packages cannot enforce different contracts.
+   */
+  const claimedPmids = input.receipt.canaryPmids ?? []
+  const boundProvenance: ObservedProvenanceRow[] = []
+  const boundArticles: ObservedArticleState[] = []
+  if (claimedPmids.length > 0) {
+    for (const pmidChunk of chunks(claimedPmids, READ_CHUNK_SIZE)) {
+      boundProvenance.push(
+        ...(await input.transport.readRows<ObservedProvenanceRow>('literature_article_sources', {
+          query: { select: 'pmid,batch_id', pmid: inFilter(pmidChunk), order: 'pmid.asc' },
+        })),
+      )
+      boundArticles.push(
+        ...(await input.transport.readRows<ObservedArticleState>('literature_articles', {
+          query: {
+            select: 'pmid,relevance_state,visibility_state',
+            pmid: inFilter(pmidChunk),
+            order: 'pmid.asc',
+          },
+        })),
+      )
+    }
+  }
+  const binding = evaluateReceiptBinding(input.receipt, {
+    observedProjectRef: input.transport.projectRef,
+    observedUrl: APPROVED_PROJECT_URL,
+    batch: observedBatchRow(importBatch),
+    batchesObserved: true,
+    provenance: boundProvenance,
+    articleStates: boundArticles,
+    totalArticles: articleCount,
+  })
+  if (binding.findings.length > 0) {
+    throw new Error(
+      `The ingestion receipt is not bound to what was observed: ${binding.findings
+        .map((entry) => `[${entry.code}] ${entry.subject}: ${entry.detail}`)
+        .join(' ')}`,
+    )
   }
 
   return {

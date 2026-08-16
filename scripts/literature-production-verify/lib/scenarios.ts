@@ -207,8 +207,15 @@ export const SCENARIOS: readonly Scenario[] = [
         input.database.batches,
         input.database.totalArticles,
         input.database.sources,
+        input.target,
+        input.database.articleStates,
       ),
-      checkCanaryIdempotency(input.baselineSnapshot, input.currentSnapshot, input.ingestReceipt),
+      checkCanaryIdempotency(
+        input.baselineSnapshot,
+        input.currentSnapshot,
+        input.ingestReceipt,
+        input.database.batches,
+      ),
     ],
   },
   {
@@ -234,6 +241,8 @@ export const SCENARIOS: readonly Scenario[] = [
         input.database.batches,
         input.database.totalArticles,
         input.database.sources,
+        input.target,
+        input.database.articleStates,
       ),
       checkReceiptConsistency(input.database.batches, input.database.totalArticles),
       ...checkSourceProvenance(

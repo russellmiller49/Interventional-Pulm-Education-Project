@@ -34,13 +34,13 @@
  * happened to come back.
  */
 
+import { EXPECTED_DEVELOPMENT_CANDIDATE_COUNT } from './constants'
 import {
-  EXPECTED_DEVELOPMENT_CANDIDATE_COUNT,
-  SOURCE_DATABASE,
-  SOURCE_DATABASE_USER,
-  SOURCE_INTERNAL_PORT,
-} from './constants'
-import { SOURCE_COMPLETE_PREFIX, SOURCE_IDENTITY_PREFIX, SOURCE_RECORD_PREFIX } from './source'
+  SOURCE_ATTESTATION_SQL,
+  SOURCE_COMPLETE_PREFIX,
+  SOURCE_IDENTITY_PREFIX,
+  SOURCE_RECORD_PREFIX,
+} from './source'
 import type { CanaryCandidate } from './types'
 
 /** The development split. The only cohort value this module may name. */
@@ -85,9 +85,11 @@ const CANDIDATE_PROJECTION = [
 /**
  * The read-only candidate query.
  *
- * Structurally identical to the ingestion source read: an explicit read-only repeatable-read
- * transaction that attests `transaction_read_only` in its own output, and a terminal `rollback`.
- * The only difference is the projection and the development-split join.
+ * Identical in every respect to the ingestion source read except the projection and the
+ * development-split join: the same read-only repeatable-read transaction, the same terminal
+ * `rollback`, and — since this correction — literally the same attestation frames, built from
+ * `SOURCE_ATTESTATION_SQL`. It previously emitted a third, narrower attestation shape of its own,
+ * which is how "structurally identical" and "actually identical" came apart.
  */
 export function buildCandidateSql(): string {
   const projection = CANDIDATE_PROJECTION.map(
@@ -96,13 +98,7 @@ export function buildCandidateSql(): string {
 
   return `begin transaction isolation level repeatable read read only;
 set local statement_timeout = '0';
-select '${SOURCE_IDENTITY_PREFIX}' || jsonb_build_object(
-  'database', current_database(),
-  'user', current_user,
-  'port', current_setting('port'),
-  'readOnly', current_setting('transaction_read_only')::boolean,
-  'isolation', current_setting('transaction_isolation')
-)::text;
+select '${SOURCE_IDENTITY_PREFIX}' || ${SOURCE_ATTESTATION_SQL}::text;
 select '${SOURCE_RECORD_PREFIX}' || jsonb_build_object(
       ${projection}
 )::text
@@ -115,35 +111,8 @@ where article.pmid in (
   where item.dataset_split = '${DEVELOPMENT_SPLIT}'
 )
 order by article.pmid collate "C" asc;
-select '${SOURCE_COMPLETE_PREFIX}' || jsonb_build_object(
-  'readOnly', current_setting('transaction_read_only')::boolean,
-  'database', current_database(),
-  'user', current_user,
-  'port', current_setting('port')
-)::text;
+select '${SOURCE_COMPLETE_PREFIX}' || ${SOURCE_ATTESTATION_SQL}::text;
 rollback;`
-}
-
-export interface CandidateIdentity {
-  database: string
-  user: string
-  port: string
-  readOnly: boolean
-}
-
-function assertReadOnlyIdentity(value: unknown, label: string): void {
-  const row = value as Record<string, unknown> | null
-  if (
-    row === null ||
-    typeof row !== 'object' ||
-    Array.isArray(row) ||
-    row.database !== SOURCE_DATABASE ||
-    row.user !== SOURCE_DATABASE_USER ||
-    row.port !== SOURCE_INTERNAL_PORT ||
-    row.readOnly !== true
-  ) {
-    throw new Error(`${label} did not attest a read-only transaction on the expected source.`)
-  }
 }
 
 function assertPmid(value: unknown): string {
@@ -188,50 +157,17 @@ function normalizeCandidate(value: unknown): CanaryCandidate {
   }
 }
 
-export interface ParsedCandidateOutput {
-  candidates: CanaryCandidate[]
-}
-
 /**
- * Parse the prefixed lines the query emits.
+ * Turn the record frames the guarded boundary yielded into the candidate set.
  *
- * Both the opening identity row and the closing completion row must attest a read-only transaction
- * on the expected database, user, and port. A stream that ends without the completion row is a
- * truncated read and is refused — the failure mode that would otherwise produce a manifest built
- * from a partial cohort.
+ * This used to be `parseCandidateOutput`, which re-implemented the frame grammar — identity first,
+ * completion last, refuse a truncated stream — a second time, in a second style, against a raw
+ * stdout string. Framing, attestation, and fail-closed exit are now the boundary's job and are
+ * enforced identically for every read; what is left here is what is genuinely about the cohort:
+ * the bibliography-only projection, no duplicates, and the exact expected size.
  */
-export function parseCandidateOutput(stdout: string): ParsedCandidateOutput {
-  let identitySeen = false
-  let completeSeen = false
-  const candidates: CanaryCandidate[] = []
-
-  for (const rawLine of stdout.split('\n')) {
-    const line = rawLine.trim()
-    if (line.startsWith(SOURCE_IDENTITY_PREFIX)) {
-      assertReadOnlyIdentity(
-        JSON.parse(line.slice(SOURCE_IDENTITY_PREFIX.length)) as unknown,
-        'Candidate source identity',
-      )
-      identitySeen = true
-      continue
-    }
-    if (line.startsWith(SOURCE_COMPLETE_PREFIX)) {
-      assertReadOnlyIdentity(
-        JSON.parse(line.slice(SOURCE_COMPLETE_PREFIX.length)) as unknown,
-        'Candidate source completion',
-      )
-      completeSeen = true
-      continue
-    }
-    if (line.startsWith(SOURCE_RECORD_PREFIX)) {
-      candidates.push(
-        normalizeCandidate(JSON.parse(line.slice(SOURCE_RECORD_PREFIX.length)) as unknown),
-      )
-    }
-  }
-
-  if (!identitySeen) throw new Error('Candidate read produced no source identity attestation.')
-  if (!completeSeen) throw new Error('Candidate read did not complete; the result may be partial.')
+export function collectCandidates(payloads: readonly unknown[]): CanaryCandidate[] {
+  const candidates = payloads.map((payload) => normalizeCandidate(payload))
 
   const unique = new Set(candidates.map((candidate) => candidate.pmid))
   if (unique.size !== candidates.length) {
@@ -245,7 +181,7 @@ export function parseCandidateOutput(stdout: string): ParsedCandidateOutput {
     )
   }
 
-  return { candidates }
+  return candidates
 }
 
 export interface CandidateAggregates {

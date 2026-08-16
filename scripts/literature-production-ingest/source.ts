@@ -5,7 +5,6 @@ import type { Readable } from 'node:stream'
 import {
   ARTICLE_SELECT_COLUMNS,
   DEFAULT_CANARY_SIZE,
-  DESTINATION_ENV_NAMES,
   SOURCE_CONTAINER,
   SOURCE_CONTAINER_ID,
   SOURCE_DATABASE,
@@ -24,10 +23,31 @@ export const SOURCE_IDENTITY_PREFIX = 'LITERATURE_SOURCE_IDENTITY:' as const
 export const SOURCE_RECORD_PREFIX = 'LITERATURE_SOURCE_RECORD:' as const
 export const SOURCE_COMPLETE_PREFIX = 'LITERATURE_SOURCE_COMPLETE:' as const
 
-const SOURCE_OPERATIONAL_ENVIRONMENT_PATTERN =
-  /^(?:DOCKER|CONTAINER|SUPABASE|PG|POSTGRES|DATABASE_|DB_)/iu
-const SOURCE_CREDENTIAL_ENVIRONMENT_PATTERN =
-  /(?:SECRET|PASSWORD|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CREDENTIAL)/iu
+/**
+ * The complete environment a source child process receives.
+ *
+ * This was a denylist — strip anything matching `DOCKER|CONTAINER|SUPABASE|PG|…` or
+ * `SECRET|PASSWORD|TOKEN|…` — and a denylist is only ever as good as the names someone thought of.
+ * `LITERATURE_VERIFY_ADMIN_COOKIE` matched none of those patterns, so an admin session cookie was
+ * forwarded to a `docker exec` child that has no use for one. Neither does anything else here: a
+ * local `psql` read authenticates as the container's `postgres` user over a Unix socket and needs
+ * no Literature production secret, no session, and no token of any kind.
+ *
+ * So the rule is inverted. Five names go through, chosen because `docker` and `psql` genuinely
+ * need them, and everything else — every current variable and every variable anyone adds later —
+ * is absent by default rather than by prediction. `DOCKER_HOST` and friends are excluded as a
+ * consequence, which also means the pinned context cannot be redirected through the environment.
+ */
+export const SOURCE_ENVIRONMENT_ALLOWLIST: readonly string[] = [
+  // `docker` and `psql` are resolved from PATH.
+  'PATH',
+  // `docker` reads ~/.docker/config.json to resolve the pinned context name.
+  'HOME',
+  // Locale only affects message formatting; the framed protocol is ASCII.
+  'LANG',
+  'LC_ALL',
+  'TMPDIR',
+]
 const MAX_GUARD_OUTPUT_BYTES = 8 * 1024
 
 const JOURNAL_SELECT_COLUMNS = [
@@ -45,7 +65,15 @@ const JOURNAL_SELECT_COLUMNS = [
   'registry_version',
 ] as const
 
-interface SourceIdentity {
+/**
+ * What the source must attest about itself, in band, before any row is believed.
+ *
+ * Both the opening identity frame and the closing completion frame now carry the full payload and
+ * are checked by the same assertion. Previously the completion frame carried only `readOnly`, and
+ * the candidate query in `canary-candidates.ts` carried a third, different subset — so "the same
+ * attestation" was three attestations. One shape, one assertion, both ends.
+ */
+export interface SourceIdentity {
   database: string
   user: string
   port: string
@@ -106,16 +134,19 @@ export interface SourceFactoryDependencies {
   streamRunner?: SourceStreamRunner
 }
 
+/**
+ * Reduce an environment to the allowlist, dropping everything else.
+ *
+ * Total and order-independent: what comes out is a function of `SOURCE_ENVIRONMENT_ALLOWLIST`
+ * alone, so no caller can widen it and no new variable can leak in by being unanticipated.
+ */
 export function sanitizeSourceEnvironment(
   environment: Readonly<SourceEnvironment> = process.env,
 ): SourceEnvironment {
-  const destinationEnvironmentNames = new Set<string>(Object.values(DESTINATION_ENV_NAMES))
+  const allowed = new Set(SOURCE_ENVIRONMENT_ALLOWLIST)
   return Object.fromEntries(
     Object.entries(environment).filter(
-      ([name]) =>
-        !destinationEnvironmentNames.has(name) &&
-        !SOURCE_OPERATIONAL_ENVIRONMENT_PATTERN.test(name) &&
-        !SOURCE_CREDENTIAL_ENVIRONMENT_PATTERN.test(name),
+      ([name, value]) => allowed.has(name) && typeof value === 'string',
     ),
   )
 }
@@ -199,6 +230,20 @@ function sqlString(value: string): string {
   return `'${value.replaceAll("'", "''")}'`
 }
 
+/**
+ * The one attestation payload, emitted identically by every query that crosses this boundary.
+ *
+ * Exported so the candidate query in `canary-candidates.ts` builds the same frames rather than a
+ * near-miss of them; `assertSourceIdentity` is the single reader of both.
+ */
+export const SOURCE_ATTESTATION_SQL = `jsonb_build_object(
+  'database', current_database(),
+  'user', current_user,
+  'port', current_setting('port'),
+  'readOnly', current_setting('transaction_read_only')::boolean,
+  'isolation', current_setting('transaction_isolation')
+)`
+
 function assertCanaryPmids(pmids: readonly string[] | undefined): string[] {
   if (!pmids || pmids.length !== DEFAULT_CANARY_SIZE) {
     throw new Error(`Canary source requires exactly ${DEFAULT_CANARY_SIZE} frozen manifest PMIDs.`)
@@ -229,13 +274,7 @@ export function buildSourceSql(mode: IngestMode, canaryPmids?: readonly string[]
 
   return String.raw`begin transaction isolation level repeatable read read only;
 set local statement_timeout = '0';
-select ${sqlString(SOURCE_IDENTITY_PREFIX)} || jsonb_build_object(
-  'database', current_database(),
-  'user', current_user,
-  'port', current_setting('port'),
-  'readOnly', current_setting('transaction_read_only')::boolean,
-  'isolation', current_setting('transaction_isolation')
-)::text;
+select ${sqlString(SOURCE_IDENTITY_PREFIX)} || ${SOURCE_ATTESTATION_SQL}::text;
 select ${sqlString(SOURCE_RECORD_PREFIX)} || jsonb_build_object(
   'article', jsonb_build_object(
       ${jsonObjectProjection('article', ARTICLE_SELECT_COLUMNS)}
@@ -248,9 +287,7 @@ from public.literature_articles as article
 left join public.literature_journals as journal on journal.id = article.journal_id
 ${filter}
 order by article.pmid collate "C" asc;
-select ${sqlString(SOURCE_COMPLETE_PREFIX)} || jsonb_build_object(
-  'readOnly', current_setting('transaction_read_only')::boolean
-)::text;
+select ${sqlString(SOURCE_COMPLETE_PREFIX)} || ${SOURCE_ATTESTATION_SQL}::text;
 rollback;`
 }
 
@@ -262,7 +299,7 @@ function parseJson(value: string, label: string): unknown {
   }
 }
 
-function assertSourceIdentity(value: unknown): asserts value is SourceIdentity {
+export function assertSourceIdentity(value: unknown): asserts value is SourceIdentity {
   if (
     value === null ||
     typeof value !== 'object' ||
@@ -277,18 +314,16 @@ function assertSourceIdentity(value: unknown): asserts value is SourceIdentity {
   }
 }
 
-function assertComplete(value: unknown): void {
-  if (
-    value === null ||
-    typeof value !== 'object' ||
-    Array.isArray(value) ||
-    (value as Record<string, unknown>).readOnly !== true
-  ) {
-    throw new Error('Source completion did not attest a read-only transaction.')
-  }
-}
-
-async function assertFixedDockerSource(
+/**
+ * Every fixed-source guard, in the one place they exist.
+ *
+ * Exported because the canary-manifest proposal command reads the most sensitive relation in the
+ * package — the review cohort — and used to reach it through a bare `docker exec` by container
+ * name, running none of these. A PATH-level `docker` shim, the wrong context, the wrong container,
+ * or a look-alike image all produced a perfectly well-formed manifest. There is deliberately no
+ * second implementation to drift from: any caller that wants to read the local source awaits this.
+ */
+export async function assertFixedDockerSource(
   runner: SourceCommandRunner,
   environment: SourceEnvironment,
 ): Promise<void> {
@@ -336,6 +371,130 @@ async function discard(stream: Readable): Promise<void> {
   }
 }
 
+/**
+ * The exact `docker` argv every guarded read uses.
+ *
+ * A single array rather than two hand-typed ones: the proposal command's copy was missing
+ * `--context default`, `--no-psqlrc`, and `ON_ERROR_STOP=1`, which is precisely the class of
+ * divergence that a shared constant makes impossible.
+ */
+export function buildSourcePsqlArguments(): readonly string[] {
+  return [
+    '--context',
+    SOURCE_DOCKER_CONTEXT,
+    'exec',
+    '--interactive',
+    SOURCE_CONTAINER,
+    'psql',
+    '--no-psqlrc',
+    '--set',
+    'ON_ERROR_STOP=1',
+    '--username',
+    SOURCE_DATABASE_USER,
+    '--dbname',
+    SOURCE_DATABASE,
+    '--tuples-only',
+    '--no-align',
+    '--quiet',
+  ] as const
+}
+
+export interface GuardedReadOnlyQueryOptions {
+  sql: string
+  environment?: Readonly<SourceEnvironment>
+  commandRunner?: SourceCommandRunner
+  streamRunner?: SourceStreamRunner
+}
+
+/**
+ * Run one read-only query through the fixed local source, and yield its record frames.
+ *
+ * This is the boundary itself, with nothing about the corpus in it: it knows the guards, the
+ * process contract, the frame grammar, and the fail-closed rules, and it knows nothing about
+ * articles, PMIDs, or manifests. Callers layer their own meaning on top of the `unknown` payloads.
+ *
+ * Everything it enforces, in order: the environment is sanitized to an allowlist; every fixed
+ * Docker guard passes *before* a psql process exists; the SQL travels on stdin so it never appears
+ * in a process listing; stderr is drained and never retained, because psql diagnostics echo query
+ * text and the query text names the cohort; the identity frame arrives first and exactly once; the
+ * completion frame arrives last and exactly once; any unframed line is fatal; a non-zero exit is
+ * fatal; and an early abort kills the child rather than leaking it.
+ */
+export async function* streamGuardedReadOnlyQuery(
+  options: GuardedReadOnlyQueryOptions,
+): AsyncGenerator<unknown> {
+  const environment = sanitizeSourceEnvironment(options.environment)
+  const commandRunner = options.commandRunner ?? defaultCommandRunner
+  const streamRunner = options.streamRunner ?? defaultStreamRunner
+
+  await assertFixedDockerSource(commandRunner, environment)
+
+  const sourceProcess = streamRunner('docker', buildSourcePsqlArguments(), {
+    environment,
+    stdin: options.sql,
+  })
+  const completionOutcome = sourceProcess.completion.then(
+    (result) => ({ ok: true as const, result }),
+    () => ({ ok: false as const }),
+  )
+  const stderrDrain = discard(sourceProcess.stderr)
+  const lines = createInterface({ input: sourceProcess.stdout, crlfDelay: Infinity })
+  let identitySeen = false
+  let completionSeen = false
+  let recordSeen = false
+  let streamFinished = false
+
+  try {
+    for await (const line of lines) {
+      if (!line) continue
+      if (line.startsWith(SOURCE_IDENTITY_PREFIX)) {
+        if (identitySeen || recordSeen || completionSeen) {
+          throw new Error('Source identity marker was duplicated or out of order.')
+        }
+        assertSourceIdentity(
+          parseJson(line.slice(SOURCE_IDENTITY_PREFIX.length), 'Source identity'),
+        )
+        identitySeen = true
+        continue
+      }
+      if (line.startsWith(SOURCE_RECORD_PREFIX)) {
+        if (!identitySeen || completionSeen) {
+          throw new Error('Source record appeared outside its attested read-only stream.')
+        }
+        recordSeen = true
+        yield parseJson(line.slice(SOURCE_RECORD_PREFIX.length), 'Source record')
+        continue
+      }
+      if (line.startsWith(SOURCE_COMPLETE_PREFIX)) {
+        if (!identitySeen || completionSeen) {
+          throw new Error('Source completion marker was duplicated or out of order.')
+        }
+        assertSourceIdentity(
+          parseJson(line.slice(SOURCE_COMPLETE_PREFIX.length), 'Source completion'),
+        )
+        completionSeen = true
+        continue
+      }
+      throw new Error('Source stream returned an unexpected unframed line.')
+    }
+
+    const completion = await completionOutcome
+    await stderrDrain
+    streamFinished = true
+    if (!completion.ok || completion.result.code !== 0) {
+      throw new Error('Fixed source psql stream failed.')
+    }
+    if (!identitySeen || !completionSeen) {
+      throw new Error('Fixed source stream ended without complete read-only attestation.')
+    }
+  } finally {
+    lines.close()
+    if (!streamFinished) sourceProcess.terminate()
+    await completionOutcome
+    await stderrDrain.catch(() => undefined)
+  }
+}
+
 export class DockerPsqlSource implements AsyncIterable<SourceEnvelope> {
   readonly #mode: IngestMode
   readonly #canaryPmids: readonly string[] | undefined
@@ -351,112 +510,45 @@ export class DockerPsqlSource implements AsyncIterable<SourceEnvelope> {
     this.#streamRunner = options.streamRunner ?? defaultStreamRunner
   }
 
+  /**
+   * The corpus read, layered on the shared boundary.
+   *
+   * Everything about processes, guards, frames, and fail-closed exit now lives in
+   * `streamGuardedReadOnlyQuery`. What remains here is the part that is genuinely about the corpus:
+   * envelope validation, lexicographic PMID ordering, and frozen-manifest membership.
+   */
   async *[Symbol.asyncIterator](): AsyncIterator<SourceEnvelope> {
-    const sql = buildSourceSql(this.#mode, this.#canaryPmids)
-    await assertFixedDockerSource(this.#commandRunner, this.#environment)
-
-    const sourceProcess = this.#streamRunner(
-      'docker',
-      [
-        '--context',
-        SOURCE_DOCKER_CONTEXT,
-        'exec',
-        '--interactive',
-        SOURCE_CONTAINER,
-        'psql',
-        '--no-psqlrc',
-        '--set',
-        'ON_ERROR_STOP=1',
-        '--username',
-        SOURCE_DATABASE_USER,
-        '--dbname',
-        SOURCE_DATABASE,
-        '--tuples-only',
-        '--no-align',
-        '--quiet',
-      ],
-      { environment: this.#environment, stdin: sql },
-    )
-    const completionOutcome = sourceProcess.completion.then(
-      (result) => ({ ok: true as const, result }),
-      () => ({ ok: false as const }),
-    )
-    const stderrDrain = discard(sourceProcess.stderr)
-    const lines = createInterface({ input: sourceProcess.stdout, crlfDelay: Infinity })
     const expectedCanaryPmids =
       this.#mode === 'canary' ? new Set(assertCanaryPmids(this.#canaryPmids)) : null
     const seenCanaryPmids = expectedCanaryPmids ? new Set<string>() : null
-    let identitySeen = false
-    let completionSeen = false
     let previousPmid: string | null = null
-    let streamFinished = false
 
-    try {
-      for await (const line of lines) {
-        if (!line) continue
-        if (line.startsWith(SOURCE_IDENTITY_PREFIX)) {
-          if (identitySeen || previousPmid !== null || completionSeen) {
-            throw new Error('Source identity marker was duplicated or out of order.')
-          }
-          assertSourceIdentity(
-            parseJson(line.slice(SOURCE_IDENTITY_PREFIX.length), 'Source identity'),
-          )
-          identitySeen = true
-          continue
-        }
-        if (line.startsWith(SOURCE_RECORD_PREFIX)) {
-          if (!identitySeen || completionSeen) {
-            throw new Error('Source record appeared outside its attested read-only stream.')
-          }
-          const envelope = parseJson(
-            line.slice(SOURCE_RECORD_PREFIX.length),
-            'Source record',
-          ) as SourceEnvelope
-          validateSourceEnvelope(envelope)
-          const pmid = envelope.article.pmid
-          if (previousPmid !== null && pmid <= previousPmid) {
-            throw new Error('Source PMIDs were duplicated or not in lexicographic order.')
-          }
-          if (expectedCanaryPmids && !expectedCanaryPmids.has(pmid)) {
-            throw new Error('Source returned an article outside the frozen canary manifest.')
-          }
-          previousPmid = pmid
-          seenCanaryPmids?.add(pmid)
-          yield envelope
-          continue
-        }
-        if (line.startsWith(SOURCE_COMPLETE_PREFIX)) {
-          if (!identitySeen || completionSeen) {
-            throw new Error('Source completion marker was duplicated or out of order.')
-          }
-          assertComplete(parseJson(line.slice(SOURCE_COMPLETE_PREFIX.length), 'Source completion'))
-          completionSeen = true
-          continue
-        }
-        throw new Error('Source stream returned an unexpected unframed line.')
+    for await (const payload of streamGuardedReadOnlyQuery({
+      sql: buildSourceSql(this.#mode, this.#canaryPmids),
+      environment: this.#environment,
+      commandRunner: this.#commandRunner,
+      streamRunner: this.#streamRunner,
+    })) {
+      const envelope = payload as SourceEnvelope
+      validateSourceEnvelope(envelope)
+      const pmid = envelope.article.pmid
+      if (previousPmid !== null && pmid <= previousPmid) {
+        throw new Error('Source PMIDs were duplicated or not in lexicographic order.')
       }
+      if (expectedCanaryPmids && !expectedCanaryPmids.has(pmid)) {
+        throw new Error('Source returned an article outside the frozen canary manifest.')
+      }
+      previousPmid = pmid
+      seenCanaryPmids?.add(pmid)
+      yield envelope
+    }
 
-      const completion = await completionOutcome
-      await stderrDrain
-      streamFinished = true
-      if (!completion.ok || completion.result.code !== 0) {
-        throw new Error('Fixed source psql stream failed.')
-      }
-      if (!identitySeen || !completionSeen) {
-        throw new Error('Fixed source stream ended without complete read-only attestation.')
-      }
-      if (
-        expectedCanaryPmids &&
-        (seenCanaryPmids?.size !== expectedCanaryPmids.size ||
-          [...expectedCanaryPmids].some((pmid) => !seenCanaryPmids?.has(pmid)))
-      ) {
-        throw new Error('Source did not return the complete frozen canary manifest.')
-      }
-    } finally {
-      lines.close()
-      if (!streamFinished) sourceProcess.terminate()
-      await completionOutcome
-      await stderrDrain.catch(() => undefined)
+    if (
+      expectedCanaryPmids &&
+      (seenCanaryPmids?.size !== expectedCanaryPmids.size ||
+        [...expectedCanaryPmids].some((pmid) => !seenCanaryPmids?.has(pmid)))
+    ) {
+      throw new Error('Source did not return the complete frozen canary manifest.')
     }
   }
 }

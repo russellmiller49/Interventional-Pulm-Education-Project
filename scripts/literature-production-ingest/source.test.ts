@@ -51,7 +51,16 @@ function recordLine(envelope: SourceEnvelope): string {
 }
 
 function completionLine(): string {
-  return `${SOURCE_COMPLETE_PREFIX}${JSON.stringify({ readOnly: true })}\n`
+  // The completion frame now carries the same full attestation payload as the identity frame, and
+  // one assertion reads both. It used to carry `readOnly` alone, which is how the candidate query
+  // came to attest a third, different subset of the same facts.
+  return `${SOURCE_COMPLETE_PREFIX}${JSON.stringify({
+    database: SOURCE_DATABASE,
+    user: SOURCE_DATABASE_USER,
+    port: SOURCE_INTERNAL_PORT,
+    readOnly: true,
+    isolation: 'repeatable read',
+  })}\n`
 }
 
 function fixedGuardRunner(

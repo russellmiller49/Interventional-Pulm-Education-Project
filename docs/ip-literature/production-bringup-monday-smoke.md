@@ -25,8 +25,9 @@ Export the three Literature variables plus `LITERATURE_VERIFY_ANON_KEY` (the pro
 key — without it the exposure checks report no verdict rather than a denial the API gateway
 produced).
 
-The canary run is two commands, because idempotency is a comparison of two runs and the first one
-has nothing to compare against. Run 1 captures the baseline; run 2 reads it back.
+The canary run is two commands, and **both must report `verified`**. They verify different claims:
+run 1 is an exact initial application, run 2 is an exact deterministic replay. Run 1 also captures
+the baseline that run 2 reads back.
 
 **Keep the receipt the import writes.** The canary run leaves
 `local-data/literature-production-ingest/canary-<operation-id>.receipt.json`. That file is what
@@ -52,11 +53,22 @@ npm run literature:production-verify -- \
   --receipt evidence/monday-canary-2.json
 ```
 
-Run 2 is the one that must report `verified`. Both runs need `--ingest-receipt`: without it
-`V52-canary-idempotent` and the receipt-binding checks report no verdict, the run verdict is
+Both runs must report `verified`, and both need `--ingest-receipt`.
+
+Run 1 verifies an **exact initial application**: one completed batch with a non-null
+`completed_at`, exactly twenty-five provenance rows scoped to that batch, exactly twenty-five live
+unreviewed drafts, and receipt counters that match the row. It needs no baseline, because nothing
+ran before it — that is not a gap in the evidence.
+
+Run 2 verifies an **exact deterministic replay**: the same completed operation and batch, no new
+batch, no start time moved, nothing written. Its receipt says so directly, and the check confirms
+the claim against the database rather than believing the outcome string.
+
+Without `--ingest-receipt` the receipt-binding checks report no verdict, the run verdict is
 `indeterminate`, and the exit status is nonzero. That is deliberate — the database alone cannot
-tell a replay that wrote nothing from an import that never happened. If either run reports
-`stopped`, an import batch has no receipt: resolve it before the conference, not at it.
+tell a replay that wrote nothing from an import that never happened, and twenty-five unreviewed
+drafts are twenty-five unreviewed drafts whoever wrote them. If either run reports `stopped`, an
+import batch has no receipt: resolve it before the conference, not at it.
 
 ```bash
 LITERATURE_VERIFY_APP_BASE_URL=https://<production origin> \

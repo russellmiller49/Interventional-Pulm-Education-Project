@@ -422,8 +422,13 @@ export class PostgrestTransport {
   ): Promise<ImportBatchLookupRow | null> {
     const rows = await this.readRows<ImportBatchLookupRow>('literature_import_batches', {
       query: {
+        // `completed_at` and `created_by` are selected because the caller must decide whether this
+        // row is genuinely a completed operation. `status = 'completed'` alone is a claim the row
+        // makes about itself; a completed row with no completion timestamp is inconsistent, and
+        // treating it as the idempotent-replay short-circuit produced a completed receipt for an
+        // operation nothing had confirmed.
         select:
-          'id,status,source_file_sha256,manifest_version,query_registry_version,source_kind,source_id,query_id,record_limit,report',
+          'id,status,completed_at,created_by,source_file_sha256,manifest_version,query_registry_version,source_kind,source_id,query_id,record_limit,report',
         source_file_sha256: filterValue(identityInput.sourceFileSha256),
         manifest_version: filterValue(identityInput.manifestVersion),
         query_registry_version: filterValue(identityInput.queryRegistryVersion),

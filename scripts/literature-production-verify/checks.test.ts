@@ -50,8 +50,11 @@ import {
   LITERATURE_PRODUCTION_CATALOG_TOTALS,
   LITERATURE_PRODUCTION_MIGRATION,
 } from './lib/identity'
-import { ingestReceiptFixture } from './lib/ingest-receipt-fixture'
+import { batchRowForReceipt, ingestReceiptFixture } from './lib/ingest-receipt-fixture'
 import { failed, observed, skipped, unavailable, type Observation } from './lib/observation'
+
+/** A second operation id, for the "something else also wrote here" case. */
+const OTHER_OPERATION_ID = '99999999-8888-7777-6666-555555555555'
 
 function outcomeOf(results: readonly CheckResult[], id: string): CheckResult['outcome'] {
   const match = results.find((result) => result.id === id)
@@ -252,18 +255,66 @@ describe('canary idempotency compares two runs', () => {
     expect(result.detail).toMatch(/recognised the re-run as an identical operation/u)
   })
 
-  it('fails when the receipt says the re-run was treated as a new operation', () => {
-    // Unchanged numbers plus outcome `completed` means the engine did not take the replay path.
-    // Passing that would report idempotency for a run that never exercised it.
+  /*
+   * A completed receipt is the *other* valid state, not a failure.
+   *
+   * This check used to fail any completed receipt outright, on the reasoning that outcome
+   * `completed` means the replay path was not taken. True — and irrelevant to a first run, which
+   * has no replay path to take. Because the check also demanded a baseline it could not have, the
+   * first legitimate 25-record canary was permanently unverifiable and the scenario exited nonzero
+   * on a healthy import.
+   */
+  it('verifies an initial completed canary with no baseline at all', () => {
+    const receipt = ingestReceiptFixture({ outcome: 'completed' })
     const result = checkCanaryIdempotency(
+      skipped('no baseline exists: nothing ran before this'),
       baseline,
-      baseline,
-      observed(ingestReceiptFixture({ outcome: 'completed' })),
+      observed(receipt),
+      observed([batchRowForReceipt(receipt)]),
     )
-    expect(result.outcome).toBe('fail')
+    expect(result.outcome).toBe('pass')
+    expect(result.detail).toMatch(/exact initial application/u)
   })
 
-  it('is indeterminate without a baseline', () => {
+  it('refuses an initial claim when another batch also wrote to this project', () => {
+    const receipt = ingestReceiptFixture({ outcome: 'completed' })
+    const foreign = {
+      ...batchRowForReceipt(ingestReceiptFixture({ operationId: OTHER_OPERATION_ID })),
+      id: OTHER_OPERATION_ID,
+    }
+    const result = checkCanaryIdempotency(
+      skipped('no baseline'),
+      baseline,
+      observed(receipt),
+      observed([batchRowForReceipt(receipt), foreign]),
+    )
+    expect(result.outcome).toBe('fail')
+    expect(result.detail).toMatch(/other import batch/u)
+  })
+
+  it('refuses an initial claim whose batch is completed without a completion timestamp', () => {
+    const receipt = ingestReceiptFixture({ outcome: 'completed' })
+    const result = checkCanaryIdempotency(
+      skipped('no baseline'),
+      baseline,
+      observed(receipt),
+      observed([{ ...batchRowForReceipt(receipt), completed_at: null }]),
+    )
+    expect(result.outcome).toBe('fail')
+    expect(result.detail).toMatch(/not evidence of completion/u)
+  })
+
+  it('gives no verdict on a completed receipt when the batch rows were not read', () => {
+    const result = checkCanaryIdempotency(
+      skipped('no baseline'),
+      baseline,
+      observed(ingestReceiptFixture({ outcome: 'completed' })),
+      skipped('batches not read'),
+    )
+    expect(result.outcome).toBe('indeterminate')
+  })
+
+  it('is indeterminate without a baseline and without a receipt', () => {
     expect(checkCanaryIdempotency(skipped('no baseline supplied'), baseline).outcome).toBe(
       'indeterminate',
     )

@@ -365,6 +365,18 @@ export interface DatabaseObservations {
   readonly publiclyVisibleCount: Observation<number>
   readonly batches: Observation<BatchReceipt[]>
   readonly sources: Observation<SourceRow[]>
+  /**
+   * Per-article state, for every article in the corpus.
+   *
+   * Read because "every claimed PMID exists and is an unreviewed draft" is a statement about
+   * specific rows, and the only per-article evidence available before this was a single spot-check
+   * PMID. The aggregate `canaryStateCount` says *how many* articles are in the canary state, which
+   * a receipt binding cannot use: twenty-five unreviewed drafts and twenty-five claimed PMIDs can
+   * be disjoint sets and still produce a matching count.
+   *
+   * Three columns, paged to the exact Content-Range total like every other full read here.
+   */
+  readonly articleStates: Observation<ArticleSummary[]>
   readonly importErrors: Observation<number>
   readonly adminStats: Observation<Record<string, unknown>>
   readonly blankAdminPreview: Observation<unknown[]>
@@ -444,6 +456,7 @@ export async function collectDatabaseObservations(
     publiclyVisibleCount,
     batches,
     sources,
+    articleStates,
     importErrors,
     adminStats,
     blankAdminPreview,
@@ -478,6 +491,10 @@ export async function collectDatabaseObservations(
     selectAllRows<SourceRow>(transport, 'literature_article_sources', {
       select: 'pmid,batch_id,source_kind,source_filename',
       order: 'pmid.asc,batch_id.asc',
+    }),
+    selectAllRows<ArticleSummary>(transport, 'literature_articles', {
+      select: 'pmid,relevance_state,visibility_state',
+      order: 'pmid.asc',
     }),
     countRows(transport, 'literature_import_errors'),
     callStableRpc<Record<string, unknown>>(
@@ -571,6 +588,7 @@ export async function collectDatabaseObservations(
     publiclyVisibleCount,
     batches,
     sources,
+    articleStates,
     importErrors,
     adminStats,
     blankAdminPreview,

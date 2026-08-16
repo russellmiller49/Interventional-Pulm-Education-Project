@@ -15,11 +15,13 @@ import {
   FULL_EXPECTED_RECORD_COUNT_ENV_NAME,
   FULL_EXPECTED_SOURCE_SHA256_ENV_NAME,
   ENGINE_VERSION,
+  INGEST_WRITER_IDENTITY,
   MAPPING_VERSION,
   MAX_CONCURRENCY,
   MIN_PRODUCTION_BYTE_BATCH_LIMIT,
   SOURCE_CONTAINER_ID,
 } from './constants'
+import { classifyStoredBatchState, describeAmbiguousBatch } from './receipt-binding'
 import {
   createCompletedReceiptFromCheckpoint,
   createIdempotentReplayReceipt,
@@ -595,6 +597,28 @@ async function runMutation(arguments_: ParsedArguments, mode: IngestMode): Promi
   const completed = await transport.findCompletedImportBatch(planned.identity)
   const directory = stateDirectory(arguments_)
   if (completed) {
+    /*
+     * The read-only short-circuit is only available for a state that is actually completed.
+     *
+     * `findCompletedImportBatch` filters on `status = 'completed'`, which a row asserts about
+     * itself. A row that also carries no completion timestamp contradicts that assertion, and
+     * replaying against it would emit an `idempotent-replay` receipt claiming an operation had
+     * finished when nothing established that it had. Stop for read-only reconciliation instead.
+     */
+    const state = classifyStoredBatchState(completed)
+    if (state.kind !== 'completed') {
+      throw new Error(
+        `The matching import batch is not in a resolvable completed state. ` +
+          `${state.kind === 'ambiguous' ? describeAmbiguousBatch(state.reason) : ''} Reconcile ` +
+          'this operation read-only before running it again.',
+      )
+    }
+    if (completed.created_by !== INGEST_WRITER_IDENTITY) {
+      throw new Error(
+        'The matching import batch was written by an identity other than the reviewed ingestion ' +
+          'writer. Reconcile this operation read-only; do not replay against it.',
+      )
+    }
     const checkpointPath = resolve(directory, `${mode}-${completed.id}.checkpoint.json`)
     const originalReceiptPath = resolve(directory, `${mode}-${completed.id}.receipt.json`)
     const store = new CheckpointStore(checkpointPath)

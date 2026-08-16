@@ -1,7 +1,22 @@
 export const ENGINE_VERSION = 'literature-production-ingest/1.0.0' as const
 export const MAPPING_VERSION = 'literature-bibliographic-transfer/1.0.0' as const
-export const CHECKPOINT_SCHEMA_VERSION = 'literature-production-ingest-checkpoint/1.0.0' as const
-export const RECEIPT_SCHEMA_VERSION = 'literature-production-ingest-receipt/1.0.0' as const
+/**
+ * Bumped to 1.1.0 when the finalization envelope became part of the durable record.
+ *
+ * A resumed finalization must reuse the exact request body it already persisted, so the body and
+ * its checksum now live in the checkpoint. A 1.0.0 checkpoint has no envelope and cannot prove what
+ * it sent, so it is refused rather than resumed under a regenerated timestamp.
+ */
+export const CHECKPOINT_SCHEMA_VERSION = 'literature-production-ingest-checkpoint/1.1.0' as const
+/**
+ * Bumped to 1.1.0 when the receipt began carrying its full binding identity.
+ *
+ * A 1.0.0 receipt named neither the canonical target URL, the writer identity, the source
+ * authority, nor an error count, so a verifier holding one could not tell an operation against the
+ * approved project from an identically-shaped operation against another. Those four values are now
+ * part of the body, and therefore part of the receipt checksum.
+ */
+export const RECEIPT_SCHEMA_VERSION = 'literature-production-ingest-receipt/1.1.0' as const
 export const RECONCILIATION_SCHEMA_VERSION =
   'literature-production-ingest-reconciliation/1.0.0' as const
 export const CANARY_MANIFEST_SCHEMA_VERSION =
@@ -12,6 +27,24 @@ export const APPROVED_PROJECT_NAME = 'IP_Literature' as const
 export const APPROVED_PROJECT_REF = 'itcttmkxdxvwmwcmzmey' as const
 export const APPROVED_PROJECT_URL = `https://${APPROVED_PROJECT_REF}.supabase.co/` as const
 export const PROHIBITED_ENDOREELS_REF = 'tqnhxlwvkkswuckszlee' as const
+
+/**
+ * The exact `created_by` this engine writes, and the only writer a bound receipt may name.
+ *
+ * Previously a bare literal repeated in `engine.ts`, `reconcile.ts`, and a test fixture. A receipt
+ * check that accepts "some nonempty string" accepts a row written by anything at all, so the value
+ * is pinned once and compared by identity everywhere.
+ */
+export const INGEST_WRITER_IDENTITY = 'literature-production-ingest' as const
+
+/**
+ * The only cohort a canary manifest may claim as its authority.
+ *
+ * Stated in `CanaryManifestBody.sourceAuthority` and now carried on the receipt, so a receipt
+ * describing a selection drawn from anything else disagrees with the contract rather than being
+ * read as an unlabelled 25 records.
+ */
+export const CANARY_SOURCE_AUTHORITY = 'owner-authorized-development-cohort-630' as const
 
 export const DESTINATION_ENV_NAMES = {
   url: 'LITERATURE_SUPABASE_URL',

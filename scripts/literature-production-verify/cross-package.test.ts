@@ -40,6 +40,11 @@ import type {
   IngestReceipt as EngineReceipt,
 } from '../literature-production-ingest/types'
 import { checkCanaryIdempotency, checkFullCorpus, checkIngestReceiptBinding } from './lib/checks'
+import {
+  LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+  LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+} from './lib/identity'
+import { MAPPING_VERSION } from '../literature-production-ingest/constants'
 import type { BatchReceipt, SourceRow } from './lib/collect'
 import {
   isIngestReceipt,
@@ -73,7 +78,10 @@ function checkpoint(overrides: Partial<Checkpoint> = {}): Checkpoint {
   return {
     schemaVersion: 'literature-production-ingest-checkpoint/1.0.0',
     engineVersion: 'literature-production-ingest/1.0.0',
-    mappingVersion: 'literature-production-mapping/1.0.0',
+    // The engine's real mapping version. The fixture previously invented one, which nothing caught
+    // because V57 did not compare `mapping_version` — so the stored identity and the receipt were
+    // free to disagree about it in production too.
+    mappingVersion: MAPPING_VERSION,
     operationId: OPERATION_ID,
     mode,
     targetProjectRef: TARGET,
@@ -95,6 +103,11 @@ function checkpoint(overrides: Partial<Checkpoint> = {}): Checkpoint {
     },
     importBatchCreate: stage('acknowledged'),
     finalization: stage('acknowledged'),
+    finalizationEnvelope: {
+      completedAt: CREATED_AT,
+      body: JSON.stringify({ completed_at: CREATED_AT, status: 'completed' }),
+      checksum: 'd'.repeat(64),
+    },
     phase: 'completed',
     beforeArticleCount: 0,
     afterArticleCount: recordCount,
@@ -105,6 +118,7 @@ function checkpoint(overrides: Partial<Checkpoint> = {}): Checkpoint {
       inserted: recordCount,
       updated: 0,
       unchanged: 0,
+      errors: 0,
     },
     batches: [
       {
@@ -201,8 +215,31 @@ function bind(
   batches: BatchReceipt[],
   total: number,
   sources: SourceRow[],
+  options: {
+    target?: { projectRef: string; url: string; canonicalUrl: string }
+    articleStates?: { pmid: string; relevance_state: string; visibility_state: string }[]
+  } = {},
 ) {
-  return checkIngestReceiptBinding(receipt, observed(batches), observed(total), observed(sources))
+  const claimed = receipt && receipt.status === 'observed' ? (receipt.value.canaryPmids ?? []) : []
+  return checkIngestReceiptBinding(
+    receipt,
+    observed(batches),
+    observed(total),
+    observed(sources),
+    options.target ?? {
+      projectRef: LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+      url: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+      canonicalUrl: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
+    },
+    observed(
+      options.articleStates ??
+        [...claimed].map((pmid) => ({
+          pmid,
+          relevance_state: 'unreviewed',
+          visibility_state: 'draft',
+        })),
+    ),
+  )
 }
 
 /* --------------------------------------------------------------------------------------------- *

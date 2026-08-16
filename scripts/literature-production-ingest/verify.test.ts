@@ -63,6 +63,7 @@ async function completedFixture() {
     inserted: 1,
     updated: 0,
     unchanged: 0,
+    errors: 0,
   }
   checkpoint.batches = [
     {
@@ -110,6 +111,10 @@ class VerificationFakeTransport {
     return {
       id: this.checkpoint.operationId,
       status: 'completed',
+      // A completed row carries its completion timestamp and its writer. Without both, this stub
+      // modelled a state the engine never produces and the corrected verifier refuses.
+      completed_at: this.checkpoint.createdAt,
+      created_by: 'literature-production-ingest',
       records_read: 1,
       unique_pmids: 1,
       inserted_count: 1,

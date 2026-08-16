@@ -3,8 +3,11 @@ import { randomUUID } from 'node:crypto'
 import { canonicalJson, jsonBody, sha256 } from './canonical'
 import {
   APPROVED_PROJECT_REF,
+  APPROVED_PROJECT_URL,
+  CANARY_SOURCE_AUTHORITY,
   CHECKPOINT_SCHEMA_VERSION,
   ENGINE_VERSION,
+  INGEST_WRITER_IDENTITY,
   MAPPING_VERSION,
   MAX_BATCH_COUNT,
   RECEIPT_SCHEMA_VERSION,
@@ -73,7 +76,7 @@ export interface ImportBatchRowInput {
   started_at: string
   completed_at: null
   report: Record<string, unknown>
-  created_by: 'literature-production-ingest'
+  created_by: typeof INGEST_WRITER_IDENTITY
 }
 
 export interface CompletedImportBatch {
@@ -185,6 +188,7 @@ export function createCheckpoint(input: {
     batchIdentity: identity,
     importBatchCreate: emptyMutationStage(),
     finalization: emptyMutationStage(),
+    finalizationEnvelope: null,
     phase: 'prepared',
     beforeArticleCount: null,
     afterArticleCount: null,
@@ -195,6 +199,7 @@ export function createCheckpoint(input: {
       inserted: 0,
       updated: 0,
       unchanged: 0,
+      errors: 0,
     },
     batches: [],
   }
@@ -510,6 +515,20 @@ export function createIdempotentReplayReceipt(input: {
   if (input.checkpoint.phase !== 'completed') {
     throw new Error('Idempotent replay requires the completed operation checkpoint.')
   }
+  /*
+   * A replay receipt must name its records too.
+   *
+   * `createCompletedReceiptFromCheckpoint` has always refused a canary without exactly 25 PMIDs;
+   * this builder did not, so it could emit a canary receipt carrying none. The verifier then
+   * reported the strongest binding it has — "the twenty-five the owner authorized" — as no verdict,
+   * and explained the absence as expected for a full-corpus run.
+   */
+  if (
+    (input.checkpoint.mode === 'canary' && input.canaryPmids?.length !== 25) ||
+    (input.checkpoint.mode === 'full' && input.canaryPmids !== undefined)
+  ) {
+    throw new Error('Idempotent replay receipt does not match the operation mode.')
+  }
   return receipt({
     schemaVersion: RECEIPT_SCHEMA_VERSION,
     engineVersion: ENGINE_VERSION,
@@ -518,6 +537,9 @@ export function createIdempotentReplayReceipt(input: {
     mode: input.checkpoint.mode,
     outcome: 'idempotent-replay',
     targetProjectRef: input.checkpoint.targetProjectRef,
+    targetUrl: APPROVED_PROJECT_URL,
+    writerIdentity: INGEST_WRITER_IDENTITY,
+    sourceAuthority: input.checkpoint.mode === 'canary' ? CANARY_SOURCE_AUTHORITY : null,
     completedAt: input.now ?? new Date().toISOString(),
     sourceProjectionChecksum: input.checkpoint.sourceProjectionChecksum,
     sourceRecordCount: input.checkpoint.sourceRecordCount,
@@ -532,6 +554,7 @@ export function createIdempotentReplayReceipt(input: {
       inserted: 0,
       updated: 0,
       unchanged: input.checkpoint.sourceRecordCount,
+      errors: 0,
     },
     batchChecksums: input.checkpoint.batches.map((batch) => batch.checksum),
     importBatchId: input.checkpoint.operationId,
@@ -550,6 +573,22 @@ export function createCompletedReceiptFromCheckpoint(input: {
   ) {
     throw new Error('Completed receipt recovery requires an exact completed checkpoint.')
   }
+  /*
+   * A completed receipt is a statement that the finalization was acknowledged. Requiring the
+   * envelope and the acknowledgement here — not only the phase — closes the path where an
+   * ambiguous or reconciled-but-unfinalized checkpoint produced a receipt saying the operation
+   * completed. The phase alone was too weak: it is a field, and this is the artifact operators
+   * treat as proof.
+   */
+  if (
+    input.checkpoint.finalization.state !== 'acknowledged' ||
+    input.checkpoint.finalizationEnvelope === null
+  ) {
+    throw new Error(
+      'Completed receipt recovery requires an acknowledged finalization and its durable request ' +
+        'envelope. Reconcile the operation read-only before treating it as completed.',
+    )
+  }
   if (
     (input.checkpoint.mode === 'canary' && input.canaryPmids?.length !== 25) ||
     (input.checkpoint.mode === 'full' && input.canaryPmids !== undefined)
@@ -564,6 +603,9 @@ export function createCompletedReceiptFromCheckpoint(input: {
     mode: input.checkpoint.mode,
     outcome: 'completed',
     targetProjectRef: input.checkpoint.targetProjectRef,
+    targetUrl: APPROVED_PROJECT_URL,
+    writerIdentity: INGEST_WRITER_IDENTITY,
+    sourceAuthority: input.checkpoint.mode === 'canary' ? CANARY_SOURCE_AUTHORITY : null,
     completedAt: input.now ?? new Date().toISOString(),
     sourceProjectionChecksum: input.checkpoint.sourceProjectionChecksum,
     sourceRecordCount: input.checkpoint.sourceRecordCount,
@@ -619,6 +661,11 @@ async function dryRun(input: ExecuteIngestionInput, now: () => string): Promise<
     mode: input.mode,
     outcome: 'dry-run',
     targetProjectRef: null,
+    // A dry run resolves no destination at all, so it names none. The binding contract refuses to
+    // bind a dry-run receipt to any row rather than reading these nulls as agreement.
+    targetUrl: null,
+    writerIdentity: INGEST_WRITER_IDENTITY,
+    sourceAuthority: input.mode === 'canary' ? CANARY_SOURCE_AUTHORITY : null,
     completedAt: now(),
     sourceProjectionChecksum: input.projection.checksum,
     sourceRecordCount: input.projection.recordCount,
@@ -633,6 +680,7 @@ async function dryRun(input: ExecuteIngestionInput, now: () => string): Promise<
       inserted: 0,
       updated: 0,
       unchanged: 0,
+      errors: 0,
     },
     batchChecksums,
     importBatchId: null,
@@ -698,7 +746,7 @@ export async function executeIngestion(input: ExecuteIngestionInput): Promise<In
       source_projection_checksum: input.projection.checksum,
       canary_manifest_checksum: input.canaryManifestChecksum,
     },
-    created_by: 'literature-production-ingest',
+    created_by: INGEST_WRITER_IDENTITY,
   }
   const batchRowRequest = jsonBody([batchRow])
   if (batchRowRequest.bytes > input.limits.byteBatchLimit) {
@@ -770,37 +818,85 @@ export async function executeIngestion(input: ExecuteIngestionInput): Promise<In
   }
 
   const finalCheckpoint = input.ledger.current()
-  const checksumSummary = batchChecksumSummary(finalCheckpoint)
-  const finalPatch = {
-    status: 'completed',
-    records_read: finalCheckpoint.counters.recordsRead,
-    unique_pmids: finalCheckpoint.counters.uniquePmids,
-    inserted_count: finalCheckpoint.counters.inserted,
-    updated_count: finalCheckpoint.counters.updated,
-    duplicate_count: finalCheckpoint.counters.duplicateOccurrences,
-    error_count: 0,
-    completed_at: now(),
-    report: {
-      engine_version: ENGINE_VERSION,
-      mapping_version: MAPPING_VERSION,
-      operation_id: finalCheckpoint.operationId,
-      mode: finalCheckpoint.mode,
-      source_projection_checksum: finalCheckpoint.sourceProjectionChecksum,
-      canary_manifest_checksum: finalCheckpoint.canaryManifestChecksum,
-      unchanged_count: finalCheckpoint.counters.unchanged,
-      before_article_count: finalCheckpoint.beforeArticleCount,
-      after_article_count: finalCheckpoint.afterArticleCount,
-      batch_count: checksumSummary.batchCount,
-      batch_checksums_sha256: checksumSummary.batchChecksumsSha256,
-    },
+  /*
+   * The finalization envelope.
+   *
+   * Every value below is derived from the durable checkpoint except one — `completed_at` — and that
+   * one used to be read from the clock on every attempt. A resume therefore built a *different*
+   * body than the one whose checksum it had already written ahead, and the write-ahead record
+   * proved nothing about what had been sent.
+   *
+   * So the timestamp is generated exactly once, persisted with the complete request body and its
+   * checksum before the request leaves, and reused verbatim on every resume. A resume rebuilds the
+   * body from the checkpoint, compares it byte for byte against what was stored, and stops on any
+   * difference rather than sending a second, different finalization.
+   */
+  const buildFinalPatch = (completedAt: string) => {
+    const checksumSummary = batchChecksumSummary(finalCheckpoint)
+    return {
+      status: 'completed',
+      records_read: finalCheckpoint.counters.recordsRead,
+      unique_pmids: finalCheckpoint.counters.uniquePmids,
+      inserted_count: finalCheckpoint.counters.inserted,
+      updated_count: finalCheckpoint.counters.updated,
+      duplicate_count: finalCheckpoint.counters.duplicateOccurrences,
+      error_count: finalCheckpoint.counters.errors,
+      completed_at: completedAt,
+      report: {
+        engine_version: ENGINE_VERSION,
+        mapping_version: MAPPING_VERSION,
+        operation_id: finalCheckpoint.operationId,
+        mode: finalCheckpoint.mode,
+        source_projection_checksum: finalCheckpoint.sourceProjectionChecksum,
+        canary_manifest_checksum: finalCheckpoint.canaryManifestChecksum,
+        unchanged_count: finalCheckpoint.counters.unchanged,
+        before_article_count: finalCheckpoint.beforeArticleCount,
+        after_article_count: finalCheckpoint.afterArticleCount,
+        batch_count: checksumSummary.batchCount,
+        batch_checksums_sha256: checksumSummary.batchChecksumsSha256,
+      },
+    }
   }
+
+  const storedEnvelope = finalCheckpoint.finalizationEnvelope
+  const completedAt = storedEnvelope?.completedAt ?? now()
+  const finalPatch = buildFinalPatch(completedAt)
   const finalizationRequest = jsonBody(finalPatch)
+
+  if (storedEnvelope) {
+    // Drift, not a repair opportunity. If the counters, the report, or the timestamp moved since
+    // the intent was recorded, the operation is no longer the one that was written ahead.
+    if (
+      storedEnvelope.body !== canonicalJson(finalPatch) ||
+      storedEnvelope.checksum !== finalizationRequest.checksum
+    ) {
+      throw new Error(
+        'The finalization request no longer matches the body recorded in the write-ahead ' +
+          'checkpoint. Reconcile this operation read-only; do not send a second finalization.',
+      )
+    }
+    if (
+      finalCheckpoint.finalization.requestChecksum &&
+      finalCheckpoint.finalization.requestChecksum !== storedEnvelope.checksum
+    ) {
+      throw new Error(
+        'The finalization stage checksum disagrees with its persisted request envelope. This is ' +
+          'checkpoint drift and must be reconciled read-only.',
+      )
+    }
+  }
   if (finalizationRequest.bytes > input.limits.byteBatchLimit) {
     throw new Error('Import-batch finalization exceeds the configured byte request limit.')
   }
-  if (!finalCheckpoint.finalization.requestChecksum) {
+  if (!storedEnvelope) {
+    const envelope = {
+      completedAt,
+      body: canonicalJson(finalPatch),
+      checksum: finalizationRequest.checksum,
+    }
     await input.ledger.update((draft) => {
-      draft.finalization.requestChecksum = finalizationRequest.checksum
+      draft.finalizationEnvelope = envelope
+      draft.finalization.requestChecksum = envelope.checksum
     })
   }
   await executeCheckpointStage({
