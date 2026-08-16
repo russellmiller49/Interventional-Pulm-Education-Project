@@ -346,13 +346,23 @@ describe('critical-care accessibility surfaces', () => {
       expect(control).toHaveAttribute('href')
     }
 
-    // The track chooser is a real radio group, and its state is carried in text as well as colour.
+    // The track chooser is a real radio group — not just the markup of one. Exactly one option is
+    // in the tab sequence and the arrow keys move within the group, which is the half that was
+    // missing: the roles promised a radio group to assistive technology while the control behaved
+    // like two buttons. Full keyboard coverage is in `hub-track-radiogroup.test.tsx`.
     const chooser = screen.getByRole('radiogroup', { name: 'ECMO support mode' })
     const options = within(chooser).getAllByRole('radio')
     expect(options).toHaveLength(2)
     expect(options.filter((option) => option.getAttribute('aria-checked') === 'true')).toHaveLength(
       1,
     )
+    expect(options.filter((option) => option.tabIndex === 0)).toHaveLength(1)
+
+    fireEvent.keyDown(options[0]!, { key: 'ArrowRight' })
+    expect(options[1]).toHaveAttribute('aria-checked', 'true')
+    expect(document.activeElement).toBe(options[1])
+
+    // State is carried in text, not only in colour.
     expect(chooser.textContent).toContain('Selected')
   })
 

@@ -1,6 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import {
   ArrowRight,
   BookOpenCheck,
@@ -90,6 +96,32 @@ function groupSpanLabel(group: EcmoPathwayGroup, track: SupportMode): string {
   return `${span} · ${minutes} minutes`
 }
 
+/**
+ * The two tracks, as data, so the radio group's keyboard model is written once rather than per
+ * option.
+ */
+const TRACK_OPTIONS: readonly {
+  readonly mode: SupportMode
+  readonly title: string
+  readonly description: string
+  readonly icon: typeof Wind
+}[] = [
+  {
+    mode: 'vv',
+    title: 'VV ECMO',
+    description:
+      'For failing lungs. Gas exchange happens in series with the native circulation: femoral vein drainage → pump + oxygenator → femoral vein return toward the right atrium.',
+    icon: Wind,
+  },
+  {
+    mode: 'va',
+    title: 'Peripheral VA ECMO',
+    description:
+      'For a failing heart or circulation. Circuit flow runs in parallel with whatever the heart still ejects: femoral vein drainage → pump + oxygenator → femoral artery return toward the aorta, with mode-specific upper-body, LV-loading, and limb risks.',
+    icon: HeartPulse,
+  },
+]
+
 /** The composition line, counted from the registry so it cannot drift out of step with it. */
 function compositionLine(track: SupportMode): string {
   const { total, foundations, consoleOrientation, drills, capstone } = ecmoPathwayComposition(track)
@@ -115,6 +147,65 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
     if (stored.lastVisited) setTrack(stored.lastVisited.supportMode)
     setHydrated(true)
   }, [])
+
+  /**
+   * The track chooser, as a real ARIA radio group rather than the shape of one.
+   *
+   * It declared `role="radiogroup"` and two `role="radio"` buttons while implementing none of that
+   * pattern's keyboard model: both options sat in the tab sequence and no arrow key did anything.
+   * Nothing was unreachable — that is why this is a correctness problem rather than a trap — but
+   * the markup told assistive technology it was a radio group and then behaved like two buttons.
+   *
+   * Selection follows focus, which is the pattern for a radio group: moving to an option chooses
+   * it. Both entry actions and the grouped list read from the same `track` state, so they follow
+   * the keyboard the same way they follow a click.
+   *
+   * Native `<input type="radio">` would give all of this for free, and was not used because the
+   * approved presentation is fourteen CSS rules selecting `.supportModeTabs button`, two inside
+   * width breakpoints. Reproducing it around a hidden input and a label would have rewritten the
+   * presentation rather than fixed the behaviour.
+   */
+  const trackRefs = useRef<Partial<Record<SupportMode, HTMLButtonElement | null>>>({})
+
+  const selectTrackAt = useCallback((index: number) => {
+    const option = TRACK_OPTIONS[(index + TRACK_OPTIONS.length) % TRACK_OPTIONS.length]!
+    setTrack(option.mode)
+    trackRefs.current[option.mode]?.focus()
+  }, [])
+
+  const onTrackKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          event.preventDefault()
+          selectTrackAt(index + 1)
+          break
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          event.preventDefault()
+          selectTrackAt(index - 1)
+          break
+        case 'Home':
+          event.preventDefault()
+          selectTrackAt(0)
+          break
+        case 'End':
+          event.preventDefault()
+          selectTrackAt(TRACK_OPTIONS.length - 1)
+          break
+        case ' ':
+          // Enter already activates a button natively; Space needs to be claimed so the page does
+          // not scroll underneath the choice.
+          event.preventDefault()
+          selectTrackAt(index)
+          break
+        default:
+          break
+      }
+    },
+    [selectTrackAt],
+  )
 
   const workedSections = ecmoWorkedSectionIds(progress)
   const completedCases = new Set(progress.completedLabs)
@@ -230,43 +321,33 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             once covers both tracks; everything after them is followed separately.
           </p>
           <div className={styles.supportModeTabs} role="radiogroup" aria-label="ECMO support mode">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={track === 'vv'}
-              data-active={track === 'vv'}
-              onClick={() => setTrack('vv')}
-            >
-              <Wind aria-hidden="true" />
-              <span>
-                <strong>VV ECMO</strong>
-                <small>
-                  For failing lungs. Gas exchange happens in series with the native circulation:
-                  femoral vein drainage → pump + oxygenator → femoral vein return toward the right
-                  atrium.
-                </small>
-              </span>
-              <em>{track === 'vv' ? 'Selected' : 'View VV track'}</em>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={track === 'va'}
-              data-active={track === 'va'}
-              onClick={() => setTrack('va')}
-            >
-              <HeartPulse aria-hidden="true" />
-              <span>
-                <strong>Peripheral VA ECMO</strong>
-                <small>
-                  For a failing heart or circulation. Circuit flow runs in parallel with whatever
-                  the heart still ejects: femoral vein drainage → pump + oxygenator → femoral artery
-                  return toward the aorta, with mode-specific upper-body, LV-loading, and limb
-                  risks.
-                </small>
-              </span>
-              <em>{track === 'va' ? 'Selected' : 'View VA track'}</em>
-            </button>
+            {TRACK_OPTIONS.map((option, index) => {
+              const Icon = option.icon
+              const selected = track === option.mode
+              return (
+                <button
+                  key={option.mode}
+                  ref={(node) => {
+                    trackRefs.current[option.mode] = node
+                  }}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  data-active={selected}
+                  // Roving tabindex: the group is one Tab stop, and the arrow keys move within it.
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => setTrack(option.mode)}
+                  onKeyDown={(event) => onTrackKeyDown(event, index)}
+                >
+                  <Icon aria-hidden="true" />
+                  <span>
+                    <strong>{option.title}</strong>
+                    <small>{option.description}</small>
+                  </span>
+                  <em>{selected ? 'Selected' : `View ${option.mode.toUpperCase()} track`}</em>
+                </button>
+              )
+            })}
           </div>
         </section>
 
