@@ -22,22 +22,26 @@
  * `LITERATURE_SUPABASE_RUNTIME_MODE` relaxes anything. Everything else — absent, empty,
  * `Local`, `production`, `LOCAL `, an unknown word — resolves to the strict hosted contract.
  *
- * ## The production runtime is validated here and activated nowhere
+ * ## The production runtime is activated by this source constant, never by a variable
  *
- * The third independent review found that a fully valid strict configuration still produced a
- * `bound` result, which `createLiteratureAdmin()` turned into a privileged remote client that the
- * existing curation and gold-set callers use for mutating RPCs. Setting the documented Railway
- * variables would therefore have activated remote mutation *before* the separately reviewed
- * capability-gating / cutover package exists.
+ * The third independent review found that a fully valid strict configuration produced a `bound`
+ * result, which `createLiteratureAdmin()` turned into a privileged remote client that the existing
+ * curation and gold-set callers use for mutating RPCs. Setting the documented Railway variables
+ * would therefore have activated remote mutation with no reviewed change in between. The fix was
+ * to make activation a **source constant** — `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`,
+ * deliberately not another environment variable — so no value an operator can set turns the
+ * production client on.
  *
- * So strict mode now validates everything and then stops: an exactly valid production URL, ref,
- * and secret key resolve to the typed state `not_activated` / `dedicated_runtime_not_activated`,
- * never to `bound`. The switch is `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`, a **source
- * constant** — deliberately not another environment variable, so no value an operator can set
- * turns the production client on. Flipping it is a code change belonging to the future
- * capability-gating / cutover PR, which comes after — in this order — the Layer-3 provider work
- * and its independent review, the owner migration authorization, the foundation migration itself,
- * and an explicit, separate Railway authorization. See the rollout runbook's sequence.
+ * That constant is now `activated_by_reviewed_cutover`, and this is the reviewed change that set
+ * it. The property it protects is unchanged and still load-bearing: the three Railway variables
+ * *alone* cannot broaden the target. They are validated against the byte-exact canonical URL, the
+ * single approved ref, and the current-model secret-key credential class, and a build without this
+ * constant flipped refuses them all. Widening the target still requires editing this file.
+ *
+ * Activation is also not the same thing as capability. What a bound client may *do* is a separate,
+ * equally source-controlled allowlist in `./database-client`: the reads the foundation schema
+ * supports are carried, and curation writes, gold-set operations, and ingestion are withheld. See
+ * `LITERATURE_ACTIVATED_OPERATIONS` there.
  */
 
 /** The approved dedicated Literature production project (`IP_Literature`). */
@@ -241,18 +245,29 @@ export const LITERATURE_LOCAL_RUNTIME_MODE_VALUE = 'local'
  * A source constant on purpose. Introducing another environment variable here would recreate the
  * defect the third review found: a deployment could activate a privileged remote Literature client
  * — reachable by the existing curation and gold-set mutating RPCs — simply by setting variables,
- * with no reviewed change in between. Activation must be a code change, and the future
- * capability-gating / cutover PR is the first one permitted to make it.
+ * with no reviewed change in between. Activation must be a code change.
+ *
+ * The production bring-up package is that code change, so the value is
+ * `activated_by_reviewed_cutover`. What flipping it does and does not do:
+ *
+ *   - it does **not** relax a single validation rule. The byte-exact canonical URL, the approved
+ *     ref, the prohibited main-project ref, and the `sb_secret_…` credential class are all still
+ *     required, and a partial configuration still fails closed with no fallback;
+ *   - it does **not** grant capability. `LITERATURE_ACTIVATED_OPERATIONS` in `./database-client`
+ *     decides which operations may hold the resulting client, and curation writes, gold-set
+ *     operations, and ingestion are not on it;
+ *   - it does mean a correctly configured deployment reads the dedicated project instead of
+ *     reporting "not configured".
  *
  * The annotation widens the type past the assigned literal deliberately: the comparison below is a
- * real runtime branch and a future flip needs no other edit.
+ * real runtime branch, and reverting activation needs no other edit.
  */
 export type LiteratureProductionRuntimeActivation =
   | 'not_activated'
   | 'activated_by_reviewed_cutover'
 
 export const LITERATURE_PRODUCTION_RUNTIME_ACTIVATION: LiteratureProductionRuntimeActivation =
-  'not_activated'
+  'activated_by_reviewed_cutover'
 
 export interface LiteratureRuntimeModeEnvironment {
   LITERATURE_SUPABASE_RUNTIME_MODE?: string

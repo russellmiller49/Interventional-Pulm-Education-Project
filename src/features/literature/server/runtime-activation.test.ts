@@ -1,16 +1,27 @@
 /** @jest-environment node */
 
 /**
- * Third review, finding 4 — the production Literature runtime is disabled in this PR.
+ * The activated production Literature runtime, and the two gates that still hold.
  *
- * The defect: a fully valid strict configuration resolved to `bound`, and `createLiteratureAdmin()`
- * turned that into a privileged remote client which the existing curation and gold-set callers use
- * for mutating RPCs. Setting the documented Railway variables would have activated remote mutation
- * before the separately reviewed capability-gating / cutover package exists.
+ * The third review's defect was that a fully valid strict configuration resolved to `bound` and
+ * became a privileged remote client the curation and gold-set callers could mutate through — with
+ * no reviewed change between setting Railway variables and remote writes. The production bring-up
+ * package activates the runtime, so `createClient` *is* now reached; the property that replaces
+ * "no client exists" is narrower and is what these tests pin:
  *
- * These tests instrument Supabase client construction itself, so the claim under test is not "the
- * control flow looks right" but "`createClient` is never called and `.rpc()` is never reached".
- * They drive the real `process.env`, exactly as the deployed server functions do.
+ *   1. **Target.** Only the byte-exact canonical URL for the single approved ref, with an
+ *      `sb_secret_…` credential, produces a client. Every partial, near-miss, legacy-credential,
+ *      main-project, and loopback-in-strict-mode shape still produces none, and none of them ever
+ *      falls back to the main application project.
+ *   2. **Capability.** Being bound is not permission. A client is handed out per operation from a
+ *      closed source-controlled allowlist, so the four foundation reads get one and curation,
+ *      gold-set reads, and gold-set mutations do not — in exactly the configuration where the
+ *      reads succeed.
+ *
+ * These tests instrument Supabase client construction itself, so the claims under test are not
+ * "the control flow looks right" but "`createClient` was called with this target, once" and
+ * "`.rpc()`/`.from()` were never reached". They drive the real `process.env`, exactly as the
+ * deployed server functions do.
  */
 
 const createClientMock = jest.fn(() => supabaseClientStub)
@@ -34,7 +45,13 @@ import {
   LITERATURE_CANONICAL_PRODUCTION_ORIGIN,
   LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
 } from './dedicated-project-contract'
-import { createLiteratureAdmin, describeLiteratureDatabaseBinding } from './database-client'
+import {
+  LITERATURE_ACTIVATED_OPERATIONS,
+  describeLiteratureDatabaseBinding,
+  literatureClientForOperation,
+  literatureOperationActivated,
+  type LiteratureRuntimeOperation,
+} from './database-client'
 import {
   curateLiteratureArticle,
   getLiteratureArticle,
@@ -42,6 +59,7 @@ import {
   searchLiterature,
 } from './queries'
 import { listLiteratureGoldSetBatches } from './gold-set'
+import { capabilityCarriesCounts } from './runtime-capability'
 
 const APPROVED_REF = LITERATURE_APPROVED_PRODUCTION_PROJECT_REF
 const APPROVED_URL = LITERATURE_CANONICAL_PRODUCTION_URL_EXACT
@@ -71,42 +89,19 @@ afterEach(() => {
 })
 
 /**
- * Every deployed configuration shape the review asked about: nothing set, partial, exactly valid,
- * and invalid. None of them may construct a client.
+ * Deployed configuration shapes that must still produce no client.
+ *
+ * Activation removed exactly one member from this list — the exactly-valid production
+ * configuration, which now appears in `VALID_PRODUCTION_ENVIRONMENTS` below. Everything else is
+ * unchanged, which is the point: activation is not a relaxation of any validation rule.
  */
-const DEPLOYED_ENVIRONMENTS: [string, Record<string, string>][] = [
+const REFUSED_ENVIRONMENTS: [string, Record<string, string>][] = [
   ['no variables', {}],
   ['only the URL', { LITERATURE_SUPABASE_URL: APPROVED_URL }],
   ['only the credential', { LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY }],
   [
     'URL and credential but no expected ref',
     { LITERATURE_SUPABASE_URL: APPROVED_URL, LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY },
-  ],
-  [
-    'exactly the documented production variables',
-    {
-      LITERATURE_SUPABASE_URL: APPROVED_URL,
-      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
-      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-    },
-  ],
-  [
-    'the documented variables plus an unset runtime mode',
-    {
-      LITERATURE_SUPABASE_URL: APPROVED_URL,
-      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
-      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-      LITERATURE_SUPABASE_RUNTIME_MODE: '',
-    },
-  ],
-  [
-    'the documented variables with a near-miss runtime mode',
-    {
-      LITERATURE_SUPABASE_URL: APPROVED_URL,
-      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
-      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-      LITERATURE_SUPABASE_RUNTIME_MODE: 'Local',
-    },
   ],
   [
     'the origin without the trailing slash',
@@ -143,54 +138,224 @@ const DEPLOYED_ENVIRONMENTS: [string, Record<string, string>][] = [
   ],
 ]
 
-describe('no production Literature client is constructed in this PR', () => {
-  it.each(DEPLOYED_ENVIRONMENTS)('constructs no client for %s', (_label, environment) => {
-    applyEnvironment(environment)
-    expect(createLiteratureAdmin()).toBeNull()
-    expect(createClientMock).not.toHaveBeenCalled()
-  })
-
-  it('reports the exactly valid production configuration as validated but not activated', () => {
-    applyEnvironment({
+/**
+ * The configurations that now activate the read path.
+ *
+ * All three are the same three documented variables; the last two additionally prove that the
+ * runtime mode is a closed opt-in — an empty value and the near-miss `Local` both resolve to the
+ * strict hosted contract rather than relaxing anything.
+ */
+const VALID_PRODUCTION_ENVIRONMENTS: [string, Record<string, string>][] = [
+  [
+    'exactly the documented production variables',
+    {
       LITERATURE_SUPABASE_URL: APPROVED_URL,
       LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
       LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-    })
+    },
+  ],
+  [
+    'the documented variables plus an unset runtime mode',
+    {
+      LITERATURE_SUPABASE_URL: APPROVED_URL,
+      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+      LITERATURE_SUPABASE_RUNTIME_MODE: '',
+    },
+  ],
+  [
+    'the documented variables with a near-miss runtime mode',
+    {
+      LITERATURE_SUPABASE_URL: APPROVED_URL,
+      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'Local',
+    },
+  ],
+]
+
+const PRODUCTION_ENVIRONMENT = VALID_PRODUCTION_ENVIRONMENTS[0][1]
+
+/** Read the client for an operation without asserting anything about it. */
+function clientFor(operation: LiteratureRuntimeOperation) {
+  return literatureClientForOperation(operation)
+}
+
+describe('only the exact dedicated target produces a client', () => {
+  it.each(REFUSED_ENVIRONMENTS)('constructs no client for %s', (_label, environment) => {
+    applyEnvironment(environment)
+    expect(clientFor('article_search').client).toBeNull()
+    expect(createClientMock).not.toHaveBeenCalled()
+  })
+
+  it.each(REFUSED_ENVIRONMENTS)(
+    'reports %s as not configured rather than as an empty corpus',
+    (_label, environment) => {
+      applyEnvironment(environment)
+      const acquired = clientFor('admin_stats')
+      expect(acquired.client).toBeNull()
+      expect(acquired.capability?.state).toBe('not_configured')
+      // The distinction the administration page depends on: this state carries no counts, so
+      // nothing downstream may render it as a zero.
+      expect(capabilityCarriesCounts(acquired.capability!.state)).toBe(false)
+    },
+  )
+
+  it.each(VALID_PRODUCTION_ENVIRONMENTS)(
+    'constructs exactly one dedicated client for %s',
+    (_label, environment) => {
+      applyEnvironment(environment)
+      const acquired = clientFor('article_search')
+      if (!acquired.client) throw new Error(`expected a client for ${_label}`)
+      expect(acquired.client).toBe(supabaseClientStub)
+      expect(acquired.projectRef).toBe(APPROVED_REF)
+      expect(createClientMock).toHaveBeenCalledTimes(1)
+      expect(createClientMock).toHaveBeenCalledWith(APPROVED_URL, SECRET_KEY, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      })
+    },
+  )
+
+  it('binds the exactly valid production configuration without exposing the credential', () => {
+    applyEnvironment(PRODUCTION_ENVIRONMENT)
     const diagnostics = describeLiteratureDatabaseBinding()
     expect(diagnostics).toMatchObject({
-      status: 'not_activated',
+      status: 'bound',
       mode: 'production_strict',
-      reason: 'dedicated_runtime_not_activated',
+      credentialClass: 'secret',
       projectRef: APPROVED_REF,
     })
     expect(JSON.stringify(diagnostics)).not.toContain(SECRET_KEY)
   })
 
-  it('leaves every existing read and mutating server function without a client or an RPC', async () => {
+  it('never targets the main application project, even when both refs agree on it', () => {
     applyEnvironment({
+      LITERATURE_SUPABASE_URL: 'https://tqnhxlwvkkswuckszlee.supabase.co/',
+      LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: 'tqnhxlwvkkswuckszlee',
+    })
+    // Strict mode compares the raw URL against the single canonical byte sequence before it looks
+    // at refs at all, so the main project is refused as non-canonical rather than reaching the
+    // prohibited-ref rule. Both gates independently exclude it; this is simply the first one.
+    expect(describeLiteratureDatabaseBinding()).toMatchObject({
+      status: 'unbound',
+      reason: 'noncanonical_production_url',
+    })
+    expect(createClientMock).not.toHaveBeenCalled()
+  })
+
+  it('refuses the main application project by ref even where the URL gate does not apply', () => {
+    applyEnvironment({
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
+      LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: 'tqnhxlwvkkswuckszlee',
+    })
+    expect(describeLiteratureDatabaseBinding()).toMatchObject({
+      status: 'unbound',
+      reason: 'prohibited_project_ref',
+    })
+    expect(clientFor('article_search').client).toBeNull()
+    expect(createClientMock).not.toHaveBeenCalled()
+  })
+
+  it('does not read the main project variables as a fallback', () => {
+    applyEnvironment({})
+    process.env.SUPABASE_URL = 'https://tqnhxlwvkkswuckszlee.supabase.co/'
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://tqnhxlwvkkswuckszlee.supabase.co/'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_MAIN_PROJECT_PLACEHOLDER'
+    try {
+      expect(clientFor('article_search').client).toBeNull()
+      expect(describeLiteratureDatabaseBinding().reason).toBe('not_configured')
+      expect(createClientMock).not.toHaveBeenCalled()
+    } finally {
+      delete process.env.SUPABASE_URL
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY
+    }
+  })
+})
+
+/**
+ * Activation is not capability.
+ *
+ * These run in the configuration where the read path genuinely works, so a withheld operation
+ * failing here cannot be explained away by a missing variable. The dedicated project carries the
+ * foundation migration only, and this build carries no Literature write path at all.
+ */
+describe('the activation contract withholds writes and the gold-set workflow', () => {
+  beforeEach(() => {
+    applyEnvironment(PRODUCTION_ENVIRONMENT)
+  })
+
+  it.each([...LITERATURE_ACTIVATED_OPERATIONS])('carries %s', (operation) => {
+    expect(literatureOperationActivated(operation)).toBe(true)
+    expect(clientFor(operation).client).toBe(supabaseClientStub)
+  })
+
+  it.each([
+    ['article_curation', 'write_capability_withheld'],
+    ['gold_set_read', 'gold_workflow_unavailable'],
+    ['gold_set_mutation', 'gold_workflow_unavailable'],
+  ] as const)('withholds %s as %s', (operation, state) => {
+    expect(literatureOperationActivated(operation)).toBe(false)
+    const acquired = clientFor(operation)
+    expect(acquired.client).toBeNull()
+    expect(acquired.capability?.state).toBe(state)
+    expect(createClientMock).not.toHaveBeenCalled()
+  })
+
+  it('does not let a local-mode label widen capability against a remote target', () => {
+    /*
+     * The regression this pins: `literatureOperationActivated` once consulted only the runtime-mode
+     * string, so a deployed environment that set LITERATURE_SUPABASE_RUNTIME_MODE=local next to the
+     * production URL reported gold-set and curation as carried. The page then offered a button and
+     * a form whose every use fails, because local mode never binds to a remote host — the precise
+     * always-failing control the capability check exists to prevent.
+     */
+    const mislabelled = {
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
       LITERATURE_SUPABASE_URL: APPROVED_URL,
       LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
       LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
-    })
+    }
+    expect(literatureOperationActivated('gold_set_read', mislabelled)).toBe(false)
+    expect(literatureOperationActivated('article_curation', mislabelled)).toBe(false)
+    // The reads stay carried, because they are on the strict allowlist regardless of the label.
+    expect(literatureOperationActivated('article_search', mislabelled)).toBe(true)
+  })
 
+  it('carries every operation for a genuinely bound local target', () => {
+    // The local Supabase stack has all Literature migrations, so nothing is withheld there.
+    const local = {
+      LITERATURE_SUPABASE_RUNTIME_MODE: 'local',
+      LITERATURE_SUPABASE_URL: 'http://127.0.0.1:55321',
+      LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
+      LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
+    }
+    for (const operation of [
+      'article_search',
+      'article_detail',
+      'admin_stats',
+      'review_queue_read',
+      'article_curation',
+      'gold_set_read',
+      'gold_set_mutation',
+    ] as const) {
+      expect(`${operation}: ${literatureOperationActivated(operation, local)}`).toBe(
+        `${operation}: true`,
+      )
+    }
+  })
+
+  it('withholds the deferred operations for an unconfigured deployment', () => {
+    // No binding at all must not read as "local", which would be the same widening by another route.
+    expect(literatureOperationActivated('gold_set_read', {})).toBe(false)
+    expect(literatureOperationActivated('article_curation', {})).toBe(false)
+  })
+
+  it('reaches no RPC from the curation or gold-set server functions', async () => {
     const results = [
-      // Read paths: list/search, detail, and the admin stats RPC.
-      await searchLiterature({
-        q: '',
-        journalIds: [],
-        topicIds: [],
-        yearFrom: null,
-        yearTo: null,
-        publicationTypes: [],
-        landmarkOnly: false,
-        sort: 'relevance',
-        page: 1,
-        pageSize: 20,
-        adminPreview: false,
-      } as unknown as Parameters<typeof searchLiterature>[0]),
-      await getLiteratureArticle('12345678'),
-      await loadLiteratureAdminStats(),
-      // The mutating curation RPC, and a gold-set path.
       await curateLiteratureArticle(
         '12345678',
         {} as unknown as Parameters<typeof curateLiteratureArticle>[1],
@@ -203,11 +368,80 @@ describe('no production Literature client is constructed in this PR', () => {
 
     for (const result of results) {
       expect(result.data).toBeNull()
-      expect(result.error).toBe('The literature database is not configured.')
+      expect(typeof result.error).toBe('string')
     }
+    // The curation refusal fires before the payload is validated, so an invalid update object
+    // cannot be what produced it.
+    expect(results[0].capability.state).toBe('write_capability_withheld')
+    expect(results[1].capability.state).toBe('gold_workflow_unavailable')
     expect(createClientMock).not.toHaveBeenCalled()
     expect(rpcMock).not.toHaveBeenCalled()
     expect(fromMock).not.toHaveBeenCalled()
+  })
+
+  it('reaches the search RPC and reports a real zero as a measurement', async () => {
+    // Distinct from the stub above: these two are expected to reach the client, so the mock
+    // answers instead of throwing.
+    const answering = {
+      rpc: jest.fn(async () => ({ data: [], error: null })),
+      from: jest.fn(() => {
+        throw new Error('unexpected table read')
+      }),
+    }
+    createClientMock.mockReturnValueOnce(answering as never)
+    const search = await searchLiterature({
+      q: '',
+      journalIds: [],
+      topicIds: [],
+      yearFrom: null,
+      yearTo: null,
+      publicationTypes: [],
+      landmarkOnly: false,
+      sort: 'relevance',
+      page: 1,
+      pageSize: 20,
+      adminPreview: false,
+    } as unknown as Parameters<typeof searchLiterature>[0])
+
+    expect(answering.rpc).toHaveBeenCalledWith('search_literature_v1', expect.any(Object))
+    // Zero rows from a working RPC is a measurement, and the capability says so.
+    expect(search.error).toBeNull()
+    expect(search.data?.total).toBe(0)
+    expect(search.capability.state).toBe('foundation_ready_empty')
+    expect(capabilityCarriesCounts(search.capability.state)).toBe(true)
+  })
+
+  it('reaches the stats RPC and distinguishes a real zero from an unreadable one', async () => {
+    const answering = {
+      rpc: jest.fn(async () => ({
+        data: { total_articles: 0, with_abstract: 0, without_abstract: 0 },
+        error: null,
+      })),
+      from: jest.fn(() => {
+        throw new Error('unexpected table read')
+      }),
+    }
+    createClientMock.mockReturnValueOnce(answering as never)
+    const ok = await loadLiteratureAdminStats()
+    expect(answering.rpc).toHaveBeenCalledWith('literature_admin_stats_v1')
+    expect(ok.data?.totalArticles).toBe(0)
+    expect(ok.capability.state).toBe('foundation_ready_empty')
+    expect(capabilityCarriesCounts(ok.capability.state)).toBe(true)
+
+    // Same zero on the page, entirely different meaning: the RPC failed because the object is not
+    // there. This must never reach the UI as a count.
+    const failing = {
+      rpc: jest.fn(async () => ({
+        data: null,
+        error: { code: 'PGRST202', message: 'no function' },
+      })),
+      from: jest.fn(),
+    }
+    createClientMock.mockReturnValueOnce(failing as never)
+    const missing = await loadLiteratureAdminStats()
+    expect(missing.data).toBeNull()
+    expect(missing.capability.state).toBe('foundation_missing')
+    expect(capabilityCarriesCounts(missing.capability.state)).toBe(false)
   })
 })
 
@@ -223,7 +457,7 @@ describe('local development still gets exactly its loopback client', () => {
       LITERATURE_SUPABASE_SERVICE_ROLE_KEY: 'local-development-placeholder',
       LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
     })
-    expect(createLiteratureAdmin()).toBe(supabaseClientStub)
+    expect(clientFor('article_search').client).toBe(supabaseClientStub)
     expect(createClientMock).toHaveBeenCalledTimes(1)
     expect(createClientMock).toHaveBeenCalledWith(url, 'local-development-placeholder', {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -258,7 +492,7 @@ describe('alias spellings of the loopback address never get a client (fifth revi
       status: 'unbound',
       reason: 'noncanonical_local_url_authority',
     })
-    expect(createLiteratureAdmin()).toBeNull()
+    expect(clientFor('article_search').client).toBeNull()
     expect(createClientMock).not.toHaveBeenCalled()
     expect(rpcMock).not.toHaveBeenCalled()
     expect(fromMock).not.toHaveBeenCalled()
@@ -300,7 +534,7 @@ describe('alias spellings of the loopback address never get a client (fifth revi
 
     for (const result of results) {
       expect(result.data).toBeNull()
-      expect(result.error).toBe('The literature database is not configured.')
+      expect(typeof result.error).toBe('string')
     }
     expect(createClientMock).not.toHaveBeenCalled()
     expect(rpcMock).not.toHaveBeenCalled()
@@ -326,7 +560,7 @@ describe('a wildcard bind address never gets a client (fourth review)', () => {
       LITERATURE_SUPABASE_EXPECTED_PROJECT_REF: APPROVED_REF,
     })
     expect(describeLiteratureDatabaseBinding()).toMatchObject({ status: 'unbound', reason })
-    expect(createLiteratureAdmin()).toBeNull()
+    expect(clientFor('article_search').client).toBeNull()
     expect(createClientMock).not.toHaveBeenCalled()
     expect(rpcMock).not.toHaveBeenCalled()
     expect(fromMock).not.toHaveBeenCalled()

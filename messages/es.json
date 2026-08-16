@@ -2303,6 +2303,33 @@
   "literature": {
     "title": "Explorador de literatura de IP",
     "draftBadge": "Vista previa administrativa",
+    "capability": {
+      "unavailableValue": "No disponible",
+      "unavailableHint": "Este valor no se pudo leer. No indica cero.",
+      "bannerTitle": "Estado de la base de datos de literatura",
+      "projectLabel": "Proyecto dedicado",
+      "state": {
+        "not_configured": "Sin configurar. Este despliegue no tiene ajustes de base de datos de literatura dedicada, por lo que no se leyó nada. Los recuentos no están disponibles; no son cero.",
+        "foundation_missing": "El proyecto de literatura dedicado responde, pero faltan sus tablas base. Los recuentos no están disponibles; no son cero.",
+        "foundation_ready_empty": "El esquema base existe y aún no contiene registros. Los ceros que aparecen abajo son mediciones reales.",
+        "foundation_ready_populated": "El esquema base existe y contiene registros.",
+        "gold_workflow_unavailable": "El flujo de revisión del conjunto de referencia no está instalado en este proyecto. Sus migraciones se aplazaron deliberadamente.",
+        "write_capability_withheld": "Esta versión no incluye ninguna ruta de escritura de literatura. Los cambios de curación y de conjunto de referencia no están disponibles por diseño.",
+        "temporarily_unavailable": "El proyecto de literatura dedicado no respondió. Los recuentos no están disponibles; no son cero.",
+        "not_observed": "La solicitud se rechazó antes de llegar a la base de datos, por lo que no se midió nada.",
+        "foundation_ready_filtered": "El esquema base existe y respondió a esta consulta. Los recuentos mostrados reflejan los filtros activos, no el tamaño del corpus."
+      },
+      "curation": {
+        "title": "La curación no está disponible en esta versión",
+        "body": "Este despliegue lee el proyecto de literatura dedicado solo para revisión y verificación. No incluye ninguna ruta de escritura, así que las decisiones de curación no se pueden guardar aquí. Habilitarlas es un cambio revisado aparte."
+      },
+      "reason": "Motivo informado",
+      "goldSet": {
+        "title": "El flujo de revisión del conjunto de referencia no está instalado",
+        "body": "Este despliegue lee el proyecto de literatura dedicado, que solo incluye el esquema base. Las tablas y funciones de revisión del conjunto de referencia pertenecen a un grupo de migraciones aplazado deliberadamente, así que todavía no hay nada que revisar aquí.",
+        "back": "Volver a la administración de literatura"
+      }
+    },
     "loading": "Cargando literatura…",
     "workflow": {
       "relevance": {

@@ -13,7 +13,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/cn'
 import { Input } from '@/components/ui/input'
+import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
 import { flattenLiteratureTaxonomy, literatureQueryRegistry } from '@/features/literature/config'
 import {
   literatureRelevanceStates,
@@ -34,10 +36,16 @@ import {
   type LiteraturePageSearchParams,
 } from '@/features/literature/search/page-params'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
+import { literatureOperationActivated } from '@/features/literature/server/database-client'
 import {
   loadLiteratureAdminStats,
   loadLiteratureReviewQueue,
 } from '@/features/literature/server/queries'
+import {
+  capabilityCarriesCounts,
+  capabilityNotObserved,
+  literatureCountDisplay,
+} from '@/features/literature/server/runtime-capability'
 import { isActiveLocale, type ActiveLocale } from '@/i18n/locale'
 import { Link } from '@/i18n/navigation'
 
@@ -95,6 +103,7 @@ export default async function LiteratureAdminPage({
   await requireLiteratureSiteAdminPage(locale, '/admin/literature')
   const t = await getTranslations('literature.admin')
   const workflowT = await getTranslations('literature.workflow')
+  const capabilityT = await getTranslations('literature.capability')
   const rawParams = literaturePageSearchParamsToUrl(await searchParams)
   const parsed = literatureReviewQueueSchema.safeParse(literatureReviewQueueInputFromUrl(rawParams))
   const filters = parsed.success ? parsed.data : literatureReviewQueueSchema.parse({})
@@ -103,7 +112,14 @@ export default async function LiteratureAdminPage({
     loadLiteratureAdminStats(),
     parsed.success
       ? loadLiteratureReviewQueue(filters)
-      : Promise.resolve({ data: null, error: t('invalidFilters') }),
+      : Promise.resolve({
+          data: null,
+          error: t('invalidFilters'),
+          capability: capabilityNotObserved(
+            null,
+            'The review-queue filters were rejected before the database was queried.',
+          ),
+        } as const),
   ])
   const topics = flattenLiteratureTaxonomy()
   const journals = [
@@ -112,6 +128,24 @@ export default async function LiteratureAdminPage({
     ...literatureQueryRegistry.expanded_journals,
     ...literatureQueryRegistry.non_pubmed_sources,
   ]
+
+  /*
+   * Every count on this page is rendered through `statValue`.
+   *
+   * The defect it replaces was a family of `?? 0` fallbacks: when the statistics RPC failed,
+   * `stats.data` was null, the maps below defaulted to `{}`, and the page reported a corpus of
+   * exactly zero articles in every category — indistinguishable from a freshly migrated, genuinely
+   * empty project. That is the single most consequential thing this page can get wrong during a
+   * bring-up, because "empty" and "unreadable" call for opposite responses.
+   *
+   * So the capability decides first. When it does not carry counts, no number is rendered at all;
+   * when it does, `stats.data` is present and a missing key really is zero.
+   */
+  const countsAreReal = capabilityCarriesCounts(stats.capability.state)
+  const unavailableValue = capabilityT('unavailableValue')
+  const statValue = (value: number | undefined) =>
+    literatureCountDisplay(stats.capability.state, value, unavailableValue)
+
   const relevance = stats.data?.relevanceCounts ?? {}
   const visibility = stats.data?.visibilityCounts ?? {}
   const journalCounts = Object.entries(stats.data?.journalCounts ?? {}).sort(
@@ -123,35 +157,40 @@ export default async function LiteratureAdminPage({
     .slice(12)
     .reduce((total, [, count]) => total + count, 0)
 
+  // The gold-set workflow's migrations are deferred, so this build does not carry the operation.
+  // Hiding the entry point is the honest presentation: the alternative is a button whose only
+  // possible outcome is an error page.
+  const goldWorkflowAvailable = literatureOperationActivated('gold_set_read')
+
   const summaryCards = [
     {
       label: t('stats.total'),
-      value: stats.data?.totalArticles,
+      value: statValue(stats.data?.totalArticles),
       icon: Database,
     },
     {
       label: t('stats.withAbstract'),
-      value: stats.data?.withAbstract,
+      value: statValue(stats.data?.withAbstract),
       icon: BookOpenCheck,
     },
     {
       label: t('stats.withoutAbstract'),
-      value: stats.data?.withoutAbstract,
+      value: statValue(stats.data?.withoutAbstract),
       icon: FileQuestion,
     },
     {
       label: t('stats.unreviewed'),
-      value: relevance.unreviewed,
+      value: statValue(relevance.unreviewed),
       icon: AlertTriangle,
     },
     {
       label: t('stats.included'),
-      value: relevance.included,
+      value: statValue(relevance.included),
       icon: CheckCircle2,
     },
     {
       label: t('stats.suggestions'),
-      value: stats.data?.topicSuggestionCount,
+      value: statValue(stats.data?.topicSuggestionCount),
       icon: Tags,
     },
   ]
@@ -165,14 +204,24 @@ export default async function LiteratureAdminPage({
           <p className="text-base leading-7 text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href="/admin/literature/gold-set">Open gold-set review</Link>
-          </Button>
+          {goldWorkflowAvailable ? (
+            <Button asChild>
+              <Link href="/admin/literature/gold-set">Open gold-set review</Link>
+            </Button>
+          ) : null}
           <Button asChild variant="outline">
             <Link href="/literature?adminPreview=1">{t('openPreview')}</Link>
           </Button>
         </div>
       </section>
+
+      <LiteratureCapabilityNotice
+        capability={stats.capability}
+        title={capabilityT('bannerTitle')}
+        description={capabilityT(`state.${stats.capability.state}`)}
+        projectLabel={capabilityT('projectLabel')}
+        reasonLabel={capabilityT('reason')}
+      />
 
       <section
         aria-label={t('stats.label')}
@@ -185,7 +234,15 @@ export default async function LiteratureAdminPage({
               <CardContent className="gap-2 p-4">
                 <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
                 <p className="text-xs text-muted-foreground">{summary.label}</p>
-                <p className="text-2xl font-semibold">{summary.value ?? '—'}</p>
+                <p
+                  className={cn(
+                    'font-semibold',
+                    countsAreReal ? 'text-2xl' : 'text-base text-muted-foreground',
+                  )}
+                  title={countsAreReal ? undefined : capabilityT('unavailableHint')}
+                >
+                  {summary.value}
+                </p>
               </CardContent>
             </Card>
           )
@@ -202,7 +259,7 @@ export default async function LiteratureAdminPage({
               {literatureRelevanceStates.map((state) => (
                 <div key={state}>
                   <dt className="text-muted-foreground">{workflowT(`relevance.${state}`)}</dt>
-                  <dd className="text-xl font-semibold">{relevance[state] ?? 0}</dd>
+                  <dd className="text-xl font-semibold">{statValue(relevance[state])}</dd>
                 </div>
               ))}
             </dl>
@@ -217,7 +274,7 @@ export default async function LiteratureAdminPage({
               {literatureVisibilityStates.map((state) => (
                 <div key={state}>
                   <dt className="text-muted-foreground">{workflowT(`visibility.${state}`)}</dt>
-                  <dd className="text-xl font-semibold">{visibility[state] ?? 0}</dd>
+                  <dd className="text-xl font-semibold">{statValue(visibility[state])}</dd>
                 </div>
               ))}
             </dl>
@@ -235,7 +292,9 @@ export default async function LiteratureAdminPage({
               {literatureSourceKinds.map((sourceKind) => (
                 <div key={sourceKind} className="flex items-center justify-between gap-4">
                   <dt className="text-muted-foreground">{workflowT(`sourceKind.${sourceKind}`)}</dt>
-                  <dd className="font-semibold">{stats.data?.sourceKindCounts[sourceKind] ?? 0}</dd>
+                  <dd className="font-semibold">
+                    {statValue(stats.data?.sourceKindCounts[sourceKind])}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -265,7 +324,9 @@ export default async function LiteratureAdminPage({
                 ) : null}
               </dl>
             ) : (
-              <p className="text-sm text-muted-foreground">{t('stats.none')}</p>
+              <p className="text-sm text-muted-foreground">
+                {countsAreReal ? t('stats.none') : unavailableValue}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -280,43 +341,36 @@ export default async function LiteratureAdminPage({
                   file: stats.data.lastImport.source_filename,
                   status: workflowT(`importStatus.${stats.data.lastImport.status}`),
                 })
-              : t('imports.noBatch')}
+              : countsAreReal
+                ? t('imports.noBatch')
+                : capabilityT(`state.${stats.capability.state}`)}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 text-sm sm:grid-cols-4">
             <div>
               <dt className="text-muted-foreground">{t('imports.errors')}</dt>
-              <dd className="text-xl font-semibold">{stats.data?.importErrorCount ?? '—'}</dd>
+              <dd className="text-xl font-semibold">{statValue(stats.data?.importErrorCount)}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">{t('imports.unmapped')}</dt>
-              <dd className="text-xl font-semibold">{stats.data?.unmappedFileCount ?? '—'}</dd>
+              <dd className="text-xl font-semibold">{statValue(stats.data?.unmappedFileCount)}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">{t('imports.records')}</dt>
               <dd className="text-xl font-semibold">
-                {stats.data?.lastImport?.records_read ?? '—'}
+                {countsAreReal ? (stats.data?.lastImport?.records_read ?? '—') : unavailableValue}
               </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">{t('imports.batchErrors')}</dt>
               <dd className="text-xl font-semibold">
-                {stats.data?.lastImport?.error_count ?? '—'}
+                {countsAreReal ? (stats.data?.lastImport?.error_count ?? '—') : unavailableValue}
               </dd>
             </div>
           </dl>
         </CardContent>
       </Card>
-
-      {stats.error ? (
-        <p
-          role="status"
-          className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"
-        >
-          {t('stats.unavailable')}
-        </p>
-      ) : null}
 
       <section className="space-y-5">
         <div>
@@ -450,7 +504,20 @@ export default async function LiteratureAdminPage({
 
         {queue.error ? (
           <Card className="border-destructive/40">
-            <CardContent className="p-6 text-sm">{t('queue.unavailable')}</CardContent>
+            <CardContent className="p-6 text-sm">
+              {/*
+                Not one generic sentence for every failure. A rejected filter, an unconfigured
+                deployment, a missing foundation, and a transient outage all land here and call for
+                different responses, so the capability says which one it was.
+              */}
+              <LiteratureCapabilityNotice
+                capability={queue.capability}
+                title={t('queue.unavailable')}
+                description={capabilityT(`state.${queue.capability.state}`)}
+                projectLabel={capabilityT('projectLabel')}
+                reasonLabel={capabilityT('reason')}
+              />
+            </CardContent>
           </Card>
         ) : queue.data ? (
           <>

@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { flattenLiteratureTaxonomy } from '@/features/literature/config'
+import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
 import { LiteratureReviewForm } from '@/features/literature/components/LiteratureReviewForm'
 import {
   compactLiteratureAuthors,
@@ -14,7 +15,9 @@ import {
 } from '@/features/literature/domain/display'
 import { pmidSchema } from '@/features/literature/schemas/search'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
+import { literatureOperationActivated } from '@/features/literature/server/database-client'
 import { getLiteratureArticle } from '@/features/literature/server/queries'
+import { capabilityForWithheldOperation } from '@/features/literature/server/runtime-capability'
 import { isActiveLocale, type ActiveLocale } from '@/i18n/locale'
 import { Link } from '@/i18n/navigation'
 
@@ -51,24 +54,39 @@ export default async function LiteratureAdminArticlePage({
   await requireLiteratureSiteAdminPage(locale, `/admin/literature/article/${rawPmid}`)
   const t = await getTranslations('literature.admin.article')
   const workflowT = await getTranslations('literature.workflow')
+  const capabilityT = await getTranslations('literature.capability')
   const pmid = pmidSchema.safeParse(rawPmid)
   if (!pmid.success) {
     notFound()
   }
-  const result = await getLiteratureArticle(pmid.data)
-  if (result.error) {
+  const detail = await getLiteratureArticle(pmid.data)
+  if (detail.error) {
+    // Which failure it was matters here: a missing foundation, an unconfigured deployment, and a
+    // transient outage all reach this branch and have different remedies.
     return (
-      <div className="container py-12">
+      <div className="container max-w-3xl space-y-6 py-12">
         <Card className="border-destructive/40">
-          <CardContent className="p-6">{t('loadError')}</CardContent>
+          <CardHeader>
+            <CardTitle>{t('loadError')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LiteratureCapabilityNotice
+              capability={detail.capability}
+              title={capabilityT('bannerTitle')}
+              description={capabilityT(`state.${detail.capability.state}`)}
+              projectLabel={capabilityT('projectLabel')}
+              reasonLabel={capabilityT('reason')}
+            />
+          </CardContent>
         </Card>
       </div>
     )
   }
-  if (!result.data) {
+  if (!detail.data) {
     notFound()
   }
-  const article = result.data
+  const article = detail.data
+  const curationAvailable = literatureOperationActivated('article_curation')
   const authors = compactLiteratureAuthors(article.authors, article.collectiveAuthors)
   const citation = literatureCitationParts(article)
 
@@ -112,14 +130,37 @@ export default async function LiteratureAdminArticlePage({
         <Card>
           <CardHeader>
             <CardTitle>{t('curationTitle')}</CardTitle>
-            <CardDescription>{t('curationDescription')}</CardDescription>
+            <CardDescription>
+              {curationAvailable ? t('curationDescription') : capabilityT('curation.body')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <LiteratureReviewForm
-              article={article}
-              locale={locale}
-              topics={flattenLiteratureTaxonomy()}
-            />
+            {curationAvailable ? (
+              <LiteratureReviewForm
+                article={article}
+                locale={locale}
+                topics={flattenLiteratureTaxonomy()}
+              />
+            ) : (
+              /*
+               * The form is withheld rather than disabled-in-place.
+               * `article_curation` is not on the activated allowlist, so every submission would
+               * reach `curateLiteratureArticle`, be refused before the payload is even validated,
+               * and surface as a generic save error — an admin would reasonably read that as data
+               * loss or a bug. Saying so up front is the honest presentation.
+               */
+              <LiteratureCapabilityNotice
+                capability={capabilityForWithheldOperation(
+                  detail.capability.projectRef,
+                  'write_capability_withheld',
+                  capabilityT('curation.body'),
+                )}
+                title={capabilityT('curation.title')}
+                description={capabilityT('state.write_capability_withheld')}
+                projectLabel={capabilityT('projectLabel')}
+                reasonLabel={capabilityT('reason')}
+              />
+            )}
           </CardContent>
         </Card>
 

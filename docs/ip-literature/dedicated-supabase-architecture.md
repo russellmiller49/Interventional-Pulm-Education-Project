@@ -1,5 +1,13 @@
 # Dedicated Literature Supabase project
 
+> **Superseded in part by the production bring-up.** The status line below described a
+> preparation-only state. The foundation migration has since been applied to `IP_Literature`
+> (provider-recorded version `20260815223259`), and the production runtime is activated: the
+> three dedicated variables now connect the Literature read path. The design this document
+> describes — dedicated project, byte-exact target binding, no fallback to the main project,
+> activation as a reviewed code change rather than an environment variable — is unchanged, and the
+> capability allowlist added by the production bring-up still withholds every write path.
+
 Status: **preparation only.** Nothing in this document has been applied to any remote system.
 
 ## Decision
@@ -112,28 +120,30 @@ truly accepted when the Supabase provider validates it.
 
 `tqnhxlwvkkswuckszlee` is rejected as a Literature target in **every** mode, not only production.
 
-### The production runtime is validated, not activated
+### The production runtime is validated, then activated by a source constant
 
-`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a **source constant**, currently `not_activated`.
-While it holds that value, a strict configuration that passes every check resolves to the typed
-state `not_activated` / `dedicated_runtime_not_activated` rather than `bound`, and
-`createLiteratureAdmin()` returns `null`. `createClient` is reachable only for a `local`-mode URL
-whose raw authority and parsed hostname are both on the canonical local-host allowlist
-(`localhost`, `127.0.0.1`, `[::1]`), so:
+`LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is a **source constant**. It held `not_activated` while
+this note was written, and the production bring-up set it to `activated_by_reviewed_cutover`, so a
+strict configuration that passes every check now resolves to `bound` and `createLiteratureAdmin()`
+constructs a client for the dedicated project. The canonical local-host allowlist
+(`localhost`, `127.0.0.1`, `[::1]`, matched on the raw authority as well as the parsed hostname)
+still governs `local` mode.
 
-- setting the three documented production variables validates them and constructs nothing;
-- no privileged remote Literature client exists in this PR, and no mutating RPC
-  (`curate_literature_article_v1`, the gold-set RPCs) is reachable;
-- the existing list, detail, curation, and gold-set callers receive the same `null` they already
-  handle as "not configured".
+What survives the flip, unchanged:
 
-Activation is deliberately _not_ another environment variable — a deployment must not be able to
-switch on remote mutation without a reviewed change. The separate capability-gating / cutover
-package is the first change permitted to flip the constant, and it comes after — in this order —
-the Layer-3 provider work and its independent review, the owner migration authorization, the
-foundation migration itself, and a separate explicit Railway authorization. The
-[rollout runbook](./dedicated-supabase-rollout-runbook.md) states that sequence in full; this note
-does not restate it in a second, drift-prone form.
+- activation is deliberately _not_ an environment variable — a deployment must not be able to
+  switch on a remote client without a reviewed change, and no variable can;
+- no validation rule was relaxed to activate: the byte-exact canonical URL, the single approved
+  ref, the prohibited main-project ref, the `sb_secret_…` credential class, and fail-closed partial
+  configuration all still apply, with no fallback to the main project;
+- **no mutating RPC is reachable.** `curate_literature_article_v1` and every gold-set RPC are
+  withheld by a second source-controlled gate, `LITERATURE_ACTIVATED_OPERATIONS`, which carries
+  only the four foundation reads. `createLiteratureAdmin()` is module-private; callers go through
+  `literatureClientForOperation`, and a withheld operation receives a typed capability instead of a
+  client.
+
+The [rollout runbook](./dedicated-supabase-rollout-runbook.md) states the sequence in full; this
+note does not restate it in a second, drift-prone form.
 
 ### Failure states are typed, not collapsed
 

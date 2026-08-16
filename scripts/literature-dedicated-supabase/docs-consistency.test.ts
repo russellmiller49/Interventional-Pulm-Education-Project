@@ -47,6 +47,7 @@ const DOCUMENTS = [
 
 const RUNBOOK = 'dedicated-supabase-rollout-runbook.md'
 const ARCHITECTURE = 'dedicated-supabase-architecture.md'
+const THREAT_MODEL = 'dedicated-supabase-threat-model.md'
 
 async function readDocument(name: string) {
   return readFile(resolve(ROOT, DOCS_DIRECTORY, name), 'utf8')
@@ -324,21 +325,78 @@ describe('documented flags and commands exist', () => {
   })
 })
 
-describe('the documents state that production variables do not activate the runtime', () => {
-  it('says so in the runbook, the architecture note, the threat model, and .env.example', async () => {
+/**
+ * The production bring-up flipped `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION`, so the claim these
+ * assertions guard has changed shape — but not disappeared.
+ *
+ * What is no longer true: "setting the three variables does nothing". `.env.example` said exactly
+ * that, and leaving it would have told an operator that a Railway change was inert when it now
+ * connects the read path — the most consequential thing that file can get wrong.
+ *
+ * What is still true, and is what the guard has always really been about: activation is a source
+ * constant, not a variable. No environment variable may activate the production client, and the
+ * `ACTIVAT` assignment scan below is unchanged, because that is the rule the third review's
+ * finding actually turned on.
+ */
+describe('the documents state that activation is a code change, not a variable', () => {
+  it('names the source constant in the runbook and .env.example', async () => {
     const runbook = await readDocument(RUNBOOK)
     expect(runbook).toContain('LITERATURE_PRODUCTION_RUNTIME_ACTIVATION')
-    expect(runbook).toMatch(/reserved for this cutover/iu)
-
-    expect(await readDocument(ARCHITECTURE)).toMatch(/validated, not activated/iu)
-    expect(await readDocument('dedicated-supabase-threat-model.md')).toContain(
-      'dedicated_runtime_not_activated',
-    )
 
     const environmentExample = await readFile(resolve(ROOT, '.env.example'), 'utf8')
     expect(environmentExample).toContain('LITERATURE_PRODUCTION_RUNTIME_ACTIVATION')
-    expect(environmentExample).toMatch(/RESERVED FOR THE LATER CUTOVER/u)
-    // No new variable may exist that could activate the production client.
+    // No variable may exist that could activate the production client.
     expect(environmentExample).not.toMatch(/^[A-Z_]*ACTIVAT[A-Z_]*=/mu)
+  })
+
+  it('tells the operator that the three variables now connect the read path', async () => {
+    const environmentExample = await readFile(resolve(ROOT, '.env.example'), 'utf8')
+    expect(environmentExample).toMatch(/THE PRODUCTION RUNTIME IS ACTIVATED/u)
+    // The superseded claim must not survive anywhere in the file.
+    expect(environmentExample).not.toMatch(/RESERVED FOR THE LATER CUTOVER/u)
+    expect(environmentExample).not.toMatch(
+      /the production Literature runtime is not\s*#?\s*activated/iu,
+    )
+  })
+
+  it('states that no write path is carried', async () => {
+    const environmentExample = await readFile(resolve(ROOT, '.env.example'), 'utf8')
+    expect(environmentExample).toMatch(/No write path is carried/u)
+  })
+
+  it('marks every preparation-era document that claimed an inactive runtime as superseded', async () => {
+    // These documents record the foundation rollout and stay accurate as that record. Each one that
+    // asserted the runtime was inactive now carries a superseded banner, so an operator opening any
+    // of them is not told a stale present-tense fact. The threat model is included deliberately: it
+    // is the document that describes what can reach the production project, and it was the one this
+    // change originally missed.
+    for (const name of [RUNBOOK, ARCHITECTURE, THREAT_MODEL]) {
+      const body = await readDocument(name)
+      expect(`${name}: ${/^> \*\*Superseded/mu.test(body)}`).toBe(`${name}: true`)
+      expect(body).toContain('production bring-up')
+    }
+  })
+
+  it('leaves no document asserting that the runtime is inactive', async () => {
+    // The exact sentences that were false after activation. A superseded banner is not a licence to
+    // leave the body contradicting it.
+    const stale = [
+      /production runtime is not activated/iu,
+      /the production Literature runtime is disabled/iu,
+      // Broad on purpose. The first version of this guard matched only "currently set to
+      // `not_activated`" and sailed past the architecture note's "currently `not_activated`",
+      // which is the same false claim with two words removed.
+      /currently[^.\n]{0,20}`not_activated`/u,
+      /cannot activate a client anywhere/iu,
+      /runtime constructs no client/iu,
+      /does not turn the Literature runtime on/iu,
+      /validates them and constructs nothing/iu,
+    ]
+    for (const [name, body] of await readAllDocuments()) {
+      for (const pattern of stale) {
+        const hit = pattern.exec(body)?.[0] ?? ''
+        expect(`${name}: ${hit}`).toBe(`${name}: `)
+      }
+    }
   })
 })
