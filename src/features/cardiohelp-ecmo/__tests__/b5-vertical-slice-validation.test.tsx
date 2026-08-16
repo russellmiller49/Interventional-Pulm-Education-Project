@@ -5,7 +5,10 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
 import {
+  ecmoDraftDrillTeachingPanelScenarioIds,
+  ecmoDrillPanelMetadata,
   ecmoDrillTeachingPanelScenarioIds,
+  ecmoFrozenPilotPanelScenarioIds,
   hasEcmoDrillTeachingPanel,
   validateEcmoDrillPanelRegistry,
 } from '../components/teaching/EcmoDrillTeachingPanel'
@@ -17,7 +20,8 @@ import { cardiohelpScenarioById } from '../content/scenarios'
  * B5: the contracts the six-scenario vertical slice is validated against.
  *
  * This file holds the guarantees that belong to the slice as a whole rather than to one component:
- * that the pilot registry is still exactly six panels and the other fourteen still say so plainly,
+ * that the protected pilot subset is still exactly six panels while B6 adds fourteen separate
+ * draft/non-credit entries,
  * that every prediction can still be answered wrongly, and that the console the Learn route puts in
  * a pane is scaled to fit that pane instead of being cut off by it.
  *
@@ -72,25 +76,39 @@ beforeEach(() => {
   })
 })
 
-describe('B5: the pilot slice is exactly six panels, and the rest say so', () => {
-  it('registers each pilot scenario once and validates its own registry', () => {
+describe('B5: the protected pilot slice remains exactly six panels', () => {
+  it('preserves each pilot scenario once inside the expanded registry', () => {
     expect(validateEcmoDrillPanelRegistry()).toEqual([])
-    expect([...ecmoDrillTeachingPanelScenarioIds].sort()).toEqual([...PILOT_SCENARIO_IDS].sort())
+    expect([...ecmoFrozenPilotPanelScenarioIds].sort()).toEqual([...PILOT_SCENARIO_IDS].sort())
+    expect(ecmoFrozenPilotPanelScenarioIds).toHaveLength(6)
+    expect(ecmoDrillTeachingPanelScenarioIds).toHaveLength(20)
     expect(new Set(ecmoDrillTeachingPanelScenarioIds).size).toBe(
       ecmoDrillTeachingPanelScenarioIds.length,
     )
+    for (const scenarioId of PILOT_SCENARIO_IDS) {
+      expect(ecmoDrillPanelMetadata(scenarioId)).toMatchObject({
+        reviewStatus: 'frozen-pilot',
+        creditEligible: true,
+      })
+    }
   })
 
-  it('leaves every other guided drill on the explicit no-panel fallback', () => {
+  it('keeps the fourteen B6 additions visibly separate and non-credit', () => {
     const nonPilot = cardiohelpLearnLessons
       .map((lesson) => lesson.scenarioId)
       .filter((scenarioId) => !(PILOT_SCENARIO_IDS as readonly string[]).includes(scenarioId))
 
-    // The slice is six of twenty; if that ratio changes, this package's scope changed with it.
+    // B5 remains six of twenty even though B6 now registers a separate draft branch for the rest.
     expect(nonPilot).toHaveLength(cardiohelpLearnLessons.length - PILOT_SCENARIO_IDS.length)
-    expect(nonPilot.length).toBeGreaterThan(0)
+    expect(ecmoDraftDrillTeachingPanelScenarioIds).toHaveLength(14)
+    expect([...ecmoDraftDrillTeachingPanelScenarioIds].sort()).toEqual([...nonPilot].sort())
     for (const scenarioId of nonPilot) {
-      expect(hasEcmoDrillTeachingPanel(scenarioId)).toBe(false)
+      expect(hasEcmoDrillTeachingPanel(scenarioId)).toBe(true)
+      if (!hasEcmoDrillTeachingPanel(scenarioId)) throw new Error(`No panel for ${scenarioId}`)
+      expect(ecmoDrillPanelMetadata(scenarioId)).toMatchObject({
+        reviewStatus: 'draft',
+        creditEligible: false,
+      })
     }
   })
 })

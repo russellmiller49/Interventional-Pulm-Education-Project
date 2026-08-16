@@ -429,10 +429,14 @@ describe('B3: the learner’s state survives every layout change', () => {
     fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
 
     // The transfer step loads a different case, and the teaching pane follows the circuit rather
-    // than the lesson: the recirculation panel is not shown over the hypercapnia case.
+    // than the lesson: the recirculation panel is not shown over the hypercapnia case. B6 now has
+    // a draft panel for that real transfer scenario, so the registry must render it rather than the
+    // old unavailable fallback.
     expect(screen.getByTestId('scenario').textContent).toBe('acute-hypercapnia')
     expect(document.querySelector('[data-drill-panel="vv-recirculation"]')).toBeNull()
-    expect(document.querySelector('[data-drill-panel-unavailable]')).not.toBeNull()
+    expect(document.querySelector('[data-drill-panel="acute-hypercapnia"]')).not.toBeNull()
+    expect(document.querySelector('[data-draft-panel-notice]')).not.toBeNull()
+    expect(document.querySelector('[data-drill-panel-unavailable]')).toBeNull()
 
     // The transfer step is operated on the real gas control, exactly as it was before the split.
     const sweepControl = screen.getByRole('slider', { name: 'Sweep flow control' })

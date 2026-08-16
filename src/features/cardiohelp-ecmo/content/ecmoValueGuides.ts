@@ -459,6 +459,266 @@ const baselineChange: CriticalCareDerivedValueGuide = {
   reviewStatus: 'draft',
 }
 
+/**
+ * Claim-scoped guides used by the B6 draft drill panels.
+ *
+ * None carries an interpretation band. They identify what a live number represents, where its
+ * authority stops, and which registered source supports that limited claim. Exact values remain
+ * properties of the authored case and educational model, never bedside targets.
+ */
+function b6PanelGuide({
+  id,
+  label,
+  unit,
+  liveValueType,
+  interpretation,
+  evidenceIds,
+  appliesWhen,
+  caveats,
+  doNotInfer,
+  conceptIds,
+}: {
+  readonly id: string
+  readonly label: string
+  readonly unit?: string
+  readonly liveValueType: CriticalCareDerivedValueGuide['liveValueType']
+  readonly interpretation: string
+  readonly evidenceIds: readonly string[]
+  readonly appliesWhen: string
+  readonly caveats: string
+  readonly doNotInfer: string
+  readonly conceptIds: readonly string[]
+}): CriticalCareDerivedValueGuide {
+  return {
+    id,
+    label,
+    unit,
+    liveValueType,
+    interpretation,
+    references: [
+      {
+        id: `${id}.claim-scope`,
+        kind: 'educational-model-boundary',
+        statement: interpretation,
+        appliesWhen,
+        evidenceIds,
+      },
+    ],
+    caveats,
+    doNotInfer,
+    conceptIds,
+    reviewStatus: 'draft',
+  }
+}
+
+const pumpSpeed = b6PanelGuide({
+  id: 'ecmo.pumpSpeed',
+  label: 'Pump speed',
+  unit: 'rpm',
+  liveValueType: 'configured',
+  interpretation:
+    'The centrifugal-pump speed set on this simulated console. It is a demand placed on the circuit, not a delivered-flow setting.',
+  evidenceIds: ['ifu-console-workflow', 'ecmo-book-ch9', 'bounded-educational-model'],
+  appliesWhen: 'The CARDIOHELP-i simulation and its authored reference circuits.',
+  caveats:
+    'The blood flow produced at a given speed changes with drainage, resistance, cannulae, and the patient.',
+  doNotInfer: 'Do not treat a speed value as a flow target or a universal support setting.',
+  conceptIds: ['cc.device.native-device-effective-flow', 'cc.circuit.pressure-zones'],
+})
+
+const sweepGasFlow = b6PanelGuide({
+  id: 'ecmo.sweepGasFlow',
+  label: 'External sweep-gas flow',
+  unit: 'L/min',
+  liveValueType: 'configured',
+  interpretation:
+    'Gas flow set on the external blender or flowmeter and delivered toward the membrane lung; it is not a CARDIOHELP touchscreen value.',
+  evidenceIds: ['ecmo-book-ch18', 'bounded-educational-model'],
+  appliesWhen: 'The external gas-path representation in this simulation.',
+  caveats:
+    'This model makes the carbon-dioxide response faster and simpler than a bedside response.',
+  doNotInfer: 'Do not treat one sweep value as a universal carbon-dioxide target or prescription.',
+  conceptIds: ['cc.membrane.gas-transfer'],
+})
+
+const sweepGasOxygenFraction = b6PanelGuide({
+  id: 'ecmo.sweepGasOxygenFraction',
+  label: 'Sweep-gas oxygen fraction',
+  unit: '%',
+  liveValueType: 'configured',
+  interpretation:
+    'The oxygen fraction set on the external gas blender for gas entering the membrane lung; it is distinct from blood flow and sweep-gas flow.',
+  evidenceIds: ['ecmo-book-ch18', 'bounded-educational-model'],
+  appliesWhen: 'The external gas-path representation in this simulation.',
+  caveats: 'The source, blender hardware, analyser, and tubing are not physically simulated.',
+  doNotInfer:
+    'Do not read this setting as the patient oxygen fraction or as proof of gas delivery.',
+  conceptIds: ['cc.membrane.gas-transfer'],
+})
+
+const patientSpo2 = b6PanelGuide({
+  id: 'ecmo.patientSpO2',
+  label: 'Patient pulse-oximeter saturation',
+  unit: '%',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated value representing an independent bedside pulse oximeter. The CARDIOHELP console neither measures nor displays it.',
+  evidenceIds: ['bounded-educational-model'],
+  appliesWhen: 'Inside this educational simulation only.',
+  caveats: 'Probe quality, dyshemoglobinemia, perfusion, and measurement delay are not modeled.',
+  doNotInfer:
+    'Do not use the modeled value as a bedside target or as proof of tissue oxygen delivery.',
+  conceptIds: ['cc.measurement.measurand', 'cc.perfusion.oxygen-delivery-extraction'],
+})
+
+const arterialCarbonDioxide = b6PanelGuide({
+  id: 'ecmo.arterialCarbonDioxide',
+  label: 'Arterial carbon dioxide',
+  unit: 'mmHg',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated arterial blood-gas value used to show the direction of membrane carbon-dioxide clearance.',
+  evidenceIds: ['ecmo-book-ch18', 'bounded-educational-model'],
+  appliesWhen: 'Inside this educational gas-transfer model only.',
+  caveats:
+    'Sampling delay, regional VA differences, ventilation, production, and distribution kinetics are simplified.',
+  doNotInfer: 'Do not treat one modeled value as a universal correction target.',
+  conceptIds: ['cc.membrane.gas-transfer', 'cc.measurement.measurand'],
+})
+
+const arterialPh = b6PanelGuide({
+  id: 'ecmo.arterialPh',
+  label: 'Arterial pH',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated arterial blood-gas pH interpreted with carbon dioxide, bicarbonate, symptoms, and phase rather than alone.',
+  evidenceIds: ['ecmo-book-ch18', 'bounded-educational-model'],
+  appliesWhen: 'Inside this educational acid-base model only.',
+  caveats: 'The model omits many metabolic, renal, sampling, and treatment effects.',
+  doNotInfer: 'Do not derive a universal treatment threshold from this authored case value.',
+  conceptIds: ['cc.membrane.gas-transfer', 'cc.measurement.measurand'],
+})
+
+const bicarbonate = b6PanelGuide({
+  id: 'ecmo.bicarbonate',
+  label: 'Bicarbonate',
+  unit: 'mmol/L',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated blood-gas bicarbonate used to distinguish an acute acid-base pattern from an already compensated one.',
+  evidenceIds: ['ecmo-book-ch18', 'bounded-educational-model'],
+  appliesWhen: 'Inside this educational acid-base model only.',
+  caveats: 'Renal time course and mixed metabolic disorders are not simulated.',
+  doNotInfer: 'Do not treat the authored value as a bedside treatment target.',
+  conceptIds: ['cc.membrane.gas-transfer', 'cc.measurement.measurand'],
+})
+
+const postOxygenatorSaturation = b6PanelGuide({
+  id: 'ecmo.postOxygenatorSaturation',
+  label: 'Post-oxygenator blood saturation',
+  unit: '%',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated sample from blood leaving the membrane lung. It is not one of the CARDIOHELP console channels represented here.',
+  evidenceIds: ['ecmo-book-ch18', 'elso-circuit-2022', 'bounded-educational-model'],
+  appliesWhen: 'The authored membrane-gas-transfer states in this simulation.',
+  caveats:
+    'Sampling method, dissolved oxygen, blood temperature, and analyser behavior are not modeled.',
+  doNotInfer:
+    'Do not treat this one saturation as proof of patient oxygen delivery or membrane health.',
+  conceptIds: ['cc.membrane.gas-transfer', 'cc.measurement.measurand'],
+})
+
+const meanArterialPressure = b6PanelGuide({
+  id: 'ecmo.meanArterialPressure',
+  label: 'Patient mean arterial pressure',
+  unit: 'mmHg',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated independent patient-monitor value. It is separate from pArt, which is pressure inside return-side circuit tubing.',
+  evidenceIds: ['elso-adult-va-2021', 'bounded-educational-model'],
+  appliesWhen: 'The peripheral femoral V-A reference profile in this simulation.',
+  caveats: 'Vascular tone, waveform fidelity, monitoring site, and dynamic loading are simplified.',
+  doNotInfer:
+    'Do not treat the case value as a universal perfusion target or compare it with pArt.',
+  conceptIds: ['cc.measurement.measurand', 'cc.device.native-device-effective-flow'],
+})
+
+const pulsePressure = b6PanelGuide({
+  id: 'ecmo.pulsePressure',
+  label: 'Arterial pulse pressure',
+  unit: 'mmHg',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated independent arterial-waveform feature used as one clue to native ejection during peripheral V-A support.',
+  evidenceIds: ['elso-adult-va-2021', 'bounded-educational-model'],
+  appliesWhen: 'The peripheral femoral V-A reference profile in this simulation.',
+  caveats:
+    'Waveform quality, loading conditions, rhythm, valve disease, and monitoring-site effects are omitted.',
+  doNotInfer:
+    'Do not use one pulse-pressure number as a universal unloading or ejection threshold.',
+  conceptIds: ['cc.device.native-device-effective-flow', 'cc.measurement.measurand'],
+})
+
+const nativeCardiacOutput = b6PanelGuide({
+  id: 'ecmo.nativeCardiacOutput',
+  label: 'Native cardiac output',
+  unit: 'L/min',
+  liveValueType: 'estimated',
+  interpretation:
+    'A latent simulation estimate used to represent native-heart contribution alongside V-A circuit flow; no CARDIOHELP sensor measures it.',
+  evidenceIds: ['elso-adult-va-2021', 'bounded-educational-model'],
+  appliesWhen: 'The peripheral femoral V-A physiology model in this simulation.',
+  caveats: 'The model does not reproduce an echocardiographic or thermodilution measurement.',
+  doNotInfer: 'Do not add this number to circuit flow to claim a measured total systemic flow.',
+  conceptIds: ['cc.device.native-device-effective-flow'],
+})
+
+const rightRadialSaturation = b6PanelGuide({
+  id: 'ecmo.rightRadialSaturation',
+  label: 'Right-radial saturation',
+  unit: '%',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated independent upper-body arterial value used to represent what the right arm samples during peripheral femoral V-A support.',
+  evidenceIds: ['elso-adult-va-2021', 'elso-neuro-monitoring-2024', 'bounded-educational-model'],
+  appliesWhen: 'The peripheral femoral V-A configuration represented in this simulation.',
+  caveats:
+    'The mixing location is fixed and anatomy, cannula flow, native ejection, and lung function are simplified.',
+  doNotInfer:
+    'Do not carry this value or its response to another V-A configuration as a universal pattern.',
+  conceptIds: ['cc.measurement.measurand', 'cc.device.native-device-effective-flow'],
+})
+
+const femoralArterialSaturation = b6PanelGuide({
+  id: 'ecmo.femoralArterialSaturation',
+  label: 'Femoral arterial saturation',
+  unit: '%',
+  liveValueType: 'estimated',
+  interpretation:
+    'A simulated independent lower-body arterial value used beside a right-radial value to show territory-specific sampling.',
+  evidenceIds: ['elso-adult-va-2021', 'bounded-educational-model'],
+  appliesWhen: 'The peripheral femoral V-A configuration represented in this simulation.',
+  caveats: 'The model fixes the mixing region and does not reproduce dynamic vascular anatomy.',
+  doNotInfer: 'Do not substitute a lower-body value for upper-body oxygenation assessment.',
+  conceptIds: ['cc.measurement.measurand', 'cc.device.native-device-effective-flow'],
+})
+
+const batteryReserve = b6PanelGuide({
+  id: 'ecmo.batteryReserve',
+  label: 'Console battery indication',
+  unit: '%',
+  liveValueType: 'device-displayed',
+  interpretation:
+    'The simulated console battery indication after automatic changeover from AC power; it is a device-status value, not a patient-support target.',
+  evidenceIds: ['ifu-console-workflow', 'bounded-educational-model'],
+  appliesWhen: 'The CARDIOHELP-i transport screen represented in this simulation.',
+  caveats:
+    'The modeled discharge curve and transport duration are authored and do not predict real remaining runtime.',
+  doNotInfer: 'Do not use the displayed percentage to delay restoring a verified power source.',
+  conceptIds: ['cc.device.safety-state'],
+})
+
 export const ecmoDerivedValueGuideList = registerCriticalCareDerivedValueGuides([
   circuitBloodFlow,
   drainagePressure,
@@ -471,6 +731,20 @@ export const ecmoDerivedValueGuideList = registerCriticalCareDerivedValueGuides(
   recirculationAdjustedFlow,
   recirculationFraction,
   baselineChange,
+  pumpSpeed,
+  sweepGasFlow,
+  sweepGasOxygenFraction,
+  patientSpo2,
+  arterialCarbonDioxide,
+  arterialPh,
+  bicarbonate,
+  postOxygenatorSaturation,
+  meanArterialPressure,
+  pulsePressure,
+  nativeCardiacOutput,
+  rightRadialSaturation,
+  femoralArterialSaturation,
+  batteryReserve,
 ])
 
 export const ecmoDerivedValueGuides = {
@@ -485,4 +759,18 @@ export const ecmoDerivedValueGuides = {
   recirculationAdjustedCircuitFlow: recirculationAdjustedFlow,
   recirculationFraction,
   baselineChangeFromEarlierValue: baselineChange,
+  pumpSpeed,
+  sweepGasFlow,
+  sweepGasOxygenFraction,
+  patientSpO2: patientSpo2,
+  arterialCarbonDioxide,
+  arterialPh,
+  bicarbonate,
+  postOxygenatorSaturation,
+  meanArterialPressure,
+  pulsePressure,
+  nativeCardiacOutput,
+  rightRadialSaturation,
+  femoralArterialSaturation,
+  batteryReserve,
 } as const
