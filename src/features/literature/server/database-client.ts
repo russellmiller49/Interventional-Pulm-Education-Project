@@ -249,13 +249,6 @@ export type LiteratureClientResult =
   | { client: null; capability: LiteratureCapability }
 
 /**
- * The single way application code obtains a Literature client.
- *
- * The operation is checked before the binding, so a withheld operation reports *why it is withheld*
- * even in a fully configured deployment — an operator debugging a missing gold-set page should be
- * told the workflow is not installed, not that the database is unconfigured.
- */
-/**
  * Whether this build carries the operation against the currently selected target.
  *
  * Synchronous and connectionless, so a surface can decide whether to *offer* an action without a
@@ -283,6 +276,15 @@ export function literatureOperationActivated(
   return ACTIVATED_OPERATION_SET.has(operation)
 }
 
+/**
+ * The single way application code obtains a Literature client.
+ *
+ * The **binding is judged first**, then the operation. That order matters for the message an
+ * operator reads: telling an unconfigured deployment that "the gold-set workflow is not installed
+ * in this project" names a cause that does not exist and sends them to look at a database instead
+ * of at their variables. Only a deployment that genuinely reached a project is told which of that
+ * project's capabilities are withheld.
+ */
 export function literatureClientForOperation(
   operation: LiteratureRuntimeOperation,
 ): LiteratureClientResult {

@@ -28,8 +28,8 @@
  * observe what it needed has proven nothing, and a shell `&&` chain must not read it as success.
  */
 
-import { access, readFile, writeFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 
 import {
   collectApplicationObservations,
@@ -390,6 +390,13 @@ async function main() {
       process.exitCode = 1
       return
     }
+    // Create the parent directory rather than aborting on it.
+    //
+    // Every `--receipt` invocation in the operator documents writes under `evidence/`, which is not
+    // in the repository, so following the runbook verbatim failed at the last step of a run that
+    // had already done all its work — the worst possible moment, and on conference morning the
+    // likeliest one. `recursive: true` is a no-op when the directory already exists.
+    await mkdir(dirname(resolvedReceiptPath), { recursive: true })
     await writeFile(resolvedReceiptPath, renderReceipt(envelope), 'utf8')
     writeOut(`\nReceipt written to ${receiptPath} (redacted).\n`)
   }

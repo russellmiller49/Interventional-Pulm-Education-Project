@@ -12,6 +12,7 @@ import { LiteratureCapabilityNotice } from '@/features/literature/components/Lit
 import { literatureGoldBatchQuerySchema } from '@/features/literature/schemas/gold-set'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
 import { literatureRuntimeMode } from '@/features/literature/server/database-client'
+import { capabilityCarriesCounts } from '@/features/literature/server/runtime-capability'
 import {
   listLiteratureGoldSetBatches,
   loadLiteratureGoldReviewItem,
@@ -65,7 +66,13 @@ export default async function LiteratureGoldSetPage({ params, searchParams }: Go
    * "no batches have been created yet" — a different and much more misleading claim than "this
    * workflow is not installed here".
    */
-  if (batchesResult.capability.state === 'gold_workflow_unavailable') {
+  /*
+   * Any capability that carries no batches gets the controlled state, not just the deferred
+   * workflow. Matching only `gold_workflow_unavailable` let an *unconfigured* hosted deployment
+   * fall through to the review shell below, whose failure card offers local-stack onboarding —
+   * advice an operator on a deployed environment cannot act on.
+   */
+  if (!capabilityCarriesCounts(batchesResult.capability.state)) {
     const capabilityT = await getTranslations('literature.capability')
     return (
       <div className="container max-w-3xl space-y-6 py-10 md:py-16">

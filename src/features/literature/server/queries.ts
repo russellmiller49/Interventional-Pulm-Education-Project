@@ -257,13 +257,20 @@ export function validateKnownLiteratureFilters(query: LiteratureSearchQuery) {
  * search still speaks for the corpus.
  */
 function searchIsUnfiltered(query: LiteratureSearchQuery): boolean {
+  // `== null` on purpose, matching both `null` and `undefined`.
+  //
+  // `literatureSearchSchema` preprocesses an absent year to `undefined`, so a strict `=== null`
+  // was false for every schema-parsed query and this guard never once returned true — which made
+  // `capabilityFromArticleCount` unreachable from the search path and left the "only an unfiltered
+  // search may report empty versus populated" rule unimplemented. zod infers the field as `any`,
+  // so the type checker had nothing to say about it.
   return (
     !query.q &&
     query.journalIds.length === 0 &&
     query.topicIds.length === 0 &&
     query.publicationTypes.length === 0 &&
-    query.yearFrom === null &&
-    query.yearTo === null &&
+    query.yearFrom == null &&
+    query.yearTo == null &&
     !query.landmarkOnly
   )
 }
@@ -633,6 +640,27 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
 
   const rows = (result.data ?? []) as unknown as ArticleRow[]
   const associations = await loadAssociations(rows.map((row) => row.pmid))
+  if (associations.failure) {
+    /*
+     * The second call site of `loadAssociations`, and the one the earlier fix missed.
+     *
+     * Making that helper return a failure instead of throwing was right — a throw inside
+     * `Promise.all` escaped the capability model and 500'd the detail page — but only
+     * `getLiteratureArticle` was updated to fold the result in. Here the failure was dropped, so a
+     * project that grants select on `literature_articles` but not on the two association tables
+     * produced a queue listing every article with "No source provenance" and no topics, under a
+     * banner saying the project answered. That is precisely the misleading-empty this package
+     * exists to eliminate, reintroduced by the fix for a different instance of it.
+     */
+    console.error('Literature review queue associations failed', {
+      code: associations.failure.code,
+    })
+    const capability = capabilityFromFailure(associations.failure, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
   const sourcesByPmid = new Map<string, LiteratureSourceDisplay[]>()
   const topicsByPmid = new Map<string, LiteratureTopicAssignmentDisplay[]>()
   for (const source of associations.sources) {
