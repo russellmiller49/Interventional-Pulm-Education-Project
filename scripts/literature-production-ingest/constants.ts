@@ -70,6 +70,26 @@ export const SOURCE_SUPABASE_PROJECT = 'ip-literature-local' as const
 
 export const DEFAULT_CANARY_SIZE = 25
 export const EXPECTED_DEVELOPMENT_CANDIDATE_COUNT = 630
+
+/**
+ * The one gold-set batch whose development split is the canary candidate authority.
+ *
+ * `CANARY_SOURCE_AUTHORITY` names the cohort in the contract; these two name the database batch
+ * that supplies it. Both are needed, and neither is a heuristic: `literature_gold_set_batches.name`
+ * is `unique`, so the pair is an exact identity rather than a filter that happens to match one row
+ * today.
+ *
+ * The candidate query previously selected every `dataset_split = 'development'` item in the table,
+ * across all batches. The 100-record `pilot-v1` batch is development-only, so its rows joined the
+ * 630 authorized ones and the read returned 730. The exact-630 assertion caught it, which is why
+ * this is a scoping fix rather than an incident.
+ *
+ * `status` is deliberately not part of the identity. The batch may be frozen later without becoming
+ * a different development cohort, and `EXPECTED_DEVELOPMENT_CANDIDATE_COUNT` remains the drift gate.
+ */
+export const AUTHORITATIVE_DEVELOPMENT_BATCH_NAME = 'gold-set-v1' as const
+export const AUTHORITATIVE_DEVELOPMENT_BATCH_KIND = 'gold_standard' as const
+
 export const DEFAULT_RECORD_BATCH_LIMIT = 250
 export const DEFAULT_BYTE_BATCH_LIMIT = 4 * 1024 * 1024
 export const DEFAULT_CONCURRENCY = 1

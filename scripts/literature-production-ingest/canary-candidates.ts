@@ -7,8 +7,8 @@
  *
  * ## What it reads, and what it must never read
  *
- * It reads exactly two things: the PMIDs of the **630-record development split**, and the
- * bibliography columns of those articles. That is it.
+ * It reads exactly two things: the PMIDs of the **630-record development split of the authoritative
+ * gold-standard batch**, and the bibliography columns of those articles. That is it.
  *
  * It must never read, and contains no SQL that could read:
  *
@@ -26,15 +26,39 @@
  * fact that these PMIDs are in the development collection — which is the whole purpose of the file
  * and is what the owner is authorizing.
  *
+ * ## Which development split
+ *
+ * "The development split" is not a property of the items table on its own. `dataset_split` is
+ * per-item, and every gold-set batch has one, so filtering on the split value alone selects the
+ * development rows of *every* batch. The development-only 100-record `pilot-v1` batch therefore
+ * contributed to this read, and 100 + 630 came back as 730.
+ *
+ * The cohort is now named the only way it can be named exactly: by joining
+ * `literature_gold_set_batches` and binding `name` and `kind` to
+ * `AUTHORITATIVE_DEVELOPMENT_BATCH_NAME` / `AUTHORITATIVE_DEVELOPMENT_BATCH_KIND`. `name` is
+ * `unique` in the schema, so that pair identifies one row rather than describing a shape some batch
+ * happens to have. The join authenticates the source batch and contributes nothing else: no batch
+ * column is projected, no sampling parameter is read, and the batch's `status` is not part of the
+ * identity, because freezing the batch later does not make it a different development cohort.
+ *
+ * What it deliberately is *not*: "every batch that is not the pilot", an anti-join, an `except`, a
+ * subtraction of the held-out count, or `requested_size` minus `test_percent`. Each of those either
+ * enumerates the held-out split or silently readmits the next batch someone creates.
+ *
  * ## Why the count is asserted
  *
  * `createCanaryManifest` requires exactly 630 candidates. Asserting it here as well, against the
  * same constant, turns a silently-partial read — a `max-rows` ceiling, a half-applied migration, a
  * batch that was never frozen — into a refusal rather than into a manifest built from whatever
- * happened to come back.
+ * happened to come back. It is also what caught the batch-scope defect above, and it is unchanged
+ * by this correction: the query says which cohort, the count says the cohort has not drifted.
  */
 
-import { EXPECTED_DEVELOPMENT_CANDIDATE_COUNT } from './constants'
+import {
+  AUTHORITATIVE_DEVELOPMENT_BATCH_KIND,
+  AUTHORITATIVE_DEVELOPMENT_BATCH_NAME,
+  EXPECTED_DEVELOPMENT_CANDIDATE_COUNT,
+} from './constants'
 import {
   SOURCE_ATTESTATION_SQL,
   SOURCE_COMPLETE_PREFIX,
@@ -53,6 +77,18 @@ export const DEVELOPMENT_SPLIT = 'development' as const
  */
 export const FORBIDDEN_COHORT_COLUMNS: readonly string[] = [
   'dataset_split',
+  // Reachable through the batch join, and each one is a way to describe the cohort by arithmetic
+  // rather than by identity: `requested_size` and `test_percent` together give the held-out size,
+  // and the sampling parameters describe how membership was drawn.
+  'requested_size',
+  'test_percent',
+  'sampling_seed',
+  'sampling_report',
+  'sampling_algorithm_version',
+  'sampling_metadata',
+  'sampling_reason',
+  'sample_stratum',
+  'review_status',
   'relevance_label',
   'metadata_sufficiency',
   'reviewer_confidence',
@@ -83,6 +119,16 @@ const CANDIDATE_PROJECTION = [
 ] as const
 
 /**
+ * A single-quoted SQL literal.
+ *
+ * The three values that reach it are reviewed module constants that cannot contain a quote, so this
+ * is not input sanitation — it is the reason a future edit to one of them cannot become one.
+ */
+function sqlText(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`
+}
+
+/**
  * The read-only candidate query.
  *
  * Identical in every respect to the ingestion source read except the projection and the
@@ -104,11 +150,17 @@ select '${SOURCE_RECORD_PREFIX}' || jsonb_build_object(
 )::text
 from public.literature_articles as article
 where article.pmid in (
-  -- The development split only. The test/held-out split is never selected, counted, or
-  -- anti-joined against; this subquery is the single place a cohort relation is named.
+  -- The development split of the one authoritative gold-standard batch, and nothing else. The
+  -- batch join authenticates that batch by its unique name and its kind; it projects no batch
+  -- column and constrains no lifecycle state. The scoping is positive and exact, so the held-out
+  -- split is never selected, counted, or inferred by difference, and a batch added later cannot
+  -- silently widen the cohort.
   select item.pmid
   from public.literature_gold_set_items as item
-  where item.dataset_split = '${DEVELOPMENT_SPLIT}'
+  join public.literature_gold_set_batches as batch on batch.id = item.batch_id
+  where batch.name = ${sqlText(AUTHORITATIVE_DEVELOPMENT_BATCH_NAME)}
+    and batch.kind = ${sqlText(AUTHORITATIVE_DEVELOPMENT_BATCH_KIND)}
+    and item.dataset_split = ${sqlText(DEVELOPMENT_SPLIT)}
 )
 order by article.pmid collate "C" asc;
 select '${SOURCE_COMPLETE_PREFIX}' || ${SOURCE_ATTESTATION_SQL}::text;
