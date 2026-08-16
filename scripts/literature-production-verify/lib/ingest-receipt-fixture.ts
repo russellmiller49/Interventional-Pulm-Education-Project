@@ -15,6 +15,7 @@ import {
   createCompletedReceiptFromCheckpoint,
   createIdempotentReplayReceipt,
 } from '../../literature-production-ingest/engine'
+import { batchChecksumSequenceSummary } from '../../literature-production-ingest/receipt-binding'
 import type { Checkpoint } from '../../literature-production-ingest/types'
 import type { BatchReceipt } from './collect'
 import type { IngestReceipt } from './ingest-receipt'
@@ -178,8 +179,36 @@ export function articleStatesForReceipt(
   }))
 }
 
-/** The batch row the engine leaves behind for that receipt. */
+/**
+ * The batch row the engine leaves behind, describing the **original completed operation**.
+ *
+ * Two things this fixture got wrong, both of which hid the stored-report gap:
+ *
+ *   1. it read its effect counters off the receipt, so for a *replay* receipt it produced a row
+ *      claiming `inserted_count: 0`. The real row is never rewritten by a replay — it still records
+ *      the original operation's 25 inserts. A fixture that agrees with the replay receipt instead
+ *      of with the database is a fixture that cannot catch a receipt disagreeing with the database.
+ *   2. its `report` carried eight fields. The engine persists eleven, and the three it omitted —
+ *      `unchanged_count`, `batch_count`, `batch_checksums_sha256` — were exactly the ones nothing
+ *      compared.
+ *
+ * The report below is transcribed from the engine's `buildFinalPatch` rather than reconstructed by
+ * the contract that validates it, so a change to the engine's shape fails these tests instead of
+ * agreeing with itself.
+ */
 export function batchRowForReceipt(receipt: IngestReceipt): BatchReceipt {
+  // A replay writes nothing, so the durable row still holds the original operation's effects: the
+  // canary fixture inserted every record it read.
+  const original =
+    receipt.outcome === 'idempotent-replay'
+      ? { inserted: receipt.counters.uniquePmids, updated: 0, unchanged: 0 }
+      : {
+          inserted: receipt.counters.inserted,
+          updated: receipt.counters.updated,
+          unchanged: receipt.counters.unchanged,
+        }
+  const afterArticleCount = receipt.afterArticleCount ?? original.inserted
+
   return {
     id: receipt.importBatchId ?? receipt.operationId,
     status: 'completed',
@@ -190,8 +219,8 @@ export function batchRowForReceipt(receipt: IngestReceipt): BatchReceipt {
     source_kind: 'unmapped',
     records_read: receipt.counters.recordsRead,
     unique_pmids: receipt.counters.uniquePmids,
-    inserted_count: receipt.counters.inserted,
-    updated_count: receipt.counters.updated,
+    inserted_count: original.inserted,
+    updated_count: original.updated,
     duplicate_count: receipt.counters.duplicateOccurrences,
     error_count: 0,
     started_at: CREATED_AT,
@@ -203,8 +232,11 @@ export function batchRowForReceipt(receipt: IngestReceipt): BatchReceipt {
       mode: receipt.mode,
       source_projection_checksum: receipt.sourceProjectionChecksum,
       canary_manifest_checksum: receipt.canaryManifestChecksum,
-      before_article_count: receipt.beforeArticleCount,
-      after_article_count: receipt.afterArticleCount,
+      unchanged_count: original.unchanged,
+      before_article_count: afterArticleCount - original.inserted,
+      after_article_count: afterArticleCount,
+      batch_count: receipt.batchChecksums.length,
+      batch_checksums_sha256: batchChecksumSequenceSummary(receipt.batchChecksums),
     },
     created_by: 'literature-production-ingest',
   }

@@ -42,12 +42,7 @@ import {
   LITERATURE_UNPRIVILEGED_ROLES,
   LITERATURE_VISIBILITY_STATES,
 } from './identity'
-import {
-  batchChecksumSummary,
-  ingestBatchReport,
-  ingestReceiptChecksumMatches,
-  type IngestReceipt,
-} from './ingest-receipt'
+import { ingestReceiptChecksumMatches, type IngestReceipt } from './ingest-receipt'
 import { describeObservation, isObserved, type Observation } from './observation'
 /*
  * The binding contract, imported rather than restated.
@@ -59,6 +54,7 @@ import { describeObservation, isObserved, type Observation } from './observation
  * actually matters.
  */
 import {
+  STABLE_FINAL_REPORT_KEYS,
   classifyStoredBatchState,
   describeAmbiguousBatch,
   evaluateReceiptBinding,
@@ -1752,12 +1748,21 @@ export function checkIngestReceiptBinding(
   }
 
   /* --------------------------------------------------------------------------------------- *
-   * V57 — the operation identity the engine stamped into the row itself, which is the only copy
-   * of these values that did not travel through the operator's disk.
+   * V57 — the complete operation record the engine stamped into the row itself, which is the only
+   * copy of these values that did not travel through the operator's disk.
+   *
+   * This check owns no comparison of its own any more. It used to add one — the batch-checksum
+   * summary, guarded by `typeof stored === 'string'` — on the reasoning that the value was
+   * receipt-derived and therefore outside the shared contract. Both halves of that were wrong: the
+   * summary belongs to the stored report like every other field, and the type guard turned an
+   * *omitted* summary into a skipped comparison, so deleting the field passed. Alongside it, five
+   * stored fields were bound by neither side. The shared contract now decides all eleven, and this
+   * check renders the verdict.
    * --------------------------------------------------------------------------------------- */
 
   const reportId = 'V57-receipt-matches-batch-report'
-  const reportTitle = 'the receipt agrees with the operation identity stored in the batch row'
+  const reportTitle =
+    'the receipt agrees with the complete operation record stored in the batch row'
   const reportFindings = findingsFor([
     'batch_report_operation_id_drift',
     'batch_report_mode_drift',
@@ -1765,6 +1770,14 @@ export function checkIngestReceiptBinding(
     'batch_report_mapping_version_drift',
     'batch_report_source_checksum_drift',
     'batch_report_manifest_checksum_drift',
+    'batch_report_unchanged_count_drift',
+    'batch_report_before_count_drift',
+    'batch_report_after_count_drift',
+    'batch_report_batch_count_drift',
+    'batch_report_batch_checksums_drift',
+    'batch_report_field_malformed',
+    'batch_report_unexpected_shape',
+    'batch_report_arithmetic_impossible',
     'batch_identity_source_checksum_drift',
   ])
   const absentReport = findingsFor(['batch_report_absent'])
@@ -1777,26 +1790,13 @@ export function checkIngestReceiptBinding(
   } else if (reportFindings.length > 0) {
     results.push(fail(reportId, reportTitle, renderFindings(reportFindings)))
   } else {
-    // The batch-checksum summary is receipt-derived and is not part of the shared contract, so it
-    // is compared here, where the receipt's own batch checksums are in hand.
-    const report = ingestBatchReport(matchedBatch.report)
-    const summaryDrifted =
-      report !== null &&
-      typeof report.batch_checksums_sha256 === 'string' &&
-      report.batch_checksums_sha256 !== batchChecksumSummary(receipt.value.batchChecksums)
     results.push(
-      summaryDrifted
-        ? fail(
-            reportId,
-            reportTitle,
-            'The receipt disagrees with the identity stored in the batch row on the batch ' +
-              'checksum summary.',
-          )
-        : pass(
-            reportId,
-            reportTitle,
-            'The receipt and the stored operation identity agree on every bound value.',
-          ),
+      pass(
+        reportId,
+        reportTitle,
+        `All ${STABLE_FINAL_REPORT_KEYS.length} stored report fields agree with the operation ` +
+          'reconstructed from the receipt and from independently observed rows.',
+      ),
     )
   }
 

@@ -411,3 +411,86 @@ describe('missing optional evidence is reported, never assumed', () => {
     expect(run.summary.fail).toBe(0)
   })
 })
+
+/* --------------------------------------------------------------------------------------------- *
+ * Stored-report parity, at scenario level
+ *
+ * Each mutation below independently produced `verdict=verified, pass=26, fail=0, indeterminate=0,
+ * V57=pass` against an otherwise healthy engine-shaped canary. They are driven through the whole
+ * canary scenario here — not just the binding function — because that is the surface an operator
+ * reads before a conference.
+ * --------------------------------------------------------------------------------------------- */
+
+/** The healthy canary with one field of the stored batch report mutated or removed. */
+function canaryWithReport(
+  patch: Readonly<Record<string, unknown>>,
+  remove: readonly string[] = [],
+): VerificationInput {
+  const input = healthyCanaryInput()
+  const batches = input.database.batches
+  if (batches.status !== 'observed') throw new Error('the healthy fixture must observe batches')
+  const [row] = batches.value
+  const report = { ...(row.report as Record<string, unknown>), ...patch }
+  for (const key of remove) delete report[key]
+  return {
+    ...input,
+    database: { ...input.database, batches: observed([{ ...row, report }]) },
+  }
+}
+
+describe('the stored operation report is bound field by field', () => {
+  it.each([
+    ['before_article_count wrong', { before_article_count: 777 }, []],
+    ['before_article_count missing', {}, ['before_article_count']],
+    ['after_article_count wrong', { after_article_count: 999 }, []],
+    ['after_article_count missing', {}, ['after_article_count']],
+    ['unchanged_count wrong', { unchanged_count: 999 }, []],
+    ['unchanged_count missing', {}, ['unchanged_count']],
+    ['batch_count wrong', { batch_count: 999 }, []],
+    ['batch_count missing', {}, ['batch_count']],
+    ['batch_checksums_sha256 wrong', { batch_checksums_sha256: 'c'.repeat(64) }, []],
+    ['batch_checksums_sha256 missing', {}, ['batch_checksums_sha256']],
+    ['batch_checksums_sha256 malformed', { batch_checksums_sha256: 'not-a-digest' }, []],
+    ['an impossible before/after pair', { before_article_count: 10 }, []],
+    ['an impossible unchanged count', { unchanged_count: 26 }, []],
+  ])('refuses the whole canary when %s', (_label, patch, remove) => {
+    const run = runById(
+      'canary',
+      canaryWithReport(patch as Record<string, unknown>, remove as string[]),
+    )
+
+    expect(run.verdict).toBe('not_verified')
+    expect(run.summary.fail).toBeGreaterThan(0)
+    const report = run.checks.find((check) => check.id === 'V57-receipt-matches-batch-report')
+    expect(report?.outcome).toBe('fail')
+  })
+
+  it('still verifies the healthy replay the fixture models', () => {
+    // The fixture's receipt is `idempotent-replay` while the stored report describes the original
+    // completed operation. Both must bind against the identical row.
+    const run = runById('canary', healthyCanaryInput())
+    expect(run.verdict).toBe('verified')
+    expect(
+      run.checks.find((check) => check.id === 'V57-receipt-matches-batch-report')?.outcome,
+    ).toBe('pass')
+  })
+
+  it('still verifies a first-run canary whose receipt reports the completion', () => {
+    const pmids = Array.from({ length: LITERATURE_CANARY_RECORD_COUNT }, (_, index) =>
+      String(40_000_000 + index),
+    )
+    const receipt = ingestReceiptFixture({ pmids, afterArticleCount: pmids.length })
+    const input = healthyCanaryInput()
+    const run = runById('canary', {
+      ...input,
+      ingestReceipt: observed(receipt),
+      baselineSnapshot: skipped('no baseline exists: nothing ran before this'),
+      database: { ...input.database, batches: observed([batchRowForReceipt(receipt)]) },
+    })
+
+    expect(run.verdict).toBe('verified')
+    expect(
+      run.checks.find((check) => check.id === 'V57-receipt-matches-batch-report')?.outcome,
+    ).toBe('pass')
+  })
+})

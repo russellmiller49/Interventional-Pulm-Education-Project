@@ -42,6 +42,7 @@
  * in the receipt the operator already has.
  */
 
+import { canonicalJson, sha256 } from './canonical'
 import {
   APPROVED_PROJECT_REF,
   APPROVED_PROJECT_URL,
@@ -51,6 +52,19 @@ import {
   INGEST_WRITER_IDENTITY,
   MAPPING_VERSION,
 } from './constants'
+
+/**
+ * The summary of a durable batch-checksum sequence, in one place.
+ *
+ * The engine wrote this into `report.batch_checksums_sha256`, and the verification package had its
+ * own transcription of the same algorithm. Two copies of a hash construction is one copy too many:
+ * the point of the stored value is that it was computed by the reviewed algorithm, so both sides
+ * now call this. `engine.ts` delegates to it, which keeps the engine's checkpoint-shaped helper
+ * without giving it a second definition of the hash.
+ */
+export function batchChecksumSequenceSummary(checksums: readonly string[]): string {
+  return sha256(canonicalJson([...checksums]))
+}
 
 /** The article states an import is allowed to leave behind. Anything else means something curated. */
 export const REQUIRED_ARTICLE_RELEVANCE_STATE = 'unreviewed' as const
@@ -188,6 +202,14 @@ export type BindingFindingCode =
   | 'batch_report_mapping_version_drift'
   | 'batch_report_source_checksum_drift'
   | 'batch_report_manifest_checksum_drift'
+  | 'batch_report_unchanged_count_drift'
+  | 'batch_report_before_count_drift'
+  | 'batch_report_after_count_drift'
+  | 'batch_report_batch_count_drift'
+  | 'batch_report_batch_checksums_drift'
+  | 'batch_report_field_malformed'
+  | 'batch_report_unexpected_shape'
+  | 'batch_report_arithmetic_impossible'
   | 'batch_identity_source_checksum_drift'
   | 'counter_drift'
   | 'replay_reported_effects'
@@ -228,6 +250,144 @@ function finding(code: BindingFindingCode, subject: string, detail: string): Bin
 function reportRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   return value as Record<string, unknown>
+}
+
+/* ============================================================================================= *
+ * The stable final report
+ * ============================================================================================= */
+
+/**
+ * Every key the engine's finalization persists into `literature_import_batches.report`.
+ *
+ * One explicit definition, in the shared contract, because there had been three implicit ones: the
+ * engine wrote eleven fields, the engine's own verifier compared all eleven by canonical-JSON
+ * equality, and this contract compared six. The six were the identity fields, which is why the gap
+ * was easy to miss — every mutation of the *other five* left a receipt that still bound cleanly:
+ * `before_article_count: 777`, `after_article_count: 999`, `unchanged_count: 999`,
+ * `batch_count: 999`, and an omitted `batch_checksums_sha256` each independently produced
+ * `verified`, `pass=26`, `fail=0`.
+ */
+export const STABLE_FINAL_REPORT_KEYS = [
+  'engine_version',
+  'mapping_version',
+  'operation_id',
+  'mode',
+  'source_projection_checksum',
+  'canary_manifest_checksum',
+  'unchanged_count',
+  'before_article_count',
+  'after_article_count',
+  'batch_count',
+  'batch_checksums_sha256',
+] as const
+
+export type StableFinalReportKey = (typeof STABLE_FINAL_REPORT_KEYS)[number]
+
+export interface StableFinalReportReconstruction {
+  /**
+   * Every field that could be reconstructed, and only those.
+   *
+   * Partial rather than all-or-nothing: `before_article_count` and `after_article_count` are the
+   * only two that need the corpus total, so an unobserved total must not also suspend judgement on
+   * `unchanged_count`, `batch_count`, and the checksum summary — those follow from the receipt and
+   * the batch row alone. A field absent here is withheld, never assumed to agree.
+   */
+  readonly report: Readonly<Partial<Record<StableFinalReportKey, unknown>>>
+  /** What could not be reconstructed, and why. Reported as no verdict, never as agreement. */
+  readonly unresolved: readonly string[]
+  /** Arithmetic that cannot describe any real operation, whatever the stored report says. */
+  readonly impossible: readonly string[]
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+}
+
+/**
+ * Rebuild the complete report a healthy operation must have persisted.
+ *
+ * Nothing here is copied out of the stored report — that would make the comparison vacuous. Every
+ * value is derived from the receipt (already checksum-verified and identity-bound above) or from
+ * rows read independently from the database:
+ *
+ *   - `after_article_count` is the **observed corpus total**. The contract has already required the
+ *     receipt's own after-count to equal it, and required this batch to account for every
+ *     provenance row it carries, so the operation being bound is the one that left the corpus at
+ *     this size.
+ *   - `before_article_count` follows from the engine's own finalization invariant,
+ *     `after - before = inserted`, using the **observed batch row's** `inserted_count`. For the
+ *     first-run canary that yields `before = 0`, `after = 25` without either being assumed.
+ *   - `unchanged_count` is `unique_pmids - inserted_count - updated_count`, again from the observed
+ *     row.
+ *   - `batch_count` and `batch_checksums_sha256` come from the receipt's durable batch-checksum
+ *     sequence, summarized by the engine's own algorithm.
+ *
+ * ## Why the replay receipt is not consulted for these
+ *
+ * The stored report describes the **original completed operation**; a replay receipt describes the
+ * later no-write replay. Their effect counters disagree by design — a replay reports
+ * `inserted: 0`, `updated: 0`, `unchanged: 25` while the original reported `inserted: 25`,
+ * `unchanged: 0`. Reconstructing from the *observed batch row* rather than from the receipt's
+ * counters is what lets one contract bind both without weakening either: the row still records the
+ * original operation in both cases, and the durable batch-checksum sequence is carried identically
+ * by both receipts.
+ */
+export function reconstructStableFinalReport(
+  receipt: BindableReceipt,
+  batch: ObservedBatchRow,
+  totalArticles: number | null,
+): StableFinalReportReconstruction {
+  const unresolved: string[] = []
+  const impossible: string[] = []
+
+  // Always available: these follow from the receipt alone, which is already checksum-verified and
+  // identity-bound by the checks above.
+  const report: Partial<Record<StableFinalReportKey, unknown>> = {
+    engine_version: receipt.engineVersion,
+    mapping_version: receipt.mappingVersion,
+    operation_id: receipt.operationId,
+    mode: receipt.mode,
+    source_projection_checksum: receipt.sourceProjectionChecksum,
+    canary_manifest_checksum: receipt.canaryManifestChecksum,
+    batch_count: receipt.batchChecksums.length,
+    batch_checksums_sha256: batchChecksumSequenceSummary(receipt.batchChecksums),
+  }
+
+  const countable = (['inserted_count', 'updated_count', 'unique_pmids'] as const).filter(
+    (key) => !isNonNegativeInteger(batch[key]),
+  )
+  for (const key of countable) unresolved.push(`the batch row's ${key}`)
+
+  if (countable.length === 0) {
+    const unchangedCount = batch.unique_pmids - batch.inserted_count - batch.updated_count
+    if (unchangedCount < 0) {
+      impossible.push(
+        `the batch reports ${batch.inserted_count} insert(s) and ${batch.updated_count} update(s) ` +
+          `across only ${batch.unique_pmids} unique PMID(s)`,
+      )
+    } else {
+      report.unchanged_count = unchangedCount
+    }
+
+    if (totalArticles === null) {
+      unresolved.push('the corpus total')
+    } else {
+      const beforeArticleCount = totalArticles - batch.inserted_count
+      if (beforeArticleCount < 0) {
+        impossible.push(
+          `the batch reports ${batch.inserted_count} insert(s) into a corpus that now holds ` +
+            `${totalArticles}, so the operation would have started from a negative count`,
+        )
+      } else {
+        report.before_article_count = beforeArticleCount
+        report.after_article_count = totalArticles
+      }
+    }
+  } else if (totalArticles === null) {
+    unresolved.push('the corpus total')
+  }
+
+  return { report, unresolved, impossible }
 }
 
 /**
@@ -530,6 +690,95 @@ export function evaluateReceiptBinding(
         report.canary_manifest_checksum,
         receipt.canaryManifestChecksum,
       )
+
+      /*
+       * The five fields that were not bound at all.
+       *
+       * Each is compared against a value reconstructed from the receipt and from rows read
+       * independently — never against the stored report itself. A missing key is a failure exactly
+       * like a wrong one: `undefined` is not a value the engine writes, and the previous
+       * `typeof stored === 'string'` guard on the checksum summary turned an omitted field into a
+       * skipped comparison, which is how deleting it produced a pass.
+       */
+      const expected = reconstructStableFinalReport(receipt, batch, observation.totalArticles)
+
+      const shape = STABLE_FINAL_REPORT_KEYS.filter((key) => !(key in report))
+      const extra = Object.keys(report).filter(
+        (key) => !(STABLE_FINAL_REPORT_KEYS as readonly string[]).includes(key),
+      )
+      if (shape.length > 0 || extra.length > 0) {
+        findings.push(
+          finding(
+            'batch_report_unexpected_shape',
+            'stored report shape',
+            `The stored report is not the report this engine writes: ` +
+              `${shape.length > 0 ? `missing ${shape.join(', ')}. ` : ''}` +
+              `${extra.length > 0 ? `unexpected ${extra.join(', ')}. ` : ''}` +
+              'The engine persists exactly these eleven fields at finalization, and its own ' +
+              'verifier compares the whole object, so a different shape is drift rather than a ' +
+              'field this contract may skip.',
+          ),
+        )
+      }
+
+      for (const reason of expected.impossible) {
+        findings.push(
+          finding(
+            'batch_report_arithmetic_impossible',
+            'stored operation arithmetic',
+            `No real operation matches what was observed: ${reason}. The stored report cannot be ` +
+              'reconstructed, so it cannot be confirmed.',
+          ),
+        )
+      }
+
+      const numericFields: readonly [StableFinalReportKey, BindingFindingCode, string][] = [
+        ['unchanged_count', 'batch_report_unchanged_count_drift', 'stored unchanged count'],
+        ['before_article_count', 'batch_report_before_count_drift', 'stored before-article count'],
+        ['after_article_count', 'batch_report_after_count_drift', 'stored after-article count'],
+        ['batch_count', 'batch_report_batch_count_drift', 'stored batch count'],
+      ]
+      for (const [key, code, subject] of numericFields) {
+        if (key in report && !isNonNegativeInteger(report[key])) {
+          findings.push(
+            finding(
+              'batch_report_field_malformed',
+              subject,
+              `The stored ${key} is ${JSON.stringify(report[key]) ?? 'undefined'}, which is not a ` +
+                'non-negative integer.',
+            ),
+          )
+          continue
+        }
+        // Only compared when the expected value could be reconstructed; a withheld field is
+        // reported as no verdict below rather than silently passing.
+        if (key in expected.report && report[key] !== expected.report[key]) {
+          drift(code, subject, report[key], expected.report[key])
+        }
+      }
+
+      const storedSummary = report.batch_checksums_sha256
+      if (typeof storedSummary !== 'string' || !/^[a-f0-9]{64}$/u.test(storedSummary)) {
+        findings.push(
+          finding(
+            'batch_report_field_malformed',
+            'stored batch checksum summary',
+            'The stored batch_checksums_sha256 is absent or is not a lowercase SHA-256 digest. It ' +
+              'is required: it is the only stored value that summarizes the durable batch sequence.',
+          ),
+        )
+      } else if (storedSummary !== expected.report.batch_checksums_sha256) {
+        drift(
+          'batch_report_batch_checksums_drift',
+          'stored batch checksum summary',
+          storedSummary,
+          expected.report.batch_checksums_sha256,
+        )
+      }
+
+      if (expected.unresolved.length > 0) {
+        unobserved.push(...expected.unresolved.map((entry) => `${entry} (stored report binding)`))
+      }
     }
 
     /*

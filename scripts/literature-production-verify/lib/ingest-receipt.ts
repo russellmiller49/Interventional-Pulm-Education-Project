@@ -208,27 +208,17 @@ export function ingestReceiptChecksumMatches(receipt: IngestReceipt): boolean {
   return createHash('sha256').update(canonicalJson(body)).digest('hex') === receipt.receiptChecksum
 }
 
-/** The batch `report` column the engine writes. Read alongside the receipt, and cross-checked. */
-export interface IngestBatchReport {
-  readonly engine_version?: unknown
-  readonly mapping_version?: unknown
-  readonly operation_id?: unknown
-  readonly mode?: unknown
-  readonly source_projection_checksum?: unknown
-  readonly canary_manifest_checksum?: unknown
-  readonly batch_checksums_sha256?: unknown
-  readonly before_article_count?: unknown
-  readonly after_article_count?: unknown
-}
-
-export function ingestBatchReport(value: unknown): IngestBatchReport | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  return value as IngestBatchReport
-}
-
-/** sha256 over the canonical form of the receipt's batch checksums, as the engine summarizes them. */
-export function batchChecksumSummary(batchChecksums: readonly string[]): string {
-  return createHash('sha256')
-    .update(canonicalJson([...batchChecksums]))
-    .digest('hex')
-}
+/*
+ * The stored batch `report` is deliberately not described here.
+ *
+ * This module used to carry an `IngestBatchReport` interface listing nine of the eleven fields as
+ * `unknown`, and a `batchChecksumSummary` transcription of the engine's hash. Both were partial
+ * second opinions about an artifact the engine defines: the interface omitted `unchanged_count` and
+ * `batch_count` entirely, and the transcribed hash was only ever consulted when the stored value
+ * happened to already be a string.
+ *
+ * `STABLE_FINAL_REPORT_KEYS`, `reconstructStableFinalReport`, and `batchChecksumSequenceSummary` in
+ * `literature-production-ingest/receipt-binding.ts` are now the single description, used by both
+ * packages. What stays independent here is the receipt's own checksum recomputation above, against
+ * this package's own canonicalizer — that is the duplication that is worth keeping.
+ */

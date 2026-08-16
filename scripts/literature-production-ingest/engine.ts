@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { canonicalJson, jsonBody, sha256 } from './canonical'
+import { batchChecksumSequenceSummary } from './receipt-binding'
 import {
   APPROVED_PROJECT_REF,
   APPROVED_PROJECT_URL,
@@ -491,6 +492,13 @@ function aggregateEffects(checkpoint: Checkpoint) {
   )
 }
 
+/**
+ * The checkpoint-shaped view of the durable batch-checksum summary.
+ *
+ * The hash itself lives in `receipt-binding.ts` so the verification package binds the stored
+ * `batch_checksums_sha256` with the same algorithm that produced it, rather than with a
+ * transcription of it.
+ */
 export function batchChecksumSummary(checkpoint: Checkpoint): {
   batchCount: number
   batchChecksumsSha256: string
@@ -498,7 +506,7 @@ export function batchChecksumSummary(checkpoint: Checkpoint): {
   const checksums = checkpoint.batches.map((batch) => batch.checksum)
   return {
     batchCount: checksums.length,
-    batchChecksumsSha256: sha256(canonicalJson(checksums)),
+    batchChecksumsSha256: batchChecksumSequenceSummary(checksums),
   }
 }
 

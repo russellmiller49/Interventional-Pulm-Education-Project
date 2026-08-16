@@ -45,6 +45,7 @@ import {
   LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
 } from './lib/identity'
 import { MAPPING_VERSION } from '../literature-production-ingest/constants'
+import { batchChecksumSequenceSummary } from '../literature-production-ingest/receipt-binding'
 import type { BatchReceipt, SourceRow } from './lib/collect'
 import {
   isIngestReceipt,
@@ -175,14 +176,18 @@ function batchRow(
     source_filename: source.batchIdentity.sourceFilename,
     source_file_sha256: source.batchIdentity.sourceFileSha256,
     source_kind: source.batchIdentity.sourceKind,
-    records_read: receipt.counters.recordsRead,
-    unique_pmids: receipt.counters.uniquePmids,
-    inserted_count: receipt.counters.inserted,
-    updated_count: receipt.counters.updated,
-    duplicate_count: receipt.counters.duplicateOccurrences,
+    // From the checkpoint, not the receipt: the durable row records the ORIGINAL operation, and a
+    // replay never rewrites it. Reading these off a replay receipt produced a row claiming zero
+    // inserts, which is not a row the engine can leave behind.
+    records_read: source.counters.recordsRead,
+    unique_pmids: source.counters.uniquePmids,
+    inserted_count: source.counters.inserted,
+    updated_count: source.counters.updated,
+    duplicate_count: source.counters.duplicateOccurrences,
     error_count: 0,
     started_at: source.createdAt,
     completed_at: source.updatedAt,
+    // All eleven fields the engine's finalization persists.
     report: {
       engine_version: source.engineVersion,
       mapping_version: source.mappingVersion,
@@ -190,8 +195,13 @@ function batchRow(
       mode: source.mode,
       source_projection_checksum: source.sourceProjectionChecksum,
       canary_manifest_checksum: source.canaryManifestChecksum,
+      unchanged_count: source.counters.unchanged,
       before_article_count: source.beforeArticleCount,
       after_article_count: source.afterArticleCount,
+      batch_count: source.batches.length,
+      batch_checksums_sha256: batchChecksumSequenceSummary(
+        source.batches.map((batch) => batch.checksum),
+      ),
     },
     created_by: 'literature-production-ingest',
     ...overrides,

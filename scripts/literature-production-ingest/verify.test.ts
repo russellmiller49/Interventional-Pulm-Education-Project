@@ -209,6 +209,44 @@ describe('completed ingestion verification', () => {
     ).rejects.toThrow('import-batch report')
   })
 
+  /*
+   * Parity with the shared binding contract.
+   *
+   * The ingestion verifier has always compared the whole stored report by canonical-JSON equality,
+   * so it already rejected each of these. The production verification path bound only six identity
+   * fields, and each mutation below independently produced `verified` there. Running the same list
+   * through both is what makes "the two packages agree" a test rather than a claim.
+   */
+  it.each([
+    ['before_article_count wrong', { before_article_count: 777 }],
+    ['after_article_count wrong', { after_article_count: 999 }],
+    ['unchanged_count wrong', { unchanged_count: 999 }],
+    ['batch_count wrong', { batch_count: 999 }],
+    ['batch_checksums_sha256 wrong', { batch_checksums_sha256: 'c'.repeat(64) }],
+    ['batch_checksums_sha256 malformed', { batch_checksums_sha256: 'not-a-digest' }],
+    ['batch_checksums_sha256 omitted', { batch_checksums_sha256: undefined }],
+    ['before_article_count omitted', { before_article_count: undefined }],
+    ['after_article_count omitted', { after_article_count: undefined }],
+    ['unchanged_count omitted', { unchanged_count: undefined }],
+    ['batch_count omitted', { batch_count: undefined }],
+  ])('refuses a completed operation whose stored report has %s', async (_label, override) => {
+    const fixture = await completedFixture()
+    await expect(
+      verifyCompletedIngestion({
+        checkpoint: fixture.checkpoint,
+        receipt: fixture.receipt,
+        sourceFactory: sourceFactory(fixture.rows),
+        mapRecord: fixture.mapper,
+        transport: new VerificationFakeTransport(
+          fixture.checkpoint,
+          fixture.batch,
+          "'synthetic':1",
+          override as Record<string, unknown>,
+        ),
+      }),
+    ).rejects.toThrow(/import-batch report|not bound to what was observed/u)
+  })
+
   it('rejects checksum-valid extra identity or membership fields in a receipt', async () => {
     const fixture = await completedFixture()
     const body = {

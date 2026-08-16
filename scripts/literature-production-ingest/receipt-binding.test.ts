@@ -24,8 +24,11 @@ import {
 } from './constants'
 import { createCompletedReceiptFromCheckpoint, createIdempotentReplayReceipt } from './engine'
 import {
+  STABLE_FINAL_REPORT_KEYS,
+  batchChecksumSequenceSummary,
   classifyStoredBatchState,
   evaluateReceiptBinding,
+  reconstructStableFinalReport,
   type BindableReceipt,
   type BindingFindingCode,
   type ObservedArticleState,
@@ -133,6 +136,7 @@ function replayReceipt(source: Checkpoint = checkpoint()): IngestReceipt {
 function batchRow(
   receipt: IngestReceipt,
   overrides: Partial<ObservedBatchRow> = {},
+  reportOverrides: Readonly<Record<string, unknown>> = {},
 ): ObservedBatchRow {
   return {
     id: receipt.importBatchId ?? receipt.operationId,
@@ -148,6 +152,9 @@ function batchRow(
     updated_count: 0,
     duplicate_count: 0,
     error_count: 0,
+    // The complete eleven-field report the engine's finalization persists, transcribed from
+    // `buildFinalPatch` rather than reconstructed by the contract that checks it. It describes the
+    // ORIGINAL operation: 25 inserted into an empty corpus, nothing unchanged, one durable batch.
     report: {
       engine_version: receipt.engineVersion,
       mapping_version: receipt.mappingVersion,
@@ -155,9 +162,27 @@ function batchRow(
       mode: receipt.mode,
       source_projection_checksum: receipt.sourceProjectionChecksum,
       canary_manifest_checksum: receipt.canaryManifestChecksum,
+      unchanged_count: 0,
+      before_article_count: 0,
+      after_article_count: 25,
+      batch_count: receipt.batchChecksums.length,
+      batch_checksums_sha256: batchChecksumSequenceSummary(receipt.batchChecksums),
+      ...reportOverrides,
     },
     ...overrides,
   }
+}
+
+/** A batch row whose stored report has one field mutated, removed, or added. */
+function batchRowWithReport(
+  receipt: IngestReceipt,
+  patch: Readonly<Record<string, unknown>>,
+  remove: readonly string[] = [],
+): ObservedBatchRow {
+  const row = batchRow(receipt)
+  const report = { ...(row.report as Record<string, unknown>), ...patch }
+  for (const key of remove) delete report[key]
+  return { ...row, report }
 }
 
 function provenance(pmids: readonly string[], batchId: string): ObservedProvenanceRow[] {
@@ -518,6 +543,166 @@ describe('the receipt names the cohort that authorized it', () => {
     }
     expect(codes(receipt, observation(receipt as IngestReceipt))).toContain(
       'receipt_source_authority_unreviewed',
+    )
+  })
+})
+
+/* --------------------------------------------------------------------------------------------- *
+ * The complete stored final report
+ *
+ * Every mutation below independently produced `verdict=verified, pass=26, fail=0, V57=pass` before
+ * this correction, because the contract bound only the six identity fields and the verifier's one
+ * extra comparison was skipped whenever the stored value was not already a string.
+ * --------------------------------------------------------------------------------------------- */
+
+describe('every stable field of the stored report is bound', () => {
+  it('reconstructs the complete eleven-field report from receipt and observation alone', () => {
+    const receipt = completedReceipt()
+    const rebuilt = reconstructStableFinalReport(receipt, batchRow(receipt), 25)
+
+    expect(rebuilt.impossible).toEqual([])
+    expect(rebuilt.unresolved).toEqual([])
+    expect(Object.keys(rebuilt.report ?? {}).sort()).toEqual([...STABLE_FINAL_REPORT_KEYS].sort())
+    // The first-run canary values fall out of the invariants rather than being assumed.
+    expect(rebuilt.report).toMatchObject({
+      before_article_count: 0,
+      after_article_count: 25,
+      unchanged_count: 0,
+      batch_count: 1,
+    })
+  })
+
+  it.each([
+    [
+      'before_article_count wrong',
+      { before_article_count: 777 },
+      [],
+      'batch_report_before_count_drift',
+    ],
+    ['before_article_count missing', {}, ['before_article_count'], 'batch_report_unexpected_shape'],
+    [
+      'after_article_count wrong',
+      { after_article_count: 999 },
+      [],
+      'batch_report_after_count_drift',
+    ],
+    ['after_article_count missing', {}, ['after_article_count'], 'batch_report_unexpected_shape'],
+    ['unchanged_count wrong', { unchanged_count: 999 }, [], 'batch_report_unchanged_count_drift'],
+    ['unchanged_count missing', {}, ['unchanged_count'], 'batch_report_unexpected_shape'],
+    ['batch_count wrong', { batch_count: 999 }, [], 'batch_report_batch_count_drift'],
+    ['batch_count missing', {}, ['batch_count'], 'batch_report_unexpected_shape'],
+    [
+      'batch_checksums_sha256 wrong',
+      { batch_checksums_sha256: 'c'.repeat(64) },
+      [],
+      'batch_report_batch_checksums_drift',
+    ],
+    [
+      'batch_checksums_sha256 missing',
+      {},
+      ['batch_checksums_sha256'],
+      'batch_report_field_malformed',
+    ],
+    [
+      'batch_checksums_sha256 malformed',
+      { batch_checksums_sha256: 'not-a-digest' },
+      [],
+      'batch_report_field_malformed',
+    ],
+  ])('refuses a report whose %s', (_label, patch, remove, expected) => {
+    const receipt = completedReceipt()
+    const row = batchRowWithReport(receipt, patch as Record<string, unknown>, remove as string[])
+    expect(codes(receipt, observation(receipt, { batch: row }))).toContain(expected)
+  })
+
+  it('refuses a null batch_checksums_sha256 rather than skipping the comparison', () => {
+    const receipt = completedReceipt()
+    const row = batchRowWithReport(receipt, { batch_checksums_sha256: null })
+    expect(codes(receipt, observation(receipt, { batch: row }))).toContain(
+      'batch_report_field_malformed',
+    )
+  })
+
+  it('refuses an impossible before/after/insert delta', () => {
+    // 30 inserts into a corpus that now holds 25 would mean the operation started from -5.
+    const receipt = completedReceipt()
+    const row = batchRow(receipt, { inserted_count: 30 })
+    expect(codes(receipt, observation(receipt, { batch: row }))).toContain(
+      'batch_report_arithmetic_impossible',
+    )
+  })
+
+  it('refuses a stored before/after pair that contradicts the observed inserts', () => {
+    const receipt = completedReceipt()
+    const row = batchRowWithReport(receipt, { before_article_count: 10 })
+    expect(codes(receipt, observation(receipt, { batch: row }))).toContain(
+      'batch_report_before_count_drift',
+    )
+  })
+
+  it('refuses impossible unchanged arithmetic', () => {
+    // 25 inserts plus 5 updates across only 25 unique PMIDs leaves -5 unchanged.
+    const receipt = completedReceipt()
+    const row = batchRow(receipt, { updated_count: 5 })
+    expect(codes(receipt, observation(receipt, { batch: row }))).toContain(
+      'batch_report_arithmetic_impossible',
+    )
+  })
+
+  it('refuses a report carrying a field the engine does not persist', () => {
+    const receipt = completedReceipt()
+    const row = batchRowWithReport(receipt, { smuggled_total: 999 })
+    expect(codes(receipt, observation(receipt, { batch: row }))).toContain(
+      'batch_report_unexpected_shape',
+    )
+  })
+
+  it('gives no verdict on the reconstructed fields when the corpus total was not observed', () => {
+    // Unobserved is never agreement, and it is never a failure either.
+    const receipt = completedReceipt()
+    const result = evaluateReceiptBinding(receipt, observation(receipt, { totalArticles: null }))
+    expect(result.findings.map((entry) => entry.code)).not.toContain(
+      'batch_report_after_count_drift',
+    )
+    expect(result.unobserved.join(' ')).toMatch(/corpus total \(stored report binding\)/u)
+  })
+
+  it('still binds the receipt-derived fields when the corpus total was not observed', () => {
+    // Only before/after need the corpus total. Suspending judgement on `batch_count`,
+    // `unchanged_count`, and the checksum summary as well would let an unread total buy a pass on
+    // three fields that follow from the receipt and the batch row alone.
+    const receipt = completedReceipt()
+    const row = batchRowWithReport(receipt, { batch_count: 999 })
+    expect(codes(receipt, observation(receipt, { batch: row, totalArticles: null }))).toContain(
+      'batch_report_batch_count_drift',
+    )
+  })
+
+  it('binds the ORIGINAL operation report through a replay receipt', () => {
+    /*
+     * The regression that matters most: do not close the false positives by breaking replay.
+     *
+     * The replay receipt reports inserted=0, updated=0, unchanged=25, while the stored report still
+     * describes the original operation — inserted 25, unchanged 0, before 0, after 25. Because the
+     * expected report is reconstructed from the observed batch row rather than from the receipt's
+     * transient counters, both bind against the identical stored report.
+     */
+    const replay = replayReceipt()
+    expect(replay.counters).toMatchObject({ inserted: 0, updated: 0, unchanged: 25 })
+
+    const storedReport = batchRow(completedReceipt()).report
+    const result = evaluateReceiptBinding(
+      replay,
+      observation(replay, { batch: batchRow(replay, { report: storedReport }) }),
+    )
+    expect(result.findings).toEqual([])
+
+    // And the same stored report, mutated, still fails through the replay path.
+    const mutated = batchRow(replay, {
+      report: { ...(storedReport as Record<string, unknown>), unchanged_count: 999 },
+    })
+    expect(codes(replay, observation(replay, { batch: mutated }))).toContain(
+      'batch_report_unchanged_count_drift',
     )
   })
 })
