@@ -21,6 +21,7 @@ import {
   LITERATURE_RELEVANCE_STATES,
   LITERATURE_VISIBILITY_STATES,
 } from './lib/identity'
+import { batchRowForReceipt, ingestReceiptFixture } from './lib/ingest-receipt-fixture'
 import { failed, observed, skipped, unavailable, type Observation } from './lib/observation'
 
 function batch(overrides: Partial<BatchReceipt> = {}): BatchReceipt {
@@ -47,6 +48,21 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
   const pmids = Array.from({ length: LITERATURE_CANARY_RECORD_COUNT }, (_, index) =>
     String(40_000_000 + index),
   )
+  /*
+   * A healthy canary now includes the ingestion receipt.
+   *
+   * Without it the scenario is `indeterminate` rather than `verified`, and that is deliberate:
+   * the claim "exactly twenty-five unreviewed drafts are present" is satisfied by ANY twenty-five
+   * unreviewed drafts, from any run, of any manifest. The receipt is what turns a statement about
+   * a shape into a statement about an operation.
+   */
+  const receipt = ingestReceiptFixture({
+    pmids,
+    afterArticleCount: pmids.length,
+    // The fixture supplies a baseline and an identical current snapshot, so it models the
+    // second run. `idempotent-replay` is what the engine writes when it recognises the repeat.
+    outcome: 'idempotent-replay',
+  })
   const denied = observed({ status: 401, denied: true, rowsReturned: null })
 
   return {
@@ -79,13 +95,13 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
       sourceRowCount: observed(LITERATURE_CANARY_RECORD_COUNT),
       canaryStateCount: observed(LITERATURE_CANARY_RECORD_COUNT),
       publiclyVisibleCount: observed(0),
-      batches: observed([batch()]),
+      batches: observed([batchRowForReceipt(receipt)]),
       sources: observed(
         pmids.map((pmid) => ({
           pmid,
-          batch_id: 'b1',
-          source_kind: 'core_journal',
-          source_filename: 'canary.nbib',
+          batch_id: receipt.importBatchId as string,
+          source_kind: 'all_pubmed_discovery',
+          source_filename: `literature-production-ingest/${receipt.mode}`,
         })),
       ),
       importErrors: observed(0),
@@ -129,8 +145,10 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
     migrationHistory: observed([{ version: '20260815223259', name: 'add_literature_explorer' }]),
     catalogAttestation: skipped('no catalog attestation was supplied'),
     corpusExpectation: skipped('no corpus expectation was supplied'),
-    // A `--force` replay: same batch row, reset in place, so the count holds and the start time
-    // moves. That is the trace the importer actually leaves.
+    // The engine's replay path writes nothing to the database, so the two snapshots are identical
+    // and the receipt is what evidences the second run. The old fixture modelled a `--force`
+    // replay, which moved `started_at` — a trace this engine never produces.
+    ingestReceipt: observed(receipt),
     baselineSnapshot: observed({
       totalArticles: LITERATURE_CANARY_RECORD_COUNT,
       batchCount: 1,
@@ -142,10 +160,10 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
     currentSnapshot: observed({
       totalArticles: LITERATURE_CANARY_RECORD_COUNT,
       batchCount: 1,
-      insertedTotal: 0,
-      updatedTotal: LITERATURE_CANARY_RECORD_COUNT,
+      insertedTotal: LITERATURE_CANARY_RECORD_COUNT,
+      updatedTotal: 0,
       duplicateTotal: 0,
-      latestBatchStartedAt: '2026-08-15T01:00:00.000Z',
+      latestBatchStartedAt: '2026-08-15T00:00:00.000Z',
     }),
     detailPmid: pmids[0],
     ...overrides,
@@ -235,12 +253,32 @@ describe('one failure is enough to withhold a verdict', () => {
 })
 
 describe('an ambiguous batch stops the scenarios that depend on counts', () => {
+  /*
+   * Interrupt the operation the rest of the fixture already describes, rather than substituting a
+   * different batch row.
+   *
+   * Replacing the batch outright also broke the provenance link — the fixture's source rows name
+   * the operation's batch id — so the run failed on provenance instead of stopping on the
+   * ambiguity, and a genuine failure now outranks `stopped`. Mutating status in place keeps every
+   * other relationship intact so the ambiguity is the only thing wrong.
+   */
   const ambiguous = (input: VerificationInput): VerificationInput => ({
     ...input,
     database: {
       ...input.database,
-      batches: observed([batch({ status: 'started', completed_at: null })]),
+      batches:
+        input.database.batches.status === 'observed'
+          ? observed(
+              input.database.batches.value.map((row) => ({
+                ...row,
+                status: 'started',
+                completed_at: null,
+              })),
+            )
+          : input.database.batches,
     },
+    // An interrupted operation never wrote a receipt, so there is none to supply.
+    ingestReceipt: skipped('an interrupted operation writes no receipt'),
   })
 
   it.each<[ScenarioId]>([['foundation-populated'], ['canary'], ['full-corpus']])(

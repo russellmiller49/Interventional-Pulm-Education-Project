@@ -42,6 +42,11 @@ import {
   type LiteratureVerificationEnvironment,
 } from './lib/configuration'
 import { LITERATURE_CANONICAL_PRODUCTION_URL_EXACT } from './lib/identity'
+import {
+  INGEST_RECEIPT_SCHEMA_VERSION,
+  isIngestReceipt,
+  type IngestReceipt,
+} from './lib/ingest-receipt'
 import { failed, observed, skipped, type Observation } from './lib/observation'
 import { createReadOnlyTransport } from './lib/read-only-transport'
 import { assertNoCredentialInArgument } from './lib/redaction'
@@ -243,6 +248,7 @@ async function main() {
     corpus: flagValue('--corpus'),
     baseline: flagValue('--baseline'),
     receipt: flagValue('--receipt'),
+    ingestReceipt: flagValue('--ingest-receipt'),
   }
   const flagError = Object.values(flags).find(
     (result): result is { error: string } => 'error' in result,
@@ -308,7 +314,7 @@ async function main() {
     }),
   ])
 
-  const [migrationHistory, catalogAttestation, corpusExpectation, baselineSnapshot] =
+  const [migrationHistory, catalogAttestation, corpusExpectation, baselineSnapshot, ingestReceipt] =
     await Promise.all([
       readEvidence<readonly MigrationHistoryEntry[]>(
         value(flags.migrationHistory),
@@ -338,6 +344,23 @@ async function main() {
           ? observed(extractSnapshot(observation.value) as CorpusSnapshot)
           : observation,
       ),
+      /*
+       * The ingestion engine's own receipt.
+       *
+       * A distinct flag from `--receipt`, which is this command's OUTPUT path. The two packages
+       * arrived at the same word for opposite directions, and rather than rename either CLI's
+       * established flag the input is spelled `--ingest-receipt` after the package that writes it.
+       *
+       * Optional, and read through the same discipline as every other evidence file: absent means
+       * dependent checks report no verdict rather than a failure, so existing invocations are
+       * unaffected.
+       */
+      readEvidence<IngestReceipt>(
+        value(flags.ingestReceipt),
+        'ingestion receipt',
+        isIngestReceipt,
+        `a receipt written by the ingestion engine (schemaVersion ${INGEST_RECEIPT_SCHEMA_VERSION})`,
+      ),
     ])
 
   const run = runScenario(scenario, {
@@ -352,6 +375,7 @@ async function main() {
     catalogAttestation,
     corpusExpectation,
     baselineSnapshot,
+    ingestReceipt,
     currentSnapshot: currentSnapshotFrom(database),
     detailPmid,
   })

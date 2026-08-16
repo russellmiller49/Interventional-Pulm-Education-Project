@@ -42,6 +42,12 @@ import {
   LITERATURE_UNPRIVILEGED_ROLES,
   LITERATURE_VISIBILITY_STATES,
 } from './identity'
+import {
+  batchChecksumSummary,
+  ingestBatchReport,
+  ingestReceiptChecksumMatches,
+  type IngestReceipt,
+} from './ingest-receipt'
 import { describeObservation, isObserved, type Observation } from './observation'
 import type {
   ApplicationObservations,
@@ -966,6 +972,7 @@ export interface CorpusSnapshot {
 export function checkCanaryIdempotency(
   baseline: Observation<CorpusSnapshot>,
   current: Observation<CorpusSnapshot>,
+  receipt?: Observation<IngestReceipt>,
 ): CheckResult {
   const id = 'V52-canary-idempotent'
   const title = 'a second identical import adds nothing'
@@ -1000,9 +1007,50 @@ export function checkCanaryIdempotency(
     })
   }
 
-  // The numbers agree. Whether they agree *because a second import ran and changed nothing* or
-  // because nothing ran at all is a different question, and the database can only answer it when
-  // the replay left a trace.
+  /*
+   * The numbers agree. Whether they agree *because a second run happened and changed nothing* or
+   * because nothing ran at all is a separate question — and against the production ingestion
+   * engine the database cannot answer it at all.
+   *
+   * That engine derives a deterministic operation id, so a replay reuses the same
+   * `literature_import_batches` row, takes a read-only short-circuit, and writes nothing: the batch
+   * count never grows and `started_at` never moves. The heuristic below was written against the
+   * previous importer, whose `--force` reset the row in place and did move `started_at`. The engine
+   * has no `--force` at all — passing one aborts with `Unknown option`. So without other evidence
+   * this check was unpassable, which made the whole canary scenario permanently indeterminate and
+   * its exit status nonzero on a perfectly good replay.
+   *
+   * The engine's own replay receipt states the fact directly, so it is consulted first.
+   */
+  if (receipt !== undefined && isObserved(receipt)) {
+    if (receipt.value.outcome === 'idempotent-replay') {
+      return pass(
+        id,
+        title,
+        `The engine recognised the re-run as an identical operation and wrote nothing. The corpus ` +
+          `stayed at ${current.value.totalArticles} with no new inserts.`,
+        {
+          total: current.value.totalArticles,
+          operationId: receipt.value.operationId,
+          outcome: receipt.value.outcome,
+        },
+      )
+    }
+    if (receipt.value.outcome === 'completed') {
+      return fail(
+        id,
+        title,
+        `The supplied receipt reports outcome "completed", not "idempotent-replay": the engine ` +
+          'treated this run as a new operation rather than recognising it as a repeat. The ' +
+          'corpus happens to be unchanged, but this is not the replay path.',
+        { outcome: receipt.value.outcome, operationId: receipt.value.operationId },
+      )
+    }
+  }
+
+  // No receipt. Fall back to the database trace, which the previous importer produced and the
+  // current engine does not — so say what would settle it rather than naming a flag that no
+  // longer exists.
   const replayEvidenced =
     current.value.batchCount > baseline.value.batchCount ||
     (current.value.latestBatchStartedAt != null &&
@@ -1014,11 +1062,11 @@ export function checkCanaryIdempotency(
       id,
       title,
       `The corpus is unchanged at ${current.value.totalArticles} and nothing new was inserted, ` +
-        'but the database shows no trace of a second import between the two captures: no new ' +
-        'batch, and no batch start time moved. `import-nbib.ts` skips an identical completed ' +
-        'file without writing anything, so a plain re-run is invisible here. Replay with ' +
-        '`--force`, which resets the batch row and moves its start time, to make the second run ' +
-        'observable — otherwise this reports what it can see, which is not idempotency.',
+        'but the database shows no trace of a second run between the two captures: no new batch, ' +
+        'and no batch start time moved. That is the expected and correct behaviour of the ' +
+        'production ingestion engine, which recognises an identical operation and writes nothing ' +
+        '— so the database cannot settle this. Pass the replay receipt the engine wrote ' +
+        '(`--ingest-receipt <canary-*.replay-*.receipt.json>`) to get a verdict.',
     )
   }
 
@@ -1289,6 +1337,7 @@ export function checkFullCorpus(
   expectation: Observation<CorpusExpectation>,
   batches: Observation<readonly BatchReceipt[]>,
   totalArticles: Observation<number>,
+  receipt?: Observation<IngestReceipt>,
 ): CheckResult[] {
   const countId = 'V70-corpus-counts'
   const countTitle = 'the destination corpus matches the declared source'
@@ -1304,12 +1353,30 @@ export function checkFullCorpus(
           `corpus=${describeObservation(totalArticles)}, batches=${describeObservation(batches)}.`,
       )
     }
-    const reconciliation = reconcileBatches(batches.value)
+    /*
+     * Scoped to the declared operation when a receipt names one.
+     *
+     * Summing `records_read` across every completed batch double-counts the canary. The ingestion
+     * engine leaves the canary's batch row `completed` forever, and the runbook's own order runs
+     * the canary before the full import — so a full-corpus reconciliation over all batches
+     * overshoots the declared source by exactly the canary size, and reports a failure on a corpus
+     * that is exactly right. The previous importer's batches were per-file and disjoint, which is
+     * the assumption that no longer holds.
+     */
+    const scopedBatches =
+      receipt !== undefined && isObserved(receipt) && receipt.value.importBatchId !== null
+        ? batches.value.filter((batch) => batch.id === receipt.value.importBatchId)
+        : batches.value
+    const reconciliation = reconcileBatches(scopedBatches)
+    const scopeNote =
+      scopedBatches.length === batches.value.length
+        ? ''
+        : ' (scoped to the operation named by the receipt)'
     const problems: string[] = []
     if (reconciliation.completedRecordsReadTotal !== expectation.value.sourceRecordCount) {
       problems.push(
-        `completed receipts read ${reconciliation.completedRecordsReadTotal} record(s), the ` +
-          `source declares ${expectation.value.sourceRecordCount}`,
+        `completed receipts read ${reconciliation.completedRecordsReadTotal} record(s)${scopeNote}, ` +
+          `the source declares ${expectation.value.sourceRecordCount}`,
       )
     }
     if (totalArticles.value !== expectation.value.sourceDistinctPmidCount) {
@@ -1349,6 +1416,37 @@ export function checkFullCorpus(
       batches.value.map((batch) => [batch.source_file_sha256, batch] as const),
     )
     const missing = expectation.value.sourceFiles.filter((file) => !byChecksum.has(file.sha256))
+
+    /*
+     * `source_file_sha256` is not a file digest under the production ingestion engine.
+     *
+     * That engine reads a database table, not files. It synthesizes a `source_filename` and stores
+     * a digest of the *mapped projection* in `source_file_sha256` — a value that changes when the
+     * mapping version changes, even with byte-identical source data. An operator who prepares this
+     * expectation the way the field name implies, by checksumming an exported file, gets a
+     * guaranteed failure on a correct corpus.
+     *
+     * So when a receipt is present, the projection checksum it carries is what a declared entry
+     * must match, and the message says which value is actually being compared.
+     */
+    if (receipt !== undefined && isObserved(receipt) && missing.length > 0) {
+      const projection = receipt.value.sourceProjectionChecksum
+      const declaredProjection = expectation.value.sourceFiles.some(
+        (file) => file.sha256 === projection,
+      )
+      if (!declaredProjection) {
+        return indeterminate(
+          fileId,
+          fileTitle,
+          'No verdict: the declared source files do not include the projection checksum this ' +
+            'operation actually recorded. The ingestion engine reads a table rather than files, ' +
+            'so `source_file_sha256` holds a digest of the mapped projection ' +
+            `(${projection.slice(0, 12)}…), not a checksum of any file on disk. Declare that ` +
+            'value to make this check meaningful, or omit sourceFiles entirely.',
+        )
+      }
+    }
+
     return missing.length === 0
       ? pass(
           fileId,
@@ -1366,6 +1464,264 @@ export function checkFullCorpus(
   })()
 
   return [counts, files]
+}
+
+/* ------------------------------------------------------------------------------------------- *
+ * Ingestion receipt binding
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * Bind the corpus being read to the operation that claims to have written it.
+ *
+ * Without this, the canary scenario's strongest statement — "exactly twenty-five unreviewed drafts
+ * are present, every one accounted for by a batch receipt" — is satisfied by *any* twenty-five
+ * unreviewed drafts, written by any batch, from any manifest, in any project. It is a claim about
+ * a shape, not about an operation. A canary run against a stale or unapproved manifest passes it.
+ *
+ * Every assertion below compares a receipt field against something read independently from the
+ * database, so a receipt describing a different operation disagrees loudly instead of being
+ * believed. The receipt is evidence, not authority.
+ */
+export function checkIngestReceiptBinding(
+  receipt: Observation<IngestReceipt> | undefined,
+  batches: Observation<readonly BatchReceipt[]>,
+  totalArticles: Observation<number>,
+  // The provenance rows, not a second article read: they already carry every PMID, are already
+  // paged to the exact Content-Range total, and are already collected for every scenario.
+  sources: Observation<readonly SourceRow[]>,
+): CheckResult[] {
+  const results: CheckResult[] = []
+  const bindId = 'V55-receipt-binds-operation'
+  const bindTitle = 'the receipt names an import batch that exists in this project'
+
+  if (receipt === undefined || !isObserved(receipt)) {
+    return [
+      indeterminate(
+        bindId,
+        bindTitle,
+        `No verdict: receipt=${receipt === undefined ? 'not supplied' : describeObservation(receipt)}. Pass the receipt the ingestion ` +
+          'engine wrote with `--ingest-receipt <path>` to bind these observations to a specific ' +
+          'operation. Without it the corpus checks describe a shape rather than a run.',
+      ),
+    ]
+  }
+
+  // An edited receipt is the failure mode that matters here: a number changed by hand to make a
+  // check agree. This detects that and nothing else — it is not a signature and proves no origin.
+  if (!ingestReceiptChecksumMatches(receipt.value)) {
+    return [
+      fail(
+        bindId,
+        bindTitle,
+        'The receipt checksum does not match its own contents, so the file was modified after the ' +
+          'engine wrote it. Nothing it claims can be relied on.',
+      ),
+    ]
+  }
+
+  if (!isObserved(batches)) {
+    results.push(
+      indeterminate(bindId, bindTitle, `No verdict: batches=${describeObservation(batches)}.`),
+    )
+  } else if (receipt.value.importBatchId === null) {
+    results.push(
+      indeterminate(
+        bindId,
+        bindTitle,
+        'The receipt records no import batch id, which is the shape a dry-run receipt has. There ' +
+          'is nothing to bind to a database row.',
+      ),
+    )
+  } else {
+    const matched = batches.value.find((batch) => batch.id === receipt.value.importBatchId)
+    if (!matched) {
+      results.push(
+        fail(
+          bindId,
+          bindTitle,
+          `The receipt names import batch ${receipt.value.importBatchId}, which does not exist in ` +
+            'this project. The corpus being read was not written by the operation this receipt ' +
+            'describes — or it was written to a different project.',
+        ),
+      )
+    } else {
+      const counterId = 'V56-receipt-counters-agree'
+      const counterTitle = 'the receipt counters match the batch row'
+      const mismatches: string[] = []
+      const compare = (label: string, fromReceipt: number, fromRow: number) => {
+        if (fromReceipt !== fromRow) mismatches.push(`${label} ${fromReceipt} vs ${fromRow}`)
+      }
+      compare('records read', receipt.value.counters.recordsRead, matched.records_read)
+      compare('unique PMIDs', receipt.value.counters.uniquePmids, matched.unique_pmids)
+      compare('inserted', receipt.value.counters.inserted, matched.inserted_count)
+      compare('updated', receipt.value.counters.updated, matched.updated_count)
+      compare('duplicates', receipt.value.counters.duplicateOccurrences, matched.duplicate_count)
+
+      results.push(
+        pass(
+          bindId,
+          bindTitle,
+          `The receipt binds to import batch ${matched.id}, recorded in this project.`,
+          { operationId: receipt.value.operationId, batchId: matched.id },
+        ),
+      )
+      results.push(
+        mismatches.length === 0
+          ? pass(
+              counterId,
+              counterTitle,
+              'Every counter in the receipt matches the batch row it names.',
+            )
+          : fail(
+              counterId,
+              counterTitle,
+              `The receipt and its batch row disagree: ${mismatches.join('; ')}. One of the two ` +
+                'was written or edited outside the engine.',
+            ),
+      )
+
+      // The batch `report` carries the operation identity the engine stamped into the row itself,
+      // which is the only copy of these values that did not travel through the operator's disk.
+      const report = ingestBatchReport(matched.report)
+      const reportId = 'V57-receipt-matches-batch-report'
+      const reportTitle = 'the receipt agrees with the operation identity stored in the batch row'
+      if (!report) {
+        results.push(
+          indeterminate(
+            reportId,
+            reportTitle,
+            'The batch row carries no report object, so it was written by something other than ' +
+              'the production ingestion engine. There is no stored identity to compare against.',
+          ),
+        )
+      } else {
+        const drift: string[] = []
+        if (report.operation_id !== receipt.value.operationId) {
+          drift.push('operation id')
+        }
+        if (report.source_projection_checksum !== receipt.value.sourceProjectionChecksum) {
+          drift.push('source projection checksum')
+        }
+        if (report.canary_manifest_checksum !== receipt.value.canaryManifestChecksum) {
+          drift.push('canary manifest checksum')
+        }
+        if (
+          typeof report.batch_checksums_sha256 === 'string' &&
+          report.batch_checksums_sha256 !== batchChecksumSummary(receipt.value.batchChecksums)
+        ) {
+          drift.push('batch checksum summary')
+        }
+        results.push(
+          drift.length === 0
+            ? pass(
+                reportId,
+                reportTitle,
+                'The receipt and the stored operation identity agree on every bound value.',
+              )
+            : fail(
+                reportId,
+                reportTitle,
+                `The receipt disagrees with the identity stored in the batch row on: ` +
+                  `${drift.join(', ')}. These are written at different times by the same ` +
+                  'operation, so a disagreement means the receipt does not describe this row.',
+              ),
+        )
+      }
+    }
+  }
+
+  // The corpus total is the one number an operator reads off the administration page, so a receipt
+  // that disagrees with it means the corpus moved after the receipt was written.
+  const totalId = 'V58-receipt-matches-corpus'
+  const totalTitle = 'the corpus total matches what the receipt recorded'
+  if (!isObserved(totalArticles)) {
+    results.push(
+      indeterminate(
+        totalId,
+        totalTitle,
+        `No verdict: corpus=${describeObservation(totalArticles)}.`,
+      ),
+    )
+  } else if (receipt.value.afterArticleCount === null) {
+    results.push(
+      indeterminate(
+        totalId,
+        totalTitle,
+        'The receipt records no after-count, which is the shape a dry-run receipt has.',
+      ),
+    )
+  } else {
+    results.push(
+      receipt.value.afterArticleCount === totalArticles.value
+        ? pass(
+            totalId,
+            totalTitle,
+            `Both the receipt and the database report ${totalArticles.value} article(s).`,
+          )
+        : fail(
+            totalId,
+            totalTitle,
+            `The receipt recorded ${receipt.value.afterArticleCount} article(s) after the ` +
+              `operation; the database now holds ${totalArticles.value}. The corpus moved after ` +
+              'the receipt was written, so something other than this operation has written to it.',
+          ),
+    )
+  }
+
+  // For a canary, the receipt names the exact PMIDs. This is what turns "twenty-five drafts" into
+  // "the twenty-five the owner authorized".
+  const pmidId = 'V59-receipt-pmids-present'
+  const pmidTitle = 'every PMID the receipt claims to have written is present'
+  const claimed = receipt.value.canaryPmids
+  if (claimed === undefined || claimed.length === 0) {
+    results.push(
+      indeterminate(
+        pmidId,
+        pmidTitle,
+        'The receipt lists no canary PMIDs, which is expected for a full-corpus operation.',
+      ),
+    )
+  } else if (!isObserved(sources)) {
+    results.push(
+      indeterminate(pmidId, pmidTitle, `No verdict: provenance=${describeObservation(sources)}.`),
+    )
+  } else {
+    const present = new Set(sources.value.map((row) => row.pmid))
+    const claimedSet = new Set(claimed)
+    const absent = claimed.filter((pmid) => !present.has(pmid))
+    const unexpected = [...present].filter((pmid) => !claimedSet.has(pmid))
+    if (absent.length > 0) {
+      results.push(
+        fail(
+          pmidId,
+          pmidTitle,
+          `${absent.length} of the ${claimed.length} PMID(s) the receipt claims to have written ` +
+            'are not in the corpus. The identifiers are deliberately not listed here; they are in ' +
+            'the receipt.',
+        ),
+      )
+    } else if (unexpected.length > 0) {
+      results.push(
+        fail(
+          pmidId,
+          pmidTitle,
+          `All ${claimed.length} claimed PMID(s) have provenance, but ${unexpected.length} ` +
+            'further article(s) carry provenance this receipt does not account for.',
+        ),
+      )
+    } else {
+      results.push(
+        pass(
+          pmidId,
+          pmidTitle,
+          `All ${claimed.length} PMID(s) named by the receipt carry provenance, and nothing ` +
+            'else does.',
+        ),
+      )
+    }
+  }
+
+  return results
 }
 
 /* ------------------------------------------------------------------------------------------- *
@@ -1695,6 +2051,13 @@ export interface VerificationInput {
   readonly catalogAttestation: Observation<CatalogAttestation>
   readonly corpusExpectation: Observation<CorpusExpectation>
   readonly baselineSnapshot: Observation<CorpusSnapshot>
+  /**
+   * The receipt the ingestion engine wrote, when the operator supplied one.
+   *
+   * Optional evidence, exactly like the catalog attestation: absent means dependent checks
+   * report no verdict, never that something failed.
+   */
+  readonly ingestReceipt?: Observation<IngestReceipt>
   readonly currentSnapshot: Observation<CorpusSnapshot>
   /**
    * The PMID the operator asked for, or `null`.

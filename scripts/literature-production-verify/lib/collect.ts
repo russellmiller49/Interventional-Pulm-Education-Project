@@ -323,6 +323,15 @@ export interface BatchReceipt {
   error_count: number
   started_at: string
   completed_at: string | null
+  /**
+   * The ingestion engine's operation metadata, and the writer that produced the row.
+   *
+   * Optional in the type because a row written before these columns were read — or by any other
+   * importer — legitimately has neither, and every check that consumes them must already handle
+   * their absence as "cannot tell" rather than as a failure.
+   */
+  report?: unknown
+  created_by?: string | null
 }
 
 export interface ArticleSummary {
@@ -456,9 +465,14 @@ export async function collectDatabaseObservations(
     // provenance coverage check counts distinct PMIDs across every source row, so a partial read
     // of either would produce a confidently wrong number.
     selectAllRows<BatchReceipt>(transport, 'literature_import_batches', {
+      // `report` and `created_by` carry the ingestion engine's operation identity — the operation
+      // id, the source projection checksum, the canary manifest checksum, and the before/after
+      // counts. Without them nothing in the database links the corpus being read to the operation
+      // that wrote it, and the receipt's claims cannot be cross-checked against anything.
       select:
         'id,status,source_filename,source_file_sha256,source_kind,records_read,unique_pmids,' +
-        'inserted_count,updated_count,duplicate_count,error_count,started_at,completed_at',
+        'inserted_count,updated_count,duplicate_count,error_count,started_at,completed_at,' +
+        'report,created_by',
       order: 'started_at.asc,id.asc',
     }),
     selectAllRows<SourceRow>(transport, 'literature_article_sources', {

@@ -29,6 +29,7 @@ import {
   checkFoundationEmpty,
   checkFoundationPopulated,
   checkFullCorpus,
+  checkIngestReceiptBinding,
   checkGoldWorkflowUnavailable,
   checkMigrationHistory,
   checkNoDuplicatePmids,
@@ -171,8 +172,9 @@ export const SCENARIOS: readonly Scenario[] = [
     title: 'Canary verification',
     claim:
       'Exactly twenty-five articles are present, all of them unreviewed drafts, every one ' +
-      'accounted for by a batch receipt, none of them publicly reachable — and, when a baseline ' +
-      'from a prior run is supplied, a second identical import added nothing.',
+      'accounted for by a batch receipt, none of them publicly reachable — and, when the ' +
+      'ingestion receipt is supplied, they are the twenty-five that operation wrote rather ' +
+      'than any twenty-five drafts, with a second identical run adding nothing.',
     stopsOnAmbiguousBatch: true,
     run: (input) => [
       ...identityChecks(input),
@@ -200,7 +202,13 @@ export const SCENARIOS: readonly Scenario[] = [
         input.database.anonymousTableRead,
         input.database.anonymousRpcRead,
       ),
-      checkCanaryIdempotency(input.baselineSnapshot, input.currentSnapshot),
+      ...checkIngestReceiptBinding(
+        input.ingestReceipt,
+        input.database.batches,
+        input.database.totalArticles,
+        input.database.sources,
+      ),
+      checkCanaryIdempotency(input.baselineSnapshot, input.currentSnapshot, input.ingestReceipt),
     ],
   },
   {
@@ -219,6 +227,13 @@ export const SCENARIOS: readonly Scenario[] = [
         input.corpusExpectation,
         input.database.batches,
         input.database.totalArticles,
+        input.ingestReceipt,
+      ),
+      ...checkIngestReceiptBinding(
+        input.ingestReceipt,
+        input.database.batches,
+        input.database.totalArticles,
+        input.database.sources,
       ),
       checkReceiptConsistency(input.database.batches, input.database.totalArticles),
       ...checkSourceProvenance(

@@ -50,6 +50,7 @@ import {
   LITERATURE_PRODUCTION_CATALOG_TOTALS,
   LITERATURE_PRODUCTION_MIGRATION,
 } from './lib/identity'
+import { ingestReceiptFixture } from './lib/ingest-receipt-fixture'
 import { failed, observed, skipped, unavailable, type Observation } from './lib/observation'
 
 function outcomeOf(results: readonly CheckResult[], id: string): CheckResult['outcome'] {
@@ -228,13 +229,38 @@ describe('canary idempotency compares two runs', () => {
   })
 
   it('reports no verdict when nothing evidences a second run, rather than passing vacuously', () => {
-    // Identical snapshots: the numbers agree, and they would agree just as well if no second
-    // import had ever run. A plain re-run is skipped by the importer without writing anything, so
-    // the database genuinely cannot tell — and saying so is the honest answer.
+    // Identical snapshots: the numbers agree, and they would agree just as well if no second run
+    // had ever happened. The production ingestion engine recognises an identical operation and
+    // writes nothing at all, so the database genuinely cannot tell — and saying so is the honest
+    // answer.
     const result = checkCanaryIdempotency(baseline, baseline)
     expect(result.outcome).toBe('indeterminate')
-    expect(result.detail).toMatch(/no trace of a second import/u)
-    expect(result.detail).toMatch(/`--force`/u)
+    expect(result.detail).toMatch(/no trace of a second run/u)
+    // The remedy must name something that exists. `--force` was the previous importer's flag; the
+    // engine aborts with `Unknown option --force`, so pointing an operator at it was a dead end.
+    expect(result.detail).not.toMatch(/--force/u)
+    expect(result.detail).toMatch(/--ingest-receipt/u)
+  })
+
+  it("accepts the engine's replay receipt as authoritative evidence of idempotency", () => {
+    const result = checkCanaryIdempotency(
+      baseline,
+      baseline,
+      observed(ingestReceiptFixture({ outcome: 'idempotent-replay' })),
+    )
+    expect(result.outcome).toBe('pass')
+    expect(result.detail).toMatch(/recognised the re-run as an identical operation/u)
+  })
+
+  it('fails when the receipt says the re-run was treated as a new operation', () => {
+    // Unchanged numbers plus outcome `completed` means the engine did not take the replay path.
+    // Passing that would report idempotency for a run that never exercised it.
+    const result = checkCanaryIdempotency(
+      baseline,
+      baseline,
+      observed(ingestReceiptFixture({ outcome: 'completed' })),
+    )
+    expect(result.outcome).toBe('fail')
   })
 
   it('is indeterminate without a baseline', () => {
