@@ -63,6 +63,7 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
     // second run. `idempotent-replay` is what the engine writes when it recognises the repeat.
     outcome: 'idempotent-replay',
   })
+  const originalReceipt = ingestReceiptFixture({ pmids, afterArticleCount: pmids.length })
   const denied = observed({ status: 401, denied: true, rowsReturned: null })
 
   return {
@@ -95,7 +96,9 @@ function healthyCanaryInput(overrides: Partial<VerificationInput> = {}): Verific
       sourceRowCount: observed(LITERATURE_CANARY_RECORD_COUNT),
       canaryStateCount: observed(LITERATURE_CANARY_RECORD_COUNT),
       publiclyVisibleCount: observed(0),
-      batches: observed([batchRowForReceipt(receipt)]),
+      // The row the FIRST run left. A replay does not rewrite it, so it still carries the
+      // original operation's counters — which is why V56 must not compare them to a replay.
+      batches: observed([batchRowForReceipt(originalReceipt)]),
       sources: observed(
         pmids.map((pmid) => ({
           pmid,

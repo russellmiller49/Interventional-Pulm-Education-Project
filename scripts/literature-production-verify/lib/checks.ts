@@ -1547,15 +1547,34 @@ export function checkIngestReceiptBinding(
     } else {
       const counterId = 'V56-receipt-counters-agree'
       const counterTitle = 'the receipt counters match the batch row'
+      /*
+       * Only a completion receipt describes the row.
+       *
+       * A replay receipt records what the *replay* did — nothing: zero inserted, zero updated,
+       * `unchanged` equal to the corpus. The batch row still records the original operation, which
+       * did the inserting, because a replay does not rewrite it. Comparing the two is guaranteed to
+       * disagree, and that disagreement is the engine behaving correctly. What a replay must
+       * satisfy instead is that it wrote nothing.
+       */
+      const isReplay = receipt.value.outcome === 'idempotent-replay'
       const mismatches: string[] = []
       const compare = (label: string, fromReceipt: number, fromRow: number) => {
         if (fromReceipt !== fromRow) mismatches.push(`${label} ${fromReceipt} vs ${fromRow}`)
       }
-      compare('records read', receipt.value.counters.recordsRead, matched.records_read)
-      compare('unique PMIDs', receipt.value.counters.uniquePmids, matched.unique_pmids)
-      compare('inserted', receipt.value.counters.inserted, matched.inserted_count)
-      compare('updated', receipt.value.counters.updated, matched.updated_count)
-      compare('duplicates', receipt.value.counters.duplicateOccurrences, matched.duplicate_count)
+      if (isReplay) {
+        if (receipt.value.counters.inserted !== 0) {
+          mismatches.push(`replay reports ${receipt.value.counters.inserted} insert(s)`)
+        }
+        if (receipt.value.counters.updated !== 0) {
+          mismatches.push(`replay reports ${receipt.value.counters.updated} update(s)`)
+        }
+      } else {
+        compare('records read', receipt.value.counters.recordsRead, matched.records_read)
+        compare('unique PMIDs', receipt.value.counters.uniquePmids, matched.unique_pmids)
+        compare('inserted', receipt.value.counters.inserted, matched.inserted_count)
+        compare('updated', receipt.value.counters.updated, matched.updated_count)
+        compare('duplicates', receipt.value.counters.duplicateOccurrences, matched.duplicate_count)
+      }
 
       results.push(
         pass(
@@ -1570,7 +1589,9 @@ export function checkIngestReceiptBinding(
           ? pass(
               counterId,
               counterTitle,
-              'Every counter in the receipt matches the batch row it names.',
+              isReplay
+                ? 'The replay receipt reports no inserts and no updates, as a replay must.'
+                : 'Every counter in the receipt matches the batch row it names.',
             )
           : fail(
               counterId,
