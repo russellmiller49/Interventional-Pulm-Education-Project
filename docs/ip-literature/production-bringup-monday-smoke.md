@@ -28,23 +28,35 @@ produced).
 The canary run is two commands, because idempotency is a comparison of two runs and the first one
 has nothing to compare against. Run 1 captures the baseline; run 2 reads it back.
 
+**Keep the receipt the import writes.** The canary run leaves
+`local-data/literature-production-ingest/canary-<operation-id>.receipt.json`. That file is what
+binds the twenty-five records in the database to the operation that wrote them; without it the
+verification says only that _some_ twenty-five unreviewed drafts exist.
+
 ```bash
-npx tsx scripts/literature-production-verify/verify.ts \
-  --scenario canary --receipt evidence/monday-canary-1.json
+npm run literature:production-verify -- \
+  --scenario canary \
+  --ingest-receipt local-data/literature-production-ingest/canary-<operation-id>.receipt.json \
+  --receipt evidence/monday-canary-1.json
 ```
 
-Run the import a second time **with `--force`** (a plain re-run is skipped without writing
-anything, which leaves the database with no trace for the idempotency check to read), then:
+Then run the import a second time — a plain re-run, no extra flags. The engine derives a
+deterministic operation id, recognises the repeat, writes nothing, and emits a replay receipt
+alongside the first:
 
 ```bash
-npx tsx scripts/literature-production-verify/verify.ts \
-  --scenario canary --baseline evidence/monday-canary-1.json \
+npm run literature:production-verify -- \
+  --scenario canary \
+  --ingest-receipt local-data/literature-production-ingest/canary-<operation-id>.replay-<epoch>.receipt.json \
+  --baseline evidence/monday-canary-1.json \
   --receipt evidence/monday-canary-2.json
 ```
 
-Run 1 reports `indeterminate` on `V52-canary-idempotent` alone — expected, and not a problem to
-chase. Run 2 is the one that must report `verified`. If either reports `stopped`, an import batch
-has no receipt: resolve it before the conference, not at it.
+Run 2 is the one that must report `verified`. Both runs need `--ingest-receipt`: without it
+`V52-canary-idempotent` and the receipt-binding checks report no verdict, the run verdict is
+`indeterminate`, and the exit status is nonzero. That is deliberate — the database alone cannot
+tell a replay that wrote nothing from an import that never happened. If either run reports
+`stopped`, an import batch has no receipt: resolve it before the conference, not at it.
 
 ```bash
 LITERATURE_VERIFY_APP_BASE_URL=https://<production origin> \

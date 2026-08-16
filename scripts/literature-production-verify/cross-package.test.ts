@@ -28,6 +28,9 @@
  *     authorizes a canary.
  */
 
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import {
   createCompletedReceiptFromCheckpoint,
   createIdempotentReplayReceipt,
@@ -519,5 +522,61 @@ describe('12. public draft exposure', () => {
     for (const result of results) {
       expect(result.id).not.toMatch(/public|exposure|anonymous/iu)
     }
+  })
+})
+
+/* --------------------------------------------------------------------------------------------- *
+ * The vocabulary an operator can actually act on
+ * --------------------------------------------------------------------------------------------- */
+
+describe('no operator-facing string offers a flag the engine does not have', () => {
+  const ROOT = process.cwd()
+  const read = (path: string) => readFileSync(join(ROOT, path), 'utf8')
+
+  it('names no --force in any bring-up document', () => {
+    // The previous importer had one; the engine aborts with `Unknown option`. A remedy an operator
+    // cannot run is worse than no remedy, because it costs them the time to discover that.
+    for (const document of [
+      'docs/ip-literature/production-bringup-runbook.md',
+      'docs/ip-literature/production-bringup-monday-smoke.md',
+      'docs/ip-literature/production-bringup-railway-cutover.md',
+    ]) {
+      expect(`${document}: ${read(document).includes('--force')}`).toBe(`${document}: false`)
+    }
+  })
+
+  it('names no --force in any check detail the tool prints', () => {
+    /*
+     * Source comments may still narrate the previous importer's behaviour — that history is why
+     * these checks look the way they do. What must never carry it is a string the tool prints,
+     * because that is the one an operator reads as an instruction. The distinction is enforced by
+     * scanning only the quoted strings that reach a `fail`, `pass`, or `indeterminate` call.
+     */
+    const source = read('scripts/literature-production-verify/lib/checks.ts')
+    const withoutComments = source
+      .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
+      .replaceAll(/(^|[^:])\/\/.*$/gmu, '$1')
+    expect(withoutComments).not.toMatch(/--force/u)
+  })
+
+  it('tells the operator to pass the receipt instead', () => {
+    const source = read('scripts/literature-production-verify/lib/checks.ts')
+    expect(source).toContain('--ingest-receipt')
+  })
+
+  it('keeps the Monday canary command passing the generated receipt through', () => {
+    const smoke = read('docs/ip-literature/production-bringup-monday-smoke.md')
+    // Every verify command in the document, not just the second run: the binding checks are what
+    // make run 1 meaningful too. Counted over fenced commands rather than the whole file, so a
+    // sentence of prose mentioning the flag neither satisfies nor breaks this.
+    const commands = [...smoke.matchAll(/```bash\n([\s\S]*?)```/gu)]
+      .map((match) => match[1])
+      .filter((command) => command.includes('literature-production-verify'))
+    expect(commands.length).toBeGreaterThanOrEqual(2)
+    for (const command of commands) {
+      if (!command.includes('--scenario canary')) continue
+      expect(command).toContain('--ingest-receipt')
+    }
+    expect(smoke).toMatch(/Keep the receipt the import writes/u)
   })
 })

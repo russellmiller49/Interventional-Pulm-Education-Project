@@ -953,9 +953,9 @@ export interface CorpusSnapshot {
    * The most recent `started_at` across all batches.
    *
    * Present because a batch *count* is not evidence that a second import ran. `import-nbib.ts`
-   * skips an identical completed file outright, writing nothing; with `--force` it resets the
+   * skipped an identical completed file outright, writing nothing; a forced replay reset the
    * existing row in place rather than adding one. Either way the count is unchanged, so a check
-   * that required it to grow would fail the documented workflow. A `--force` replay does move
+   * that required it to grow would fail the documented workflow. That replay did move
    * `started_at`, which is the one observable trace there is.
    */
   readonly latestBatchStartedAt?: string | null
@@ -993,7 +993,7 @@ export function checkCanaryIdempotency(
     )
   }
   // An *increase* means rows were inserted that the importer did not recognise as already
-  // present. A decrease is normal: `--force` resets the batch row in place, so its counters are
+  // present. A decrease was normal for the previous importer, which reset the row in place, so
   // recomputed rather than accumulated.
   if (current.value.insertedTotal > baseline.value.insertedTotal) {
     problems.push(
