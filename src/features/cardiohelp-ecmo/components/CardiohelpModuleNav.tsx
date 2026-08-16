@@ -5,15 +5,18 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 
 export const cardiohelpModuleNavItems: readonly ModuleNavItem[] = [
+  // The four titles are pinned by `criticalCareShellConvergence.test.tsx`, which keeps the module
+  // shells reading alike. Only the descriptions carry module vocabulary, and they now use the same
+  // word for a pathway entry that the landing, the rail and the hub use: section.
   {
     href: cardiohelpEcmoNavBase,
     title: 'Overview',
-    description: 'Curriculum map, tracks, and progress',
+    description: 'Pathway map, tracks, and progress',
   },
   {
     href: `${cardiohelpEcmoNavBase}/learn`,
     title: 'Learn',
-    description: 'Guided lessons',
+    description: 'Sections and drills',
   },
   {
     href: `${cardiohelpEcmoNavBase}/practice`,

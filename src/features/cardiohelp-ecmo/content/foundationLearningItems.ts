@@ -6,7 +6,7 @@ import {
 import type { EcmoInteractiveFoundationSectionId } from './foundationLessonRuntime'
 
 /**
- * Prediction and transfer items for the seven interactive foundation lessons.
+ * Prediction and transfer items for the ten interactive foundation sections.
  *
  * Transfer is deliberately a different situation rather than the same question with the nouns
  * swapped: a learner who has understood the ledger should be able to reach a content problem from
