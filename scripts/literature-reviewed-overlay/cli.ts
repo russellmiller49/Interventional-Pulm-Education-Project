@@ -229,7 +229,10 @@ async function main(): Promise<void> {
           receipt.operationId !== checkpoint.operationId ||
           receipt.projectionDigest !== checkpoint.projectionDigest ||
           receipt.artifactSha256 !== checkpoint.artifactSha256 ||
-          receipt.outcome === 'dry-run'
+          receipt.curationReason !== checkpoint.curationReason ||
+          receipt.reviewedAt !== checkpoint.reviewedAt ||
+          receipt.outcome === 'dry-run' ||
+          receipt.postObservationChecksum !== verified.postObservationChecksum
         ) {
           throw new Error('The supplied receipt does not bind to the verified operation.')
         }

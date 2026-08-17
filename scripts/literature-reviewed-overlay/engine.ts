@@ -4,7 +4,19 @@
  * The engine never touches process.env, argv, or the network directly — everything arrives
  * through `OverlayEngineDependencies`, so the production CLI and the disposable rehearsal drive
  * the identical orchestration. Destination requests happen only inside `apply` (bounded RPC
- * calls behind the full gate set), `reconcile` (GET/HEAD only), and `verify` (GET/HEAD only).
+ * calls behind the full gate set), `reconcile`, and `verify` (observation RPC only, POST with
+ * a body, reads only).
+ *
+ * Two review-hardened rules govern completion:
+ *
+ *   1. An acknowledgement — even an exact, context-bound one — is never proof of remote
+ *      application. Before the checkpoint or receipt may say `completed`, the engine performs
+ *      a complete read-only post-observation (registry identity and status, every class and
+ *      provenance total, the deterministic event count, the untouched complement, and every
+ *      record's exact state) and binds its checksum into both artifacts.
+ *   2. A reconciliation receipt is evidence, not authority. On resume the engine re-observes
+ *      every batch the receipt names and requires the fresh classification to agree before a
+ *      single stage advances.
  */
 
 import { stat } from 'node:fs/promises'
@@ -13,6 +25,7 @@ import { canonicalJson, sha256 } from '../literature-production-ingest/canonical
 import type { ArtifactTruth } from './artifact'
 import {
   acquireOverlayLease,
+  overlayCheckpointChecksum,
   readOverlayCheckpoint,
   writeOverlayCheckpoint,
   writeOverlayReceiptImmutable,
@@ -159,6 +172,7 @@ export async function runDryRun(
     targetUrl: null,
     writerIdentity: OVERLAY_WRITER_IDENTITY,
     sourceIdentity: OVERLAY_SOURCE_IDENTITY,
+    curationReason: OVERLAY_CURATION_REASON,
     artifactSha256: set.artifactSha256,
     projectionDigest: set.projectionDigest,
     reviewedAt,
@@ -166,6 +180,8 @@ export async function runDryRun(
     counts: set.counts,
     counters: { applied: 0, alreadyApplied: 0 },
     batchRequestChecksums: checksums,
+    checkpointChecksum: sha256(canonicalJson({ dryRun: set.projectionDigest, reviewedAt })),
+    postObservationChecksum: null,
   }
   const receiptPath = `${options.stateDirectory}/overlay-${set.operationId}.dry-run.receipt.json`
   await writeOverlayReceiptImmutable(receiptPath, receiptWithChecksum(body))
@@ -191,6 +207,7 @@ export function expectedArticleState(
     relevance_state: OVERLAY_COARSE_RELEVANCE[record.reviewedRelevance],
     visibility_state: 'draft',
     manual_override: true,
+    is_landmark: false,
     curation_reason: OVERLAY_CURATION_REASON,
     reviewed_relevance: record.reviewedRelevance,
     reviewed_enrichment_provenance: record.enrichmentProvenance,
@@ -240,14 +257,138 @@ function requireEnvironmentPin(
   }
 }
 
+function timestampsEqual(left: unknown, right: unknown): boolean {
+  if (typeof left !== 'string' || typeof right !== 'string') return false
+  const leftEpoch = Date.parse(left)
+  const rightEpoch = Date.parse(right)
+  return Number.isFinite(leftEpoch) && leftEpoch === rightEpoch
+}
+
+function chunked<T>(values: readonly T[], size: number): T[][] {
+  const chunks: T[][] = []
+  for (let start = 0; start < values.length; start += size) {
+    chunks.push(values.slice(start, start + size))
+  }
+  return chunks
+}
+
+function observationRequestBody(
+  operationId: string,
+  pmids: readonly string[],
+  eventIds: readonly string[],
+): string {
+  return JSON.stringify({ operationId, pmids, eventIds })
+}
+
+interface OverlayObservationView {
+  operation: Record<string, unknown> | null
+  totals: Record<string, unknown>
+  articles: Map<string, Record<string, unknown>>
+  events: Map<string, Record<string, unknown>>
+}
+
+function parseObservation(value: unknown): OverlayObservationView {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('The overlay observation was not a JSON object.')
+  }
+  const record = value as Record<string, unknown>
+  const operation = record.operation
+  if (operation !== null && (typeof operation !== 'object' || Array.isArray(operation))) {
+    throw new Error('The overlay observation operation section is malformed.')
+  }
+  const totals = record.totals
+  if (totals === null || typeof totals !== 'object' || Array.isArray(totals)) {
+    throw new Error('The overlay observation totals section is malformed.')
+  }
+  const articles = new Map<string, Record<string, unknown>>()
+  if (!Array.isArray(record.articles)) {
+    throw new Error('The overlay observation articles section is malformed.')
+  }
+  for (const article of record.articles) {
+    if (article === null || typeof article !== 'object' || Array.isArray(article)) {
+      throw new Error('The overlay observation articles section is malformed.')
+    }
+    articles.set(
+      String((article as Record<string, unknown>).pmid),
+      article as Record<string, unknown>,
+    )
+  }
+  const events = new Map<string, Record<string, unknown>>()
+  if (!Array.isArray(record.events)) {
+    throw new Error('The overlay observation events section is malformed.')
+  }
+  for (const event of record.events) {
+    if (event === null || typeof event !== 'object' || Array.isArray(event)) {
+      throw new Error('The overlay observation events section is malformed.')
+    }
+    events.set(String((event as Record<string, unknown>).id), event as Record<string, unknown>)
+  }
+  return { operation, totals, articles, events } as OverlayObservationView
+}
+
+async function observeBase(
+  transport: OverlayTransport,
+  operationId: string,
+): Promise<OverlayObservationView> {
+  return parseObservation(await transport.observe(observationRequestBody(operationId, [], [])))
+}
+
+function totalsNumber(view: OverlayObservationView, key: string): number {
+  const value = view.totals[key]
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error('The overlay observation totals are malformed.')
+  }
+  return value
+}
+
+/**
+ * The full identity comparison for a registered operation row. Every field participates —
+ * registry metadata is bound, never sampled.
+ */
+function assertRegisteredOperationIdentity(
+  operation: Record<string, unknown>,
+  set: ReviewedSet,
+  options: { reviewedAt?: string },
+): void {
+  const mismatch =
+    operation.id !== set.operationId ||
+    operation.writer_identity !== OVERLAY_WRITER_IDENTITY ||
+    operation.artifact_sha256 !== set.artifactSha256 ||
+    operation.source_identity !== OVERLAY_SOURCE_IDENTITY ||
+    operation.curation_reason !== OVERLAY_CURATION_REASON ||
+    operation.record_count !== set.counts.recordCount ||
+    operation.include_core_count !== set.counts.classCounts.include_core ||
+    operation.include_adjacent_count !== set.counts.classCounts.include_adjacent ||
+    operation.exclude_count !== set.counts.classCounts.exclude ||
+    operation.physician_confirmed_count !== set.counts.provenanceCounts.physician_confirmed ||
+    operation.physician_modified_count !== set.counts.provenanceCounts.physician_modified ||
+    operation.qc_accepted_count !== set.counts.provenanceCounts.qc_accepted
+  if (mismatch) {
+    throw new Error(
+      'A registered operation carries this deterministic id with different identity content. ' +
+        'Stopping; the registered row is never overwritten.',
+    )
+  }
+  if (
+    options.reviewedAt !== undefined &&
+    !timestampsEqual(operation.reviewed_at, options.reviewedAt)
+  ) {
+    throw new Error('The registered operation reviewed-at timestamp does not match. Stopping.')
+  }
+  if (operation.status !== 'started' && operation.status !== 'completed') {
+    throw new Error('The registered operation status is unreadable. Stopping.')
+  }
+}
+
 async function assertDestinationPreconditions(
   transport: OverlayTransport,
   set: ReviewedSet,
-): Promise<void> {
-  // 1. The overlay schema must exist. Against today's foundation-only production project this
-  //    probe is rejected, so a production apply fails closed before any mutation.
+): Promise<{ registered: Record<string, unknown> | null }> {
+  // 1. The overlay schema must exist. Against today's foundation-only production project the
+  //    observation RPC does not exist, so a production apply fails closed before any mutation.
+  let base: OverlayObservationView
   try {
-    await transport.countRows('literature_reviewed_overlay_operations', 'select=id')
+    base = await observeBase(transport, set.operationId)
   } catch {
     throw new Error(
       'The reviewed-overlay schema is not present on the destination. The additive proposal ' +
@@ -257,21 +398,25 @@ async function assertDestinationPreconditions(
 
   // 2. Corpus binding: the total is exactly the fixed corpus, every reviewed PMID exists, and
   //    the overlay can therefore create no article.
-  const total = await transport.countRows('literature_articles', 'select=pmid')
-  if (total !== OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT) {
+  const corpusTotal = totalsNumber(base, 'corpusArticles')
+  if (corpusTotal !== OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT) {
     throw new Error(
-      `The destination corpus holds ${total} articles; exactly ` +
+      `The destination corpus holds ${corpusTotal} articles; exactly ` +
         `${OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT} are expected.`,
     )
   }
-  const pmids = set.records.map((record) => record.pmid)
   let present = 0
-  for (let start = 0; start < pmids.length; start += 100) {
-    const chunk = pmids.slice(start, start + 100)
-    const rows = await transport.readRows('literature_articles', {
-      query: `select=pmid&pmid=in.(${chunk.join(',')})`,
-    })
-    present += rows.length
+  for (const chunk of chunked(set.records, 250)) {
+    const view = parseObservation(
+      await transport.observe(
+        observationRequestBody(
+          set.operationId,
+          chunk.map((record) => record.pmid),
+          [],
+        ),
+      ),
+    )
+    present += view.articles.size
   }
   if (present !== set.records.length) {
     throw new Error(
@@ -282,56 +427,300 @@ async function assertDestinationPreconditions(
 
   // 3. No foreign reviewed state: every already-reviewed article must belong to this
   //    operation (idempotent replay); any other reviewed article is drift.
-  const foreign = await transport.countRows(
-    'literature_articles',
-    `select=pmid&reviewed_operation_id=not.is.null&reviewed_operation_id=neq.${set.operationId}`,
-  )
+  const foreign = totalsNumber(base, 'foreignReviewed')
   if (foreign !== 0) {
     throw new Error(
       `${foreign} article(s) carry a reviewed state from a different operation. Stopping.`,
     )
   }
+
+  if (base.operation !== null) {
+    assertRegisteredOperationIdentity(base.operation, set, {})
+  }
+  return { registered: base.operation }
+}
+
+export type OverlayBatchClassification =
+  | 'applied_exact'
+  | 'absent_exact'
+  | 'partial'
+  | 'mixed'
+  | 'drifted'
+  | 'ambiguous'
+  | 'observation_incomplete'
+
+export interface OverlayBatchObservation {
+  index: number
+  classification: OverlayBatchClassification
+  observed: {
+    recordCount: number
+    exactRecords: number
+    absentRecords: number
+    driftedRecords: number
+    inconsistentRecords: number
+    eventsPresent: number
+  }
 }
 
 /**
- * Adopt the registered operation's reviewed_at, or mint one for a genuinely new operation.
+ * Observe one batch read-only and classify it against the strict vocabulary.
  *
- * When the deterministic operation row already exists remotely, its identity fields must match
- * this reviewed set exactly (anything else is a foreign row wearing our id — a hard stop), and
- * its stored timestamp becomes the plan's timestamp so that replayed per-record payloads can
- * match the recorded history byte for byte.
+ * Per record there are exactly four dispositions: exact (article in the exact target state and
+ * the deterministic event exact), absent (article in the complete untouched state and no
+ * event), drifted (present but content-mismatched anywhere), and inconsistent (a reviewed
+ * article without its event, or an event without its reviewed article — a state the
+ * transactional RPC can never produce, so it can only mean interference). The batch
+ * classification follows: all exact → applied_exact; all absent → absent_exact; any
+ * inconsistency → ambiguous; any drift beside exact/absent records → mixed; drift alone →
+ * drifted; exact and absent together without drift → partial. Failed reads are
+ * observation_incomplete — never a verdict.
  */
-async function adoptRegisteredReviewedAt(
+async function observeBatch(
   transport: OverlayTransport,
   set: ReviewedSet,
-  fallbackNow: Date,
-): Promise<string> {
-  const rows = await transport.readRows('literature_reviewed_overlay_operations', {
-    query:
-      'select=id,writer_identity,artifact_sha256,source_identity,reviewed_at,record_count' +
-      `&id=eq.${set.operationId}`,
-  })
-  if (rows.length === 0) return fallbackNow.toISOString()
-  if (rows.length > 1) {
-    throw new Error('The overlay operation id is duplicated on the destination. Stopping.')
+  reviewedAt: string,
+  batch: { index: number; startOrdinal: number; endOrdinal: number },
+): Promise<OverlayBatchObservation> {
+  const records = set.records.slice(batch.startOrdinal - 1, batch.endOrdinal)
+  let exactRecords = 0
+  let absentRecords = 0
+  let driftedRecords = 0
+  let inconsistentRecords = 0
+  let eventsPresent = 0
+
+  try {
+    const view = parseObservation(
+      await transport.observe(
+        observationRequestBody(
+          set.operationId,
+          records.map((record) => record.pmid),
+          records.map((record) => reviewedRecordEventId(set, record)),
+        ),
+      ),
+    )
+
+    for (const record of records) {
+      const eventId = reviewedRecordEventId(set, record)
+      const article = view.articles.get(record.pmid)
+      const event = view.events.get(eventId)
+      if (event) eventsPresent += 1
+
+      if (!article) {
+        driftedRecords += 1
+        continue
+      }
+
+      const expected = expectedArticleState(set, record, reviewedAt)
+      const payloads = expectedEventPayloads(set, record)
+
+      const articleReviewed = article.reviewed_operation_id !== null
+      const articleExact =
+        article.relevance_state === expected.relevance_state &&
+        article.visibility_state === 'draft' &&
+        article.manual_override === true &&
+        article.is_landmark === false &&
+        article.curation_reason === OVERLAY_CURATION_REASON &&
+        article.classifier_version_is_null === true &&
+        article.classifier_payload_is_null === true &&
+        article.reviewed_relevance === expected.reviewed_relevance &&
+        article.reviewed_enrichment_provenance === expected.reviewed_enrichment_provenance &&
+        article.reviewed_source_identity === expected.reviewed_source_identity &&
+        timestampsEqual(article.reviewed_at, reviewedAt) &&
+        article.reviewed_operation_id === set.operationId
+
+      const articleUntouched =
+        !articleReviewed &&
+        article.relevance_state === 'unreviewed' &&
+        article.visibility_state === 'draft' &&
+        article.manual_override === false &&
+        article.is_landmark === false &&
+        article.curation_reason === null &&
+        article.classifier_version_is_null === true &&
+        article.classifier_payload_is_null === true &&
+        article.reviewed_relevance === null &&
+        article.reviewed_enrichment_provenance === null &&
+        article.reviewed_source_identity === null &&
+        article.reviewed_at === null
+
+      const eventExact =
+        event !== undefined &&
+        event.pmid === record.pmid &&
+        event.event_type === 'relevance_changed' &&
+        event.actor_user_id === null &&
+        event.actor_email === OVERLAY_WRITER_IDENTITY &&
+        event.reason === OVERLAY_CURATION_REASON &&
+        canonicalJson(event.before_value) === canonicalJson(payloads.before) &&
+        canonicalJson(event.after_value) === canonicalJson(payloads.after)
+
+      if (articleExact && eventExact) exactRecords += 1
+      else if (articleUntouched && event === undefined) absentRecords += 1
+      else if ((articleReviewed || articleExact) !== (event !== undefined)) {
+        inconsistentRecords += 1
+      } else {
+        driftedRecords += 1
+      }
+    }
+  } catch {
+    return {
+      index: batch.index,
+      classification: 'observation_incomplete',
+      observed: {
+        recordCount: records.length,
+        exactRecords,
+        absentRecords,
+        driftedRecords,
+        inconsistentRecords,
+        eventsPresent,
+      },
+    }
   }
-  const row = rows[0] as Record<string, unknown>
+
+  const recordCount = records.length
+  let classification: OverlayBatchClassification
+  if (inconsistentRecords > 0) classification = 'ambiguous'
+  else if (exactRecords === recordCount) classification = 'applied_exact'
+  else if (absentRecords === recordCount) classification = 'absent_exact'
+  else if (driftedRecords > 0 && exactRecords === 0 && absentRecords === 0) {
+    classification = 'drifted'
+  } else if (driftedRecords > 0) classification = 'mixed'
+  else classification = 'partial'
+
+  return {
+    index: batch.index,
+    classification,
+    observed: {
+      recordCount,
+      exactRecords,
+      absentRecords,
+      driftedRecords,
+      inconsistentRecords,
+      eventsPresent,
+    },
+  }
+}
+
+export interface OverlayPostObservation {
+  checksum: string
+  summary: Record<string, unknown>
+}
+
+/**
+ * The complete read-only post-observation that licenses whole-operation completion: the full
+ * registry row, every class and provenance total, the deterministic event count, the untouched
+ * complement, and every record's exact state. Timestamps are normalized to epoch milliseconds
+ * so the checksum does not depend on a server's text rendering.
+ */
+async function performPostObservation(
+  transport: OverlayTransport,
+  set: ReviewedSet,
+  reviewedAt: string,
+  batches: readonly { index: number; startOrdinal: number; endOrdinal: number }[],
+): Promise<OverlayPostObservation> {
+  const base = await observeBase(transport, set.operationId)
+  if (base.operation === null) {
+    throw new Error('The overlay operation row is absent from the destination.')
+  }
+  assertRegisteredOperationIdentity(base.operation, set, { reviewedAt })
+  if (base.operation.status !== 'completed') {
+    throw new Error('The overlay operation row is not completed on the destination.')
+  }
+  const startedAtEpoch = Date.parse(String(base.operation.started_at))
+  const completedAtEpoch = Date.parse(String(base.operation.completed_at))
   if (
-    row.writer_identity !== OVERLAY_WRITER_IDENTITY ||
-    row.artifact_sha256 !== set.artifactSha256 ||
-    row.source_identity !== OVERLAY_SOURCE_IDENTITY ||
-    row.record_count !== set.counts.recordCount
+    !Number.isFinite(startedAtEpoch) ||
+    !Number.isFinite(completedAtEpoch) ||
+    completedAtEpoch < startedAtEpoch
+  ) {
+    throw new Error('The overlay operation timestamps are unreadable or out of order.')
+  }
+
+  const totals = {
+    corpusArticles: totalsNumber(base, 'corpusArticles'),
+    reviewedForOperation: totalsNumber(base, 'reviewedForOperation'),
+    includeCore: totalsNumber(base, 'includeCore'),
+    includeAdjacent: totalsNumber(base, 'includeAdjacent'),
+    exclude: totalsNumber(base, 'exclude'),
+    physicianConfirmed: totalsNumber(base, 'physicianConfirmed'),
+    physicianModified: totalsNumber(base, 'physicianModified'),
+    qcAccepted: totalsNumber(base, 'qcAccepted'),
+    eventsForOperation: totalsNumber(base, 'eventsForOperation'),
+    foreignReviewed: totalsNumber(base, 'foreignReviewed'),
+  }
+  if (totals.corpusArticles !== OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT) {
+    throw new Error('The destination corpus total changed. The overlay must create no article.')
+  }
+  if (
+    totals.reviewedForOperation !== set.counts.recordCount ||
+    totals.includeCore !== set.counts.classCounts.include_core ||
+    totals.includeAdjacent !== set.counts.classCounts.include_adjacent ||
+    totals.exclude !== set.counts.classCounts.exclude ||
+    totals.physicianConfirmed !== set.counts.provenanceCounts.physician_confirmed ||
+    totals.physicianModified !== set.counts.provenanceCounts.physician_modified ||
+    totals.qcAccepted !== set.counts.provenanceCounts.qc_accepted
   ) {
     throw new Error(
-      'A registered operation carries this deterministic id with different identity content. ' +
-        'Stopping; the registered row is never overwritten.',
+      'The actual destination totals do not match the reviewed set exactly. Completion is ' +
+        'not licensed.',
     )
   }
-  const reviewedAt = row.reviewed_at
-  if (typeof reviewedAt !== 'string' || !Number.isFinite(Date.parse(reviewedAt))) {
-    throw new Error('The registered operation reviewed_at is unreadable. Stopping.')
+  if (totals.eventsForOperation !== set.counts.recordCount) {
+    throw new Error('The destination event count does not match the reviewed set exactly.')
   }
-  return new Date(Date.parse(reviewedAt)).toISOString()
+  if (totals.foreignReviewed !== 0) {
+    throw new Error('The destination carries reviewed articles outside this operation.')
+  }
+
+  const batchObservations: OverlayBatchObservation[] = []
+  for (const batch of batches) {
+    const observation = await observeBatch(transport, set, reviewedAt, batch)
+    if (observation.classification !== 'applied_exact') {
+      throw new Error('A destination batch is not exactly applied. Completion is not licensed.')
+    }
+    batchObservations.push(observation)
+  }
+
+  const summary = {
+    schemaVersion: 'literature-reviewed-overlay-post-observation/1.0.0',
+    operationId: set.operationId,
+    projectionDigest: set.projectionDigest,
+    artifactSha256: set.artifactSha256,
+    registry: {
+      writerIdentity: base.operation.writer_identity,
+      sourceIdentity: base.operation.source_identity,
+      curationReason: base.operation.curation_reason,
+      reviewedAtEpochMs: Date.parse(String(base.operation.reviewed_at)),
+      recordCount: base.operation.record_count,
+      includeCoreCount: base.operation.include_core_count,
+      includeAdjacentCount: base.operation.include_adjacent_count,
+      excludeCount: base.operation.exclude_count,
+      physicianConfirmedCount: base.operation.physician_confirmed_count,
+      physicianModifiedCount: base.operation.physician_modified_count,
+      qcAcceptedCount: base.operation.qc_accepted_count,
+      status: base.operation.status,
+      startedAtEpochMs: startedAtEpoch,
+      completedAtEpochMs: completedAtEpoch,
+    },
+    totals,
+    batches: batchObservations.map((observation) => ({
+      index: observation.index,
+      classification: observation.classification,
+      observed: observation.observed,
+    })),
+  }
+  return { checksum: sha256(canonicalJson(summary)), summary }
+}
+
+/** Recompute checkpoint counters as the sum of acknowledged batch effects. */
+function syncCounters(checkpoint: OverlayCheckpoint): void {
+  let applied = 0
+  let alreadyApplied = 0
+  for (const batch of checkpoint.batches) {
+    if (batch.stage.state === 'acknowledged' && batch.effects) {
+      applied += batch.effects.applied
+      alreadyApplied += batch.effects.alreadyApplied
+    }
+  }
+  checkpoint.counters = { applied, alreadyApplied }
 }
 
 export interface OverlayApplyResult {
@@ -340,6 +729,7 @@ export interface OverlayApplyResult {
   receiptPath: string
   counters: { applied: number; alreadyApplied: number }
   batchCount: number
+  postObservationChecksum: string
 }
 
 export interface OverlayApplyOptions {
@@ -388,6 +778,7 @@ export async function runApply(
   const lease = await acquireOverlayLease(checkpointPath)
   try {
     let resumedCheckpoint: OverlayCheckpoint | null = null
+    let pendingReconciliation: unknown = null
     if (options.resume) {
       if (!options.checkpointPath) {
         throw new Error('A resume requires the explicit checkpoint path.')
@@ -428,23 +819,11 @@ export async function runApply(
         if (!options.readReconciliation) {
           throw new Error('The engine was not given a reconciliation reader.')
         }
-        const receipt = await options.readReconciliation(options.reconciliationPath)
-        applyReconciliationToCheckpoint(loaded, receipt)
+        pendingReconciliation = await options.readReconciliation(options.reconciliationPath)
+        // Binding and internal consistency are judged now; the authoritative re-observation
+        // happens after the transport exists, below.
+        assertReconciliationReceiptConsistent(loaded, pendingReconciliation)
       }
-      for (const batch of loaded.batches) {
-        if (batch.stage.state === 'submitted' || batch.stage.state === 'ambiguous') {
-          throw new Error('A batch stage requires read-only reconciliation before continuation.')
-        }
-        if (batch.stage.state === 'confirmed_failure') {
-          batch.stage = {
-            state: 'prepared',
-            submittedAt: null,
-            acknowledgedAt: null,
-            failureCode: null,
-          }
-        }
-      }
-      loaded.phase = 'running'
       resumedCheckpoint = loaded
     } else {
       if (options.checkpointPath) {
@@ -460,17 +839,55 @@ export async function runApply(
     }
 
     const transport = deps.createTransport()
-    await assertDestinationPreconditions(transport, set)
+    const { registered } = await assertDestinationPreconditions(transport, set)
+    const replayMode = registered !== null && registered.status === 'completed'
 
     let checkpoint: OverlayCheckpoint
     if (resumedCheckpoint) {
       checkpoint = resumedCheckpoint
+      if (pendingReconciliation !== null) {
+        await applyReconciliationWithReobservation(
+          transport,
+          set,
+          checkpoint,
+          pendingReconciliation,
+          replayMode,
+          deps.now,
+        )
+      }
+      for (const batch of checkpoint.batches) {
+        if (batch.stage.state === 'submitted' || batch.stage.state === 'ambiguous') {
+          throw new Error('A batch stage requires read-only reconciliation before continuation.')
+        }
+        if (batch.stage.state === 'confirmed_failure') {
+          batch.stage = {
+            state: 'prepared',
+            submittedAt: null,
+            acknowledgedAt: null,
+            failureCode: null,
+          }
+        }
+      }
+      syncCounters(checkpoint)
+      checkpoint.phase = 'running'
     } else {
       // The registered operation row is the authority for its own timestamp: a fresh run of an
       // operation that already exists remotely (a from-scratch replay after lost local state)
       // must adopt the registered reviewed_at, or its deterministic per-record payloads could
       // never match the recorded history.
-      const reviewedAt = await adoptRegisteredReviewedAt(transport, set, deps.now())
+      let reviewedAt: string
+      if (registered !== null) {
+        const registeredReviewedAt = registered.reviewed_at
+        if (
+          typeof registeredReviewedAt !== 'string' ||
+          !Number.isFinite(Date.parse(registeredReviewedAt))
+        ) {
+          throw new Error('The registered operation reviewed_at is unreadable. Stopping.')
+        }
+        reviewedAt = new Date(Date.parse(registeredReviewedAt)).toISOString()
+      } else {
+        reviewedAt = deps.now().toISOString()
+      }
       const plan = buildOverlayPlan(set, reviewedAt, options.recordBatchLimit)
       const timestamp = deps.now().toISOString()
       checkpoint = {
@@ -483,11 +900,13 @@ export async function runApply(
         artifactSha256: set.artifactSha256,
         projectionDigest: set.projectionDigest,
         reviewedAt,
+        curationReason: OVERLAY_CURATION_REASON,
         counts: set.counts,
         limits: { recordBatchLimit: plan.recordBatchLimit },
         batches: checkpointBatchesForPlan(set, plan),
         phase: 'prepared',
         counters: { applied: 0, alreadyApplied: 0 },
+        postObservationChecksum: null,
       }
     }
 
@@ -551,7 +970,12 @@ export async function runApply(
       }
 
       const verdict = acknowledgementMatches(
-        { operationId: set.operationId, recordCount: batch.recordCount },
+        {
+          operationId: set.operationId,
+          recordCount: batch.recordCount,
+          finalBatch: batch.finalBatch,
+          mode: replayMode ? 'replay_completed' : 'in_progress',
+        },
         acknowledgement,
       )
       if (!verdict.matches) {
@@ -577,13 +1001,23 @@ export async function runApply(
         failureCode: null,
       }
       batch.acknowledgementChecksum = sha256(canonicalJson(acknowledgement))
+      batch.reconciliationChecksum = null
       batch.effects = { applied: verdict.applied, alreadyApplied: verdict.alreadyApplied }
-      checkpoint.counters.applied += verdict.applied
-      checkpoint.counters.alreadyApplied += verdict.alreadyApplied
+      syncCounters(checkpoint)
       checkpoint.updatedAt = deps.now().toISOString()
       await writeOverlayCheckpoint(checkpointPath, checkpoint)
     }
 
+    // An acknowledgement is not proof of remote application. Only the complete read-only
+    // post-observation licenses whole-operation completion.
+    const postObservation = await performPostObservation(
+      transport,
+      set,
+      checkpoint.reviewedAt,
+      checkpoint.batches,
+    )
+
+    checkpoint.postObservationChecksum = postObservation.checksum
     checkpoint.phase = 'completed'
     checkpoint.updatedAt = deps.now().toISOString()
     await writeOverlayCheckpoint(checkpointPath, checkpoint)
@@ -601,6 +1035,7 @@ export async function runApply(
       targetUrl: APPROVED_PROJECT_URL,
       writerIdentity: OVERLAY_WRITER_IDENTITY,
       sourceIdentity: OVERLAY_SOURCE_IDENTITY,
+      curationReason: OVERLAY_CURATION_REASON,
       artifactSha256: set.artifactSha256,
       projectionDigest: set.projectionDigest,
       reviewedAt: checkpoint.reviewedAt,
@@ -608,6 +1043,8 @@ export async function runApply(
       counts: set.counts,
       counters: { ...checkpoint.counters },
       batchRequestChecksums: checkpoint.batches.map((batch) => batch.requestChecksum),
+      checkpointChecksum: overlayCheckpointChecksum(checkpoint),
+      postObservationChecksum: postObservation.checksum,
     }
     const finalReceiptPath =
       outcome === 'idempotent-replay'
@@ -621,26 +1058,10 @@ export async function runApply(
       receiptPath: finalReceiptPath,
       counters: { ...checkpoint.counters },
       batchCount: checkpoint.batches.length,
+      postObservationChecksum: postObservation.checksum,
     }
   } finally {
     await lease.release()
-  }
-}
-
-export type OverlayBatchClassification =
-  | 'applied_exact'
-  | 'absent_exact'
-  | 'partial_or_conflicting'
-  | 'observation_incomplete'
-
-export interface OverlayReconciliationBatch {
-  index: number
-  classification: OverlayBatchClassification
-  observed: {
-    eventsPresent: number
-    articlesReviewed: number
-    articlesUntouched: number
-    mismatches: number
   }
 }
 
@@ -649,152 +1070,9 @@ export interface OverlayReconciliationReceipt {
   operationId: string
   checkpointChecksum: string
   observedAt: string
-  batches: OverlayReconciliationBatch[]
+  registryConsistent: boolean
+  batches: OverlayBatchObservation[]
   receiptChecksum: string
-}
-
-function chunked<T>(values: readonly T[], size: number): T[][] {
-  const chunks: T[][] = []
-  for (let start = 0; start < values.length; start += size) {
-    chunks.push(values.slice(start, start + size))
-  }
-  return chunks
-}
-
-const UNTOUCHED_ARTICLE_STATE = {
-  relevance_state: 'unreviewed',
-  visibility_state: 'draft',
-  manual_override: false,
-  reviewed_relevance: null,
-  reviewed_enrichment_provenance: null,
-  reviewed_source_identity: null,
-  reviewed_at: null,
-  reviewed_operation_id: null,
-} as const
-
-const ARTICLE_OBSERVATION_SELECT =
-  'select=pmid,relevance_state,visibility_state,manual_override,curation_reason,' +
-  'reviewed_relevance,reviewed_enrichment_provenance,reviewed_source_identity,reviewed_at,' +
-  'reviewed_operation_id'
-
-function timestampsEqual(left: unknown, right: unknown): boolean {
-  if (typeof left !== 'string' || typeof right !== 'string') return false
-  const leftEpoch = Date.parse(left)
-  const rightEpoch = Date.parse(right)
-  return Number.isFinite(leftEpoch) && leftEpoch === rightEpoch
-}
-
-/**
- * Observe one batch read-only and classify it.
- *
- * A batch is transactional on the destination, so the expected observations are exactly "all
- * applied" or "none applied"; anything mixed, foreign, or content-mismatched is drift, and any
- * failed read is an incomplete observation — never a verdict.
- */
-async function observeBatch(
-  transport: OverlayTransport,
-  set: ReviewedSet,
-  reviewedAt: string,
-  batch: OverlayCheckpointBatch,
-): Promise<OverlayReconciliationBatch> {
-  const records = set.records.slice(batch.startOrdinal - 1, batch.endOrdinal)
-  let eventsPresent = 0
-  let articlesReviewed = 0
-  let articlesUntouched = 0
-  let mismatches = 0
-
-  try {
-    for (const chunk of chunked(records, 50)) {
-      const eventIds = chunk.map((record) => reviewedRecordEventId(set, record))
-      const eventRows = await transport.readRows('literature_curation_events', {
-        query:
-          'select=id,pmid,event_type,actor_email,before_value,after_value,reason' +
-          `&id=in.(${eventIds.join(',')})`,
-      })
-      const eventsById = new Map(
-        eventRows.map((row) => [(row as Record<string, unknown>).id as string, row]),
-      )
-
-      const articleRows = await transport.readRows('literature_articles', {
-        query: `${ARTICLE_OBSERVATION_SELECT}&pmid=in.(${chunk.map((r) => r.pmid).join(',')})`,
-      })
-      const articlesByPmid = new Map(
-        articleRows.map((row) => [(row as Record<string, unknown>).pmid as string, row]),
-      )
-
-      for (const record of chunk) {
-        const eventId = reviewedRecordEventId(set, record)
-        const event = eventsById.get(eventId) as Record<string, unknown> | undefined
-        const article = articlesByPmid.get(record.pmid) as Record<string, unknown> | undefined
-        if (!article) {
-          mismatches += 1
-          continue
-        }
-
-        const expected = expectedArticleState(set, record, reviewedAt)
-        const payloads = expectedEventPayloads(set, record)
-
-        const articleReviewed = article.reviewed_operation_id !== null
-        if (articleReviewed) articlesReviewed += 1
-
-        const articleExact =
-          articleReviewed &&
-          article.relevance_state === expected.relevance_state &&
-          article.visibility_state === expected.visibility_state &&
-          article.manual_override === true &&
-          article.curation_reason === OVERLAY_CURATION_REASON &&
-          article.reviewed_relevance === expected.reviewed_relevance &&
-          article.reviewed_enrichment_provenance === expected.reviewed_enrichment_provenance &&
-          article.reviewed_source_identity === expected.reviewed_source_identity &&
-          timestampsEqual(article.reviewed_at, reviewedAt) &&
-          article.reviewed_operation_id === set.operationId
-
-        const articleUntouched =
-          !articleReviewed &&
-          Object.entries(UNTOUCHED_ARTICLE_STATE).every(([key, value]) => article[key] === value)
-        if (articleUntouched) articlesUntouched += 1
-
-        if (event) {
-          eventsPresent += 1
-          const eventExact =
-            event.pmid === record.pmid &&
-            event.event_type === 'relevance_changed' &&
-            event.actor_email === OVERLAY_WRITER_IDENTITY &&
-            event.reason === OVERLAY_CURATION_REASON &&
-            canonicalJson(event.before_value) === canonicalJson(payloads.before) &&
-            canonicalJson(event.after_value) === canonicalJson(payloads.after)
-          if (!eventExact || !articleExact) mismatches += 1
-        } else if (articleReviewed) {
-          // A reviewed article with no history row can never be this operation's work.
-          mismatches += 1
-        } else if (!articleUntouched) {
-          mismatches += 1
-        }
-      }
-    }
-  } catch {
-    return {
-      index: batch.index,
-      classification: 'observation_incomplete',
-      observed: { eventsPresent, articlesReviewed, articlesUntouched, mismatches },
-    }
-  }
-
-  const recordCount = records.length
-  let classification: OverlayBatchClassification
-  if (mismatches > 0) classification = 'partial_or_conflicting'
-  else if (eventsPresent === recordCount && articlesReviewed === recordCount) {
-    classification = 'applied_exact'
-  } else if (eventsPresent === 0 && articlesUntouched === recordCount) {
-    classification = 'absent_exact'
-  } else {
-    classification = 'partial_or_conflicting'
-  }
-  return {
-    index: batch.index,
-    classification,
-    observed: { eventsPresent, articlesReviewed, articlesUntouched, mismatches },
-  }
 }
 
 export interface OverlayReconcileResult {
@@ -817,7 +1095,25 @@ export async function runReconcile(
     (batch) => batch.stage.state === 'submitted' || batch.stage.state === 'ambiguous',
   )
   const transport = deps.createTransport()
-  const observations: OverlayReconciliationBatch[] = []
+
+  // The operation registry is observed alongside the batches: a drifted registry means no
+  // classification below can be trusted to describe this operation.
+  let registryConsistent = false
+  try {
+    const base = await observeBase(transport, set.operationId)
+    if (base.operation === null) {
+      registryConsistent = true // exact nonapplication of the registry row itself
+    } else {
+      assertRegisteredOperationIdentity(base.operation, set, {
+        reviewedAt: checkpoint.reviewedAt,
+      })
+      registryConsistent = true
+    }
+  } catch {
+    registryConsistent = false
+  }
+
+  const observations: OverlayBatchObservation[] = []
   for (const batch of unresolved) {
     observations.push(await observeBatch(transport, set, checkpoint.reviewedAt, batch))
   }
@@ -827,6 +1123,7 @@ export async function runReconcile(
     operationId: checkpoint.operationId,
     checkpointChecksum: sha256(canonicalJson(checkpoint)),
     observedAt: deps.now().toISOString(),
+    registryConsistent,
     batches: observations,
   }
   const receipt: OverlayReconciliationReceipt = {
@@ -837,13 +1134,14 @@ export async function runReconcile(
 }
 
 /**
- * Fold an exact reconciliation receipt into a checkpoint before resume. Ambiguity and drift
- * stop with distinct messages; only exact application and exact absence continue.
+ * Judge a reconciliation receipt's binding and internal consistency. This is a precondition,
+ * not authority: a receipt that passes here still only nominates batches, and the engine
+ * re-observes each one freshly before any stage advances.
  */
-export function applyReconciliationToCheckpoint(
+export function assertReconciliationReceiptConsistent(
   checkpoint: OverlayCheckpoint,
   receiptValue: unknown,
-): void {
+): asserts receiptValue is OverlayReconciliationReceipt {
   if (!receiptValue || typeof receiptValue !== 'object' || Array.isArray(receiptValue)) {
     throw new Error('The reconciliation receipt is not an object.')
   }
@@ -861,6 +1159,12 @@ export function applyReconciliationToCheckpoint(
   if (receipt.checkpointChecksum !== sha256(canonicalJson(checkpoint))) {
     throw new Error('The reconciliation receipt was produced against a different checkpoint state.')
   }
+  if (receipt.registryConsistent !== true) {
+    throw new Error(
+      'The reconciliation observation found the operation registry inconsistent. No further ' +
+        'mutation may be attempted; investigate the drift read-only.',
+    )
+  }
   if (!Array.isArray(receipt.batches)) {
     throw new Error('The reconciliation receipt batches are invalid.')
   }
@@ -870,55 +1174,112 @@ export function applyReconciliationToCheckpoint(
       throw new Error('The reconciliation receipt names a batch that is not unresolved.')
     }
     const classification = entry.classification
+    const observed = entry.observed as Record<string, unknown> | undefined
+    if (!observed || typeof observed !== 'object') {
+      throw new Error('The reconciliation receipt observations are invalid.')
+    }
+    // Internal consistency: a classification must agree with its own observed counts. A
+    // receipt claiming applied_exact over zero events is semantically false and is refused
+    // before any re-observation is even attempted.
+    if (
+      classification === 'applied_exact' &&
+      (observed.exactRecords !== batch.recordCount ||
+        observed.eventsPresent !== batch.recordCount ||
+        observed.driftedRecords !== 0 ||
+        observed.inconsistentRecords !== 0 ||
+        observed.absentRecords !== 0)
+    ) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
+    if (
+      classification === 'absent_exact' &&
+      (observed.absentRecords !== batch.recordCount ||
+        observed.eventsPresent !== 0 ||
+        observed.exactRecords !== 0 ||
+        observed.driftedRecords !== 0 ||
+        observed.inconsistentRecords !== 0)
+    ) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
     if (classification === 'observation_incomplete') {
       throw new Error(
         'The reconciliation observation is incomplete. No further mutation may be attempted ' +
           'until a complete read-only observation succeeds.',
       )
     }
-    if (classification === 'partial_or_conflicting') {
+    if (classification !== 'applied_exact' && classification !== 'absent_exact') {
       throw new Error(
         'The destination state conflicts with the overlay expectation. No further mutation ' +
           'may be attempted; investigate the drift read-only.',
       )
     }
-    if (classification === 'applied_exact') {
+  }
+}
+
+/**
+ * Fold a reconciliation receipt into a checkpoint — but only after re-observing every batch it
+ * names and requiring the fresh classification to agree. The receipt nominates; the fresh
+ * observation decides.
+ */
+export async function applyReconciliationWithReobservation(
+  transport: OverlayTransport,
+  set: ReviewedSet,
+  checkpoint: OverlayCheckpoint,
+  receiptValue: unknown,
+  replayMode: boolean,
+  now: () => Date,
+): Promise<void> {
+  assertReconciliationReceiptConsistent(checkpoint, receiptValue)
+  const receipt = receiptValue as OverlayReconciliationReceipt
+
+  for (const entry of receipt.batches) {
+    const batch = checkpoint.batches[entry.index] as OverlayCheckpointBatch
+    const fresh = await observeBatch(transport, set, checkpoint.reviewedAt, batch)
+    if (fresh.classification !== entry.classification) {
+      throw new Error(
+        'A fresh observation disagrees with the reconciliation receipt. The receipt is stale; ' +
+          'reconcile again read-only.',
+      )
+    }
+    if (fresh.classification === 'applied_exact') {
       batch.stage = {
         state: 'acknowledged',
         submittedAt: batch.stage.submittedAt,
-        acknowledgedAt: new Date().toISOString(),
+        acknowledgedAt: now().toISOString(),
         failureCode: null,
       }
-      // The fresh/replay split of a reconciled batch is unknowable after the fact; effects
-      // stay null and the verify command proves the exact remote totals instead.
-      batch.effects = null
       batch.acknowledgementChecksum = null
-    } else if (classification === 'absent_exact') {
+      batch.reconciliationChecksum = sha256(canonicalJson(fresh))
+      // The lost acknowledgement's fresh/replay split is decided by the operation's status at
+      // observation time: a completed operation can only have been replayed; a started one can
+      // only have applied.
+      batch.effects = replayMode
+        ? { applied: 0, alreadyApplied: batch.recordCount }
+        : { applied: batch.recordCount, alreadyApplied: 0 }
+    } else {
       batch.stage = {
         state: 'prepared',
         submittedAt: null,
         acknowledgedAt: null,
         failureCode: null,
       }
-    } else {
-      throw new Error('The reconciliation receipt carries an unknown classification.')
+      batch.acknowledgementChecksum = null
+      batch.reconciliationChecksum = null
+      batch.effects = null
     }
   }
+  syncCounters(checkpoint)
   checkpoint.phase = 'running'
 }
 
 export interface OverlayVerifyResult {
   status: 'verified'
   operationId: string
+  postObservationChecksum: string
   remote: {
-    operationRowStatus: string
-    reviewedTotal: number
-    classCounts: Record<string, number>
-    provenanceCounts: Record<string, number>
-    corpusTotal: number
-    foreignReviewed: number
-    recordsExact: number
-    eventsExact: number
+    registry: Record<string, unknown>
+    totals: Record<string, unknown>
+    batchesExact: number
   }
 }
 
@@ -936,94 +1297,32 @@ export async function runVerify(
   }
   const transport = deps.createTransport()
 
-  const operationRows = await transport.readRows('literature_reviewed_overlay_operations', {
-    query:
-      'select=id,writer_identity,artifact_sha256,source_identity,record_count,status' +
-      `&id=eq.${set.operationId}`,
-  })
-  if (operationRows.length !== 1) {
-    throw new Error('The overlay operation row is absent or duplicated on the destination.')
-  }
-  const operationRow = operationRows[0] as Record<string, unknown>
-  if (
-    operationRow.writer_identity !== OVERLAY_WRITER_IDENTITY ||
-    operationRow.artifact_sha256 !== set.artifactSha256 ||
-    operationRow.source_identity !== OVERLAY_SOURCE_IDENTITY ||
-    operationRow.record_count !== set.counts.recordCount ||
-    operationRow.status !== 'completed'
-  ) {
-    throw new Error('The overlay operation row does not match the reviewed set exactly.')
-  }
-
-  const reviewedTotal = await transport.countRows(
-    'literature_articles',
-    `select=pmid&reviewed_operation_id=eq.${set.operationId}`,
+  const postObservation = await performPostObservation(
+    transport,
+    set,
+    checkpoint.reviewedAt,
+    checkpoint.batches,
   )
-  const classCounts: Record<string, number> = {}
-  for (const relevance of ['include_core', 'include_adjacent', 'exclude'] as const) {
-    classCounts[relevance] = await transport.countRows(
-      'literature_articles',
-      `select=pmid&reviewed_operation_id=eq.${set.operationId}` +
-        `&reviewed_relevance=eq.${relevance}`,
+  if (postObservation.checksum !== checkpoint.postObservationChecksum) {
+    throw new Error(
+      'The fresh post-observation does not match the completion binding. The destination ' +
+        'state moved after completion; investigate read-only.',
     )
   }
-  const provenanceCounts: Record<string, number> = {}
-  for (const provenance of ['physician_confirmed', 'physician_modified', 'qc_accepted'] as const) {
-    provenanceCounts[provenance] = await transport.countRows(
-      'literature_articles',
-      `select=pmid&reviewed_operation_id=eq.${set.operationId}` +
-        `&reviewed_enrichment_provenance=eq.${provenance}`,
-    )
-  }
-  const corpusTotal = await transport.countRows('literature_articles', 'select=pmid')
-  const foreignReviewed = await transport.countRows(
-    'literature_articles',
-    `select=pmid&reviewed_operation_id=not.is.null&reviewed_operation_id=neq.${set.operationId}`,
-  )
 
-  if (reviewedTotal !== set.counts.recordCount) {
-    throw new Error('The destination reviewed total does not match the reviewed set.')
+  const summary = postObservation.summary as {
+    registry: Record<string, unknown>
+    totals: Record<string, unknown>
+    batches: unknown[]
   }
-  for (const [key, expected] of Object.entries(set.counts.classCounts)) {
-    if (classCounts[key] !== expected) {
-      throw new Error('A destination class count does not match the reviewed set.')
-    }
-  }
-  for (const [key, expected] of Object.entries(set.counts.provenanceCounts)) {
-    if (provenanceCounts[key] !== expected) {
-      throw new Error('A destination provenance count does not match the reviewed set.')
-    }
-  }
-  if (corpusTotal !== OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT) {
-    throw new Error('The destination corpus total changed. The overlay must create no article.')
-  }
-  if (foreignReviewed !== 0) {
-    throw new Error('The destination carries reviewed articles outside this operation.')
-  }
-
-  let recordsExact = 0
-  let eventsExact = 0
-  for (const batch of checkpoint.batches) {
-    const observation = await observeBatch(transport, set, checkpoint.reviewedAt, batch)
-    if (observation.classification !== 'applied_exact') {
-      throw new Error('A destination batch is not exactly applied.')
-    }
-    recordsExact += batch.recordCount
-    eventsExact += observation.observed.eventsPresent
-  }
-
   return {
     status: 'verified',
     operationId: set.operationId,
+    postObservationChecksum: postObservation.checksum,
     remote: {
-      operationRowStatus: String(operationRow.status),
-      reviewedTotal,
-      classCounts,
-      provenanceCounts,
-      corpusTotal,
-      foreignReviewed,
-      recordsExact,
-      eventsExact,
+      registry: summary.registry,
+      totals: summary.totals,
+      batchesExact: summary.batches.length,
     },
   }
 }

@@ -4,23 +4,25 @@
  * `OverlayTransport` is the engine's only view of a destination, so the production PostgREST
  * implementation and the rehearsal's disposable-container implementation are interchangeable
  * without the engine knowing which world it is in. The production implementation can reach
- * exactly one mutating surface — the overlay batch RPC — and three read-only tables; there is
- * no generic query method to widen.
+ * exactly two surfaces — the mutating overlay batch RPC and the bounded read-only observation
+ * RPC — both by POST with a request body. There is no generic table read, no query-string
+ * filter, and therefore no way for a PMID to enter a request URL.
  *
- * Error taxonomy mirrors the ingest transport: a confirmed PostgREST rejection (4xx) is
- * retryable only by explicit resume; a timeout, transport exception, 408, 5xx, or malformed
- * body is ambiguous — the caller must reconcile read-only before any further mutation.
+ * Error discipline: an untrusted response body never enters a thrown or logged error. Failures
+ * carry only the stable classification, the HTTP status, and a digest of the body for
+ * out-of-band correlation. A confirmed PostgREST rejection (4xx) is retryable only by explicit
+ * resume; a timeout, transport exception, 408, 5xx, or malformed body is ambiguous — the
+ * caller must reconcile read-only before any further mutation.
  */
 
-import { redact } from '../literature-production-ingest/canonical'
+import { redact, sha256 } from '../literature-production-ingest/canonical'
 import type { DestinationBinding } from '../literature-production-ingest/types'
 import {
   APPROVED_PROJECT_REF,
   APPROVED_PROJECT_URL,
   OVERLAY_APPLY_RPC,
-  OVERLAY_READ_TABLES,
+  OVERLAY_OBSERVE_RPC,
   PROHIBITED_ENDOREELS_REF,
-  type OverlayReadTable,
 } from './constants'
 
 export type OverlayAmbiguityCode =
@@ -59,8 +61,7 @@ export class OverlayReadError extends Error {
       | 'read_timeout'
       | 'read_transport_error'
       | 'read_rejected'
-      | 'read_malformed_response'
-      | 'count_missing',
+      | 'read_malformed_response',
     message: string,
   ) {
     super(message)
@@ -68,29 +69,14 @@ export class OverlayReadError extends Error {
   }
 }
 
-export interface OverlayReadQuery {
-  /** PostgREST query-string filters, e.g. `select=pmid&reviewed_operation_id=eq.…`. */
-  query: string
-  /** Zero-based inclusive row range for paging. */
-  range?: { from: number; to: number }
-}
-
 export interface OverlayTransport {
-  /** POST the batch RPC and return the parsed acknowledgement body. */
+  /** POST the mutating batch RPC and return the parsed acknowledgement body. */
   applyBatch(requestBody: string): Promise<unknown>
-  /** GET rows from an allowlisted table. */
-  readRows(table: OverlayReadTable, query: OverlayReadQuery): Promise<unknown[]>
-  /** HEAD an exact count from an allowlisted table. */
-  countRows(table: OverlayReadTable, filterQuery: string): Promise<number>
+  /** POST the bounded read-only observation RPC and return the parsed observation body. */
+  observe(requestBody: string): Promise<unknown>
 }
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 60_000
-
-function assertReadTable(table: string): asserts table is OverlayReadTable {
-  if (!(OVERLAY_READ_TABLES as readonly string[]).includes(table)) {
-    throw new Error('The overlay transport may not read that relation.')
-  }
-}
 
 function validateBinding(binding: DestinationBinding): void {
   // Deliberately re-checked against widened strings: the binding type already narrows these to
@@ -108,6 +94,11 @@ function validateBinding(binding: DestinationBinding): void {
   if (!/^sb_secret_[A-Za-z0-9._-]+$/u.test(binding.secret)) {
     throw new Error('The overlay transport refuses a non-secret credential class.')
   }
+}
+
+/** A short correlation digest of an untrusted body that is safe to name in an error. */
+function bodyDigest(bodyText: string | null): string {
+  return bodyText === null ? 'unreadable' : sha256(bodyText).slice(0, 16)
 }
 
 export interface PostgrestOverlayTransportOptions {
@@ -128,27 +119,20 @@ export class PostgrestOverlayTransport implements OverlayTransport {
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS
   }
 
-  #headers(extra: Record<string, string> = {}): Record<string, string> {
-    // The opaque secret travels only here, in the apikey and authorization headers of a
-    // request to the approved origin. It never enters a URL, a log, or an error.
-    return {
-      apikey: this.#binding.secret,
-      authorization: `Bearer ${this.#binding.secret}`,
-      ...extra,
-    }
-  }
-
-  async #request(
-    path: string,
-    init: { method: string; headers: Record<string, string>; body?: string },
-  ): Promise<Response> {
+  async #post(rpc: string, requestBody: string): Promise<Response> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), this.#timeoutMs)
     try {
-      return await this.#fetch(`${this.#binding.url}${path}`, {
-        method: init.method,
-        headers: init.headers,
-        body: init.body,
+      // The opaque secret travels only here, in the apikey and authorization headers of a
+      // request to the approved origin. It never enters a URL, a log, or an error.
+      return await this.#fetch(`${this.#binding.url}rest/v1/rpc/${rpc}`, {
+        method: 'POST',
+        headers: {
+          apikey: this.#binding.secret,
+          authorization: `Bearer ${this.#binding.secret}`,
+          'content-type': 'application/json',
+        },
+        body: requestBody,
         redirect: 'error',
         signal: controller.signal,
       })
@@ -160,11 +144,7 @@ export class PostgrestOverlayTransport implements OverlayTransport {
   async applyBatch(requestBody: string): Promise<unknown> {
     let response: Response
     try {
-      response = await this.#request(`rest/v1/rpc/${OVERLAY_APPLY_RPC}`, {
-        method: 'POST',
-        headers: this.#headers({ 'content-type': 'application/json' }),
-        body: requestBody,
-      })
+      response = await this.#post(OVERLAY_APPLY_RPC, requestBody)
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new OverlayMutationAmbiguousError(
@@ -188,14 +168,15 @@ export class PostgrestOverlayTransport implements OverlayTransport {
     if (response.status >= 500) {
       throw new OverlayMutationAmbiguousError(
         'server_error',
-        `The destination reported a server error (${response.status}).`,
+        `The destination reported a server error (status ${response.status}).`,
       )
     }
     if (response.status >= 400) {
+      // The response body is untrusted and never enters the error; the digest lets an
+      // operator correlate the refusal with server-side logs out of band.
       throw new OverlayMutationConfirmedFailureError(
-        `The destination rejected the overlay batch (${response.status}): ${redact(bodyText ?? '', [
-          this.#binding.secret,
-        ])}`,
+        `The destination rejected the overlay batch (status ${response.status}, ` +
+          `body digest ${bodyDigest(bodyText)}).`,
       )
     }
     if (response.status < 200 || response.status >= 300) {
@@ -220,76 +201,48 @@ export class PostgrestOverlayTransport implements OverlayTransport {
     }
   }
 
-  async readRows(table: OverlayReadTable, query: OverlayReadQuery): Promise<unknown[]> {
-    assertReadTable(table)
-    const headers = this.#headers()
-    if (query.range) headers.range = `${query.range.from}-${query.range.to}`
+  async observe(requestBody: string): Promise<unknown> {
     let response: Response
     try {
-      response = await this.#request(`rest/v1/${table}?${query.query}`, {
-        method: 'GET',
-        headers,
-      })
+      response = await this.#post(OVERLAY_OBSERVE_RPC, requestBody)
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new OverlayReadError('read_timeout', 'A read-only overlay request timed out.')
+        throw new OverlayReadError('read_timeout', 'An overlay observation timed out.')
       }
       throw new OverlayReadError(
         'read_transport_error',
-        `A read-only overlay request failed in transport: ${redact(error, [this.#binding.secret])}`,
-      )
-    }
-    if (response.status < 200 || response.status >= 300) {
-      throw new OverlayReadError(
-        'read_rejected',
-        `A read-only overlay request was rejected (${response.status}).`,
+        `An overlay observation failed in transport: ${redact(error, [this.#binding.secret])}`,
       )
     }
     const bodyText = await response.text().catch(() => null)
+    if (response.status < 200 || response.status >= 300) {
+      throw new OverlayReadError(
+        'read_rejected',
+        `An overlay observation was rejected (status ${response.status}, ` +
+          `body digest ${bodyDigest(bodyText)}).`,
+      )
+    }
     if (bodyText === null) {
-      throw new OverlayReadError('read_malformed_response', 'A read-only body could not be read.')
+      throw new OverlayReadError(
+        'read_malformed_response',
+        'An overlay observation body could not be read.',
+      )
     }
     let parsed: unknown
     try {
       parsed = JSON.parse(bodyText)
     } catch {
-      throw new OverlayReadError('read_malformed_response', 'A read-only body was not JSON.')
+      throw new OverlayReadError(
+        'read_malformed_response',
+        'An overlay observation was not valid JSON.',
+      )
     }
-    if (!Array.isArray(parsed)) {
-      throw new OverlayReadError('read_malformed_response', 'A read-only body was not an array.')
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new OverlayReadError(
+        'read_malformed_response',
+        'An overlay observation was not a JSON object.',
+      )
     }
     return parsed
-  }
-
-  async countRows(table: OverlayReadTable, filterQuery: string): Promise<number> {
-    assertReadTable(table)
-    let response: Response
-    try {
-      response = await this.#request(`rest/v1/${table}?${filterQuery}`, {
-        method: 'HEAD',
-        headers: this.#headers({ prefer: 'count=exact', range: '0-0' }),
-      })
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new OverlayReadError('read_timeout', 'A count request timed out.')
-      }
-      throw new OverlayReadError(
-        'read_transport_error',
-        `A count request failed in transport: ${redact(error, [this.#binding.secret])}`,
-      )
-    }
-    if (response.status < 200 || response.status >= 300) {
-      throw new OverlayReadError(
-        'read_rejected',
-        `A count request was rejected (${response.status}).`,
-      )
-    }
-    const contentRange = response.headers.get('content-range')
-    const total = contentRange?.split('/')[1]
-    if (!total || total === '*' || !/^\d+$/u.test(total)) {
-      // `*` means "not counted": an uncounted response must never read as an empty table.
-      throw new OverlayReadError('count_missing', 'The destination did not return an exact count.')
-    }
-    return Number.parseInt(total, 10)
   }
 }
