@@ -149,6 +149,27 @@ describe('collectCohort', () => {
     }
   })
 
+  it('requires exactly nine persisted heads — a tenth head refuses', () => {
+    const payloads = validPayloads()
+    const pending = payloads.find((payload) => payload.reviewStatus === 'pending')
+    ;(pending as Record<string, unknown>).reviewStatus = 'completed'
+    ;(pending as Record<string, unknown>).hasHead = true
+    ;(pending as Record<string, unknown>).relevanceLabel = 'include_core'
+    ;(pending as Record<string, unknown>).headRevision = 1
+    expect(() => collectCohort(payloads)).toThrow(/exactly 9 heads with 7 ordinary/u)
+  })
+
+  it('refuses an ordinary head above revision one', () => {
+    const payloads = validPayloads()
+    const ordinary = payloads.find(
+      (payload) =>
+        payload.reviewStatus === 'completed' &&
+        !OVERLAY_NOTE_CORRECTIONS.some((c) => c.pmid === payload.pmid),
+    )
+    ;(ordinary as Record<string, unknown>).headRevision = 3
+    expect(() => collectCohort(payloads)).toThrow(/not at revision one/u)
+  })
+
   it('requires the two corrections at exactly their checksum-bound revisions', () => {
     const missing = validPayloads().filter(
       (payload) => payload.pmid !== OVERLAY_NOTE_CORRECTIONS[0].pmid,

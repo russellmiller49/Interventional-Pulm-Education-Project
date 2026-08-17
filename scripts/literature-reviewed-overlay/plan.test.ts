@@ -86,7 +86,12 @@ describe('overlay planning', () => {
 })
 
 describe('acknowledgementMatches', () => {
-  const expectation = { operationId: 'op', recordCount: 3 }
+  const expectation = {
+    operationId: 'op',
+    recordCount: 3,
+    finalBatch: false,
+    mode: 'in_progress' as const,
+  }
   const valid = {
     operationId: 'op',
     recordCount: 3,
@@ -96,7 +101,7 @@ describe('acknowledgementMatches', () => {
     operationStatus: 'started',
   }
 
-  it('accepts an exact acknowledgement', () => {
+  it('accepts an exact acknowledgement in its context', () => {
     expect(acknowledgementMatches(expectation, valid)).toEqual({
       matches: true,
       applied: 2,
@@ -131,5 +136,47 @@ describe('acknowledgementMatches', () => {
     ],
   ])('rejects %s as ambiguous', (_label, body, reason) => {
     expect(acknowledgementMatches(expectation, body)).toEqual({ matches: false, reason })
+  })
+
+  it('binds the operation status to the batch context, not a generic either-or', () => {
+    // A non-final in-progress batch must not be acknowledged as completed…
+    expect(acknowledgementMatches(expectation, { ...valid, operationStatus: 'completed' })).toEqual(
+      { matches: false, reason: 'acknowledgement_operation_status_invalid' },
+    )
+    // …and the final in-progress batch must not remain started.
+    expect(
+      acknowledgementMatches(
+        { ...expectation, finalBatch: true },
+        { ...valid, operationStatus: 'started' },
+      ),
+    ).toEqual({ matches: false, reason: 'acknowledgement_operation_status_invalid' })
+    expect(
+      acknowledgementMatches(
+        { ...expectation, finalBatch: true },
+        { ...valid, operationStatus: 'completed' },
+      ),
+    ).toMatchObject({ matches: true })
+  })
+
+  it('requires a completed-operation replay to apply nothing and stay completed', () => {
+    const replayExpectation = { ...expectation, mode: 'replay_completed' as const }
+    expect(
+      acknowledgementMatches(replayExpectation, { ...valid, operationStatus: 'completed' }),
+    ).toEqual({ matches: false, reason: 'acknowledgement_replay_applied_fresh_records' })
+    const pureReplay = {
+      ...valid,
+      applied: 0,
+      alreadyApplied: 3,
+      dispositions: ['already_applied', 'already_applied', 'already_applied'],
+      operationStatus: 'completed',
+    }
+    expect(acknowledgementMatches(replayExpectation, pureReplay)).toEqual({
+      matches: true,
+      applied: 0,
+      alreadyApplied: 3,
+    })
+    expect(
+      acknowledgementMatches(replayExpectation, { ...pureReplay, operationStatus: 'started' }),
+    ).toEqual({ matches: false, reason: 'acknowledgement_replay_status_invalid' })
   })
 })

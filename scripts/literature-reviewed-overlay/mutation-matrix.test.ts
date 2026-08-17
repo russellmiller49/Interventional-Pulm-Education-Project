@@ -160,3 +160,26 @@ describe('terminal-output discipline', () => {
     expect(cli).not.toMatch(/records/u)
   })
 })
+
+describe('request-surface discipline', () => {
+  const sources = packageFiles(false)
+
+  it('builds no query-string read and never places a PMID in a URL', () => {
+    for (const file of sources) {
+      expect(file.content).not.toContain('pmid=in.(')
+      expect(file.content).not.toContain('select=pmid')
+      expect(file.content).not.toMatch(/rest\/v1\/literature_/u)
+    }
+  })
+
+  it('reaches exactly the two reviewed RPC surfaces from the production transport', () => {
+    const transport = readFileSync(join(PACKAGE_ROOT, 'transport.ts'), 'utf8')
+    const paths = [...transport.matchAll(/rest\/v1\/[^`'"\s]+/gu)].map((match) => match[0])
+    // The one template in #post interpolates only the reviewed RPC constants.
+    expect(new Set(paths)).toEqual(new Set(['rest/v1/rpc/${rpc}']))
+    expect(transport).toContain('OVERLAY_APPLY_RPC')
+    expect(transport).toContain('OVERLAY_OBSERVE_RPC')
+    expect(transport).not.toMatch(/method:\s*'GET'/u)
+    expect(transport).not.toMatch(/\bRange\b/u)
+  })
+})

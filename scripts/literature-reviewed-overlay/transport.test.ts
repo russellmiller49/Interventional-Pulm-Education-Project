@@ -54,31 +54,45 @@ describe('PostgrestOverlayTransport construction', () => {
   })
 })
 
-describe('applyBatch', () => {
-  it('sends the secret only in headers to the approved origin', async () => {
-    const seen: Array<{ url: string; headers: Record<string, string> }> = []
+describe('request discipline', () => {
+  it('sends the secret only in headers, POSTs bodies, and keeps URLs parameter-free', async () => {
+    const seen: Array<{ url: string; method: string; headers: Record<string, string> }> = []
     const transport = new PostgrestOverlayTransport({
       binding: BINDING,
       fetchImplementation: async (input, init) => {
         seen.push({
           url: String(input),
+          method: String(init?.method),
           headers: { ...(init?.headers as Record<string, string>) },
         })
         return jsonResponse({ ok: true })
       },
     })
     await transport.applyBatch('{}')
+    await transport.observe('{"operationId":"x","pmids":["36879724"],"eventIds":[]}')
     expect(seen[0]?.url).toBe(
       'https://itcttmkxdxvwmwcmzmey.supabase.co/rest/v1/rpc/apply_literature_reviewed_overlay_batch_v1',
     )
-    expect(seen[0]?.headers.apikey).toBe(SECRET)
-    expect(seen[0]?.url).not.toContain(SECRET)
+    expect(seen[1]?.url).toBe(
+      'https://itcttmkxdxvwmwcmzmey.supabase.co/rest/v1/rpc/observe_literature_reviewed_overlay_v1',
+    )
+    for (const request of seen) {
+      expect(request.method).toBe('POST')
+      expect(request.url).not.toContain('?')
+      // No identifier from the request body may reach the URL.
+      expect(request.url).not.toContain('36879724')
+      expect(request.headers.apikey).toBe(SECRET)
+      expect(request.url).not.toContain(SECRET)
+    }
   })
+})
 
-  it('classifies a 4xx as a confirmed rejection with the secret redacted', async () => {
+describe('applyBatch error taxonomy', () => {
+  it('classifies a 4xx as confirmed without exposing the response body', async () => {
+    const leakedBody = { message: `refusal mentioning ${SECRET} and 36879724` }
     const transport = new PostgrestOverlayTransport({
       binding: BINDING,
-      fetchImplementation: async () => jsonResponse({ message: `bad ${SECRET}` }, 400),
+      fetchImplementation: async () => jsonResponse(leakedBody, 400),
     })
     let caught: unknown
     try {
@@ -87,8 +101,12 @@ describe('applyBatch', () => {
       caught = error
     }
     expect(caught).toBeInstanceOf(OverlayMutationConfirmedFailureError)
-    expect((caught as Error).message).not.toContain(SECRET)
-    expect((caught as Error).message).toContain('[redacted]')
+    const message = (caught as Error).message
+    expect(message).toContain('status 400')
+    expect(message).toContain('body digest')
+    expect(message).not.toContain(SECRET)
+    expect(message).not.toContain('36879724')
+    expect(message).not.toContain('refusal mentioning')
   })
 
   it.each([
@@ -110,7 +128,7 @@ describe('applyBatch', () => {
     expect((caught as OverlayMutationAmbiguousError).code).toBe(code)
   })
 
-  it('classifies a transport exception as ambiguous, never confirmed', async () => {
+  it('classifies a transport exception as ambiguous with the secret redacted', async () => {
     const transport = new PostgrestOverlayTransport({
       binding: BINDING,
       fetchImplementation: async () => {
@@ -143,45 +161,38 @@ describe('applyBatch', () => {
   })
 })
 
-describe('read-only surface', () => {
-  it('refuses a relation outside the allowlist', async () => {
+describe('observe error taxonomy', () => {
+  it('returns the parsed observation object', async () => {
     const transport = new PostgrestOverlayTransport({
       binding: BINDING,
-      fetchImplementation: async () => jsonResponse([]),
+      fetchImplementation: async () =>
+        jsonResponse({ operation: null, totals: {}, articles: [], events: [] }),
     })
-    await expect(
-      transport.readRows('literature_import_batches' as never, { query: 'select=id' }),
-    ).rejects.toThrow(/may not read that relation/u)
-    await expect(
-      transport.countRows('literature_gold_set_items' as never, 'select=id'),
-    ).rejects.toThrow(/may not read that relation/u)
+    await expect(transport.observe('{}')).resolves.toMatchObject({ operation: null })
   })
 
-  it('parses an exact count and refuses an uncounted response', async () => {
-    const counted = new PostgrestOverlayTransport({
-      binding: BINDING,
-      fetchImplementation: async () =>
-        new Response(null, { status: 206, headers: { 'content-range': '0-0/630' } }),
-    })
-    await expect(counted.countRows('literature_articles', 'select=pmid')).resolves.toBe(630)
-
-    const uncounted = new PostgrestOverlayTransport({
-      binding: BINDING,
-      fetchImplementation: async () =>
-        new Response(null, { status: 206, headers: { 'content-range': '0-0/*' } }),
-    })
-    await expect(uncounted.countRows('literature_articles', 'select=pmid')).rejects.toThrow(
-      OverlayReadError,
-    )
-  })
-
-  it('refuses a non-array read body', async () => {
+  it('rejects non-2xx without exposing the response body', async () => {
     const transport = new PostgrestOverlayTransport({
       binding: BINDING,
-      fetchImplementation: async () => jsonResponse({ not: 'an array' }),
+      fetchImplementation: async () => jsonResponse({ message: `secret ${SECRET}` }, 404),
     })
-    await expect(
-      transport.readRows('literature_articles', { query: 'select=pmid' }),
-    ).rejects.toThrow(/not an array/u)
+    let caught: unknown
+    try {
+      await transport.observe('{}')
+    } catch (error) {
+      caught = error
+    }
+    expect(caught).toBeInstanceOf(OverlayReadError)
+    expect((caught as OverlayReadError).code).toBe('read_rejected')
+    expect((caught as Error).message).toContain('status 404')
+    expect((caught as Error).message).not.toContain(SECRET)
+  })
+
+  it('rejects a non-object observation body', async () => {
+    const transport = new PostgrestOverlayTransport({
+      binding: BINDING,
+      fetchImplementation: async () => jsonResponse([1, 2, 3]),
+    })
+    await expect(transport.observe('{}')).rejects.toThrow(/not a JSON object/u)
   })
 })
