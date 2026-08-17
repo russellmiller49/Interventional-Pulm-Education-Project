@@ -40,8 +40,11 @@ import {
   OVERLAY_BATCH_KIND,
   OVERLAY_BATCH_NAME,
   OVERLAY_DEVELOPMENT_SPLIT,
+  OVERLAY_EXPECTED_ORDINARY_HEAD_COUNT,
+  OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT,
   OVERLAY_EXPECTED_RECORD_COUNT,
   OVERLAY_NOTE_CORRECTIONS,
+  OVERLAY_ORDINARY_HEAD_REVISION,
   OVERLAY_RELEVANCE_VALUES,
   type OverlayRelevance,
 } from './constants'
@@ -237,6 +240,9 @@ export function collectCohort(payloads: readonly unknown[]): CohortItem[] {
   }
 
   const rowsByPmid = new Map(rows.map((row) => [row.pmid, row]))
+  const correctionPmids = new Set<string>(
+    OVERLAY_NOTE_CORRECTIONS.map((correction) => correction.pmid),
+  )
   for (const correction of OVERLAY_NOTE_CORRECTIONS) {
     const row = rowsByPmid.get(correction.pmid)
     if (!row) {
@@ -248,6 +254,37 @@ export function collectCohort(payloads: readonly unknown[]): CohortItem[] {
           'append-only corrections must remain preserved exactly as recorded.',
       )
     }
+  }
+
+  // The persisted-head lineage is exact, not merely bounded: nine heads, of which seven are
+  // ordinary first revisions and two are the checksum-bound corrections. A tenth head, a
+  // missing ordinary head, or an ordinary head above revision one means the protected local
+  // persisted state moved, and the overlay refuses until its lineage assumptions are
+  // re-reviewed.
+  let ordinaryHeadCount = 0
+  let persistedHeadCount = 0
+  for (const row of rows) {
+    if (row.persistedHeadRevision === null) continue
+    persistedHeadCount += 1
+    if (correctionPmids.has(row.pmid)) continue
+    if (row.persistedHeadRevision !== OVERLAY_ORDINARY_HEAD_REVISION) {
+      throw new Error(
+        'An ordinary persisted head is not at revision one. Only the two known corrections ' +
+          'may carry a revised head.',
+      )
+    }
+    ordinaryHeadCount += 1
+  }
+  if (
+    persistedHeadCount !== OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT ||
+    ordinaryHeadCount !== OVERLAY_EXPECTED_ORDINARY_HEAD_COUNT
+  ) {
+    throw new Error(
+      `The cohort projection carried ${persistedHeadCount} persisted heads ` +
+        `(${ordinaryHeadCount} ordinary); exactly ` +
+        `${OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT} heads with ` +
+        `${OVERLAY_EXPECTED_ORDINARY_HEAD_COUNT} ordinary first revisions are expected.`,
+    )
   }
 
   return rows

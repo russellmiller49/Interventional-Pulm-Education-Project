@@ -6,12 +6,27 @@
  * "some nonempty string" accepts anything at all, so the values are compared by identity.
  */
 
-export const OVERLAY_ENGINE_VERSION = 'literature-reviewed-overlay/1.0.0' as const
+export const OVERLAY_ENGINE_VERSION = 'literature-reviewed-overlay/1.1.0' as const
+/**
+ * Bumped to 1.1.0 when the checkpoint began carrying the frozen curation reason, the
+ * post-observation binding, and relationally strict stage invariants. A 1.0.0 checkpoint
+ * cannot prove what its acknowledged stages actually acknowledged, so it is refused rather
+ * than reinterpreted.
+ */
 export const OVERLAY_CHECKPOINT_SCHEMA_VERSION =
-  'literature-reviewed-overlay-checkpoint/1.0.0' as const
-export const OVERLAY_RECEIPT_SCHEMA_VERSION = 'literature-reviewed-overlay-receipt/1.0.0' as const
+  'literature-reviewed-overlay-checkpoint/1.1.0' as const
+/**
+ * Bumped to 1.1.0 when the receipt began binding the destination identity unconditionally for
+ * remote outcomes, the frozen curation reason, the checkpoint checksum, and the read-only
+ * post-observation that licensed completion.
+ */
+export const OVERLAY_RECEIPT_SCHEMA_VERSION = 'literature-reviewed-overlay-receipt/1.1.0' as const
+/**
+ * Bumped to 1.1.0 when reconciliation began observing the operation registry and totals beside
+ * the per-batch state, with the strict classification vocabulary.
+ */
 export const OVERLAY_RECONCILIATION_SCHEMA_VERSION =
-  'literature-reviewed-overlay-reconciliation/1.0.0' as const
+  'literature-reviewed-overlay-reconciliation/1.1.0' as const
 export const OVERLAY_LEASE_SCHEMA_VERSION = 'literature-reviewed-overlay-lease/1.0.0' as const
 
 /** The exact `actor_email` every overlay event carries, and the writer a receipt may name. */
@@ -110,8 +125,18 @@ export const OVERLAY_NOTE_CORRECTIONS = Object.freeze([
   }),
 ] as const)
 
-/** Every non-corrected cohort record must be a first-revision completed head. */
-export const OVERLAY_DEFAULT_HEAD_REVISION = 1 as const
+/** Every non-corrected persisted head must be exactly a first-revision completed head. */
+export const OVERLAY_ORDINARY_HEAD_REVISION = 1 as const
+
+/**
+ * The exact persisted-head lineage of the development cohort, verified against the protected
+ * local database: exactly nine persisted heads — seven ordinary heads at revision 1 plus the
+ * two checksum-bound corrections at revision 2 — and 621 pending items with no persisted
+ * review row. A tenth head, a missing head, or an ordinary head above revision 1 means the
+ * local persisted state moved and the overlay's lineage assumptions must be re-reviewed.
+ */
+export const OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT = 9 as const
+export const OVERLAY_EXPECTED_ORDINARY_HEAD_COUNT = 7 as const
 
 /** The fixed sentence written to `curation_reason` and event `reason` for every overlay record. */
 export const OVERLAY_CURATION_REASON =
@@ -153,10 +178,8 @@ export const OVERLAY_MIN_RECORD_BATCH_LIMIT = 1
 
 /** The only mutating surface the transport may reach. */
 export const OVERLAY_APPLY_RPC = 'apply_literature_reviewed_overlay_batch_v1' as const
-/** Read-only tables the reconcile/verify surfaces may observe. */
-export const OVERLAY_READ_TABLES = [
-  'literature_articles',
-  'literature_curation_events',
-  'literature_reviewed_overlay_operations',
-] as const
-export type OverlayReadTable = (typeof OVERLAY_READ_TABLES)[number]
+/**
+ * The only read surface the transport may reach: the bounded, body-based observation RPC.
+ * There is deliberately no generic table read, so no PMID can appear in a request URL.
+ */
+export const OVERLAY_OBSERVE_RPC = 'observe_literature_reviewed_overlay_v1' as const

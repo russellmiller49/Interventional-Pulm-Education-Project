@@ -14,6 +14,7 @@ import { canonicalJson, sha256 } from '../literature-production-ingest/canonical
 import type { ArtifactTruth } from './artifact'
 import {
   OVERLAY_EXPECTED_CLASS_COUNTS,
+  OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT,
   OVERLAY_EXPECTED_PROVENANCE_COUNTS,
   OVERLAY_EXPECTED_RECORD_COUNT,
   OVERLAY_EXPECTED_RELEVANT_COUNT,
@@ -134,6 +135,12 @@ function assertExactCounts(counts: ReviewedSetCounts): void {
   }
   if (counts.correctionCount !== OVERLAY_NOTE_CORRECTIONS.length) {
     throw new Error('The reviewed set does not carry exactly the two known corrections.')
+  }
+  if (counts.persistedHeadCount !== OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT) {
+    throw new Error(
+      `The reviewed set carried ${counts.persistedHeadCount} persisted heads; exactly ` +
+        `${OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT} are expected.`,
+    )
   }
 }
 

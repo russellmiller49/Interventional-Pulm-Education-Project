@@ -8,7 +8,11 @@
  */
 
 import { sha256 } from '../literature-production-ingest/canonical'
-import { OVERLAY_ARTIFACT_SHA256, OVERLAY_ENGINE_VERSION } from './constants'
+import {
+  OVERLAY_ARTIFACT_SHA256,
+  OVERLAY_CURATION_REASON,
+  OVERLAY_ENGINE_VERSION,
+} from './constants'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-8[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u
 
@@ -43,9 +47,11 @@ export function assertDeterministicUuid(value: unknown, label: string): asserts 
 /**
  * The overlay operation identity.
  *
- * Bound to the engine version, the artifact byte identity, and the digest of the combined
- * source projection, so that different truth can never share an operation and identical truth
- * can never fork one.
+ * Bound to the engine version, the artifact byte identity, the digest of the combined source
+ * projection, and the frozen curation reason, so that different truth — or the same truth with
+ * a different frozen reason — can never share an operation, and identical truth can never fork
+ * one. The reason contains no newline by construction (it is a reviewed sentence constant),
+ * which the derivation's newline-free rule re-enforces.
  */
 export function overlayOperationId(projectionDigest: string): string {
   if (!/^[a-f0-9]{64}$/u.test(projectionDigest)) {
@@ -56,6 +62,7 @@ export function overlayOperationId(projectionDigest: string): string {
     OVERLAY_ENGINE_VERSION,
     OVERLAY_ARTIFACT_SHA256,
     projectionDigest,
+    OVERLAY_CURATION_REASON,
   ])
 }
 

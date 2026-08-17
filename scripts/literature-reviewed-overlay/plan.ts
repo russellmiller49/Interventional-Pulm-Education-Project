@@ -162,20 +162,33 @@ export function checkpointBatchesForPlan(
     requestChecksum: buildBatchRequest(set, plan.reviewedAt, descriptor).checksum,
     stage: { state: 'prepared', submittedAt: null, acknowledgedAt: null, failureCode: null },
     acknowledgementChecksum: null,
+    reconciliationChecksum: null,
     effects: null,
   }))
 }
 
-/** The exact acknowledgement a batch request must produce to be `acknowledged`. */
+/**
+ * The context of a batch submission, which decides what an acceptable acknowledgement looks
+ * like. A generic "started or completed" acceptance would let a fabricated acknowledgement
+ * pass in every context, so the caller must say what it just did:
+ *
+ *   - `in_progress`: the registered operation is (or is being) started; the final batch must
+ *     acknowledge `completed`, every other batch must acknowledge `started`.
+ *   - `replay_completed`: the registered operation was already completed before this run; every
+ *     batch must acknowledge `completed` with zero fresh applications.
+ */
 export interface OverlayExpectedAcknowledgement {
   operationId: string
   recordCount: number
+  finalBatch: boolean
+  mode: 'in_progress' | 'replay_completed'
 }
 
 /**
- * Judge an acknowledgement body against the submitted batch. Exact or ambiguous — a mismatch
- * is never a confirmed failure, because the server may have applied the batch and answered
- * badly.
+ * Judge an acknowledgement body against the submitted batch and its context. Exact or
+ * ambiguous — a mismatch is never a confirmed failure, because the server may have applied the
+ * batch and answered badly. A matching acknowledgement is still not proof of remote
+ * application; the engine's read-only post-observation carries that burden.
  */
 export function acknowledgementMatches(
   expectation: OverlayExpectedAcknowledgement,
@@ -216,8 +229,19 @@ export function acknowledgementMatches(
   if (observedApplied !== applied || observedAlready !== alreadyApplied) {
     return { matches: false, reason: 'acknowledgement_disposition_totals_mismatch' }
   }
-  if (record.operationStatus !== 'started' && record.operationStatus !== 'completed') {
-    return { matches: false, reason: 'acknowledgement_operation_status_invalid' }
+
+  if (expectation.mode === 'replay_completed') {
+    if ((applied as number) !== 0 || (alreadyApplied as number) !== expectation.recordCount) {
+      return { matches: false, reason: 'acknowledgement_replay_applied_fresh_records' }
+    }
+    if (record.operationStatus !== 'completed') {
+      return { matches: false, reason: 'acknowledgement_replay_status_invalid' }
+    }
+  } else {
+    const requiredStatus = expectation.finalBatch ? 'completed' : 'started'
+    if (record.operationStatus !== requiredStatus) {
+      return { matches: false, reason: 'acknowledgement_operation_status_invalid' }
+    }
   }
   return { matches: true, applied: applied as number, alreadyApplied: alreadyApplied as number }
 }

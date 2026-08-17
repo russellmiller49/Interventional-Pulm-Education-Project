@@ -18,11 +18,21 @@ import { basename, dirname, resolve } from 'node:path'
 import { canonicalJson, redact, sha256 } from '../literature-production-ingest/canonical'
 import {
   APPROVED_PROJECT_REF,
+  APPROVED_PROJECT_URL,
   OVERLAY_CHECKPOINT_SCHEMA_VERSION,
+  OVERLAY_CURATION_REASON,
   OVERLAY_ENGINE_VERSION,
+  OVERLAY_EXPECTED_CLASS_COUNTS,
+  OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT,
+  OVERLAY_EXPECTED_PROVENANCE_COUNTS,
+  OVERLAY_EXPECTED_RECORD_COUNT,
+  OVERLAY_EXPECTED_RELEVANT_COUNT,
   OVERLAY_LEASE_SCHEMA_VERSION,
   OVERLAY_MAX_RECORD_BATCH_LIMIT,
+  OVERLAY_NOTE_CORRECTIONS,
   OVERLAY_RECEIPT_SCHEMA_VERSION,
+  OVERLAY_SOURCE_IDENTITY,
+  OVERLAY_WRITER_IDENTITY,
 } from './constants'
 import { assertDeterministicUuid } from './identity'
 import type { ReviewedSetCounts } from './reviewed-set'
@@ -49,8 +59,15 @@ export interface OverlayCheckpointBatch {
   finalBatch: boolean
   requestChecksum: string
   stage: OverlayStage
-  /** Canonical checksum of the exact acknowledgement body, recorded on acknowledgement. */
+  /** Canonical checksum of the exact acknowledgement body, when acknowledged by transport. */
   acknowledgementChecksum: string | null
+  /**
+   * Canonical checksum of the fresh reconciliation observation, when acknowledged through
+   * read-only reconciliation instead of a transport acknowledgement. An acknowledged stage
+   * carries exactly one of the two checksums — an acknowledgement that can name neither its
+   * transport response nor its reconciliation evidence is not an acknowledgement.
+   */
+  reconciliationChecksum: string | null
   effects: { applied: number; alreadyApplied: number } | null
 }
 
@@ -71,11 +88,19 @@ export interface OverlayCheckpoint {
   artifactSha256: string
   projectionDigest: string
   reviewedAt: string
+  /** The frozen operation curation reason; part of the operation identity. */
+  curationReason: string
   counts: ReviewedSetCounts
   limits: { recordBatchLimit: number }
   batches: OverlayCheckpointBatch[]
   phase: OverlayPhase
   counters: { applied: number; alreadyApplied: number }
+  /**
+   * Canonical checksum of the read-only post-mutation observation that licensed completion.
+   * Null in every phase except `completed`, where it is required: a checkpoint may not claim
+   * completion on acknowledgements alone.
+   */
+  postObservationChecksum: string | null
 }
 
 export interface OverlayCheckpointEnvelope {
@@ -94,6 +119,7 @@ export interface OverlayReceiptBody {
   targetUrl: string | null
   writerIdentity: string
   sourceIdentity: string
+  curationReason: string
   artifactSha256: string
   projectionDigest: string
   reviewedAt: string
@@ -101,6 +127,10 @@ export interface OverlayReceiptBody {
   counts: ReviewedSetCounts
   counters: { applied: number; alreadyApplied: number }
   batchRequestChecksums: string[]
+  /** Checksum of the checkpoint state this receipt was written from. */
+  checkpointChecksum: string
+  /** Checksum of the read-only post-observation that licensed a remote outcome; null on dry runs. */
+  postObservationChecksum: string | null
 }
 
 export interface OverlayReceipt extends OverlayReceiptBody {
@@ -302,6 +332,154 @@ function validateStage(value: unknown, label: string): asserts value is OverlayS
   }
 }
 
+/**
+ * The relational stage invariants: what each state must and must not carry, judged against the
+ * whole batch rather than the stage record alone. An "acknowledged" stage with no timestamps,
+ * no effects, and no evidence checksum is not an acknowledged stage — it is a claim, and a
+ * checkpoint made of claims must be refused rather than resumed.
+ */
+function validateBatchStageInvariants(batch: Record<string, unknown>, label: string): void {
+  const stage = batch.stage as OverlayStage
+  const acknowledgement = batch.acknowledgementChecksum
+  const reconciliation = batch.reconciliationChecksum
+  const effects = batch.effects as { applied: number; alreadyApplied: number } | null
+
+  const requireNullEvidence = () => {
+    if (acknowledgement !== null || reconciliation !== null || effects !== null) {
+      throw new OverlayCheckpointIntegrityError(
+        `${label} carries acknowledgement evidence its stage state does not permit.`,
+      )
+    }
+  }
+
+  switch (stage.state) {
+    case 'prepared':
+      if (stage.submittedAt !== null || stage.acknowledgedAt !== null) {
+        throw new OverlayCheckpointIntegrityError(`${label} is prepared but carries timestamps.`)
+      }
+      if (stage.failureCode !== null) {
+        throw new OverlayCheckpointIntegrityError(`${label} is prepared but carries a failure.`)
+      }
+      requireNullEvidence()
+      return
+    case 'submitted':
+      if (stage.submittedAt === null) {
+        throw new OverlayCheckpointIntegrityError(`${label} is submitted without a timestamp.`)
+      }
+      if (stage.acknowledgedAt !== null || stage.failureCode !== null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is submitted but carries acknowledgement or failure fields.`,
+        )
+      }
+      requireNullEvidence()
+      return
+    case 'acknowledged': {
+      if (stage.submittedAt === null || stage.acknowledgedAt === null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is acknowledged without both timestamps.`,
+        )
+      }
+      if (stage.failureCode !== null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is acknowledged but carries a failure code.`,
+        )
+      }
+      const hasAcknowledgement = acknowledgement !== null
+      const hasReconciliation = reconciliation !== null
+      if (hasAcknowledgement === hasReconciliation) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} must carry exactly one of a transport acknowledgement or a ` +
+            'reconciliation evidence checksum.',
+        )
+      }
+      if (effects === null) {
+        throw new OverlayCheckpointIntegrityError(`${label} is acknowledged without effects.`)
+      }
+      if (effects.applied + effects.alreadyApplied !== batch.recordCount) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} effects do not account for every record exactly once.`,
+        )
+      }
+      return
+    }
+    case 'confirmed_failure':
+      if (stage.submittedAt === null || stage.failureCode === null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is a confirmed failure without submission identity or classification.`,
+        )
+      }
+      if (stage.acknowledgedAt !== null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is a confirmed failure but carries an acknowledgement timestamp.`,
+        )
+      }
+      requireNullEvidence()
+      return
+    case 'ambiguous':
+      if (stage.submittedAt === null || stage.failureCode === null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is ambiguous without submission identity or ambiguity evidence.`,
+        )
+      }
+      if (stage.acknowledgedAt !== null) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is ambiguous but carries an acknowledgement timestamp.`,
+        )
+      }
+      requireNullEvidence()
+      return
+    default:
+      throw new OverlayCheckpointIntegrityError(`${label}.state is invalid.`)
+  }
+}
+
+/**
+ * Value-level binding of a counts object to the one reviewed truth this operator exists for.
+ * Structural validity is not enough: a zeroed or drifted counts object inside a checkpoint or
+ * receipt would launder a wrong operation as a plausible artifact.
+ */
+export function assertPinnedCounts(value: ReviewedSetCounts, label: string): void {
+  const expectations: Array<[string, number, number]> = [
+    ['recordCount', value.recordCount, OVERLAY_EXPECTED_RECORD_COUNT],
+    [
+      'classCounts.include_core',
+      value.classCounts.include_core,
+      OVERLAY_EXPECTED_CLASS_COUNTS.include_core,
+    ],
+    [
+      'classCounts.include_adjacent',
+      value.classCounts.include_adjacent,
+      OVERLAY_EXPECTED_CLASS_COUNTS.include_adjacent,
+    ],
+    ['classCounts.exclude', value.classCounts.exclude, OVERLAY_EXPECTED_CLASS_COUNTS.exclude],
+    ['relevantCount', value.relevantCount, OVERLAY_EXPECTED_RELEVANT_COUNT],
+    [
+      'provenanceCounts.physician_confirmed',
+      value.provenanceCounts.physician_confirmed,
+      OVERLAY_EXPECTED_PROVENANCE_COUNTS.physician_confirmed,
+    ],
+    [
+      'provenanceCounts.physician_modified',
+      value.provenanceCounts.physician_modified,
+      OVERLAY_EXPECTED_PROVENANCE_COUNTS.physician_modified,
+    ],
+    [
+      'provenanceCounts.qc_accepted',
+      value.provenanceCounts.qc_accepted,
+      OVERLAY_EXPECTED_PROVENANCE_COUNTS.qc_accepted,
+    ],
+    ['persistedHeadCount', value.persistedHeadCount, OVERLAY_EXPECTED_PERSISTED_HEAD_COUNT],
+    ['correctionCount', value.correctionCount, OVERLAY_NOTE_CORRECTIONS.length],
+  ]
+  for (const [field, observed, expected] of expectations) {
+    if (observed !== expected) {
+      throw new OverlayCheckpointIntegrityError(
+        `${label}.${field} is ${observed}; exactly ${expected} is required.`,
+      )
+    }
+  }
+}
+
 export function validateOverlayCheckpoint(value: unknown): asserts value is OverlayCheckpoint {
   const checkpoint = asRecord(value, 'checkpoint')
   assertExactKeys(
@@ -316,11 +494,13 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
       'artifactSha256',
       'projectionDigest',
       'reviewedAt',
+      'curationReason',
       'counts',
       'limits',
       'batches',
       'phase',
       'counters',
+      'postObservationChecksum',
     ],
     'checkpoint',
   )
@@ -341,7 +521,13 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
   assertSha256Digest(checkpoint.artifactSha256, 'checkpoint.artifactSha256')
   assertSha256Digest(checkpoint.projectionDigest, 'checkpoint.projectionDigest')
   assertTimestamp(checkpoint.reviewedAt, 'checkpoint.reviewedAt')
+  if (checkpoint.curationReason !== OVERLAY_CURATION_REASON) {
+    throw new OverlayCheckpointIntegrityError(
+      'checkpoint.curationReason is not the frozen operation reason.',
+    )
+  }
   assertCounts(checkpoint.counts, 'checkpoint.counts')
+  assertPinnedCounts(checkpoint.counts as ReviewedSetCounts, 'checkpoint.counts')
 
   const limits = asRecord(checkpoint.limits, 'checkpoint.limits')
   assertExactKeys(limits, ['recordBatchLimit'], 'checkpoint.limits')
@@ -366,6 +552,9 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
     throw new OverlayCheckpointIntegrityError('checkpoint.batches must be a non-empty array.')
   }
   let expectedStart = 1
+  let acknowledgedApplied = 0
+  let acknowledgedAlready = 0
+  let allAcknowledged = true
   const counts = checkpoint.counts as ReviewedSetCounts
   checkpoint.batches.forEach((value, index) => {
     const batch = asRecord(value, `checkpoint.batches[${index}]`)
@@ -380,6 +569,7 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
         'requestChecksum',
         'stage',
         'acknowledgementChecksum',
+        'reconciliationChecksum',
         'effects',
       ],
       `checkpoint.batches[${index}]`,
@@ -411,16 +601,60 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
     if (batch.acknowledgementChecksum !== null) {
       assertSha256Digest(batch.acknowledgementChecksum, 'batch.acknowledgementChecksum')
     }
+    if (batch.reconciliationChecksum !== null) {
+      assertSha256Digest(batch.reconciliationChecksum, 'batch.reconciliationChecksum')
+    }
     if (batch.effects !== null) {
       const effects = asRecord(batch.effects, 'batch.effects')
       assertExactKeys(effects, ['applied', 'alreadyApplied'], 'batch.effects')
       assertNonNegativeInteger(effects.applied, 'batch.effects.applied')
       assertNonNegativeInteger(effects.alreadyApplied, 'batch.effects.alreadyApplied')
     }
+    validateBatchStageInvariants(batch, `checkpoint.batches[${index}]`)
+    const stage = batch.stage as OverlayStage
+    if (stage.state === 'acknowledged') {
+      const effects = batch.effects as { applied: number; alreadyApplied: number }
+      acknowledgedApplied += effects.applied
+      acknowledgedAlready += effects.alreadyApplied
+    } else {
+      allAcknowledged = false
+    }
   })
   if (expectedStart !== counts.recordCount + 1) {
     throw new OverlayCheckpointIntegrityError(
       'checkpoint.batches do not cover exactly the record count.',
+    )
+  }
+
+  // Counters are derived, never asserted: they must equal the sum of acknowledged effects.
+  if (counters.applied !== acknowledgedApplied || counters.alreadyApplied !== acknowledgedAlready) {
+    throw new OverlayCheckpointIntegrityError(
+      'checkpoint.counters do not equal the sum of acknowledged batch effects.',
+    )
+  }
+
+  if (checkpoint.postObservationChecksum !== null) {
+    assertSha256Digest(checkpoint.postObservationChecksum, 'checkpoint.postObservationChecksum')
+  }
+  if (checkpoint.phase === 'completed') {
+    if (!allAcknowledged) {
+      throw new OverlayCheckpointIntegrityError(
+        'checkpoint.phase is completed while a batch is not acknowledged.',
+      )
+    }
+    if (counters.applied + counters.alreadyApplied !== counts.recordCount) {
+      throw new OverlayCheckpointIntegrityError(
+        'checkpoint.phase is completed while counters do not cover the record count.',
+      )
+    }
+    if (checkpoint.postObservationChecksum === null) {
+      throw new OverlayCheckpointIntegrityError(
+        'checkpoint.phase is completed without the read-only post-observation binding.',
+      )
+    }
+  } else if (checkpoint.postObservationChecksum !== null) {
+    throw new OverlayCheckpointIntegrityError(
+      'checkpoint.postObservationChecksum is present before completion.',
     )
   }
 
@@ -551,6 +785,7 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
       'targetUrl',
       'writerIdentity',
       'sourceIdentity',
+      'curationReason',
       'artifactSha256',
       'projectionDigest',
       'reviewedAt',
@@ -558,6 +793,8 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
       'counts',
       'counters',
       'batchRequestChecksums',
+      'checkpointChecksum',
+      'postObservationChecksum',
       'receiptChecksum',
     ],
     'receipt',
@@ -576,18 +813,30 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
   ) {
     throw new OverlayCheckpointIntegrityError('receipt.outcome is invalid.')
   }
-  if (receipt.targetProjectRef !== null && receipt.targetProjectRef !== APPROVED_PROJECT_REF) {
+
+  // Authority fields are compared by identity, never by shape. A receipt naming any other
+  // writer, source, reason, or destination is not a weaker receipt — it is not a receipt.
+  if (receipt.writerIdentity !== OVERLAY_WRITER_IDENTITY) {
     throw new OverlayCheckpointIntegrityError(
-      'receipt.targetProjectRef does not name the approved project.',
+      'receipt.writerIdentity is not the reviewed writer identity.',
     )
   }
-  assertNonEmptyString(receipt.writerIdentity, 'receipt.writerIdentity')
-  assertNonEmptyString(receipt.sourceIdentity, 'receipt.sourceIdentity')
+  if (receipt.sourceIdentity !== OVERLAY_SOURCE_IDENTITY) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.sourceIdentity is not the reviewed source identity.',
+    )
+  }
+  if (receipt.curationReason !== OVERLAY_CURATION_REASON) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.curationReason is not the frozen operation reason.',
+    )
+  }
   assertSha256Digest(receipt.artifactSha256, 'receipt.artifactSha256')
   assertSha256Digest(receipt.projectionDigest, 'receipt.projectionDigest')
   assertTimestamp(receipt.reviewedAt, 'receipt.reviewedAt')
   assertTimestamp(receipt.completedAt, 'receipt.completedAt')
   assertCounts(receipt.counts, 'receipt.counts')
+  assertPinnedCounts(receipt.counts as ReviewedSetCounts, 'receipt.counts')
   const counters = asRecord(receipt.counters, 'receipt.counters')
   assertExactKeys(counters, ['applied', 'alreadyApplied'], 'receipt.counters')
   assertNonNegativeInteger(counters.applied, 'receipt.counters.applied')
@@ -600,6 +849,51 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
   for (const checksum of receipt.batchRequestChecksums) {
     assertSha256Digest(checksum, 'receipt.batchRequestChecksums[]')
   }
+  assertSha256Digest(receipt.checkpointChecksum, 'receipt.checkpointChecksum')
+
+  const counts = receipt.counts as ReviewedSetCounts
+  if (receipt.outcome === 'dry-run') {
+    if (receipt.targetProjectRef !== null || receipt.targetUrl !== null) {
+      throw new OverlayCheckpointIntegrityError('receipt: a dry run names no destination.')
+    }
+    if (counters.applied !== 0 || counters.alreadyApplied !== 0) {
+      throw new OverlayCheckpointIntegrityError('receipt: a dry run has no effects.')
+    }
+    if (receipt.postObservationChecksum !== null) {
+      throw new OverlayCheckpointIntegrityError('receipt: a dry run has no post-observation.')
+    }
+  } else {
+    if (receipt.targetProjectRef !== APPROVED_PROJECT_REF) {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt.targetProjectRef does not name the approved project exactly.',
+      )
+    }
+    if (receipt.targetUrl !== APPROVED_PROJECT_URL) {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt.targetUrl is not the canonical approved URL.',
+      )
+    }
+    if (counters.applied + counters.alreadyApplied !== counts.recordCount) {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt.counters do not cover the record count exactly.',
+      )
+    }
+    if (
+      receipt.outcome === 'idempotent-replay' &&
+      (counters.applied !== 0 || counters.alreadyApplied !== counts.recordCount)
+    ) {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt: an idempotent replay applies nothing and re-observes everything.',
+      )
+    }
+    if (typeof receipt.postObservationChecksum !== 'string') {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt: a remote outcome requires the post-observation binding.',
+      )
+    }
+    assertSha256Digest(receipt.postObservationChecksum, 'receipt.postObservationChecksum')
+  }
+
   const body = { ...(receipt as unknown as OverlayReceipt) } as Partial<OverlayReceipt>
   delete body.receiptChecksum
   if (receipt.receiptChecksum !== overlayReceiptChecksum(body as OverlayReceiptBody)) {
