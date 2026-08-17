@@ -215,13 +215,13 @@ an expectation to match an observation.
 Package: `scripts/literature-reviewed-overlay/` (outside the protected bundle; no npm scripts
 are added — the integration lead may add them later exactly as the ingest README prescribes).
 
-| Command                             | Destination requests | Purpose                                                                                                                              |
-| ----------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `validate`                          | none                 | Guarded source read + artifact verification + all cross-checks; prints aggregate summary and the projection digest an owner reviews. |
-| `dry-run`                           | none                 | `validate` plus the full bounded batch plan and an immutable dry-run receipt.                                                        |
-| `apply --confirm-production-write`  | bounded RPC calls    | The production mutation. Unreachable this phase (see locks).                                                                         |
-| `reconcile --checkpoint …`          | GET/HEAD only        | Classifies each unresolved batch: exact application, exact nonapplication, drift, ambiguity.                                         |
-| `verify --checkpoint … --receipt …` | GET/HEAD only        | Re-derives the reviewed set from source + artifact and proves remote articles, events, operation row, and counts exactly.            |
+| Command                             | Destination requests                         | Purpose                                                                                                                                                                                          |
+| ----------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `validate`                          | none                                         | Guarded source read + artifact verification + all cross-checks; prints aggregate summary and the projection digest an owner reviews.                                                             |
+| `dry-run`                           | none                                         | `validate` plus the full bounded batch plan and an immutable dry-run receipt.                                                                                                                    |
+| `apply --confirm-production-write`  | bounded RPC calls                            | The production mutation. Unreachable this phase (see locks).                                                                                                                                     |
+| `reconcile --checkpoint …`          | observation RPC only (POST body, reads only) | Observes the registry and every unresolved batch; classifies with the strict vocabulary (`absent_exact`, `applied_exact`, `partial`, `mixed`, `drifted`, `ambiguous`, `observation_incomplete`). |
+| `verify --checkpoint … --receipt …` | observation RPC only (POST body, reads only) | Re-derives the reviewed set from source + artifact, re-performs the complete post-observation, and requires it to match the completion binding exactly.                                          |
 
 ### Production locks (all required before `apply` can mutate)
 
@@ -332,7 +332,7 @@ For the later UI package (not implemented here):
   said;
 - `reviewed_enrichment_provenance` is displayable as a provenance badge;
 - the event stream for a reviewed article contains exactly one `relevance_changed` event whose
-  `after_value.reviewed_operation_id` matches the article, carrying `review_head_revision` and,
+  `after_value.reviewed_operation_id` matches the article, carrying `persisted_head_revision` and,
   for the two corrected records, `note_correction` lineage suitable for an audit view;
 - reads should go through a new `reviewed_read`-style operation in the capability allowlist —
   the current `LITERATURE_ACTIVATED_OPERATIONS` does not change in this phase.
@@ -370,6 +370,59 @@ What this preparation session proved, without any remote write:
   append-only trigger enforcement, idempotent from-scratch replay (630 events before and
   after), refusal to resume a completed operation, and drift detection by verify.
 - **115 unit and adversarial tests** across 11 suites, self-contained and synthetic.
+
+## Tier-1 correction pass (2026-08-17)
+
+An independent Codex review of the preparation PR returned BLOCKED with reproduced
+production-integrity defects (while passing the held-out non-access, positive authority,
+artifact handling, exact local counts, representation, additive structure, and production
+unreachability). The corrections, all landed on the same branch without redesigning the passed
+boundaries:
+
+- **Completion is licensed by actual state, not registry metadata.** The apply RPC's
+  finalization now counts the actual articles by class _and_ enrichment provenance and the
+  actual deterministic events, and refuses completion on any disagreement; the engine
+  additionally performs a complete read-only **post-observation** (full registry row, every
+  total, the untouched complement, and every record's exact state) before a checkpoint or
+  receipt may say completed, binding its checksum into both.
+- **Completed operations are immutable.** Every later call must be an exact replay; a fresh
+  application, a foreign article, or any metadata difference fails the whole call. Replay
+  works across batches in any order and returns `already_applied` only.
+- **The frozen curation reason is operation identity**, bound into the deterministic operation
+  id, the registry (durable column), the checkpoint, the receipt, the RPC identity comparison,
+  every event reason and article `curation_reason`, replay comparison, reconciliation, and
+  verification.
+- **Fresh and replay predicates are exact** over every protected field (`relevance_state`,
+  `visibility_state`, `manual_override`, `is_landmark`, `curation_reason`,
+  `classifier_version`, `classifier_payload`, all `reviewed_*` columns, and the full event
+  payload/actor/reason); each field is proven load-bearing by a rehearsal tamper scenario.
+- **Acknowledgements are context-bound** (fresh non-final → `started`; fresh final →
+  `completed`; completed-operation replay → `already_applied`-only with `completed`), and even
+  a matching acknowledgement never licenses completion — the post-observation does.
+- **Checkpoints are relationally strict** (per-state invariants; acknowledged stages must
+  carry both timestamps, exact effects, and exactly one evidence checksum; counters must equal
+  the sum of acknowledged effects; completed requires the post-observation binding), and
+  **receipts bind the full authority** (canonical URL, approved ref, writer, source, frozen
+  reason, pinned counts, checkpoint checksum, post-observation checksum) unconditionally for
+  remote outcomes.
+- **Reconciliation classifies remote truth** with the strict vocabulary (`absent_exact`,
+  `applied_exact`, `partial`, `mixed`, `drifted`, `ambiguous`, `observation_incomplete`),
+  observes the registry beside the batches, refuses semantically false receipts, and — because
+  a receipt is evidence, not authority — the engine **re-observes** every nominated batch
+  freshly before any stage advances. Resume mutates again only after a verified exact absence.
+- **The persisted-head lineage is exact**: exactly nine heads — seven ordinary first revisions
+  plus the two corrections at revision 2 — enforced in the projection, the reviewed-set
+  counts, checkpoints, and receipts.
+- **Inputs are validated before any cast** (closed key sets, grammar-checked UUIDs, integers,
+  timestamps, booleans; duplicate PMIDs/event ids refused; ordinal-only generic errors), and
+  the transport **never carries a response body into an error and never places a PMID in a
+  URL** — all reads travel through one bounded, body-based, service-role-only, read-only
+  observation RPC added to the staged proposal.
+- **Generic credentials are test-killed** (every legacy/main-project variable individually
+  refused; Endoreels and arbitrary targets refused; production modules textually free of every
+  legacy name), and the proposal is **partial-schema safe**: bare `CREATE` only, one
+  transaction — an incompatible same-signature function survives untouched while the proposal
+  rolls back whole.
 
 ## Relationship to the protected import contracts
 
