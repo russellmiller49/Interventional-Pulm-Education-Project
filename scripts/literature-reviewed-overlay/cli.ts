@@ -152,7 +152,7 @@ function recordBatchLimit(values: Map<string, string>): number {
   return parsed
 }
 
-interface CliSecretHolder {
+export interface CliSecretHolder {
   secret: string | null
 }
 
@@ -174,6 +174,24 @@ export function assertVerifiedReceiptBinding(
   }
 }
 
+/**
+ * The CLI's one destination-transport construction pathway. Every mutating or observing
+ * command reaches the network exclusively through this function: the environment must resolve
+ * to the approved binding or the construction throws before any transport exists — there is
+ * no other route from an environment to a PostgREST client in this CLI.
+ */
+export function createOverlayDestinationTransport(
+  environment: Readonly<Record<string, string | undefined>>,
+  holder?: CliSecretHolder,
+): PostgrestOverlayTransport {
+  const binding = resolveDestinationBinding(environment, true)
+  if (!binding) {
+    throw new Error('The Literature destination is not configured.')
+  }
+  if (holder) holder.secret = binding.secret
+  return new PostgrestOverlayTransport({ binding })
+}
+
 function buildDependencies(
   values: Map<string, string>,
   holder: CliSecretHolder,
@@ -193,12 +211,7 @@ function buildDependencies(
       return loadArtifactTruth(artifactPath, pin === undefined ? [] : [pin])
     },
     createTransport() {
-      const binding = resolveDestinationBinding(process.env, true)
-      if (!binding) {
-        throw new Error('The Literature destination is not configured.')
-      }
-      holder.secret = binding.secret
-      return new PostgrestOverlayTransport({ binding })
+      return createOverlayDestinationTransport(process.env, holder)
     },
     now: () => new Date(),
   }

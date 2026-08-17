@@ -21,6 +21,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { resolveDestinationBinding } from '../literature-production-ingest/config'
+import { createOverlayDestinationTransport } from './cli'
 import { DESTINATION_ENV_NAMES } from './constants'
 import { PostgrestOverlayTransport } from './transport'
 
@@ -206,6 +207,132 @@ describe('operational partial-configuration kill tests', () => {
       expectFailClosedWithoutTransport(resolveDestinationBinding, scenario.environment)
     },
   )
+})
+
+describe('the actual CLI destination boundary', () => {
+  /**
+   * The eight owner-defined environments, exercised through the EXACT production function the
+   * CLI uses to construct its transport (`createOverlayDestinationTransport`, called by
+   * `buildDependencies().createTransport`). For every one: construction fails closed, no
+   * PostgREST transport is created (the throw precedes any construction), and no request
+   * occurs (the global fetch is trapped for the whole call and must stay untouched).
+   */
+  const CLI_BOUNDARY_SCENARIOS: ReadonlyArray<{
+    name: string
+    environment: Record<string, string>
+    refusal: RegExp
+  }> = [
+    {
+      name: '1: dedicated URL/ref present, secret only in SUPABASE_SERVICE_ROLE_KEY',
+      environment: {
+        [DESTINATION_ENV_NAMES.url]: APPROVED_URL,
+        [DESTINATION_ENV_NAMES.projectRef]: APPROVED_REF,
+        SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_generic_service_role',
+      },
+      refusal: /Partial Literature destination configuration is refused/u,
+    },
+    {
+      name: '2: dedicated URL/ref present, secret only in SUPABASE_SECRET_KEY',
+      environment: {
+        [DESTINATION_ENV_NAMES.url]: APPROVED_URL,
+        [DESTINATION_ENV_NAMES.projectRef]: APPROVED_REF,
+        SUPABASE_SECRET_KEY: 'sb_secret_generic_secret',
+      },
+      refusal: /Partial Literature destination configuration is refused/u,
+    },
+    {
+      name: '3: dedicated secret/ref present, URL only in NEXT_PUBLIC_SUPABASE_URL',
+      environment: {
+        [DESTINATION_ENV_NAMES.projectRef]: APPROVED_REF,
+        [DESTINATION_ENV_NAMES.secret]: 'sb_secret_dedicated_value',
+        NEXT_PUBLIC_SUPABASE_URL: APPROVED_URL,
+      },
+      refusal: /Partial Literature destination configuration is refused/u,
+    },
+    {
+      name: '4: dedicated secret/ref present, URL only in generic SUPABASE_URL',
+      environment: {
+        [DESTINATION_ENV_NAMES.projectRef]: APPROVED_REF,
+        [DESTINATION_ENV_NAMES.secret]: 'sb_secret_dedicated_value',
+        SUPABASE_URL: APPROVED_URL,
+      },
+      refusal: /Partial Literature destination configuration is refused/u,
+    },
+    {
+      name: '5: dedicated URL/secret present, ref only in generic SUPABASE_PROJECT_REF',
+      environment: {
+        [DESTINATION_ENV_NAMES.url]: APPROVED_URL,
+        [DESTINATION_ENV_NAMES.secret]: 'sb_secret_dedicated_value',
+        SUPABASE_PROJECT_REF: APPROVED_REF,
+      },
+      refusal: /Partial Literature destination configuration is refused/u,
+    },
+    {
+      name: '6: partial dedicated config plus SUPABASE_ANON_KEY holding a server-secret-shaped value',
+      environment: {
+        [DESTINATION_ENV_NAMES.url]: APPROVED_URL,
+        [DESTINATION_ENV_NAMES.projectRef]: APPROVED_REF,
+        SUPABASE_ANON_KEY: 'sb_secret_shaped_anon_value',
+      },
+      refusal: /Partial Literature destination configuration is refused/u,
+    },
+    {
+      name: '7: Endoreels generic URL/ref/key',
+      environment: {
+        NEXT_PUBLIC_SUPABASE_URL: 'https://tqnhxlwvkkswuckszlee.supabase.co/',
+        SUPABASE_PROJECT_REF: 'tqnhxlwvkkswuckszlee',
+        SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_endoreels_value',
+      },
+      refusal: /Legacy destination configuration is not accepted/u,
+    },
+    {
+      name: '8: arbitrary generic URL/ref/key',
+      environment: {
+        NEXT_PUBLIC_SUPABASE_URL: 'https://someotherproject.supabase.co/',
+        SUPABASE_PROJECT_REF: 'someotherproject',
+        SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_arbitrary_value',
+      },
+      refusal: /Legacy destination configuration is not accepted/u,
+    },
+  ]
+
+  it.each(CLI_BOUNDARY_SCENARIOS.map((scenario) => [scenario.name, scenario] as const))(
+    'CLI transport construction fails closed: %s',
+    (_name, scenario) => {
+      const realFetch = globalThis.fetch
+      let fetchCalls = 0
+      globalThis.fetch = (() => {
+        fetchCalls += 1
+        throw new Error('the CLI boundary must issue no request')
+      }) as unknown as typeof fetch
+      try {
+        expect(() => createOverlayDestinationTransport(scenario.environment)).toThrow(
+          scenario.refusal,
+        )
+      } finally {
+        globalThis.fetch = realFetch
+      }
+      expect(fetchCalls).toBe(0)
+    },
+  )
+
+  it('constructs the transport for exactly the approved dedicated trio, still without a request', () => {
+    const realFetch = globalThis.fetch
+    let fetchCalls = 0
+    globalThis.fetch = (() => {
+      fetchCalls += 1
+      throw new Error('construction alone must issue no request')
+    }) as unknown as typeof fetch
+    try {
+      const holder = { secret: null as string | null }
+      const transport = createOverlayDestinationTransport(APPROVED, holder)
+      expect(transport).toBeInstanceOf(PostgrestOverlayTransport)
+      expect(holder.secret).toBe(APPROVED[DESTINATION_ENV_NAMES.secret])
+    } finally {
+      globalThis.fetch = realFetch
+    }
+    expect(fetchCalls).toBe(0)
+  })
 })
 
 describe('realistic fallback mutations are killed by the operational tests', () => {
