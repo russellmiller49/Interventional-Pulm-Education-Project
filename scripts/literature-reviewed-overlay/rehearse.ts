@@ -7,11 +7,15 @@
  *   1. The engine lifecycle on a synthetic full-size corpus: precondition refusals, a
  *      confirmed rejection with rollback, a lost acknowledgement with re-observed
  *      reconciliation, completion licensed by the read-only post-observation, corrections
- *      lineage, append-only enforcement, idempotent replay, and drift detection.
+ *      lineage, append-only enforcement, idempotent replay, drift detection, and both
+ *      causality counterexamples — a lost FINAL fresh acknowledgement that must remain
+ *      630 applied / 0 alreadyApplied, and a lost replay acknowledgement whose counters must
+ *      remain replay.
  *   2. The RPC contract directly, on a tiny corpus: strict input validation before casts,
- *      duplicate rejection, frozen-reason identity, actual-totals finalization, completed-
- *      operation immutability, per-field fresh and replay predicates, bounded observation, and
- *      partial-schema safety of the bare-CREATE proposal.
+ *      duplicate rejection, frozen-reason identity, the causal-mode gate (fresh never targets
+ *      a completed operation; replay never targets anything else), actual-totals finalization,
+ *      completed-operation immutability, per-field fresh and replay predicates, bounded
+ *      observation, and partial-schema safety of the bare-CREATE proposal.
  *
  * The protected real-local database and the real dedicated project are never contacted; the
  * rehearsal transport can only reach the container it created.
@@ -71,6 +75,7 @@ const REHEARSAL_DATABASE = 'literature_overlay_rehearsal'
 const FOUNDATION_ONLY_DATABASE = 'literature_overlay_foundation_only'
 const RPC_CONTRACT_DATABASE = 'literature_overlay_rpc_contract'
 const PARTIAL_SCHEMA_DATABASE = 'literature_overlay_partial_schema'
+const FINAL_ACK_DATABASE = 'literature_overlay_final_ack'
 
 interface RehearsalScenario {
   name: string
@@ -313,10 +318,13 @@ async function psqlAllowFailure(
   )
 }
 
-async function countEvents(world: RehearsalWorld): Promise<number> {
+async function countEvents(
+  world: RehearsalWorld,
+  database: string = REHEARSAL_DATABASE,
+): Promise<number> {
   const output = await psqlAdmin(
     world,
-    REHEARSAL_DATABASE,
+    database,
     'select count(*)::text from public.literature_curation_events;',
   )
   return Number.parseInt(output, 10)
@@ -356,6 +364,7 @@ function contractOperation(
     physicianConfirmedCount: 1,
     physicianModifiedCount: 0,
     qcAcceptedCount: 1,
+    causalMode: 'fresh',
     finalBatch: false,
     ...overrides,
   }
@@ -562,17 +571,53 @@ async function runRpcContractScenarios(world: RehearsalWorld): Promise<void> {
     'operation registered, applied, and completed',
   )
 
-  // Completed operations are immutable: fresh extension, foreign-article extension, and
-  // altered metadata all fail the entire call.
+  // The causal-mode gate: a fresh-mode request can never target the completed operation, and
+  // a replay-mode request can never target an operation that is not completed — including a
+  // brand-new operation, whose registration must roll back with the refused call.
   await expectRpcRejection(
     world,
     { ...sealedOp, finalBatch: false },
+    [contractRecord('sealed-fresh-gate', CONTRACT_PMIDS[5] as string)],
+    'fresh-mode request targets a completed operation',
+  )
+  const replayGateOp = contractOperation('replay-gate', { causalMode: 'replay' })
+  await expectRpcRejection(
+    world,
+    replayGateOp,
+    [contractRecord('replay-gate', CONTRACT_PMIDS[5] as string)],
+    'replay-mode request targets an operation that is not completed',
+  )
+  const replayGateRegistered = await psqlAdmin(
+    world,
+    RPC_CONTRACT_DATABASE,
+    `select count(*)::text from public.literature_reviewed_overlay_operations ` +
+      `where id = '${replayGateOp.operationId as string}';`,
+  )
+  await expectRpcRejection(
+    world,
+    { ...contractOperation('bad-mode'), causalMode: 'REPLAY' },
+    [contractRecord('bad-mode', CONTRACT_PMIDS[5] as string)],
+    'causal mode is not well-formed',
+  )
+  record(
+    world,
+    'rpc-causal-mode-gate',
+    replayGateRegistered === '0',
+    'fresh-vs-completed and replay-vs-started both refused; refused registration rolled back',
+  )
+
+  // Completed operations are immutable: replay-mode extension by a fresh article, a foreign
+  // article, and altered metadata all fail the entire call.
+  const sealedReplayOp = { ...sealedOp, causalMode: 'replay' }
+  await expectRpcRejection(
+    world,
+    { ...sealedReplayOp, finalBatch: false },
     [contractRecord('sealed-extend', CONTRACT_PMIDS[5] as string)],
     'attempts to extend a completed operation',
   )
   await expectRpcRejection(
     world,
-    { ...sealedOp, finalBatch: false },
+    { ...sealedReplayOp, finalBatch: false },
     [contractRecord('sealed-foreign', CONTRACT_PMIDS[0] as string)],
     'attempts to extend a completed operation',
   )
@@ -602,8 +647,9 @@ async function runRpcContractScenarios(world: RehearsalWorld): Promise<void> {
   )
 
   // Exact replay of a completed operation returns already_applied only — including a replay
-  // that repeats the final batch — and a replay mixing one exact and one fresh record fails.
-  const sealedReplay = await callApplyRpc(world, sealedOp, [sealedRecord])
+  // that repeats the final batch — echoes the causal mode, and a replay mixing one exact and
+  // one fresh record fails.
+  const sealedReplay = await callApplyRpc(world, sealedReplayOp, [sealedRecord])
   if (sealedReplay.code !== 0) throw new Error(`sealed replay failed: ${sealedReplay.stderr}`)
   const sealedReplayAck = JSON.parse(sealedReplay.stdout) as Record<string, unknown>
   record(
@@ -611,12 +657,13 @@ async function runRpcContractScenarios(world: RehearsalWorld): Promise<void> {
     'rpc-exact-replay-already-applied',
     sealedReplayAck.applied === 0 &&
       sealedReplayAck.alreadyApplied === 1 &&
-      sealedReplayAck.operationStatus === 'completed',
-    'replay returned already_applied only',
+      sealedReplayAck.operationStatus === 'completed' &&
+      sealedReplayAck.causalMode === 'replay',
+    'replay returned already_applied only with the causal mode echoed',
   )
   await expectRpcRejection(
     world,
-    { ...sealedOp, finalBatch: false },
+    { ...sealedReplayOp, finalBatch: false },
     [sealedRecord, contractRecord('sealed-mixed', CONTRACT_PMIDS[5] as string)],
     'attempts to extend a completed operation',
   )
@@ -635,8 +682,9 @@ async function runRpcContractScenarios(world: RehearsalWorld): Promise<void> {
   if (orderedFirst.code !== 0) throw new Error(`ordered batch 1 failed: ${orderedFirst.stderr}`)
   const orderedSecond = await callApplyRpc(world, { ...orderedOp, finalBatch: true }, [orderedB])
   if (orderedSecond.code !== 0) throw new Error(`ordered batch 2 failed: ${orderedSecond.stderr}`)
-  const replayB = await callApplyRpc(world, { ...orderedOp, finalBatch: true }, [orderedB])
-  const replayA = await callApplyRpc(world, { ...orderedOp, finalBatch: false }, [orderedA])
+  const orderedReplayOp = { ...orderedOp, causalMode: 'replay' }
+  const replayB = await callApplyRpc(world, { ...orderedReplayOp, finalBatch: true }, [orderedB])
+  const replayA = await callApplyRpc(world, { ...orderedReplayOp, finalBatch: false }, [orderedA])
   const replayBAck = JSON.parse(replayB.stdout) as Record<string, unknown>
   const replayAAck = JSON.parse(replayA.stdout) as Record<string, unknown>
   record(
@@ -673,7 +721,7 @@ async function runRpcContractScenarios(world: RehearsalWorld): Promise<void> {
     )
     await expectRpcRejection(
       world,
-      sealedOp,
+      sealedReplayOp,
       [sealedRecord],
       field === 'reviewed_enrichment_provenance'
         ? 'has drifted from the applied state'
@@ -698,7 +746,7 @@ async function runRpcContractScenarios(world: RehearsalWorld): Promise<void> {
        where pmid = '${CONTRACT_PMIDS[4] as string}';`,
     )
   }
-  const sealedReplayAfterRestore = await callApplyRpc(world, sealedOp, [sealedRecord])
+  const sealedReplayAfterRestore = await callApplyRpc(world, sealedReplayOp, [sealedRecord])
   record(
     world,
     'rpc-replay-field-predicates-load-bearing',
@@ -828,6 +876,7 @@ export async function runRehearsal(): Promise<{
       FOUNDATION_ONLY_DATABASE,
       RPC_CONTRACT_DATABASE,
       PARTIAL_SCHEMA_DATABASE,
+      FINAL_ACK_DATABASE,
     ]) {
       await psqlAdmin(world, 'postgres', `create database ${database};`)
       // A freshly created database lacks the Supabase `extensions` schema the foundation
@@ -837,7 +886,9 @@ export async function runRehearsal(): Promise<{
     }
     await psqlAdmin(world, REHEARSAL_DATABASE, proposalSql)
     await psqlAdmin(world, RPC_CONTRACT_DATABASE, proposalSql)
+    await psqlAdmin(world, FINAL_ACK_DATABASE, proposalSql)
     await psqlAdmin(world, REHEARSAL_DATABASE, buildCorpusSeedSql())
+    await psqlAdmin(world, FINAL_ACK_DATABASE, buildCorpusSeedSql())
     await psqlAdmin(
       world,
       RPC_CONTRACT_DATABASE,
@@ -1048,7 +1099,10 @@ export async function runRehearsal(): Promise<{
       'reconciliation-classifies-applied-exact',
       reconciliation.unresolvedBatchCount === 1 &&
         reconciliation.receipt.registryConsistent === true &&
+        reconciliation.receipt.operationScope?.reviewedForOperation === 360 &&
+        reconciliation.receipt.operationScope.eventsForOperation === 360 &&
         lostBatch?.classification === 'applied_exact' &&
+        lostBatch.requestMode === 'fresh' &&
         lostBatch.observed.exactRecords === 90,
       JSON.stringify(lostBatch?.observed ?? {}),
     )
@@ -1173,6 +1227,152 @@ export async function runRehearsal(): Promise<{
         eventsAfterReplay === OVERLAY_EXPECTED_RECORD_COUNT &&
         replay.postObservationChecksum === applied.postObservationChecksum,
       `events=${eventsAfterReplay}`,
+    )
+
+    // Scenario: a genuine completed-operation replay whose acknowledgement is lost keeps its
+    // replay causality — reconciliation classifies through the batch's durable replay mode,
+    // and the completed counters remain 0 applied / 630 alreadyApplied with no new history.
+    const replayLossDir = join(world.stateRoot, 'replay-loss')
+    const replayLossTransport = new LostAcknowledgementTransport(
+      new DockerPsqlOverlayTransport(world.container, REHEARSAL_DATABASE),
+      0,
+    )
+    await expectRejection(
+      () =>
+        runApply(
+          rehearsalDependencies(world, REHEARSAL_DATABASE, { transport: replayLossTransport }),
+          {
+            stateDirectory: replayLossDir,
+            recordBatchLimit: 250,
+            resume: false,
+            confirmProductionWrite: true,
+          },
+        ),
+      'deliberately lost this acknowledgement',
+    )
+    const replayLossCheckpointPath = join(
+      replayLossDir,
+      `overlay-${set.operationId}.checkpoint.json`,
+    )
+    const replayLossReconciliation = await runReconcile(
+      rehearsalDependencies(world, REHEARSAL_DATABASE),
+      { checkpointPath: replayLossCheckpointPath },
+    )
+    const replayLossBatch = replayLossReconciliation.receipt.batches[0]
+    record(
+      world,
+      'replay-lost-ack-reconciles-causally-replay',
+      replayLossBatch?.classification === 'applied_exact' &&
+        replayLossBatch.requestMode === 'replay' &&
+        replayLossBatch.expectedRecordCount === 250,
+      JSON.stringify(replayLossBatch?.observed ?? {}),
+    )
+    const replayLossReceiptPath = join(replayLossDir, 'reconciliation.json')
+    await writeFile(
+      replayLossReceiptPath,
+      `${JSON.stringify(replayLossReconciliation.receipt, null, 2)}\n`,
+      { mode: 0o600 },
+    )
+    const replayLossResumed = await runApply(rehearsalDependencies(world, REHEARSAL_DATABASE), {
+      stateDirectory: replayLossDir,
+      recordBatchLimit: 250,
+      resume: true,
+      checkpointPath: replayLossCheckpointPath,
+      reconciliationPath: replayLossReceiptPath,
+      readReconciliation: async (path) => JSON.parse(readFileSync(path, 'utf8')) as unknown,
+      confirmProductionWrite: true,
+    })
+    record(
+      world,
+      'replay-counters-remain-replay-after-lost-ack',
+      replayLossResumed.status === 'idempotent-replay' &&
+        replayLossResumed.counters.applied === 0 &&
+        replayLossResumed.counters.alreadyApplied === OVERLAY_EXPECTED_RECORD_COUNT &&
+        (await countEvents(world)) === OVERLAY_EXPECTED_RECORD_COUNT,
+      `counters=${JSON.stringify(replayLossResumed.counters)}`,
+    )
+
+    // Scenario: the review's exact counterexample — batches of 250/250/130, the FINAL batch
+    // freshly applies and completes the operation remotely, and only its acknowledgement is
+    // lost. The batch's durable fresh mode must survive the now-completed registry:
+    // reconciliation reports 130 applied, the completed counters are 630 applied / 0
+    // alreadyApplied, and no second mutation occurs.
+    const finalAckStateDir = join(world.stateRoot, 'final-ack')
+    const finalAckLossyTransport = new LostAcknowledgementTransport(
+      new DockerPsqlOverlayTransport(world.container, FINAL_ACK_DATABASE),
+      2,
+    )
+    await expectRejection(
+      () =>
+        runApply(
+          rehearsalDependencies(world, FINAL_ACK_DATABASE, {
+            transport: finalAckLossyTransport,
+          }),
+          {
+            stateDirectory: finalAckStateDir,
+            recordBatchLimit: 250,
+            resume: false,
+            confirmProductionWrite: true,
+          },
+        ),
+      'deliberately lost this acknowledgement',
+    )
+    const finalAckRegistryStatus = await psqlAdmin(
+      world,
+      FINAL_ACK_DATABASE,
+      `select status from public.literature_reviewed_overlay_operations ` +
+        `where id = '${set.operationId}';`,
+    )
+    record(
+      world,
+      'final-batch-applied-remotely-ack-lost',
+      finalAckRegistryStatus === 'completed' &&
+        (await countEvents(world, FINAL_ACK_DATABASE)) === OVERLAY_EXPECTED_RECORD_COUNT,
+      `registry=${finalAckRegistryStatus}, all 630 events present, acknowledgement lost`,
+    )
+
+    const finalAckCheckpointPath = join(
+      finalAckStateDir,
+      `overlay-${set.operationId}.checkpoint.json`,
+    )
+    const finalAckReconciliation = await runReconcile(
+      rehearsalDependencies(world, FINAL_ACK_DATABASE),
+      { checkpointPath: finalAckCheckpointPath },
+    )
+    const finalAckBatch = finalAckReconciliation.receipt.batches[0]
+    record(
+      world,
+      'lost-final-ack-reconciles-causally-fresh',
+      finalAckBatch?.classification === 'applied_exact' &&
+        finalAckBatch.requestMode === 'fresh' &&
+        finalAckBatch.expectedRecordCount === 130 &&
+        finalAckReconciliation.receipt.operationScope?.reviewedForOperation === 630 &&
+        finalAckReconciliation.receipt.operationScope.eventsForOperation === 630,
+      JSON.stringify(finalAckBatch?.observed ?? {}),
+    )
+    const finalAckReceiptPath = join(finalAckStateDir, 'reconciliation.json')
+    await writeFile(
+      finalAckReceiptPath,
+      `${JSON.stringify(finalAckReconciliation.receipt, null, 2)}\n`,
+      { mode: 0o600 },
+    )
+    const finalAckResumed = await runApply(rehearsalDependencies(world, FINAL_ACK_DATABASE), {
+      stateDirectory: finalAckStateDir,
+      recordBatchLimit: 250,
+      resume: true,
+      checkpointPath: finalAckCheckpointPath,
+      reconciliationPath: finalAckReceiptPath,
+      readReconciliation: async (path) => JSON.parse(readFileSync(path, 'utf8')) as unknown,
+      confirmProductionWrite: true,
+    })
+    record(
+      world,
+      'lost-final-ack-remains-fresh-630-applied',
+      finalAckResumed.status === 'applied' &&
+        finalAckResumed.counters.applied === OVERLAY_EXPECTED_RECORD_COUNT &&
+        finalAckResumed.counters.alreadyApplied === 0 &&
+        (await countEvents(world, FINAL_ACK_DATABASE)) === OVERLAY_EXPECTED_RECORD_COUNT,
+      `counters=${JSON.stringify(finalAckResumed.counters)}, no second mutation`,
     )
 
     // Scenario: resuming a completed checkpoint is refused.

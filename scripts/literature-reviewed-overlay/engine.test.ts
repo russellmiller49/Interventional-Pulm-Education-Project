@@ -6,17 +6,27 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { canonicalJson, sha256 } from '../literature-production-ingest/canonical'
-import { readOverlayCheckpoint, type OverlayCheckpoint } from './checkpoint'
+import {
+  overlayCheckpointChecksum,
+  readOverlayCheckpoint,
+  readOverlayReceipt,
+  writeOverlayCheckpoint,
+  type OverlayCheckpoint,
+} from './checkpoint'
 import {
   OVERLAY_ARTIFACT_SHA256,
   OVERLAY_ARTIFACT_SHA256_ENV_NAME,
+  OVERLAY_CHECKPOINT_SCHEMA_VERSION,
   OVERLAY_CURATION_REASON,
+  OVERLAY_ENGINE_VERSION,
   OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
   OVERLAY_OWNER_AUTHORIZATION_ENV_NAME,
   OVERLAY_OWNER_AUTHORIZATION_SENTENCE,
   OVERLAY_PROJECTION_SHA256_ENV_NAME,
+  OVERLAY_RECONCILIATION_SCHEMA_VERSION,
   OVERLAY_SOURCE_IDENTITY,
   OVERLAY_WRITER_IDENTITY,
+  type OverlayRequestMode,
 } from './constants'
 import {
   applyReconciliationWithReobservation,
@@ -25,10 +35,14 @@ import {
   expectedEventPayloads,
   runApply,
   runDryRun,
+  runReconcile,
   runValidate,
   runVerify,
+  validateOverlayReconciliationReceipt,
   type OverlayEngineDependencies,
+  type OverlayOperationScope,
 } from './engine'
+import { buildOverlayPlan, checkpointBatchesForPlan } from './plan'
 import { collectCohort } from './projection'
 import { buildFixtureTruth } from './rehearsal-fixtures'
 import { buildReviewedSet, reviewedRecordEventId, type ReviewedSet } from './reviewed-set'
@@ -49,9 +63,11 @@ const REVIEWED_AT = '2026-08-17T00:00:00.000Z'
 
 /**
  * A faithful in-memory destination: it simulates real application, so the observation surface
- * reports what actually happened rather than what the acknowledgement claimed. The
- * `mutateSilently` switch reproduces the fabricated-acknowledgement counterexample: plausible
- * acknowledgements with zero stored rows.
+ * reports what actually happened rather than what the acknowledgement claimed. It enforces the
+ * proposal's causal-mode gate and echoes the causal mode, and it can lose exactly one
+ * acknowledgement AFTER applying (the lost-acknowledgement counterexample), fabricate
+ * acknowledgements without storing anything (`mutateSilently`), or carry operation-scope drift
+ * (an extra event or article under the operation) that per-batch reads cannot see.
  */
 class ScriptedTransport implements OverlayTransport {
   corpus = new Set(fixtureSet.records.map((record) => record.pmid))
@@ -65,8 +81,13 @@ class ScriptedTransport implements OverlayTransport {
   observeCalls = 0
   failCall: { index: number; error: Error } | null = null
   mangleAckAtCall: number | null = null
+  /** Apply the batch, then lose its acknowledgement — exactly once. */
+  loseAckAtCall: number | null = null
   /** Return plausible acknowledgements without storing anything. */
   mutateSilently = false
+  /** Operation-scope drift no per-batch read can see. */
+  extraEventsForOperation = 0
+  extraReviewedForOperation = 0
 
   seedCompletedOperation(): void {
     this.operationRow = {
@@ -121,6 +142,19 @@ class ScriptedTransport implements OverlayTransport {
     const operation = request.p_operation
     if (this.mangleAckAtCall === call) {
       return { operationId: operation.operationId, recordCount: -1 }
+    }
+
+    // The proposal's transactional causal-mode gate.
+    const operationCompleted = this.operationRow?.status === 'completed'
+    if (operation.causalMode === 'fresh' && operationCompleted) {
+      throw new OverlayMutationConfirmedFailureError(
+        'overlay fresh-mode request targets a completed operation',
+      )
+    }
+    if (operation.causalMode === 'replay' && !operationCompleted) {
+      throw new OverlayMutationConfirmedFailureError(
+        'overlay replay-mode request targets an operation that is not completed',
+      )
     }
 
     let applied = 0
@@ -191,14 +225,22 @@ class ScriptedTransport implements OverlayTransport {
       : finalBatch
         ? 'completed'
         : String(this.operationRow?.status ?? 'started')
-    return {
+    const acknowledgement = {
       operationId: operation.operationId,
       recordCount: request.p_records.length,
+      causalMode: operation.causalMode,
       applied,
       alreadyApplied,
       dispositions,
       operationStatus: status,
     }
+    if (this.loseAckAtCall === call) {
+      throw new OverlayMutationAmbiguousError(
+        'request_timeout',
+        'The scripted destination deliberately lost this acknowledgement.',
+      )
+    }
+    return acknowledgement
   }
 
   async observe(requestBody: string): Promise<unknown> {
@@ -252,14 +294,14 @@ class ScriptedTransport implements OverlayTransport {
       operation: this.operationRow,
       totals: {
         corpusArticles: this.corpusTotal,
-        reviewedForOperation: this.appliedArticles.size,
+        reviewedForOperation: this.appliedArticles.size + this.extraReviewedForOperation,
         includeCore,
         includeAdjacent,
         exclude,
         physicianConfirmed: confirmed,
         physicianModified: modified,
         qcAccepted: qc,
-        eventsForOperation: this.appliedEvents.size,
+        eventsForOperation: this.appliedEvents.size + this.extraEventsForOperation,
         foreignReviewed: this.foreignReviewed,
       },
       articles,
@@ -321,7 +363,7 @@ describe('validate and dry-run', () => {
     ).rejects.toThrow(/projection pin does not match/u)
   })
 
-  it('writes an immutable dry-run receipt without destination requests', async () => {
+  it('writes an immutable fresh-mode dry-run receipt without destination requests', async () => {
     let constructed = 0
     const result = await runDryRun(
       dependencies(new ScriptedTransport(), {}, () => {
@@ -331,6 +373,9 @@ describe('validate and dry-run', () => {
     )
     expect(result.plan.batchCount).toBe(7)
     expect(constructed).toBe(0)
+    const receipt = await readOverlayReceipt(result.receiptPath)
+    expect(receipt.outcome).toBe('dry-run')
+    expect(receipt.causalMode).toBe('fresh')
     await expect(
       runDryRun(dependencies(new ScriptedTransport()), {
         stateDirectory: directory,
@@ -485,6 +530,10 @@ describe('apply gates and preconditions', () => {
     expect(checkpoint.phase).toBe('completed')
     expect(checkpoint.postObservationChecksum).toBe(result.postObservationChecksum)
     expect(checkpoint.curationReason).toBe(OVERLAY_CURATION_REASON)
+    expect(checkpoint.batches.every((batch) => batch.requestMode === 'fresh')).toBe(true)
+    const receipt = await readOverlayReceipt(result.receiptPath)
+    expect(receipt.outcome).toBe('completed')
+    expect(receipt.causalMode).toBe('fresh')
   })
 
   it('refuses completion when acknowledgements are plausible but nothing was stored', async () => {
@@ -510,13 +559,18 @@ describe('apply gates and preconditions', () => {
     const result = await runApply(dependencies(transport), baseOptions())
     expect(result.status).toBe('idempotent-replay')
     expect(result.counters).toEqual({ applied: 0, alreadyApplied: 630 })
+    const checkpoint = await readOverlayCheckpoint(result.checkpointPath)
+    expect(checkpoint.batches.every((batch) => batch.requestMode === 'replay')).toBe(true)
+    const receipt = await readOverlayReceipt(result.receiptPath)
+    expect(receipt.outcome).toBe('idempotent-replay')
+    expect(receipt.causalMode).toBe('replay')
   })
 
-  it('treats a fresh application inside a completed-operation replay as ambiguous', async () => {
+  it('treats a fabricated fresh application inside a replay as ambiguous', async () => {
     const transport = new ScriptedTransport()
     transport.seedCompletedOperation()
-    // Remove one stored article: the fake will report it as freshly applied, which the
-    // replay acknowledgement contract must refuse.
+    // Remove one stored article: the adversarial fake will report it as freshly applied,
+    // which the replay acknowledgement contract must refuse.
     const victim = fixtureSet.records[0]?.pmid as string
     transport.appliedArticles.delete(victim)
     transport.appliedEvents.delete(reviewedRecordEventId(fixtureSet, fixtureSet.records[0]!))
@@ -526,6 +580,183 @@ describe('apply gates and preconditions', () => {
     const checkpoint = await readOverlayCheckpoint(checkpointPathFor())
     expect(checkpoint.batches[0]?.stage.failureCode).toBe(
       'acknowledgement_replay_applied_fresh_records',
+    )
+  })
+})
+
+describe('fresh/replay causality across lost acknowledgements', () => {
+  let directory: string
+  beforeEach(() => {
+    directory = mkdtempSync(join(tmpdir(), 'overlay-causality-test-'))
+  })
+  afterEach(() => {
+    rmSync(directory, { recursive: true, force: true })
+  })
+
+  const options = () => ({
+    stateDirectory: directory,
+    recordBatchLimit: 250, // batches of 250 / 250 / 130 — the review's reproduction shape
+    resume: false,
+    confirmProductionWrite: true,
+  })
+  const checkpointPathFor = () =>
+    join(directory, `overlay-${fixtureSet.operationId}.checkpoint.json`)
+
+  async function resumeWithReceipt(
+    transport: ScriptedTransport,
+    receipt: unknown,
+  ): Promise<Awaited<ReturnType<typeof runApply>>> {
+    return runApply(dependencies(transport), {
+      ...options(),
+      resume: true,
+      checkpointPath: checkpointPathFor(),
+      reconciliationPath: 'in-memory',
+      readReconciliation: () => Promise.resolve(JSON.parse(JSON.stringify(receipt)) as unknown),
+      confirmProductionWrite: true,
+    })
+  }
+
+  it('keeps a lost FINAL fresh acknowledgement causally fresh: 630 applied, 0 already', async () => {
+    const transport = new ScriptedTransport()
+    transport.loseAckAtCall = 2 // the final 130-record batch applies, completing the
+    // operation remotely, and only its acknowledgement is lost
+    await expect(runApply(dependencies(transport), options())).rejects.toThrow(
+      /deliberately lost this acknowledgement/u,
+    )
+    expect(transport.operationRow?.status).toBe('completed')
+    expect(transport.appliedEvents.size).toBe(630)
+
+    const reconciled = await runReconcile(dependencies(transport), {
+      checkpointPath: checkpointPathFor(),
+    })
+    expect(reconciled.unresolvedBatchCount).toBe(1)
+    const evidence = reconciled.receipt.batches[0]!
+    // The batch's durable causal mode survives the registry's completed status.
+    expect(evidence).toMatchObject({
+      index: 2,
+      requestMode: 'fresh',
+      expectedRecordCount: 130,
+      classification: 'applied_exact',
+    })
+    expect(reconciled.receipt.operationScope).toMatchObject({
+      reviewedForOperation: 630,
+      eventsForOperation: 630,
+    })
+
+    const applyCallsBeforeResume = transport.applyCalls
+    const result = await resumeWithReceipt(transport, reconciled.receipt)
+    expect(result.status).toBe('applied')
+    expect(result.counters).toEqual({ applied: 630, alreadyApplied: 0 })
+    // No second mutation: the reconciled batch was never resubmitted.
+    expect(transport.applyCalls).toBe(applyCallsBeforeResume)
+    expect(transport.appliedEvents.size).toBe(630)
+    const checkpoint = await readOverlayCheckpoint(checkpointPathFor())
+    expect(checkpoint.batches[2]?.effects).toEqual({ applied: 130, alreadyApplied: 0 })
+    expect(checkpoint.batches[2]?.reconciliationChecksum).toMatch(/^[a-f0-9]{64}$/u)
+    const receipt = await readOverlayReceipt(result.receiptPath)
+    expect(receipt.outcome).toBe('completed')
+    expect(receipt.causalMode).toBe('fresh')
+    expect(receipt.counters).toEqual({ applied: 630, alreadyApplied: 0 })
+  })
+
+  it('keeps a lost NON-final fresh acknowledgement fresh and resumes the tail', async () => {
+    const transport = new ScriptedTransport()
+    transport.loseAckAtCall = 1
+    await expect(runApply(dependencies(transport), options())).rejects.toThrow(
+      /deliberately lost this acknowledgement/u,
+    )
+    expect(transport.operationRow?.status).toBe('started')
+    expect(transport.appliedEvents.size).toBe(500)
+
+    const reconciled = await runReconcile(dependencies(transport), {
+      checkpointPath: checkpointPathFor(),
+    })
+    expect(reconciled.receipt.batches[0]).toMatchObject({
+      index: 1,
+      requestMode: 'fresh',
+      classification: 'applied_exact',
+    })
+
+    const result = await resumeWithReceipt(transport, reconciled.receipt)
+    expect(result.counters).toEqual({ applied: 630, alreadyApplied: 0 })
+    expect(transport.appliedEvents.size).toBe(630)
+    expect(transport.operationRow?.status).toBe('completed')
+  })
+
+  it('keeps a genuine replay causally replay across a lost acknowledgement', async () => {
+    const transport = new ScriptedTransport()
+    transport.seedCompletedOperation()
+    transport.loseAckAtCall = 0
+    await expect(runApply(dependencies(transport), options())).rejects.toThrow(
+      /deliberately lost this acknowledgement/u,
+    )
+    expect(transport.appliedEvents.size).toBe(630) // nothing was mutated
+
+    const reconciled = await runReconcile(dependencies(transport), {
+      checkpointPath: checkpointPathFor(),
+    })
+    expect(reconciled.receipt.batches[0]).toMatchObject({
+      index: 0,
+      requestMode: 'replay',
+      classification: 'applied_exact',
+    })
+
+    const result = await resumeWithReceipt(transport, reconciled.receipt)
+    expect(result.status).toBe('idempotent-replay')
+    // Replay counters remain replay counters; no fresh effect is fabricated.
+    expect(result.counters).toEqual({ applied: 0, alreadyApplied: 630 })
+    expect(transport.appliedEvents.size).toBe(630)
+    const receipt = await readOverlayReceipt(result.receiptPath)
+    expect(receipt.outcome).toBe('idempotent-replay')
+    expect(receipt.causalMode).toBe('replay')
+  })
+
+  it('refuses a stale receipt claiming the opposite causal mode', async () => {
+    const transport = new ScriptedTransport()
+    transport.loseAckAtCall = 2
+    await expect(runApply(dependencies(transport), options())).rejects.toThrow(
+      OverlayMutationAmbiguousError,
+    )
+    const reconciled = await runReconcile(dependencies(transport), {
+      checkpointPath: checkpointPathFor(),
+    })
+    const forged = JSON.parse(JSON.stringify(reconciled.receipt)) as {
+      batches: Array<{ requestMode: string }>
+      receiptChecksum?: string
+    }
+    forged.batches[0]!.requestMode = 'replay'
+    delete forged.receiptChecksum
+    const resealed = { ...forged, receiptChecksum: sha256(canonicalJson(forged)) }
+    await expect(resumeWithReceipt(transport, resealed)).rejects.toThrow(
+      /contradicts the request causal mode the checkpoint durably recorded/u,
+    )
+    // And the effects were never folded: the checkpoint still awaits reconciliation.
+    const checkpoint = await readOverlayCheckpoint(checkpointPathFor())
+    expect(checkpoint.batches[2]?.stage.state).toBe('ambiguous')
+    expect(checkpoint.counters).toEqual({ applied: 500, alreadyApplied: 0 })
+  })
+
+  it('halts when the remote completed outside this operation history after send', async () => {
+    // The operator submits batch 0 and loses the acknowledgement; meanwhile the whole
+    // operation appears completed remotely (a history this checkpoint cannot account for:
+    // only batch 0 was ever submitted). The reconciliation must refuse to call anything
+    // exact — the per-record reads look applied, but the operation scope is unaccountable.
+    const transport = new ScriptedTransport()
+    transport.loseAckAtCall = 0
+    await expect(runApply(dependencies(transport), options())).rejects.toThrow(
+      OverlayMutationAmbiguousError,
+    )
+    // Simulate the external completion of everything else.
+    transport.seedCompletedOperation()
+
+    const reconciled = await runReconcile(dependencies(transport), {
+      checkpointPath: checkpointPathFor(),
+    })
+    const evidence = reconciled.receipt.batches[0]!
+    expect(evidence.requestMode).toBe('fresh') // the recorded mode is never rewritten
+    expect(evidence.classification).toBe('drifted') // never applied_exact
+    await expect(resumeWithReceipt(transport, reconciled.receipt)).rejects.toThrow(
+      /conflicts with the overlay expectation/u,
     )
   })
 })
@@ -564,6 +795,7 @@ describe('verify', () => {
       checkpointPath: world.checkpointPath,
     })
     expect(verified.status).toBe('verified')
+    expect(verified.causalMode).toBe('fresh')
     expect(verified.postObservationChecksum).toBe(world.postObservationChecksum)
     expect(verified.remote.totals).toMatchObject({
       reviewedForOperation: 630,
@@ -609,210 +841,689 @@ describe('verify', () => {
       runVerify(dependencies(world.transport), { checkpointPath: world.checkpointPath }),
     ).rejects.toThrow(/not exactly applied/u)
   })
+
+  it('fails when an extra event exists under the operation after completion', async () => {
+    const world = await completedWorld()
+    world.transport.extraEventsForOperation = 1
+    await expect(
+      runVerify(dependencies(world.transport), { checkpointPath: world.checkpointPath }),
+    ).rejects.toThrow(/event count does not match/u)
+  })
 })
 
-describe('reconciliation receipts', () => {
-  function ambiguousCheckpoint(): OverlayCheckpoint {
-    return {
-      schemaVersion: 'literature-reviewed-overlay-checkpoint/1.1.0',
-      engineVersion: 'literature-reviewed-overlay/1.1.0',
+describe('strict reconciliation receipts', () => {
+  const CREATED_AT = REVIEWED_AT
+  const LATER = '2026-08-17T00:05:00.000Z'
+
+  function lostFinalAckCheckpoint(mode: OverlayRequestMode = 'fresh'): OverlayCheckpoint {
+    const plan = buildOverlayPlan(fixtureSet, REVIEWED_AT, 250, mode)
+    const checkpoint: OverlayCheckpoint = {
+      schemaVersion: OVERLAY_CHECKPOINT_SCHEMA_VERSION,
+      engineVersion: OVERLAY_ENGINE_VERSION,
       operationId: fixtureSet.operationId,
       targetProjectRef: 'itcttmkxdxvwmwcmzmey',
-      createdAt: REVIEWED_AT,
-      updatedAt: REVIEWED_AT,
+      createdAt: CREATED_AT,
+      updatedAt: LATER,
       artifactSha256: fixtureSet.artifactSha256,
       projectionDigest: fixtureSet.projectionDigest,
       reviewedAt: REVIEWED_AT,
       curationReason: OVERLAY_CURATION_REASON,
       counts: fixtureSet.counts,
-      limits: { recordBatchLimit: 630 },
-      batches: [
-        {
-          index: 0,
-          startOrdinal: 1,
-          endOrdinal: 630,
-          recordCount: 630,
-          finalBatch: true,
-          requestChecksum: sha256('request'),
-          stage: {
-            state: 'ambiguous',
-            submittedAt: REVIEWED_AT,
-            acknowledgedAt: null,
-            failureCode: 'request_timeout',
-          },
-          acknowledgementChecksum: null,
-          reconciliationChecksum: null,
-          effects: null,
-        },
-      ],
+      limits: { recordBatchLimit: 250 },
+      batches: checkpointBatchesForPlan(fixtureSet, plan),
       phase: 'needs_reconciliation',
       counters: { applied: 0, alreadyApplied: 0 },
       postObservationChecksum: null,
     }
+    for (const index of [0, 1]) {
+      const batch = checkpoint.batches[index]!
+      batch.stage = {
+        state: 'acknowledged',
+        submittedAt: CREATED_AT,
+        acknowledgedAt: CREATED_AT,
+        failureCode: null,
+      }
+      batch.acknowledgementChecksum = sha256(`acknowledgement-${index}`)
+      batch.effects =
+        mode === 'replay'
+          ? { applied: 0, alreadyApplied: batch.recordCount }
+          : { applied: batch.recordCount, alreadyApplied: 0 }
+    }
+    checkpoint.batches[2]!.stage = {
+      state: 'ambiguous',
+      submittedAt: CREATED_AT,
+      acknowledgedAt: null,
+      failureCode: 'request_timeout',
+    }
+    checkpoint.counters =
+      mode === 'replay' ? { applied: 0, alreadyApplied: 500 } : { applied: 500, alreadyApplied: 0 }
+    return checkpoint
   }
+
+  function emptyRemoteCheckpoint(): OverlayCheckpoint {
+    const checkpoint = lostFinalAckCheckpoint()
+    for (const index of [0, 1]) {
+      const batch = checkpoint.batches[index]!
+      batch.stage = {
+        state: 'prepared',
+        submittedAt: null,
+        acknowledgedAt: null,
+        failureCode: null,
+      }
+      batch.acknowledgementChecksum = null
+      batch.effects = null
+    }
+    // Only the first batch was ever submitted; it timed out before anything landed.
+    checkpoint.batches[0]!.stage = {
+      state: 'ambiguous',
+      submittedAt: CREATED_AT,
+      acknowledgedAt: null,
+      failureCode: 'request_timeout',
+    }
+    checkpoint.batches[2]!.stage = {
+      state: 'prepared',
+      submittedAt: null,
+      acknowledgedAt: null,
+      failureCode: null,
+    }
+    checkpoint.counters = { applied: 0, alreadyApplied: 0 }
+    return checkpoint
+  }
+
+  const OBSERVED = (recordCount: number, kind: 'exact' | 'absent') => ({
+    recordCount,
+    exactRecords: kind === 'exact' ? recordCount : 0,
+    absentRecords: kind === 'absent' ? recordCount : 0,
+    driftedRecords: 0,
+    inconsistentRecords: 0,
+    eventsPresent: kind === 'exact' ? recordCount : 0,
+  })
 
   function receiptFor(
     checkpoint: OverlayCheckpoint,
-    classification: string,
-    observed: Record<string, number>,
-    registryConsistent = true,
+    entries: Array<{
+      index: number
+      classification: string
+      observed: Record<string, number>
+      requestMode?: string
+      requestChecksum?: string
+      expectedRecordCount?: number
+    }>,
+    overrides: Record<string, unknown> = {},
   ): Record<string, unknown> {
+    const scope: OverlayOperationScope = (overrides.operationScope as OverlayOperationScope) ?? {
+      corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+      reviewedForOperation: 630,
+      eventsForOperation: 630,
+      foreignReviewed: 0,
+    }
     const body = {
-      schemaVersion: 'literature-reviewed-overlay-reconciliation/1.1.0',
+      schemaVersion: OVERLAY_RECONCILIATION_SCHEMA_VERSION,
       operationId: checkpoint.operationId,
-      checkpointChecksum: sha256(canonicalJson(checkpoint)),
-      observedAt: '2026-08-17T00:01:00.000Z',
-      registryConsistent,
-      batches: [{ index: 0, classification, observed }],
+      checkpointChecksum: overlayCheckpointChecksum(checkpoint),
+      observedAt: '2026-08-17T00:06:00.000Z',
+      registryConsistent: true,
+      ...overrides,
+      operationScope: overrides.operationScope === undefined ? scope : overrides.operationScope,
+      batches: entries.map((entry) => {
+        const batch = checkpoint.batches[entry.index]!
+        const observation = {
+          index: entry.index,
+          classification: entry.classification,
+          observed: entry.observed,
+        }
+        return {
+          index: entry.index,
+          requestChecksum: entry.requestChecksum ?? batch.requestChecksum,
+          requestMode: entry.requestMode ?? batch.requestMode,
+          expectedRecordCount: entry.expectedRecordCount ?? batch.recordCount,
+          classification: entry.classification,
+          observed: entry.observed,
+          observationChecksum: sha256(canonicalJson(observation)),
+        }
+      }),
     }
     return { ...body, receiptChecksum: sha256(canonicalJson(body)) }
   }
 
-  const exactObserved = {
-    recordCount: 630,
-    exactRecords: 630,
-    absentRecords: 0,
-    driftedRecords: 0,
-    inconsistentRecords: 0,
-    eventsPresent: 630,
-  }
-  const absentObserved = {
-    recordCount: 630,
-    exactRecords: 0,
-    absentRecords: 630,
-    driftedRecords: 0,
-    inconsistentRecords: 0,
-    eventsPresent: 0,
-  }
+  it('accepts the truthful lost-final-acknowledgement nomination', () => {
+    const checkpoint = lostFinalAckCheckpoint()
+    const receipt = receiptFor(checkpoint, [
+      { index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') },
+    ])
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, receipt)).not.toThrow()
+  })
 
-  it('accepts internally consistent applied_exact and absent_exact nominations', () => {
-    const checkpoint = ambiguousCheckpoint()
-    expect(() =>
-      assertReconciliationReceiptConsistent(
-        checkpoint,
-        receiptFor(checkpoint, 'applied_exact', exactObserved),
-      ),
-    ).not.toThrow()
-    expect(() =>
-      assertReconciliationReceiptConsistent(
-        checkpoint,
-        receiptFor(checkpoint, 'absent_exact', absentObserved),
-      ),
-    ).not.toThrow()
+  it('accepts the truthful exact-absence nomination against an empty remote', () => {
+    const checkpoint = emptyRemoteCheckpoint()
+    const receipt = receiptFor(
+      checkpoint,
+      [{ index: 0, classification: 'absent_exact', observed: OBSERVED(250, 'absent') }],
+      {
+        operationScope: {
+          corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+          reviewedForOperation: 0,
+          eventsForOperation: 0,
+          foreignReviewed: 0,
+        },
+      },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, receipt)).not.toThrow()
+  })
+
+  it.each([
+    [
+      'a string batch index',
+      (receipt: Record<string, unknown>) => {
+        ;(receipt.batches as Array<Record<string, unknown>>)[0]!.index = '2'
+      },
+      /non-negative safe integer/u,
+    ],
+    [
+      'a fractional batch index',
+      (receipt: Record<string, unknown>) => {
+        ;(receipt.batches as Array<Record<string, unknown>>)[0]!.index = 2.5
+      },
+      /non-negative safe integer/u,
+    ],
+    [
+      'an invalid observedAt timestamp',
+      (receipt: Record<string, unknown>) => {
+        receipt.observedAt = 'not-a-timestamp'
+      },
+      /ISO-compatible timestamp/u,
+    ],
+    [
+      'a missing field',
+      (receipt: Record<string, unknown>) => {
+        delete receipt.observedAt
+      },
+      /missing or unexpected fields/u,
+    ],
+    [
+      'an extra field',
+      (receipt: Record<string, unknown>) => {
+        receipt.note = 'trust me'
+      },
+      /missing or unexpected fields/u,
+    ],
+    [
+      'a string record count',
+      (receipt: Record<string, unknown>) => {
+        const observed = (receipt.batches as Array<Record<string, unknown>>)[0]!.observed as Record<
+          string,
+          unknown
+        >
+        observed.recordCount = '130'
+      },
+      /non-negative safe integer/u,
+    ],
+    [
+      'a negative count',
+      (receipt: Record<string, unknown>) => {
+        const observed = (receipt.batches as Array<Record<string, unknown>>)[0]!.observed as Record<
+          string,
+          unknown
+        >
+        observed.driftedRecords = -1
+      },
+      /non-negative safe integer/u,
+    ],
+    [
+      'an unknown classification',
+      (receipt: Record<string, unknown>) => {
+        ;(receipt.batches as Array<Record<string, unknown>>)[0]!.classification = 'looks_fine'
+      },
+      /unknown classification/u,
+    ],
+    [
+      'an unknown causal mode',
+      (receipt: Record<string, unknown>) => {
+        ;(receipt.batches as Array<Record<string, unknown>>)[0]!.requestMode = 'replayed'
+      },
+      /unknown request causal mode/u,
+    ],
+    [
+      'zero observed records under a nonzero exact claim',
+      (receipt: Record<string, unknown>) => {
+        const observed = (receipt.batches as Array<Record<string, unknown>>)[0]!.observed as Record<
+          string,
+          unknown
+        >
+        observed.recordCount = 0
+      },
+      /does not equal the expected record count|account for every record/u,
+    ],
+    [
+      'impossible count arithmetic',
+      (receipt: Record<string, unknown>) => {
+        const observed = (receipt.batches as Array<Record<string, unknown>>)[0]!.observed as Record<
+          string,
+          unknown
+        >
+        observed.absentRecords = 40
+      },
+      /account for every record exactly once/u,
+    ],
+    [
+      'more events than records',
+      (receipt: Record<string, unknown>) => {
+        const observed = (receipt.batches as Array<Record<string, unknown>>)[0]!.observed as Record<
+          string,
+          unknown
+        >
+        observed.eventsPresent = 131
+      },
+      /event count is impossible|internally inconsistent/u,
+    ],
+    [
+      'a malformed observation checksum',
+      (receipt: Record<string, unknown>) => {
+        ;(receipt.batches as Array<Record<string, unknown>>)[0]!.observationChecksum = 'zzz'
+      },
+      /SHA-256 digest/u,
+    ],
+  ])('refuses %s at the schema boundary', (_label, mutate, pattern) => {
+    const checkpoint = lostFinalAckCheckpoint()
+    const receipt = receiptFor(checkpoint, [
+      { index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') },
+    ])
+    mutate(receipt)
+    const body: Record<string, unknown> = { ...receipt }
+    delete body.receiptChecksum
+    const resealed = { ...body, receiptChecksum: sha256(canonicalJson(body)) }
+    expect(() => validateOverlayReconciliationReceipt(resealed)).toThrow(pattern)
+    expect(() => assertReconciliationReceiptConsistent(lostFinalAckCheckpoint(), resealed)).toThrow(
+      pattern,
+    )
   })
 
   it('refuses a semantically false applied_exact claim', () => {
-    const checkpoint = ambiguousCheckpoint()
-    const falseReceipt = receiptFor(checkpoint, 'applied_exact', {
-      recordCount: 630,
-      exactRecords: 0,
-      absentRecords: 0,
-      driftedRecords: 0,
-      inconsistentRecords: 0,
-      eventsPresent: 0,
-    })
+    const checkpoint = lostFinalAckCheckpoint()
+    const falseReceipt = receiptFor(checkpoint, [
+      {
+        index: 2,
+        classification: 'applied_exact',
+        observed: {
+          recordCount: 130,
+          exactRecords: 0,
+          absentRecords: 0,
+          driftedRecords: 0,
+          inconsistentRecords: 0,
+          eventsPresent: 0,
+        },
+      },
+    ])
     expect(() => assertReconciliationReceiptConsistent(checkpoint, falseReceipt)).toThrow(
-      /internally inconsistent/u,
+      /account for every record exactly once|internally inconsistent/u,
     )
-    const mismatchReceipt = receiptFor(checkpoint, 'applied_exact', {
-      ...exactObserved,
-      driftedRecords: 999,
-    })
-    expect(() => assertReconciliationReceiptConsistent(checkpoint, mismatchReceipt)).toThrow(
-      /internally inconsistent/u,
+  })
+
+  it('refuses receipts that misname the checkpointed request identity', () => {
+    const checkpoint = lostFinalAckCheckpoint()
+    const wrongChecksum = receiptFor(checkpoint, [
+      {
+        index: 2,
+        classification: 'applied_exact',
+        observed: OBSERVED(130, 'exact'),
+        requestChecksum: sha256('someone-elses-request'),
+      },
+    ])
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, wrongChecksum)).toThrow(
+      /does not name the checkpointed request identity/u,
+    )
+
+    const wrongMode = receiptFor(checkpoint, [
+      {
+        index: 2,
+        classification: 'applied_exact',
+        observed: OBSERVED(130, 'exact'),
+        requestMode: 'replay',
+      },
+    ])
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, wrongMode)).toThrow(
+      /contradicts the request causal mode/u,
+    )
+
+    const wrongCount = receiptFor(checkpoint, [
+      {
+        index: 2,
+        classification: 'applied_exact',
+        observed: OBSERVED(129, 'exact'),
+        expectedRecordCount: 129,
+      },
+    ])
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, wrongCount)).toThrow(
+      /does not name the checkpointed record count/u,
+    )
+
+    const notUnresolved = receiptFor(checkpoint, [
+      { index: 0, classification: 'applied_exact', observed: OBSERVED(250, 'exact') },
+    ])
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, notUnresolved)).toThrow(
+      /not unresolved/u,
+    )
+  })
+
+  it('refuses an operation scope that cannot account for every article and event', () => {
+    const checkpoint = lostFinalAckCheckpoint()
+    // 631 events for an expected 630: the extra event is unaccountable, whatever the
+    // per-record reads say.
+    const extraEvent = receiptFor(
+      checkpoint,
+      [{ index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') }],
+      {
+        operationScope: {
+          corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+          reviewedForOperation: 630,
+          eventsForOperation: 631,
+          foreignReviewed: 0,
+        },
+      },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, extraEvent)).toThrow(
+      /does not account for every article and event exactly/u,
+    )
+
+    const extraArticle = receiptFor(
+      checkpoint,
+      [{ index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') }],
+      {
+        operationScope: {
+          corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+          reviewedForOperation: 631,
+          eventsForOperation: 631,
+          foreignReviewed: 0,
+        },
+      },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, extraArticle)).toThrow(
+      /does not account for every article and event exactly/u,
+    )
+
+    const missingScope = receiptFor(
+      checkpoint,
+      [{ index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') }],
+      { operationScope: null },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, missingScope)).toThrow(
+      /omits the operation scope|carries no operation-scope observation/u,
+    )
+  })
+
+  it('refuses exact absence claimed for a replay-mode batch', () => {
+    const checkpoint = lostFinalAckCheckpoint('replay')
+    const receipt = receiptFor(
+      checkpoint,
+      [{ index: 2, classification: 'absent_exact', observed: OBSERVED(130, 'absent') }],
+      {
+        operationScope: {
+          corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+          reviewedForOperation: 630,
+          eventsForOperation: 630,
+          foreignReviewed: 0,
+        },
+      },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, receipt)).toThrow(
+      /completed operation's records cannot be exactly absent/u,
     )
   })
 
   it('stops on drift, mixture, incomplete observation, and registry inconsistency', () => {
-    const checkpoint = ambiguousCheckpoint()
-    for (const classification of ['partial', 'mixed', 'drifted', 'ambiguous']) {
+    const checkpoint = lostFinalAckCheckpoint()
+    const cases: Array<[string, Record<string, number>]> = [
+      [
+        'partial',
+        {
+          recordCount: 130,
+          exactRecords: 100,
+          absentRecords: 30,
+          driftedRecords: 0,
+          inconsistentRecords: 0,
+          eventsPresent: 100,
+        },
+      ],
+      [
+        'mixed',
+        {
+          recordCount: 130,
+          exactRecords: 100,
+          absentRecords: 0,
+          driftedRecords: 30,
+          inconsistentRecords: 0,
+          eventsPresent: 100,
+        },
+      ],
+      [
+        'drifted',
+        {
+          recordCount: 130,
+          exactRecords: 0,
+          absentRecords: 0,
+          driftedRecords: 130,
+          inconsistentRecords: 0,
+          eventsPresent: 0,
+        },
+      ],
+      [
+        'ambiguous',
+        {
+          recordCount: 130,
+          exactRecords: 129,
+          absentRecords: 0,
+          driftedRecords: 0,
+          inconsistentRecords: 1,
+          eventsPresent: 129,
+        },
+      ],
+    ]
+    for (const [classification, observed] of cases) {
       expect(() =>
         assertReconciliationReceiptConsistent(
           checkpoint,
-          receiptFor(checkpoint, classification, exactObserved),
+          receiptFor(checkpoint, [{ index: 2, classification, observed }]),
         ),
       ).toThrow(/conflicts with the overlay expectation/u)
     }
     expect(() =>
       assertReconciliationReceiptConsistent(
         checkpoint,
-        receiptFor(checkpoint, 'observation_incomplete', exactObserved),
+        receiptFor(checkpoint, [
+          { index: 2, classification: 'observation_incomplete', observed: OBSERVED(130, 'absent') },
+        ]),
       ),
     ).toThrow(/observation is incomplete/u)
     expect(() =>
       assertReconciliationReceiptConsistent(
         checkpoint,
-        receiptFor(checkpoint, 'applied_exact', exactObserved, false),
+        receiptFor(
+          checkpoint,
+          [{ index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') }],
+          { registryConsistent: false, operationScope: null },
+        ),
       ),
     ).toThrow(/registry inconsistent/u)
   })
 
   it('refuses a receipt bound to a different checkpoint state or operation', () => {
-    const checkpoint = ambiguousCheckpoint()
-    const receipt = receiptFor(checkpoint, 'applied_exact', exactObserved)
-    checkpoint.counters = { applied: 1, alreadyApplied: 0 }
+    const checkpoint = lostFinalAckCheckpoint()
+    const receipt = receiptFor(checkpoint, [
+      { index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') },
+    ])
+    checkpoint.counters = { applied: 250, alreadyApplied: 0 }
+    checkpoint.batches[1]!.stage = {
+      state: 'prepared',
+      submittedAt: null,
+      acknowledgedAt: null,
+      failureCode: null,
+    }
+    checkpoint.batches[1]!.acknowledgementChecksum = null
+    checkpoint.batches[1]!.effects = null
     expect(() => assertReconciliationReceiptConsistent(checkpoint, receipt)).toThrow(
       /different checkpoint state/u,
     )
 
-    const foreign = ambiguousCheckpoint()
-    const foreignReceipt = receiptFor(foreign, 'applied_exact', exactObserved) as {
-      operationId: string
-    }
+    const foreign = lostFinalAckCheckpoint()
+    const foreignReceipt = receiptFor(foreign, [
+      { index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') },
+    ]) as { operationId: string }
     foreignReceipt.operationId = '00000000-0000-8000-8000-000000000000'
     expect(() => assertReconciliationReceiptConsistent(foreign, foreignReceipt)).toThrow(
       /different operation|checksum does not match/u,
     )
   })
 
-  it('re-observes before advancing a stage and refuses a stale receipt', async () => {
+  it('re-observes before advancing and refuses stale or fabricated nominations', async () => {
+    // Remote state: nothing applied. A self-checksummed receipt claiming applied_exact is
+    // schema-valid and internally consistent, but the fresh observation refuses it.
     const transport = new ScriptedTransport()
-    // Remote state: nothing applied. A receipt claiming applied_exact is internally
-    // consistent in shape but stale against the fresh observation.
-    const checkpoint = ambiguousCheckpoint()
-    const staleReceipt = receiptFor(checkpoint, 'applied_exact', exactObserved)
+    const staleCheckpoint = emptyRemoteCheckpoint()
+    const fabricated = receiptFor(
+      staleCheckpoint,
+      [{ index: 0, classification: 'applied_exact', observed: OBSERVED(250, 'exact') }],
+      {
+        operationScope: {
+          corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+          reviewedForOperation: 250,
+          eventsForOperation: 250,
+          foreignReviewed: 0,
+        },
+      },
+    )
     await expect(
       applyReconciliationWithReobservation(
         transport,
         fixtureSet,
-        checkpoint,
-        staleReceipt,
-        false,
+        staleCheckpoint,
+        fabricated,
         () => new Date(REVIEWED_AT),
       ),
-    ).rejects.toThrow(/receipt is stale/u)
-    expect(checkpoint.batches[0]?.stage.state).toBe('ambiguous')
+    ).rejects.toThrow(/stale/u)
+    expect(staleCheckpoint.batches[0]?.stage.state).toBe('ambiguous')
 
     // A truthful absent_exact nomination is confirmed by the fresh observation and
     // re-prepares the batch.
-    const absentCheckpoint = ambiguousCheckpoint()
-    const absentReceipt = receiptFor(absentCheckpoint, 'absent_exact', absentObserved)
+    const absentCheckpoint = emptyRemoteCheckpoint()
+    const absentReceipt = receiptFor(
+      absentCheckpoint,
+      [{ index: 0, classification: 'absent_exact', observed: OBSERVED(250, 'absent') }],
+      {
+        operationScope: {
+          corpusArticles: OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+          reviewedForOperation: 0,
+          eventsForOperation: 0,
+          foreignReviewed: 0,
+        },
+      },
+    )
     await applyReconciliationWithReobservation(
       transport,
       fixtureSet,
       absentCheckpoint,
       absentReceipt,
-      false,
       () => new Date(REVIEWED_AT),
     )
     expect(absentCheckpoint.batches[0]?.stage.state).toBe('prepared')
+    expect(absentCheckpoint.counters).toEqual({ applied: 0, alreadyApplied: 0 })
+  })
 
-    // With the remote fully applied, an applied_exact nomination is confirmed and the batch
-    // acknowledges through reconciliation evidence with mode-decided effects.
-    transport.seedCompletedOperation()
-    const appliedCheckpoint = ambiguousCheckpoint()
-    const appliedReceipt = receiptFor(appliedCheckpoint, 'applied_exact', exactObserved)
-    await applyReconciliationWithReobservation(
-      transport,
-      fixtureSet,
-      appliedCheckpoint,
-      appliedReceipt,
-      true,
-      () => new Date(REVIEWED_AT),
-    )
-    expect(appliedCheckpoint.batches[0]?.stage.state).toBe('acknowledged')
-    expect(appliedCheckpoint.batches[0]?.reconciliationChecksum).toMatch(/^[a-f0-9]{64}$/u)
-    expect(appliedCheckpoint.batches[0]?.effects).toEqual({ applied: 0, alreadyApplied: 630 })
-    expect(appliedCheckpoint.counters).toEqual({ applied: 0, alreadyApplied: 630 })
+  it('classifies an operation with 631 events as drifted, never applied_exact', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'overlay-631-test-'))
+    try {
+      const transport = new ScriptedTransport()
+      transport.seedCompletedOperation()
+      transport.extraEventsForOperation = 1 // eventsForOperation = 631
+      const checkpoint = lostFinalAckCheckpoint()
+      const checkpointPath = join(directory, 'checkpoint.json')
+      await writeOverlayCheckpoint(checkpointPath, checkpoint)
+
+      const reconciled = await runReconcile(dependencies(transport), { checkpointPath })
+      expect(reconciled.receipt.operationScope).toMatchObject({
+        reviewedForOperation: 630,
+        eventsForOperation: 631,
+      })
+      expect(reconciled.receipt.batches[0]?.classification).toBe('drifted')
+      await expect(
+        applyReconciliationWithReobservation(
+          transport,
+          fixtureSet,
+          checkpoint,
+          reconciled.receipt,
+          () => new Date(REVIEWED_AT),
+        ),
+      ).rejects.toThrow(/conflicts with the overlay expectation/u)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('classifies an extra reviewed article under the operation as drifted', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'overlay-extra-article-test-'))
+    try {
+      const transport = new ScriptedTransport()
+      transport.seedCompletedOperation()
+      transport.extraReviewedForOperation = 1 // a 631st article under the operation id
+      transport.extraEventsForOperation = 1 // with its fabricated event
+      const checkpoint = lostFinalAckCheckpoint()
+      const checkpointPath = join(directory, 'checkpoint.json')
+      await writeOverlayCheckpoint(checkpointPath, checkpoint)
+
+      const reconciled = await runReconcile(dependencies(transport), { checkpointPath })
+      expect(reconciled.receipt.batches[0]?.classification).toBe('drifted')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('classifies a missing event as ambiguous, never applied_exact', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'overlay-missing-event-test-'))
+    try {
+      const transport = new ScriptedTransport()
+      transport.seedCompletedOperation()
+      const finalRecord = fixtureSet.records[629]!
+      transport.appliedEvents.delete(reviewedRecordEventId(fixtureSet, finalRecord))
+      const checkpoint = lostFinalAckCheckpoint()
+      const checkpointPath = join(directory, 'checkpoint.json')
+      await writeOverlayCheckpoint(checkpointPath, checkpoint)
+
+      const reconciled = await runReconcile(dependencies(transport), { checkpointPath })
+      expect(reconciled.receipt.batches[0]?.classification).toBe('ambiguous')
+      expect(reconciled.receipt.batches[0]?.observed.inconsistentRecords).toBeGreaterThan(0)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('a receipt is evidence only: remote movement after reconcile refuses the fold', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'overlay-stale-fold-test-'))
+    try {
+      const transport = new ScriptedTransport()
+      transport.seedCompletedOperation()
+      const checkpoint = lostFinalAckCheckpoint()
+      const checkpointPath = join(directory, 'checkpoint.json')
+      await writeOverlayCheckpoint(checkpointPath, checkpoint)
+
+      const reconciled = await runReconcile(dependencies(transport), { checkpointPath })
+      expect(reconciled.receipt.batches[0]?.classification).toBe('applied_exact')
+
+      // The destination moves between reconcile and resume.
+      const victim = fixtureSet.records[629]!
+      transport.appliedArticles.delete(victim.pmid)
+      transport.appliedEvents.delete(reviewedRecordEventId(fixtureSet, victim))
+
+      await expect(
+        applyReconciliationWithReobservation(
+          transport,
+          fixtureSet,
+          checkpoint,
+          reconciled.receipt,
+          () => new Date(REVIEWED_AT),
+        ),
+      ).rejects.toThrow(/stale/u)
+      expect(checkpoint.batches[2]?.stage.state).toBe('ambiguous')
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 })

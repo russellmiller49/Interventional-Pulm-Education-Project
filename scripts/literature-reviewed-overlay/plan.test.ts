@@ -22,7 +22,7 @@ describe('overlay planning', () => {
   const set = fixtureSet()
 
   it('tiles 630 records into bounded batches with one final batch', () => {
-    const plan = buildOverlayPlan(set, REVIEWED_AT, 90)
+    const plan = buildOverlayPlan(set, REVIEWED_AT, 90, 'fresh')
     expect(plan.batches).toHaveLength(7)
     expect(plan.batches.at(-1)?.finalBatch).toBe(true)
     expect(plan.batches.filter((batch) => batch.finalBatch)).toHaveLength(1)
@@ -30,14 +30,38 @@ describe('overlay planning', () => {
     expect(plan.batches.at(-1)).toMatchObject({ startOrdinal: 541, endOrdinal: 630 })
   })
 
-  it('refuses out-of-bounds batch limits', () => {
+  it('refuses out-of-bounds batch limits and unknown request modes', () => {
     for (const bad of [0, -1, 251, 1.5, Number.NaN]) {
       expect(() => assertRecordBatchLimit(bad)).toThrow(/between 1 and 250/u)
     }
+    for (const badMode of ['replayed', 'FRESH', '', null, undefined, 7]) {
+      expect(() => buildOverlayPlan(set, REVIEWED_AT, 90, badMode as unknown as 'fresh')).toThrow(
+        /exactly fresh or replay/u,
+      )
+    }
+  })
+
+  it('carries the causal mode into every descriptor and the request body', () => {
+    const freshPlan = buildOverlayPlan(set, REVIEWED_AT, 250, 'fresh')
+    const replayPlan = buildOverlayPlan(set, REVIEWED_AT, 250, 'replay')
+    expect(freshPlan.batches.every((batch) => batch.requestMode === 'fresh')).toBe(true)
+    expect(replayPlan.batches.every((batch) => batch.requestMode === 'replay')).toBe(true)
+
+    const freshRequest = buildBatchRequest(set, REVIEWED_AT, freshPlan.batches[0]!)
+    const replayRequest = buildBatchRequest(set, REVIEWED_AT, replayPlan.batches[0]!)
+    expect(JSON.parse(freshRequest.body)).toMatchObject({
+      p_operation: { causalMode: 'fresh' },
+    })
+    expect(JSON.parse(replayRequest.body)).toMatchObject({
+      p_operation: { causalMode: 'replay' },
+    })
+    // The mode is part of the request identity: the same batch in the other causal context is
+    // a different request with a different checksum.
+    expect(freshRequest.checksum).not.toBe(replayRequest.checksum)
   })
 
   it('builds byte-identical requests for the same inputs', () => {
-    const plan = buildOverlayPlan(set, REVIEWED_AT, 90)
+    const plan = buildOverlayPlan(set, REVIEWED_AT, 90, 'fresh')
     const first = buildBatchRequest(set, REVIEWED_AT, plan.batches[2]!)
     const second = buildBatchRequest(set, REVIEWED_AT, plan.batches[2]!)
     expect(first.checksum).toBe(second.checksum)
@@ -54,6 +78,7 @@ describe('overlay planning', () => {
         endOrdinal: 90,
         recordCount: 89,
         finalBatch: false,
+        requestMode: 'fresh',
       }),
     ).toThrow(/does not tile/u)
     expect(() =>
@@ -63,12 +88,13 @@ describe('overlay planning', () => {
         endOrdinal: 90,
         recordCount: 90,
         finalBatch: true,
+        requestMode: 'fresh',
       }),
     ).toThrow(/mislabels the final batch/u)
   })
 
   it('derives checkpoint batches whose checksums match rebuilt requests', () => {
-    const plan = buildOverlayPlan(set, REVIEWED_AT, 250)
+    const plan = buildOverlayPlan(set, REVIEWED_AT, 250, 'fresh')
     const batches = checkpointBatchesForPlan(set, plan)
     expect(batches).toHaveLength(3)
     for (const batch of batches) {
@@ -78,9 +104,11 @@ describe('overlay planning', () => {
         endOrdinal: batch.endOrdinal,
         recordCount: batch.recordCount,
         finalBatch: batch.finalBatch,
+        requestMode: batch.requestMode,
       })
       expect(rebuilt.checksum).toBe(batch.requestChecksum)
       expect(batch.stage.state).toBe('prepared')
+      expect(batch.requestMode).toBe('fresh')
     }
   })
 })
@@ -90,22 +118,23 @@ describe('acknowledgementMatches', () => {
     operationId: 'op',
     recordCount: 3,
     finalBatch: false,
-    mode: 'in_progress' as const,
+    requestMode: 'fresh' as const,
   }
   const valid = {
     operationId: 'op',
     recordCount: 3,
-    applied: 2,
-    alreadyApplied: 1,
-    dispositions: ['applied', 'applied', 'already_applied'],
+    causalMode: 'fresh',
+    applied: 3,
+    alreadyApplied: 0,
+    dispositions: ['applied', 'applied', 'applied'],
     operationStatus: 'started',
   }
 
   it('accepts an exact acknowledgement in its context', () => {
     expect(acknowledgementMatches(expectation, valid)).toEqual({
       matches: true,
-      applied: 2,
-      alreadyApplied: 1,
+      applied: 3,
+      alreadyApplied: 0,
     })
   })
 
@@ -113,7 +142,21 @@ describe('acknowledgementMatches', () => {
     ['not an object', 'nope', 'acknowledgement_not_object'],
     ['wrong operation', { ...valid, operationId: 'other' }, 'acknowledgement_operation_mismatch'],
     ['wrong count', { ...valid, recordCount: 4 }, 'acknowledgement_record_count_mismatch'],
-    ['invalid effects', { ...valid, applied: 3 }, 'acknowledgement_effect_counts_invalid'],
+    [
+      'missing causal mode',
+      (() => {
+        const rest: Record<string, unknown> = { ...valid }
+        delete rest.causalMode
+        return rest
+      })(),
+      'acknowledgement_causal_mode_mismatch',
+    ],
+    [
+      'opposite causal mode',
+      { ...valid, causalMode: 'replay' },
+      'acknowledgement_causal_mode_mismatch',
+    ],
+    ['invalid effects', { ...valid, applied: 4 }, 'acknowledgement_effect_counts_invalid'],
     [
       'short dispositions',
       { ...valid, dispositions: ['applied', 'applied'] },
@@ -126,7 +169,7 @@ describe('acknowledgementMatches', () => {
     ],
     [
       'totals mismatch',
-      { ...valid, dispositions: ['applied', 'already_applied', 'already_applied'] },
+      { ...valid, dispositions: ['applied', 'applied', 'already_applied'] },
       'acknowledgement_disposition_totals_mismatch',
     ],
     [
@@ -138,12 +181,35 @@ describe('acknowledgementMatches', () => {
     expect(acknowledgementMatches(expectation, body)).toEqual({ matches: false, reason })
   })
 
+  it('refuses a fresh-context acknowledgement claiming already-applied records', () => {
+    // A fresh submission only ever targets records the operator proved untouched, so an
+    // already_applied answer is a causal contradiction — the exact vector that once let a
+    // lost final acknowledgement be re-reported as a replay.
+    expect(
+      acknowledgementMatches(expectation, {
+        ...valid,
+        applied: 2,
+        alreadyApplied: 1,
+        dispositions: ['applied', 'applied', 'already_applied'],
+      }),
+    ).toEqual({ matches: false, reason: 'acknowledgement_fresh_records_already_applied' })
+    expect(
+      acknowledgementMatches(expectation, {
+        ...valid,
+        applied: 0,
+        alreadyApplied: 3,
+        dispositions: ['already_applied', 'already_applied', 'already_applied'],
+        operationStatus: 'completed',
+      }),
+    ).toEqual({ matches: false, reason: 'acknowledgement_fresh_records_already_applied' })
+  })
+
   it('binds the operation status to the batch context, not a generic either-or', () => {
-    // A non-final in-progress batch must not be acknowledged as completed…
+    // A non-final fresh batch must not be acknowledged as completed…
     expect(acknowledgementMatches(expectation, { ...valid, operationStatus: 'completed' })).toEqual(
       { matches: false, reason: 'acknowledgement_operation_status_invalid' },
     )
-    // …and the final in-progress batch must not remain started.
+    // …and the final fresh batch must not remain started.
     expect(
       acknowledgementMatches(
         { ...expectation, finalBatch: true },
@@ -159,12 +225,13 @@ describe('acknowledgementMatches', () => {
   })
 
   it('requires a completed-operation replay to apply nothing and stay completed', () => {
-    const replayExpectation = { ...expectation, mode: 'replay_completed' as const }
+    const replayExpectation = { ...expectation, requestMode: 'replay' as const }
+    const replayAck = { ...valid, causalMode: 'replay' }
     expect(
-      acknowledgementMatches(replayExpectation, { ...valid, operationStatus: 'completed' }),
+      acknowledgementMatches(replayExpectation, { ...replayAck, operationStatus: 'completed' }),
     ).toEqual({ matches: false, reason: 'acknowledgement_replay_applied_fresh_records' })
     const pureReplay = {
-      ...valid,
+      ...replayAck,
       applied: 0,
       alreadyApplied: 3,
       dispositions: ['already_applied', 'already_applied', 'already_applied'],
@@ -178,5 +245,9 @@ describe('acknowledgementMatches', () => {
     expect(
       acknowledgementMatches(replayExpectation, { ...pureReplay, operationStatus: 'started' }),
     ).toEqual({ matches: false, reason: 'acknowledgement_replay_status_invalid' })
+    // A replay expectation refuses an acknowledgement echoed in the fresh vocabulary.
+    expect(
+      acknowledgementMatches(replayExpectation, { ...pureReplay, causalMode: 'fresh' }),
+    ).toEqual({ matches: false, reason: 'acknowledgement_causal_mode_mismatch' })
   })
 })
