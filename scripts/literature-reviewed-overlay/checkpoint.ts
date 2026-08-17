@@ -600,8 +600,9 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
   for (const checksum of receipt.batchRequestChecksums) {
     assertSha256Digest(checksum, 'receipt.batchRequestChecksums[]')
   }
-  const { receiptChecksum: _ignored, ...body } = receipt as unknown as OverlayReceipt
-  if (receipt.receiptChecksum !== overlayReceiptChecksum(body)) {
+  const body = { ...(receipt as unknown as OverlayReceipt) } as Partial<OverlayReceipt>
+  delete body.receiptChecksum
+  if (receipt.receiptChecksum !== overlayReceiptChecksum(body as OverlayReceiptBody)) {
     throw new OverlayCheckpointIntegrityError('receipt.receiptChecksum does not match.')
   }
   assertNoSensitiveOverlayMaterial(receipt, 'receipt')

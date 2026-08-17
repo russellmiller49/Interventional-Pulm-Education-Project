@@ -122,7 +122,15 @@ describe('buildReviewedSet', () => {
 })
 
 describe('reduceParsedArtifact', () => {
-  function parsedFixture(rowCount = 630) {
+  function parsedFixture(rowCount = 630): {
+    artifactSha256: string
+    rows: Array<{
+      csvRecordNumber: number
+      identity: { pmid: string }
+      physicianReviewCohort: string
+      projection: { relevanceLabel: string }
+    }>
+  } {
     const truth = buildFixtureTruth()
     return {
       artifactSha256: truth.artifact.artifactSha256,

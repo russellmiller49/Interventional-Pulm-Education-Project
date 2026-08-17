@@ -44,7 +44,7 @@ const fixtureSet: ReviewedSet = buildReviewedSet(
  */
 class ScriptedTransport implements OverlayTransport {
   corpus = new Set(truth.cohortPayloads.map((payload) => payload.pmid as string))
-  corpusTotal = OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT
+  corpusTotal: number = OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT
   foreignReviewed = 0
   schemaPresent = true
   operationRow: Record<string, unknown> | null = null

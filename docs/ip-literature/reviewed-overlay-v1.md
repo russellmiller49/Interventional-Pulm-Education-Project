@@ -84,7 +84,8 @@ carrying the full reviewed payload:
   "reviewed_enrichment_provenance": "physician_confirmed",
   "reviewed_source_identity": "…", // constant, includes the artifact SHA-256
   "reviewed_operation_id": "…",
-  "review_head_revision": 1, // 2 for the two corrected records, see below
+  "persisted_head_revision": null, // 1 for the seven workspace heads, 2 for the corrections
+  "note_correction": null, // checksum-bound lineage object on the two corrected records
 }
 ```
 
@@ -106,9 +107,9 @@ review, and their persisted notes are authoritative over the artifact notes
 Physician notes are coordinator-only and are **not** imported by this overlay. The corrections
 are preserved without disclosing their text:
 
-- the source projection asserts, at validate time, that these two items' current heads are
-  exactly `revision = 2` while every cohort item is `completed` — the corrections still exist
-  and are still the effective truth;
+- the source projection asserts, at validate time, that these two items' persisted heads are
+  exactly `revision = 2`, effective, and standard — the corrections still exist and are still
+  the effective persisted truth;
 - their events and `after_value` payloads carry `review_head_revision: 2` plus a
   `note_correction` object naming the amended-authorization SHA-256
   (`b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a`), the per-record bound
@@ -130,25 +131,35 @@ are preserved without disclosing their text:
 
 ## Source authority
 
-Two authorities, cross-checked, both required:
+Two authorities, cross-checked, both required. The observed division (verified against the
+real local database and the real artifact during preparation, by guarded read-only queries and
+aggregate-only probes):
 
 1. **The protected local gold database** (fixed Docker container
-   `supabase_db_ip-literature-local`, published port 55322) is authoritative for **persisted
-   review state**: cohort membership, current head relevance labels, head revisions, and the two
-   corrections. It is read through the existing guarded boundary
-   (`streamGuardedReadOnlyQuery` in `scripts/literature-production-ingest/source.ts`): Docker
-   context/endpoint/container/image/port guards, `repeatable read read only`, in-band identity
-   attestation, terminal `rollback`, stderr discarded.
+   `supabase_db_ip-literature-local`, published port 55322) is authoritative for **cohort
+   membership and persisted review state**. It holds persisted review heads for nine cohort
+   items — seven at revision 1 and the two checksum-bound corrections at revision 2 — while the
+   remaining 621 items are `pending` with no persisted review row (the V2 import contract
+   remains unexecuted; operations/actions/imports/compensations are 0/0/0/0). It is read
+   through the existing guarded boundary (`streamGuardedReadOnlyQuery` in
+   `scripts/literature-production-ingest/source.ts`): Docker context/endpoint/container/image/
+   port guards, `repeatable read read only`, in-band identity attestation, terminal
+   `rollback`, stderr discarded.
 
 2. **The finalized 630-row V3 artifact** (SHA-256
    `961c19f4ea1c6a82e061369fd33d927e804360f10781729f8049073a4b6d0f59`) is authoritative for
-   **source values to be imported** — here, per-record enrichment provenance. Its bytes are
-   hashed and compared to the pinned constant **and** to the owner's environment pin before one
-   byte is parsed, then parsed by the existing protected
-   `parseFinalizedGoldImportArtifact`, which re-verifies the SHA, requires the development
-   split literal on every row as a positive schema constant, and rejects duplicates. The
-   artifact is handled as coordinator-only: no row content reaches stdout, logs, checkpoints,
-   receipts, or errors — aggregates only.
+   **the values to be imported**: every record's relevance class and enrichment provenance,
+   exactly as the field-lineage contract assigns it. Its bytes are hashed and compared to the
+   pinned constant **and** to the owner's environment pin before one byte is parsed, then
+   parsed by the existing protected `parseFinalizedGoldImportArtifact`, which re-verifies the
+   SHA, requires the development split literal on every row as a positive schema constant, and
+   rejects duplicates. The artifact is handled as coordinator-only: no row content reaches
+   stdout, logs, checkpoints, receipts, or errors — aggregates only.
+
+Where the two overlap — the nine persisted heads — they must agree exactly on relevance
+(verified: all nine agree), and the imported per-record lineage records each record's
+persisted head revision (`null` for the 621 artifact-only records, `1` for the seven workspace
+heads, `2` for the two corrections).
 
 ### Positive development-cohort authentication
 
@@ -173,17 +184,20 @@ construction, each row's split authenticated positively by the parser's schema l
 
 ### Cross-checks (every failure stops the operator)
 
-- database cohort count is exactly 630, PMIDs unique, every item `completed` with a current head;
+- database cohort count is exactly 630, PMIDs unique, every item in a stable state — `pending`
+  with no head fields, or `completed` with an effective, standard head (an `in_progress` or
+  `return_later` item, a withdrawn head, or an import/compensation-kind head refuses);
 - artifact row count exactly 630, identities unique, SHA-256 exactly the pin;
 - database PMID set equals artifact PMID set exactly (compared as sets — missing and extra rows
   are distinguished and both fatal);
-- per-PMID database head `relevance_label` equals artifact `physician_final_label`;
+- every persisted database head's `relevance_label` equals the artifact's
+  `physician_final_label` for that PMID;
 - class counts exactly `{include_core: 283, include_adjacent: 75, exclude: 272}`, zero
   `uncertain`, relevant total exactly 358;
 - enrichment-provenance counts exactly `{physician_confirmed: 192, physician_modified: 133,
 qc_accepted: 305}` — see below;
-- the two corrected PMIDs have head revision exactly 2; every event/payload lineage claim is
-  derived from the observed head, not assumed;
+- the two corrected PMIDs have persisted head revision exactly 2; every payload lineage claim
+  is derived from the observed head, not assumed;
 - every one of the 630 PMIDs already exists in the production corpus (membership verified
   read-only before mutation; the overlay can create no article).
 
@@ -254,7 +268,10 @@ automatic retry, no failed-status write, no delete, no compensating mutation.
   per-record state and reports an idempotent replay, mutating nothing; a rerun of a partially
   applied operation resumes only after reconciliation, and each already-applied record returns
   `already_applied` from the RPC without inserting a second event.
-- **`reviewed_at`** is generated once at plan time, persisted in the checkpoint, and reused
+- **`reviewed_at`** is minted once for a genuinely new operation, persisted in the checkpoint,
+  and adopted from the registered remote operation row when the deterministic operation
+  already exists (so a from-scratch replay after lost local state converges on the recorded
+  identity — a property the disposable rehearsal proves), and it is reused
   verbatim on resume, so a resumed operation cannot fork the current-state timestamp.
 - The RPC accepts a record only in one of two states: exactly unreviewed (fresh application) or
   exactly in the target reviewed state with the deterministic event present (replay). Anything
@@ -319,6 +336,30 @@ For the later UI package (not implemented here):
   for the two corrected records, `note_correction` lineage suitable for an audit view;
 - reads should go through a new `reviewed_read`-style operation in the capability allowlist —
   the current `LITERATURE_ACTIVATED_OPERATIONS` does not change in this phase.
+
+## Preparation evidence (2026-08-16)
+
+What this preparation session proved, without any remote write:
+
+- **Real-source validation, read-only.** The guarded positive-selection projection ran against
+  the protected local database (repeatable-read read-only, terminal rollback) and the finalized
+  artifact was located, byte-verified against the pin, and parsed through the protected
+  boundary. Aggregate results: 630 cohort items = 630 artifact records with identical PMID
+  sets; class counts exactly 283 / 75 / 272; enrichment-provenance counts exactly
+  **192 physician-confirmed / 133 physician-modified / 305 QC-accepted** (the owner-expected
+  triple matches the authoritative development-only projection exactly); nine persisted heads,
+  all agreeing with the artifact on relevance; the two corrections at revision 2.
+- **Disposable end-to-end rehearsal, 16 scenarios.** A throwaway Supabase-image PostgreSQL 17
+  container (no published port) received the foundation migration, the additive proposal, and
+  a synthetic 132,350-row corpus; the real engine then proved: schema-probe fail-closed on a
+  foundation-only database, corpus-absent refusal before any mutation, confirmation-flag
+  refusal, confirmed-rejection rollback (a poisoned batch leaves exactly the prior batches'
+  events), lost-acknowledgement ambiguity with resume blocked until read-only reconciliation,
+  reconciliation classifying exact application, resumed completion at exactly 630 events with
+  no duplicate history, correction lineage present in production history, exact verification,
+  append-only trigger enforcement, idempotent from-scratch replay (630 events before and
+  after), refusal to resume a completed operation, and drift detection by verify.
+- **115 unit and adversarial tests** across 11 suites, self-contained and synthetic.
 
 ## Relationship to the protected import contracts
 
