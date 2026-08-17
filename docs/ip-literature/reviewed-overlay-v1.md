@@ -353,11 +353,14 @@ What this preparation session proved, without any remote write:
 
   ```text
   projection digest  6bdc086aa8a57a14fe60ce4c25dc43c28dc7d339712aed193f012ded890b8ff7
-  operation id       93245053-7bb3-853c-926d-8c05a1c58a32
+  operation id       955eecb4-4ef9-8f09-8aa9-b50890c471c5
   ```
 
   A future owner authorization that pins this projection digest names exactly this reviewed
-  truth; any drift in either authority changes the digest and refuses the pin.
+  truth; any drift in either authority changes the digest and refuses the pin. (The operation
+  id shown is the tier-1 derivation — engine 1.1.0, which binds the frozen curation reason
+  into the operation identity; the projection digest is unchanged from the first pass, and the
+  corrected `validate` re-verified both against the real authorities read-only on 2026-08-17.)
 
 - **Disposable end-to-end rehearsal, 16 scenarios.** A throwaway Supabase-image PostgreSQL 17
   container (no published port) received the foundation migration, the additive proposal, and
