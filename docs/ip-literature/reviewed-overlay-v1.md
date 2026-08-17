@@ -341,14 +341,24 @@ For the later UI package (not implemented here):
 
 What this preparation session proved, without any remote write:
 
-- **Real-source validation, read-only.** The guarded positive-selection projection ran against
-  the protected local database (repeatable-read read-only, terminal rollback) and the finalized
-  artifact was located, byte-verified against the pin, and parsed through the protected
-  boundary. Aggregate results: 630 cohort items = 630 artifact records with identical PMID
-  sets; class counts exactly 283 / 75 / 272; enrichment-provenance counts exactly
-  **192 physician-confirmed / 133 physician-modified / 305 QC-accepted** (the owner-expected
-  triple matches the authoritative development-only projection exactly); nine persisted heads,
-  all agreeing with the artifact on relevance; the two corrections at revision 2.
+- **Real-source validation, read-only.** The operator's own `validate` command ran against the
+  protected local database (guarded boundary, repeatable-read read-only, terminal rollback)
+  and the located finalized artifact (byte-verified against the pin, parsed through the
+  protected boundary). Aggregate results: 630 cohort items = 630 artifact records with
+  identical PMID sets; class counts exactly 283 / 75 / 272; enrichment-provenance counts
+  exactly **192 physician-confirmed / 133 physician-modified / 305 QC-accepted** (the
+  owner-expected triple matches the authoritative development-only projection exactly); nine
+  persisted heads, all agreeing with the artifact on relevance; the two corrections at
+  revision 2. The derived identity of this exact truth:
+
+  ```text
+  projection digest  6bdc086aa8a57a14fe60ce4c25dc43c28dc7d339712aed193f012ded890b8ff7
+  operation id       93245053-7bb3-853c-926d-8c05a1c58a32
+  ```
+
+  A future owner authorization that pins this projection digest names exactly this reviewed
+  truth; any drift in either authority changes the digest and refuses the pin.
+
 - **Disposable end-to-end rehearsal, 16 scenarios.** A throwaway Supabase-image PostgreSQL 17
   container (no published port) received the foundation migration, the additive proposal, and
   a synthetic 132,350-row corpus; the real engine then proved: schema-probe fail-closed on a
