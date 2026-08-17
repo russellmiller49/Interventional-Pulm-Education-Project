@@ -181,6 +181,9 @@ const PHASES = new Set<OverlayPhase>([
 const CREDENTIAL_VALUE_PATTERN =
   /(?:sb_(?:secret|publishable)_[A-Za-z0-9._-]+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|bearer\s+\S+)/iu
 
+/** The canonical `Date.toISOString()` rendering — the only form a completion instant takes. */
+const CANONICAL_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u
+
 export class OverlayCheckpointIntegrityError extends Error {
   readonly code = 'overlay_checkpoint_integrity_error'
 
@@ -852,6 +855,26 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
 
   validatePhaseStageAgreement(checkpoint.phase as OverlayPhase, stageStates, 'checkpoint')
 
+  // Adjacent-batch chronology: the engine is strictly sequential, so batch N+1 can only be
+  // submitted after batch N acknowledged. Under the sequential stage-prefix model, every
+  // progressed batch after index 0 sits behind an acknowledged predecessor, and its
+  // submission moment cannot precede that predecessor's acknowledgement. Equality is valid —
+  // an acknowledgement and the next submission may share a millisecond.
+  for (let index = 1; index < checkpoint.batches.length; index += 1) {
+    const current = checkpoint.batches[index] as unknown as OverlayCheckpointBatch
+    const previous = checkpoint.batches[index - 1] as unknown as OverlayCheckpointBatch
+    if (
+      current.stage.submittedAt !== null &&
+      previous.stage.state === 'acknowledged' &&
+      previous.stage.acknowledgedAt !== null &&
+      epochOf(current.stage.submittedAt) < epochOf(previous.stage.acknowledgedAt)
+    ) {
+      throw new OverlayCheckpointIntegrityError(
+        `checkpoint.batches[${index}] was submitted before its predecessor acknowledged.`,
+      )
+    }
+  }
+
   // Counters are derived, never asserted: they must equal the sum of acknowledged effects.
   if (counters.applied !== acknowledgedApplied || counters.alreadyApplied !== acknowledgedAlready) {
     throw new OverlayCheckpointIntegrityError(
@@ -1251,9 +1274,17 @@ export function validateOverlayReceiptAgainstCheckpoint(
       'receipt.postObservationChecksum is not the checkpoint completion binding.',
     )
   }
-  if (epochOf(receipt.completedAt) < epochOf(checkpoint.updatedAt)) {
+  // The completion instant is canonical: the completed checkpoint's updatedAt IS the moment
+  // the operation completed, and the receipt must carry exactly that value — byte-for-byte in
+  // canonical Date.toISOString() form, so an earlier moment, a later moment, or an alternate
+  // textual rendering of the same instant are all refused.
+  if (
+    !CANONICAL_TIMESTAMP_PATTERN.test(checkpoint.updatedAt) ||
+    !CANONICAL_TIMESTAMP_PATTERN.test(receipt.completedAt) ||
+    receipt.completedAt !== checkpoint.updatedAt
+  ) {
     throw new OverlayCheckpointIntegrityError(
-      'receipt.completedAt precedes the checkpoint completion write.',
+      'receipt.completedAt is not exactly the canonical checkpoint completion instant.',
     )
   }
 }

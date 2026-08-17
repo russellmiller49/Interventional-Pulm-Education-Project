@@ -1058,7 +1058,9 @@ export async function runApply(
       artifactSha256: set.artifactSha256,
       projectionDigest: set.projectionDigest,
       reviewedAt: checkpoint.reviewedAt,
-      completedAt: deps.now().toISOString(),
+      // The canonical completion instant: the completed checkpoint's updatedAt IS the moment
+      // the operation completed, and the receipt carries exactly that value.
+      completedAt: checkpoint.updatedAt,
       counts: set.counts,
       counters: { ...checkpoint.counters },
       batchRequestChecksums: checkpoint.batches.map((batch) => batch.requestChecksum),
@@ -1530,6 +1532,16 @@ export function assertReconciliationReceiptConsistent(
   }
   if (receipt.checkpointChecksum !== overlayCheckpointChecksum(checkpoint)) {
     throw new Error('The reconciliation receipt was produced against a different checkpoint state.')
+  }
+  // Observation chronology: a receipt evidencing this checkpoint state cannot claim an
+  // observation from before that state was persisted. Equality is valid — the observation
+  // and the checkpoint's last write may share a millisecond. (Fresh re-observation on resume
+  // remains mandatory regardless.)
+  if (Date.parse(receipt.observedAt) < Date.parse(checkpoint.updatedAt)) {
+    throw new Error(
+      'The reconciliation receipt claims an observation from before the checkpoint state it ' +
+        'evidences was persisted.',
+    )
   }
   if (receipt.registryConsistent !== true) {
     throw new Error(

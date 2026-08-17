@@ -853,7 +853,6 @@ describe('verify', () => {
 
 describe('strict reconciliation receipts', () => {
   const CREATED_AT = REVIEWED_AT
-  const LATER = '2026-08-17T00:05:00.000Z'
 
   function lostFinalAckCheckpoint(mode: OverlayRequestMode = 'fresh'): OverlayCheckpoint {
     const plan = buildOverlayPlan(fixtureSet, REVIEWED_AT, 250, mode)
@@ -863,7 +862,9 @@ describe('strict reconciliation receipts', () => {
       operationId: fixtureSet.operationId,
       targetProjectRef: 'itcttmkxdxvwmwcmzmey',
       createdAt: CREATED_AT,
-      updatedAt: LATER,
+      // Equal to every fixed-clock stage moment: the observation-chronology rule accepts
+      // equality, and receipts produced under the frozen test clock stay valid.
+      updatedAt: CREATED_AT,
       artifactSha256: fixtureSet.artifactSha256,
       projectionDigest: fixtureSet.projectionDigest,
       reviewedAt: REVIEWED_AT,
@@ -1203,6 +1204,27 @@ describe('strict reconciliation receipts', () => {
     expect(() => assertReconciliationReceiptConsistent(checkpoint, notUnresolved)).toThrow(
       /not unresolved/u,
     )
+  })
+
+  it('refuses an observation claimed from before the checkpoint state existed', () => {
+    // The reviewed counterexample: a checkpoint persisted in 2026, evidenced by a receipt
+    // whose observation claims the year 2000.
+    const checkpoint = lostFinalAckCheckpoint()
+    const backdated = receiptFor(
+      checkpoint,
+      [{ index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') }],
+      { observedAt: '2000-01-01T00:00:00.000Z' },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, backdated)).toThrow(
+      /observation from before the checkpoint state it evidences was persisted/u,
+    )
+    // Equality remains valid: an observation at the checkpoint's own last-write moment.
+    const simultaneous = receiptFor(
+      checkpoint,
+      [{ index: 2, classification: 'applied_exact', observed: OBSERVED(130, 'exact') }],
+      { observedAt: checkpoint.updatedAt },
+    )
+    expect(() => assertReconciliationReceiptConsistent(checkpoint, simultaneous)).not.toThrow()
   })
 
   it('refuses an operation scope that cannot account for every article and event', () => {

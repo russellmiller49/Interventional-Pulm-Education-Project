@@ -74,12 +74,17 @@ function fixtureCheckpoint(mode: OverlayRequestMode = 'fresh'): OverlayCheckpoin
   }
 }
 
+/** Per-index sequential stage moments: batch N+1 submits after batch N acknowledges. */
+function stageMoment(second: number): string {
+  return `2026-08-17T00:00:${String(second).padStart(2, '0')}.000Z`
+}
+
 function acknowledgeBatch(checkpoint: OverlayCheckpoint, index: number): void {
   const batch = checkpoint.batches[index]!
   batch.stage = {
     state: 'acknowledged',
-    submittedAt: SUBMITTED_AT,
-    acknowledgedAt: ACKNOWLEDGED_AT,
+    submittedAt: stageMoment(10 + 2 * index),
+    acknowledgedAt: stageMoment(11 + 2 * index),
     failureCode: null,
   }
   batch.acknowledgementChecksum = sha256(`acknowledgement-${index}`)
@@ -562,6 +567,58 @@ describe('temporal coherence', () => {
   })
 })
 
+describe('adjacent-batch chronology', () => {
+  it('refuses a successor batch submitted before its predecessor acknowledged', () => {
+    // The reviewed counterexample: batch 0 submitted 00:01:00 / acknowledged 00:02:00, while
+    // batch 1 claims submission 00:01:30 and acknowledgement 00:01:45 — an interleaving the
+    // strictly sequential engine cannot produce.
+    const checkpoint = fixtureCheckpoint()
+    acknowledgeBatch(checkpoint, 0)
+    checkpoint.batches[0]!.stage.submittedAt = '2026-08-17T00:01:00.000Z'
+    checkpoint.batches[0]!.stage.acknowledgedAt = '2026-08-17T00:02:00.000Z'
+    acknowledgeBatch(checkpoint, 1)
+    checkpoint.batches[1]!.stage.submittedAt = '2026-08-17T00:01:30.000Z'
+    checkpoint.batches[1]!.stage.acknowledgedAt = '2026-08-17T00:01:45.000Z'
+    syncFixtureCounters(checkpoint)
+    checkpoint.phase = 'running'
+    expect(() => validateOverlayCheckpoint(checkpoint)).toThrow(
+      /submitted before its predecessor acknowledged/u,
+    )
+  })
+
+  it('accepts a successor submitted at or after the predecessor acknowledgement', () => {
+    const checkpoint = fixtureCheckpoint()
+    acknowledgeBatch(checkpoint, 0)
+    checkpoint.batches[0]!.stage.submittedAt = '2026-08-17T00:01:00.000Z'
+    checkpoint.batches[0]!.stage.acknowledgedAt = '2026-08-17T00:02:00.000Z'
+    checkpoint.batches[1]!.stage = {
+      state: 'submitted',
+      submittedAt: '2026-08-17T00:02:00.000Z', // equality is valid
+      acknowledgedAt: null,
+      failureCode: null,
+    }
+    syncFixtureCounters(checkpoint)
+    checkpoint.phase = 'running'
+    expect(() => validateOverlayCheckpoint(checkpoint)).not.toThrow()
+  })
+
+  it('leaves the halted-successor and prepared-tail shapes valid', () => {
+    // An ambiguous successor submitted after the predecessor acknowledged remains a valid
+    // needs_reconciliation checkpoint, exactly as before.
+    const checkpoint = fixtureCheckpoint()
+    acknowledgeBatch(checkpoint, 0)
+    checkpoint.batches[1]!.stage = {
+      state: 'ambiguous',
+      submittedAt: SUBMITTED_AT,
+      acknowledgedAt: null,
+      failureCode: 'request_timeout',
+    }
+    syncFixtureCounters(checkpoint)
+    checkpoint.phase = 'needs_reconciliation'
+    expect(() => validateOverlayCheckpoint(checkpoint)).not.toThrow()
+  })
+})
+
 describe('durable causal mode', () => {
   it('refuses an unknown or missing request mode', () => {
     const unknown = fixtureCheckpoint() as unknown as {
@@ -918,12 +975,32 @@ describe('exact receipt-to-checkpoint binding', () => {
       /not the checkpoint completion binding/u,
     )
 
+    // The completion instant is canonical and exact: earlier, later, and alternate textual
+    // renderings of the very same instant are all refused.
     const early = strip()
     early.completedAt = '2026-08-16T23:00:00.000Z'
     expectRefusedEverywhere(
       sealedReceipt(early),
       checkpoint,
-      /precedes the checkpoint completion write/u,
+      /not exactly the canonical checkpoint completion instant/u,
+    )
+
+    const later = strip()
+    later.completedAt = '2026-08-17T09:00:00.000Z'
+    expectRefusedEverywhere(
+      sealedReceipt(later),
+      checkpoint,
+      /not exactly the canonical checkpoint completion instant/u,
+    )
+
+    const alternateRendering = strip()
+    // The same instant as checkpoint.updatedAt (2026-08-17T00:03:00.000Z), rendered without
+    // milliseconds — parseable, equal in epoch, and still not the canonical string.
+    alternateRendering.completedAt = '2026-08-17T00:03:00Z'
+    expectRefusedEverywhere(
+      sealedReceipt(alternateRendering),
+      checkpoint,
+      /not exactly the canonical checkpoint completion instant/u,
     )
   })
 
