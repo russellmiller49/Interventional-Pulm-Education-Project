@@ -110,7 +110,7 @@ are preserved without disclosing their text:
 - the source projection asserts, at validate time, that these two items' persisted heads are
   exactly `revision = 2`, effective, and standard — the corrections still exist and are still
   the effective persisted truth;
-- their events and `after_value` payloads carry `review_head_revision: 2` plus a
+- their events and `after_value` payloads carry `persisted_head_revision: 2` plus a
   `note_correction` object naming the amended-authorization SHA-256
   (`b95fc9785ee355b810981c051db62307e868110e06ffb1a83c09c8eff52bf89a`), the per-record bound
   rationale SHA-256, and the rule version
