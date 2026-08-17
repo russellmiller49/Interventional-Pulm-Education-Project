@@ -204,7 +204,10 @@ export class PostgrestOverlayTransport implements OverlayTransport {
   async observe(requestBody: string): Promise<unknown> {
     let response: Response
     try {
-      response = await this.#post(OVERLAY_OBSERVE_RPC, requestBody)
+      response = await this.#post(
+        OVERLAY_OBSERVE_RPC,
+        JSON.stringify({ p_request: JSON.parse(requestBody) as unknown }),
+      )
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new OverlayReadError('read_timeout', 'An overlay observation timed out.')

@@ -55,8 +55,13 @@ describe('PostgrestOverlayTransport construction', () => {
 })
 
 describe('request discipline', () => {
-  it('sends the secret only in headers, POSTs bodies, and keeps URLs parameter-free', async () => {
-    const seen: Array<{ url: string; method: string; headers: Record<string, string> }> = []
+  it('keeps apply exact, wraps observe as p_request, and uses only parameter-free RPC URLs', async () => {
+    const seen: Array<{
+      url: string
+      method: string
+      headers: Record<string, string>
+      body: string
+    }> = []
     const transport = new PostgrestOverlayTransport({
       binding: BINDING,
       fetchImplementation: async (input, init) => {
@@ -64,17 +69,24 @@ describe('request discipline', () => {
           url: String(input),
           method: String(init?.method),
           headers: { ...(init?.headers as Record<string, string>) },
+          body: String(init?.body),
         })
         return jsonResponse({ ok: true })
       },
     })
-    await transport.applyBatch('{}')
-    await transport.observe('{"operationId":"x","pmids":["36879724"],"eventIds":[]}')
+    const applyBody = '{"p_operation":{"operationId":"x"},"p_records":[]}'
+    const observationBody = '{"operationId":"x","pmids":["36879724"],"eventIds":[]}'
+    await transport.applyBatch(applyBody)
+    await transport.observe(observationBody)
     expect(seen[0]?.url).toBe(
       'https://itcttmkxdxvwmwcmzmey.supabase.co/rest/v1/rpc/apply_literature_reviewed_overlay_batch_v1',
     )
     expect(seen[1]?.url).toBe(
       'https://itcttmkxdxvwmwcmzmey.supabase.co/rest/v1/rpc/observe_literature_reviewed_overlay_v1',
+    )
+    expect(seen[0]?.body).toBe(applyBody)
+    expect(seen[1]?.body).toBe(
+      '{"p_request":{"operationId":"x","pmids":["36879724"],"eventIds":[]}}',
     )
     for (const request of seen) {
       expect(request.method).toBe('POST')

@@ -49,6 +49,10 @@ describe('overlay planning', () => {
 
     const freshRequest = buildBatchRequest(set, REVIEWED_AT, freshPlan.batches[0]!)
     const replayRequest = buildBatchRequest(set, REVIEWED_AT, replayPlan.batches[0]!)
+    expect(Object.keys(JSON.parse(freshRequest.body) as Record<string, unknown>)).toEqual([
+      'p_operation',
+      'p_records',
+    ])
     expect(JSON.parse(freshRequest.body)).toMatchObject({
       p_operation: { causalMode: 'fresh' },
     })
