@@ -146,6 +146,12 @@ create index literature_articles_reviewed_relevance_idx
 -- entire call — and completion itself requires the ACTUAL article and event state (total,
 -- classes, provenance, events) to equal the registered expectation exactly. Registry metadata
 -- is never trusted as proof of article state.
+--
+-- Every request also declares its causal mode (`fresh` | `replay`), fixed by the caller
+-- before the request was sent. The mode is enforced against the registered status in the same
+-- transaction — a fresh request against a completed operation, or a replay request against
+-- anything else, fails whole — and it is echoed in the acknowledgement so the caller can
+-- refuse an answer given in the wrong causal vocabulary.
 create function public.apply_literature_reviewed_overlay_batch_v1(
   p_operation jsonb,
   p_records jsonb
@@ -174,6 +180,7 @@ declare
   op_physician_confirmed integer;
   op_physician_modified integer;
   op_qc_accepted integer;
+  op_causal_mode text;
   op_final_batch boolean;
   operation_row public.literature_reviewed_overlay_operations%rowtype;
   operation_completed boolean;
@@ -219,7 +226,7 @@ begin
   into operation_keys
   from jsonb_object_keys(p_operation) as key;
   if operation_keys is distinct from array[
-    'artifactSha256', 'curationReason', 'excludeCount', 'finalBatch',
+    'artifactSha256', 'causalMode', 'curationReason', 'excludeCount', 'finalBatch',
     'includeAdjacentCount', 'includeCoreCount', 'operationId',
     'physicianConfirmedCount', 'physicianModifiedCount', 'qcAcceptedCount',
     'recordCount', 'reviewedAt', 'sourceIdentity', 'writerIdentity'
@@ -313,6 +320,16 @@ begin
     raise exception 'overlay operation counts are not well-formed';
   end if;
 
+  -- The caller's durable causal context, validated by grammar and then enforced against the
+  -- registered operation's status below: a fresh-mode request cannot target a completed
+  -- operation, and a replay-mode request cannot target anything else.
+  op_causal_mode := p_operation ->> 'causalMode';
+  if jsonb_typeof(p_operation -> 'causalMode') <> 'string'
+    or op_causal_mode not in ('fresh', 'replay')
+  then
+    raise exception 'overlay operation causal mode is not well-formed';
+  end if;
+
   if jsonb_typeof(p_operation -> 'finalBatch') <> 'boolean' then
     raise exception 'overlay operation final-batch flag is not well-formed';
   end if;
@@ -381,6 +398,18 @@ begin
   end if;
 
   operation_completed := operation_row.status = 'completed';
+
+  -- Causal consistency, transactionally: the request's recorded mode must agree with the
+  -- registered operation's status at execution time. A fresh request replayed against a
+  -- completed operation (or a replay request against anything else) is refused whole, so a
+  -- stale or rewritten causal context can never be silently re-acknowledged. On the fresh
+  -- registration path above, a refused replay rolls the registration back with the call.
+  if op_causal_mode = 'fresh' and operation_completed then
+    raise exception 'overlay fresh-mode request targets a completed operation';
+  end if;
+  if op_causal_mode = 'replay' and not operation_completed then
+    raise exception 'overlay replay-mode request targets an operation that is not completed';
+  end if;
 
   for record_value in select value from jsonb_array_elements(p_records)
   loop
@@ -668,6 +697,7 @@ begin
   return jsonb_build_object(
     'operationId', op_id,
     'recordCount', record_count,
+    'causalMode', op_causal_mode,
     'applied', applied_count,
     'alreadyApplied', already_applied_count,
     'dispositions', dispositions,

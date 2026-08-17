@@ -14,8 +14,10 @@ import {
   OVERLAY_CURATION_REASON,
   OVERLAY_MAX_RECORD_BATCH_LIMIT,
   OVERLAY_MIN_RECORD_BATCH_LIMIT,
+  OVERLAY_REQUEST_MODES,
   OVERLAY_SOURCE_IDENTITY,
   OVERLAY_WRITER_IDENTITY,
+  type OverlayRequestMode,
 } from './constants'
 import { reviewedRecordEventId, type ReviewedSet } from './reviewed-set'
 
@@ -27,12 +29,19 @@ export interface OverlayBatchDescriptor {
   endOrdinal: number
   recordCount: number
   finalBatch: boolean
+  /**
+   * The causal context this request is prepared in, fixed before the request exists and bound
+   * into the request body (and therefore the request checksum). One operation plans every
+   * batch in the same mode; the destination's later status never rewrites it.
+   */
+  requestMode: OverlayRequestMode
 }
 
 export interface OverlayPlan {
   operationId: string
   reviewedAt: string
   recordBatchLimit: number
+  requestMode: OverlayRequestMode
   batches: OverlayBatchDescriptor[]
 }
 
@@ -49,12 +58,20 @@ export function assertRecordBatchLimit(value: number): void {
   }
 }
 
+export function assertRequestMode(value: unknown): asserts value is OverlayRequestMode {
+  if (!OVERLAY_REQUEST_MODES.includes(value as OverlayRequestMode)) {
+    throw new Error('The overlay request mode must be exactly fresh or replay.')
+  }
+}
+
 export function buildOverlayPlan(
   set: ReviewedSet,
   reviewedAt: string,
   recordBatchLimit: number,
+  requestMode: OverlayRequestMode,
 ): OverlayPlan {
   assertRecordBatchLimit(recordBatchLimit)
+  assertRequestMode(requestMode)
   if (!Number.isFinite(Date.parse(reviewedAt))) {
     throw new Error('The reviewed-at timestamp must be ISO-compatible.')
   }
@@ -68,13 +85,14 @@ export function buildOverlayPlan(
       endOrdinal: end,
       recordCount: end - start,
       finalBatch: end === set.records.length,
+      requestMode,
     })
   }
   if (batches.length === 0) {
     throw new Error('An overlay plan requires at least one batch.')
   }
 
-  return { operationId: set.operationId, reviewedAt, recordBatchLimit, batches }
+  return { operationId: set.operationId, reviewedAt, recordBatchLimit, requestMode, batches }
 }
 
 /** The operation envelope shared by every batch request of one operation. */
@@ -82,7 +100,9 @@ export function buildOperationEnvelope(
   set: ReviewedSet,
   reviewedAt: string,
   finalBatch: boolean,
+  causalMode: OverlayRequestMode,
 ): Record<string, unknown> {
+  assertRequestMode(causalMode)
   return {
     operationId: set.operationId,
     writerIdentity: OVERLAY_WRITER_IDENTITY,
@@ -97,6 +117,7 @@ export function buildOperationEnvelope(
     physicianModifiedCount: set.counts.provenanceCounts.physician_modified,
     qcAcceptedCount: set.counts.provenanceCounts.qc_accepted,
     curationReason: OVERLAY_CURATION_REASON,
+    causalMode,
     finalBatch,
   }
 }
@@ -142,7 +163,12 @@ export function buildBatchRequest(
     }))
 
   const { body, bytes, checksum } = jsonBody({
-    p_operation: buildOperationEnvelope(set, reviewedAt, descriptor.finalBatch),
+    p_operation: buildOperationEnvelope(
+      set,
+      reviewedAt,
+      descriptor.finalBatch,
+      descriptor.requestMode,
+    ),
     p_records: records,
   })
   return { body, bytes, checksum, recordCount: records.length }
@@ -159,6 +185,7 @@ export function checkpointBatchesForPlan(
     endOrdinal: descriptor.endOrdinal,
     recordCount: descriptor.recordCount,
     finalBatch: descriptor.finalBatch,
+    requestMode: descriptor.requestMode,
     requestChecksum: buildBatchRequest(set, plan.reviewedAt, descriptor).checksum,
     stage: { state: 'prepared', submittedAt: null, acknowledgedAt: null, failureCode: null },
     acknowledgementChecksum: null,
@@ -170,18 +197,24 @@ export function checkpointBatchesForPlan(
 /**
  * The context of a batch submission, which decides what an acceptable acknowledgement looks
  * like. A generic "started or completed" acceptance would let a fabricated acknowledgement
- * pass in every context, so the caller must say what it just did:
+ * pass in every context, so the expectation carries the batch's durable causal mode:
  *
- *   - `in_progress`: the registered operation is (or is being) started; the final batch must
- *     acknowledge `completed`, every other batch must acknowledge `started`.
- *   - `replay_completed`: the registered operation was already completed before this run; every
- *     batch must acknowledge `completed` with zero fresh applications.
+ *   - `fresh`: the operation was not completed when this request was prepared. Every record
+ *     must acknowledge `applied` — a fresh submission only ever targets records the operator
+ *     proved untouched (first submission, or resubmission after a verified exact absence), so
+ *     an `already_applied` answer here is a causal contradiction, never bookkeeping. The final
+ *     batch must acknowledge `completed`; every other batch must acknowledge `started`.
+ *   - `replay`: the operation was completed before this run began; every batch must
+ *     acknowledge `completed` with zero fresh applications.
+ *
+ * The acknowledgement must also echo the request's causal mode exactly — a server (or
+ * fabricator) answering a fresh request in replay vocabulary is a mismatch, not a variant.
  */
 export interface OverlayExpectedAcknowledgement {
   operationId: string
   recordCount: number
   finalBatch: boolean
-  mode: 'in_progress' | 'replay_completed'
+  requestMode: OverlayRequestMode
 }
 
 /**
@@ -203,6 +236,9 @@ export function acknowledgementMatches(
   }
   if (record.recordCount !== expectation.recordCount) {
     return { matches: false, reason: 'acknowledgement_record_count_mismatch' }
+  }
+  if (record.causalMode !== expectation.requestMode) {
+    return { matches: false, reason: 'acknowledgement_causal_mode_mismatch' }
   }
   const applied = record.applied
   const alreadyApplied = record.alreadyApplied
@@ -230,7 +266,7 @@ export function acknowledgementMatches(
     return { matches: false, reason: 'acknowledgement_disposition_totals_mismatch' }
   }
 
-  if (expectation.mode === 'replay_completed') {
+  if (expectation.requestMode === 'replay') {
     if ((applied as number) !== 0 || (alreadyApplied as number) !== expectation.recordCount) {
       return { matches: false, reason: 'acknowledgement_replay_applied_fresh_records' }
     }
@@ -238,6 +274,9 @@ export function acknowledgementMatches(
       return { matches: false, reason: 'acknowledgement_replay_status_invalid' }
     }
   } else {
+    if ((applied as number) !== expectation.recordCount || (alreadyApplied as number) !== 0) {
+      return { matches: false, reason: 'acknowledgement_fresh_records_already_applied' }
+    }
     const requiredStatus = expectation.finalBatch ? 'completed' : 'started'
     if (record.operationStatus !== requiredStatus) {
       return { matches: false, reason: 'acknowledgement_operation_status_invalid' }

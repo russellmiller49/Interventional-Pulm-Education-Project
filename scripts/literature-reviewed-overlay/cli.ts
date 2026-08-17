@@ -17,7 +17,12 @@ import {
 } from '../literature-production-ingest/config'
 import { streamGuardedReadOnlyQuery } from '../literature-production-ingest/source'
 import { loadArtifactTruth, type ArtifactTruth } from './artifact'
-import { readOverlayCheckpoint, readOverlayReceipt } from './checkpoint'
+import {
+  readOverlayCheckpoint,
+  readOverlayReceipt,
+  validateOverlayReceiptAgainstCheckpoint,
+  type OverlayReceipt,
+} from './checkpoint'
 import {
   OVERLAY_ARTIFACT_SHA256_ENV_NAME,
   OVERLAY_DEFAULT_RECORD_BATCH_LIMIT,
@@ -151,6 +156,24 @@ interface CliSecretHolder {
   secret: string | null
 }
 
+/**
+ * The CLI's complete receipt-acceptance boundary for `verify --receipt`: the exact
+ * receipt-to-checkpoint binding over every meaningful field, plus the requirement that the
+ * receipt's post-observation binding is the one the FRESH verification just re-derived from
+ * the destination. There is deliberately no smaller predicate — a receipt that self-checksums
+ * and matches a field subset is not accepted anywhere.
+ */
+export function assertVerifiedReceiptBinding(
+  receipt: unknown,
+  checkpoint: unknown,
+  verifiedPostObservationChecksum: string,
+): asserts receipt is OverlayReceipt {
+  validateOverlayReceiptAgainstCheckpoint(receipt, checkpoint)
+  if ((receipt as OverlayReceipt).postObservationChecksum !== verifiedPostObservationChecksum) {
+    throw new Error('The supplied receipt does not bind to the freshly verified remote state.')
+  }
+}
+
 function buildDependencies(
   values: Map<string, string>,
   holder: CliSecretHolder,
@@ -225,17 +248,7 @@ async function main(): Promise<void> {
       if (receiptPath !== undefined) {
         const receipt = await readOverlayReceipt(receiptPath)
         const checkpoint = await readOverlayCheckpoint(checkpointPath)
-        if (
-          receipt.operationId !== checkpoint.operationId ||
-          receipt.projectionDigest !== checkpoint.projectionDigest ||
-          receipt.artifactSha256 !== checkpoint.artifactSha256 ||
-          receipt.curationReason !== checkpoint.curationReason ||
-          receipt.reviewedAt !== checkpoint.reviewedAt ||
-          receipt.outcome === 'dry-run' ||
-          receipt.postObservationChecksum !== verified.postObservationChecksum
-        ) {
-          throw new Error('The supplied receipt does not bind to the verified operation.')
-        }
+        assertVerifiedReceiptBinding(receipt, checkpoint, verified.postObservationChecksum)
       }
       result = verified
     }

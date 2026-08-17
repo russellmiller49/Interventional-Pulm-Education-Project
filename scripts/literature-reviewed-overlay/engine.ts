@@ -26,7 +26,9 @@ import type { ArtifactTruth } from './artifact'
 import {
   acquireOverlayLease,
   overlayCheckpointChecksum,
+  overlayCheckpointMode,
   readOverlayCheckpoint,
+  validateOverlayReceiptAgainstCheckpoint,
   writeOverlayCheckpoint,
   writeOverlayReceiptImmutable,
   type OverlayCheckpoint,
@@ -44,14 +46,18 @@ import {
   OVERLAY_CURATION_REASON,
   OVERLAY_ENGINE_VERSION,
   OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT,
+  OVERLAY_MAX_RECORD_BATCH_LIMIT,
   OVERLAY_OWNER_AUTHORIZATION_ENV_NAME,
   OVERLAY_OWNER_AUTHORIZATION_SENTENCE,
   OVERLAY_PROJECTION_SHA256_ENV_NAME,
   OVERLAY_RECEIPT_SCHEMA_VERSION,
   OVERLAY_RECONCILIATION_SCHEMA_VERSION,
+  OVERLAY_REQUEST_MODES,
   OVERLAY_SOURCE_IDENTITY,
   OVERLAY_WRITER_IDENTITY,
+  type OverlayRequestMode,
 } from './constants'
+import { assertDeterministicUuid } from './identity'
 import {
   acknowledgementMatches,
   buildBatchRequest,
@@ -159,7 +165,9 @@ export async function runDryRun(
     )
   }
   const reviewedAt = deps.now().toISOString()
-  const plan = buildOverlayPlan(set, reviewedAt, options.recordBatchLimit)
+  // A dry run plans the fresh application: it contacts no destination, so it has no registry
+  // status to consult, and the operation it describes is the one that would freshly apply.
+  const plan = buildOverlayPlan(set, reviewedAt, options.recordBatchLimit, 'fresh')
   const checksums = plan.batches.map(
     (descriptor) => buildBatchRequest(set, reviewedAt, descriptor).checksum,
   )
@@ -168,6 +176,7 @@ export async function runDryRun(
     engineVersion: OVERLAY_ENGINE_VERSION,
     operationId: set.operationId,
     outcome: 'dry-run',
+    causalMode: 'fresh',
     targetProjectRef: null,
     targetUrl: null,
     writerIdentity: OVERLAY_WRITER_IDENTITY,
@@ -799,7 +808,8 @@ export async function runApply(
       ) {
         throw new Error('The checkpoint source identity does not match the reviewed set.')
       }
-      // Every durable request body must be reproducible byte-for-byte before any request.
+      // Every durable request body must be reproducible byte-for-byte before any request —
+      // including its causal mode, which the request body carries and the checksum binds.
       for (const batch of loaded.batches) {
         const descriptor: OverlayBatchDescriptor = {
           index: batch.index,
@@ -807,6 +817,7 @@ export async function runApply(
           endOrdinal: batch.endOrdinal,
           recordCount: batch.recordCount,
           finalBatch: batch.finalBatch,
+          requestMode: batch.requestMode,
         }
         const rebuilt = buildBatchRequest(set, loaded.reviewedAt, descriptor)
         if (rebuilt.checksum !== batch.requestChecksum) {
@@ -840,7 +851,12 @@ export async function runApply(
 
     const transport = deps.createTransport()
     const { registered } = await assertDestinationPreconditions(transport, set)
-    const replayMode = registered !== null && registered.status === 'completed'
+    // The causal mode of a NEW plan, decided once at checkpoint-creation time: an operation
+    // already completed remotely can only be replayed; anything else is a fresh application.
+    // A resumed checkpoint never consults this — its batches carry their durable modes, and
+    // the registry's later status must not rewrite them.
+    const plannedMode: OverlayRequestMode =
+      registered !== null && registered.status === 'completed' ? 'replay' : 'fresh'
 
     let checkpoint: OverlayCheckpoint
     if (resumedCheckpoint) {
@@ -851,7 +867,6 @@ export async function runApply(
           set,
           checkpoint,
           pendingReconciliation,
-          replayMode,
           deps.now,
         )
       }
@@ -888,7 +903,7 @@ export async function runApply(
       } else {
         reviewedAt = deps.now().toISOString()
       }
-      const plan = buildOverlayPlan(set, reviewedAt, options.recordBatchLimit)
+      const plan = buildOverlayPlan(set, reviewedAt, options.recordBatchLimit, plannedMode)
       const timestamp = deps.now().toISOString()
       checkpoint = {
         schemaVersion: OVERLAY_CHECKPOINT_SCHEMA_VERSION,
@@ -923,6 +938,7 @@ export async function runApply(
         endOrdinal: batch.endOrdinal,
         recordCount: batch.recordCount,
         finalBatch: batch.finalBatch,
+        requestMode: batch.requestMode,
       }
       const request = buildBatchRequest(set, checkpoint.reviewedAt, descriptor)
       if (request.checksum !== batch.requestChecksum) {
@@ -969,12 +985,14 @@ export async function runApply(
         throw error
       }
 
+      // The acknowledgement is judged in the batch's own durable causal context — never in a
+      // context re-derived from the registry's current status.
       const verdict = acknowledgementMatches(
         {
           operationId: set.operationId,
           recordCount: batch.recordCount,
           finalBatch: batch.finalBatch,
-          mode: replayMode ? 'replay_completed' : 'in_progress',
+          requestMode: batch.requestMode,
         },
         acknowledgement,
       )
@@ -1022,15 +1040,16 @@ export async function runApply(
     checkpoint.updatedAt = deps.now().toISOString()
     await writeOverlayCheckpoint(checkpointPath, checkpoint)
 
-    const outcome =
-      checkpoint.counters.applied === 0 && checkpoint.counters.alreadyApplied > 0
-        ? 'idempotent-replay'
-        : 'completed'
+    // The outcome is the causal mode's completion vocabulary, read from the durable batch
+    // modes — never inferred from counters or from the registry's final status.
+    const causalMode = overlayCheckpointMode(checkpoint)
+    const outcome = causalMode === 'replay' ? 'idempotent-replay' : 'completed'
     const body: OverlayReceiptBody = {
       schemaVersion: OVERLAY_RECEIPT_SCHEMA_VERSION,
       engineVersion: OVERLAY_ENGINE_VERSION,
       operationId: set.operationId,
       outcome,
+      causalMode,
       targetProjectRef: APPROVED_PROJECT_REF,
       targetUrl: APPROVED_PROJECT_URL,
       writerIdentity: OVERLAY_WRITER_IDENTITY,
@@ -1046,11 +1065,15 @@ export async function runApply(
       checkpointChecksum: overlayCheckpointChecksum(checkpoint),
       postObservationChecksum: postObservation.checksum,
     }
+    const receipt = receiptWithChecksum(body)
+    // The receipt must bind to the completed checkpoint exactly before it may exist at all —
+    // the same total comparison every later consumer applies.
+    validateOverlayReceiptAgainstCheckpoint(receipt, checkpoint)
     const finalReceiptPath =
       outcome === 'idempotent-replay'
         ? `${options.stateDirectory}/overlay-${set.operationId}.replay-${Date.now()}.receipt.json`
         : receiptPath
-    await writeOverlayReceiptImmutable(finalReceiptPath, receiptWithChecksum(body))
+    await writeOverlayReceiptImmutable(finalReceiptPath, receipt)
 
     return {
       status: outcome === 'idempotent-replay' ? 'idempotent-replay' : 'applied',
@@ -1065,13 +1088,41 @@ export async function runApply(
   }
 }
 
+/**
+ * The operation-scope totals every reconciliation observes beside the per-batch state. These
+ * are what make an extra event or an extra article under the operation visible: per-batch
+ * reads can only see the records they name, so exactness over the operation requires the
+ * destination's own aggregate view.
+ */
+export interface OverlayOperationScope {
+  corpusArticles: number
+  reviewedForOperation: number
+  eventsForOperation: number
+  foreignReviewed: number
+}
+
+export interface OverlayReconciliationBatchEvidence {
+  index: number
+  /** The checkpointed request identity this evidence describes. */
+  requestChecksum: string
+  /** The request's durable causal mode — recorded, never re-derived from the registry. */
+  requestMode: OverlayRequestMode
+  expectedRecordCount: number
+  classification: OverlayBatchClassification
+  observed: OverlayBatchObservation['observed']
+  /** Canonical checksum of the exact observation record this evidence was written from. */
+  observationChecksum: string
+}
+
 export interface OverlayReconciliationReceipt {
   schemaVersion: string
   operationId: string
   checkpointChecksum: string
   observedAt: string
   registryConsistent: boolean
-  batches: OverlayBatchObservation[]
+  /** Null exactly when the registry observation itself failed (registryConsistent false). */
+  operationScope: OverlayOperationScope | null
+  batches: OverlayReconciliationBatchEvidence[]
   receiptChecksum: string
 }
 
@@ -1079,6 +1130,50 @@ export interface OverlayReconcileResult {
   status: 'reconciled'
   receipt: OverlayReconciliationReceipt
   unresolvedBatchCount: number
+}
+
+function scopeOf(view: OverlayObservationView): OverlayOperationScope {
+  return {
+    corpusArticles: totalsNumber(view, 'corpusArticles'),
+    reviewedForOperation: totalsNumber(view, 'reviewedForOperation'),
+    eventsForOperation: totalsNumber(view, 'eventsForOperation'),
+    foreignReviewed: totalsNumber(view, 'foreignReviewed'),
+  }
+}
+
+/**
+ * Whether the operation-scope totals account for every article and event exactly, given the
+ * checkpoint's acknowledged batches and the classifications of the unresolved ones.
+ *
+ * Fresh-mode operations: every reviewed article under the operation must belong to an
+ * acknowledged batch or to an unresolved batch observed exactly applied — an extra article is
+ * unaccountable drift. Replay-mode operations: the completed operation's full record set must
+ * be present, no more and no less. In both modes every reviewed article carries exactly one
+ * deterministic event, so an event total differing from the reviewed total (the 631st event)
+ * is unaccountable in itself.
+ */
+function operationScopeConsistent(
+  checkpoint: OverlayCheckpoint,
+  scope: OverlayOperationScope,
+  classificationByIndex: ReadonlyMap<number, OverlayBatchClassification>,
+): boolean {
+  if (scope.corpusArticles !== OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT) return false
+  if (scope.foreignReviewed !== 0) return false
+  if (scope.eventsForOperation !== scope.reviewedForOperation) return false
+  let expectedReviewed: number
+  if (overlayCheckpointMode(checkpoint) === 'replay') {
+    expectedReviewed = checkpoint.counts.recordCount
+  } else {
+    expectedReviewed = 0
+    for (const batch of checkpoint.batches) {
+      if (batch.stage.state === 'acknowledged') {
+        expectedReviewed += batch.recordCount
+      } else if (classificationByIndex.get(batch.index) === 'applied_exact') {
+        expectedReviewed += batch.recordCount
+      }
+    }
+  }
+  return scope.reviewedForOperation === expectedReviewed
 }
 
 export async function runReconcile(
@@ -1096,11 +1191,14 @@ export async function runReconcile(
   )
   const transport = deps.createTransport()
 
-  // The operation registry is observed alongside the batches: a drifted registry means no
-  // classification below can be trusted to describe this operation.
+  // The operation registry and the operation-scope totals are observed alongside the batches:
+  // a drifted registry means no classification below can be trusted to describe this
+  // operation, and inconsistent totals mean no batch can honestly claim exactness.
   let registryConsistent = false
+  let operationScope: OverlayOperationScope | null = null
   try {
     const base = await observeBase(transport, set.operationId)
+    operationScope = scopeOf(base)
     if (base.operation === null) {
       registryConsistent = true // exact nonapplication of the registry row itself
     } else {
@@ -1111,6 +1209,7 @@ export async function runReconcile(
     }
   } catch {
     registryConsistent = false
+    operationScope = null
   }
 
   const observations: OverlayBatchObservation[] = []
@@ -1118,13 +1217,47 @@ export async function runReconcile(
     observations.push(await observeBatch(transport, set, checkpoint.reviewedAt, batch))
   }
 
+  // Exactness is an operation property, not only a batch property: a batch whose own records
+  // read exactly applied still is not `applied_exact` while the operation carries an extra
+  // event, an extra article, a foreign review, or a changed corpus. Such a batch is drifted
+  // at the operation scope — never silently exact.
+  const classificationByIndex = new Map(
+    observations.map((observation) => [observation.index, observation.classification]),
+  )
+  const scopeConsistent =
+    registryConsistent &&
+    operationScope !== null &&
+    operationScopeConsistent(checkpoint, operationScope, classificationByIndex)
+  const finalObservations = observations.map((observation) => {
+    if (
+      !scopeConsistent &&
+      (observation.classification === 'applied_exact' ||
+        observation.classification === 'absent_exact')
+    ) {
+      return { ...observation, classification: 'drifted' as const }
+    }
+    return observation
+  })
+
   const body = {
     schemaVersion: OVERLAY_RECONCILIATION_SCHEMA_VERSION,
     operationId: checkpoint.operationId,
-    checkpointChecksum: sha256(canonicalJson(checkpoint)),
+    checkpointChecksum: overlayCheckpointChecksum(checkpoint),
     observedAt: deps.now().toISOString(),
     registryConsistent,
-    batches: observations,
+    operationScope,
+    batches: finalObservations.map((observation): OverlayReconciliationBatchEvidence => {
+      const batch = checkpoint.batches[observation.index] as OverlayCheckpointBatch
+      return {
+        index: observation.index,
+        requestChecksum: batch.requestChecksum,
+        requestMode: batch.requestMode,
+        expectedRecordCount: batch.recordCount,
+        classification: observation.classification,
+        observed: observation.observed,
+        observationChecksum: sha256(canonicalJson(observation)),
+      }
+    }),
   }
   const receipt: OverlayReconciliationReceipt = {
     ...body,
@@ -1133,22 +1266,261 @@ export async function runReconcile(
   return { status: 'reconciled', receipt, unresolvedBatchCount: unresolved.length }
 }
 
+const BATCH_CLASSIFICATIONS = new Set<OverlayBatchClassification>([
+  'applied_exact',
+  'absent_exact',
+  'partial',
+  'mixed',
+  'drifted',
+  'ambiguous',
+  'observation_incomplete',
+])
+
+function requireReceiptRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`The reconciliation receipt ${label} must be a JSON object.`)
+  }
+  return value as Record<string, unknown>
+}
+
+function requireExactReceiptKeys(
+  value: Record<string, unknown>,
+  expected: readonly string[],
+  label: string,
+): void {
+  if (canonicalJson(Object.keys(value).sort()) !== canonicalJson([...expected].sort())) {
+    throw new Error(`The reconciliation receipt ${label} carries missing or unexpected fields.`)
+  }
+}
+
+function requireReceiptInteger(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`The reconciliation receipt ${label} must be a non-negative safe integer.`)
+  }
+  return value
+}
+
+function requireReceiptSha256(value: unknown, label: string): string {
+  if (typeof value !== 'string' || !/^[a-f0-9]{64}$/u.test(value)) {
+    throw new Error(`The reconciliation receipt ${label} must be a lowercase SHA-256 digest.`)
+  }
+  return value
+}
+
 /**
- * Judge a reconciliation receipt's binding and internal consistency. This is a precondition,
- * not authority: a receipt that passes here still only nominates batches, and the engine
- * re-observes each one freshly before any stage advances.
+ * The strict standalone reconciliation-receipt schema: exact keys, exact primitive types, and
+ * full count arithmetic at every level. Binding to a checkpoint and actionability are judged
+ * separately — this validator refuses malformed evidence before any of that is considered.
+ */
+export function validateOverlayReconciliationReceipt(
+  value: unknown,
+): asserts value is OverlayReconciliationReceipt {
+  const receipt = requireReceiptRecord(value, 'envelope')
+  requireExactReceiptKeys(
+    receipt,
+    [
+      'schemaVersion',
+      'operationId',
+      'checkpointChecksum',
+      'observedAt',
+      'registryConsistent',
+      'operationScope',
+      'batches',
+      'receiptChecksum',
+    ],
+    'envelope',
+  )
+  if (receipt.schemaVersion !== OVERLAY_RECONCILIATION_SCHEMA_VERSION) {
+    throw new Error('The reconciliation receipt schema is not supported.')
+  }
+  assertDeterministicUuid(receipt.operationId, 'The reconciliation receipt operation id')
+  requireReceiptSha256(receipt.checkpointChecksum, 'checkpointChecksum')
+  requireReceiptSha256(receipt.receiptChecksum, 'receiptChecksum')
+  if (typeof receipt.observedAt !== 'string' || !Number.isFinite(Date.parse(receipt.observedAt))) {
+    throw new Error('The reconciliation receipt observedAt must be an ISO-compatible timestamp.')
+  }
+  if (typeof receipt.registryConsistent !== 'boolean') {
+    throw new Error('The reconciliation receipt registryConsistent must be a boolean.')
+  }
+  if (receipt.operationScope === null) {
+    if (receipt.registryConsistent !== false) {
+      throw new Error(
+        'The reconciliation receipt omits the operation scope while claiming a consistent ' +
+          'registry observation.',
+      )
+    }
+  } else {
+    const scope = requireReceiptRecord(receipt.operationScope, 'operationScope')
+    requireExactReceiptKeys(
+      scope,
+      ['corpusArticles', 'reviewedForOperation', 'eventsForOperation', 'foreignReviewed'],
+      'operationScope',
+    )
+    requireReceiptInteger(scope.corpusArticles, 'operationScope.corpusArticles')
+    requireReceiptInteger(scope.reviewedForOperation, 'operationScope.reviewedForOperation')
+    requireReceiptInteger(scope.eventsForOperation, 'operationScope.eventsForOperation')
+    requireReceiptInteger(scope.foreignReviewed, 'operationScope.foreignReviewed')
+  }
+  if (!Array.isArray(receipt.batches)) {
+    throw new Error('The reconciliation receipt batches must be an array.')
+  }
+  const seenIndexes = new Set<number>()
+  receipt.batches.forEach((value_, position) => {
+    const entry = requireReceiptRecord(value_, `batches[${position}]`)
+    requireExactReceiptKeys(
+      entry,
+      [
+        'index',
+        'requestChecksum',
+        'requestMode',
+        'expectedRecordCount',
+        'classification',
+        'observed',
+        'observationChecksum',
+      ],
+      `batches[${position}]`,
+    )
+    const index = requireReceiptInteger(entry.index, `batches[${position}].index`)
+    if (seenIndexes.has(index)) {
+      throw new Error('The reconciliation receipt repeats a batch index.')
+    }
+    seenIndexes.add(index)
+    requireReceiptSha256(entry.requestChecksum, `batches[${position}].requestChecksum`)
+    if (
+      typeof entry.requestMode !== 'string' ||
+      !OVERLAY_REQUEST_MODES.includes(entry.requestMode as OverlayRequestMode)
+    ) {
+      throw new Error('The reconciliation receipt names an unknown request causal mode.')
+    }
+    const expectedRecordCount = requireReceiptInteger(
+      entry.expectedRecordCount,
+      `batches[${position}].expectedRecordCount`,
+    )
+    if (expectedRecordCount < 1 || expectedRecordCount > OVERLAY_MAX_RECORD_BATCH_LIMIT) {
+      throw new Error('The reconciliation receipt expected record count is out of bounds.')
+    }
+    if (
+      typeof entry.classification !== 'string' ||
+      !BATCH_CLASSIFICATIONS.has(entry.classification as OverlayBatchClassification)
+    ) {
+      throw new Error('The reconciliation receipt names an unknown classification.')
+    }
+    const observed = requireReceiptRecord(entry.observed, `batches[${position}].observed`)
+    requireExactReceiptKeys(
+      observed,
+      [
+        'recordCount',
+        'exactRecords',
+        'absentRecords',
+        'driftedRecords',
+        'inconsistentRecords',
+        'eventsPresent',
+      ],
+      `batches[${position}].observed`,
+    )
+    const recordCount = requireReceiptInteger(
+      observed.recordCount,
+      `batches[${position}].observed.recordCount`,
+    )
+    const exactRecords = requireReceiptInteger(
+      observed.exactRecords,
+      `batches[${position}].observed.exactRecords`,
+    )
+    const absentRecords = requireReceiptInteger(
+      observed.absentRecords,
+      `batches[${position}].observed.absentRecords`,
+    )
+    const driftedRecords = requireReceiptInteger(
+      observed.driftedRecords,
+      `batches[${position}].observed.driftedRecords`,
+    )
+    const inconsistentRecords = requireReceiptInteger(
+      observed.inconsistentRecords,
+      `batches[${position}].observed.inconsistentRecords`,
+    )
+    const eventsPresent = requireReceiptInteger(
+      observed.eventsPresent,
+      `batches[${position}].observed.eventsPresent`,
+    )
+    requireReceiptSha256(entry.observationChecksum, `batches[${position}].observationChecksum`)
+
+    // Count arithmetic: the observation must account for every record of the batch exactly
+    // once, and can never see more events than records or fewer events than exact records.
+    if (recordCount !== expectedRecordCount) {
+      throw new Error(
+        'The reconciliation receipt observed record count does not equal the expected ' +
+          'record count.',
+      )
+    }
+    if (exactRecords + absentRecords + driftedRecords + inconsistentRecords !== recordCount) {
+      throw new Error(
+        'The reconciliation receipt observed counts do not account for every record ' +
+          'exactly once.',
+      )
+    }
+    if (eventsPresent > recordCount || eventsPresent < exactRecords) {
+      throw new Error('The reconciliation receipt event count is impossible.')
+    }
+
+    // Classification-versus-observation semantics. `applied_exact` and `absent_exact` are
+    // total claims; the mixed/partial/ambiguous vocabulary must at least exhibit what it
+    // names. (`drifted` may also describe operation-scope drift over record-exact batches,
+    // and `observation_incomplete` carries whatever was gathered before the failure.)
+    const classification = entry.classification as OverlayBatchClassification
+    if (
+      classification === 'applied_exact' &&
+      (exactRecords !== recordCount ||
+        eventsPresent !== recordCount ||
+        absentRecords !== 0 ||
+        driftedRecords !== 0 ||
+        inconsistentRecords !== 0)
+    ) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
+    if (
+      classification === 'absent_exact' &&
+      (absentRecords !== recordCount ||
+        eventsPresent !== 0 ||
+        exactRecords !== 0 ||
+        driftedRecords !== 0 ||
+        inconsistentRecords !== 0)
+    ) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
+    if (classification === 'ambiguous' && inconsistentRecords === 0) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
+    if (
+      classification === 'partial' &&
+      (exactRecords === 0 ||
+        absentRecords === 0 ||
+        driftedRecords !== 0 ||
+        inconsistentRecords !== 0)
+    ) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
+    if (
+      classification === 'mixed' &&
+      (driftedRecords === 0 ||
+        (exactRecords === 0 && absentRecords === 0) ||
+        inconsistentRecords !== 0)
+    ) {
+      throw new Error('The reconciliation receipt is internally inconsistent.')
+    }
+  })
+}
+
+/**
+ * Judge a reconciliation receipt's schema, binding, and internal consistency against its
+ * checkpoint. This is a precondition, not authority: a receipt that passes here still only
+ * nominates batches, and the engine re-observes each one freshly before any stage advances.
  */
 export function assertReconciliationReceiptConsistent(
   checkpoint: OverlayCheckpoint,
   receiptValue: unknown,
 ): asserts receiptValue is OverlayReconciliationReceipt {
-  if (!receiptValue || typeof receiptValue !== 'object' || Array.isArray(receiptValue)) {
-    throw new Error('The reconciliation receipt is not an object.')
-  }
-  const receipt = receiptValue as Record<string, unknown>
-  if (receipt.schemaVersion !== OVERLAY_RECONCILIATION_SCHEMA_VERSION) {
-    throw new Error('The reconciliation receipt schema is not supported.')
-  }
+  validateOverlayReconciliationReceipt(receiptValue)
+  const receipt = receiptValue as OverlayReconciliationReceipt
   if (receipt.operationId !== checkpoint.operationId) {
     throw new Error('The reconciliation receipt belongs to a different operation.')
   }
@@ -1156,7 +1528,7 @@ export function assertReconciliationReceiptConsistent(
   if (receiptChecksum !== sha256(canonicalJson(body))) {
     throw new Error('The reconciliation receipt checksum does not match.')
   }
-  if (receipt.checkpointChecksum !== sha256(canonicalJson(checkpoint))) {
+  if (receipt.checkpointChecksum !== overlayCheckpointChecksum(checkpoint)) {
     throw new Error('The reconciliation receipt was produced against a different checkpoint state.')
   }
   if (receipt.registryConsistent !== true) {
@@ -1165,83 +1537,125 @@ export function assertReconciliationReceiptConsistent(
         'mutation may be attempted; investigate the drift read-only.',
     )
   }
-  if (!Array.isArray(receipt.batches)) {
-    throw new Error('The reconciliation receipt batches are invalid.')
+  if (receipt.operationScope === null) {
+    throw new Error(
+      'The reconciliation receipt carries no operation-scope observation. No further ' +
+        'mutation may be attempted.',
+    )
   }
-  for (const entry of receipt.batches as Array<Record<string, unknown>>) {
-    const batch = checkpoint.batches[entry.index as number]
+  for (const entry of receipt.batches) {
+    const batch = checkpoint.batches[entry.index]
     if (!batch || (batch.stage.state !== 'submitted' && batch.stage.state !== 'ambiguous')) {
       throw new Error('The reconciliation receipt names a batch that is not unresolved.')
     }
-    const classification = entry.classification
-    const observed = entry.observed as Record<string, unknown> | undefined
-    if (!observed || typeof observed !== 'object') {
-      throw new Error('The reconciliation receipt observations are invalid.')
+    // The evidence must describe the exact checkpointed request: its checksum, its durable
+    // causal mode, and its record count. A receipt claiming the opposite causal mode is a
+    // rewritten history, not a variant reading.
+    if (entry.requestChecksum !== batch.requestChecksum) {
+      throw new Error('The reconciliation receipt does not name the checkpointed request identity.')
     }
-    // Internal consistency: a classification must agree with its own observed counts. A
-    // receipt claiming applied_exact over zero events is semantically false and is refused
-    // before any re-observation is even attempted.
-    if (
-      classification === 'applied_exact' &&
-      (observed.exactRecords !== batch.recordCount ||
-        observed.eventsPresent !== batch.recordCount ||
-        observed.driftedRecords !== 0 ||
-        observed.inconsistentRecords !== 0 ||
-        observed.absentRecords !== 0)
-    ) {
-      throw new Error('The reconciliation receipt is internally inconsistent.')
+    if (entry.requestMode !== batch.requestMode) {
+      throw new Error(
+        'The reconciliation receipt contradicts the request causal mode the checkpoint ' +
+          'durably recorded.',
+      )
     }
-    if (
-      classification === 'absent_exact' &&
-      (observed.absentRecords !== batch.recordCount ||
-        observed.eventsPresent !== 0 ||
-        observed.exactRecords !== 0 ||
-        observed.driftedRecords !== 0 ||
-        observed.inconsistentRecords !== 0)
-    ) {
-      throw new Error('The reconciliation receipt is internally inconsistent.')
+    if (entry.expectedRecordCount !== batch.recordCount) {
+      throw new Error('The reconciliation receipt does not name the checkpointed record count.')
     }
-    if (classification === 'observation_incomplete') {
+    if (entry.classification === 'observation_incomplete') {
       throw new Error(
         'The reconciliation observation is incomplete. No further mutation may be attempted ' +
           'until a complete read-only observation succeeds.',
       )
     }
-    if (classification !== 'applied_exact' && classification !== 'absent_exact') {
+    if (entry.classification !== 'applied_exact' && entry.classification !== 'absent_exact') {
       throw new Error(
         'The destination state conflicts with the overlay expectation. No further mutation ' +
           'may be attempted; investigate the drift read-only.',
       )
     }
+    if (entry.classification === 'absent_exact' && batch.requestMode === 'replay') {
+      throw new Error(
+        "A completed operation's records cannot be exactly absent. No further mutation may " +
+          'be attempted; investigate the drift read-only.',
+      )
+    }
+  }
+  // The recorded operation scope must account for every article and event exactly, under the
+  // recorded classifications. An extra event or article under the operation is unaccountable
+  // and refuses every nomination.
+  const classificationByIndex = new Map(
+    receipt.batches.map((entry) => [entry.index, entry.classification]),
+  )
+  if (!operationScopeConsistent(checkpoint, receipt.operationScope, classificationByIndex)) {
+    throw new Error(
+      'The reconciliation receipt operation scope does not account for every article and ' +
+        'event exactly. No further mutation may be attempted; investigate the drift read-only.',
+    )
   }
 }
 
 /**
- * Fold a reconciliation receipt into a checkpoint — but only after re-observing every batch it
- * names and requiring the fresh classification to agree. The receipt nominates; the fresh
- * observation decides.
+ * Fold a reconciliation receipt into a checkpoint — but only after freshly re-observing the
+ * operation scope and every batch the receipt names, and requiring the fresh evidence to agree
+ * with the receipt exactly. The receipt nominates; the fresh observation decides. Effects are
+ * recorded under each batch's durable causal mode: a fresh request observed exactly applied
+ * was applied by this operation, whatever the registry's status has since become, and a replay
+ * request observed exactly applied applied nothing.
  */
 export async function applyReconciliationWithReobservation(
   transport: OverlayTransport,
   set: ReviewedSet,
   checkpoint: OverlayCheckpoint,
   receiptValue: unknown,
-  replayMode: boolean,
   now: () => Date,
 ): Promise<void> {
   assertReconciliationReceiptConsistent(checkpoint, receiptValue)
   const receipt = receiptValue as OverlayReconciliationReceipt
 
+  // Fresh operation-scope observation: the registry identity and the aggregate totals must be
+  // consistent NOW, not merely at reconcile time.
+  const base = await observeBase(transport, set.operationId)
+  if (base.operation !== null) {
+    assertRegisteredOperationIdentity(base.operation, set, { reviewedAt: checkpoint.reviewedAt })
+  }
+  const freshScope = scopeOf(base)
+
+  const freshObservations: OverlayBatchObservation[] = []
   for (const entry of receipt.batches) {
     const batch = checkpoint.batches[entry.index] as OverlayCheckpointBatch
-    const fresh = await observeBatch(transport, set, checkpoint.reviewedAt, batch)
-    if (fresh.classification !== entry.classification) {
+    freshObservations.push(await observeBatch(transport, set, checkpoint.reviewedAt, batch))
+  }
+  const freshClassifications = new Map(
+    freshObservations.map((observation) => [observation.index, observation.classification]),
+  )
+  if (!operationScopeConsistent(checkpoint, freshScope, freshClassifications)) {
+    throw new Error(
+      'The fresh operation-scope observation does not account for every article and event ' +
+        'exactly. The receipt is stale; reconcile again read-only.',
+    )
+  }
+
+  receipt.batches.forEach((entry, position) => {
+    const fresh = freshObservations[position] as OverlayBatchObservation
+    if (
+      fresh.classification !== entry.classification ||
+      sha256(canonicalJson(fresh)) !== entry.observationChecksum
+    ) {
       throw new Error(
         'A fresh observation disagrees with the reconciliation receipt. The receipt is stale; ' +
           'reconcile again read-only.',
       )
     }
-    if (fresh.classification === 'applied_exact') {
+  })
+
+  for (const entry of receipt.batches) {
+    const batch = checkpoint.batches[entry.index] as OverlayCheckpointBatch
+    if (entry.classification === 'applied_exact') {
+      const fresh = freshObservations.find(
+        (observation) => observation.index === entry.index,
+      ) as OverlayBatchObservation
       batch.stage = {
         state: 'acknowledged',
         submittedAt: batch.stage.submittedAt,
@@ -1250,12 +1664,11 @@ export async function applyReconciliationWithReobservation(
       }
       batch.acknowledgementChecksum = null
       batch.reconciliationChecksum = sha256(canonicalJson(fresh))
-      // The lost acknowledgement's fresh/replay split is decided by the operation's status at
-      // observation time: a completed operation can only have been replayed; a started one can
-      // only have applied.
-      batch.effects = replayMode
-        ? { applied: 0, alreadyApplied: batch.recordCount }
-        : { applied: batch.recordCount, alreadyApplied: 0 }
+      // Effects follow the durable causal mode, never the registry's current status.
+      batch.effects =
+        batch.requestMode === 'replay'
+          ? { applied: 0, alreadyApplied: batch.recordCount }
+          : { applied: batch.recordCount, alreadyApplied: 0 }
     } else {
       batch.stage = {
         state: 'prepared',
@@ -1275,6 +1688,8 @@ export async function applyReconciliationWithReobservation(
 export interface OverlayVerifyResult {
   status: 'verified'
   operationId: string
+  /** The operation's durable causal mode, read from the completed checkpoint's batches. */
+  causalMode: OverlayRequestMode
   postObservationChecksum: string
   remote: {
     registry: Record<string, unknown>
@@ -1318,6 +1733,7 @@ export async function runVerify(
   return {
     status: 'verified',
     operationId: set.operationId,
+    causalMode: overlayCheckpointMode(checkpoint),
     postObservationChecksum: postObservation.checksum,
     remote: {
       registry: summary.registry,

@@ -31,18 +31,28 @@ import {
   OVERLAY_MAX_RECORD_BATCH_LIMIT,
   OVERLAY_NOTE_CORRECTIONS,
   OVERLAY_RECEIPT_SCHEMA_VERSION,
+  OVERLAY_REQUEST_MODES,
   OVERLAY_SOURCE_IDENTITY,
   OVERLAY_WRITER_IDENTITY,
+  type OverlayRequestMode,
 } from './constants'
 import { assertDeterministicUuid } from './identity'
 import type { ReviewedSetCounts } from './reviewed-set'
 
+/**
+ * The complete stage vocabulary. `not_required` exists so the vocabulary is closed over every
+ * stage a checkpoint format could name — a stage that is not a required mutation carries no
+ * request checksum, no timestamps, no effects, and no evidence. This operation plans no such
+ * stage: every batch of the 630-record overlay is a required mutation, so a checkpoint
+ * claiming a `not_required` batch is refused at the operation level, not merely shape-checked.
+ */
 export type OverlayStageState =
   | 'prepared'
   | 'submitted'
   | 'acknowledged'
   | 'confirmed_failure'
   | 'ambiguous'
+  | 'not_required'
 
 export interface OverlayStage {
   state: OverlayStageState
@@ -57,6 +67,14 @@ export interface OverlayCheckpointBatch {
   endOrdinal: number
   recordCount: number
   finalBatch: boolean
+  /**
+   * The durable causal context this batch's request was prepared in — `fresh` application or
+   * exact completed-operation `replay` — fixed before the request is sent and bound into the
+   * request body and checksum. Reconciliation classifies whether the exact request was
+   * remotely applied, but it never rewrites this recorded mode from the destination's later
+   * registry status.
+   */
+  requestMode: OverlayRequestMode
   requestChecksum: string
   stage: OverlayStage
   /** Canonical checksum of the exact acknowledgement body, when acknowledged by transport. */
@@ -115,6 +133,13 @@ export interface OverlayReceiptBody {
   engineVersion: string
   operationId: string
   outcome: OverlayReceiptOutcome
+  /**
+   * The operation's uniform causal mode, copied from the durable per-batch request modes —
+   * never inferred from counters or from the destination's later status. `completed` receipts
+   * are `fresh`; `idempotent-replay` receipts are `replay`; a dry run plans the fresh
+   * application and says so.
+   */
+  causalMode: OverlayRequestMode
   targetProjectRef: string | null
   targetUrl: string | null
   writerIdentity: string
@@ -143,6 +168,7 @@ const STAGE_STATES = new Set<OverlayStageState>([
   'acknowledged',
   'confirmed_failure',
   'ambiguous',
+  'not_required',
 ])
 const PHASES = new Set<OverlayPhase>([
   'prepared',
@@ -332,6 +358,47 @@ function validateStage(value: unknown, label: string): asserts value is OverlayS
   }
 }
 
+/** Epoch milliseconds of an already-validated timestamp string. */
+function epochOf(value: string): number {
+  return Date.parse(value)
+}
+
+/**
+ * Temporal coherence for one stage against the checkpoint's own lifecycle window. These are
+ * order relations between moments the operator itself recorded, not wall-clock precision
+ * claims: a submission cannot precede the checkpoint's creation, an acknowledgement cannot
+ * precede its submission, and no stage moment can postdate the checkpoint's last write.
+ * Equality is always acceptable — several moments are legitimately recorded within one
+ * millisecond.
+ */
+function validateStageTemporalCoherence(
+  stage: OverlayStage,
+  bounds: { createdAt: string; updatedAt: string },
+  label: string,
+): void {
+  const createdEpoch = epochOf(bounds.createdAt)
+  const updatedEpoch = epochOf(bounds.updatedAt)
+  if (stage.submittedAt !== null) {
+    const submittedEpoch = epochOf(stage.submittedAt)
+    if (submittedEpoch < createdEpoch || submittedEpoch > updatedEpoch) {
+      throw new OverlayCheckpointIntegrityError(
+        `${label}.submittedAt lies outside the checkpoint lifecycle window.`,
+      )
+    }
+  }
+  if (stage.acknowledgedAt !== null) {
+    const acknowledgedEpoch = epochOf(stage.acknowledgedAt)
+    if (stage.submittedAt !== null && acknowledgedEpoch < epochOf(stage.submittedAt)) {
+      throw new OverlayCheckpointIntegrityError(`${label} acknowledges before its own submission.`)
+    }
+    if (acknowledgedEpoch < createdEpoch || acknowledgedEpoch > updatedEpoch) {
+      throw new OverlayCheckpointIntegrityError(
+        `${label}.acknowledgedAt lies outside the checkpoint lifecycle window.`,
+      )
+    }
+  }
+}
+
 /**
  * The relational stage invariants: what each state must and must not carry, judged against the
  * whole batch rather than the stage record alone. An "acknowledged" stage with no timestamps,
@@ -400,6 +467,19 @@ function validateBatchStageInvariants(batch: Record<string, unknown>, label: str
           `${label} effects do not account for every record exactly once.`,
         )
       }
+      // Effects must agree with the batch's durable causal mode: a fresh request applies
+      // every record it carries, a replay applies none. Effects that contradict the recorded
+      // mode are a rewritten causal history, not bookkeeping.
+      if (batch.requestMode === 'fresh' && effects.alreadyApplied !== 0) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is a fresh-mode batch acknowledging already-applied effects.`,
+        )
+      }
+      if (batch.requestMode === 'replay' && effects.applied !== 0) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is a replay-mode batch acknowledging fresh effects.`,
+        )
+      }
       return
     }
     case 'confirmed_failure':
@@ -428,8 +508,111 @@ function validateBatchStageInvariants(batch: Record<string, unknown>, label: str
       }
       requireNullEvidence()
       return
+    case 'not_required':
+      // The complete shape of a not-required stage: nothing. No request checksum (checked at
+      // the batch level), no timestamps, no failure, no effects, no evidence.
+      if (
+        stage.submittedAt !== null ||
+        stage.acknowledgedAt !== null ||
+        stage.failureCode !== null
+      ) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} is not required but carries timestamps or a failure.`,
+        )
+      }
+      requireNullEvidence()
+      return
     default:
       throw new OverlayCheckpointIntegrityError(`${label}.state is invalid.`)
+  }
+}
+
+/**
+ * The phase-to-stage relational invariants over the whole checkpoint.
+ *
+ * The engine's write-ahead protocol is strictly sequential — batch k is submitted only after
+ * batches 0..k-1 acknowledged, and a halting stage (a confirmed failure or an ambiguity)
+ * stops the run before any later batch moves — so every honestly persisted checkpoint shows a
+ * prefix of acknowledged batches, at most one in-flight or halted batch, and a prepared tail.
+ * Each phase then names which shapes it may describe. A checkpoint whose phase and stages
+ * disagree is not a weaker checkpoint; it is a claim about history the protocol cannot have
+ * produced, and it is refused rather than reinterpreted.
+ */
+function validatePhaseStageAgreement(
+  phase: OverlayPhase,
+  stageStates: readonly OverlayStageState[],
+  label: string,
+): void {
+  // Sequential-progression shape, independent of phase.
+  let cursor = 0
+  while (cursor < stageStates.length && stageStates[cursor] === 'acknowledged') cursor += 1
+  const haltIndex = cursor
+  const halting =
+    haltIndex < stageStates.length &&
+    (stageStates[haltIndex] === 'submitted' ||
+      stageStates[haltIndex] === 'confirmed_failure' ||
+      stageStates[haltIndex] === 'ambiguous')
+  if (halting) cursor += 1
+  while (cursor < stageStates.length && stageStates[cursor] === 'prepared') cursor += 1
+  if (cursor !== stageStates.length) {
+    throw new OverlayCheckpointIntegrityError(
+      `${label} stages do not form a sequential progression ` +
+        '(acknowledged prefix, at most one in-flight batch, prepared tail).',
+    )
+  }
+
+  const counted = new Map<OverlayStageState, number>()
+  for (const state of stageStates) {
+    counted.set(state, (counted.get(state) ?? 0) + 1)
+  }
+  const of = (state: OverlayStageState): number => counted.get(state) ?? 0
+
+  switch (phase) {
+    case 'prepared':
+      // A prepared operation has done nothing: no submission, no acknowledgement, no failure,
+      // no ambiguity, no evidence — and therefore (enforced separately) zero counters and no
+      // post-observation. A completion receipt for it is impossible by construction.
+      if (of('prepared') !== stageStates.length) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} phase is prepared while a batch has progressed beyond prepared.`,
+        )
+      }
+      return
+    case 'running':
+      if (of('confirmed_failure') > 0 || of('ambiguous') > 0) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} phase is running while a batch is halted in failure or ambiguity.`,
+        )
+      }
+      if (of('submitted') > 1) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} phase is running with more than one in-flight batch.`,
+        )
+      }
+      return
+    case 'confirmed_failure':
+      if (of('confirmed_failure') !== 1 || of('submitted') > 0 || of('ambiguous') > 0) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} phase is confirmed_failure without exactly one confirmed-failure stage.`,
+        )
+      }
+      return
+    case 'needs_reconciliation':
+      if (of('ambiguous') !== 1 || of('submitted') > 0 || of('confirmed_failure') > 0) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} phase is needs_reconciliation without exactly one ambiguous stage.`,
+        )
+      }
+      return
+    case 'completed':
+      if (of('acknowledged') !== stageStates.length) {
+        throw new OverlayCheckpointIntegrityError(
+          `${label} phase is completed while a batch is not acknowledged.`,
+        )
+      }
+      return
+    default:
+      throw new OverlayCheckpointIntegrityError(`${label} phase is invalid.`)
   }
 }
 
@@ -518,6 +701,9 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
   }
   assertTimestamp(checkpoint.createdAt, 'checkpoint.createdAt')
   assertTimestamp(checkpoint.updatedAt, 'checkpoint.updatedAt')
+  if (epochOf(checkpoint.updatedAt) < epochOf(checkpoint.createdAt)) {
+    throw new OverlayCheckpointIntegrityError('checkpoint.updatedAt precedes checkpoint.createdAt.')
+  }
   assertSha256Digest(checkpoint.artifactSha256, 'checkpoint.artifactSha256')
   assertSha256Digest(checkpoint.projectionDigest, 'checkpoint.projectionDigest')
   assertTimestamp(checkpoint.reviewedAt, 'checkpoint.reviewedAt')
@@ -554,8 +740,13 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
   let expectedStart = 1
   let acknowledgedApplied = 0
   let acknowledgedAlready = 0
-  let allAcknowledged = true
+  const stageStates: OverlayStageState[] = []
+  let uniformMode: string | null = null
   const counts = checkpoint.counts as ReviewedSetCounts
+  const temporalBounds = {
+    createdAt: checkpoint.createdAt as string,
+    updatedAt: checkpoint.updatedAt as string,
+  }
   checkpoint.batches.forEach((value, index) => {
     const batch = asRecord(value, `checkpoint.batches[${index}]`)
     assertExactKeys(
@@ -566,6 +757,7 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
         'endOrdinal',
         'recordCount',
         'finalBatch',
+        'requestMode',
         'requestChecksum',
         'stage',
         'acknowledgementChecksum',
@@ -596,8 +788,31 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
         'batch.finalBatch must mark exactly the last batch.',
       )
     }
-    assertSha256Digest(batch.requestChecksum, 'batch.requestChecksum')
+    if (
+      typeof batch.requestMode !== 'string' ||
+      !OVERLAY_REQUEST_MODES.includes(batch.requestMode as OverlayRequestMode)
+    ) {
+      throw new OverlayCheckpointIntegrityError('batch.requestMode is invalid.')
+    }
+    // One operation is planned in exactly one causal context. A checkpoint mixing fresh and
+    // replay batches claims two different pasts at once and is refused.
+    if (uniformMode === null) uniformMode = batch.requestMode
+    else if (uniformMode !== batch.requestMode) {
+      throw new OverlayCheckpointIntegrityError(
+        'checkpoint.batches mix fresh and replay causal modes within one operation.',
+      )
+    }
     validateStage(batch.stage, `checkpoint.batches[${index}].stage`)
+    const stage = batch.stage as OverlayStage
+    if (stage.state === 'not_required') {
+      if (batch.requestChecksum !== null) {
+        throw new OverlayCheckpointIntegrityError(
+          'batch.requestChecksum is present on a not-required stage.',
+        )
+      }
+    } else {
+      assertSha256Digest(batch.requestChecksum, 'batch.requestChecksum')
+    }
     if (batch.acknowledgementChecksum !== null) {
       assertSha256Digest(batch.acknowledgementChecksum, 'batch.acknowledgementChecksum')
     }
@@ -611,13 +826,12 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
       assertNonNegativeInteger(effects.alreadyApplied, 'batch.effects.alreadyApplied')
     }
     validateBatchStageInvariants(batch, `checkpoint.batches[${index}]`)
-    const stage = batch.stage as OverlayStage
+    validateStageTemporalCoherence(stage, temporalBounds, `checkpoint.batches[${index}]`)
+    stageStates.push(stage.state)
     if (stage.state === 'acknowledged') {
       const effects = batch.effects as { applied: number; alreadyApplied: number }
       acknowledgedApplied += effects.applied
       acknowledgedAlready += effects.alreadyApplied
-    } else {
-      allAcknowledged = false
     }
   })
   if (expectedStart !== counts.recordCount + 1) {
@@ -625,6 +839,18 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
       'checkpoint.batches do not cover exactly the record count.',
     )
   }
+
+  // Every batch of this operation is a required mutation stage: the plan tiles all 630
+  // records into mutating batches and defines no optional stage. The vocabulary keeps
+  // `not_required` closed and shape-checked, and this operation-level rule refuses it.
+  if (stageStates.includes('not_required')) {
+    throw new OverlayCheckpointIntegrityError(
+      'checkpoint.batches claim a not-required stage; every overlay batch is a required ' +
+        'mutation stage.',
+    )
+  }
+
+  validatePhaseStageAgreement(checkpoint.phase as OverlayPhase, stageStates, 'checkpoint')
 
   // Counters are derived, never asserted: they must equal the sum of acknowledged effects.
   if (counters.applied !== acknowledgedApplied || counters.alreadyApplied !== acknowledgedAlready) {
@@ -637,11 +863,6 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
     assertSha256Digest(checkpoint.postObservationChecksum, 'checkpoint.postObservationChecksum')
   }
   if (checkpoint.phase === 'completed') {
-    if (!allAcknowledged) {
-      throw new OverlayCheckpointIntegrityError(
-        'checkpoint.phase is completed while a batch is not acknowledged.',
-      )
-    }
     if (counters.applied + counters.alreadyApplied !== counts.recordCount) {
       throw new OverlayCheckpointIntegrityError(
         'checkpoint.phase is completed while counters do not cover the record count.',
@@ -659,6 +880,15 @@ export function validateOverlayCheckpoint(value: unknown): asserts value is Over
   }
 
   assertNoSensitiveOverlayMaterial(checkpoint)
+}
+
+/** The one causal mode a validated checkpoint's batches uniformly carry. */
+export function overlayCheckpointMode(checkpoint: OverlayCheckpoint): OverlayRequestMode {
+  const mode = checkpoint.batches[0]?.requestMode
+  if (mode !== 'fresh' && mode !== 'replay') {
+    throw new OverlayCheckpointIntegrityError('checkpoint.batches carry no causal mode.')
+  }
+  return mode
 }
 
 function isNodeError(error: unknown, code: string): boolean {
@@ -781,6 +1011,7 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
       'engineVersion',
       'operationId',
       'outcome',
+      'causalMode',
       'targetProjectRef',
       'targetUrl',
       'writerIdentity',
@@ -812,6 +1043,19 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
     receipt.outcome !== 'idempotent-replay'
   ) {
     throw new OverlayCheckpointIntegrityError('receipt.outcome is invalid.')
+  }
+  if (
+    typeof receipt.causalMode !== 'string' ||
+    !OVERLAY_REQUEST_MODES.includes(receipt.causalMode as OverlayRequestMode)
+  ) {
+    throw new OverlayCheckpointIntegrityError('receipt.causalMode is invalid.')
+  }
+  // The outcome IS the causal mode's completion vocabulary: a completed outcome describes a
+  // fresh operation, an idempotent replay describes a replay, and a dry run plans the fresh
+  // application. Any other pairing narrates a causal history that never happened.
+  const requiredMode = receipt.outcome === 'idempotent-replay' ? 'replay' : 'fresh'
+  if (receipt.causalMode !== requiredMode) {
+    throw new OverlayCheckpointIntegrityError('receipt.causalMode contradicts the receipt outcome.')
   }
 
   // Authority fields are compared by identity, never by shape. A receipt naming any other
@@ -886,6 +1130,14 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
         'receipt: an idempotent replay applies nothing and re-observes everything.',
       )
     }
+    if (
+      receipt.outcome === 'completed' &&
+      (counters.applied !== counts.recordCount || counters.alreadyApplied !== 0)
+    ) {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt: a completed fresh operation applies every record exactly once.',
+      )
+    }
     if (typeof receipt.postObservationChecksum !== 'string') {
       throw new OverlayCheckpointIntegrityError(
         'receipt: a remote outcome requires the post-observation binding.',
@@ -900,6 +1152,110 @@ export function validateOverlayReceipt(value: unknown): asserts value is Overlay
     throw new OverlayCheckpointIntegrityError('receipt.receiptChecksum does not match.')
   }
   assertNoSensitiveOverlayMaterial(receipt, 'receipt')
+}
+
+/**
+ * The exact completed-receipt-to-checkpoint binding.
+ *
+ * A completed remote receipt is only ever the checkpoint's own completion restated: every
+ * meaningful field must equal the completed checkpoint's value, the ordered batch checksum
+ * sequence must be identical, the checkpoint checksum must be the checksum of THIS checkpoint,
+ * and the post-observation binding must be the one the checkpoint completed under. A receipt
+ * that is internally valid and self-checksummed but names a different checkpoint state is not
+ * a weaker receipt — it is not this operation's receipt, and no CLI or engine boundary may
+ * accept it through any smaller field subset.
+ *
+ * Dry-run receipts are never completed-operation authority and are refused here outright.
+ */
+export function validateOverlayReceiptAgainstCheckpoint(
+  receiptValue: unknown,
+  checkpointValue: unknown,
+): asserts receiptValue is OverlayReceipt {
+  validateOverlayReceipt(receiptValue)
+  validateOverlayCheckpoint(checkpointValue)
+  const receipt = receiptValue as OverlayReceipt
+  const checkpoint = checkpointValue as OverlayCheckpoint
+
+  if (receipt.outcome === 'dry-run') {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt: a dry-run receipt is never completed-operation authority.',
+    )
+  }
+  if (checkpoint.phase !== 'completed') {
+    throw new OverlayCheckpointIntegrityError('receipt binding requires a completed checkpoint.')
+  }
+  if (receipt.operationId !== checkpoint.operationId) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.operationId does not name the checkpoint operation.',
+    )
+  }
+  if (receipt.targetProjectRef !== checkpoint.targetProjectRef) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.targetProjectRef does not match the checkpoint destination.',
+    )
+  }
+  if (receipt.artifactSha256 !== checkpoint.artifactSha256) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.artifactSha256 does not match the checkpoint.',
+    )
+  }
+  if (receipt.projectionDigest !== checkpoint.projectionDigest) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.projectionDigest does not match the checkpoint.',
+    )
+  }
+  if (receipt.curationReason !== checkpoint.curationReason) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.curationReason does not match the checkpoint.',
+    )
+  }
+  if (receipt.reviewedAt !== checkpoint.reviewedAt) {
+    throw new OverlayCheckpointIntegrityError('receipt.reviewedAt does not match the checkpoint.')
+  }
+  if (canonicalJson(receipt.counts) !== canonicalJson(checkpoint.counts)) {
+    throw new OverlayCheckpointIntegrityError('receipt.counts do not match the checkpoint.')
+  }
+  if (
+    receipt.counters.applied !== checkpoint.counters.applied ||
+    receipt.counters.alreadyApplied !== checkpoint.counters.alreadyApplied
+  ) {
+    throw new OverlayCheckpointIntegrityError('receipt.counters do not match the checkpoint.')
+  }
+  if (receipt.causalMode !== overlayCheckpointMode(checkpoint)) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.causalMode does not match the checkpoint batches.',
+    )
+  }
+  if (receipt.batchRequestChecksums.length !== checkpoint.batches.length) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.batchRequestChecksums do not cover the checkpoint batches.',
+    )
+  }
+  checkpoint.batches.forEach((batch, index) => {
+    if (receipt.batchRequestChecksums[index] !== batch.requestChecksum) {
+      throw new OverlayCheckpointIntegrityError(
+        'receipt.batchRequestChecksums do not equal the checkpoint request sequence exactly.',
+      )
+    }
+  })
+  if (receipt.checkpointChecksum !== overlayCheckpointChecksum(checkpoint)) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.checkpointChecksum is not the checksum of this completed checkpoint.',
+    )
+  }
+  if (
+    checkpoint.postObservationChecksum === null ||
+    receipt.postObservationChecksum !== checkpoint.postObservationChecksum
+  ) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.postObservationChecksum is not the checkpoint completion binding.',
+    )
+  }
+  if (epochOf(receipt.completedAt) < epochOf(checkpoint.updatedAt)) {
+    throw new OverlayCheckpointIntegrityError(
+      'receipt.completedAt precedes the checkpoint completion write.',
+    )
+  }
 }
 
 export async function writeOverlayReceiptImmutable(

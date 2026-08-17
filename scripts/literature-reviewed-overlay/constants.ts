@@ -6,27 +6,37 @@
  * "some nonempty string" accepts anything at all, so the values are compared by identity.
  */
 
+/**
+ * The engine version participates in the deterministic operation identity
+ * (`overlayOperationId`), so it is frozen at 1.1.0: bumping it would silently rename the one
+ * reviewed operation. Artifact-format evolution is carried by the three schema versions below
+ * instead, which identify what a persisted checkpoint, receipt, or reconciliation receipt can
+ * prove — never what operation it belongs to.
+ */
 export const OVERLAY_ENGINE_VERSION = 'literature-reviewed-overlay/1.1.0' as const
 /**
- * Bumped to 1.1.0 when the checkpoint began carrying the frozen curation reason, the
- * post-observation binding, and relationally strict stage invariants. A 1.0.0 checkpoint
- * cannot prove what its acknowledged stages actually acknowledged, so it is refused rather
- * than reinterpreted.
+ * Bumped to 1.2.0 when every batch began carrying its durable causal request mode
+ * (`fresh` | `replay`, fixed before the request is sent and bound into the request body and
+ * checksum), and the validator became relational across the whole checkpoint: phase-to-stage
+ * agreement, temporal coherence, and mode-consistent effects. A 1.1.0 checkpoint cannot prove
+ * in which causal context its requests were sent, so it is refused rather than reinterpreted.
  */
 export const OVERLAY_CHECKPOINT_SCHEMA_VERSION =
-  'literature-reviewed-overlay-checkpoint/1.1.0' as const
+  'literature-reviewed-overlay-checkpoint/1.2.0' as const
 /**
- * Bumped to 1.1.0 when the receipt began binding the destination identity unconditionally for
- * remote outcomes, the frozen curation reason, the checkpoint checksum, and the read-only
- * post-observation that licensed completion.
+ * Bumped to 1.2.0 when the receipt began carrying the operation's causal mode beside the
+ * counters, so a completed receipt can only describe the causal history its checkpoint
+ * durably recorded — never one inferred from the destination's later status.
  */
-export const OVERLAY_RECEIPT_SCHEMA_VERSION = 'literature-reviewed-overlay-receipt/1.1.0' as const
+export const OVERLAY_RECEIPT_SCHEMA_VERSION = 'literature-reviewed-overlay-receipt/1.2.0' as const
 /**
- * Bumped to 1.1.0 when reconciliation began observing the operation registry and totals beside
- * the per-batch state, with the strict classification vocabulary.
+ * Bumped to 1.2.0 when the reconciliation receipt became a closed strict schema: exact keys
+ * and primitive types, per-batch request checksum + causal mode + expected record count +
+ * observation checksum, the operation-scope totals that make an extra event or article under
+ * the operation visible, and full count arithmetic.
  */
 export const OVERLAY_RECONCILIATION_SCHEMA_VERSION =
-  'literature-reviewed-overlay-reconciliation/1.1.0' as const
+  'literature-reviewed-overlay-reconciliation/1.2.0' as const
 export const OVERLAY_LEASE_SCHEMA_VERSION = 'literature-reviewed-overlay-lease/1.0.0' as const
 
 /** The exact `actor_email` every overlay event carries, and the writer a receipt may name. */
@@ -170,6 +180,16 @@ export const OVERLAY_DEFAULT_STATE_DIRECTORY = 'local-data/literature-reviewed-o
  * in it, the overlay may create no article, and the total must be identical before and after.
  */
 export const OVERLAY_EXPECTED_CORPUS_ARTICLE_COUNT = 132_350 as const
+
+/**
+ * The causal request modes. A batch request is prepared in exactly one of them, decided by the
+ * registered operation's status at checkpoint-creation time and durably recorded before the
+ * request is sent: `fresh` — the operation was not completed, so this request freshly applies
+ * its records; `replay` — the operation was already completed before this run began, so this
+ * request may only re-observe. The destination's later status never rewrites a recorded mode.
+ */
+export const OVERLAY_REQUEST_MODES = ['fresh', 'replay'] as const
+export type OverlayRequestMode = (typeof OVERLAY_REQUEST_MODES)[number]
 
 /** Bounded transactions: one RPC call per batch, transactional per call. */
 export const OVERLAY_DEFAULT_RECORD_BATCH_LIMIT = 90
