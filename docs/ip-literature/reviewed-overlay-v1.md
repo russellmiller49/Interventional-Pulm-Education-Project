@@ -263,6 +263,14 @@ automatic retry, no failed-status write, no delete, no compensating mutation.
 
 - **Operation identity** is a deterministic UUID derived from the engine version, the artifact
   SHA-256, and the source projection digest. The same truth always names the same operation.
+- **Causal request mode.** Every batch request durably records, before it is sent, whether it
+  is a `fresh` application (the operation was not completed when this run planned it) or an
+  exact completed-operation `replay`. The mode is bound into the request body and checksum,
+  enforced transactionally by the apply RPC (a fresh request never targets a completed
+  operation; a replay request never targets anything else), echoed in the acknowledgement,
+  carried in reconciliation evidence and receipts, and never rewritten from the destination's
+  later registry status — so a lost final fresh acknowledgement reconciles as fresh
+  application, and a replay's counters remain replay counters.
 - **Event identity** is a deterministic UUID derived from the operation id and PMID. History can
   therefore never be duplicated: a rerun of a completed operation observes the operation row and
   per-record state and reports an idempotent replay, mutating nothing; a rerun of a partially
@@ -380,7 +388,12 @@ An independent Codex review of the preparation PR returned BLOCKED with reproduc
 production-integrity defects (while passing the held-out non-access, positive authority,
 artifact handling, exact local counts, representation, additive structure, and production
 unreachability). The corrections, all landed on the same branch without redesigning the passed
-boundaries:
+boundaries, are listed below **as landed in that pass**. A second independent review
+subsequently reproduced remaining defects inside four of these areas — checkpoint phase-level
+and temporal strictness, reconciliation-receipt schema strictness and operation-scope
+exactness, the completed-receipt-to-checkpoint binding, and operational coverage of
+credential fallbacks — so the corresponding bullets here must be read together with the
+final bounded correction round recorded in the next section, which closed them.
 
 - **Completion is licensed by actual state, not registry metadata.** The apply RPC's
   finalization now counts the actual articles by class _and_ enrichment provenance and the
@@ -425,7 +438,81 @@ boundaries:
   refused; Endoreels and arbitrary targets refused; production modules textually free of every
   legacy name), and the proposal is **partial-schema safe**: bare `CREATE` only, one
   transaction — an incompatible same-signature function survives untouched while the proposal
-  rolls back whole.
+  rolls back whole. (The second review showed the tier-1 credential tests did not cover
+  partial dedicated configurations completed by generic values; the final round below adds
+  the operational coverage and the fallback-mutation kills.)
+
+## Final bounded correction round (2026-08-17)
+
+A second independent Codex review of the corrected branch passed the SQL/RPC work and the
+positive lifecycle, and returned BLOCKED on five bounded families. Each family's
+counterexample was first reproduced against the pre-correction head (`908c9151`) in
+disposable fixtures, then closed. **This round has not been independently re-reviewed; no
+review PASS is claimed.**
+
+1. **Strict checkpoint phase and temporal relationships.** The tier-1 validator was strict
+   per stage but not across the checkpoint: it accepted a `prepared` checkpoint carrying an
+   acknowledged batch with nonzero counters, and an acknowledgement recorded two days before
+   its own submission. The validator is now relational over the whole artifact — each phase
+   admits exactly the stage shapes the sequential write-ahead protocol can produce (a
+   prepared phase nothing progressed, a running phase no halted stage and at most one
+   in-flight batch, halt phases exactly their halting stage, completion only over
+   acknowledged batches with the post-observation binding), stages must form the
+   acknowledged-prefix sequential progression, timestamps must be causally ordered inside the
+   checkpoint's lifecycle window (equality always acceptable — no wall-clock precision
+   claims), the closed `not_required` vocabulary is shape-checked and refused at the
+   operation level, and effects must agree with each batch's durable causal mode.
+2. **Fresh/replay causality across lost acknowledgements.** The tier-1 engine derived the
+   fresh-versus-replay split from the registry's status at resume time, so the review's
+   250/250/130 counterexample — the final batch freshly applied and completing the operation
+   remotely with only its acknowledgement lost — was misreported as 500 applied / 130
+   alreadyApplied. The causal mode is now durably recorded per batch before the request is
+   sent, bound into the request checksum, enforced and echoed by the RPC, and preserved by
+   reconciliation: the lost final batch reconciles as 130 applied, completed counters remain
+   630 / 0, a genuine replay's counters remain 0 / 630, a receipt claiming the opposite mode
+   is refused, and a remote completion this checkpoint's history cannot account for halts the
+   operation instead of being adopted.
+3. **Reconciliation observation and event exactness.** The tier-1 receipt check accepted a
+   malformed receipt (`observedAt: "not-a-timestamp"`, a string batch index, zero observed
+   records under a 90-record exact claim) and classified an operation carrying 631 events as
+   `applied_exact`. The reconciliation receipt is now a closed strict schema — exact keys,
+   exact primitive types, non-negative safe integers, digest and timestamp grammar, full
+   count arithmetic — carrying per-batch request checksum, causal mode, expected record
+   count, and observation checksum beside the operation-scope totals; and exactness is an
+   operation property: an extra event, an extra article, a foreign review, or a changed
+   corpus total downgrades record-exact batches to `drifted`, never `applied_exact`. A
+   receipt remains evidence only — resume freshly re-observes the operation scope and every
+   nominated batch and requires exact agreement before any stage advances.
+4. **Exact receipt-to-checkpoint authority.** The tier-1 CLI accepted a self-checksummed
+   completed receipt through a seven-field subset, so a receipt with an unrelated checkpoint
+   checksum, bogus batch checksums, and swapped counters passed. A completed receipt is now
+   validated against its checkpoint on every meaningful field (identities, digests, frozen
+   reason, `reviewedAt`, pinned counts, counters, causal mode, the exact ordered
+   batch-checksum sequence, the checkpoint checksum itself, the post-observation binding, and
+   the completion timestamp) by one mandatory `validateOverlayReceiptAgainstCheckpoint`; the
+   engine self-checks the binding before a receipt may exist, the CLI accepts only through it
+   plus the freshly re-verified post-observation, and dry-run receipts are never
+   completed-operation authority.
+5. **Operational credential-fallback kills.** The tier-1 credential tests covered legacy-only
+   and full-trio environments, so a realistic fallback (a partial dedicated configuration
+   silently completed from a generic variable) survived them. Eight operational
+   partial-configuration scenarios now must fail closed constructing no transport and issuing
+   no request, and a mutation matrix compiles seven realistic fallback edits of the real
+   resolver source (service-role/secret-key/public-URL/generic-URL/project-ref fallbacks, an
+   anon-key fallback with a weakened credential pattern, and a full generic trio with the
+   legacy refusal removed) and proves each is killed by those scenarios. The byte-exact
+   identity pins remain a second wall, and the resolver source is additionally pinned to
+   read the environment only through the dedicated names.
+
+Evidence for this round: every counterexample reproduced at `908c9151` and re-run refused at
+the corrected head; 234 unit/adversarial tests across the package's 12 suites; the disposable
+rehearsal at 37 scenarios — including `lost-final-ack-remains-fresh-630-applied`,
+`replay-counters-remain-replay-after-lost-ack`, and `rpc-causal-mode-gate` — run three
+consecutive times. The checkpoint, receipt, and reconciliation schema versions moved to
+1.2.0; the engine version (and with it the deterministic operation id
+`955eecb4-4ef9-8f09-8aa9-b50890c471c5` and projection digest `6bdc086a…`) is unchanged.
+Nothing in this round contacted production, applied the schema proposal anywhere remote, or
+touched the protected local database.
 
 ## Relationship to the protected import contracts
 

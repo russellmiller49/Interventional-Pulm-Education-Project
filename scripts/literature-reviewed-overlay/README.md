@@ -73,6 +73,13 @@ write-ahead checkpoint records `submitted` before every request; an ambiguous ac
 stops the operation until read-only reconciliation proves exact application or exact absence;
 there is no automatic retry and no compensating mutation.
 
+Every batch request carries a durable **causal mode**, fixed before the request is sent:
+`fresh` (the operation was not completed when this run planned it) or `replay` (it was). The
+mode is part of the request body and checksum, enforced transactionally by the proposal RPC,
+echoed in the acknowledgement, and preserved by reconciliation — a lost final fresh
+acknowledgement reconciles as fresh application, and the destination's later registry status
+never rewrites the recorded causal history.
+
 ## Rehearsal
 
 ```sh
@@ -80,12 +87,17 @@ npx tsx scripts/literature-reviewed-overlay/rehearse.ts
 ```
 
 creates a disposable Supabase-image PostgreSQL 17 container (no published port), applies the
-foundation migration plus the proposal, seeds a synthetic corpus of exactly 132,350 rows, and
+foundation migration plus the proposal, seeds synthetic corpora of exactly 132,350 rows, and
 proves the full lifecycle with the real engine: precondition refusals, confirmed-rejection
 rollback, lost-acknowledgement reconciliation, completion, corrections lineage, append-only
 enforcement, idempotent replay without duplicate history, refusal to resume a completed
-operation, and drift detection. The protected real-local database and the real dedicated
-project are never contacted.
+operation, drift detection, and both causality counterexamples — the 250/250/130 plan whose
+FINAL batch applies remotely with a lost acknowledgement (completed counters must remain
+630 applied / 0 alreadyApplied) and a completed-operation replay with a lost acknowledgement
+(counters must remain replay). A direct RPC-contract layer additionally proves the strict
+input grammar, the causal-mode gate, completed-operation immutability, and every per-field
+fresh/replay predicate. The protected real-local database and the real dedicated project are
+never contacted.
 
 ## Tests
 
@@ -96,9 +108,13 @@ npx jest --runInBand scripts/literature-reviewed-overlay
 The suites are self-contained (fixtures are synthetic; no Docker, no network, no protected
 source access) and include the adversarial matrix: wrong totals, wrong class or provenance
 distributions, duplicate and absent PMIDs, unknown vocabulary, authority disagreement,
-correction-lineage loss, checkpoint and receipt integrity, acknowledgement mismatch handling,
-credential/PMID redaction guards, and the textual forbidden-construct matrix over every source
-file in this package.
+correction-lineage loss, relational checkpoint integrity (phase-to-stage agreement, temporal
+coherence, causal-mode uniformity), lost-acknowledgement causality in fresh and replay
+contexts, the strict reconciliation-receipt schema with operation-scope exactness, the exact
+receipt-to-checkpoint binding at both the validator and the CLI acceptance boundary,
+acknowledgement mismatch handling, credential/PMID redaction guards, operational
+partial-credential-configuration kills with a compiled fallback-mutation matrix, and the
+textual forbidden-construct matrix over every source file in this package.
 
 ## Integration entries
 
