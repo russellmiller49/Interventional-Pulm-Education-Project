@@ -77,7 +77,10 @@ function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationSta
   return current
 }
 
-function settled(profileId: EcmoReferenceProfileId, action?: SimulationAction): EcmoSimulationState {
+function settled(
+  profileId: EcmoReferenceProfileId,
+  action?: SimulationAction,
+): EcmoSimulationState {
   let state = advance(createReferenceSimulationState(profileId), 8)
   if (action) state = advance(ecmoSimulationReducer(state, action), 12)
   return state
@@ -149,7 +152,11 @@ function vvOnlyVariants(sectionId: EcmoVvOnlyFoundationSectionId): readonly Vari
     const snapshot = ecmoFoundationSnapshot(opening)
     return [
       { label: 'reference at the captured snapshot', state: opening, snapshot },
-      { label: 'after 20 modeled seconds, compared with the snapshot', state: advance(opening, 20), snapshot },
+      {
+        label: 'after 20 modeled seconds, compared with the snapshot',
+        state: advance(opening, 20),
+        snapshot,
+      },
       {
         label: 'transfer and narrative — compared with the retained samples',
         state: advance(opening, 40),
@@ -502,6 +509,16 @@ const html = `<!doctype html>
   .w-full { width: 100%; }
   .min-w-0 { min-width: 0; }
   .min-w-\\[64rem\\] { min-width: 64rem; }
+  .h-auto { height: auto; }
+  .max-w-\\[30rem\\] { max-width: 30rem; }
+  .leading-5 { line-height: 1.25rem; }
+  /*
+   * The circuit minimap draws itself entirely from presentation attributes and \`currentColor\`,
+   * which is what lets it appear in this stylesheet-free harness at all. The only thing it needs
+   * from CSS is its size, so a missing rule here shows up as a diagram at its intrinsic width
+   * rather than as a diagram in the wrong colours.
+   */
+  [data-circuit-minimap] svg { display: block; }
   [data-reference-kind] { display: inline-block; border: 1px solid #999; border-radius: 999px; padding: 1px 8px; font-size: 10px; }
   [data-model-boundary], [data-cell-limitation] { background: #fffbe6; }
   [data-hypothesis-matrix] td, [data-hypothesis-matrix] th { border-bottom: 1px solid #eee; }
