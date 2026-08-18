@@ -1,7 +1,10 @@
 /** @jest-environment node */
+import { sha256 } from '../literature-production-ingest/canonical'
 import { estimateCohortCost } from './estimate'
 import { mintSpendAuthorization } from './openai'
 import {
+  batchSubmitPlanSha256,
+  batchSubmitRequestSlots,
   parseBatchOutputJsonl,
   planBatchShards,
   serializeBatchLine,
@@ -128,24 +131,36 @@ describe('batch submission through the gated socket', () => {
 
   it('uploads the shard then creates the batch, returning a receipt', async () => {
     process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
+    const lines = [line(1), line(2)]
+    const plan = planBatchShards(lines, estimatesFor(lines))
+    const estimate = estimateCohortCost([{ inputTokens: 10, outputTokenAllowance: 1 }], {
+      batch: true,
+    })
     const authorization = mintSpendAuthorization({
       confirmFlagPresent: true,
       interactivePhrase: 'SPEND op-b',
       requiredPhrase: 'SPEND op-b',
-      operationId: 'op-b',
-      cohort: 'pilot-1000',
-      recordCount: 2,
-      maxRecords: 10,
-      maxEstimatedCostUsd: 10,
-      estimate: estimateCohortCost([{ inputTokens: 10, outputTokenAllowance: 1 }], {
-        batch: true,
-      }),
+      envelope: {
+        action: 'batch-submit',
+        operationId: 'op-b',
+        cohort: 'pilot-1000',
+        planSha256: batchSubmitPlanSha256(plan.shards[0]),
+        recordCount: 1,
+        estimatedInputTokens: estimate.inputTokens,
+        estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
+        estimatedTotalTokens: estimate.totalTokenAllowance,
+        estimatedCostUsd: estimate.estimatedCostUsd,
+        maxRecords: 10,
+        maxEstimatedCostUsd: 10,
+        requests: batchSubmitRequestSlots(plan.shards[0].contentSha256),
+        maxNetworkRequests: 2,
+      },
+      estimate,
     })
-    const lines = [line(1), line(2)]
-    const plan = planBatchShards(lines, estimatesFor(lines))
     const calls: string[] = []
     const receipt = await submitBatchShard({
       shard: plan.shards[0],
+      operationId: 'op-b',
       authorization,
       submittedAt: '2026-08-17T00:00:00.000Z',
       fetchImplementation: (async (url: unknown, init?: RequestInit) => {
@@ -166,5 +181,81 @@ describe('batch submission through the gated socket', () => {
     expect(receipt.inputFileId).toBe('file-123')
     expect(receipt.batchId).toBe('batch-456')
     expect(receipt.shardSha256).toBe(plan.shards[0].contentSha256)
+  })
+
+  /**
+   * LUNA-SPEND-001 at the Batch boundary: the capability binds the exact shard bytes, so shard
+   * drift after the owner confirmed the spend refuses before any socket opens.
+   */
+  it('refuses shard bytes that changed after authorization, opening zero sockets', async () => {
+    process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
+    const lines = [line(1), line(2)]
+    const plan = planBatchShards(lines, estimatesFor(lines))
+    const estimate = estimateCohortCost([{ inputTokens: 10, outputTokenAllowance: 1 }], {
+      batch: true,
+    })
+    const authorization = mintSpendAuthorization({
+      confirmFlagPresent: true,
+      interactivePhrase: 'SPEND op-b',
+      requiredPhrase: 'SPEND op-b',
+      envelope: {
+        action: 'batch-submit',
+        operationId: 'op-b',
+        cohort: 'pilot-1000',
+        planSha256: batchSubmitPlanSha256(plan.shards[0]),
+        recordCount: 1,
+        estimatedInputTokens: estimate.inputTokens,
+        estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
+        estimatedTotalTokens: estimate.totalTokenAllowance,
+        estimatedCostUsd: estimate.estimatedCostUsd,
+        maxRecords: 10,
+        maxEstimatedCostUsd: 10,
+        requests: batchSubmitRequestSlots(plan.shards[0].contentSha256),
+        maxNetworkRequests: 2,
+      },
+      estimate,
+    })
+    let calls = 0
+    const forbidden = (async () => {
+      calls += 1
+      throw new Error('fetch must never be reached')
+    }) as typeof fetch
+    // Bytes changed while the shard metadata still claims the authorized digest: the upload
+    // digest is recomputed from the real bytes, so consumption refuses.
+    const tamperedBytes = `${plan.shards[0].content}tampered\n`
+    await expect(
+      submitBatchShard({
+        shard: { ...plan.shards[0], content: tamperedBytes },
+        operationId: 'op-b',
+        authorization,
+        submittedAt: '2026-08-17T00:00:00.000Z',
+        fetchImplementation: forbidden,
+      }),
+    ).rejects.toThrow(/not part of what the owner authorized/u)
+    // Bytes and metadata both re-derived: the plan digest itself no longer matches.
+    await expect(
+      submitBatchShard({
+        shard: {
+          ...plan.shards[0],
+          content: tamperedBytes,
+          contentSha256: sha256(tamperedBytes),
+        },
+        operationId: 'op-b',
+        authorization,
+        submittedAt: '2026-08-17T00:00:00.000Z',
+        fetchImplementation: forbidden,
+      }),
+    ).rejects.toThrow(/plan digest changed/u)
+    // Same bytes, wrong operation: refused before the socket too.
+    await expect(
+      submitBatchShard({
+        shard: plan.shards[0],
+        operationId: 'op-other',
+        authorization,
+        submittedAt: '2026-08-17T00:00:00.000Z',
+        fetchImplementation: forbidden,
+      }),
+    ).rejects.toThrow(/different operation/u)
+    expect(calls).toBe(0)
   })
 })

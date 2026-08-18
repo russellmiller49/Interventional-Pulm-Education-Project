@@ -6,7 +6,13 @@ import {
   LUNA_BATCH_MAX_RECORDS_PER_SHARD,
 } from './constants'
 import type { RequestEstimate } from './estimate'
-import { executeOpenAiRequest, type OpenAiHttpResult, type SpendAuthorization } from './openai'
+import {
+  assertSpendEnvelope,
+  executeOpenAiRequest,
+  type AuthorizedRequestSlot,
+  type OpenAiHttpResult,
+  type SpendAuthorization,
+} from './openai'
 import type { RawResponseRecord } from './results'
 
 /**
@@ -136,6 +142,52 @@ export function planBatchShards(
   }
 }
 
+/**
+ * The plan digest one shard submission is authorized against. Shard byte drift after the owner
+ * confirmed the spend changes it, and the capability then refuses before any socket opens.
+ */
+export function batchSubmitPlanSha256(shard: {
+  readonly filename: string
+  readonly contentSha256: string
+  readonly recordCount: number
+}): string {
+  return sha256(
+    canonicalJson({
+      filename: shard.filename,
+      contentSha256: shard.contentSha256,
+      recordCount: shard.recordCount,
+    }),
+  )
+}
+
+/** The plan digest for a Batch control-plane call against one batch id. */
+export function batchControlPlanSha256(batchId: string): string {
+  return sha256(canonicalJson({ batchId }))
+}
+
+/** The exact two-request upload/create sequence a shard submission may perform. */
+export function batchSubmitRequestSlots(shardSha256: string): AuthorizedRequestSlot[] {
+  return [
+    { kind: 'exact', method: 'POST', path: '/files', bodySha256: shardSha256 },
+    // The job-creation body carries the file id the upload returns, so it cannot be pre-hashed;
+    // method, path, and the single use stay exact.
+    { kind: 'exact', method: 'POST', path: '/batches', bodySha256: null },
+  ]
+}
+
+/** The one status request a batch-status spend may perform. */
+export function batchStatusRequestSlots(batchId: string): AuthorizedRequestSlot[] {
+  return [{ kind: 'exact', method: 'GET', path: `/batches/${batchId}`, bodySha256: null }]
+}
+
+/** One status request plus at most two content fetches (output and error files). */
+export function batchFetchRequestSlots(batchId: string): AuthorizedRequestSlot[] {
+  return [
+    { kind: 'exact', method: 'GET', path: `/batches/${batchId}`, bodySha256: null },
+    { kind: 'derived', method: 'GET', pathPrefix: '/files/', pathSuffix: '/content', maxUses: 2 },
+  ]
+}
+
 export interface BatchSubmissionReceipt {
   readonly shardFilename: string
   readonly shardSha256: string
@@ -156,10 +208,18 @@ function requireString(value: unknown, label: string): string {
 /** Upload one shard and create its Batch job. Two spend-gated requests, no retry. */
 export async function submitBatchShard(options: {
   readonly shard: BatchShard
+  readonly operationId: string
   readonly authorization: SpendAuthorization
   readonly submittedAt: string
   readonly fetchImplementation?: typeof fetch
 }): Promise<BatchSubmissionReceipt> {
+  assertSpendEnvelope(options.authorization, {
+    action: 'batch-submit',
+    operationId: options.operationId,
+    planSha256: batchSubmitPlanSha256(options.shard),
+  })
+  // Hashed from the exact bytes handed to the upload body, so declared and sent cannot diverge.
+  const shardDigest = sha256(options.shard.content)
   const formData = new FormData()
   formData.append('purpose', 'batch')
   formData.append(
@@ -171,6 +231,7 @@ export async function submitBatchShard(options: {
     method: 'POST',
     path: '/files',
     formData,
+    bodyDigest: shardDigest,
     authorization: options.authorization,
     fetchImplementation: options.fetchImplementation,
   })
@@ -210,9 +271,17 @@ export interface BatchStatus {
 
 export async function fetchBatchStatus(options: {
   readonly batchId: string
+  readonly operationId: string
+  /** `batch-fetch` reads status first, so both control-plane actions may make this call. */
+  readonly action: 'batch-status' | 'batch-fetch'
   readonly authorization: SpendAuthorization
   readonly fetchImplementation?: typeof fetch
 }): Promise<BatchStatus> {
+  assertSpendEnvelope(options.authorization, {
+    action: options.action,
+    operationId: options.operationId,
+    planSha256: batchControlPlanSha256(options.batchId),
+  })
   const result = await executeOpenAiRequest({
     method: 'GET',
     path: `/batches/${options.batchId}`,
@@ -232,9 +301,16 @@ export async function fetchBatchStatus(options: {
 
 export async function fetchBatchFileContent(options: {
   readonly fileId: string
+  readonly batchId: string
+  readonly operationId: string
   readonly authorization: SpendAuthorization
   readonly fetchImplementation?: typeof fetch
 }): Promise<OpenAiHttpResult> {
+  assertSpendEnvelope(options.authorization, {
+    action: 'batch-fetch',
+    operationId: options.operationId,
+    planSha256: batchControlPlanSha256(options.batchId),
+  })
   return executeOpenAiRequest({
     method: 'GET',
     path: `/files/${options.fileId}/content`,

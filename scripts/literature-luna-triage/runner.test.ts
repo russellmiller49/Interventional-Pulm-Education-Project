@@ -2,8 +2,16 @@
 import type { UniversalPacket } from '../../src/features/literature/classifier/packet-contract'
 import { estimateCohortCost } from './estimate'
 import { syntheticResponseBody, syntheticStageAOutput } from './fixtures'
-import { mintSpendAuthorization } from './openai'
-import { executeSyncRun, ledgerCostUsd, prepareRequestSet, type LedgerRow } from './runner'
+import { mintSpendAuthorization, type SpendAuthorization } from './openai'
+import {
+  executeSyncRun,
+  ledgerCostUsd,
+  prepareRequestSet,
+  syncRunPlanSha256,
+  syncRunRequestSlots,
+  type LedgerRow,
+  type PreparedRequest,
+} from './runner'
 
 const KEY_ENV = 'OPENAI_API_KEY'
 
@@ -80,19 +88,35 @@ describe('synchronous execution', () => {
     else process.env[KEY_ENV] = previous
   })
 
-  function authorization(recordCount: number) {
+  function authorization(
+    requests: readonly PreparedRequest[],
+    overrides: { readonly operationId?: string } = {},
+  ): SpendAuthorization {
+    const estimate = estimateCohortCost(
+      requests.map((request) => request.estimate),
+      { batch: false },
+    )
+    const operationId = overrides.operationId ?? 'op-x'
     return mintSpendAuthorization({
       confirmFlagPresent: true,
-      interactivePhrase: 'SPEND op-x',
-      requiredPhrase: 'SPEND op-x',
-      operationId: 'op-x',
-      cohort: 'smoke-30',
-      recordCount,
-      maxRecords: 100,
-      maxEstimatedCostUsd: 100,
-      estimate: estimateCohortCost([{ inputTokens: 100, outputTokenAllowance: 10 }], {
-        batch: false,
-      }),
+      interactivePhrase: `SPEND ${operationId}`,
+      requiredPhrase: `SPEND ${operationId}`,
+      envelope: {
+        action: 'run-sync',
+        operationId,
+        cohort: 'smoke-30',
+        planSha256: syncRunPlanSha256(requests),
+        recordCount: requests.length,
+        estimatedInputTokens: estimate.inputTokens,
+        estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
+        estimatedTotalTokens: estimate.totalTokenAllowance,
+        estimatedCostUsd: estimate.estimatedCostUsd,
+        maxRecords: 100,
+        maxEstimatedCostUsd: 100,
+        requests: syncRunRequestSlots(requests),
+        maxNetworkRequests: requests.length,
+      },
+      estimate,
     })
   }
 
@@ -102,7 +126,8 @@ describe('synchronous execution', () => {
     const ledger: LedgerRow[] = []
     const summary = await executeSyncRun({
       requests: prepared.requests,
-      authorization: authorization(2),
+      operationId: 'op-x',
+      authorization: authorization(prepared.requests),
       sinks: {
         writeRawResponse: async (customId, bodyText) => {
           raw[customId] = bodyText
@@ -141,7 +166,8 @@ describe('synchronous execution', () => {
     await expect(
       executeSyncRun({
         requests: prepared.requests,
-        authorization: authorization(2),
+        operationId: 'op-x',
+        authorization: authorization(prepared.requests),
         sinks: {
           writeRawResponse: async () => undefined,
           appendLedger: async (row) => {
@@ -161,3 +187,129 @@ describe('synchronous execution', () => {
     expect(ledger[0].error).not.toContain('sk-test-abcdef1234567890')
   })
 })
+
+/**
+ * LUNA-SPEND-001 at the run boundary. The capability is bound to one operation and one exact
+ * prepared request set; drift in either refuses before the first socket.
+ */
+describe('run-level spend binding (LUNA-SPEND-001)', () => {
+  const previous = process.env[KEY_ENV]
+  beforeEach(() => {
+    process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
+  })
+  afterEach(() => {
+    if (previous === undefined) delete process.env[KEY_ENV]
+    else process.env[KEY_ENV] = previous
+  })
+
+  const sinks = {
+    writeRawResponse: async () => undefined,
+    appendLedger: async () => undefined,
+    now: () => 'now',
+  }
+
+  function forbiddenFetch() {
+    let calls = 0
+    const implementation = (async () => {
+      calls += 1
+      throw new Error('fetch must never be reached')
+    }) as typeof fetch
+    return { implementation, calls: () => calls }
+  }
+
+  it('refuses a capability minted for another operation', async () => {
+    const prepared = prepareRequestSet([packet(ID_A, 'One')], PARAMS)
+    const socket = forbiddenFetch()
+    await expect(
+      executeSyncRun({
+        requests: prepared.requests,
+        operationId: 'op-x',
+        authorization: authorizationFor(prepared.requests, 'op-other'),
+        sinks,
+        fetchImplementation: socket.implementation,
+      }),
+    ).rejects.toThrow(/different operation/u)
+    expect(socket.calls()).toBe(0)
+  })
+
+  it('refuses a request set that drifted after authorization', async () => {
+    const authorized = prepareRequestSet([packet(ID_A, 'One')], PARAMS)
+    const drifted = prepareRequestSet(
+      [packet(ID_A, 'One edited after the owner confirmed')],
+      PARAMS,
+    )
+    const socket = forbiddenFetch()
+    await expect(
+      executeSyncRun({
+        requests: drifted.requests,
+        operationId: 'op-x',
+        authorization: authorizationFor(authorized.requests, 'op-x'),
+        sinks,
+        fetchImplementation: socket.implementation,
+      }),
+    ).rejects.toThrow(/plan digest changed/u)
+    expect(socket.calls()).toBe(0)
+  })
+
+  it('refuses to mint when the prepared record count exceeds the owner ceiling', () => {
+    const prepared = prepareRequestSet([packet(ID_A, 'One'), packet(ID_B, 'Two')], PARAMS)
+    const estimate = estimateCohortCost(
+      prepared.requests.map((request) => request.estimate),
+      { batch: false },
+    )
+    expect(() =>
+      mintSpendAuthorization({
+        confirmFlagPresent: true,
+        interactivePhrase: 'SPEND op-x',
+        requiredPhrase: 'SPEND op-x',
+        envelope: {
+          action: 'run-sync',
+          operationId: 'op-x',
+          cohort: 'smoke-30',
+          planSha256: syncRunPlanSha256(prepared.requests),
+          recordCount: 2,
+          estimatedInputTokens: estimate.inputTokens,
+          estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
+          estimatedTotalTokens: estimate.totalTokenAllowance,
+          estimatedCostUsd: estimate.estimatedCostUsd,
+          maxRecords: 1,
+          maxEstimatedCostUsd: 100,
+          requests: syncRunRequestSlots(prepared.requests),
+          maxNetworkRequests: 2,
+        },
+        estimate,
+      }),
+    ).toThrow(/exceeds --max-records/u)
+  })
+})
+
+function authorizationFor(
+  requests: readonly PreparedRequest[],
+  operationId: string,
+): SpendAuthorization {
+  const estimate = estimateCohortCost(
+    requests.map((request) => request.estimate),
+    { batch: false },
+  )
+  return mintSpendAuthorization({
+    confirmFlagPresent: true,
+    interactivePhrase: `SPEND ${operationId}`,
+    requiredPhrase: `SPEND ${operationId}`,
+    envelope: {
+      action: 'run-sync',
+      operationId,
+      cohort: 'smoke-30',
+      planSha256: syncRunPlanSha256(requests),
+      recordCount: requests.length,
+      estimatedInputTokens: estimate.inputTokens,
+      estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
+      estimatedTotalTokens: estimate.totalTokenAllowance,
+      estimatedCostUsd: estimate.estimatedCostUsd,
+      maxRecords: 100,
+      maxEstimatedCostUsd: 100,
+      requests: syncRunRequestSlots(requests),
+      maxNetworkRequests: requests.length,
+    },
+    estimate,
+  })
+}
