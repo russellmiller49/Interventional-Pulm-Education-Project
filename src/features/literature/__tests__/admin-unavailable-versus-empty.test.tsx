@@ -27,6 +27,7 @@ import {
 } from '@/features/literature/server/runtime-capability'
 
 const ADMIN_PAGE = 'src/app/[locale]/admin/literature/page.tsx'
+const CURATED_PAGE = 'src/app/[locale]/admin/literature/curated/page.tsx'
 const UNAVAILABLE = 'Unavailable'
 
 describe('the shared count display', () => {
@@ -111,6 +112,24 @@ describe('the administration page cannot reintroduce a misleading zero', () => {
   it('offers the gold-set entry point only when the operation is carried', () => {
     expect(executable).toContain("literatureOperationActivated('gold_set_read')")
     expect(executable).toMatch(/goldWorkflowAvailable \?/u)
+  })
+})
+
+describe('the Curated page cannot reintroduce a misleading zero', () => {
+  const source = readFileSync(join(process.cwd(), CURATED_PAGE), 'utf8')
+  const executable = source
+    .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
+    .replaceAll(/(^|[^:])\/\/.*$/gmu, '$1')
+
+  it('routes every reviewed statistic through the shared capability helper', () => {
+    expect(executable).toContain('literatureCountDisplay(stats.capability.state')
+    expect(executable).not.toMatch(/\?\?\s*0/gu)
+  })
+
+  it('renders unavailable counts and empty filtered results as different states', () => {
+    expect(executable).toContain('<LiteratureCapabilityNotice')
+    expect(executable).toContain('stats.data ? (')
+    expect(executable).toContain('collection.data.items.length > 0')
   })
 })
 

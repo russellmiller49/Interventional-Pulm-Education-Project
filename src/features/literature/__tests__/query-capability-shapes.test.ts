@@ -145,6 +145,35 @@ describe('an unfiltered search speaks for the corpus', () => {
 })
 
 describe('the review queue does not hide a failed association read', () => {
+  it('keeps a physician-reviewed exclusion available through All Literature', async () => {
+    const reviewedExclusion = {
+      pmid: '87654321',
+      title: 'Synthetic reviewed exclusion',
+      authors: [],
+      relevance_state: 'excluded',
+      visibility_state: 'draft',
+      reviewed_relevance: 'exclude',
+    }
+    clientForOperation.mockImplementation((operation: string) => ({
+      client:
+        operation === 'review_queue_read'
+          ? stubClient({ tableRows: [reviewedExclusion], count: 1 })
+          : stubClient({ tableRows: [] }),
+      capability: null,
+      projectRef: PROJECT_REF,
+    }))
+
+    const result = await loadLiteratureReviewQueue(literatureReviewQueueSchema.parse({}))
+
+    expect(result.error).toBeNull()
+    expect(result.data?.total).toBe(1)
+    expect(result.data?.items[0]).toMatchObject({
+      pmid: '87654321',
+      relevanceState: 'excluded',
+      visibilityState: 'draft',
+    })
+  })
+
   it('reports the failure rather than an article with no provenance', async () => {
     /*
      * The concrete regression: `literature_articles` readable, the two association tables denied.

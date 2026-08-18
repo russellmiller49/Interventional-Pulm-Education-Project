@@ -55,7 +55,10 @@ import {
 import {
   curateLiteratureArticle,
   getLiteratureArticle,
+  getLiteratureReviewedMetadata,
   loadLiteratureAdminStats,
+  loadLiteratureCuratedCollection,
+  loadLiteratureCuratedStats,
   searchLiterature,
 } from './queries'
 import { listLiteratureGoldSetBatches } from './gold-set'
@@ -185,6 +188,7 @@ describe('only the exact dedicated target produces a client', () => {
   it.each(REFUSED_ENVIRONMENTS)('constructs no client for %s', (_label, environment) => {
     applyEnvironment(environment)
     expect(clientFor('article_search').client).toBeNull()
+    expect(clientFor('reviewed_overlay_read').client).toBeNull()
     expect(createClientMock).not.toHaveBeenCalled()
   })
 
@@ -281,11 +285,22 @@ describe('only the exact dedicated target produces a client', () => {
  *
  * These run in the configuration where the read path genuinely works, so a withheld operation
  * failing here cannot be explained away by a missing variable. The dedicated project carries the
- * foundation migration only, and this build carries no Literature write path at all.
+ * foundation reads and reviewed-overlay columns, while this build carries no Literature write path
+ * at all.
  */
 describe('the activation contract withholds writes and the gold-set workflow', () => {
   beforeEach(() => {
     applyEnvironment(PRODUCTION_ENVIRONMENT)
+  })
+
+  it('carries exactly the five reviewed read operations and no mutation', () => {
+    expect(LITERATURE_ACTIVATED_OPERATIONS).toEqual([
+      'article_search',
+      'article_detail',
+      'admin_stats',
+      'review_queue_read',
+      'reviewed_overlay_read',
+    ])
   })
 
   it.each([...LITERATURE_ACTIVATED_OPERATIONS])('carries %s', (operation) => {
@@ -323,6 +338,7 @@ describe('the activation contract withholds writes and the gold-set workflow', (
     expect(literatureOperationActivated('article_curation', mislabelled)).toBe(false)
     // The reads stay carried, because they are on the strict allowlist regardless of the label.
     expect(literatureOperationActivated('article_search', mislabelled)).toBe(true)
+    expect(literatureOperationActivated('reviewed_overlay_read', mislabelled)).toBe(true)
   })
 
   it('carries every operation for a genuinely bound local target', () => {
@@ -338,6 +354,7 @@ describe('the activation contract withholds writes and the gold-set workflow', (
       'article_detail',
       'admin_stats',
       'review_queue_read',
+      'reviewed_overlay_read',
       'article_curation',
       'gold_set_read',
       'gold_set_mutation',
@@ -522,6 +539,15 @@ describe('alias spellings of the loopback address never get a client (fifth revi
       } as unknown as Parameters<typeof searchLiterature>[0]),
       await getLiteratureArticle('12345678'),
       await loadLiteratureAdminStats(),
+      await loadLiteratureCuratedStats(),
+      await loadLiteratureCuratedCollection({
+        q: '',
+        reviewedClass: 'all',
+        sort: 'newest',
+        page: 1,
+        pageSize: 20,
+      }),
+      await getLiteratureReviewedMetadata('12345678'),
       await curateLiteratureArticle(
         '12345678',
         {} as unknown as Parameters<typeof curateLiteratureArticle>[1],
