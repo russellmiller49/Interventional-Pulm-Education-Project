@@ -15,6 +15,7 @@ import { buildPacket, type OperationSalt } from './packet'
 import {
   applyReviewFilters,
   loadReviewData,
+  parseLoopbackHostHeader,
   startReviewServer,
   writeReviewExports,
   type ReviewRecordView,
@@ -241,6 +242,126 @@ describe('loopback server', () => {
         body: JSON.stringify({ recordId: 'f'.repeat(64), action: 'retain_for_stage_b' }),
       })
       expect(rejected.status).toBe(400)
+    } finally {
+      await review.close()
+    }
+  })
+})
+
+/**
+ * LUNA-REVIEW-001. Host validation is whole-authority equality against three exact loopback
+ * names, never a prefix test: the original reproduction, `localhost.evil.example`, is a foreign
+ * host that merely starts with `localhost`.
+ */
+describe('loopback Host authority validation (LUNA-REVIEW-001)', () => {
+  const accepted: readonly [string, string, number | null][] = [
+    ['localhost', 'localhost', null],
+    ['localhost:4630', 'localhost', 4630],
+    ['127.0.0.1', '127.0.0.1', null],
+    ['127.0.0.1:4630', '127.0.0.1', 4630],
+    ['[::1]', '::1', null],
+    ['[::1]:4630', '::1', 4630],
+    ['::1', '::1', null],
+    ['LOCALHOST:4630', 'localhost', 4630],
+  ]
+
+  it.each(accepted)('accepts %s', (header, hostname, port) => {
+    expect(parseLoopbackHostHeader(header)).toEqual({ ok: true, hostname, port })
+  })
+
+  const rejected: readonly string[] = [
+    'localhost.evil.example',
+    'localhost.evil.example:4630',
+    '127.0.0.1.evil.example',
+    'localhost.',
+    'localhostx',
+    'user@localhost',
+    'localhost@evil.example',
+    'localhost ',
+    ' localhost',
+    'local\thost',
+    'localhost\n',
+    'localhost,evil.example',
+    'localhost:4630,127.0.0.1:4630',
+    '[::1',
+    '::1]',
+    '[::1]x',
+    '[::1]:',
+    '[[::1]]',
+    '[::1]:0',
+    '[::1]:65536',
+    '[::1]:-1',
+    '[::1]:+80',
+    '[::1]:4a30',
+    'localhost:0',
+    'localhost:65536',
+    'localhost:99999',
+    'localhost:',
+    'localhost:abc',
+    '127.0.0.1:0',
+    '*',
+    '*.localhost',
+    '0.0.0.0',
+    '0.0.0.0:4630',
+    '[::]',
+    '[::]:4630',
+    '[0:0:0:0:0:0:0:1]',
+    '192.168.1.10',
+    '10.0.0.1:4630',
+    '127.0.0.2',
+    'localhost/../evil',
+    'http://localhost',
+    '',
+  ]
+
+  it.each(rejected)('rejects %s', (header) => {
+    expect(parseLoopbackHostHeader(header).ok).toBe(false)
+  })
+
+  it('rejects an absent Host header', () => {
+    expect(parseLoopbackHostHeader(undefined).ok).toBe(false)
+  })
+
+  it('answers only loopback authorities over a real socket and stays bound to 127.0.0.1', async () => {
+    const review = await startReviewServer({
+      state,
+      operationId: 'op-review',
+      port: 0,
+      now: () => '2026-08-17T00:00:00.000Z',
+    })
+    try {
+      const address = review.server.address() as AddressInfo
+      expect(address.address).toBe('127.0.0.1')
+      const port = address.port
+      const { request } = await import('node:http')
+      const statusFor = (host: string) =>
+        new Promise<number>((resolvePromise, rejectPromise) => {
+          const probe = request(
+            { host: '127.0.0.1', port, path: '/api/operation', method: 'GET', headers: { host } },
+            (response) => {
+              response.resume()
+              resolvePromise(response.statusCode ?? 0)
+            },
+          )
+          probe.on('error', rejectPromise)
+          probe.end()
+        })
+
+      for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, 'localhost', '[::1]', '::1']) {
+        expect({ host, status: await statusFor(host) }).toEqual({ host, status: 200 })
+      }
+      for (const host of [
+        'localhost.evil.example',
+        `localhost.evil.example:${port}`,
+        '127.0.0.1.evil.example',
+        'localhost.',
+        'evil.example',
+        '0.0.0.0',
+        '[::]',
+        `user@localhost:${port}`,
+      ]) {
+        expect({ host, status: await statusFor(host) }).toEqual({ host, status: 403 })
+      }
     } finally {
       await review.close()
     }

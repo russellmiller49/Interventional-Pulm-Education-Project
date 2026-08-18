@@ -326,9 +326,82 @@ function readBody(request: IncomingMessage): Promise<string> {
   })
 }
 
+/** The only hostnames this server will answer to. No DNS resolution ever happens. */
+const LOOPBACK_HOSTNAMES: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '::1'])
+
+export type LoopbackHostValidation =
+  | { readonly ok: true; readonly hostname: string; readonly port: number | null }
+  | { readonly ok: false; readonly reason: string }
+
+function refuse(reason: string): LoopbackHostValidation {
+  return { ok: false, reason }
+}
+
+/**
+ * Parse a Host header as an authority and accept only the three exact loopback hostnames,
+ * optionally with a valid port.
+ *
+ * Whole-authority equality, never a prefix test: `localhost.evil.example` and
+ * `127.0.0.1.evil.example` are foreign hosts that merely start with a loopback string, and a
+ * prefix check hands them the review app. Userinfo, embedded paths, multiple comma-joined
+ * authorities, whitespace, control characters, wildcard binds, and non-loopback addresses are
+ * all refused, and nothing here resolves a name.
+ */
+export function parseLoopbackHostHeader(value: string | undefined): LoopbackHostValidation {
+  if (typeof value !== 'string' || value.length === 0) return refuse('missing_authority')
+  if (value.length > 255) return refuse('authority_too_long')
+  for (const character of value) {
+    const code = character.codePointAt(0) ?? 0
+    if (code <= 0x20 || code >= 0x7f) return refuse('whitespace_or_control_character')
+  }
+  if (value.includes(',')) return refuse('multiple_authorities')
+  if (value.includes('@')) return refuse('userinfo_not_allowed')
+  for (const forbidden of ['/', '\\', '?', '#']) {
+    if (value.includes(forbidden)) return refuse('not_a_bare_authority')
+  }
+
+  let hostname: string
+  let portText: string | null
+  if (value.startsWith('[')) {
+    const close = value.indexOf(']')
+    if (close < 0 || value.indexOf('[', 1) >= 0 || value.indexOf(']', close + 1) >= 0) {
+      return refuse('malformed_ipv6_authority')
+    }
+    hostname = value.slice(1, close)
+    const rest = value.slice(close + 1)
+    if (rest.length === 0) portText = null
+    else if (rest.startsWith(':')) portText = rest.slice(1)
+    else return refuse('malformed_ipv6_authority')
+  } else if (value.includes('[') || value.includes(']')) {
+    return refuse('malformed_ipv6_authority')
+  } else if (value === '::1') {
+    // A bare, portless IPv6 literal. Any ported IPv6 Host must use the bracketed form.
+    hostname = value
+    portText = null
+  } else {
+    const firstColon = value.indexOf(':')
+    if (firstColon < 0) {
+      hostname = value
+      portText = null
+    } else if (value.indexOf(':', firstColon + 1) >= 0) {
+      return refuse('malformed_authority')
+    } else {
+      hostname = value.slice(0, firstColon)
+      portText = value.slice(firstColon + 1)
+    }
+  }
+
+  const normalized = hostname.toLowerCase()
+  if (!LOOPBACK_HOSTNAMES.has(normalized)) return refuse('not_a_loopback_host')
+  if (portText === null) return { ok: true, hostname: normalized, port: null }
+  if (!/^[0-9]{1,5}$/u.test(portText)) return refuse('invalid_port')
+  const port = Number(portText)
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) return refuse('port_out_of_range')
+  return { ok: true, hostname: normalized, port }
+}
+
 function hostAllowed(request: IncomingMessage): boolean {
-  const host = request.headers.host ?? ''
-  return host.startsWith('127.0.0.1') || host.startsWith('localhost')
+  return parseLoopbackHostHeader(request.headers.host).ok
 }
 
 export interface ReviewServer {
