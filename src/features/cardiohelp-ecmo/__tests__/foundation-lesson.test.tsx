@@ -23,6 +23,8 @@ import {
 } from '../content/foundationLessonRuntime'
 import { createFoundationVariantState } from '../session/foundationSession'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
+import { ecmoBloodPathSegmentIds } from '../content/circuitSegments'
+import { ecmoLocalizationRowIds, ecmoLocalizationRows } from '../content/localizationCards'
 import { ecmoReferenceProfileForMode } from '../content/referenceProfiles'
 import '../content/ecmoValueGuides'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
@@ -403,6 +405,25 @@ describe('foundation teaching panels', () => {
     ])
     expect(container.querySelector('[data-gas-path]')?.textContent).toMatch(/sweep/i)
     expect(container.querySelector('[data-blood-path]')).toBeInTheDocument()
+
+    /*
+     * The stop list now reads from the canonical segment registry, and this assertion is the proof
+     * that the promotion changed nothing a learner sees: the same six ids, in the same order, from
+     * a literal array that the registry does not get a vote on.
+     */
+    expect(order).toEqual([...ecmoBloodPathSegmentIds])
+  })
+
+  it('circuit-flow-path draws the circuit it is describing', () => {
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
+    )
+    const map = container.querySelector('[data-circuit-minimap]')
+    expect(map).not.toBeNull()
+    expect(map?.getAttribute('data-presentation')).toBe('scaffold')
+    expect(map?.getAttribute('data-scaffold-emphasis')).toBe('path-order')
+    // A foundation map teaches; it never marks a segment as the culprit.
+    expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
   })
 
   it('circuit-flow-path shows the venous-line value the console reads, beside the estimate', () => {
@@ -430,7 +451,19 @@ describe('foundation teaching panels', () => {
     expect(container.querySelector('[data-selected-setting]')?.textContent).toMatch(/rpm/i)
     expect(container.querySelector('[data-resulting-flow]')?.textContent).toMatch(/L\/min/i)
     expect(container.textContent).toMatch(/reference state/i)
-    expect(container.querySelectorAll('[data-mechanism-preview]')).toHaveLength(3)
+
+    /*
+     * The three "mechanism previews" this panel used to keep in a private array are now four rows
+     * of the shared localization registry, rendered by reference. The count moved because the gas
+     * path is one of the patterns and was only ever missing from the preview list — the fourth row
+     * was already being taught, in prose, three lessons later.
+     */
+    const rows = [...container.querySelectorAll('[data-localization-row]')].map((node) =>
+      node.getAttribute('data-localization-row'),
+    )
+    expect(rows).toEqual([...ecmoLocalizationRowIds])
+    expect(container.querySelector('[data-localization-card]')).not.toBeNull()
+    expect(container.querySelector('[data-mechanism-preview]')).toBeNull()
 
     // Any interpreted reference must be this circuit's own baseline, the sources' own reported
     // range, or a declared simulation boundary — never a guideline-style normal.
@@ -442,6 +475,25 @@ describe('foundation teaching panels', () => {
       expect(['patient-baseline', 'source-reported-range', 'educational-model-boundary']).toContain(
         kind,
       )
+    }
+  })
+
+  it('pump-and-pressure-zones shows the zones on the circuit and keeps the answers back', () => {
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,
+    )
+    const map = container.querySelector('[data-circuit-minimap]')
+    expect(map?.getAttribute('data-scaffold-emphasis')).toBe('pressure-zones')
+    expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
+
+    // The scaffold is pattern and location. The shortlist, the response and the reflex belong to
+    // the drills that ask for them.
+    expect(container.querySelector('[data-row-causes]')).toBeNull()
+    expect(container.querySelector('[data-row-action]')).toBeNull()
+    expect(container.querySelector('[data-row-reflex]')).toBeNull()
+    for (const row of ecmoLocalizationRows) {
+      for (const cause of row.causes) expect(container.textContent).not.toContain(cause)
+      expect(container.textContent).not.toContain(row.harmfulReflex)
     }
   })
 

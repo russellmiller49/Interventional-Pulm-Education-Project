@@ -68,6 +68,12 @@ import {
   ecmoDrillTeachingPanelScenarioIds,
 } from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel.tsx'
 import { requireEcmoLearnPrediction } from '../../src/features/cardiohelp-ecmo/content/learnPredictionItems.ts'
+import {
+  EcmoCircuitMinimap,
+  type EcmoCircuitMinimapLayoutId,
+} from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx'
+import type { EcmoCircuitPresentation } from '../../src/features/cardiohelp-ecmo/content/circuitPresentation.ts'
+import { ecmoLocalizationRowIds } from '../../src/features/cardiohelp-ecmo/content/localizationCards.ts'
 
 function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationState {
   let current = state
@@ -77,7 +83,10 @@ function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationSta
   return current
 }
 
-function settled(profileId: EcmoReferenceProfileId, action?: SimulationAction): EcmoSimulationState {
+function settled(
+  profileId: EcmoReferenceProfileId,
+  action?: SimulationAction,
+): EcmoSimulationState {
   let state = advance(createReferenceSimulationState(profileId), 8)
   if (action) state = advance(ecmoSimulationReducer(state, action), 12)
   return state
@@ -149,7 +158,11 @@ function vvOnlyVariants(sectionId: EcmoVvOnlyFoundationSectionId): readonly Vari
     const snapshot = ecmoFoundationSnapshot(opening)
     return [
       { label: 'reference at the captured snapshot', state: opening, snapshot },
-      { label: 'after 20 modeled seconds, compared with the snapshot', state: advance(opening, 20), snapshot },
+      {
+        label: 'after 20 modeled seconds, compared with the snapshot',
+        state: advance(opening, 20),
+        snapshot,
+      },
       {
         label: 'transfer and narrative — compared with the retained samples',
         state: advance(opening, 40),
@@ -457,6 +470,55 @@ const sections = ecmoInteractiveFoundationSectionIds
 const drillCount = ecmoDrillTeachingPanelScenarioIds.length
 const foundationCount = ecmoInteractiveFoundationSectionIds.length
 
+/*
+ * The circuit map on its own, in both geometries.
+ *
+ * The panels above render at the two pane widths they actually get, and at both of those the map
+ * chooses its landscape geometry. The compact geometry only appears in a pane near its 280px floor,
+ * which no panel cell here reproduces — and it is the geometry that exists because the landscape one
+ * rendered six-pixel type down there. Rendering it beside its sibling is the only way this page
+ * shows the thing the compact layout was built for.
+ *
+ * `layout` is named rather than measured because there is no browser here: the component measures
+ * its own container, and `renderToStaticMarkup` gives it nothing to measure.
+ */
+const MAP_STATES: readonly (readonly [string, SupportMode, EcmoCircuitPresentation])[] = [
+  ['neutral — before a commitment', 'vv', { kind: 'neutral' }],
+  ['scaffold · the circuit walk', 'vv', { kind: 'scaffold', emphasis: 'path-order' }],
+  ['scaffold · the console tour', 'vv', { kind: 'scaffold', emphasis: 'sensor-sites' }],
+  ...ecmoLocalizationRowIds.map(
+    (rowId) =>
+      [
+        `implicated · ${rowId}`,
+        rowId === 'return-path-resistance' ? 'va' : 'vv',
+        {
+          kind: 'implicated',
+          rowId,
+        },
+      ] as const,
+  ),
+]
+
+const MAP_LAYOUTS: readonly (readonly [EcmoCircuitMinimapLayoutId, number])[] = [
+  ['compact', 280],
+  ['regular', 480],
+]
+
+const maps = MAP_LAYOUTS.map(
+  ([
+    layout,
+    width,
+  ]) => `<h2>Circuit map — ${layout} geometry <span class="scope">at a ${width}px pane</span></h2>
+<div class="matrix-drill">
+${MAP_STATES.map(
+  ([label, supportMode, presentation]) =>
+    `<div class="cell" style="width:${width}px"><p class="cell-label">${label} · ${supportMode}</p>${renderToStaticMarkup(
+      createElement(EcmoCircuitMinimap, { supportMode, presentation, layout }),
+    )}</div>`,
+).join('\n')}
+</div>`,
+).join('\n')
+
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>ECMO teaching panels — foundation and drill</title>
 <style>
@@ -502,6 +564,17 @@ const html = `<!doctype html>
   .w-full { width: 100%; }
   .min-w-0 { min-width: 0; }
   .min-w-\\[64rem\\] { min-width: 64rem; }
+  .h-auto { height: auto; }
+  .max-w-\\[30rem\\] { max-width: 30rem; }
+  .max-w-\\[18rem\\] { max-width: 18rem; }
+  .leading-5 { line-height: 1.25rem; }
+  /*
+   * The circuit minimap draws itself entirely from presentation attributes and \`currentColor\`,
+   * which is what lets it appear in this stylesheet-free harness at all. The only thing it needs
+   * from CSS is its size, so a missing rule here shows up as a diagram at its intrinsic width
+   * rather than as a diagram in the wrong colours.
+   */
+  [data-circuit-minimap] svg { display: block; }
   [data-reference-kind] { display: inline-block; border: 1px solid #999; border-radius: 999px; padding: 1px 8px; font-size: 10px; }
   [data-model-boundary], [data-cell-limitation] { background: #fffbe6; }
   [data-hypothesis-matrix] td, [data-hypothesis-matrix] th { border-bottom: 1px solid #eee; }
@@ -518,6 +591,10 @@ const html = `<!doctype html>
 
 <h1>Drill panels — B4 pilot slice (${drillCount} panels, ${renderedDrillCells} states, ${PANE_WIDTHS.length} widths each)</h1>
 ${drills}
+
+<h1>Circuit map — both geometries (${MAP_STATES.length} states each)</h1>
+<p>The compact geometry is what a 280px teaching pane gets. Check that no label is smaller than the body text around it, that nothing overlaps, and that the implicated ticks and outline read without colour.</p>
+${maps}
 
 <h1>Foundation panels (${foundationCount} sections, ${renderedCells} states)</h1>
 ${sections}

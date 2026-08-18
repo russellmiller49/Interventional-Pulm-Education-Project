@@ -1,6 +1,9 @@
+import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { ecmoReferenceProfileForMode } from '../../content/referenceProfiles'
 import type { EcmoSimulationState } from '../../engine/types'
+import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
+import { EcmoLocalizationCard } from './EcmoLocalizationCard'
 import {
   ChannelValue,
   GuidedValue,
@@ -17,27 +20,17 @@ import {
  * Comparisons here are against *this modeled circuit's own reference state*, never against
  * "normal ECMO values" — the reference profile is an authored teaching anchor, and calling it
  * normal would turn a model constant into a clinical claim.
+ *
+ * This is where the module states its diagnostic grammar, and the three "mechanism previews" it
+ * used to keep in a private array are now four rows of the shared localization registry, rendered
+ * by reference. Two things changed and both were already true: the gas path is one of the four
+ * recurring patterns and was only ever missing from the preview list, and the sentences a drill
+ * later uses are now literally the sentences shown here rather than a paraphrase of them.
+ *
+ * The scaffold stops at pattern and location. What to inspect, the response that fits and the
+ * reflex to avoid stay with the drills, because a learner meeting this table is looking at a
+ * circuit with nothing wrong with it and has not been asked to diagnose anything yet.
  */
-
-const MECHANISM_PREVIEWS = [
-  {
-    id: 'preload',
-    label: 'Drainage limitation',
-    signature:
-      'Drainage pressure becomes more negative; flow stops following speed and may become unstable.',
-  },
-  {
-    id: 'return',
-    label: 'Return-side resistance',
-    signature:
-      'Both post-pump pressures rise together; the gradient across the membrane changes little.',
-  },
-  {
-    id: 'membrane',
-    label: 'Membrane resistance',
-    signature: 'The pre-membrane pressure separates from the return pressure; the gradient widens.',
-  },
-] as const
 
 export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulationState }) {
   const { circuit, device } = state
@@ -113,27 +106,15 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
         </ModelBoundary>
       </section>
 
-      <section className={styles.section} aria-labelledby="mechanism-preview-heading">
-        <h3 id="mechanism-preview-heading" className={styles.heading}>
-          Mechanism previews — signatures you will work through later
-        </h3>
-        <dl className="mt-3 grid gap-3">
-          {MECHANISM_PREVIEWS.map((preview) => (
-            <div
-              key={preview.id}
-              className="rounded-xl border p-3"
-              data-mechanism-preview={preview.id}
-            >
-              <dt className="text-sm font-semibold">{preview.label}</dt>
-              <dd className="mt-1 text-xs leading-5 text-muted-foreground">{preview.signature}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          These are directional previews only. The circuit in front of you has no injected problem,
-          and the drills that work each signature come later in the pathway.
-        </p>
-      </section>
+      <EcmoCircuitMinimap
+        supportMode={state.supportMode}
+        presentation={deriveEcmoCircuitPresentation(state, {
+          kind: 'foundation-scaffold',
+          emphasis: 'pressure-zones',
+        })}
+      />
+
+      <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
 
       <GuidedValue
         guide={ecmoDerivedValueGuides.transmembraneDeltaP}
