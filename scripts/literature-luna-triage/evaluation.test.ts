@@ -177,7 +177,7 @@ function buildInputs(rows: readonly Row[]) {
   const routed = buildRoutedRecords({
     assignments,
     evidenceProfiles: new Map(rows.map((row) => [row.recordId, row.profile])),
-    riskFlags: new Map(rows.map((row) => [row.recordId, row.risk])),
+    riskAnalysisResults: rows.map((row) => ({ recordId: row.recordId, riskFlags: row.risk })),
   })
   const truthByRecordId = new Map(rows.map((row) => [row.recordId, row.truth]))
   return { assignments, routed, truthByRecordId }

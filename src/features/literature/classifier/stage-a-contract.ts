@@ -1,10 +1,13 @@
 import { z } from 'zod'
 
+import { COORDINATOR_RISK_FLAGS } from './risk-lexicon'
+
 /**
  * Stage-A universal negative-triage contract for the literature Luna classifier lane.
  *
- * This module is deliberately pure and browser-safe: it imports only `zod`, touches no
- * filesystem, network, environment, or crypto, and never sees a PMID. Everything here is a
+ * This module is deliberately pure and browser-safe: it imports only `zod` and the sibling
+ * risk lexicon (itself import-free), touches no filesystem, network, environment, or crypto,
+ * and never sees a PMID. Everything here is a
  * closed vocabulary or a total function over already-validated values, so the same contract
  * can back the node CLI, tests, and any future review surface without duplication.
  *
@@ -161,6 +164,51 @@ export function validateStageAOutput(value: unknown): StageAOutputValidation {
 }
 
 /**
+ * Independent risk-analysis evidence for exactly one record.
+ *
+ * The coordinator's deterministic risk pass is mandatory evidence, not optional metadata: a
+ * record with no risk result has not been scanned, and an unscanned record is unknown risk,
+ * never zero risk. The shape is exactly what the risk pass writes, so the routing contract can
+ * re-validate the stored evidence instead of trusting a caller-built map.
+ */
+export const stageARiskAnalysisResultSchema = z
+  .object({
+    recordId: z.string().regex(STAGE_A_RECORD_ID_PATTERN),
+    riskFlags: z.array(z.enum(COORDINATOR_RISK_FLAGS)),
+  })
+  .strict()
+  .superRefine((result, context) => {
+    if (new Set(result.riskFlags).size !== result.riskFlags.length) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['riskFlags'],
+        message: 'Risk flags must be unique.',
+      })
+    }
+  })
+
+export type StageARiskAnalysisResult = z.infer<typeof stageARiskAnalysisResultSchema>
+
+export type StageARiskAnalysisValidation =
+  | { readonly ok: true; readonly result: StageARiskAnalysisResult }
+  | { readonly ok: false; readonly issues: readonly string[] }
+
+/** Validate one stored risk-analysis result. An empty `riskFlags` array is a completed scan. */
+export function validateStageARiskAnalysisResult(value: unknown): StageARiskAnalysisValidation {
+  const parsed = stageARiskAnalysisResultSchema.safeParse(value)
+  if (parsed.success) {
+    return { ok: true, result: parsed.data }
+  }
+  return {
+    ok: false,
+    issues: parsed.error.issues.map((issue) => {
+      const path = issue.path.length > 0 ? issue.path.join('.') : '(root)'
+      return `${path}: ${issue.message}`
+    }),
+  }
+}
+
+/**
  * Terminal accounting states for one selected record. Exactly one applies. Everything except
  * `valid_prediction` and `valid_abstention` advances by default and may never be treated as a
  * negative signal about the article.
@@ -185,12 +233,18 @@ export const STAGE_A_ROUTES = [
 export type StageARoute = (typeof STAGE_A_ROUTES)[number]
 
 export interface StageARoutingInput {
+  /** The record being routed. Risk evidence must bind to exactly this id. */
+  readonly recordId: string
   /** Terminal accounting state assigned by strict ingestion. */
   readonly terminalState: StageATerminalState
   /** The validated output, present only when the terminal state is a valid one. */
   readonly output: StageAOutput | null
-  /** Deterministic coordinator risk flags for the record. Never derived from model output. */
-  readonly coordinatorRiskFlags: readonly string[]
+  /**
+   * The record's independent risk-analysis result, exactly as the coordinator stored it.
+   * Mandatory: `null`, a foreign record id, or any malformed value is *missing* evidence and
+   * may never be read as zero risk. Never derived from model output.
+   */
+  readonly riskAnalysisResult: unknown
 }
 
 export interface StageARoutingDecision {
@@ -201,10 +255,21 @@ export interface StageARoutingDecision {
 
 /**
  * The routing contract. Only a schema-valid, identity-bound, high-confidence
- * `obvious_irrelevant` output carrying exclusively negative-only reasons, for a record with no
- * coordinator risk flag, may enter `deprioritization_candidate`. Everything else advances.
+ * `obvious_irrelevant` output carrying exclusively negative-only reasons, for a record whose
+ * own schema-valid risk-analysis result reports zero flags, may enter
+ * `deprioritization_candidate`. Everything else advances.
  */
 export function routeStageARecord(input: StageARoutingInput): StageARoutingDecision {
+  // Defense in depth. The coordinator already asserts exact one-to-one risk coverage before
+  // calling this; if it somehow did not, unusable risk evidence advances the record rather
+  // than letting a missing scan masquerade as a clean one.
+  const risk = validateStageARiskAnalysisResult(input.riskAnalysisResult)
+  if (!risk.ok || risk.result.recordId !== input.recordId) {
+    return {
+      route: 'advance_to_full_relevance_classification',
+      routeReasons: ['risk_evidence_missing_or_unusable_advances_by_default'],
+    }
+  }
   if (input.terminalState !== 'valid_prediction' || input.output === null) {
     return {
       route: 'advance_to_full_relevance_classification',
@@ -236,7 +301,7 @@ export function routeStageARecord(input: StageARoutingInput): StageARoutingDecis
       routeReasons: ['reason_codes_not_negative_only'],
     }
   }
-  if (input.coordinatorRiskFlags.length > 0) {
+  if (risk.result.riskFlags.length > 0) {
     return {
       route: 'advance_to_full_relevance_classification',
       routeReasons: ['coordinator_risk_flag_present'],

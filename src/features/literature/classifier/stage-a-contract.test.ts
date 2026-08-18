@@ -9,6 +9,7 @@ import {
   isProtectiveReasonCode,
   routeStageARecord,
   validateStageAOutput,
+  validateStageARiskAnalysisResult,
   type StageAOutput,
   type StageATerminalState,
 } from './stage-a-contract'
@@ -124,11 +125,14 @@ describe('stage-a routing contract', () => {
     reason_codes: ['clearly_nonpulmonary_domain'],
   })
 
+  const cleanScan = (recordId = RECORD_ID) => ({ recordId, riskFlags: [] })
+
   it('routes the one clean case into deprioritization_candidate', () => {
     const decision = routeStageARecord({
+      recordId: RECORD_ID,
       terminalState: 'valid_prediction',
       output: validNegative(),
-      coordinatorRiskFlags: [],
+      riskAnalysisResult: cleanScan(),
     })
     expect(decision.route).toBe('deprioritization_candidate')
   })
@@ -139,9 +143,10 @@ describe('stage-a routing contract', () => {
     )
     for (const state of states) {
       const decision = routeStageARecord({
+        recordId: RECORD_ID,
         terminalState: state,
         output: null,
-        coordinatorRiskFlags: [],
+        riskAnalysisResult: cleanScan(),
       })
       expect(decision.route).toBe('advance_to_full_relevance_classification')
     }
@@ -150,17 +155,19 @@ describe('stage-a routing contract', () => {
   it('advances non-negative decisions and sub-high confidence', () => {
     expect(
       routeStageARecord({
+        recordId: RECORD_ID,
         terminalState: 'valid_prediction',
         output: { ...validNegative(), triage_decision: 'potentially_relevant' },
-        coordinatorRiskFlags: [],
+        riskAnalysisResult: cleanScan(),
       }).route,
     ).toBe('advance_to_full_relevance_classification')
     for (const band of ['medium', 'low'] as const) {
       expect(
         routeStageARecord({
+          recordId: RECORD_ID,
           terminalState: 'valid_prediction',
           output: { ...validNegative(), confidence_band: band },
-          coordinatorRiskFlags: [],
+          riskAnalysisResult: cleanScan(),
         }).route,
       ).toBe('advance_to_full_relevance_classification')
     }
@@ -168,9 +175,10 @@ describe('stage-a routing contract', () => {
 
   it('advances when any coordinator risk flag is present', () => {
     const decision = routeStageARecord({
+      recordId: RECORD_ID,
       terminalState: 'valid_prediction',
       output: validNegative(),
-      coordinatorRiskFlags: ['signal_pulmonary'],
+      riskAnalysisResult: { recordId: RECORD_ID, riskFlags: ['signal_pulmonary'] },
     })
     expect(decision.route).toBe('advance_to_full_relevance_classification')
     expect(decision.routeReasons).toContain('coordinator_risk_flag_present')
@@ -178,13 +186,65 @@ describe('stage-a routing contract', () => {
 
   it('advances when a protective reason somehow reaches routing', () => {
     const decision = routeStageARecord({
+      recordId: RECORD_ID,
       terminalState: 'valid_prediction',
       output: {
         ...validNegative(),
         reason_codes: ['possible_airway_relevance'] as never,
       },
-      coordinatorRiskFlags: [],
+      riskAnalysisResult: cleanScan(),
     })
     expect(decision.route).toBe('advance_to_full_relevance_classification')
+  })
+})
+
+describe('mandatory independent risk evidence (LUNA-ROUTE-001)', () => {
+  const validNegative = (): StageAOutput => ({
+    record_id: RECORD_ID,
+    triage_decision: 'obvious_irrelevant',
+    confidence_band: 'high',
+    reason_codes: ['clearly_nonpulmonary_domain'],
+  })
+
+  const unusable: readonly [string, unknown][] = [
+    ['missing evidence', undefined],
+    ['null evidence', null],
+    ['an empty object', {}],
+    ['a bare array', []],
+    ['a non-array riskFlags', { recordId: RECORD_ID, riskFlags: 'none' }],
+    ['a foreign record id', { recordId: 'b'.repeat(64), riskFlags: [] }],
+    ['a non-hex record id', { recordId: 'not-an-opaque-id', riskFlags: [] }],
+    ['a flag outside the closed lexicon', { recordId: RECORD_ID, riskFlags: ['signal_unknown'] }],
+    ['duplicate flags', { recordId: RECORD_ID, riskFlags: ['signal_pleural', 'signal_pleural'] }],
+    ['an extra key', { recordId: RECORD_ID, riskFlags: [], scanned: true }],
+  ]
+
+  it.each(unusable)(
+    'never deprioritizes a high-confidence negative with %s',
+    (_label, riskAnalysisResult) => {
+      const decision = routeStageARecord({
+        recordId: RECORD_ID,
+        terminalState: 'valid_prediction',
+        output: validNegative(),
+        riskAnalysisResult,
+      })
+      expect(decision.route).toBe('advance_to_full_relevance_classification')
+      expect(decision.routeReasons).toEqual([
+        'risk_evidence_missing_or_unusable_advances_by_default',
+      ])
+    },
+  )
+
+  it('accepts an empty flag list only when the scan for that exact record completed', () => {
+    expect(validateStageARiskAnalysisResult({ recordId: RECORD_ID, riskFlags: [] }).ok).toBe(true)
+    expect(validateStageARiskAnalysisResult(undefined).ok).toBe(false)
+    expect(
+      routeStageARecord({
+        recordId: RECORD_ID,
+        terminalState: 'valid_prediction',
+        output: validNegative(),
+        riskAnalysisResult: { recordId: RECORD_ID, riskFlags: [] },
+      }).route,
+    ).toBe('deprioritization_candidate')
   })
 })

@@ -3,7 +3,10 @@ import { join } from 'node:path'
 
 import type { UniversalPacket } from '../../src/features/literature/classifier/packet-contract'
 import { validateUniversalPacket } from '../../src/features/literature/classifier/packet-contract'
-import type { CoordinatorRiskFlag } from '../../src/features/literature/classifier/risk-lexicon'
+import {
+  validateStageARiskAnalysisResult,
+  type StageARiskAnalysisResult,
+} from '../../src/features/literature/classifier/stage-a-contract'
 import { canonicalJson } from '../literature-production-ingest/canonical'
 import { LUNA_TRIAGE_LANE_VERSION, type LunaCohort, type LunaReviewAction } from './constants'
 import type { RecordIdMappingRow } from './packet'
@@ -51,6 +54,7 @@ export interface OperationPaths {
   readonly reviewDecisionsDir: string
   readonly reviewExportsDir: string
   readonly evaluationReportJson: string
+  readonly evaluationReceiptJson: string
   readonly qualificationReportJson: string
   readonly auditSampleJson: string
   readonly batchShardsDir: string
@@ -87,6 +91,7 @@ export function operationPaths(state: StateRoot, operationId: string): Operation
     reviewDecisionsDir: join(root, 'review', 'decisions'),
     reviewExportsDir: join(root, 'review', 'exports'),
     evaluationReportJson: join(root, 'evaluation', 'evaluation-report.json'),
+    evaluationReceiptJson: join(root, 'evaluation', 'evaluation-receipt.json'),
     qualificationReportJson: join(root, 'qualification', 'qualification-report.json'),
     auditSampleJson: join(root, 'audit', 'audit-sample.json'),
     batchShardsDir: join(root, 'batch', 'shards'),
@@ -174,19 +179,20 @@ export async function readMapping(paths: OperationPaths): Promise<RecordIdMappin
   })
 }
 
-export interface RiskFlagRow {
-  readonly recordId: string
-  readonly riskFlags: readonly CoordinatorRiskFlag[]
-}
+/** One stored independent risk-analysis result. Re-validated against the closed lexicon. */
+export type RiskFlagRow = StageARiskAnalysisResult
 
 export async function readRiskFlags(paths: OperationPaths): Promise<RiskFlagRow[]> {
   const lines = await readJournalLines(paths.riskFlagsJsonl)
-  return lines.map((line) => {
-    const row = line as RiskFlagRow
-    if (typeof row.recordId !== 'string' || !Array.isArray(row.riskFlags)) {
-      throw new Error('A risk-flag row is malformed.')
+  return lines.map((line, index) => {
+    const validation = validateStageARiskAnalysisResult(line)
+    if (!validation.ok) {
+      throw new Error(
+        `Risk-analysis row ${index} is malformed: ${validation.issues.join('; ')}. Risk ` +
+          'evidence is mandatory; refusing to continue.',
+      )
     }
-    return row
+    return validation.result
   })
 }
 

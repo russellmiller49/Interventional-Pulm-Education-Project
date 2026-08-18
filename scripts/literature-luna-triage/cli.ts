@@ -8,6 +8,11 @@ import { canonicalJson, sha256 } from '../literature-production-ingest/canonical
 import type { OverlayRelevance } from '../literature-reviewed-overlay/constants'
 import { buildAuditSample } from './audit'
 import {
+  batchControlPlanSha256,
+  batchFetchRequestSlots,
+  batchStatusRequestSlots,
+  batchSubmitPlanSha256,
+  batchSubmitRequestSlots,
   fetchBatchFileContent,
   fetchBatchStatus,
   parseBatchOutputJsonl,
@@ -41,7 +46,12 @@ import {
 import { assertWithinCostCeiling, assertWithinRecordCeiling, estimateCohortCost } from './estimate'
 import { buildEvaluationReport, type EvaluationReport } from './evaluation'
 import { assertFreezeReceiptCurrent, buildFreezeReceipt, type FreezeReceipt } from './freeze'
-import { mintSpendAuthorization, type SpendAuthorization } from './openai'
+import {
+  mintSpendAuthorization,
+  type AuthorizedRequestSlot,
+  type LunaSpendAction,
+  type SpendAuthorization,
+} from './openai'
 import {
   appendJsonlRows,
   createOperation,
@@ -59,12 +69,29 @@ import {
 } from './operation'
 import { buildPacket, mintOperationSalt } from './packet'
 import { loadStageAPrompt } from './prompt'
-import { buildQualificationReport } from './qualify'
+import {
+  buildQualificationEvidence,
+  buildQualificationReport,
+  evaluationReportSha256,
+  lockedSanityCohortIdentitySha256,
+  type LockedRunMarker,
+} from './qualify'
 import { ingestStageAResponses, type RawResponseRecord } from './results'
 import { startReviewServer } from './review-app'
 import { buildRoutedRecords, buildRoutingManifest } from './routing'
-import { executeSyncRun, prepareRequestSet, type PreparedRequest } from './runner'
-import { apportionLockedSanity, buildCalibrationSplit, buildSplitManifest } from './split'
+import {
+  executeSyncRun,
+  prepareRequestSet,
+  syncRunPlanSha256,
+  syncRunRequestSlots,
+  type PreparedRequest,
+} from './runner'
+import {
+  apportionLockedSanity,
+  buildCalibrationSplit,
+  buildSplitManifest,
+  sortedIdentityDigest,
+} from './split'
 import {
   appendJournalLine,
   createJournal,
@@ -470,13 +497,23 @@ async function confirmSpendPhrase(requiredPhrase: string): Promise<string | null
   return answer.trim()
 }
 
+interface SpendRequestSpec {
+  readonly action: LunaSpendAction
+  readonly operationId: string
+  readonly cohort: string
+  readonly recordCount: number
+  /** Prepared requests used only to price the spend; empty for control-plane actions. */
+  readonly estimateRecords: readonly PreparedRequest[]
+  readonly batch: boolean
+  /** The exact plan this spend is authorized against. */
+  readonly planSha256: string
+  /** The exact, bounded set of network requests this spend may perform. */
+  readonly requests: readonly AuthorizedRequestSlot[]
+}
+
 async function mintAuthorizationFromArgv(
   argv: readonly string[],
-  operationId: string,
-  cohort: string,
-  recordCount: number,
-  estimateRecords: readonly PreparedRequest[],
-  batch: boolean,
+  spec: SpendRequestSpec,
 ): Promise<{ authorization: SpendAuthorization; estimatedCostUsd: number }> {
   const maxRecords = numberFlag(argv, 'max-records')
   const maxEstimatedCostUsd = numberFlag(argv, 'max-estimated-cost-usd')
@@ -484,13 +521,13 @@ async function mintAuthorizationFromArgv(
   if (maxEstimatedCostUsd === undefined) {
     throw new CliUsageError('--max-estimated-cost-usd is required.')
   }
-  assertWithinRecordCeiling(recordCount, maxRecords)
+  assertWithinRecordCeiling(spec.recordCount, maxRecords)
   const estimate = estimateCohortCost(
-    estimateRecords.map((request) => request.estimate),
-    { batch },
+    spec.estimateRecords.map((request) => request.estimate),
+    { batch: spec.batch },
   )
   assertWithinCostCeiling(estimate, maxEstimatedCostUsd)
-  const requiredPhrase = `SPEND ${operationId}`
+  const requiredPhrase = `SPEND ${spec.operationId}`
   const interactivePhrase = flagPresent(argv, 'confirm-api-spend')
     ? await confirmSpendPhrase(requiredPhrase)
     : null
@@ -498,11 +535,24 @@ async function mintAuthorizationFromArgv(
     confirmFlagPresent: flagPresent(argv, 'confirm-api-spend'),
     interactivePhrase,
     requiredPhrase,
-    operationId,
-    cohort,
-    recordCount,
-    maxRecords,
-    maxEstimatedCostUsd,
+    envelope: {
+      action: spec.action,
+      operationId: spec.operationId,
+      cohort: spec.cohort,
+      planSha256: spec.planSha256,
+      recordCount: spec.recordCount,
+      estimatedInputTokens: estimate.inputTokens,
+      estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
+      estimatedTotalTokens: estimate.totalTokenAllowance,
+      estimatedCostUsd: estimate.estimatedCostUsd,
+      maxRecords,
+      maxEstimatedCostUsd,
+      requests: spec.requests,
+      maxNetworkRequests: spec.requests.reduce(
+        (sum, slot) => sum + (slot.kind === 'derived' ? slot.maxUses : 1),
+        0,
+      ),
+    },
     estimate,
   })
   return { authorization, estimatedCostUsd: estimate.estimatedCostUsd }
@@ -565,17 +615,20 @@ async function runSync(argv: readonly string[], lockedCalibration?: string): Pro
     return rebuilt
   })
 
-  const { authorization, estimatedCostUsd } = await mintAuthorizationFromArgv(
-    argv,
+  const { authorization, estimatedCostUsd } = await mintAuthorizationFromArgv(argv, {
+    action: 'run-sync',
     operationId,
-    metadata.cohort,
-    requests.length,
-    requests,
-    false,
-  )
+    cohort: metadata.cohort,
+    recordCount: requests.length,
+    estimateRecords: requests,
+    batch: false,
+    planSha256: syncRunPlanSha256(requests),
+    requests: syncRunRequestSlots(requests),
+  })
   await createJournal(paths.ledgerJsonl).catch(() => undefined)
   const summary = await executeSyncRun({
     requests,
+    operationId,
     authorization,
     sinks: {
       writeRawResponse: async (customId, bodyText) => {
@@ -693,24 +746,28 @@ async function runBatchSubmit(argv: readonly string[]): Promise<void> {
   if (prepared.requests.length !== recordCount) {
     throw new Error('The shard does not match the prepared request set; refusing to submit.')
   }
-  const { authorization } = await mintAuthorizationFromArgv(
-    argv,
-    operationId,
-    metadata.cohort,
+  const shard = {
+    index: 0,
+    filename: shardFilename,
+    contentSha256,
     recordCount,
-    prepared.requests,
-    true,
-  )
+    estimatedInputTokens: prepared.manifest.totalEstimatedInputTokens,
+    estimatedOutputTokenAllowance: prepared.manifest.totalEstimatedOutputTokenAllowance,
+    content,
+  }
+  const { authorization } = await mintAuthorizationFromArgv(argv, {
+    action: 'batch-submit',
+    operationId,
+    cohort: metadata.cohort,
+    recordCount,
+    estimateRecords: prepared.requests,
+    batch: true,
+    planSha256: batchSubmitPlanSha256(shard),
+    requests: batchSubmitRequestSlots(contentSha256),
+  })
   const receipt = await submitBatchShard({
-    shard: {
-      index: 0,
-      filename: shardFilename,
-      contentSha256: sha256(content),
-      recordCount,
-      estimatedInputTokens: 0,
-      estimatedOutputTokenAllowance: 0,
-      content,
-    },
+    shard,
+    operationId,
     authorization,
     submittedAt: nowIso(),
   })
@@ -727,15 +784,22 @@ async function runBatchStatus(argv: readonly string[]): Promise<void> {
   const batchId = requireFlag(argv, 'batch-id')
   const paths = operationPaths(state, operationId)
   const metadata = await loadOperationMetadata(paths)
-  const { authorization } = await mintAuthorizationFromArgv(
-    argv,
+  const { authorization } = await mintAuthorizationFromArgv(argv, {
+    action: 'batch-status',
     operationId,
-    metadata.cohort,
-    0,
-    [],
-    true,
-  )
-  const status = await fetchBatchStatus({ batchId, authorization })
+    cohort: metadata.cohort,
+    recordCount: 0,
+    estimateRecords: [],
+    batch: true,
+    planSha256: batchControlPlanSha256(batchId),
+    requests: batchStatusRequestSlots(batchId),
+  })
+  const status = await fetchBatchStatus({
+    batchId,
+    operationId,
+    action: 'batch-status',
+    authorization,
+  })
   print({
     command: 'batch-status',
     batchId: status.batchId,
@@ -752,22 +816,29 @@ async function runBatchFetch(argv: readonly string[]): Promise<void> {
   const batchId = requireFlag(argv, 'batch-id')
   const paths = operationPaths(state, operationId)
   const metadata = await loadOperationMetadata(paths)
-  const { authorization } = await mintAuthorizationFromArgv(
-    argv,
+  const { authorization } = await mintAuthorizationFromArgv(argv, {
+    action: 'batch-fetch',
     operationId,
-    metadata.cohort,
-    0,
-    [],
-    true,
-  )
-  const status = await fetchBatchStatus({ batchId, authorization })
+    cohort: metadata.cohort,
+    recordCount: 0,
+    estimateRecords: [],
+    batch: true,
+    planSha256: batchControlPlanSha256(batchId),
+    requests: batchFetchRequestSlots(batchId),
+  })
+  const status = await fetchBatchStatus({
+    batchId,
+    operationId,
+    action: 'batch-fetch',
+    authorization,
+  })
   const fetched: string[] = []
   for (const [label, fileId] of [
     ['output', status.outputFileId],
     ['error', status.errorFileId],
   ] as const) {
     if (!fileId) continue
-    const content = await fetchBatchFileContent({ fileId, authorization })
+    const content = await fetchBatchFileContent({ fileId, batchId, operationId, authorization })
     const path = join(paths.batchRawDir, `${batchId}-${label}.jsonl`)
     await exclusiveWriteFile(path, content.bodyText)
     fetched.push(path)
@@ -890,7 +961,9 @@ async function runRoute(argv: readonly string[]): Promise<void> {
   const routed = buildRoutedRecords({
     assignments,
     evidenceProfiles: new Map(packets.map((packet) => [packet.record_id, packet.evidence_profile])),
-    riskFlags: new Map(riskFlags.map((row) => [row.recordId, row.riskFlags])),
+    // The raw rows, not a map: exact one-to-one coverage is asserted inside, and a map would
+    // have already collapsed a duplicate risk result before anyone could notice it.
+    riskAnalysisResults: riskFlags,
   })
   const manifest = buildRoutingManifest(routed)
   await appendJsonlRows(paths.routedRecordsJsonl, routed)
@@ -947,7 +1020,18 @@ async function runEvaluate(argv: readonly string[]): Promise<void> {
     truthByRecordId: truth,
   })
   await exclusiveWriteFile(paths.evaluationReportJson, `${canonicalJson(report)}\n`)
-  print({ command: 'evaluate', report })
+  // Create-once receipt: the digest recorded here is what qualification re-derives from the
+  // stored report, so an artifact edited after the run cannot pass the gate.
+  const receipt = {
+    operationId,
+    cohort: metadata.cohort,
+    evaluationVersion: report.version,
+    selected: report.denominators.selected,
+    evaluationReportSha256: evaluationReportSha256(report),
+    createdAt: nowIso(),
+  }
+  await exclusiveWriteFile(paths.evaluationReceiptJson, `${canonicalJson(receipt)}\n`)
+  print({ command: 'evaluate', report, receipt })
 }
 
 async function runReviewQueue(argv: readonly string[]): Promise<void> {
@@ -996,10 +1080,65 @@ async function runReviewQueue(argv: readonly string[]): Promise<void> {
 async function runQualify(argv: readonly string[]): Promise<void> {
   const state = await stateFromArgv(argv)
   const operationId = requireFlag(argv, 'operation')
+  const calibrationVersion = requireFlag(argv, 'calibration-version')
   const paths = operationPaths(state, operationId)
+  const metadata = await loadOperationMetadata(paths)
+  if (metadata.cohort !== 'locked-sanity-200') {
+    throw new CliUsageError(
+      'qualify runs only over the frozen locked-sanity-200 cohort. Nothing else may qualify.',
+    )
+  }
   const evaluation = JSON.parse(
     await readRegularFile(paths.evaluationReportJson),
   ) as EvaluationReport
+  const evaluationReceipt = JSON.parse(await readRegularFile(paths.evaluationReceiptJson)) as {
+    evaluationReportSha256?: string
+  }
+  if (typeof evaluationReceipt.evaluationReportSha256 !== 'string') {
+    throw new Error('The evaluation receipt is malformed; refusing to qualify.')
+  }
+
+  // The frozen calibration surface must still name what would run today.
+  const freezeReceipt = JSON.parse(
+    await readRegularFile(resolveInsideRoot(state, 'freeze', `${calibrationVersion}.receipt.json`)),
+  ) as FreezeReceipt
+  const prompt = loadStageAPrompt()
+  const split = await readSplitArtifacts(state)
+  const splitManifestSha256 = (split.manifest as { manifestSha256?: string }).manifestSha256 ?? ''
+  assertFreezeReceiptCurrent(freezeReceipt, {
+    calibrationVersion: freezeReceipt.calibrationVersion,
+    model: freezeReceipt.model,
+    modelAlias: freezeReceipt.modelAlias,
+    reasoningEffort: freezeReceipt.reasoningEffort,
+    promptText: prompt.text,
+    splitManifestSha256,
+  })
+  const lockedRunMarker = JSON.parse(
+    await readRegularFile(
+      resolveInsideRoot(state, 'freeze', 'locked-runs', `${calibrationVersion}.marker.json`),
+    ),
+  ) as LockedRunMarker
+
+  // Exact set equality at the coordinator boundary: the identities actually evaluated against
+  // the frozen locked-sanity list. Identities never leave this process.
+  const routed = await readRoutedRecords(paths)
+  const pmidByRecordId = new Map((await readMapping(paths)).map((row) => [row.recordId, row.pmid]))
+  const cohortPmids = routed.map((record) => {
+    const pmid = pmidByRecordId.get(record.recordId)
+    if (pmid === undefined) {
+      throw new Error('A routed record has no coordinator mapping row; refusing to qualify.')
+    }
+    return pmid
+  })
+  const splitLockedSanityIdentitySha256 = sortedIdentityDigest(split.lockedSanity)
+  if (
+    splitLockedSanityIdentitySha256 !==
+    (split.manifest as { lockedSanityIdentitySha256?: string }).lockedSanityIdentitySha256
+  ) {
+    throw new Error('The stored locked-sanity identities disagree with the split manifest.')
+  }
+  const cohortIdentitySha256 = lockedSanityCohortIdentitySha256(cohortPmids)
+
   const decisions = await readReviewDecisions(paths)
   const systematicMissFlagCount = [...decisions.values()].filter(
     (decision) => decision.action === 'flag_systematic_miss',
@@ -1009,7 +1148,6 @@ async function runQualify(argv: readonly string[]): Promise<void> {
     const queue = JSON.parse(await readRegularFile(paths.reviewQueueJson)) as {
       highConfidenceNegativeRecordIds?: string[]
     }
-    const routed = await readRoutedRecords(paths)
     const assignments = await readTerminalStates(paths)
     const outputById = new Map(assignments.map((row) => [row.recordId, row.output]))
     const bucketIds = routed
@@ -1027,11 +1165,49 @@ async function runQualify(argv: readonly string[]): Promise<void> {
   } catch {
     coverage = false
   }
+
+  const evidence = buildQualificationEvidence({
+    calibrationVersion,
+    operationId,
+    cohortLabel: metadata.cohort,
+    selectedCount: evaluation.denominators.selected,
+    cohortIdentitySha256,
+    splitLockedSanityIdentitySha256,
+    splitManifestSha256,
+    freezeReceipt,
+    lockedRunMarker,
+    evaluationReportSha256: evaluationReceipt.evaluationReportSha256,
+  })
+
+  // Once per freeze: a pristine locked run is spent by the qualification that reads it.
+  await ensureStateDirectory(state, 'freeze', 'qualified')
+  const qualifiedDir = resolveInsideRoot(state, 'freeze', 'qualified')
+  let observedRunMarkerSha256s: string[] = []
+  try {
+    observedRunMarkerSha256s = (await readdir(qualifiedDir))
+      .filter((entry) => entry.endsWith('.json'))
+      .map((entry) => entry.slice(0, -'.json'.length))
+  } catch {
+    observedRunMarkerSha256s = []
+  }
+
   const report = buildQualificationReport({
+    evidence,
     evaluation,
     systematicMissFlagCount,
     reviewInterfaceCoversAllHighConfidenceNegatives: coverage,
+    observedRunMarkerSha256s,
   })
+  await exclusiveWriteFile(
+    join(qualifiedDir, `${evidence.lockedRunMarkerSha256}.json`),
+    `${canonicalJson({
+      calibrationVersion,
+      operationId,
+      evidenceSha256: evidence.evidenceSha256,
+      qualified: report.qualified,
+      observedAt: nowIso(),
+    })}\n`,
+  )
   await exclusiveWriteFile(paths.qualificationReportJson, `${canonicalJson(report)}\n`)
   print({ command: 'qualify', report })
 }

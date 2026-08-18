@@ -2,6 +2,8 @@ import type { EvidenceProfile } from '../../src/features/literature/classifier/p
 import {
   isNegativeOnlyReasonCode,
   routeStageARecord,
+  validateStageARiskAnalysisResult,
+  type StageARiskAnalysisResult,
   type StageARoute,
   type StageATerminalState,
 } from '../../src/features/literature/classifier/stage-a-contract'
@@ -49,7 +51,69 @@ export interface RoutingManifest {
 export interface RoutingInputs {
   readonly assignments: readonly TerminalAssignment[]
   readonly evidenceProfiles: ReadonlyMap<string, EvidenceProfile>
-  readonly riskFlags: ReadonlyMap<string, readonly string[]>
+  /**
+   * The independent risk-analysis results, one row per selected record, exactly as stored.
+   * A list rather than a map on purpose: a map silently collapses duplicate rows, and duplicate
+   * risk evidence is a disagreement between authorities, not a detail to normalize away.
+   */
+  readonly riskAnalysisResults: readonly unknown[]
+}
+
+export class RiskEvidenceCoverageError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'RiskEvidenceCoverageError'
+  }
+}
+
+/**
+ * Coordinator-level exact-coverage assertion: every selected record has exactly one
+ * schema-valid risk-analysis result, and no result names a record outside the selection.
+ * Missing, duplicated, foreign, or malformed evidence stops the routing operation — there is
+ * no "no row means no risk" reading of an unscanned record anywhere in this lane.
+ */
+export function assertExactRiskAnalysisCoverage(
+  selectedRecordIds: readonly string[],
+  riskAnalysisResults: readonly unknown[],
+): Map<string, StageARiskAnalysisResult> {
+  const selected = new Set<string>()
+  for (const recordId of selectedRecordIds) {
+    if (selected.has(recordId)) {
+      throw new RiskEvidenceCoverageError(
+        'A record id appears twice in the selection; refusing to route.',
+      )
+    }
+    selected.add(recordId)
+  }
+  const byRecordId = new Map<string, StageARiskAnalysisResult>()
+  riskAnalysisResults.forEach((value, index) => {
+    const validation = validateStageARiskAnalysisResult(value)
+    if (!validation.ok) {
+      throw new RiskEvidenceCoverageError(
+        `Risk-analysis result ${index} failed validation (${validation.issues.join('; ')}); ` +
+          'refusing to route.',
+      )
+    }
+    const { result } = validation
+    if (byRecordId.has(result.recordId)) {
+      throw new RiskEvidenceCoverageError(
+        'A record has more than one risk-analysis result; refusing to route.',
+      )
+    }
+    if (!selected.has(result.recordId)) {
+      throw new RiskEvidenceCoverageError(
+        'A risk-analysis result names a record outside the selection; refusing to route.',
+      )
+    }
+    byRecordId.set(result.recordId, result)
+  })
+  if (byRecordId.size !== selected.size) {
+    throw new RiskEvidenceCoverageError(
+      `Risk-analysis coverage is incomplete: ${byRecordId.size} results for ${selected.size} ` +
+        'selected records. Independent risk analysis is mandatory evidence; refusing to route.',
+    )
+  }
+  return byRecordId
 }
 
 function isHighConfidenceNegativeOutput(assignment: TerminalAssignment): boolean {
@@ -72,18 +136,25 @@ function stageBEntrySource(record: RoutedRecord): StageBEntrySource {
 
 /** Route every selected record. Total function: no record is ever dropped or double-routed. */
 export function buildRoutedRecords(inputs: RoutingInputs): RoutedRecord[] {
+  const riskByRecordId = assertExactRiskAnalysisCoverage(
+    inputs.assignments.map((assignment) => assignment.recordId),
+    inputs.riskAnalysisResults,
+  )
   const routed: RoutedRecord[] = []
   for (const assignment of inputs.assignments) {
     const evidenceProfile = inputs.evidenceProfiles.get(assignment.recordId)
     if (!evidenceProfile) {
       throw new Error('A terminal assignment has no evidence profile; refusing to route.')
     }
-    const riskFlags = inputs.riskFlags.get(assignment.recordId) ?? []
+    // Guaranteed present by the coverage assertion above; the routing function re-validates it.
+    const riskEvidence = riskByRecordId.get(assignment.recordId)
     const decision = routeStageARecord({
+      recordId: assignment.recordId,
       terminalState: assignment.state,
       output: assignment.output,
-      coordinatorRiskFlags: riskFlags,
+      riskAnalysisResult: riskEvidence,
     })
+    const riskFlags: readonly string[] = riskEvidence?.riskFlags ?? []
     routed.push({
       recordId: assignment.recordId,
       route: decision.route,
