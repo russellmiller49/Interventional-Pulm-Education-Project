@@ -65,9 +65,14 @@ export const DEFAULT_SHARD_CEILINGS: ShardCeilings = {
   maxEstimatedTokensPerShard: LUNA_BATCH_MAX_ESTIMATED_TOKENS_PER_SHARD,
 }
 
+function isNonNegativeSafeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+}
+
 /**
  * Deterministic sharding: requests ordered by custom id, packed greedily under both ceilings.
- * Same inputs, same ceilings → byte-identical shards with identical hashes.
+ * Same inputs, same ceilings → byte-identical shards with identical hashes. An individual
+ * request that cannot fit a shard is refused outright rather than packed into one.
  */
 export function planBatchShards(
   lines: readonly BatchRequestLine[],
@@ -103,7 +108,24 @@ export function planBatchShards(
   for (const line of ordered) {
     const estimate = estimates.get(line.customId)
     if (!estimate) throw new Error('A batch request has no token estimate; refusing to shard.')
+    if (
+      !isNonNegativeSafeInteger(estimate.inputTokens) ||
+      !isNonNegativeSafeInteger(estimate.outputTokenAllowance)
+    ) {
+      throw new Error(
+        'A batch request has an invalid token estimate (non-finite, negative, fractional, or ' +
+          'unsafe); refusing to shard.',
+      )
+    }
     const lineTokens = estimate.inputTokens + estimate.outputTokenAllowance
+    // Checked before any rollover decision: an individually oversized request can never fit a
+    // shard, so moving it into a fresh one would only mint an oversized shard. Equality fits.
+    if (lineTokens > ceilings.maxEstimatedTokensPerShard) {
+      throw new Error(
+        `A single batch request estimates ${lineTokens} tokens, above the per-shard ceiling ` +
+          `${ceilings.maxEstimatedTokensPerShard}. Refusing to shard.`,
+      )
+    }
     const wouldExceed =
       current.records + 1 > ceilings.maxRecordsPerShard ||
       current.inputTokens + current.outputTokens + lineTokens > ceilings.maxEstimatedTokensPerShard

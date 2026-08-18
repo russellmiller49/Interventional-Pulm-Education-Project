@@ -37,6 +37,83 @@ describe('batch JSONL lines', () => {
   })
 })
 
+/**
+ * LUNA-BATCH-001. A request whose own estimate exceeds the per-shard token ceiling can never
+ * fit any shard; the original reproduction packed a 101-token request into a one-record shard
+ * under a 100-token ceiling instead of refusing it.
+ */
+describe('individually oversized batch requests (LUNA-BATCH-001)', () => {
+  const CEILINGS = { maxRecordsPerShard: 10, maxEstimatedTokensPerShard: 100 }
+
+  function planOne(inputTokens: number, outputTokenAllowance: number) {
+    const one = line(1)
+    return planBatchShards(
+      [one],
+      new Map([[one.customId, { inputTokens, outputTokenAllowance }]]),
+      CEILINGS,
+    )
+  }
+
+  it('accepts a first request exactly at the ceiling', () => {
+    const plan = planOne(90, 10)
+    expect(plan.shards).toHaveLength(1)
+    expect(plan.shards[0].recordCount).toBe(1)
+  })
+
+  it('refuses a first request one token above the ceiling', () => {
+    expect(() => planOne(91, 10)).toThrow(/above the per-shard ceiling/u)
+  })
+
+  it('refuses an oversized request after a populated shard instead of rolling it over', () => {
+    const small = line(1)
+    const oversized = line(2)
+    expect(() =>
+      planBatchShards(
+        [small, oversized],
+        new Map([
+          [small.customId, { inputTokens: 40, outputTokenAllowance: 10 }],
+          [oversized.customId, { inputTokens: 200, outputTokenAllowance: 10 }],
+        ]),
+        CEILINGS,
+      ),
+    ).toThrow(/above the per-shard ceiling/u)
+  })
+
+  it('refuses invalid token estimates', () => {
+    for (const estimate of [
+      { inputTokens: -1, outputTokenAllowance: 0 },
+      { inputTokens: Number.NaN, outputTokenAllowance: 0 },
+      { inputTokens: Number.POSITIVE_INFINITY, outputTokenAllowance: 0 },
+      { inputTokens: 1.5, outputTokenAllowance: 0 },
+      { inputTokens: Number.MAX_SAFE_INTEGER + 2, outputTokenAllowance: 0 },
+      { inputTokens: 0, outputTokenAllowance: -3 },
+    ]) {
+      expect(() => planOne(estimate.inputTokens, estimate.outputTokenAllowance)).toThrow(
+        /invalid token estimate|above the per-shard ceiling/u,
+      )
+    }
+  })
+
+  it('emits no empty shard and keeps ordering and hashes stable for valid plans', () => {
+    const lines = Array.from({ length: 5 }, (_, index) => line(index))
+    const estimates = estimatesFor(lines, 40)
+    const plan = planBatchShards(lines, estimates, {
+      maxRecordsPerShard: 2,
+      maxEstimatedTokensPerShard: 200,
+    })
+    expect(plan.shards.map((shard) => shard.recordCount)).toEqual([2, 2, 1])
+    expect(plan.shards.every((shard) => shard.recordCount > 0)).toBe(true)
+    const again = planBatchShards([...lines].reverse(), estimates, {
+      maxRecordsPerShard: 2,
+      maxEstimatedTokensPerShard: 200,
+    })
+    expect(again.shards.map((shard) => shard.contentSha256)).toEqual(
+      plan.shards.map((shard) => shard.contentSha256),
+    )
+    expect(shardPlanSummary(again).planSha256).toBe(shardPlanSummary(plan).planSha256)
+  })
+})
+
 describe('deterministic content-addressed sharding', () => {
   it('produces byte-identical shards for identical inputs', () => {
     const lines = [line(3), line(1), line(2)]
