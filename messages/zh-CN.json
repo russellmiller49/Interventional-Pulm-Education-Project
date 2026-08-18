@@ -2519,10 +2519,10 @@
       "disclaimer": "仅供教育使用。搜索结果不能确定证据质量、推荐强度，也不能判断其是否适合某位患者或某项操作。"
     },
     "admin": {
-      "metadataTitle": "文献审核队列",
+      "metadataTitle": "全部文献管理",
       "eyebrow": "网站管理员",
-      "heading": "文献审核与整理",
-      "description": "检查导入、筛选审核队列，并通过仅追加的审计记录作出可持续的人工决定。",
+      "heading": "全部文献",
+      "description": "检查完整的已导入语料库、检索来源及现有的仅追加审计历史。",
       "openPreview": "打开搜索预览",
       "invalidFilters": "审核筛选条件无效。",
       "stats": {
@@ -2580,10 +2580,131 @@
         "page": "第 {page} 页，共 {pages} 页",
         "unavailable": "文献审核队列暂不可用。"
       },
+      "curated": {
+        "metadataTitle": "医师审核精选文献",
+        "eyebrow": "网站管理员 · 已审核集合",
+        "heading": "精选文献",
+        "description": "只读集合，严格由具有完整医师审核叠加层且分类为核心 IP 或相邻 IP 的记录组成。",
+        "invalidFilters": "精选文献筛选条件无效。",
+        "navigation": {
+          "label": "文献管理集合",
+          "curated": "精选",
+          "all": "全部文献"
+        },
+        "stats": {
+          "heading": "一个语料库，各项审核计数含义不同",
+          "description": "这些实时计数描述不同集合，不应视为可以互换。",
+          "fullCorpus": "完整语料库",
+          "fullCorpusHelp": "所有已导入的书目记录。",
+          "physicianReviewed": "经医师审核",
+          "physicianReviewedHelp": "五个审核字段均已填写。",
+          "curated": "精选",
+          "curatedHelp": "核心 IP 加相邻 IP。",
+          "core": "核心 IP",
+          "coreHelp": "经审核认为直接属于核心 IP 范围。",
+          "adjacent": "相邻 IP",
+          "adjacentHelp": "经审核认为是相关的相邻文献。",
+          "exclusions": "已审核排除",
+          "exclusionsHelp": "经审核不属于本集合；并非未审核。"
+        },
+        "classes": {
+          "core": "核心 IP",
+          "adjacent": "相邻 IP"
+        },
+        "provenance": {
+          "physician_confirmed": "医师确认的富化信息",
+          "physician_modified": "医师修改的富化信息",
+          "qc_accepted": "质量控制接受的富化信息"
+        },
+        "search": {
+          "heading": "在精选文献中搜索",
+          "description": "搜索和排序在服务器端完成；仅返回当前页的已审核相关记录。"
+        },
+        "filters": {
+          "classLabel": "按审核类别筛选精选文献",
+          "all": "全部精选",
+          "core": "仅核心",
+          "adjacent": "仅相邻",
+          "query": "搜索精选文献",
+          "queryPlaceholder": "搜索标题、摘要、关键词、PMID 或 DOI",
+          "sort": "排序",
+          "sortNewest": "出版年份由新到旧",
+          "sortOldest": "出版年份由旧到新",
+          "sortTitle": "标题 A–Z",
+          "apply": "应用",
+          "clear": "清除"
+        },
+        "results": {
+          "count": "{count, plural, =0 {无精选文章} other {# 篇精选文章}}",
+          "empty": "没有精选文章符合这些筛选条件。",
+          "unavailable": "精选文献暂不可用",
+          "physicianReviewed": "经医师审核",
+          "abstractUnavailable": "无可用摘要。",
+          "retracted": "已撤稿",
+          "correction": "更正",
+          "conferenceAbstract": "会议摘要",
+          "pmid": "PMID",
+          "doi": "DOI",
+          "reviewedOn": "审核日期",
+          "pubMed": "PubMed"
+        },
+        "pagination": {
+          "label": "精选文献分页",
+          "previous": "上一页",
+          "next": "下一页",
+          "page": "第 {page} 页，共 {pages} 页"
+        },
+        "methods": {
+          "heading": "方法与来源",
+          "summary": "精选成员资格和这些计数的定义方式",
+          "currentCounts": "完整书目包含 {fullCorpus} 条记录。其中 {physicianReviewed} 条接受了医师审核；{curated} 条进入精选集合（{core} 条核心 IP、{adjacent} 条相邻 IP）；{exclusions} 条为已审核排除。",
+          "countsUnavailable": "无法读取实时计数。这并不表示记录数为零。",
+          "classDistinction": "核心 IP 与相邻 IP 是不同的医师审核范围类别；两者均不是证据质量等级。",
+          "exclusions": "已审核排除仍保留在数据库、全部文献和审计界面中。未审核文章不属于排除。",
+          "allDraft": "目前所有文章仍为草稿。",
+          "draftCount": "目前 {fullCorpus} 篇文章中有 {draft} 篇仍为草稿；本功能不会更改可见性。",
+          "draftUnavailable": "草稿状态计数不可用；本功能不会更改可见性。",
+          "aiBoundary": "AI 分流或建议不会作为医师事实显示；本集合也不声称经过 AI 验证或具有保留集性能。",
+          "completeness": "精选集合不代表系统综述的完整性，也不声称完整收录所有介入肺脏病学文献或获得指南认可。",
+          "releaseBoundary": "本功能不会执行公开发布、学术发表、数据摄取、整理写入或叠加层变更。"
+        }
+      },
       "article": {
         "metadataTitle": "整理文献文章 PMID {pmid}",
         "loadError": "无法加载文献文章。请稍后重试。",
         "back": "返回审核队列",
+        "navigation": {
+          "label": "文献管理集合",
+          "curated": "精选",
+          "all": "全部文献"
+        },
+        "reviewed": {
+          "title": "医师审核来源",
+          "description": "历史审核叠加层与当前工作相关性状态分开显示。",
+          "physicianReviewed": "经医师审核",
+          "unreviewed": "未审核",
+          "unreviewedDescription": "未记录完整的医师审核叠加层。该文章是未审核，并非被排除或被判定为不相关。",
+          "unavailable": "审核来源暂不可用",
+          "core": "核心 IP",
+          "adjacent": "相邻 IP",
+          "excluded": "已审核排除",
+          "reviewedClass": "审核类别",
+          "provenanceLabel": "富化信息来源",
+          "reviewedDate": "审核日期",
+          "source": "审核来源",
+          "curatedMembership": "精选成员资格",
+          "curatedYes": "已纳入精选集合",
+          "curatedNo": "未纳入精选集合 — 已审核排除",
+          "provenance": {
+            "physician_confirmed": "医师确认的富化信息",
+            "physician_modified": "医师修改的富化信息",
+            "qc_accepted": "质量控制接受的富化信息"
+          },
+          "sourceKinds": {
+            "owner_authorized_development_cohort": "所有者授权的医师审核开发队列",
+            "physician_reviewed_source": "医师审核来源"
+          }
+        },
         "landmark": "里程碑",
         "openPubMed": "在 PubMed 中打开",
         "curationTitle": "人工整理",

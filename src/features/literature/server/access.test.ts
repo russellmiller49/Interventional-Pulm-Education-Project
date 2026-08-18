@@ -1,9 +1,10 @@
 import { cookies, headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { supabaseServer } from '@/lib/supabase/server'
 
 import { LOCAL_DEV_AUTH_COOKIE_NAME } from '@/lib/site-auth/local-dev-auth'
 
-import { requireLiteratureSiteAdminApi } from './access'
+import { requireLiteratureSiteAdminApi, requireLiteratureSiteAdminPage } from './access'
 
 jest.mock('next/headers', () => ({
   cookies: jest.fn(),
@@ -20,10 +21,16 @@ jest.mock('next/server', () => ({
     }),
   },
 }))
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn((destination: string) => {
+    throw new Error(`NEXT_REDIRECT:${destination}`)
+  }),
+}))
 
 const mockedSupabaseServer = jest.mocked(supabaseServer)
 const mockedCookies = jest.mocked(cookies)
 const mockedHeaders = jest.mocked(headers)
+const mockedRedirect = jest.mocked(redirect)
 
 function entitlementQuery(result: {
   data: { entitlement: string } | null
@@ -122,6 +129,17 @@ describe('literature API authorization', () => {
     }
   })
 
+  it('redirects an anonymous Curated page visitor to the localized login', async () => {
+    mockClient({ user: null })
+
+    await expect(requireLiteratureSiteAdminPage('en', '/admin/literature/curated')).rejects.toThrow(
+      'NEXT_REDIRECT:/en/login?next=%2Fen%2Fadmin%2Fliterature%2Fcurated',
+    )
+    expect(mockedRedirect).toHaveBeenCalledWith(
+      '/en/login?next=%2Fen%2Fadmin%2Fliterature%2Fcurated',
+    )
+  })
+
   it('rejects a signed-in user without site_admin', async () => {
     mockClient({
       user: {
@@ -138,6 +156,22 @@ describe('literature API authorization', () => {
     if (!result.ok) {
       expect(result.response.status).toBe(403)
     }
+  })
+
+  it('redirects an ordinary signed-in Curated page visitor away from admin data', async () => {
+    mockClient({
+      user: {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'reader@example.com',
+        email_confirmed_at: '2026-01-01T00:00:00.000Z',
+      },
+      entitlement: null,
+    })
+
+    await expect(requireLiteratureSiteAdminPage('en', '/admin/literature/curated')).rejects.toThrow(
+      'NEXT_REDIRECT:/en/dashboard?required=site_admin',
+    )
+    expect(mockedRedirect).toHaveBeenCalledWith('/en/dashboard?required=site_admin')
   })
 
   it('allows a verified user with an active site_admin entitlement', async () => {

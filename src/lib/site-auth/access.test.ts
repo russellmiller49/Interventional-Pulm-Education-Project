@@ -210,10 +210,26 @@ describe('main site auth access helpers', () => {
       '/es/literature',
       '/zh-CN/literature/methods',
       '/literature/article/12345678',
+      '/admin/literature/curated',
+      '/es/admin/literature/curated',
     ]) {
       expect(isPublicPath(path)).toBe(false)
       expect(getRequiredEntitlement(path, params())).toBe('site_admin')
-      expect(resolveSiteModuleId(path)).toBe('literature')
+      if (!path.includes('/admin/')) {
+        expect(resolveSiteModuleId(path)).toBe('literature')
+      }
+    }
+  })
+
+  it('does not let asset-like suffixes bypass Literature authorization', () => {
+    for (const path of [
+      '/literature/reviewed.json',
+      '/es/literature/reviewed.xml',
+      '/zh-CN/literature/reviewed.txt',
+      '/admin/literature/curated/export.json',
+    ]) {
+      expect(isPublicPath(path)).toBe(false)
+      expect(getRequiredEntitlement(path, params())).toBe('site_admin')
     }
   })
 

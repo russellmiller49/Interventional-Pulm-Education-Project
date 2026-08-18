@@ -106,6 +106,7 @@ describe('no Literature URL is advertised for indexing', () => {
   it('marks the reader and administration surfaces noindex', () => {
     expect(read(`${LITERATURE_PAGE_ROOT}/layout.tsx`)).toMatch(/robots:\s*\{[^}]*index:\s*false/su)
     expect(read(`${ADMIN_PAGE_ROOT}/page.tsx`)).toMatch(/robots:\s*\{\s*index:\s*false/su)
+    expect(read(`${ADMIN_PAGE_ROOT}/curated/page.tsx`)).toMatch(/robots:\s*\{\s*index:\s*false/su)
     expect(read(`${ADMIN_PAGE_ROOT}/gold-set/page.tsx`)).toMatch(/robots:\s*\{\s*index:\s*false/su)
   })
 

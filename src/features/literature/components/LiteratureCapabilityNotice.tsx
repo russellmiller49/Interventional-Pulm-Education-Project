@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, CircleSlash, Info } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, CircleSlash } from 'lucide-react'
 
 import { cn } from '@/lib/cn'
 import type {
@@ -81,16 +81,16 @@ export function LiteratureCapabilityNotice({
     >
       <div className="flex items-start gap-3">
         <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <p className="font-semibold">{title}</p>
           <p className="leading-6 text-muted-foreground">{description}</p>
           {reasonLabel && capability.message && capability.message !== description ? (
-            <p className="leading-6 text-muted-foreground">
+            <p className="break-words leading-6 text-muted-foreground [overflow-wrap:anywhere]">
               <span className="font-medium">{reasonLabel}:</span> {capability.message}
             </p>
           ) : null}
           {capability.projectRef ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">
               {projectLabel}: <code>{capability.projectRef}</code>
             </p>
           ) : null}

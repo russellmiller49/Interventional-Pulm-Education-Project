@@ -3,9 +3,17 @@ import type { User } from '@supabase/supabase-js'
 import { flattenLiteratureTaxonomy, literatureQueryRegistry } from '@/features/literature/config'
 import type {
   LiteratureAdminArticleUpdate,
+  LiteratureCuratedCollectionQuery,
   LiteratureReviewQueueQuery,
   LiteratureSearchQuery,
 } from '@/features/literature/schemas/search'
+import {
+  hasCompleteReviewedOverlay,
+  hasNoReviewedOverlay,
+  isCuratedReviewedOverlay,
+  literatureCuratedRelevanceValues,
+  type LiteratureReviewedOverlayCandidate,
+} from '@/features/literature/domain/reviewed-overlay'
 
 import { literatureClientForOperation } from './database-client'
 import {
@@ -18,12 +26,16 @@ import type {
   LiteratureAdminStats,
   LiteratureArticleDetail,
   LiteratureCapabilityResult,
+  LiteratureCuratedCollection,
+  LiteratureCuratedResult,
+  LiteratureCuratedStats,
   LiteratureCurationEventDisplay,
   LiteratureDisplayTopic,
   LiteratureReviewQueueItem,
+  LiteratureReviewedMetadata,
+  LiteratureReviewedSourceKind,
   LiteratureSearchResponse,
   LiteratureSearchResult,
-  LiteratureServerResult,
   LiteratureSourceDisplay,
   LiteratureTopicAssignmentDisplay,
 } from './types'
@@ -115,6 +127,28 @@ interface CurationEventRow {
   after_value: unknown
   reason: string | null
   created_at: string
+}
+
+interface ReviewedOverlayRow extends LiteratureReviewedOverlayCandidate {
+  pmid: string
+}
+
+interface CuratedArticleRow extends ReviewedOverlayRow {
+  doi: string | null
+  title: string
+  abstract: string | null
+  authors: unknown
+  journal_title: string | null
+  journal_abbreviation: string | null
+  publication_year: number | null
+  volume: string | null
+  issue: string | null
+  pages: string | null
+  publication_types: string[] | null
+  is_retracted: boolean
+  is_correction: boolean
+  is_conference_abstract: boolean
+  visibility_state: LiteratureCuratedResult['visibilityState']
 }
 
 const topicById = new Map(
@@ -236,6 +270,40 @@ function numberRecord(value: unknown) {
       Number(count) || 0,
     ]),
   )
+}
+
+interface ReviewedOverlayFilter<T> {
+  not(column: string, operator: string, value: unknown): T
+}
+
+/** Apply the five-field atomic reviewed-overlay predicate to a PostgREST query. */
+function requireCompleteReviewedOverlay<T extends ReviewedOverlayFilter<T>>(query: T): T {
+  return query
+    .not('reviewed_relevance', 'is', null)
+    .not('reviewed_enrichment_provenance', 'is', null)
+    .not('reviewed_source_identity', 'is', null)
+    .not('reviewed_at', 'is', null)
+    .not('reviewed_operation_id', 'is', null)
+}
+
+function reviewedSourceKind(sourceIdentity: string): LiteratureReviewedSourceKind {
+  return sourceIdentity.startsWith('owner-authorized-development-cohort-630/')
+    ? 'owner_authorized_development_cohort'
+    : 'physician_reviewed_source'
+}
+
+function reviewedMetadata(row: ReviewedOverlayRow): LiteratureReviewedMetadata | null {
+  if (!hasCompleteReviewedOverlay(row)) {
+    return null
+  }
+
+  return {
+    reviewedRelevance: row.reviewed_relevance,
+    enrichmentProvenance: row.reviewed_enrichment_provenance,
+    sourceKind: reviewedSourceKind(row.reviewed_source_identity),
+    reviewedAt: row.reviewed_at,
+    curated: isCuratedReviewedOverlay(row),
+  }
 }
 
 export function validateKnownLiteratureFilters(query: LiteratureSearchQuery) {
@@ -539,6 +607,229 @@ export async function loadLiteratureAdminStats(): Promise<
     },
     error: null,
     capability: capabilityFromArticleCount(totalArticles, projectRef),
+  }
+}
+
+/**
+ * Counts for the authenticated Curated surface.
+ *
+ * Every reviewed count applies the complete five-field overlay predicate. Curated is then derived
+ * from the two fine physician-reviewed classes, never from the coarse `relevance_state` column.
+ */
+export async function loadLiteratureCuratedStats(): Promise<
+  LiteratureCapabilityResult<LiteratureCuratedStats>
+> {
+  const acquired = literatureClientForOperation('reviewed_overlay_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
+  const countQuery = () =>
+    client.from('literature_articles').select('pmid', { count: 'exact', head: true })
+
+  const fullCorpusQuery = countQuery()
+  const physicianReviewedQuery = requireCompleteReviewedOverlay(countQuery())
+  const coreQuery = requireCompleteReviewedOverlay(countQuery()).eq(
+    'reviewed_relevance',
+    'include_core',
+  )
+  const adjacentQuery = requireCompleteReviewedOverlay(countQuery()).eq(
+    'reviewed_relevance',
+    'include_adjacent',
+  )
+  const reviewedExclusionsQuery = requireCompleteReviewedOverlay(countQuery()).eq(
+    'reviewed_relevance',
+    'exclude',
+  )
+  const draftArticlesQuery = countQuery().eq('visibility_state', 'draft')
+
+  const results = await Promise.all([
+    fullCorpusQuery,
+    physicianReviewedQuery,
+    coreQuery,
+    adjacentQuery,
+    reviewedExclusionsQuery,
+    draftArticlesQuery,
+  ])
+  const failed = results.find(
+    (result) => result.error || typeof result.count !== 'number' || !Number.isFinite(result.count),
+  )
+  if (failed) {
+    console.error('Curated Literature statistics failed', { code: failed.error?.code })
+    const capability = capabilityFromFailure(failed.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
+
+  const [fullCorpus, physicianReviewed, core, adjacent, reviewedExclusions, draftArticles] =
+    results.map((result) => result.count) as number[]
+
+  return {
+    data: {
+      fullCorpus,
+      physicianReviewed,
+      curated: core + adjacent,
+      core,
+      adjacent,
+      reviewedExclusions,
+      draftArticles,
+    },
+    error: null,
+    capability: capabilityFromArticleCount(fullCorpus, projectRef),
+  }
+}
+
+/** Server-side, paginated search over the two physician-reviewed relevant classes. */
+export async function loadLiteratureCuratedCollection(
+  filters: LiteratureCuratedCollectionQuery,
+): Promise<LiteratureCapabilityResult<LiteratureCuratedCollection>> {
+  const acquired = literatureClientForOperation('reviewed_overlay_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
+  let query = requireCompleteReviewedOverlay(
+    client
+      .from('literature_articles')
+      .select(
+        'pmid,doi,title,abstract,authors,journal_title,journal_abbreviation,publication_year,volume,issue,pages,publication_types,is_retracted,is_correction,is_conference_abstract,visibility_state,reviewed_relevance,reviewed_enrichment_provenance,reviewed_source_identity,reviewed_at,reviewed_operation_id',
+        { count: 'exact' },
+      ),
+  )
+
+  if (filters.q) {
+    query = query.textSearch('search_vector', filters.q, {
+      config: 'english',
+      type: 'websearch',
+    })
+  }
+
+  if (filters.reviewedClass === 'core') {
+    query = query.eq('reviewed_relevance', 'include_core')
+  } else if (filters.reviewedClass === 'adjacent') {
+    query = query.eq('reviewed_relevance', 'include_adjacent')
+  } else {
+    query = query.in('reviewed_relevance', [...literatureCuratedRelevanceValues])
+  }
+
+  if (filters.sort === 'oldest') {
+    query = query
+      .order('publication_year', { ascending: true, nullsFirst: false })
+      .order('pmid', { ascending: true })
+  } else if (filters.sort === 'title') {
+    query = query.order('title', { ascending: true }).order('pmid', { ascending: false })
+  } else {
+    query = query
+      .order('publication_year', { ascending: false, nullsFirst: false })
+      .order('pmid', { ascending: false })
+  }
+
+  const start = (filters.page - 1) * filters.pageSize
+  const result = await query.range(start, start + filters.pageSize - 1)
+  if (result.error || typeof result.count !== 'number' || !Number.isFinite(result.count)) {
+    console.error('Curated Literature search failed', { code: result.error?.code })
+    const capability = capabilityFromFailure(result.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
+
+  const rows = (result.data ?? []) as unknown as CuratedArticleRow[]
+  if (rows.some((row) => !isCuratedReviewedOverlay(row))) {
+    const capability = capabilityFromFailure(null, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
+  }
+
+  const items = rows.map((row): LiteratureCuratedResult => {
+    const reviewed = reviewedMetadata(row)
+    if (!reviewed) {
+      // Guarded above; retained as a local invariant so a future predicate change fails closed.
+      throw new Error('Curated query returned a row without a complete reviewed overlay.')
+    }
+    return {
+      pmid: row.pmid,
+      doi: row.doi,
+      title: row.title,
+      abstractSnippet: row.abstract?.slice(0, 500) ?? null,
+      authors: normalizeAuthors(row.authors),
+      journalTitle: row.journal_title,
+      journalAbbreviation: row.journal_abbreviation,
+      publicationYear: row.publication_year,
+      volume: row.volume,
+      issue: row.issue,
+      pages: row.pages,
+      publicationTypes: row.publication_types ?? [],
+      isRetracted: row.is_retracted,
+      isCorrection: row.is_correction,
+      isConferenceAbstract: row.is_conference_abstract,
+      visibilityState: row.visibility_state,
+      reviewed,
+    }
+  })
+
+  return {
+    data: {
+      items,
+      total: result.count,
+      page: filters.page,
+      pageSize: filters.pageSize,
+      pageCount: result.count === 0 ? 0 : Math.ceil(result.count / filters.pageSize),
+    },
+    error: null,
+    capability: capabilityFromFilteredRead(projectRef),
+  }
+}
+
+/** Read the physician-reviewed overlay for one authenticated admin article detail. */
+export async function getLiteratureReviewedMetadata(
+  pmid: string,
+): Promise<LiteratureCapabilityResult<LiteratureReviewedMetadata | null>> {
+  const acquired = literatureClientForOperation('reviewed_overlay_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
+  const result = await client
+    .from('literature_articles')
+    .select(
+      'pmid,reviewed_relevance,reviewed_enrichment_provenance,reviewed_source_identity,reviewed_at,reviewed_operation_id',
+    )
+    .eq('pmid', pmid)
+    .maybeSingle()
+
+  if (result.error) {
+    console.error('Literature reviewed provenance lookup failed', { code: result.error.code })
+    const capability = capabilityFromFailure(result.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
+  if (!result.data) {
+    return { data: null, error: null, capability: capabilityFromFilteredRead(projectRef) }
+  }
+
+  const row = result.data as ReviewedOverlayRow
+  if (hasNoReviewedOverlay(row)) {
+    return { data: null, error: null, capability: capabilityFromFilteredRead(projectRef) }
+  }
+
+  const metadata = reviewedMetadata(row)
+  if (!metadata) {
+    const capability = capabilityFromFailure(null, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
+  }
+
+  return {
+    data: metadata,
+    error: null,
+    capability: capabilityFromFilteredRead(projectRef),
   }
 }
 
