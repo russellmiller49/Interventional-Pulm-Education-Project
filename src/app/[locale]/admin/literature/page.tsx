@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { cn } from '@/lib/cn'
 import { Input } from '@/components/ui/input'
 import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
+import { LiteratureAdminCollectionNav } from '@/features/literature/components/LiteratureAdminCollectionNav'
 import { flattenLiteratureTaxonomy, literatureQueryRegistry } from '@/features/literature/config'
 import {
   literatureRelevanceStates,
@@ -197,6 +198,14 @@ export default async function LiteratureAdminPage({
 
   return (
     <div className="container space-y-8 py-10 md:py-14">
+      <LiteratureAdminCollectionNav
+        active="all"
+        labels={{
+          all: t('curated.navigation.all'),
+          curated: t('curated.navigation.curated'),
+          navigation: t('curated.navigation.label'),
+        }}
+      />
       <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="max-w-4xl space-y-3">
           <Badge variant="info">{t('eyebrow')}</Badge>

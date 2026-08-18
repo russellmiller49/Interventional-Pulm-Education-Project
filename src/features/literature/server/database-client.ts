@@ -36,11 +36,10 @@ import {
  * first gate, and it is a source constant rather than a variable.
  *
  * The second gate is this module's own: a client is handed out **per operation**, from the closed
- * allowlist `LITERATURE_ACTIVATED_OPERATIONS`. The dedicated project carries the foundation
- * migration and nothing else, so only what that schema genuinely supports is carried — article
- * search, article detail, administration statistics, and review-queue reading. Curation writes,
- * every gold-set operation, and ingestion are withheld and return a typed capability instead of a
- * client.
+ * allowlist `LITERATURE_ACTIVATED_OPERATIONS`. Only schema that is attested on the dedicated
+ * project is carried — foundation article reads plus the physician-reviewed overlay read. Curation
+ * writes, every gold-set operation, and ingestion are withheld and return a typed capability
+ * instead of a client.
  *
  * That split is what makes "the app cannot mutate the corpus" checkable rather than inferred:
  * `createLiteratureAdmin()` is the only `createClient` call for Literature in the repository, it is
@@ -73,6 +72,8 @@ export type LiteratureRuntimeOperation =
   | 'admin_stats'
   /** Filtered reads for the administration review queue. Foundation. */
   | 'review_queue_read'
+  /** Read-only access to the physician-reviewed overlay columns. */
+  | 'reviewed_overlay_read'
   /** `curate_literature_article_v1`. Exists in the foundation; withheld by this build. */
   | 'article_curation'
   /** Every gold-set read. Its migrations are deferred, so the objects do not exist. */
@@ -84,7 +85,7 @@ export type LiteratureRuntimeOperation =
  * The operations carried against the **dedicated hosted project**. Source-controlled and closed: an
  * operation absent from this list gets no client there, whatever the environment says.
  *
- * All four are read-only against the foundation schema. Adding a write here is a reviewed code
+ * All five are read-only against the available schema. Adding a write here is a reviewed code
  * change, deliberately not a configuration change.
  *
  * This list scopes the *strict* contract only. The local Supabase stack has every Literature
@@ -98,6 +99,7 @@ export const LITERATURE_ACTIVATED_OPERATIONS = [
   'article_detail',
   'admin_stats',
   'review_queue_read',
+  'reviewed_overlay_read',
 ] as const satisfies readonly LiteratureRuntimeOperation[]
 
 export type LiteratureActivatedOperation = (typeof LITERATURE_ACTIVATED_OPERATIONS)[number]

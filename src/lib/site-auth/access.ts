@@ -170,6 +170,18 @@ export function isAdminOnlyEbusTrainingAssetPath(pathname: string) {
 export function isPublicPath(pathname: string) {
   const normalizedPathname = unlocalizedPathname(pathname)
 
+  // Literature is site-admin-only even when a path happens to end in an asset-like suffix. The
+  // generic static-file rule below must never turn a future reviewed JSON/TXT export into a public
+  // URL before the entitlement check runs.
+  if (
+    normalizedPathname === '/literature' ||
+    normalizedPathname.startsWith('/literature/') ||
+    normalizedPathname === '/admin/literature' ||
+    normalizedPathname.startsWith('/admin/literature/')
+  ) {
+    return false
+  }
+
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
     isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||

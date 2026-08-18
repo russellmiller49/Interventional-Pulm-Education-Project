@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { flattenLiteratureTaxonomy } from '@/features/literature/config'
 import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
+import { LiteratureAdminCollectionNav } from '@/features/literature/components/LiteratureAdminCollectionNav'
+import { LiteratureReviewedProvenance } from '@/features/literature/components/LiteratureReviewedProvenance'
 import { LiteratureReviewForm } from '@/features/literature/components/LiteratureReviewForm'
 import {
   compactLiteratureAuthors,
@@ -16,7 +18,10 @@ import {
 import { pmidSchema } from '@/features/literature/schemas/search'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
 import { literatureOperationActivated } from '@/features/literature/server/database-client'
-import { getLiteratureArticle } from '@/features/literature/server/queries'
+import {
+  getLiteratureArticle,
+  getLiteratureReviewedMetadata,
+} from '@/features/literature/server/queries'
 import { capabilityForWithheldOperation } from '@/features/literature/server/runtime-capability'
 import { isActiveLocale, type ActiveLocale } from '@/i18n/locale'
 import { Link } from '@/i18n/navigation'
@@ -25,6 +30,7 @@ export const dynamic = 'force-dynamic'
 
 interface LiteratureAdminArticlePageProps {
   params: Promise<{ locale: string; pmid: string }>
+  searchParams?: Promise<{ from?: string | string[] }>
 }
 
 function resolveLocale(locale: string): ActiveLocale {
@@ -47,6 +53,7 @@ export async function generateMetadata({
 
 export default async function LiteratureAdminArticlePage({
   params,
+  searchParams,
 }: LiteratureAdminArticlePageProps) {
   const { locale: rawLocale, pmid: rawPmid } = await params
   const locale = resolveLocale(rawLocale)
@@ -59,7 +66,10 @@ export default async function LiteratureAdminArticlePage({
   if (!pmid.success) {
     notFound()
   }
-  const detail = await getLiteratureArticle(pmid.data)
+  const [detail, reviewed] = await Promise.all([
+    getLiteratureArticle(pmid.data),
+    getLiteratureReviewedMetadata(pmid.data),
+  ])
   if (detail.error) {
     // Which failure it was matters here: a missing foundation, an unconfigured deployment, and a
     // transient outage all reach this branch and have different remedies.
@@ -89,11 +99,21 @@ export default async function LiteratureAdminArticlePage({
   const curationAvailable = literatureOperationActivated('article_curation')
   const authors = compactLiteratureAuthors(article.authors, article.collectiveAuthors)
   const citation = literatureCitationParts(article)
+  const requestedFrom = (await searchParams)?.from
+  const fromCurated = requestedFrom === 'curated'
 
   return (
     <div className="container space-y-8 py-10 md:py-14">
+      <LiteratureAdminCollectionNav
+        active={fromCurated ? 'curated' : 'all'}
+        labels={{
+          all: t('navigation.all'),
+          curated: t('navigation.curated'),
+          navigation: t('navigation.label'),
+        }}
+      />
       <Link
-        href="/admin/literature"
+        href={fromCurated ? '/admin/literature/curated' : '/admin/literature'}
         className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -125,6 +145,45 @@ export default async function LiteratureAdminArticlePage({
           </a>
         </div>
       </header>
+
+      <LiteratureReviewedProvenance
+        result={reviewed}
+        locale={locale}
+        labels={{
+          adjacent: t('reviewed.adjacent'),
+          core: t('reviewed.core'),
+          curatedMembership: t('reviewed.curatedMembership'),
+          curatedNo: t('reviewed.curatedNo'),
+          curatedYes: t('reviewed.curatedYes'),
+          description: t('reviewed.description'),
+          excluded: t('reviewed.excluded'),
+          physicianReviewed: t('reviewed.physicianReviewed'),
+          provenance: {
+            physician_confirmed: t('reviewed.provenance.physician_confirmed'),
+            physician_modified: t('reviewed.provenance.physician_modified'),
+            qc_accepted: t('reviewed.provenance.qc_accepted'),
+          },
+          provenanceLabel: t('reviewed.provenanceLabel'),
+          reviewedClass: t('reviewed.reviewedClass'),
+          reviewedDate: t('reviewed.reviewedDate'),
+          source: t('reviewed.source'),
+          sourceKinds: {
+            owner_authorized_development_cohort: t(
+              'reviewed.sourceKinds.owner_authorized_development_cohort',
+            ),
+            physician_reviewed_source: t('reviewed.sourceKinds.physician_reviewed_source'),
+          },
+          title: t('reviewed.title'),
+          unreviewed: t('reviewed.unreviewed'),
+          unreviewedDescription: t('reviewed.unreviewedDescription'),
+        }}
+        capabilityLabels={{
+          title: t('reviewed.unavailable'),
+          description: capabilityT(`state.${reviewed.capability.state}`),
+          projectLabel: capabilityT('projectLabel'),
+          reasonLabel: capabilityT('reason'),
+        }}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
         <Card>

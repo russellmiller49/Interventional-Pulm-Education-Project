@@ -158,6 +158,26 @@ export const literatureReviewQueueSchema = z.object({
     .default(DEFAULT_LITERATURE_PAGE_SIZE),
 })
 
+export const literatureCuratedCollectionSchema = z.object({
+  q: z.string().trim().max(MAX_LITERATURE_QUERY_LENGTH).default(''),
+  reviewedClass: z.enum(['all', 'core', 'adjacent']).default('all'),
+  sort: z.enum(['newest', 'oldest', 'title']).default('newest'),
+  page: positiveIntegerSchema.default(1),
+  pageSize: positiveIntegerSchema
+    .pipe(z.number().int().min(1).max(MAX_LITERATURE_PAGE_SIZE))
+    .default(DEFAULT_LITERATURE_PAGE_SIZE),
+})
+
+export function literatureCuratedCollectionInputFromUrl(searchParams: URLSearchParams) {
+  return {
+    q: searchParams.get('q') ?? '',
+    reviewedClass: searchParams.get('class') || 'all',
+    sort: searchParams.get('sort') || 'newest',
+    page: searchParams.get('page') || undefined,
+    pageSize: searchParams.get('pageSize') || undefined,
+  }
+}
+
 export function literatureReviewQueueInputFromUrl(searchParams: URLSearchParams) {
   return {
     q: searchParams.get('q') ?? '',
@@ -176,3 +196,4 @@ export function literatureReviewQueueInputFromUrl(searchParams: URLSearchParams)
 export type LiteratureSearchQuery = z.infer<typeof literatureSearchSchema>
 export type LiteratureAdminArticleUpdate = z.infer<typeof literatureAdminArticleUpdateSchema>
 export type LiteratureReviewQueueQuery = z.infer<typeof literatureReviewQueueSchema>
+export type LiteratureCuratedCollectionQuery = z.infer<typeof literatureCuratedCollectionSchema>
