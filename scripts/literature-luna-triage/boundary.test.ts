@@ -119,8 +119,13 @@ describe('the one network surface', () => {
       const source = read(path)
       const urls = source.match(/https?:\/\/[^\s'"`)]+/gu) ?? []
       for (const url of urls) {
+        // The OpenAI base, plus the loopback origins the review app compares `Origin`
+        // against. Nothing else — no CDN, no telemetry host, no database endpoint.
         const allowed =
-          url.startsWith('https://api.openai.com') || url.startsWith('http://127.0.0.1')
+          url.startsWith('https://api.openai.com') ||
+          url.startsWith('http://127.0.0.1') ||
+          url.startsWith('http://localhost') ||
+          url.startsWith('http://[::1]')
         expect({ path, url, allowed }).toEqual({ path, url, allowed: true })
       }
     }

@@ -1,3 +1,4 @@
+import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { join } from 'node:path'
 
@@ -22,7 +23,13 @@ import {
 } from './operation'
 import { reviewPageHtml } from './review-page'
 import type { RoutedRecord } from './routing'
-import { exclusiveWriteFile, readRegularFile, type StateRoot } from './state'
+import {
+  assertContainedDirectory,
+  assertContainedRealPath,
+  exclusiveWriteFile,
+  readRegularFile,
+  type StateRoot,
+} from './state'
 
 /**
  * Loopback-only local physician-review application.
@@ -81,11 +88,24 @@ async function readAuditSampleIds(paths: OperationPaths): Promise<Set<string>> {
 
 export async function loadReviewData(state: StateRoot, operationId: string): Promise<ReviewData> {
   const paths = operationPaths(state, operationId)
+  // Containment is proven before the first byte is read: every ancestor of the operation tree
+  // is lstat-checked for a symlink and the tree must realpath back under the state root.
+  await assertContainedDirectory(state, paths.root)
+  await assertContainedDirectory(state, paths.reviewDecisionsDir)
+  await assertContainedDirectory(state, paths.reviewExportsDir)
+  for (const artifact of [
+    paths.operationJson,
+    paths.packetsJsonl,
+    paths.routedRecordsJsonl,
+    paths.terminalStatesJsonl,
+  ]) {
+    await assertContainedRealPath(state, artifact)
+  }
   const metadata = await loadOperationMetadata(paths)
   const packets = await readPackets(paths)
   const routed = await readRoutedRecords(paths)
   const terminal = await readTerminalStates(paths)
-  const decisions = await readReviewDecisions(paths)
+  const decisions = await readReviewDecisions(paths, state)
   const auditSample = await readAuditSampleIds(paths)
 
   const packetById = new Map<string, UniversalPacket>(
@@ -218,7 +238,9 @@ export async function writeReviewExports(
   data: ReviewData,
   decisions: ReadonlyMap<string, ReviewDecisionRecord>,
   now: string,
+  state?: StateRoot,
 ): Promise<ReviewExportResult> {
+  if (state) await assertContainedDirectory(state, data.paths.reviewExportsDir)
   const stamp = now.replace(/[:.]/gu, '-')
   const latest = [...decisions.values()].sort((left, right) =>
     left.recordId < right.recordId ? -1 : 1,
@@ -288,12 +310,12 @@ export async function writeReviewExports(
   for (const file of files) {
     const serialized = `${canonicalJson(file.body)}\n`
     const path = join(data.paths.reviewExportsDir, file.name)
-    await exclusiveWriteFile(path, serialized)
+    await exclusiveWriteFile(path, serialized, state)
     receiptBody.exports[file.name] = sha256(serialized)
     written.push(path)
   }
   const receiptPath = join(data.paths.reviewExportsDir, `review-audit-receipt-${stamp}.json`)
-  await exclusiveWriteFile(receiptPath, `${canonicalJson(receiptBody)}\n`)
+  await exclusiveWriteFile(receiptPath, `${canonicalJson(receiptBody)}\n`, state)
   written.push(receiptPath)
   return { files: written }
 }
@@ -326,7 +348,13 @@ function readBody(request: IncomingMessage): Promise<string> {
   })
 }
 
-/** The only hostnames this server will answer to. No DNS resolution ever happens. */
+/**
+ * The only hostnames this server will answer to. No DNS resolution ever happens.
+ *
+ * `::1` appears here only as the *inside* of a bracketed authority: HTTP Host syntax requires
+ * an IPv6 literal to be bracketed, so a bare `::1` is not a valid authority at all and is
+ * refused before it can be looked up.
+ */
 const LOOPBACK_HOSTNAMES: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '::1'])
 
 export type LoopbackHostValidation =
@@ -374,10 +402,10 @@ export function parseLoopbackHostHeader(value: string | undefined): LoopbackHost
     else return refuse('malformed_ipv6_authority')
   } else if (value.includes('[') || value.includes(']')) {
     return refuse('malformed_ipv6_authority')
-  } else if (value === '::1') {
-    // A bare, portless IPv6 literal. Any ported IPv6 Host must use the bracketed form.
-    hostname = value
-    portText = null
+  } else if (value.includes(':') && value.indexOf(':') !== value.lastIndexOf(':')) {
+    // Two or more colons outside brackets: an unbracketed IPv6 literal such as a bare `::1`.
+    // HTTP Host syntax has no such form, so there is nothing here to accept.
+    return refuse('unbracketed_ipv6_authority')
   } else {
     const firstColon = value.indexOf(':')
     if (firstColon < 0) {
@@ -404,6 +432,63 @@ function hostAllowed(request: IncomingMessage): boolean {
   return parseLoopbackHostHeader(request.headers.host).ok
 }
 
+export type MutationGuardResult =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: string }
+
+function headerValue(request: IncomingMessage, name: string): string | null {
+  const raw = request.headers[name]
+  if (typeof raw === 'string') return raw
+  if (Array.isArray(raw)) return raw.length === 1 ? raw[0] : null
+  return null
+}
+
+function tokensMatch(supplied: string, expected: string): boolean {
+  const left = Buffer.from(supplied, 'utf8')
+  const right = Buffer.from(expected, 'utf8')
+  if (left.length !== right.length) return false
+  return timingSafeEqual(left, right)
+}
+
+/**
+ * The CSRF wall in front of every state-changing endpoint.
+ *
+ * A hostile page can make a browser send a *simple* cross-origin request — a form post or a
+ * `text/plain` POST — without any preflight, and without the ability to read the reply. That
+ * is enough to create a physician decision if the server only checks that the request arrived.
+ * So four independent things must hold: the request must carry an `Origin` that exactly
+ * matches this server's own loopback origin (scheme, host, and the port it is actually
+ * listening on); it must declare `application/json`, which a simple request cannot; it must
+ * carry the per-run random token in a custom header, which a simple request also cannot; and
+ * any `Sec-Fetch-Site` it does carry must say same-origin. No CORS headers are ever sent, so a
+ * browser never gets permission to read anything either.
+ */
+export function assertMutationAllowed(
+  request: IncomingMessage,
+  expected: { readonly origins: readonly string[]; readonly csrfToken: string },
+): MutationGuardResult {
+  const site = headerValue(request, 'sec-fetch-site')
+  if (site !== null && site !== 'same-origin' && site !== 'none') {
+    return { ok: false, reason: 'cross_site_request' }
+  }
+  const origin = headerValue(request, 'origin')
+  if (origin === null) return { ok: false, reason: 'missing_origin' }
+  if (!expected.origins.includes(origin)) return { ok: false, reason: 'foreign_origin' }
+  const contentType = headerValue(request, 'content-type')
+  if (contentType === null) return { ok: false, reason: 'missing_content_type' }
+  const mediaType = contentType.split(';')[0].trim().toLowerCase()
+  if (mediaType !== 'application/json') return { ok: false, reason: 'unsupported_content_type' }
+  const token = headerValue(request, 'x-luna-csrf')
+  if (token === null) return { ok: false, reason: 'missing_csrf_header' }
+  if (!tokensMatch(token, expected.csrfToken)) return { ok: false, reason: 'invalid_csrf_token' }
+  return { ok: true }
+}
+
+/** The exact origins this server answers to, given the port it actually bound. */
+export function allowedReviewOrigins(port: number): string[] {
+  return [`http://localhost:${port}`, `http://127.0.0.1:${port}`, `http://[::1]:${port}`]
+}
+
 export interface ReviewServer {
   readonly server: Server
   readonly close: () => Promise<void>
@@ -420,7 +505,12 @@ export async function startReviewServer(options: {
   readonly now: () => string
 }): Promise<ReviewServer> {
   const data = await loadReviewData(options.state, options.operationId)
-  let decisions = await readReviewDecisions(data.paths)
+  let decisions = await readReviewDecisions(data.paths, options.state)
+  // One random token per server run, delivered only in the page body. It is never placed in a
+  // URL, never written to an artifact, and does not survive a restart.
+  const csrfToken = randomBytes(32).toString('hex')
+  const pageHtml = reviewPageHtml(csrfToken)
+  let allowedOrigins: readonly string[] = []
 
   const server = createServer((request, response) => {
     void (async () => {
@@ -434,7 +524,7 @@ export async function startReviewServer(options: {
           'content-type': 'text/html; charset=utf-8',
           'cache-control': 'no-store',
         })
-        response.end(reviewPageHtml())
+        response.end(pageHtml)
         return
       }
       if (request.method === 'GET' && url.pathname === '/api/operation') {
@@ -474,6 +564,12 @@ export async function startReviewServer(options: {
         return
       }
       if (request.method === 'POST' && url.pathname === '/api/decision') {
+        const guard = assertMutationAllowed(request, { origins: allowedOrigins, csrfToken })
+        if (!guard.ok) {
+          // Refused before any body is read, so no state file can exist for this request.
+          sendJson(response, 403, { error: 'forbidden', reason: guard.reason })
+          return
+        }
         const body = await readBody(request)
         let parsed: { recordId?: unknown; action?: unknown }
         try {
@@ -501,9 +597,12 @@ export async function startReviewServer(options: {
           decidedAt: options.now(),
         }
         const filename = `${recordId}.r${String(decision.revision).padStart(4, '0')}.json`
+        // Containment is revalidated on this write, not merely trusted from startup.
+        await assertContainedDirectory(options.state, data.paths.reviewDecisionsDir)
         await exclusiveWriteFile(
           join(data.paths.reviewDecisionsDir, filename),
           `${canonicalJson(decision)}\n`,
+          options.state,
         )
         decisions = new Map(decisions)
         decisions.set(recordId, decision)
@@ -519,7 +618,12 @@ export async function startReviewServer(options: {
         return
       }
       if (request.method === 'POST' && url.pathname === '/api/export') {
-        const result = await writeReviewExports(data, decisions, options.now())
+        const guard = assertMutationAllowed(request, { origins: allowedOrigins, csrfToken })
+        if (!guard.ok) {
+          sendJson(response, 403, { error: 'forbidden', reason: guard.reason })
+          return
+        }
+        const result = await writeReviewExports(data, decisions, options.now(), options.state)
         sendJson(response, 200, result)
         return
       }
@@ -533,6 +637,10 @@ export async function startReviewServer(options: {
     server.once('error', rejectPromise)
     server.listen(options.port, LUNA_REVIEW_APP_HOST, () => resolvePromise())
   })
+  // The origin allowlist names the port actually bound, so a stale or guessed port is foreign.
+  const address = server.address()
+  const boundPort = typeof address === 'object' && address !== null ? address.port : options.port
+  allowedOrigins = allowedReviewOrigins(boundPort)
   return {
     server,
     close: () =>

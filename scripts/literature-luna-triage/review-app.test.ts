@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { lstat, mkdtemp, readdir, rm } from 'node:fs/promises'
+import { lstat, mkdir, mkdtemp, readdir, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { AddressInfo } from 'node:net'
@@ -20,7 +20,12 @@ import {
   writeReviewExports,
   type ReviewRecordView,
 } from './review-app'
-import { resolveStateRoot, type StateRoot } from './state'
+import {
+  assertContainedDirectory,
+  assertContainedRealPath,
+  resolveStateRoot,
+  type StateRoot,
+} from './state'
 
 const SALT: OperationSalt = {
   version: 'literature-luna-record-id/1.0.0',
@@ -184,7 +189,15 @@ describe('loopback server', () => {
 
       const page = await fetch(`${origin}/`)
       expect(page.status).toBe(200)
-      expect(await page.text()).toContain('Luna Stage-A physician review')
+      const html = await page.text()
+      expect(html).toContain('Luna Stage-A physician review')
+      const csrfToken = /var CSRF_TOKEN = '([0-9a-f]{64})'/u.exec(html)?.[1] ?? ''
+      expect(csrfToken).toMatch(/^[0-9a-f]{64}$/u)
+      const writeHeaders = {
+        'content-type': 'application/json',
+        origin,
+        'x-luna-csrf': csrfToken,
+      }
 
       // fetch() refuses to forge Host, so drive node:http directly for the spoof check.
       const { request } = await import('node:http')
@@ -213,7 +226,7 @@ describe('loopback server', () => {
 
       const decision = await fetch(`${origin}/api/decision`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: writeHeaders,
         body: JSON.stringify({
           recordId: negativeId,
           action: 'confirm_deprioritization_candidate',
@@ -222,7 +235,7 @@ describe('loopback server', () => {
       expect(decision.status).toBe(200)
       const redo = await fetch(`${origin}/api/decision`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: writeHeaders,
         body: JSON.stringify({ recordId: negativeId, action: 'retain_for_stage_b' }),
       })
       expect(redo.status).toBe(200)
@@ -238,7 +251,7 @@ describe('loopback server', () => {
 
       const rejected = await fetch(`${origin}/api/decision`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: writeHeaders,
         body: JSON.stringify({ recordId: 'f'.repeat(64), action: 'retain_for_stage_b' }),
       })
       expect(rejected.status).toBe(400)
@@ -261,7 +274,6 @@ describe('loopback Host authority validation (LUNA-REVIEW-001)', () => {
     ['127.0.0.1:4630', '127.0.0.1', 4630],
     ['[::1]', '::1', null],
     ['[::1]:4630', '::1', 4630],
-    ['::1', '::1', null],
     ['LOCALHOST:4630', 'localhost', 4630],
   ]
 
@@ -270,6 +282,11 @@ describe('loopback Host authority validation (LUNA-REVIEW-001)', () => {
   })
 
   const rejected: readonly string[] = [
+    // HTTP Host syntax requires an IPv6 literal to be bracketed; a bare `::1` is not an
+    // authority this server can accept, however loopback-looking it is.
+    '::1',
+    '::1:4630',
+    '0:0:0:0:0:0:0:1',
     'localhost.evil.example',
     'localhost.evil.example:4630',
     '127.0.0.1.evil.example',
@@ -347,10 +364,12 @@ describe('loopback Host authority validation (LUNA-REVIEW-001)', () => {
           probe.end()
         })
 
-      for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, 'localhost', '[::1]', '::1']) {
+      for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, 'localhost', '[::1]']) {
         expect({ host, status: await statusFor(host) }).toEqual({ host, status: 200 })
       }
       for (const host of [
+        // A bare, unbracketed IPv6 literal is not valid Host syntax, loopback or not.
+        '::1',
         'localhost.evil.example',
         `localhost.evil.example:${port}`,
         '127.0.0.1.evil.example',
@@ -409,5 +428,249 @@ describe('review exports', () => {
       const stat = await lstat(join(paths.reviewExportsDir, name))
       expect(stat.mode & 0o777).toBe(0o600)
     }
+  })
+})
+
+/**
+ * CSRF defense on every state-changing endpoint.
+ *
+ * The reproduction that this closes needed no exotic capability: a hostile page posting
+ * `text/plain` with a foreign `Origin` created a physician decision, because arriving at the
+ * server was treated as authorization. A browser can send exactly that shape cross-origin with
+ * no preflight. Each case below is refused, and each refusal must leave the decisions
+ * directory untouched — a 403 that still wrote the file would be no defense at all.
+ */
+describe('review-app CSRF defense', () => {
+  async function withServer(
+    body: (context: {
+      origin: string
+      token: string
+      post: (path: string, init: RequestInit) => Promise<Response>
+      decisionCount: () => Promise<number>
+    }) => Promise<void>,
+  ): Promise<void> {
+    const review = await startReviewServer({
+      state,
+      operationId: 'op-review',
+      port: 0,
+      now: () => '2026-08-17T00:00:00.000Z',
+    })
+    try {
+      const port = (review.server.address() as AddressInfo).port
+      const origin = `http://127.0.0.1:${port}`
+      const html = await (await fetch(`${origin}/`)).text()
+      const token = /var CSRF_TOKEN = '([0-9a-f]{64})'/u.exec(html)?.[1] ?? ''
+      await body({
+        origin,
+        token,
+        post: (path, init) => fetch(`${origin}${path}`, { method: 'POST', ...init }),
+        decisionCount: async () => (await readdir(paths.reviewDecisionsDir)).length,
+      })
+    } finally {
+      await review.close()
+    }
+  }
+
+  const payload = () =>
+    JSON.stringify({ recordId: negativeId, action: 'confirm_deprioritization_candidate' })
+
+  it('accepts a correct same-origin request carrying the per-run token', async () => {
+    await withServer(async ({ origin, token, post, decisionCount }) => {
+      const response = await post('/api/decision', {
+        headers: { 'content-type': 'application/json', origin, 'x-luna-csrf': token },
+        body: payload(),
+      })
+      expect(response.status).toBe(200)
+      expect(await decisionCount()).toBe(1)
+    })
+  })
+
+  it.each([
+    [
+      'a foreign Origin',
+      (origin: string, token: string) => ({
+        'content-type': 'application/json',
+        origin: 'https://hostile.example',
+        'x-luna-csrf': token,
+      }),
+    ],
+    [
+      'a missing Origin',
+      (_origin: string, token: string) => ({
+        'content-type': 'application/json',
+        'x-luna-csrf': token,
+      }),
+    ],
+    [
+      'a text/plain simple request',
+      (origin: string, token: string) => ({
+        'content-type': 'text/plain;charset=UTF-8',
+        origin,
+        'x-luna-csrf': token,
+      }),
+    ],
+    [
+      'a form-encoded simple request',
+      (origin: string, token: string) => ({
+        'content-type': 'application/x-www-form-urlencoded',
+        origin,
+        'x-luna-csrf': token,
+      }),
+    ],
+    [
+      'a multipart request',
+      (origin: string, token: string) => ({
+        'content-type': 'multipart/form-data; boundary=x',
+        origin,
+        'x-luna-csrf': token,
+      }),
+    ],
+    [
+      'a wrong token',
+      (origin: string) => ({
+        'content-type': 'application/json',
+        origin,
+        'x-luna-csrf': 'f'.repeat(64),
+      }),
+    ],
+    [
+      'a missing custom header',
+      (origin: string) => ({ 'content-type': 'application/json', origin }),
+    ],
+    [
+      'a cross-site Sec-Fetch-Site',
+      (origin: string, token: string) => ({
+        'content-type': 'application/json',
+        origin,
+        'x-luna-csrf': token,
+        'sec-fetch-site': 'cross-site',
+      }),
+    ],
+  ])('refuses %s and creates no state file', async (_label, headersFor) => {
+    await withServer(async ({ origin, token, post, decisionCount }) => {
+      const response = await post('/api/decision', {
+        headers: headersFor(origin, token),
+        body: payload(),
+      })
+      expect(response.status).toBe(403)
+      expect(await decisionCount()).toBe(0)
+    })
+  })
+
+  it('applies the same wall to the export endpoint and sends no permissive CORS header', async () => {
+    await withServer(async ({ origin, token, post }) => {
+      const refused = await post('/api/export', {
+        headers: { 'content-type': 'text/plain', origin: 'https://hostile.example' },
+        body: '{}',
+      })
+      expect(refused.status).toBe(403)
+      expect(refused.headers.get('access-control-allow-origin')).toBeNull()
+      const allowed = await post('/api/export', {
+        headers: { 'content-type': 'application/json', origin, 'x-luna-csrf': token },
+        body: '{}',
+      })
+      expect(allowed.status).toBe(200)
+    })
+  })
+
+  it('issues a different token per server run', async () => {
+    const tokens: string[] = []
+    for (let run = 0; run < 2; run += 1) {
+      await withServer(async ({ token }) => {
+        tokens.push(token)
+      })
+    }
+    expect(tokens[0]).not.toBe(tokens[1])
+  })
+})
+
+/**
+ * Filesystem containment.
+ *
+ * A lexical prefix check cannot see a symbolic link in an ancestor: `<root>/ops/x` looks
+ * contained while resolving somewhere else entirely, which is how the original reproduction
+ * read and wrote outside the operation tree. Containment is therefore proven from the root
+ * down, at startup and again on every write.
+ */
+describe('review-app filesystem containment', () => {
+  it('refuses a symlinked operation root', async () => {
+    const outside = join(root, 'outside-op')
+    await mkdir(outside, { recursive: true, mode: 0o700 })
+    const linked = await mkdtemp(join(tmpdir(), 'luna-link-'))
+    const linkState = await resolveStateRoot(join(linked, 'lane'))
+    await mkdir(join(linkState.root, 'ops'), { recursive: true, mode: 0o700 })
+    await symlink(outside, join(linkState.root, 'ops', 'op-review'))
+    await expect(loadReviewData(linkState, 'op-review')).rejects.toThrow(/symbolic link/u)
+    await rm(linked, { recursive: true, force: true })
+  })
+
+  it('refuses a symlinked ancestor between the root and the operation', async () => {
+    const outside = join(root, 'outside-ancestor')
+    await mkdir(join(outside, 'op-review'), { recursive: true, mode: 0o700 })
+    const linked = await mkdtemp(join(tmpdir(), 'luna-link-'))
+    const linkState = await resolveStateRoot(join(linked, 'lane'))
+    // `ops` itself is the link: every path below it looks contained and is not.
+    await symlink(outside, join(linkState.root, 'ops'))
+    await expect(loadReviewData(linkState, 'op-review')).rejects.toThrow(/symbolic link/u)
+    await rm(linked, { recursive: true, force: true })
+  })
+
+  it('refuses a symlinked decision directory', async () => {
+    const outside = join(root, 'outside-decisions')
+    await mkdir(outside, { recursive: true, mode: 0o700 })
+    await rm(paths.reviewDecisionsDir, { recursive: true, force: true })
+    await symlink(outside, paths.reviewDecisionsDir)
+    await expect(loadReviewData(state, 'op-review')).rejects.toThrow(/symbolic link/u)
+  })
+
+  it('refuses a symlinked input file', async () => {
+    const outside = join(root, 'outside-packets.jsonl')
+    await writeFile(outside, '', { mode: 0o600 })
+    await rm(paths.packetsJsonl, { force: true })
+    await symlink(outside, paths.packetsJsonl)
+    await expect(loadReviewData(state, 'op-review')).rejects.toThrow(/symbolic link/u)
+  })
+
+  it('refuses an ancestor swapped for a link after startup', async () => {
+    const review = await startReviewServer({
+      state,
+      operationId: 'op-review',
+      port: 0,
+      now: () => '2026-08-17T00:00:00.000Z',
+    })
+    try {
+      const port = (review.server.address() as AddressInfo).port
+      const origin = `http://127.0.0.1:${port}`
+      const html = await (await fetch(`${origin}/`)).text()
+      const token = /var CSRF_TOKEN = '([0-9a-f]{64})'/u.exec(html)?.[1] ?? ''
+      // The decision directory becomes a link only after the server is already running.
+      const outside = join(root, 'outside-late')
+      await mkdir(outside, { recursive: true, mode: 0o700 })
+      await rm(paths.reviewDecisionsDir, { recursive: true, force: true })
+      await symlink(outside, paths.reviewDecisionsDir)
+      const response = await fetch(`${origin}/api/decision`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin, 'x-luna-csrf': token },
+        body: JSON.stringify({
+          recordId: negativeId,
+          action: 'confirm_deprioritization_candidate',
+        }),
+      })
+      expect(response.status).toBe(500)
+      expect(await readdir(outside)).toHaveLength(0)
+    } finally {
+      await review.close()
+    }
+  })
+
+  it('refuses a traversal path and accepts an exact contained read and write', async () => {
+    await expect(assertContainedRealPath(state, join(state.root, '..', 'escape'))).rejects.toThrow(
+      /outside the state root/u,
+    )
+    await expect(assertContainedDirectory(state, paths.reviewDecisionsDir)).resolves.toBe(
+      paths.reviewDecisionsDir,
+    )
+    const data = await loadReviewData(state, 'op-review')
+    expect(data.records).toHaveLength(3)
   })
 })

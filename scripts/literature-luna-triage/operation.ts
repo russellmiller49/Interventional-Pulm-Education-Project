@@ -14,6 +14,8 @@ import type { TerminalAssignment } from './results'
 import type { RoutedRecord } from './routing'
 import {
   appendJournalLine,
+  assertContainedDirectory,
+  assertContainedRealPath,
   createJournal,
   ensureStateDirectory,
   exclusiveWriteFile,
@@ -254,19 +256,22 @@ export interface ReviewDecisionRecord {
 /** Latest revision wins; each revision file is create-once. */
 export async function readReviewDecisions(
   paths: OperationPaths,
+  state?: StateRoot,
 ): Promise<Map<string, ReviewDecisionRecord>> {
   let entries: string[]
   try {
+    if (state) await assertContainedDirectory(state, paths.reviewDecisionsDir)
     entries = await readdir(paths.reviewDecisionsDir)
-  } catch {
+  } catch (error) {
+    if (state && error instanceof Error && error.name === 'StatePathError') throw error
     return new Map()
   }
   const latest = new Map<string, ReviewDecisionRecord>()
   for (const entry of entries.sort()) {
     if (!entry.endsWith('.json')) continue
-    const parsed = JSON.parse(
-      await readRegularFile(join(paths.reviewDecisionsDir, entry)),
-    ) as ReviewDecisionRecord
+    const decisionPath = join(paths.reviewDecisionsDir, entry)
+    if (state) await assertContainedRealPath(state, decisionPath)
+    const parsed = JSON.parse(await readRegularFile(decisionPath)) as ReviewDecisionRecord
     if (typeof parsed.recordId !== 'string' || typeof parsed.revision !== 'number') {
       throw new Error('A review decision artifact is malformed.')
     }

@@ -4,7 +4,10 @@
  * All interpolation happens client-side from JSON; this file is a static string.
  */
 
-export function reviewPageHtml(): string {
+export function reviewPageHtml(csrfToken: string): string {
+  if (!/^[0-9a-f]{64}$/u.test(csrfToken)) {
+    throw new Error('The review page requires a per-run CSRF token.')
+  }
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -154,6 +157,8 @@ export function reviewPageHtml(): string {
 <script>
 (function () {
   'use strict'
+  // Delivered in the page body for this server run only; never in a URL and never persisted.
+  var CSRF_TOKEN = '${csrfToken}'
   var records = []
   var index = 0
   var summary = null
@@ -320,7 +325,7 @@ export function reviewPageHtml(): string {
     var record = records[index]
     fetch('/api/decision', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-luna-csrf': CSRF_TOKEN },
       body: JSON.stringify({ recordId: record.recordId, action: action }),
     })
       .then(function (response) {
@@ -351,7 +356,8 @@ export function reviewPageHtml(): string {
   })
   el('f-journal').addEventListener('input', function () { refresh(false) })
   el('export-btn').addEventListener('click', function () {
-    fetch('/api/export', { method: 'POST' })
+    fetch('/api/export', { method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-luna-csrf': CSRF_TOKEN }, body: '{}' })
       .then(function (response) { return response.json() })
       .then(function (payload) { toast('Exported ' + payload.files.length + ' artifacts') })
       .catch(function () { toast('Export failed') })
