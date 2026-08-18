@@ -14,12 +14,9 @@ Tests:
 npx jest --runInBand scripts/literature-luna-triage src/features/literature/classifier
 ```
 
-Mutation sensitivity for the five corrected findings (restores each original defect in place,
-requires the matching regressions to fail, and restores every file afterwards):
-
-```bash
-npx tsx scripts/literature-luna-triage/mutation-matrix.ts
-```
+The regression suites are the evidence: each corrected finding has load-bearing tests that
+fail when its defect is restored. There is no source-mutating harness in this package — one
+that edits shipped files in place is a liability under interruption, not a product feature.
 
 ## Offline preparation (no API, no spend)
 
