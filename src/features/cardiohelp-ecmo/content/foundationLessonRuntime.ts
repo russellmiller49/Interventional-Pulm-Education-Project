@@ -511,7 +511,14 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       act: {
         objective: 'Inspect each pressure at its own location.',
-        requiredAction: 'Select pVen, pInt, pArt, or ΔP to highlight its measurement zone.',
+        /*
+         * This asked the learner to select a channel and watch its zone light up. Nothing anywhere
+         * in the module ever implemented that, so the instruction described an interaction that did
+         * not exist. There is now a circuit map at the top of this lesson with each channel flagged
+         * where it is taken, so the instruction describes what is actually on the screen.
+         */
+        requiredAction:
+          'Find pVen, pInt, pArt, and ΔP on the circuit map, and confirm where each one is taken.',
         teachingPoint:
           'Reading a pressure without its location is how a drainage problem gets treated as a membrane problem.',
       },
