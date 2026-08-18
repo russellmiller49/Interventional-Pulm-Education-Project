@@ -79,8 +79,17 @@ const SAFETY_BADGE_STYLES: Record<SafetyDisplay, string> = {
   no_exact_action_found_as_of_snapshot: 'border-border bg-muted text-muted-foreground',
 }
 
+/**
+ * `relative` is load-bearing, not decoration. The screen-reader prefixes below are `sr-only`,
+ * which is `position: absolute`; without a positioned ancestor their containing block is the
+ * initial containing block, so the table's `overflow-x-auto` scroller could not clip them and
+ * their 1px boxes — sitting at the last column's x offset inside a 900px-wide table — extended
+ * the DOCUMENT's scrollable width (390 -> 837 at 390px, review finding PR107-D2B-UI-001).
+ * Making the badge the containing block keeps them inside the intentionally scrollable region.
+ * With no offsets set it moves nothing and creates no stacking context.
+ */
 const BADGE_BASE =
-  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-4'
+  'relative inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-4'
 
 export function MarketStatusBadge({
   status,

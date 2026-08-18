@@ -372,3 +372,77 @@ Two levers, in this order:
 Neither lever reintroduces a visibility gate on current availability. If a future change makes
 the expanded cohort a build or route-generation problem, the fix is architectural — not a
 restoration of the `prototype_visible` conjunct.
+
+---
+
+## 9. Post-review correction — PR107-D2B-UI-001
+
+The first independent review of this branch returned **B. FAIL** (`EXACT_HEAD_REVIEW=FAIL`) at
+head `12aeb895`. The D2B architecture, inclusion-first policy, data, privacy, safety, build,
+bundle, route, feature-flag, accessibility, canonical-boundary, and test gates all passed. One
+medium UI finding did not.
+
+**The finding.** At 390 × 844 on `/en/devices` the whole page scrolled sideways:
+
+| Measurement                   | Reviewed head `12aeb895` | Base `d93e2100` | Corrected |
+| ----------------------------- | ------------------------ | --------------- | --------- |
+| `documentElement.clientWidth` | 390                      | 390             | 390       |
+| `documentElement.scrollWidth` | **837**                  | 390             | **390**   |
+| results region `clientWidth`  | 340                      | —               | 340       |
+| results region `scrollWidth`  | 900                      | —               | 900       |
+
+The results region was never the problem: its horizontal scroll is deliberate, and it behaved
+correctly at both heads. The base commit did not overflow under the same table pattern, so the
+regression arrived with D2B.
+
+**The cause.** The market and safety badges carry a screen-reader-only prefix so each reads as
+"Market status: …" rather than as a bare label. Tailwind's `.sr-only` is `position: absolute`,
+and the badge established no local positioning context — so those hidden 1px boxes resolved
+their containing block to the **initial containing block**, outside the table's
+`overflow-x-auto` scroller. A scroll container only clips descendants whose containing block
+lies inside it, so the prefixes escaped the region entirely: measured at x ≈ 836, inside a
+900px-wide table, they extended the _document's_ scrollable width to 837.
+
+**The correction.** One production change — `relative` added to the shared badge class in
+`src/features/device-intelligence/components/ProductStatus.tsx`, making each badge the
+containing block for its own prefix. With no offsets set it moves nothing, changes no painted
+pixel, and creates no stacking context; the prefixes now live inside the scroller and are
+clipped with the rest of the wide table.
+
+Explicitly **not** used, because each would have hidden the defect rather than fixed it:
+`overflow-x: hidden` on `html`, `body`, or a page shell; route-level `max-width` clipping;
+removing the table's intended internal scroll; removing the screen-reader prefixes; or
+truncating product identity text.
+
+**What the regression pins.** `e2e/device-atlas-mobile-layout.spec.ts` — jsdom performs no
+layout, so these are asserted in Chromium. Root width and internal table scrolling are asserted
+**separately**, so the cheap non-fixes above cannot satisfy the suite:
+
+- the document never scrolls sideways at 390 × 844, 1024 × 768, 1280 × 720, or 1600 × 900, on
+  both the plain index and a page carrying safety badges;
+- the results region still has `scrollWidth > clientWidth`, is still labelled, still has
+  `tabIndex=0`, and still scrolls from the keyboard;
+- rows with a market badge alone and rows with market + safety are both exercised, and the
+  active-safety ERBE cryoprobe badge is still present;
+- every badge announces `<prefix> <status label>` while showing only the status label, read
+  from each locale's own catalog;
+- `en`, `es`, and `zh-CN` are all measured. Because the D2B status keys are English placeholder
+  copy in all three bundles (§6, Localization), equal widths across locales would prove nothing
+  on their own — so each locale run also replaces every hidden prefix with a string far longer
+  than any plausible translation and re-measures, proving containment is structural rather than
+  a property of short English labels.
+
+Reverting the one-word production change fails 4 of the 9 tests with the reviewed head's exact
+numbers (390 vs 837 on the index, 390 vs 790 on the safety-badge page); the wider viewports pass
+either way, because the table fits and the defect is width-specific.
+
+**Unchanged by this correction.** Atlas cohort predicate, owner-exclusion contract, the
+status-overlay generator and its artifact, market/safety/gate mappings, the unresearched
+fallback, procedure-workspace inclusion, the compatibility wall, the launch verifier, the
+feature flag, and the route/indexing policy. Cohort 1,331 / newly included 578 / candidate
+excluded 200 / unknown excluded 1 / owner exclusions 0 all still hold, canonical
+`visibility_state`, `verification_grade`, and `selectable` are untouched, and Device
+Intelligence remains off in production.
+
+Independent review of the corrected head is pending; integration of current `main` is a separate
+later step and was deliberately not performed in this pass.
