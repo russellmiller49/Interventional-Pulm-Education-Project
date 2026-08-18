@@ -3,12 +3,16 @@ import { canonicalJson, sha256 } from '../literature-production-ingest/canonical
 import { LUNA_ASSUMED_PRICING, type LunaReasoningEffort } from './constants'
 import { estimateRequestTokens, type RequestEstimate } from './estimate'
 import {
+  assertNetworkPlanComplete,
   assertSpendEnvelope,
   buildStageARequestBody,
   executeOpenAiRequest,
+  networkPlanSha256,
   redactOpenAiSecrets,
   requestBodySha256,
-  type AuthorizedRequestSlot,
+  requestBodyText,
+  type NetworkPlanStep,
+  type OpenAiKeyProvider,
   type SpendAuthorization,
 } from './openai'
 
@@ -22,6 +26,8 @@ import {
 export interface PreparedRequest {
   readonly customId: string
   readonly body: Record<string, unknown>
+  /** The exact bytes that will be sent. The digest below is taken over precisely these. */
+  readonly bodyText: string
   readonly bodySha256: string
   readonly estimate: RequestEstimate
 }
@@ -42,22 +48,40 @@ export interface PreparedRequestSet {
 }
 
 /**
- * The plan digest a synchronous run is authorized against: the ordered set of prepared request
- * body digests. Any packet, prompt, model, or body drift changes it, and the capability minted
- * for the old plan then refuses before the first socket.
+ * The ordered network plan a synchronous run is authorized against: one numbered, single-use
+ * `/responses` step per prepared request, in prepared order, each bound to its exact body
+ * digest, its record id, and its own token contribution. Any packet, prompt, model, body, or
+ * ordering drift changes the plan digest, and the capability minted for the old plan then
+ * refuses before the first socket.
  */
-export function syncRunPlanSha256(requests: readonly PreparedRequest[]): string {
-  return sha256(canonicalJson(requests.map((request) => request.bodySha256)))
+export function syncRunPlan(
+  requests: readonly PreparedRequest[],
+  operationId: string,
+): NetworkPlanStep[] {
+  return requests.map((request, index) => ({
+    sequenceIndex: index,
+    action: 'run-sync' as const,
+    operationId,
+    method: 'POST' as const,
+    endpointClass: 'responses.create' as const,
+    remoteIdSource: 'none' as const,
+    planRemoteId: null,
+    fileRole: null,
+    body: { kind: 'digest' as const, sha256: request.bodySha256 },
+    recordId: request.customId,
+    expectedRecords: 1,
+    expectedInputTokens: request.estimate.inputTokens,
+    expectedOutputTokens: request.estimate.outputTokenAllowance,
+    allowedExecutions: 1 as const,
+    optional: false,
+  }))
 }
 
-/** The exact network requests a synchronous run may perform: one POST per prepared body. */
-export function syncRunRequestSlots(requests: readonly PreparedRequest[]): AuthorizedRequestSlot[] {
-  return requests.map((request) => ({
-    kind: 'exact' as const,
-    method: 'POST' as const,
-    path: '/responses',
-    bodySha256: request.bodySha256,
-  }))
+export function syncRunPlanSha256(
+  requests: readonly PreparedRequest[],
+  operationId: string,
+): string {
+  return networkPlanSha256(syncRunPlan(requests, operationId))
 }
 
 export interface RequestParameters {
@@ -89,6 +113,7 @@ export function prepareRequestSet(
     return {
       customId: packet.record_id,
       body,
+      bodyText: requestBodyText(body),
       bodySha256: requestBodySha256(body),
       estimate: estimateRequestTokens(
         parameters.instructions,
@@ -110,7 +135,7 @@ export function prepareRequestSet(
       (sum, request) => sum + request.estimate.outputTokenAllowance,
       0,
     ),
-    requestSetSha256: syncRunPlanSha256(requests),
+    requestSetSha256: sha256(canonicalJson(requests.map((request) => request.bodySha256))),
   }
   return { requests, manifest }
 }
@@ -183,12 +208,13 @@ export async function executeSyncRun(options: {
   readonly operationId: string
   readonly authorization: SpendAuthorization
   readonly sinks: SyncRunSinks
+  readonly keyProvider?: OpenAiKeyProvider
   readonly fetchImplementation?: typeof fetch
 }): Promise<SyncRunSummary> {
   const envelope = assertSpendEnvelope(options.authorization, {
     action: 'run-sync',
     operationId: options.operationId,
-    planSha256: syncRunPlanSha256(options.requests),
+    planSha256: syncRunPlanSha256(options.requests, options.operationId),
   })
   if (envelope.recordCount !== options.requests.length) {
     throw new Error(
@@ -202,10 +228,15 @@ export async function executeSyncRun(options: {
     attempted += 1
     try {
       const result = await executeOpenAiRequest({
-        method: 'POST',
-        path: '/responses',
-        jsonBody: request.body,
+        intent: {
+          kind: 'responses.create',
+          action: 'run-sync',
+          operationId: options.operationId,
+          recordId: request.customId,
+          bodyText: request.bodyText,
+        },
         authorization: options.authorization,
+        keyProvider: options.keyProvider,
         fetchImplementation: options.fetchImplementation,
       })
       await options.sinks.writeRawResponse(request.customId, result.bodyText)
@@ -242,5 +273,8 @@ export async function executeSyncRun(options: {
       )
     }
   }
+  // Every authorized step must have run: a plan with a request left unsent is an incomplete
+  // run, not a quietly shorter one.
+  assertNetworkPlanComplete(options.authorization)
   return { attempted, succeeded, failed: attempted - succeeded }
 }

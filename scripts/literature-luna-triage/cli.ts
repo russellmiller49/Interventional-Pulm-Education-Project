@@ -8,17 +8,19 @@ import { canonicalJson, sha256 } from '../literature-production-ingest/canonical
 import type { OverlayRelevance } from '../literature-reviewed-overlay/constants'
 import { buildAuditSample } from './audit'
 import {
-  batchControlPlanSha256,
-  batchFetchRequestSlots,
-  batchStatusRequestSlots,
+  batchFetchPlan,
+  batchFetchPlanSha256,
+  batchStatusPlan,
+  batchStatusPlanSha256,
+  batchSubmitPlan,
   batchSubmitPlanSha256,
-  batchSubmitRequestSlots,
   fetchBatchFileContent,
   fetchBatchStatus,
   parseBatchOutputJsonl,
   planBatchShards,
   shardPlanSummary,
   submitBatchShard,
+  type BatchSubmissionReceipt,
   DEFAULT_SHARD_CEILINGS,
 } from './batch'
 import {
@@ -47,9 +49,12 @@ import { assertWithinCostCeiling, assertWithinRecordCeiling, estimateCohortCost 
 import { buildEvaluationReport, type EvaluationReport } from './evaluation'
 import { assertFreezeReceiptCurrent, buildFreezeReceipt, type FreezeReceipt } from './freeze'
 import {
+  assertSafeRemoteIdentifier,
   mintSpendAuthorization,
-  type AuthorizedRequestSlot,
+  networkPlanSha256,
+  requiredConfirmationPhrase,
   type LunaSpendAction,
+  type NetworkPlanStep,
   type SpendAuthorization,
 } from './openai'
 import {
@@ -76,21 +81,33 @@ import {
   lockedSanityCohortIdentitySha256,
   type LockedRunMarker,
 } from './qualify'
+import { reconcileShardContent } from './reconcile'
 import { ingestStageAResponses, type RawResponseRecord } from './results'
 import { startReviewServer } from './review-app'
+import {
+  assertExecutionMatchesFreeze,
+  assertGenericCommandNotLocked,
+  assertNoLockedMembership,
+  frozenExecutionConfiguration,
+  lockedRunIdentitySha256,
+  lockedRunMarkerFilename,
+} from './locked'
 import { buildRoutedRecords, buildRoutingManifest } from './routing'
 import {
   executeSyncRun,
   prepareRequestSet,
+  syncRunPlan,
   syncRunPlanSha256,
-  syncRunRequestSlots,
   type PreparedRequest,
 } from './runner'
 import {
   apportionLockedSanity,
+  assertStoredSplitIsCanonical,
   buildCalibrationSplit,
   buildSplitManifest,
+  recomputeCanonicalSplit,
   sortedIdentityDigest,
+  type CanonicalSplitAuthority,
 } from './split'
 import {
   appendJournalLine,
@@ -505,10 +522,10 @@ interface SpendRequestSpec {
   /** Prepared requests used only to price the spend; empty for control-plane actions. */
   readonly estimateRecords: readonly PreparedRequest[]
   readonly batch: boolean
-  /** The exact plan this spend is authorized against. */
-  readonly planSha256: string
-  /** The exact, bounded set of network requests this spend may perform. */
-  readonly requests: readonly AuthorizedRequestSlot[]
+  /** The ordered, immutable network plan this spend authorizes. Nothing else may be sent. */
+  readonly steps: readonly NetworkPlanStep[]
+  /** The exact prepared bytes behind every body-bearing step, in plan order. */
+  readonly plannedBodies: readonly string[]
 }
 
 async function mintAuthorizationFromArgv(
@@ -527,19 +544,21 @@ async function mintAuthorizationFromArgv(
     { batch: spec.batch },
   )
   assertWithinCostCeiling(estimate, maxEstimatedCostUsd)
-  const requiredPhrase = `SPEND ${spec.operationId}`
+  // Derived from the operation id by the authority module itself; the CLI only echoes it.
+  const requiredPhrase = requiredConfirmationPhrase(spec.operationId)
+  const interactiveTty = Boolean(process.stdin.isTTY && process.stdout.isTTY)
   const interactivePhrase = flagPresent(argv, 'confirm-api-spend')
     ? await confirmSpendPhrase(requiredPhrase)
     : null
   const authorization = mintSpendAuthorization({
     confirmFlagPresent: flagPresent(argv, 'confirm-api-spend'),
+    interactiveTty,
     interactivePhrase,
-    requiredPhrase,
     envelope: {
       action: spec.action,
       operationId: spec.operationId,
       cohort: spec.cohort,
-      planSha256: spec.planSha256,
+      planSha256: networkPlanSha256(spec.steps),
       recordCount: spec.recordCount,
       estimatedInputTokens: estimate.inputTokens,
       estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
@@ -547,57 +566,85 @@ async function mintAuthorizationFromArgv(
       estimatedCostUsd: estimate.estimatedCostUsd,
       maxRecords,
       maxEstimatedCostUsd,
-      requests: spec.requests,
-      maxNetworkRequests: spec.requests.reduce(
-        (sum, slot) => sum + (slot.kind === 'derived' ? slot.maxUses : 1),
-        0,
-      ),
+      steps: spec.steps,
+      maxNetworkRequests: spec.steps.length,
     },
     estimate,
+    plannedBodies: spec.plannedBodies,
   })
   return { authorization, estimatedCostUsd: estimate.estimatedCostUsd }
 }
 
-async function runSync(argv: readonly string[], lockedCalibration?: string): Promise<void> {
+/**
+ * Recompute the canonical calibration split from the immutable truth authority and the fixed
+ * corpus, then prove the stored split artifacts are exactly it. The stored files are a cache;
+ * a manifest's own declared digests never authorize the identities sitting beside them.
+ */
+async function canonicalSplitAuthority(
+  state: StateRoot,
+  artifactPath: string | undefined,
+): Promise<{ canonical: CanonicalSplitAuthority; lockedSanityPmids: Set<string> }> {
+  if (!artifactPath) {
+    throw new CliUsageError(
+      '--artifact is required: the canonical split is recomputed from physician truth, never ' +
+        'read from a stored manifest.',
+    )
+  }
+  const truth = loadTruthAuthority(artifactPath)
+  const { presence } = await collectTruthPresence(truth)
+  const canonical = recomputeCanonicalSplit(truth, presence)
+  const stored = await readSplitArtifacts(state)
+  assertStoredSplitIsCanonical(stored, canonical, truth)
+  return { canonical, lockedSanityPmids: new Set(canonical.split.lockedSanityPmids) }
+}
+
+/**
+ * The generic synchronous runner. It refuses the locked cohort outright — both by its declared
+ * label and, when truth is available to recompute the split, by actual membership — because
+ * the locked 200 exist to be seen once, through the dedicated locked pathway.
+ */
+async function runSync(argv: readonly string[]): Promise<void> {
   const state = await stateFromArgv(argv)
   const operationId = requireFlag(argv, 'operation')
   const paths = operationPaths(state, operationId)
   const metadata = await loadOperationMetadata(paths)
-
-  if (lockedCalibration !== undefined) {
-    if (metadata.cohort !== 'locked-sanity-200') {
-      throw new CliUsageError('run-locked only runs operations over the locked-sanity-200 cohort.')
-    }
-    const receiptPath = resolveInsideRoot(state, 'freeze', `${lockedCalibration}.receipt.json`)
-    const receipt = JSON.parse(await readRegularFile(receiptPath)) as FreezeReceipt
-    const prompt = loadStageAPrompt()
-    const split = await readSplitArtifacts(state)
-    assertFreezeReceiptCurrent(receipt, {
-      calibrationVersion: receipt.calibrationVersion,
-      model: flagValue(argv, 'model') ?? receipt.model,
-      modelAlias: receipt.modelAlias,
-      reasoningEffort: parseReasoning(flagValue(argv, 'reasoning') ?? receipt.reasoningEffort),
-      promptText: prompt.text,
-      splitManifestSha256: (split.manifest as { manifestSha256?: string }).manifestSha256 ?? '',
-    })
-    await ensureStateDirectory(state, 'freeze', 'locked-runs')
-    // Create-once: a second locked run of the same calibration version refuses here, and a
-    // failed run still consumes the version — tuning against its outputs is a new version.
-    await exclusiveWriteFile(
-      resolveInsideRoot(state, 'freeze', 'locked-runs', `${lockedCalibration}.marker.json`),
-      `${canonicalJson({ calibrationVersion: lockedCalibration, operationId, startedAt: nowIso() })}\n`,
+  assertGenericCommandNotLocked(metadata.cohort, 'run-sync')
+  const artifactPath = flagValue(argv, 'artifact')
+  if (artifactPath) {
+    const { lockedSanityPmids } = await canonicalSplitAuthority(state, artifactPath)
+    assertNoLockedMembership(
+      (await readMapping(paths)).map((row) => row.pmid),
+      lockedSanityPmids,
+      'run-sync',
     )
   }
 
+  const model = flagValue(argv, 'model') ?? LUNA_DEFAULT_MODEL
+  const reasoningEffort = parseReasoning(flagValue(argv, 'reasoning'))
+  const requests = await rebuildStoredRequests(paths, argv, model, reasoningEffort)
+  const summary = await executeSyncRunWithAuthorization(argv, {
+    paths,
+    operationId,
+    cohort: metadata.cohort,
+    requests,
+  })
+  print({ command: 'run-sync', ...summary })
+}
+
+/** Rebuild the prepared requests from stored packets, refusing any drift from what was stored. */
+async function rebuildStoredRequests(
+  paths: OperationPaths,
+  argv: readonly string[],
+  model: string,
+  reasoningEffort: LunaReasoningEffort,
+): Promise<PreparedRequest[]> {
   const stored = await readRequests(paths)
   const limit = numberFlag(argv, 'limit')
   const selected = stored.slice(0, limit === undefined ? stored.length : limit)
   const prompt = loadStageAPrompt()
-  const model = flagValue(argv, 'model') ?? LUNA_DEFAULT_MODEL
-  const reasoningEffort = parseReasoning(flagValue(argv, 'reasoning'))
   const packets = await readPackets(paths)
   const packetById = new Map(packets.map((packet) => [packet.record_id, packet]))
-  const requests: PreparedRequest[] = selected.map((row) => {
+  return selected.map((row) => {
     const packet = packetById.get(row.customId)
     if (!packet) throw new Error('A stored request has no packet; artifacts disagree.')
     const rebuilt = prepareRequestSet([packet], {
@@ -614,33 +661,149 @@ async function runSync(argv: readonly string[], lockedCalibration?: string): Pro
     }
     return rebuilt
   })
+}
 
+async function executeSyncRunWithAuthorization(
+  argv: readonly string[],
+  options: {
+    readonly paths: OperationPaths
+    readonly operationId: string
+    readonly cohort: string
+    readonly requests: readonly PreparedRequest[]
+  },
+): Promise<Record<string, unknown>> {
   const { authorization, estimatedCostUsd } = await mintAuthorizationFromArgv(argv, {
     action: 'run-sync',
-    operationId,
-    cohort: metadata.cohort,
-    recordCount: requests.length,
-    estimateRecords: requests,
+    operationId: options.operationId,
+    cohort: options.cohort,
+    recordCount: options.requests.length,
+    estimateRecords: options.requests,
     batch: false,
-    planSha256: syncRunPlanSha256(requests),
-    requests: syncRunRequestSlots(requests),
+    steps: syncRunPlan(options.requests, options.operationId),
+    plannedBodies: options.requests.map((request) => request.bodyText),
   })
-  await createJournal(paths.ledgerJsonl).catch(() => undefined)
+  await createJournal(options.paths.ledgerJsonl).catch(() => undefined)
   const summary = await executeSyncRun({
-    requests,
-    operationId,
+    requests: options.requests,
+    operationId: options.operationId,
     authorization,
     sinks: {
       writeRawResponse: async (customId, bodyText) => {
-        await exclusiveWriteFile(join(paths.rawResponsesDir, `${customId}.json`), bodyText)
+        await exclusiveWriteFile(join(options.paths.rawResponsesDir, `${customId}.json`), bodyText)
       },
       appendLedger: async (row) => {
-        await appendJournalLine(paths.ledgerJsonl, canonicalJson(row))
+        await appendJournalLine(options.paths.ledgerJsonl, canonicalJson(row))
       },
       now: nowIso,
     },
   })
-  print({ command: lockedCalibration ? 'run-locked' : 'run-sync', summary, estimatedCostUsd })
+  return { summary, estimatedCostUsd }
+}
+
+/**
+ * The dedicated locked-run coordinator: the only pathway that may send the locked 200.
+ *
+ * Every execution value comes from the validated freeze receipt — no defaults, no overrides —
+ * so the surface that was verified is exactly the surface that runs. The once-only marker is
+ * written at the canonical locked-run identity, not at a path derived from a filename, so a
+ * receipt copied, moved, or renamed lands on the very same marker and refuses.
+ */
+async function runLocked(argv: readonly string[]): Promise<void> {
+  const state = await stateFromArgv(argv)
+  const operationId = requireFlag(argv, 'operation')
+  const calibrationVersion = requireFlag(argv, 'calibration-version')
+  const paths = operationPaths(state, operationId)
+  const metadata = await loadOperationMetadata(paths)
+  if (metadata.cohort !== 'locked-sanity-200') {
+    throw new CliUsageError('run-locked only runs operations over the locked-sanity-200 cohort.')
+  }
+
+  const { canonical, lockedSanityPmids } = await canonicalSplitAuthority(
+    state,
+    flagValue(argv, 'artifact'),
+  )
+  // The operation must be exactly the canonical locked 200 — no more, no fewer, no others.
+  const cohortPmids = (await readMapping(paths)).map((row) => row.pmid)
+  const cohortSet = new Set(cohortPmids)
+  if (cohortSet.size !== cohortPmids.length || cohortSet.size !== lockedSanityPmids.size) {
+    throw new Error('The locked operation does not hold exactly the canonical locked 200.')
+  }
+  for (const pmid of cohortPmids) {
+    if (!lockedSanityPmids.has(pmid)) {
+      throw new Error('The locked operation names a record outside the canonical locked 200.')
+    }
+  }
+
+  const receiptPath = resolveInsideRoot(state, 'freeze', `${calibrationVersion}.receipt.json`)
+  const receipt = JSON.parse(await readRegularFile(receiptPath)) as FreezeReceipt
+  const prompt = loadStageAPrompt()
+  assertFreezeReceiptCurrent(receipt, {
+    calibrationVersion: receipt.calibrationVersion,
+    model: receipt.model,
+    modelAlias: receipt.modelAlias,
+    reasoningEffort: receipt.reasoningEffort,
+    promptText: prompt.text,
+    splitManifestSha256: canonical.manifest.manifestSha256,
+  })
+  // Execution configuration comes from the freeze alone; a --model or --reasoning flag on a
+  // locked run is refused rather than silently ignored or silently obeyed.
+  const configuration = frozenExecutionConfiguration(receipt, {
+    model: flagValue(argv, 'model'),
+    reasoningEffort: flagValue(argv, 'reasoning'),
+  })
+  assertExecutionMatchesFreeze(configuration, {
+    model: receipt.model,
+    reasoningEffort: receipt.reasoningEffort,
+    promptSha256: prompt.sha256,
+  })
+
+  const lockedRunIdentity = lockedRunIdentitySha256(
+    receipt,
+    canonical.manifest.lockedSanityIdentitySha256,
+  )
+  await ensureStateDirectory(state, 'freeze', 'locked-runs')
+  // Create-once at the canonical identity: a second locked run of the same frozen surface
+  // refuses here, and a failed run still consumes it — tuning on its outputs is a new version.
+  await exclusiveWriteFile(
+    resolveInsideRoot(state, 'freeze', 'locked-runs', lockedRunMarkerFilename(lockedRunIdentity)),
+    `${canonicalJson({
+      calibrationVersion: receipt.calibrationVersion,
+      operationId,
+      lockedRunIdentitySha256: lockedRunIdentity,
+      startedAt: nowIso(),
+    })}\n`,
+  )
+
+  const requests = await rebuildStoredRequests(
+    paths,
+    argv,
+    configuration.model,
+    configuration.reasoningEffort,
+  )
+  // What will actually be sent, proven against the freeze one last time.
+  const actual = prepareRequestSet(await readPackets(paths), {
+    model: configuration.model,
+    reasoningEffort: configuration.reasoningEffort,
+    instructions: prompt.text,
+    promptSha256: prompt.sha256,
+  })
+  assertExecutionMatchesFreeze(configuration, {
+    model: actual.manifest.model,
+    reasoningEffort: actual.manifest.reasoningEffort,
+    promptSha256: actual.manifest.promptSha256,
+  })
+  const summary = await executeSyncRunWithAuthorization(argv, {
+    paths,
+    operationId,
+    cohort: metadata.cohort,
+    requests,
+  })
+  print({
+    command: 'run-locked',
+    calibrationVersion: receipt.calibrationVersion,
+    lockedRunIdentitySha256: lockedRunIdentity,
+    ...summary,
+  })
 }
 
 async function runFreeze(argv: readonly string[]): Promise<void> {
@@ -667,10 +830,29 @@ async function runFreeze(argv: readonly string[]): Promise<void> {
   print({ command: 'freeze', receipt })
 }
 
+async function assertBatchPathwayNotLocked(
+  state: StateRoot,
+  paths: OperationPaths,
+  argv: readonly string[],
+  command: string,
+): Promise<void> {
+  const metadata = await loadOperationMetadata(paths)
+  assertGenericCommandNotLocked(metadata.cohort, command)
+  const artifactPath = flagValue(argv, 'artifact')
+  if (!artifactPath) return
+  const { lockedSanityPmids } = await canonicalSplitAuthority(state, artifactPath)
+  assertNoLockedMembership(
+    (await readMapping(paths)).map((row) => row.pmid),
+    lockedSanityPmids,
+    command,
+  )
+}
+
 async function runBatchPrepare(argv: readonly string[]): Promise<void> {
   const state = await stateFromArgv(argv)
   const operationId = requireFlag(argv, 'operation')
   const paths = operationPaths(state, operationId)
+  await assertBatchPathwayNotLocked(state, paths, argv, 'batch-prepare')
   const stored = await readRequests(paths)
   const maxRecords = numberFlag(argv, 'max-records')
   if (maxRecords !== undefined) {
@@ -719,6 +901,7 @@ async function runBatchSubmit(argv: readonly string[]): Promise<void> {
   const shardFilename = requireFlag(argv, 'shard')
   const paths = operationPaths(state, operationId)
   const metadata = await loadOperationMetadata(paths)
+  await assertBatchPathwayNotLocked(state, paths, argv, 'batch-submit')
   const content = await readRegularFile(join(paths.batchShardsDir, shardFilename))
   const contentSha256 = sha256(content)
   const plan = JSON.parse(await readRegularFile(join(paths.batchShardsDir, 'shard-plan.json'))) as {
@@ -755,6 +938,19 @@ async function runBatchSubmit(argv: readonly string[]): Promise<void> {
     estimatedOutputTokenAllowance: prepared.manifest.totalEstimatedOutputTokenAllowance,
     content,
   }
+  // Everything the spend is measured against is recomputed from the shard bytes themselves.
+  const reconciliation = reconcileShardContent(content)
+  if (
+    reconciliation.recordCount !== recordCount ||
+    reconciliation.uniqueCustomIdCount !== recordCount ||
+    reconciliation.estimatedInputTokens !== prepared.manifest.totalEstimatedInputTokens ||
+    reconciliation.estimatedOutputTokenAllowance !==
+      prepared.manifest.totalEstimatedOutputTokenAllowance
+  ) {
+    throw new Error(
+      'The shard bytes do not reconcile with the prepared request set; refusing to submit.',
+    )
+  }
   const { authorization } = await mintAuthorizationFromArgv(argv, {
     action: 'batch-submit',
     operationId,
@@ -762,8 +958,8 @@ async function runBatchSubmit(argv: readonly string[]): Promise<void> {
     recordCount,
     estimateRecords: prepared.requests,
     batch: true,
-    planSha256: batchSubmitPlanSha256(shard),
-    requests: batchSubmitRequestSlots(contentSha256),
+    steps: batchSubmitPlan({ operationId, shardContent: content, reconciliation }),
+    plannedBodies: [content],
   })
   const receipt = await submitBatchShard({
     shard,
@@ -772,18 +968,59 @@ async function runBatchSubmit(argv: readonly string[]): Promise<void> {
     submittedAt: nowIso(),
   })
   await exclusiveWriteFile(
-    join(paths.batchReceiptsDir, `${receipt.batchId}.json`),
+    join(paths.batchReceiptsDir, `${localArtifactName(receipt.batchId)}.json`),
     `${canonicalJson(receipt)}\n`,
   )
   print({ command: 'batch-submit', receipt })
 }
 
+/**
+ * A local artifact name derived from a cryptographic digest of the remote id.
+ *
+ * A remote identifier is not a filename. Even after validation it is a value from another
+ * system, and putting it straight into `path.join` is how `../../escape` becomes a write
+ * outside the operation tree. Hashing it produces a fixed-length, separator-free, traversal-
+ * free name that is still deterministic per remote id.
+ */
+function localArtifactName(remoteId: string): string {
+  assertSafeRemoteIdentifier(remoteId, 'remote identifier')
+  return sha256(remoteId)
+}
+
+/**
+ * Load the validated local submission receipt for one Batch id. Status and fetch derive their
+ * requested Batch id from this receipt: an arbitrary CLI id that this operation never
+ * submitted has no receipt, and therefore no authority.
+ */
+async function loadSubmissionReceipt(
+  paths: OperationPaths,
+  batchId: string,
+): Promise<BatchSubmissionReceipt> {
+  assertSafeRemoteIdentifier(batchId, 'Batch id')
+  const receiptPath = join(paths.batchReceiptsDir, `${localArtifactName(batchId)}.json`)
+  let parsed: BatchSubmissionReceipt
+  try {
+    parsed = JSON.parse(await readRegularFile(receiptPath)) as BatchSubmissionReceipt
+  } catch {
+    throw new CliUsageError(
+      'This operation holds no validated submission receipt for that Batch id. Only a Batch ' +
+        'this operation submitted can be read.',
+    )
+  }
+  if (parsed.batchId !== batchId) {
+    throw new Error('The stored submission receipt names a different Batch; refusing to use it.')
+  }
+  assertSafeRemoteIdentifier(parsed.inputFileId, 'stored input file id')
+  return parsed
+}
+
 async function runBatchStatus(argv: readonly string[]): Promise<void> {
   const state = await stateFromArgv(argv)
   const operationId = requireFlag(argv, 'operation')
-  const batchId = requireFlag(argv, 'batch-id')
   const paths = operationPaths(state, operationId)
   const metadata = await loadOperationMetadata(paths)
+  // Receipt-bound: the id the request will carry comes from the validated local receipt.
+  const submission = await loadSubmissionReceipt(paths, requireFlag(argv, 'batch-id'))
   const { authorization } = await mintAuthorizationFromArgv(argv, {
     action: 'batch-status',
     operationId,
@@ -791,15 +1028,26 @@ async function runBatchStatus(argv: readonly string[]): Promise<void> {
     recordCount: 0,
     estimateRecords: [],
     batch: true,
-    planSha256: batchControlPlanSha256(batchId),
-    requests: batchStatusRequestSlots(batchId),
+    steps: batchStatusPlan(operationId, submission.batchId),
+    plannedBodies: [],
   })
   const status = await fetchBatchStatus({
-    batchId,
+    batchId: submission.batchId,
     operationId,
     action: 'batch-status',
     authorization,
   })
+  // The exact result-file ids this Batch reported, recorded so a later fetch is bounded by it.
+  await exclusiveWriteFile(
+    join(paths.batchReceiptsDir, `${localArtifactName(status.batchId)}.status.json`),
+    `${canonicalJson({
+      batchId: status.batchId,
+      status: status.status,
+      outputFileId: status.outputFileId,
+      errorFileId: status.errorFileId,
+      observedAt: nowIso(),
+    })}\n`,
+  ).catch(() => undefined)
   print({
     command: 'batch-status',
     batchId: status.batchId,
@@ -813,9 +1061,9 @@ async function runBatchStatus(argv: readonly string[]): Promise<void> {
 async function runBatchFetch(argv: readonly string[]): Promise<void> {
   const state = await stateFromArgv(argv)
   const operationId = requireFlag(argv, 'operation')
-  const batchId = requireFlag(argv, 'batch-id')
   const paths = operationPaths(state, operationId)
   const metadata = await loadOperationMetadata(paths)
+  const submission = await loadSubmissionReceipt(paths, requireFlag(argv, 'batch-id'))
   const { authorization } = await mintAuthorizationFromArgv(argv, {
     action: 'batch-fetch',
     operationId,
@@ -823,27 +1071,31 @@ async function runBatchFetch(argv: readonly string[]): Promise<void> {
     recordCount: 0,
     estimateRecords: [],
     batch: true,
-    planSha256: batchControlPlanSha256(batchId),
-    requests: batchFetchRequestSlots(batchId),
+    steps: batchFetchPlan(operationId, submission.batchId),
+    plannedBodies: [],
   })
   const status = await fetchBatchStatus({
-    batchId,
+    batchId: submission.batchId,
     operationId,
     action: 'batch-fetch',
     authorization,
   })
   const fetched: string[] = []
-  for (const [label, fileId] of [
-    ['output', status.outputFileId],
-    ['error', status.errorFileId],
-  ] as const) {
+  for (const role of ['output', 'error'] as const) {
+    const fileId = role === 'output' ? status.outputFileId : status.errorFileId
     if (!fileId) continue
-    const content = await fetchBatchFileContent({ fileId, batchId, operationId, authorization })
-    const path = join(paths.batchRawDir, `${batchId}-${label}.jsonl`)
-    await exclusiveWriteFile(path, content.bodyText)
+    // The caller names only the role; the file id itself comes from the bound status receipt.
+    const content = await fetchBatchFileContent({
+      fileRole: role,
+      batchId: submission.batchId,
+      operationId,
+      authorization,
+    })
+    const path = join(paths.batchRawDir, `${localArtifactName(status.batchId)}-${role}.jsonl`)
+    await exclusiveWriteFile(path, content.bodyText, state)
     fetched.push(path)
   }
-  print({ command: 'batch-fetch', batchId, status: status.status, fetched })
+  print({ command: 'batch-fetch', batchId: status.batchId, status: status.status, fetched })
 }
 
 async function collectRawResponses(
@@ -1013,8 +1265,12 @@ async function runEvaluate(argv: readonly string[]): Promise<void> {
   const assignments = await readTerminalStates(paths)
   const routed = await readRoutedRecords(paths)
   const truth = await truthByRecordId(paths, flagValue(argv, 'artifact'), metadata.cohort)
+  // The coordinator's mapping is the one selection authority; every denominator derives from
+  // it, and each of assignments, routing, and truth must equal it exactly.
+  const selectedRecordIds = (await readMapping(paths)).map((row) => row.recordId)
   const report = buildEvaluationReport({
     cohortLabel: metadata.cohort,
+    selectedRecordIds,
     routed,
     assignments,
     truthByRecordId: truth,
@@ -1103,8 +1359,9 @@ async function runQualify(argv: readonly string[]): Promise<void> {
     await readRegularFile(resolveInsideRoot(state, 'freeze', `${calibrationVersion}.receipt.json`)),
   ) as FreezeReceipt
   const prompt = loadStageAPrompt()
-  const split = await readSplitArtifacts(state)
-  const splitManifestSha256 = (split.manifest as { manifestSha256?: string }).manifestSha256 ?? ''
+  // Recomputed from physician truth and the fixed corpus; the stored artifacts must equal it.
+  const { canonical } = await canonicalSplitAuthority(state, flagValue(argv, 'artifact'))
+  const splitManifestSha256 = canonical.manifest.manifestSha256
   assertFreezeReceiptCurrent(freezeReceipt, {
     calibrationVersion: freezeReceipt.calibrationVersion,
     model: freezeReceipt.model,
@@ -1113,9 +1370,13 @@ async function runQualify(argv: readonly string[]): Promise<void> {
     promptText: prompt.text,
     splitManifestSha256,
   })
+  const lockedRunIdentity = lockedRunIdentitySha256(
+    freezeReceipt,
+    canonical.manifest.lockedSanityIdentitySha256,
+  )
   const lockedRunMarker = JSON.parse(
     await readRegularFile(
-      resolveInsideRoot(state, 'freeze', 'locked-runs', `${calibrationVersion}.marker.json`),
+      resolveInsideRoot(state, 'freeze', 'locked-runs', lockedRunMarkerFilename(lockedRunIdentity)),
     ),
   ) as LockedRunMarker
 
@@ -1130,13 +1391,8 @@ async function runQualify(argv: readonly string[]): Promise<void> {
     }
     return pmid
   })
-  const splitLockedSanityIdentitySha256 = sortedIdentityDigest(split.lockedSanity)
-  if (
-    splitLockedSanityIdentitySha256 !==
-    (split.manifest as { lockedSanityIdentitySha256?: string }).lockedSanityIdentitySha256
-  ) {
-    throw new Error('The stored locked-sanity identities disagree with the split manifest.')
-  }
+  // From the recomputed canonical split, never from a stored manifest's declared digest.
+  const splitLockedSanityIdentitySha256 = canonical.manifest.lockedSanityIdentitySha256
   const cohortIdentitySha256 = lockedSanityCohortIdentitySha256(cohortPmids)
 
   const decisions = await readReviewDecisions(paths)
@@ -1173,6 +1429,7 @@ async function runQualify(argv: readonly string[]): Promise<void> {
     selectedCount: evaluation.denominators.selected,
     cohortIdentitySha256,
     splitLockedSanityIdentitySha256,
+    lockedRunIdentitySha256: lockedRunIdentity,
     splitManifestSha256,
     freezeReceipt,
     lockedRunMarker,
@@ -1285,9 +1542,9 @@ const COMMANDS: Record<string, (argv: readonly string[]) => Promise<void>> = {
   packets: runPackets,
   estimate: runEstimate,
   'prepare-requests': runPrepareRequests,
-  'run-sync': (argv) => runSync(argv),
+  'run-sync': runSync,
   freeze: runFreeze,
-  'run-locked': (argv) => runSync(argv, requireFlag(argv, 'calibration-version')),
+  'run-locked': runLocked,
   'batch-prepare': runBatchPrepare,
   'batch-submit': runBatchSubmit,
   'batch-status': runBatchStatus,

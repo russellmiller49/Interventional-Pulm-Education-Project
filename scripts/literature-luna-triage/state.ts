@@ -87,11 +87,16 @@ export async function ensureStateDirectory(
 }
 
 /**
- * Exclusive create-once write. `wx` never truncates and never follows an existing symlink; a
- * second write to the same path fails loudly instead of replacing an artifact an owner may
- * already have reviewed.
+ * Exclusive create-once write, with the containment proof re-run first when a state root is
+ * supplied. `wx` never truncates and never follows an existing symlink; a second write to the
+ * same path fails loudly instead of replacing an artifact an owner may already have reviewed.
  */
-export async function exclusiveWriteFile(path: string, contents: string): Promise<void> {
+export async function exclusiveWriteFile(
+  path: string,
+  contents: string,
+  state?: StateRoot,
+): Promise<void> {
+  if (state) await assertContainedRealPath(state, path)
   const parentStat = await lstat(dirname(path))
   if (parentStat.isSymbolicLink() || !parentStat.isDirectory()) {
     throw new StatePathError('Refusing to write below a symbolic-link parent directory.')
@@ -170,8 +175,79 @@ export async function openExclusiveJournalWriter(path: string): Promise<Exclusiv
   }
 }
 
+/**
+ * Prove that a path is really inside the state root — not merely lexically beneath it.
+ *
+ * A lexical prefix check says nothing about what the filesystem will actually do: if any
+ * *ancestor* of the target is a symbolic link, `<root>/ops/x` can resolve to somewhere else
+ * entirely while still looking contained. So every component from the root down is `lstat`ed
+ * for a symlink and the containing directory is canonicalized with `realpath`, and the result
+ * must still land under the root. This is re-run at every read and write, not once at startup,
+ * because an ancestor can be swapped for a link between the two.
+ */
+export async function assertContainedRealPath(state: StateRoot, path: string): Promise<string> {
+  const inside = relative(state.root, path)
+  if (inside.length === 0 || inside.startsWith('..') || isAbsolute(inside)) {
+    throw new StatePathError('A state path resolved outside the state root and was refused.')
+  }
+  const rootReal = await realpath(state.root)
+  if (rootReal !== state.root) {
+    throw new StatePathError(
+      'The state root no longer canonicalizes to itself; refusing to use it.',
+    )
+  }
+  const segments = inside.split(sep).filter((segment) => segment.length > 0)
+  let current = state.root
+  for (let index = 0; index < segments.length; index += 1) {
+    current = resolve(current, segments[index])
+    let stat
+    try {
+      stat = await lstat(current)
+    } catch (error) {
+      // A leaf that does not exist yet is fine; a missing intermediate directory is not.
+      if (
+        index === segments.length - 1 &&
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        break
+      }
+      throw error
+    }
+    if (stat.isSymbolicLink()) {
+      throw new StatePathError(
+        `A component of ${path} is a symbolic link; refusing to read or write through it.`,
+      )
+    }
+    if (index < segments.length - 1 && !stat.isDirectory()) {
+      throw new StatePathError(`A component of ${path} is not a directory; refusing to use it.`)
+    }
+  }
+  const parentReal = await realpath(dirname(path))
+  const parentInside = relative(rootReal, parentReal)
+  if (parentInside.startsWith('..') || isAbsolute(parentInside)) {
+    throw new StatePathError(
+      `The real parent of ${path} lies outside the state root; refusing to use it.`,
+    )
+  }
+  return path
+}
+
+/** The same containment proof for a directory, plus a mode check. */
+export async function assertContainedDirectory(state: StateRoot, path: string): Promise<string> {
+  await assertContainedRealPath(state, path)
+  const stat = await lstat(path)
+  if (stat.isSymbolicLink() || !stat.isDirectory()) {
+    throw new StatePathError(`${path} is not a real directory; refusing to use it.`)
+  }
+  return path
+}
+
 /** Read a regular file, refusing symlinks. */
-export async function readRegularFile(path: string): Promise<string> {
+export async function readRegularFile(path: string, state?: StateRoot): Promise<string> {
+  if (state) await assertContainedRealPath(state, path)
   const stat = await lstat(path)
   if (stat.isSymbolicLink() || !stat.isFile()) {
     throw new StatePathError(`Refusing to read ${path}: not a regular file.`)

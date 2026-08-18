@@ -116,8 +116,20 @@ export function ratio(numerator: number, denominator: number): number | null {
   return numerator / denominator
 }
 
+export class EvaluationSetError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'EvaluationSetError'
+  }
+}
+
 export interface EvaluationInputs {
   readonly cohortLabel: string
+  /**
+   * The one authoritative selected-record identity set. Every denominator derives from this,
+   * never from whichever table an iteration happened to walk.
+   */
+  readonly selectedRecordIds: readonly string[]
   readonly routed: readonly RoutedRecord[]
   readonly assignments: readonly TerminalAssignment[]
   /** Physician class per record id; empty for non-calibration cohorts. */
@@ -137,21 +149,82 @@ interface EvaluatedRow {
   readonly truth: OverlayRelevance | null
 }
 
-function buildRows(inputs: EvaluationInputs): EvaluatedRow[] {
-  const assignmentById = new Map(
-    inputs.assignments.map((assignment) => [assignment.recordId, assignment]),
-  )
-  if (assignmentById.size !== inputs.assignments.length) {
-    throw new Error('Duplicate terminal assignments; refusing to evaluate.')
-  }
-  return inputs.routed.map((record) => {
-    const assignment = assignmentById.get(record.recordId)
-    if (!assignment) {
-      throw new Error('A routed record has no terminal assignment; refusing to evaluate.')
+/**
+ * Index one table by record id, refusing duplicates by name. A duplicate is a disagreement
+ * between authorities, not something to collapse quietly into the last writer.
+ */
+function indexExactly<T extends { readonly recordId: string }>(
+  rows: readonly T[],
+  label: string,
+): Map<string, T> {
+  const byId = new Map<string, T>()
+  for (const row of rows) {
+    if (typeof row?.recordId !== 'string' || row.recordId.length === 0) {
+      throw new EvaluationSetError(`A ${label} row has no record id; refusing to evaluate.`)
     }
+    if (byId.has(row.recordId)) {
+      throw new EvaluationSetError(`A record has more than one ${label} row; refusing to evaluate.`)
+    }
+    byId.set(row.recordId, row)
+  }
+  return byId
+}
+
+/**
+ * Prove exact set equality between the authoritative selection and every table the report
+ * reads. Missing, extra, duplicated, and wrong identities each refuse by name; iterating one
+ * table and trusting the rest is precisely how a mismatched run reports itself as clean.
+ */
+function assertExactSetEquality(
+  selected: ReadonlySet<string>,
+  observed: ReadonlyMap<string, unknown>,
+  label: string,
+): void {
+  for (const recordId of selected) {
+    if (!observed.has(recordId)) {
+      throw new EvaluationSetError(
+        `A selected record has no ${label} row; refusing to evaluate an incomplete run.`,
+      )
+    }
+  }
+  for (const recordId of observed.keys()) {
+    if (!selected.has(recordId)) {
+      throw new EvaluationSetError(
+        `A ${label} row names a record outside the selected cohort; refusing to evaluate.`,
+      )
+    }
+  }
+  if (observed.size !== selected.size) {
+    throw new EvaluationSetError(
+      `The ${label} table holds ${observed.size} records for ${selected.size} selected; ` +
+        'refusing to evaluate.',
+    )
+  }
+}
+
+function buildRows(inputs: EvaluationInputs): EvaluatedRow[] {
+  const selectedIds = inputs.selectedRecordIds
+  if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+    throw new EvaluationSetError('Evaluation requires the authoritative selected-record set.')
+  }
+  const selected = new Set(selectedIds)
+  if (selected.size !== selectedIds.length) {
+    throw new EvaluationSetError('The selected cohort contains a duplicate record id.')
+  }
+  const assignmentById = indexExactly(inputs.assignments, 'terminal assignment')
+  const routedById = indexExactly(inputs.routed, 'routing')
+  assertExactSetEquality(selected, assignmentById, 'terminal assignment')
+  assertExactSetEquality(selected, routedById, 'routing')
+  if (inputs.truthByRecordId.size > 0) {
+    assertExactSetEquality(selected, inputs.truthByRecordId, 'physician truth')
+  }
+  // Rows are built from the authoritative selection, so every denominator counts the cohort.
+  return selectedIds.map((recordId) => {
+    const assignment = assignmentById.get(recordId) as TerminalAssignment
+    const record = routedById.get(recordId) as RoutedRecord
     const output = assignment.output
     return {
-      recordId: record.recordId,
+      recordId,
       state: assignment.state,
       decision: output?.triage_decision ?? null,
       confidence: output?.confidence_band ?? null,

@@ -2,18 +2,27 @@
 import type { UniversalPacket } from '../../src/features/literature/classifier/packet-contract'
 import { estimateCohortCost } from './estimate'
 import { syntheticResponseBody, syntheticStageAOutput } from './fixtures'
-import { mintSpendAuthorization, type SpendAuthorization } from './openai'
+import {
+  mintSpendAuthorization,
+  networkPlanSha256,
+  requiredConfirmationPhrase,
+  type OpenAiKeyProvider,
+  type SpendAuthorization,
+} from './openai'
 import {
   executeSyncRun,
   ledgerCostUsd,
   prepareRequestSet,
   syncRunPlanSha256,
-  syncRunRequestSlots,
+  syncRunPlan,
   type LedgerRow,
   type PreparedRequest,
 } from './runner'
 
-const KEY_ENV = 'OPENAI_API_KEY'
+/** Injected in place of the environment: tests never touch the real key variable. */
+const keyProvider: OpenAiKeyProvider = {
+  readKey: () => 'sk-synthetic-test-key-value-not-real',
+}
 
 function packet(recordId: string, title: string): UniversalPacket {
   return {
@@ -79,15 +88,6 @@ describe('ledger costs', () => {
 })
 
 describe('synchronous execution', () => {
-  const previous = process.env[KEY_ENV]
-  beforeEach(() => {
-    process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
-  })
-  afterEach(() => {
-    if (previous === undefined) delete process.env[KEY_ENV]
-    else process.env[KEY_ENV] = previous
-  })
-
   function authorization(
     requests: readonly PreparedRequest[],
     overrides: { readonly operationId?: string } = {},
@@ -97,15 +97,16 @@ describe('synchronous execution', () => {
       { batch: false },
     )
     const operationId = overrides.operationId ?? 'op-x'
+    const steps = syncRunPlan(requests, operationId)
     return mintSpendAuthorization({
       confirmFlagPresent: true,
-      interactivePhrase: `SPEND ${operationId}`,
-      requiredPhrase: `SPEND ${operationId}`,
+      interactiveTty: true,
+      interactivePhrase: requiredConfirmationPhrase(operationId),
       envelope: {
         action: 'run-sync',
         operationId,
         cohort: 'smoke-30',
-        planSha256: syncRunPlanSha256(requests),
+        planSha256: networkPlanSha256(steps),
         recordCount: requests.length,
         estimatedInputTokens: estimate.inputTokens,
         estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
@@ -113,10 +114,11 @@ describe('synchronous execution', () => {
         estimatedCostUsd: estimate.estimatedCostUsd,
         maxRecords: 100,
         maxEstimatedCostUsd: 100,
-        requests: syncRunRequestSlots(requests),
-        maxNetworkRequests: requests.length,
+        steps,
+        maxNetworkRequests: steps.length,
       },
       estimate,
+      plannedBodies: requests.map((request) => request.bodyText),
     })
   }
 
@@ -137,6 +139,7 @@ describe('synchronous execution', () => {
         },
         now: () => '2026-08-17T00:00:00.000Z',
       },
+      keyProvider,
       fetchImplementation: (async (url: unknown, init?: RequestInit) => {
         const body = JSON.parse(String(init?.body)) as { input: unknown[] }
         expect(String(url)).toContain('/responses')
@@ -175,9 +178,14 @@ describe('synchronous execution', () => {
           },
           now: () => 'now',
         },
+        keyProvider,
         fetchImplementation: (async () => {
           calls += 1
-          return new Response('exploded sk-test-abcdef1234567890', { status: 500 })
+          return {
+            ok: false,
+            status: 500,
+            text: async () => 'exploded sk-test-abcdef1234567890',
+          } as unknown as Response
         }) as typeof fetch,
       }),
     ).rejects.toThrow(/no automatic retry/u)
@@ -193,15 +201,6 @@ describe('synchronous execution', () => {
  * prepared request set; drift in either refuses before the first socket.
  */
 describe('run-level spend binding (LUNA-SPEND-001)', () => {
-  const previous = process.env[KEY_ENV]
-  beforeEach(() => {
-    process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
-  })
-  afterEach(() => {
-    if (previous === undefined) delete process.env[KEY_ENV]
-    else process.env[KEY_ENV] = previous
-  })
-
   const sinks = {
     writeRawResponse: async () => undefined,
     appendLedger: async () => undefined,
@@ -226,6 +225,7 @@ describe('run-level spend binding (LUNA-SPEND-001)', () => {
         operationId: 'op-x',
         authorization: authorizationFor(prepared.requests, 'op-other'),
         sinks,
+        keyProvider,
         fetchImplementation: socket.implementation,
       }),
     ).rejects.toThrow(/different operation/u)
@@ -245,6 +245,7 @@ describe('run-level spend binding (LUNA-SPEND-001)', () => {
         operationId: 'op-x',
         authorization: authorizationFor(authorized.requests, 'op-x'),
         sinks,
+        keyProvider,
         fetchImplementation: socket.implementation,
       }),
     ).rejects.toThrow(/plan digest changed/u)
@@ -260,13 +261,13 @@ describe('run-level spend binding (LUNA-SPEND-001)', () => {
     expect(() =>
       mintSpendAuthorization({
         confirmFlagPresent: true,
-        interactivePhrase: 'SPEND op-x',
-        requiredPhrase: 'SPEND op-x',
+        interactiveTty: true,
+        interactivePhrase: requiredConfirmationPhrase('op-x'),
         envelope: {
           action: 'run-sync',
           operationId: 'op-x',
           cohort: 'smoke-30',
-          planSha256: syncRunPlanSha256(prepared.requests),
+          planSha256: networkPlanSha256(syncRunPlan(prepared.requests, 'op-x')),
           recordCount: 2,
           estimatedInputTokens: estimate.inputTokens,
           estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
@@ -274,10 +275,11 @@ describe('run-level spend binding (LUNA-SPEND-001)', () => {
           estimatedCostUsd: estimate.estimatedCostUsd,
           maxRecords: 1,
           maxEstimatedCostUsd: 100,
-          requests: syncRunRequestSlots(prepared.requests),
+          steps: syncRunPlan(prepared.requests, 'op-x'),
           maxNetworkRequests: 2,
         },
         estimate,
+        plannedBodies: prepared.requests.map((request) => request.bodyText),
       }),
     ).toThrow(/exceeds --max-records/u)
   })
@@ -291,15 +293,16 @@ function authorizationFor(
     requests.map((request) => request.estimate),
     { batch: false },
   )
+  const steps = syncRunPlan(requests, operationId)
   return mintSpendAuthorization({
     confirmFlagPresent: true,
-    interactivePhrase: `SPEND ${operationId}`,
-    requiredPhrase: `SPEND ${operationId}`,
+    interactiveTty: true,
+    interactivePhrase: requiredConfirmationPhrase(operationId),
     envelope: {
       action: 'run-sync',
       operationId,
       cohort: 'smoke-30',
-      planSha256: syncRunPlanSha256(requests),
+      planSha256: networkPlanSha256(steps),
       recordCount: requests.length,
       estimatedInputTokens: estimate.inputTokens,
       estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
@@ -307,9 +310,10 @@ function authorizationFor(
       estimatedCostUsd: estimate.estimatedCostUsd,
       maxRecords: 100,
       maxEstimatedCostUsd: 100,
-      requests: syncRunRequestSlots(requests),
-      maxNetworkRequests: requests.length,
+      steps,
+      maxNetworkRequests: steps.length,
     },
     estimate,
+    plannedBodies: requests.map((request) => request.bodyText),
   })
 }

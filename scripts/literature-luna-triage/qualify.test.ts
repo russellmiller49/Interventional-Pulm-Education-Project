@@ -2,6 +2,7 @@
 import { checksumBody } from '../literature-production-ingest/canonical'
 import type { EvaluationReport, NegativeBucket } from './evaluation'
 import { buildFreezeReceipt, type FreezeReceipt } from './freeze'
+import { lockedRunIdentitySha256 } from './locked'
 import {
   buildQualificationEvidence,
   buildQualificationReport,
@@ -44,10 +45,16 @@ function reseal(receipt: FreezeReceipt, overrides: Partial<FreezeReceipt>): Free
   return { ...body, receiptSha256: checksumBody(body, 'receiptSha256') }
 }
 
+/** The canonical locked-run identity for the fixture freeze and locked cohort. */
+function runIdentity(): string {
+  return lockedRunIdentitySha256(freezeReceipt(), sortedIdentityDigest(lockedPmids()))
+}
+
 function marker(overrides: Partial<LockedRunMarker> = {}): LockedRunMarker {
   return {
     calibrationVersion: CALIBRATION_VERSION,
     operationId: OPERATION_ID,
+    lockedRunIdentitySha256: runIdentity(),
     startedAt: '2026-08-17T01:00:00.000Z',
     ...overrides,
   }
@@ -130,6 +137,7 @@ function evidenceFor(
     selectedCount: evaluation.denominators.selected,
     cohortIdentitySha256: identity,
     splitLockedSanityIdentitySha256: identity,
+    lockedRunIdentitySha256: runIdentity(),
     splitManifestSha256: SPLIT_MANIFEST_SHA256,
     freezeReceipt: freezeReceipt(),
     lockedRunMarker: marker(),
@@ -402,5 +410,55 @@ describe('locked-sanity-200 evidence binding (LUNA-QUALIFY-001)', () => {
         observedRunMarkerSha256s: [evidence.lockedRunMarkerSha256],
       }),
     ).toThrow(/already observed/u)
+  })
+})
+
+/**
+ * The locked-run identity is re-derived inside the gate from the freeze receipt and the
+ * recomputed locked identity digest. A marker written for some other frozen surface — or an
+ * evidence object that simply asserts an identity — cannot authorize this qualification.
+ */
+describe('locked-run identity binding', () => {
+  it('qualifies from evidence whose identity derives from the frozen surface', () => {
+    const evaluation = passingEvaluation()
+    const report = qualify(evaluation)
+    expect(report.qualified).toBe(true)
+  })
+
+  it('refuses evidence asserting an identity the frozen surface does not produce', () => {
+    const evaluation = passingEvaluation()
+    expect(() =>
+      qualify(evaluation, {
+        evidence: evidenceFor(evaluation, { lockedRunIdentitySha256: 'a'.repeat(64) }),
+      }),
+    ).toThrow(/does not derive from the frozen surface/u)
+  })
+
+  it('refuses a marker written for another locked-run identity', () => {
+    const evaluation = passingEvaluation()
+    expect(() =>
+      qualify(evaluation, {
+        evidence: evidenceFor(evaluation, {
+          lockedRunMarker: marker({ lockedRunIdentitySha256: 'b'.repeat(64) }),
+        }),
+      }),
+    ).toThrow(/written for another locked-run identity/u)
+  })
+
+  it('changes identity when the locked cohort changes, so a swapped cohort cannot qualify', () => {
+    const evaluation = passingEvaluation()
+    const otherCohortDigest = sortedIdentityDigest(
+      Array.from({ length: 200 }, (_unused, index) => String(700_000_000 + index)),
+    )
+    expect(lockedRunIdentitySha256(freezeReceipt(), otherCohortDigest)).not.toBe(runIdentity())
+    // Evidence that swaps the cohort digest no longer matches the marker's identity.
+    expect(() =>
+      qualify(evaluation, {
+        evidence: evidenceFor(evaluation, {
+          cohortIdentitySha256: otherCohortDigest,
+          splitLockedSanityIdentitySha256: otherCohortDigest,
+        }),
+      }),
+    ).toThrow(/does not derive from the frozen surface/u)
   })
 })

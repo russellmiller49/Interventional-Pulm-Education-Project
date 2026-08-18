@@ -1,10 +1,19 @@
 /** @jest-environment node */
+import type { UniversalPacket } from '../../src/features/literature/classifier/packet-contract'
 import { sha256 } from '../literature-production-ingest/canonical'
-import { estimateCohortCost } from './estimate'
-import { mintSpendAuthorization } from './openai'
+import { estimateCohortCost, estimateRequestTokens } from './estimate'
 import {
-  batchSubmitPlanSha256,
-  batchSubmitRequestSlots,
+  buildStageARequestBody,
+  mintSpendAuthorization,
+  networkPlanSha256,
+  requiredConfirmationPhrase,
+  type OpenAiKeyProvider,
+} from './openai'
+import { loadStageAPrompt } from './prompt'
+import { reconcileShardContent } from './reconcile'
+import {
+  assertPositiveSafeIntegerCeiling,
+  batchSubmitPlan,
   parseBatchOutputJsonl,
   planBatchShards,
   serializeBatchLine,
@@ -12,12 +21,43 @@ import {
   submitBatchShard,
 } from './batch'
 
-const KEY_ENV = 'OPENAI_API_KEY'
+const PROMPT = loadStageAPrompt().text
+
+function packetFor(index: number): UniversalPacket {
+  return {
+    record_id: index.toString(16).padStart(64, '0'),
+    title: `Synthetic article ${index}`,
+    abstract: 'Synthetic abstract text.',
+    journal: 'Synthetic Journal of Testing',
+    publication_year: 2020,
+    publication_types: ['Journal Article'],
+    mesh_terms: [],
+    keywords: [],
+    language: 'eng',
+    evidence_profile: 'metadata_with_abstract',
+  }
+}
 
 function line(index: number) {
   return {
     customId: index.toString(16).padStart(64, '0'),
-    body: { model: 'gpt-5.6-luna', input: [] },
+    body: buildStageARequestBody(packetFor(index), {
+      model: 'gpt-5.6-luna',
+      reasoning: 'low',
+      instructions: PROMPT,
+    }),
+  }
+}
+
+/** A counting key provider: a refusal must leave it at zero. */
+function countingKeyProvider(): OpenAiKeyProvider & { reads: () => number } {
+  let reads = 0
+  return {
+    readKey: () => {
+      reads += 1
+      return 'sk-synthetic-test-key-value-not-real'
+    },
+    reads: () => reads,
   }
 }
 
@@ -160,7 +200,7 @@ describe('deterministic content-addressed sharding', () => {
         maxRecordsPerShard: 0,
         maxEstimatedTokensPerShard: 10,
       }),
-    ).toThrow(/positive integers/u)
+    ).toThrow(/greater than zero/u)
   })
 
   it('summarizes the plan with hashes and counts only', () => {
@@ -199,140 +239,245 @@ describe('batch output parsing for strict ingestion', () => {
   })
 })
 
-describe('batch submission through the gated socket', () => {
-  const previous = process.env[KEY_ENV]
-  afterEach(() => {
-    if (previous === undefined) delete process.env[KEY_ENV]
-    else process.env[KEY_ENV] = previous
+/**
+ * Shard ceilings must be positive **safe** integers. `Number.isInteger` is true past 2^53,
+ * where the additions that enforce the ceiling stop being exact — a bound that cannot be
+ * compared reliably is not a bound.
+ */
+describe('shard ceiling validation', () => {
+  it.each([
+    ['an unsafe integer', Number.MAX_SAFE_INTEGER + 2],
+    ['NaN', Number.NaN],
+    ['Infinity', Number.POSITIVE_INFINITY],
+    ['a fraction', 1.5],
+    ['zero', 0],
+    ['a negative', -1],
+  ])('rejects %s as a ceiling', (_label, value) => {
+    expect(() => assertPositiveSafeIntegerCeiling(value, 'The ceiling')).toThrow()
+    expect(() =>
+      planBatchShards([line(1)], estimatesFor([line(1)]), {
+        maxRecordsPerShard: value,
+        maxEstimatedTokensPerShard: 1_000,
+      }),
+    ).toThrow()
+    expect(() =>
+      planBatchShards([line(1)], estimatesFor([line(1)]), {
+        maxRecordsPerShard: 10,
+        maxEstimatedTokensPerShard: value,
+      }),
+    ).toThrow()
   })
 
-  it('uploads the shard then creates the batch, returning a receipt', async () => {
-    process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
-    const lines = [line(1), line(2)]
-    const plan = planBatchShards(lines, estimatesFor(lines))
-    const estimate = estimateCohortCost([{ inputTokens: 10, outputTokenAllowance: 1 }], {
-      batch: true,
+  it('accepts an exact safe-integer ceiling', () => {
+    expect(assertPositiveSafeIntegerCeiling(Number.MAX_SAFE_INTEGER, 'The ceiling')).toBe(
+      Number.MAX_SAFE_INTEGER,
+    )
+    const plan = planBatchShards([line(1)], estimatesFor([line(1)]), {
+      maxRecordsPerShard: Number.MAX_SAFE_INTEGER,
+      maxEstimatedTokensPerShard: Number.MAX_SAFE_INTEGER,
     })
-    const authorization = mintSpendAuthorization({
+    expect(plan.shards).toHaveLength(1)
+  })
+})
+
+describe('batch submission through the gated socket', () => {
+  function shardOf(count: number) {
+    const lines = Array.from({ length: count }, (_unused, index) => line(index + 1))
+    const estimates = new Map(
+      lines.map((entry, index) => [
+        entry.customId,
+        estimateRequestTokens(PROMPT, JSON.stringify(packetFor(index + 1)), 'low'),
+      ]),
+    )
+    return planBatchShards(lines, estimates).shards[0]
+  }
+
+  function mintFor(
+    shardContent: string,
+    overrides: { records?: number; tokens?: { input: number; output: number } } = {},
+  ) {
+    const reconciliation = reconcileShardContent(shardContent)
+    const records = overrides.records ?? reconciliation.recordCount
+    const steps = batchSubmitPlan({ operationId: 'op-b', shardContent, reconciliation })
+    const declared = overrides.tokens ?? {
+      input: reconciliation.estimatedInputTokens,
+      output: reconciliation.estimatedOutputTokenAllowance,
+    }
+    const estimate = {
+      ...estimateCohortCost([], { batch: true }),
+      records,
+      inputTokens: declared.input,
+      outputTokenAllowance: declared.output,
+      totalTokenAllowance: declared.input + declared.output,
+      estimatedCostUsd: reconciliation.estimatedCostUsd,
+    }
+    return mintSpendAuthorization({
       confirmFlagPresent: true,
-      interactivePhrase: 'SPEND op-b',
-      requiredPhrase: 'SPEND op-b',
+      interactiveTty: true,
+      interactivePhrase: requiredConfirmationPhrase('op-b'),
       envelope: {
         action: 'batch-submit',
         operationId: 'op-b',
         cohort: 'pilot-1000',
-        planSha256: batchSubmitPlanSha256(plan.shards[0]),
-        recordCount: 1,
-        estimatedInputTokens: estimate.inputTokens,
-        estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
-        estimatedTotalTokens: estimate.totalTokenAllowance,
-        estimatedCostUsd: estimate.estimatedCostUsd,
-        maxRecords: 10,
-        maxEstimatedCostUsd: 10,
-        requests: batchSubmitRequestSlots(plan.shards[0].contentSha256),
+        planSha256: networkPlanSha256(steps),
+        recordCount: records,
+        estimatedInputTokens: declared.input,
+        estimatedOutputTokenAllowance: declared.output,
+        estimatedTotalTokens: declared.input + declared.output,
+        estimatedCostUsd: reconciliation.estimatedCostUsd,
+        maxRecords: 100,
+        maxEstimatedCostUsd: 100,
+        steps,
         maxNetworkRequests: 2,
       },
       estimate,
+      plannedBodies: [shardContent],
     })
+  }
+
+  it('uploads the shard then creates the batch, returning a receipt', async () => {
+    const shard = shardOf(2)
+    const authorization = mintFor(shard.content)
+    const keyProvider = countingKeyProvider()
     const calls: string[] = []
     const receipt = await submitBatchShard({
-      shard: plan.shards[0],
+      shard,
       operationId: 'op-b',
       authorization,
       submittedAt: '2026-08-17T00:00:00.000Z',
+      keyProvider,
       fetchImplementation: (async (url: unknown, init?: RequestInit) => {
         calls.push(`${String(init?.method)} ${String(url)}`)
         if (String(url).endsWith('/files')) {
           expect(init?.body).toBeInstanceOf(FormData)
-          return new Response(JSON.stringify({ id: 'file-123' }), { status: 200 })
+          return {
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify({ id: 'file-123' }),
+          } as unknown as Response
         }
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>
         expect(body.input_file_id).toBe('file-123')
         expect(body.endpoint).toBe('/v1/responses')
-        return new Response(JSON.stringify({ id: 'batch-456', status: 'validating' }), {
+        return {
+          ok: true,
           status: 200,
-        })
+          text: async () =>
+            JSON.stringify({ id: 'batch-456', status: 'validating', input_file_id: 'file-123' }),
+        } as unknown as Response
       }) as typeof fetch,
     })
-    expect(calls).toHaveLength(2)
+    expect(calls).toEqual([
+      'POST https://api.openai.com/v1/files',
+      'POST https://api.openai.com/v1/batches',
+    ])
     expect(receipt.inputFileId).toBe('file-123')
     expect(receipt.batchId).toBe('batch-456')
-    expect(receipt.shardSha256).toBe(plan.shards[0].contentSha256)
+    expect(receipt.recordCount).toBe(2)
+    expect(receipt.shardSha256).toBe(shard.contentSha256)
+    expect(keyProvider.reads()).toBe(2)
   })
 
-  /**
-   * LUNA-SPEND-001 at the Batch boundary: the capability binds the exact shard bytes, so shard
-   * drift after the owner confirmed the spend refuses before any socket opens.
-   */
+  it('refuses a shard whose metadata undercounts its records, tokens, or cost', () => {
+    const shard = shardOf(2)
+    // Undercounted records: two real requests minted as one.
+    expect(() => mintFor(shard.content, { records: 1 })).toThrow()
+    // Undercounted tokens: the plan claims less than the bytes actually cost.
+    expect(() => mintFor(shard.content, { tokens: { input: 1, output: 1 } })).toThrow()
+  })
+
+  it('refuses a shard that carries a duplicate custom id', () => {
+    const shard = shardOf(1)
+    const duplicated = `${shard.content}${shard.content}`
+    expect(() => reconcileShardContent(duplicated)).toThrow(/repeats a custom id/u)
+  })
+
   it('refuses shard bytes that changed after authorization, opening zero sockets', async () => {
-    process.env[KEY_ENV] = 'sk-test-abcdef1234567890'
-    const lines = [line(1), line(2)]
-    const plan = planBatchShards(lines, estimatesFor(lines))
-    const estimate = estimateCohortCost([{ inputTokens: 10, outputTokenAllowance: 1 }], {
-      batch: true,
-    })
-    const authorization = mintSpendAuthorization({
-      confirmFlagPresent: true,
-      interactivePhrase: 'SPEND op-b',
-      requiredPhrase: 'SPEND op-b',
-      envelope: {
-        action: 'batch-submit',
-        operationId: 'op-b',
-        cohort: 'pilot-1000',
-        planSha256: batchSubmitPlanSha256(plan.shards[0]),
-        recordCount: 1,
-        estimatedInputTokens: estimate.inputTokens,
-        estimatedOutputTokenAllowance: estimate.outputTokenAllowance,
-        estimatedTotalTokens: estimate.totalTokenAllowance,
-        estimatedCostUsd: estimate.estimatedCostUsd,
-        maxRecords: 10,
-        maxEstimatedCostUsd: 10,
-        requests: batchSubmitRequestSlots(plan.shards[0].contentSha256),
-        maxNetworkRequests: 2,
-      },
-      estimate,
-    })
+    const shard = shardOf(2)
+    const authorization = mintFor(shard.content)
+    const keyProvider = countingKeyProvider()
     let calls = 0
     const forbidden = (async () => {
       calls += 1
       throw new Error('fetch must never be reached')
     }) as typeof fetch
-    // Bytes changed while the shard metadata still claims the authorized digest: the upload
-    // digest is recomputed from the real bytes, so consumption refuses.
-    const tamperedBytes = `${plan.shards[0].content}tampered\n`
+    const tamperedBytes = `${shard.content}${line(9).customId}\n`
     await expect(
       submitBatchShard({
-        shard: { ...plan.shards[0], content: tamperedBytes },
+        shard: { ...shard, content: tamperedBytes },
         operationId: 'op-b',
         authorization,
         submittedAt: '2026-08-17T00:00:00.000Z',
+        keyProvider,
         fetchImplementation: forbidden,
       }),
-    ).rejects.toThrow(/not part of what the owner authorized/u)
-    // Bytes and metadata both re-derived: the plan digest itself no longer matches.
-    await expect(
-      submitBatchShard({
-        shard: {
-          ...plan.shards[0],
-          content: tamperedBytes,
-          contentSha256: sha256(tamperedBytes),
-        },
-        operationId: 'op-b',
-        authorization,
-        submittedAt: '2026-08-17T00:00:00.000Z',
-        fetchImplementation: forbidden,
-      }),
-    ).rejects.toThrow(/plan digest changed/u)
+    ).rejects.toThrow()
     // Same bytes, wrong operation: refused before the socket too.
     await expect(
       submitBatchShard({
-        shard: plan.shards[0],
+        shard,
         operationId: 'op-other',
         authorization,
         submittedAt: '2026-08-17T00:00:00.000Z',
+        keyProvider,
         fetchImplementation: forbidden,
       }),
     ).rejects.toThrow(/different operation/u)
     expect(calls).toBe(0)
+    expect(keyProvider.reads()).toBe(0)
+  })
+})
+
+/**
+ * Every non-empty line must reach a controlled terminal outcome. One unusable line never stops
+ * the rest of the file from being accounted, and no line is ever silently dropped.
+ */
+describe('controlled Batch output parsing', () => {
+  const validLine = JSON.stringify({
+    custom_id: 'a'.repeat(64),
+    response: { status_code: 200, body: { status: 'completed', output: [] } },
+    error: null,
+  })
+
+  it.each([
+    ['a null line', 'null', 'batch_line_null'],
+    ['an array line', '[]', 'batch_line_array'],
+    ['a string line', '"a string"', 'batch_line_scalar'],
+    ['a number line', '42', 'batch_line_scalar'],
+    ['a malformed line', '{not json', 'batch_line_not_json'],
+    ['an object with missing keys', '{"unexpected":1}', 'batch_line_missing_custom_id'],
+  ])('quarantines %s with a stable ordinal instead of throwing', (_label, raw, expected) => {
+    const records = parseBatchOutputJsonl(`${raw}\n`)
+    expect(records).toHaveLength(1)
+    expect(records[0].parseError).toBe(expected)
+    expect(records[0].sourceOrdinal).toBe(0)
+    expect(records[0].customId).toBeNull()
+    expect(records[0].bodyText).toBe(raw)
+  })
+
+  it('still processes a valid line that follows an invalid one', () => {
+    const records = parseBatchOutputJsonl(['null', '{not json', validLine].join('\n'))
+    expect(records).toHaveLength(3)
+    expect(records.map((record) => record.sourceOrdinal)).toEqual([0, 1, 2])
+    expect(records[2].customId).toBe('a'.repeat(64))
+    expect(records[2].parseError).toBeNull()
+    expect(JSON.parse(records[2].bodyText)).toEqual({ status: 'completed', output: [] })
+  })
+
+  it('unwraps 200 bodies and turns errors and non-200s into accounted payloads', () => {
+    const errored = JSON.stringify({
+      custom_id: 'b'.repeat(64),
+      response: null,
+      error: { message: 'failed' },
+    })
+    const badStatus = JSON.stringify({
+      custom_id: 'c'.repeat(64),
+      response: { status_code: 429, body: null },
+      error: null,
+    })
+    const records = parseBatchOutputJsonl([validLine, errored, badStatus, ''].join('\n'))
+    expect(records).toHaveLength(3)
+    expect(records[1].bodyText).toContain('batch_error')
+    expect(records[2].bodyText).toContain('batch_http_status')
   })
 })

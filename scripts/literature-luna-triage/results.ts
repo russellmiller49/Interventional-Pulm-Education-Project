@@ -21,12 +21,17 @@ export interface RawResponseRecord {
   readonly customId: string | null
   /** Raw response body text, byte-preserved. */
   readonly bodyText: string
+  /** Stable position in the source artifact, so an unusable line is still locatable. */
+  readonly sourceOrdinal?: number
+  /** Set when the source line itself could not be read as a response; null when it could. */
+  readonly parseError?: string | null
 }
 
 export interface QuarantineEntry {
   readonly schemaVersion: typeof LUNA_QUARANTINE_SCHEMA_VERSION
   readonly customId: string | null
   readonly reason: string
+  readonly sourceOrdinal: number | null
   readonly rawSha256: string
   readonly rawBase64: string
 }
@@ -50,11 +55,13 @@ function quarantineEntry(
   customId: string | null,
   reason: string,
   bodyText: string,
+  sourceOrdinal: number | null = null,
 ): QuarantineEntry {
   return {
     schemaVersion: LUNA_QUARANTINE_SCHEMA_VERSION,
     customId,
     reason,
+    sourceOrdinal,
     rawSha256: sha256(bodyText),
     rawBase64: Buffer.from(bodyText, 'utf8').toString('base64'),
   }
@@ -62,12 +69,27 @@ function quarantineEntry(
 
 type ExtractedResponse =
   | { readonly kind: 'text'; readonly text: string }
-  | { readonly kind: 'refusal' }
+  | { readonly kind: 'refusal'; readonly reason: string }
   | { readonly kind: 'invalid'; readonly reason: string }
 
+/** Output item types this lane understands. `reasoning` carries no routable content. */
+const SUPPORTED_OUTPUT_ITEM_TYPES: ReadonlySet<string> = new Set(['message', 'reasoning'])
+/** Content part types this lane understands inside a message. */
+const SUPPORTED_CONTENT_PART_TYPES: ReadonlySet<string> = new Set(['output_text', 'refusal'])
+
 /**
- * Pull the model's output text (or refusal) out of one Responses API body. Anything that is
- * not an unambiguous completed message is invalid — never repaired.
+ * Pull the model's output text — or its refusal — out of one Responses API body.
+ *
+ * **Refusal dominates.** If any response item or output part indicates a refusal, the record's
+ * terminal state is refusal, full stop: any `output_text` sitting beside it is ignored for
+ * routing, and the record can never become a prediction, an abstention, or a deprioritization
+ * candidate. A parser that picked the favorable text item out of a mixed response would be
+ * choosing to act on output the model declined to stand behind.
+ *
+ * Everything else about a mixed or contradictory response fails closed: more than one output
+ * text, an unsupported item or part type, a response reporting an error, a status that
+ * contradicts the body, or an incomplete response all become invalid and are quarantined.
+ * Nothing here repairs, and nothing here selects.
  */
 export function extractResponseOutput(bodyText: string): ExtractedResponse {
   let parsed: unknown
@@ -76,37 +98,65 @@ export function extractResponseOutput(bodyText: string): ExtractedResponse {
   } catch {
     return { kind: 'invalid', reason: 'response_body_not_json' }
   }
-  if (!parsed || typeof parsed !== 'object') {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     return { kind: 'invalid', reason: 'response_body_not_object' }
   }
   const body = parsed as Record<string, unknown>
-  if (body.error) {
-    return { kind: 'invalid', reason: 'response_reported_error' }
-  }
-  if (body.status !== 'completed') {
-    return { kind: 'invalid', reason: `response_status_${String(body.status)}` }
-  }
+
+  // Scan for refusal first, across every item and part, before any other verdict can form.
   const output = Array.isArray(body.output) ? body.output : []
-  const texts: string[] = []
   let refusalSeen = false
   for (const item of output) {
     if (!item || typeof item !== 'object') continue
     const outputItem = item as Record<string, unknown>
-    if (outputItem.type !== 'message') continue
+    if (outputItem.type === 'refusal') {
+      refusalSeen = true
+      continue
+    }
     const content = Array.isArray(outputItem.content) ? outputItem.content : []
     for (const part of content) {
       if (!part || typeof part !== 'object') continue
-      const contentPart = part as Record<string, unknown>
-      if (contentPart.type === 'output_text' && typeof contentPart.text === 'string') {
-        texts.push(contentPart.text)
-      }
-      if (contentPart.type === 'refusal') {
-        refusalSeen = true
-      }
+      if ((part as Record<string, unknown>).type === 'refusal') refusalSeen = true
     }
   }
-  if (refusalSeen && texts.length === 0) {
-    return { kind: 'refusal' }
+  if (refusalSeen) return { kind: 'refusal', reason: 'model_refusal' }
+
+  if (body.error) return { kind: 'invalid', reason: 'response_reported_error' }
+  if (body.status !== 'completed') {
+    return { kind: 'invalid', reason: `response_status_${String(body.status)}` }
+  }
+  if (body.incomplete_details) {
+    return { kind: 'invalid', reason: 'response_status_body_contradiction' }
+  }
+
+  const texts: string[] = []
+  for (const item of output) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return { kind: 'invalid', reason: 'response_output_item_not_object' }
+    }
+    const outputItem = item as Record<string, unknown>
+    const itemType = outputItem.type
+    if (typeof itemType !== 'string' || !SUPPORTED_OUTPUT_ITEM_TYPES.has(itemType)) {
+      return { kind: 'invalid', reason: `response_unsupported_output_item_${String(itemType)}` }
+    }
+    if (itemType !== 'message') continue
+    const content = Array.isArray(outputItem.content) ? outputItem.content : []
+    for (const part of content) {
+      if (!part || typeof part !== 'object' || Array.isArray(part)) {
+        return { kind: 'invalid', reason: 'response_content_part_not_object' }
+      }
+      const contentPart = part as Record<string, unknown>
+      const partType = contentPart.type
+      if (typeof partType !== 'string' || !SUPPORTED_CONTENT_PART_TYPES.has(partType)) {
+        return { kind: 'invalid', reason: `response_unsupported_content_part_${String(partType)}` }
+      }
+      if (partType === 'output_text') {
+        if (typeof contentPart.text !== 'string') {
+          return { kind: 'invalid', reason: 'response_output_text_not_string' }
+        }
+        texts.push(contentPart.text)
+      }
+    }
   }
   if (texts.length !== 1) {
     return { kind: 'invalid', reason: `response_message_texts_${texts.length}` }
@@ -141,10 +191,29 @@ export function ingestStageAResponses(options: IngestOptions): IngestionResult {
   const byCustomId = new Map<string, RawResponseRecord[]>()
   let unknownIdentityCount = 0
   for (const response of options.responses) {
+    // A line the source parser could not read is never adopted by the record it names: it is
+    // accounted and quarantined with its ordinal, so nothing silently vanishes.
+    if (typeof response.parseError === 'string' && response.parseError.length > 0) {
+      unknownIdentityCount += 1
+      quarantine.push(
+        quarantineEntry(
+          response.customId,
+          response.parseError,
+          response.bodyText,
+          response.sourceOrdinal ?? null,
+        ),
+      )
+      continue
+    }
     if (response.customId === null || !selected.has(response.customId)) {
       unknownIdentityCount += 1
       quarantine.push(
-        quarantineEntry(response.customId, 'unknown_or_missing_custom_id', response.bodyText),
+        quarantineEntry(
+          response.customId,
+          'unknown_or_missing_custom_id',
+          response.bodyText,
+          response.sourceOrdinal ?? null,
+        ),
       )
       continue
     }
@@ -193,7 +262,14 @@ export function ingestStageAResponses(options: IngestOptions): IngestionResult {
     const responseSha256 = sha256(response.bodyText)
     const extracted = extractResponseOutput(response.bodyText)
     if (extracted.kind === 'refusal') {
-      assignments.push({ recordId, state: 'refusal', output: null, responseSha256, detail: null })
+      // Terminal. Any output text in the same response is retained only in the raw artifact.
+      assignments.push({
+        recordId,
+        state: 'refusal',
+        output: null,
+        responseSha256,
+        detail: extracted.reason,
+      })
       continue
     }
     if (extracted.kind === 'invalid') {

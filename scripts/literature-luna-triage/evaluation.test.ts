@@ -180,7 +180,8 @@ function buildInputs(rows: readonly Row[]) {
     riskAnalysisResults: rows.map((row) => ({ recordId: row.recordId, riskFlags: row.risk })),
   })
   const truthByRecordId = new Map(rows.map((row) => [row.recordId, row.truth]))
-  return { assignments, routed, truthByRecordId }
+  const selectedRecordIds = rows.map((row) => row.recordId)
+  return { assignments, routed, truthByRecordId, selectedRecordIds }
 }
 
 describe('ratio discipline', () => {
@@ -191,9 +192,10 @@ describe('ratio discipline', () => {
 })
 
 describe('evaluation report over the hand-computed scenario', () => {
-  const { assignments, routed, truthByRecordId } = buildInputs(scenario())
+  const { assignments, routed, truthByRecordId, selectedRecordIds } = buildInputs(scenario())
   const report = buildEvaluationReport({
     cohortLabel: 'synthetic-30',
+    selectedRecordIds,
     routed,
     assignments,
     truthByRecordId,
@@ -296,9 +298,10 @@ describe('evaluation report over the hand-computed scenario', () => {
 
 describe('evaluation guardrails', () => {
   it('runs truth-free for non-calibration cohorts with metrics nulled', () => {
-    const { assignments, routed } = buildInputs(scenario())
+    const { assignments, routed, selectedRecordIds } = buildInputs(scenario())
     const report = buildEvaluationReport({
       cohortLabel: 'pilot-1000',
+      selectedRecordIds,
       routed,
       assignments,
       truthByRecordId: new Map(),
@@ -311,15 +314,165 @@ describe('evaluation guardrails', () => {
 
   it('stops when a calibration record lacks truth', () => {
     const rows = scenario()
-    const { assignments, routed, truthByRecordId } = buildInputs(rows)
+    const { assignments, routed, truthByRecordId, selectedRecordIds } = buildInputs(rows)
     truthByRecordId.delete(rows[0].recordId)
     expect(() =>
       buildEvaluationReport({
         cohortLabel: 'locked-sanity-200',
+        selectedRecordIds,
         routed,
         assignments,
         truthByRecordId,
       }),
-    ).toThrow(/no physician truth/u)
+    ).toThrow(/no .*truth row|no physician truth/u)
+  })
+})
+
+/**
+ * Exact set equality between the authoritative selection and every table the report reads.
+ *
+ * The failure this replaces was quiet in the worst way: two terminal assignments, one routed
+ * record, `selected = 1`, and every reconciliation flag true. Iterating the routed table made
+ * the extra assignment invisible, so a run whose accounting was broken reported itself clean.
+ * Denominators now derive from the selection, and each of assignments, routing, and truth must
+ * equal it member for member.
+ */
+describe('exact evaluation set equality', () => {
+  const A = id(1)
+  const B = id(2)
+
+  const assignmentFor = (recordId: string): TerminalAssignment => ({
+    recordId,
+    state: 'valid_prediction',
+    output: output(recordId, 'potentially_relevant', 'high', ['pulmonary_relevance_unclear']),
+    responseSha256: null,
+    detail: null,
+  })
+  const routeFor = (recordId: string) => ({
+    recordId,
+    route: 'advance_to_full_relevance_classification' as const,
+    routeReasons: [],
+    terminalState: 'valid_prediction' as const,
+    evidenceProfile: 'metadata_with_abstract' as const,
+    riskFlags: [],
+    mandatoryPhysicianReview: false,
+  })
+
+  const evaluate = (inputs: {
+    selectedRecordIds: string[]
+    assignments: TerminalAssignment[]
+    routed: ReturnType<typeof routeFor>[]
+  }) =>
+    buildEvaluationReport({
+      cohortLabel: 'synthetic',
+      selectedRecordIds: inputs.selectedRecordIds,
+      routed: inputs.routed,
+      assignments: inputs.assignments,
+      truthByRecordId: new Map(),
+    })
+
+  it('accepts one exact valid equality', () => {
+    const report = evaluate({
+      selectedRecordIds: [A, B],
+      assignments: [assignmentFor(A), assignmentFor(B)],
+      routed: [routeFor(A), routeFor(B)],
+    })
+    expect(report.denominators.selected).toBe(2)
+    expect(report.reconciliation.terminalStatesSumToSelected).toBe(true)
+  })
+
+  it('refuses two assignments for one routed record', () => {
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A],
+        assignments: [assignmentFor(A), assignmentFor(B)],
+        routed: [routeFor(A)],
+      }),
+    ).toThrow(/outside the selected cohort/u)
+  })
+
+  it('refuses one assignment with two routed records', () => {
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A],
+        assignments: [assignmentFor(A)],
+        routed: [routeFor(A), routeFor(B)],
+      }),
+    ).toThrow(/outside the selected cohort/u)
+  })
+
+  it('refuses a missing assignment and a missing route', () => {
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A, B],
+        assignments: [assignmentFor(A)],
+        routed: [routeFor(A), routeFor(B)],
+      }),
+    ).toThrow(/no terminal assignment row/u)
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A, B],
+        assignments: [assignmentFor(A), assignmentFor(B)],
+        routed: [routeFor(A)],
+      }),
+    ).toThrow(/no routing row/u)
+  })
+
+  it('refuses duplicated assignments and duplicated routes', () => {
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A],
+        assignments: [assignmentFor(A), assignmentFor(A)],
+        routed: [routeFor(A)],
+      }),
+    ).toThrow(/more than one terminal assignment row/u)
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A],
+        assignments: [assignmentFor(A)],
+        routed: [routeFor(A), routeFor(A)],
+      }),
+    ).toThrow(/more than one routing row/u)
+  })
+
+  it('refuses a wrong record id and a duplicated selection', () => {
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A],
+        assignments: [assignmentFor(B)],
+        routed: [routeFor(B)],
+      }),
+    ).toThrow(/no terminal assignment row|outside the selected cohort/u)
+    expect(() =>
+      evaluate({
+        selectedRecordIds: [A, A],
+        assignments: [assignmentFor(A)],
+        routed: [routeFor(A)],
+      }),
+    ).toThrow(/duplicate record id/u)
+  })
+
+  it('refuses a truth table that disagrees with the selection', () => {
+    expect(() =>
+      buildEvaluationReport({
+        cohortLabel: 'locked-sanity-200',
+        selectedRecordIds: [A, B],
+        routed: [routeFor(A), routeFor(B)],
+        assignments: [assignmentFor(A), assignmentFor(B)],
+        truthByRecordId: new Map([[A, 'exclude']]),
+      }),
+    ).toThrow(/no physician truth row/u)
+  })
+
+  it('keeps zero-denominator and subgroup behaviour correct at the smallest size', () => {
+    const report = evaluate({
+      selectedRecordIds: [A],
+      assignments: [assignmentFor(A)],
+      routed: [routeFor(A)],
+    })
+    // Support of one is well below the suppression minimum; rates stay null, never NaN.
+    expect(report.byEvidenceProfile).toBeNull()
+    expect(report.classifiedCoverageAllSelected).toBe(1)
+    expect(ratio(0, 0)).toBeNull()
   })
 })

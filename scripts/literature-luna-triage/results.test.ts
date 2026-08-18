@@ -6,35 +6,155 @@ const ID_A = 'a'.repeat(64)
 const ID_B = 'b'.repeat(64)
 const ID_C = 'c'.repeat(64)
 
+/**
+ * Mixed-response semantics.
+ *
+ * The rule under test is a precedence rule: a refusal anywhere in the response wins over every
+ * other reading of it, and nothing mixed or contradictory is ever allowed to route negative.
+ * The failure this replaces looked benign — a response carrying both a refusal part and a
+ * clean negative `output_text` was ingested as a valid prediction and became a
+ * deprioritization candidate, i.e. an article was set aside on the strength of output the
+ * model had declined to give.
+ */
 describe('response extraction', () => {
+  const NEGATIVE_TEXT = syntheticStageAOutput(ID_A, 'obvious_irrelevant', 'high', [
+    'not_pulmonary_or_airway_topic',
+  ])
+
+  function completed(output: unknown[]): string {
+    return JSON.stringify({ id: 'resp', status: 'completed', output })
+  }
+
+  const messageWith = (...parts: unknown[]) => ({
+    type: 'message',
+    role: 'assistant',
+    content: parts,
+  })
+  const textPart = (text: string) => ({ type: 'output_text', text })
+  const refusalPart = { type: 'refusal', refusal: 'declined' }
+
   it('extracts the single output text of a completed response', () => {
     const extracted = extractResponseOutput(syntheticResponseBody('{"x":1}'))
     expect(extracted).toEqual({ kind: 'text', text: '{"x":1}' })
   })
 
-  it('detects refusals', () => {
-    expect(extractResponseOutput(syntheticRefusalBody())).toEqual({ kind: 'refusal' })
+  it('detects a refusal-only response', () => {
+    expect(extractResponseOutput(syntheticRefusalBody()).kind).toBe('refusal')
   })
 
-  it('treats errors, incompleteness, junk, and multi-text messages as invalid', () => {
+  it('treats a refusal followed by valid negative text as a refusal', () => {
+    const extracted = extractResponseOutput(
+      completed([messageWith(refusalPart, textPart(NEGATIVE_TEXT))]),
+    )
+    expect(extracted.kind).toBe('refusal')
+  })
+
+  it('treats valid negative text followed by a refusal as a refusal', () => {
+    const extracted = extractResponseOutput(
+      completed([messageWith(textPart(NEGATIVE_TEXT), refusalPart)]),
+    )
+    expect(extracted.kind).toBe('refusal')
+  })
+
+  it('treats a refusal in a separate output item as a refusal', () => {
+    const extracted = extractResponseOutput(
+      completed([messageWith(textPart(NEGATIVE_TEXT)), { type: 'refusal', refusal: 'declined' }]),
+    )
+    expect(extracted.kind).toBe('refusal')
+  })
+
+  it('treats a refusal plus an insufficient_evidence text as a refusal', () => {
+    const abstention = syntheticStageAOutput(ID_A, 'insufficient_evidence', 'low', [])
+    expect(
+      extractResponseOutput(completed([messageWith(refusalPart, textPart(abstention))])).kind,
+    ).toBe('refusal')
+  })
+
+  it('treats a refusal beside an error or partial response as a refusal, never a prediction', () => {
+    const withError = JSON.stringify({
+      status: 'completed',
+      error: { message: 'x' },
+      output: [messageWith(refusalPart, textPart(NEGATIVE_TEXT))],
+    })
+    expect(extractResponseOutput(withError).kind).toBe('refusal')
+    const partial = JSON.stringify({
+      status: 'incomplete',
+      incomplete_details: { reason: 'max_output_tokens' },
+      output: [messageWith(refusalPart)],
+    })
+    expect(extractResponseOutput(partial).kind).toBe('refusal')
+  })
+
+  it('treats a malformed refusal part as unsupported rather than as text', () => {
+    // A part that names an unknown type is not quietly skipped over to reach the text beside it.
+    const malformed = completed([
+      messageWith({ type: 'refusal_v2', refusal: 'declined' }, textPart(NEGATIVE_TEXT)),
+    ])
+    const extracted = extractResponseOutput(malformed)
+    expect(extracted.kind).toBe('invalid')
+  })
+
+  it('fails closed on multiple output texts', () => {
+    const multi = completed([messageWith(textPart('one'), textPart('two'))])
+    expect(extractResponseOutput(multi)).toEqual({
+      kind: 'invalid',
+      reason: 'response_message_texts_2',
+    })
+    const acrossItems = completed([messageWith(textPart('one')), messageWith(textPart('two'))])
+    expect(extractResponseOutput(acrossItems).kind).toBe('invalid')
+  })
+
+  it('fails closed on unsupported mixed item types', () => {
+    const withTool = completed([
+      { type: 'function_call', name: 'search', arguments: '{}' },
+      messageWith(textPart(NEGATIVE_TEXT)),
+    ])
+    expect(extractResponseOutput(withTool).kind).toBe('invalid')
+    // A reasoning item is understood and carries no routable content, so it is not a failure.
+    const withReasoning = completed([
+      { type: 'reasoning', summary: [] },
+      messageWith(textPart(NEGATIVE_TEXT)),
+    ])
+    expect(extractResponseOutput(withReasoning)).toEqual({ kind: 'text', text: NEGATIVE_TEXT })
+  })
+
+  it('fails closed on partial responses and status/body contradictions', () => {
     expect(extractResponseOutput('not json').kind).toBe('invalid')
     expect(extractResponseOutput(JSON.stringify({ error: { message: 'x' } })).kind).toBe('invalid')
     expect(extractResponseOutput(JSON.stringify({ status: 'incomplete', output: [] })).kind).toBe(
       'invalid',
     )
-    const multi = JSON.stringify({
+    const contradiction = JSON.stringify({
       status: 'completed',
-      output: [
-        {
-          type: 'message',
-          content: [
-            { type: 'output_text', text: 'one' },
-            { type: 'output_text', text: 'two' },
-          ],
-        },
-      ],
+      incomplete_details: { reason: 'max_output_tokens' },
+      output: [messageWith(textPart(NEGATIVE_TEXT))],
     })
-    expect(extractResponseOutput(multi).kind).toBe('invalid')
+    expect(extractResponseOutput(contradiction)).toEqual({
+      kind: 'invalid',
+      reason: 'response_status_body_contradiction',
+    })
+  })
+
+  it('never routes a mixed or refusing response as a negative prediction', () => {
+    const mixed = [
+      completed([messageWith(refusalPart, textPart(NEGATIVE_TEXT))]),
+      completed([messageWith(textPart(NEGATIVE_TEXT), refusalPart)]),
+      completed([messageWith(textPart(NEGATIVE_TEXT), textPart(NEGATIVE_TEXT))]),
+      completed([
+        { type: 'function_call', name: 'x', arguments: '{}' },
+        messageWith(textPart(NEGATIVE_TEXT)),
+      ]),
+    ]
+    for (const bodyText of mixed) {
+      const ingestion = ingestStageAResponses({
+        selectedRecordIds: [ID_A],
+        attemptedRecordIds: [ID_A],
+        responses: [{ customId: ID_A, bodyText }],
+      })
+      // Refusal or quarantine — never a prediction, and therefore never deprioritizable.
+      expect(['refusal', 'invalid_quarantined']).toContain(ingestion.assignments[0].state)
+      expect(ingestion.assignments[0].output).toBeNull()
+    }
   })
 })
 

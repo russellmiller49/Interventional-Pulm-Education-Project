@@ -12,6 +12,7 @@ import {
 } from './constants'
 import type { EvaluationReport } from './evaluation'
 import { outputSchemaSha256, reasonVocabularySha256, type FreezeReceipt } from './freeze'
+import { lockedRunIdentitySha256 } from './locked'
 import { sortedIdentityDigest } from './split'
 
 /**
@@ -42,10 +43,16 @@ export class QualificationEvidenceError extends Error {
   }
 }
 
-/** The create-once marker written when the locked cohort ran. One per calibration version. */
+/**
+ * The create-once marker written when the locked cohort ran. Keyed to the canonical locked-run
+ * identity — calibration version, freeze digest, locked-manifest digest, and the
+ * model/prompt/schema identities — never to a receipt's filename, so a copied, moved, or
+ * renamed receipt lands on the same marker and cannot buy a second run.
+ */
 export interface LockedRunMarker {
   readonly calibrationVersion: string
   readonly operationId: string
+  readonly lockedRunIdentitySha256: string
   readonly startedAt: string
 }
 
@@ -64,6 +71,8 @@ export interface QualificationEvidence {
   readonly cohortIdentitySha256: string
   /** The frozen split's locked-sanity identity digest. Must equal the evaluated cohort's. */
   readonly splitLockedSanityIdentitySha256: string
+  /** The canonical locked-run identity, re-derived here from the receipt and that digest. */
+  readonly lockedRunIdentitySha256: string
   readonly splitManifestSha256: string
   readonly freezeReceipt: FreezeReceipt
   readonly lockedRunMarker: LockedRunMarker
@@ -119,6 +128,7 @@ export function buildQualificationEvidence(
     selectedCount: inputs.selectedCount,
     cohortIdentitySha256: inputs.cohortIdentitySha256,
     splitLockedSanityIdentitySha256: inputs.splitLockedSanityIdentitySha256,
+    lockedRunIdentitySha256: inputs.lockedRunIdentitySha256,
     splitManifestSha256: inputs.splitManifestSha256,
     freezeReceipt: inputs.freezeReceipt,
     lockedRunMarker: inputs.lockedRunMarker,
@@ -253,6 +263,18 @@ function assertQualificationEvidence(inputs: QualificationInputs): void {
   }
   if (marker.operationId !== evidence.operationId) {
     refuse('The locked-run marker belongs to another operation.')
+  }
+  // Re-derived here from the receipt and the recomputed locked identity digest, so a marker
+  // that names some other frozen surface cannot authorize this qualification.
+  const derivedRunIdentity = lockedRunIdentitySha256(
+    receipt,
+    evidence.splitLockedSanityIdentitySha256,
+  )
+  if (evidence.lockedRunIdentitySha256 !== derivedRunIdentity) {
+    refuse('The locked-run identity does not derive from the frozen surface it claims.')
+  }
+  if (marker.lockedRunIdentitySha256 !== derivedRunIdentity) {
+    refuse('The locked-run marker was written for another locked-run identity.')
   }
   if (inputs.observedRunMarkerSha256s.includes(evidence.lockedRunMarkerSha256)) {
     refuse(

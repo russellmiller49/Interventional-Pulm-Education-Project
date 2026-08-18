@@ -210,23 +210,134 @@ describe('offline pipeline end to end', () => {
   })
 })
 
-describe('locked-run marker discipline', () => {
-  it('refuses a second locked run of the same calibration version', async () => {
+/**
+ * The generic inference commands must refuse the locked cohort by its declared label, before
+ * they get anywhere near a spend gate. The reproduction at the previous head reached the
+ * `--confirm-api-spend` check with a locked-sanity operation, i.e. nothing about the cohort
+ * had been consulted at all.
+ */
+describe('generic commands refuse the locked cohort', () => {
+  async function lockedOperation(operationId: string) {
     const state = await resolveStateRoot(stateDir)
-    // Simulate a consumed calibration version.
-    await runLunaTriageCli(['ingest', '--state-dir', stateDir, '--operation', 'op-none']).catch(
-      () => undefined,
+    const paths = await createOperation(state, operationId, 'locked-sanity-200', 'test', 'now')
+    const built = [
+      buildPacket(SALT, syntheticCorpusRecord('900000301', { title: 'Dental caries' })),
+      buildPacket(SALT, syntheticCorpusRecord('900000302', { title: 'Crop yields' })),
+    ]
+    await appendJsonlRows(
+      paths.packetsJsonl,
+      built.map((item) => item.packet),
     )
+    await appendJsonlRows(
+      paths.mappingJsonl,
+      built.map((item) => item.mapping),
+    )
+    await appendJsonlRows(
+      paths.requestsJsonl,
+      built.map((item) => ({
+        customId: item.mapping.recordId,
+        bodySha256: 'a'.repeat(64),
+        body: { model: 'gpt-5.6-luna' },
+      })),
+    )
+    return { state, paths }
+  }
+
+  it.each([
+    ['run-sync', ['run-sync', '--max-records', '10', '--max-estimated-cost-usd', '10']],
+    ['batch-prepare', ['batch-prepare']],
+    ['batch-submit', ['batch-submit', '--shard', 'shard-0000-000000000000.jsonl']],
+  ])('refuses a locked-sanity operation on %s', async (label, command) => {
+    await lockedOperation(`op-locked-${label}`)
+    await expect(
+      runLunaTriageCli([...command, '--state-dir', stateDir, '--operation', `op-locked-${label}`]),
+    ).rejects.toThrow(/locked-sanity-200 cohort/u)
+  })
+
+  it('still runs a non-locked cohort through the same command up to the spend gate', async () => {
+    const state = await resolveStateRoot(stateDir)
+    const paths = await createOperation(state, 'op-dev', 'development-430', 'test', 'now')
+    const built = buildPacket(SALT, syntheticCorpusRecord('900000305'))
+    await appendJsonlRows(paths.packetsJsonl, [built.packet])
+    await appendJsonlRows(paths.mappingJsonl, [built.mapping])
+    await appendJsonlRows(paths.requestsJsonl, [
+      { customId: built.mapping.recordId, bodySha256: 'a'.repeat(64), body: {} },
+    ])
+    // Not a locked refusal: the command proceeds past the cohort gate and stops later, on
+    // this fixture's deliberately stale stored request digest.
+    await expect(
+      runLunaTriageCli(['run-sync', '--state-dir', stateDir, '--operation', 'op-dev']),
+    ).rejects.toThrow(/prepared surface drifted/u)
+  })
+})
+
+/**
+ * Batch status and fetch derive their Batch id from a validated local submission receipt. An
+ * arbitrary id supplied on the command line has no receipt, and therefore no authority.
+ */
+describe('receipt-bound Batch identifiers', () => {
+  it('refuses a status or fetch for a Batch this operation never submitted', async () => {
+    const state = await resolveStateRoot(stateDir)
+    await createOperation(state, 'op-batch', 'pilot-1000', 'test', 'now')
+    for (const command of ['batch-status', 'batch-fetch']) {
+      await expect(
+        runLunaTriageCli([
+          command,
+          '--state-dir',
+          stateDir,
+          '--operation',
+          'op-batch',
+          '--batch-id',
+          'batch_never_submitted',
+          '--max-records',
+          '1',
+          '--max-estimated-cost-usd',
+          '1',
+        ]),
+      ).rejects.toThrow(/no validated submission receipt/u)
+    }
+  })
+
+  it('refuses a traversal or otherwise unsafe Batch id before any lookup', async () => {
+    const state = await resolveStateRoot(stateDir)
+    await createOperation(state, 'op-batch2', 'pilot-1000', 'test', 'now')
+    for (const batchId of ['../../escape', '/etc/passwd', 'batch%2Fescape', 'batch id']) {
+      await expect(
+        runLunaTriageCli([
+          'batch-fetch',
+          '--state-dir',
+          stateDir,
+          '--operation',
+          'op-batch2',
+          '--batch-id',
+          batchId,
+          '--max-records',
+          '1',
+          '--max-estimated-cost-usd',
+          '1',
+        ]),
+      ).rejects.toThrow()
+    }
+    // No artifact was created for any refused id.
+    const paths = operationPaths(state, 'op-batch2')
+    expect(await readdir(paths.batchRawDir)).toHaveLength(0)
+    expect(await readdir(paths.batchReceiptsDir)).toHaveLength(0)
+  })
+})
+
+describe('locked-run marker discipline', () => {
+  it('refuses a second locked run at the same canonical identity', async () => {
+    const state = await resolveStateRoot(stateDir)
     const markerDir = join(state.root, 'freeze', 'locked-runs')
     await expect(readdir(markerDir)).rejects.toThrow()
     await exclusiveWriteFile(join(state.root, 'corpus-identity.json'), canonicalJson({}))
-    // The marker path itself is create-once; writing it twice fails like every artifact.
+    // The marker path is create-once, and its name is the locked-run identity digest, so a
+    // relocated receipt cannot land anywhere else.
     const { mkdir } = await import('node:fs/promises')
     await mkdir(markerDir, { recursive: true, mode: 0o700 })
-    await exclusiveWriteFile(join(markerDir, 'cal-v1.marker.json'), '{}\n')
-    await expect(exclusiveWriteFile(join(markerDir, 'cal-v1.marker.json'), '{}\n')).rejects.toThrow(
-      /not overwritten/u,
-    )
+    const marker = join(markerDir, `${'a'.repeat(64)}.marker.json`)
+    await exclusiveWriteFile(marker, '{}\n')
+    await expect(exclusiveWriteFile(marker, '{}\n')).rejects.toThrow(/not overwritten/u)
   })
 })
 

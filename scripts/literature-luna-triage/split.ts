@@ -193,3 +193,121 @@ export function buildSplitManifest(split: CalibrationSplit): SplitManifest {
   }
   return { ...body, manifestSha256: sha256(canonicalJson(body)) }
 }
+
+/**
+ * Canonical split authority: the split recomputed from the immutable truth authority and the
+ * fixed corpus, never read from a stored artifact.
+ */
+export interface CanonicalSplitAuthority {
+  readonly split: CalibrationSplit
+  readonly manifest: SplitManifest
+}
+
+export function recomputeCanonicalSplit(
+  truth: TruthAuthority,
+  abstractPresence: ReadonlyMap<string, boolean>,
+): CanonicalSplitAuthority {
+  const split = buildCalibrationSplit(truth, abstractPresence)
+  return { split, manifest: buildSplitManifest(split) }
+}
+
+/** What a state directory happens to hold. A cache of the split — never its authority. */
+export interface StoredSplitArtifacts {
+  readonly development: readonly string[]
+  readonly lockedSanity: readonly string[]
+  readonly manifest: Record<string, unknown>
+}
+
+/**
+ * Prove that stored split artifacts are exactly the canonical split.
+ *
+ * Every digest compared here is **recomputed from the stored artifacts' actual contents** and
+ * checked against the **recomputed canonical** value; the manifest's own declared hashes are
+ * never treated as authority over the identities beside them. That is the whole point: a
+ * stored file that replaces one identity — or all two hundred — and then edits its own
+ * `lockedSanityIdentitySha256` and `manifestSha256` to match is internally consistent and
+ * still wrong, and only a comparison against a freshly recomputed canonical split can say so.
+ */
+export function assertStoredSplitIsCanonical(
+  stored: StoredSplitArtifacts,
+  canonical: CanonicalSplitAuthority,
+  truth: TruthAuthority,
+): void {
+  if (!Array.isArray(stored.development) || !Array.isArray(stored.lockedSanity)) {
+    throw new SplitError('The stored split artifacts are not identity lists.')
+  }
+  for (const value of [...stored.development, ...stored.lockedSanity]) {
+    if (typeof value !== 'string' || value.length === 0) {
+      throw new SplitError('A stored split identity is not a string.')
+    }
+  }
+  if (stored.development.length !== LUNA_DEVELOPMENT_COHORT_SIZE) {
+    throw new SplitError(
+      `The stored development cohort holds ${stored.development.length} identities, not ` +
+        `${LUNA_DEVELOPMENT_COHORT_SIZE}.`,
+    )
+  }
+  if (stored.lockedSanity.length !== LUNA_LOCKED_SANITY_COHORT_SIZE) {
+    throw new SplitError(
+      `The stored locked-sanity cohort holds ${stored.lockedSanity.length} identities, not ` +
+        `${LUNA_LOCKED_SANITY_COHORT_SIZE}.`,
+    )
+  }
+  const developmentSet = new Set(stored.development)
+  const lockedSet = new Set(stored.lockedSanity)
+  if (
+    developmentSet.size !== stored.development.length ||
+    lockedSet.size !== stored.lockedSanity.length
+  ) {
+    throw new SplitError('The stored split contains a duplicate identity.')
+  }
+  for (const pmid of lockedSet) {
+    if (developmentSet.has(pmid)) {
+      throw new SplitError('An identity appears in both stored cohorts; the split overlaps.')
+    }
+  }
+  const union = new Set([...developmentSet, ...lockedSet])
+  if (union.size !== OVERLAY_EXPECTED_RECORD_COUNT) {
+    throw new SplitError(
+      `The stored split covers ${union.size} identities, not the reviewed ` +
+        `${OVERLAY_EXPECTED_RECORD_COUNT}.`,
+    )
+  }
+  // Exact equality with the immutable truth-authorized 630, member by member.
+  const truthPmids = new Set(truth.rows.map((row) => row.pmid))
+  if (truthPmids.size !== OVERLAY_EXPECTED_RECORD_COUNT) {
+    throw new SplitError('The truth authority does not hold the reviewed record count.')
+  }
+  for (const pmid of union) {
+    if (!truthPmids.has(pmid)) {
+      throw new SplitError('The stored split names an identity outside the physician-reviewed set.')
+    }
+  }
+  for (const pmid of truthPmids) {
+    if (!union.has(pmid)) {
+      throw new SplitError('The stored split omits a physician-reviewed identity.')
+    }
+  }
+  // Digests recomputed from the stored contents, compared to the recomputed canonical split.
+  if (sortedIdentityDigest(stored.lockedSanity) !== canonical.manifest.lockedSanityIdentitySha256) {
+    throw new SplitError(
+      'The stored locked-sanity identities are not the canonical locked-sanity 200. A ' +
+        'self-declared digest cannot authorize its own identity list.',
+    )
+  }
+  if (sortedIdentityDigest(stored.development) !== canonical.manifest.developmentIdentitySha256) {
+    throw new SplitError('The stored development identities are not the canonical 430.')
+  }
+  const declaredManifestSha256 = stored.manifest?.manifestSha256
+  if (declaredManifestSha256 !== canonical.manifest.manifestSha256) {
+    throw new SplitError(
+      'The stored split manifest is not the canonical manifest for this truth authority.',
+    )
+  }
+  if (
+    stored.manifest?.version !== canonical.manifest.version ||
+    stored.manifest?.seed !== canonical.manifest.seed
+  ) {
+    throw new SplitError('The stored split manifest names another split version or seed.')
+  }
+}
