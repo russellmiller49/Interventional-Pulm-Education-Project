@@ -14,6 +14,13 @@ Tests:
 npx jest --runInBand scripts/literature-luna-triage src/features/literature/classifier
 ```
 
+Mutation sensitivity for the five corrected findings (restores each original defect in place,
+requires the matching regressions to fail, and restores every file afterwards):
+
+```bash
+npx tsx scripts/literature-luna-triage/mutation-matrix.ts
+```
+
 ## Offline preparation (no API, no spend)
 
 ```bash
@@ -75,7 +82,10 @@ npx tsx scripts/literature-luna-triage/cli.ts route         --operation <OP>
 npx tsx scripts/literature-luna-triage/cli.ts evaluate      --operation <OP> --artifact <ARTIFACT>   # calibration cohorts
 npx tsx scripts/literature-luna-triage/cli.ts review-queue  --operation <OP>
 npx tsx scripts/literature-luna-triage/cli.ts audit-sample  --operation <OP> --sample-size 50
-npx tsx scripts/literature-luna-triage/cli.ts qualify       --operation <OP>
+# Qualification runs only over the frozen locked-sanity-200 cohort and needs its calibration
+# version: it rebuilds checksum-bound evidence (freeze receipt, locked-run marker, exact frozen
+# 200 identities, evaluation-artifact digest) and consumes the pristine run once per freeze.
+npx tsx scripts/literature-luna-triage/cli.ts qualify       --operation <OP> --calibration-version cal-v1
 npx tsx scripts/literature-luna-triage/cli.ts review-app    --operation <OP> --port 4630
 ```
 

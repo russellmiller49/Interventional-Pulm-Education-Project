@@ -62,9 +62,16 @@ never model-facing.
   and 13 protective/escalation codes (usable only with `potentially_relevant` /
   `insufficient_evidence`). Any protective code makes `obvious_irrelevant` schema-invalid.
 - Routing: only a schema-valid, identity-bound, **high**-confidence `obvious_irrelevant`
-  with exclusively negative-only reasons and **zero coordinator risk flags** enters
-  `deprioritization_candidate`. Invalid, malformed, missing, duplicate, refused, quarantined,
-  and unattempted records advance by default and are never treated as negative.
+  with exclusively negative-only reasons and a **schema-valid, record-bound risk-analysis
+  result reporting zero flags** enters `deprioritization_candidate`. Invalid, malformed,
+  missing, duplicate, refused, quarantined, and unattempted records advance by default and are
+  never treated as negative.
+- Independent risk analysis is _mandatory evidence_, not optional metadata:
+  `stageARiskAnalysisResultSchema` validates the stored result, and a record whose risk result
+  is missing, duplicated, foreign, or malformed can never be read as zero risk. The
+  coordinator asserts exact set equality between selected record ids and risk-analysis record
+  ids (`assertExactRiskAnalysisCoverage`) before routing, and `routeStageARecord` re-validates
+  the individual result and advances the record if it is unusable.
 
 ## Coordinator risk layer
 
@@ -100,21 +107,35 @@ per-calibration-version marker — one locked run per frozen calibration, failur
 - `qualify.ts` encodes the eight-criterion shadow-routing gate (zero core / zero adjacent in
   the high-confidence bucket, zero relevant routing errors in both evidence profiles, 100%
   bucket precision, ≥40% exclude yield, no systematic category miss, complete denominators,
-  full review-interface coverage of the bucket).
+  full review-interface coverage of the bucket). The gate runs only from a checksum-bound
+  `QualificationEvidence`: cohort label exactly `locked-sanity-200`, exactly 200 selected, the
+  evaluated cohort identity digest equal to the frozen locked-sanity digest, a self-consistent
+  freeze receipt whose frozen surfaces still match what would run, the locked-run marker bound
+  to that calibration version and operation, the evaluation artifact's own recorded digest, and
+  once-per-freeze semantics against previously observed run markers. An `EvaluationReport`
+  cannot self-declare qualification.
 
 ## Runner, Batch, filesystem
 
 - `openai.ts` is the only network module. Spend requires `--confirm-api-spend` **and** an
   interactively typed `SPEND <operation-id>` phrase, minted into a module-private
   symbol+WeakMap capability (PR #98's held-out-guard pattern, repurposed): copies and
-  serialized imitations fail. The API key exists only as `process.env.OPENAI_API_KEY` inside
-  the request function; errors pass through redaction; there is no retry and no semantic
-  repair anywhere.
+  serialized imitations fail. The capability is not a reusable bearer token — it binds an
+  immutable envelope (action, operation, plan digest, record count, token estimate, cost,
+  ceilings) whose every number must be a valid safe integer or finite non-negative amount that
+  reconciles with the priced estimate, plus a bounded execution ledger of exact request
+  identities, each consumed at most once and refused past the budget. Wrong action, wrong
+  operation, drifted plan, drifted request or shard bytes, and over-consumption all fail before
+  the API key is read. The key exists only as `process.env.OPENAI_API_KEY` inside the request
+  function; errors pass through redaction; there is no retry and no semantic repair anywhere.
 - `estimate.ts` is the versioned deterministic cost estimator; `--max-records` and
   `--max-estimated-cost-usd` are enforced before any socket opens.
 - `batch.ts` prepares deterministic content-addressed JSONL shards under record and
   estimated-token ceilings (the corpus is never assumed to fit one job), and wraps
-  submission/status/retrieval/parse behind the same gated socket.
+  submission/status/retrieval/parse behind the same gated socket. A request whose own estimate
+  exceeds the per-shard token ceiling is refused before any rollover decision — it cannot fit
+  any shard, so rolling it into a fresh one would only mint an oversized shard; equality with
+  the ceiling fits, and invalid token estimates are refused outright.
 - `results.ts` is strict ingestion: byte-preserving quarantine wrappers, identity binding of
   outputs to request custom ids, duplicates as their own advancing terminal state, exhaustive
   exactly-one accounting re-asserted arithmetically.
@@ -124,8 +145,13 @@ per-calibration-version marker — one locked run per frozen calibration, failur
 
 ## Physician review
 
-`review-app.ts` + `review-page.ts`: a loopback-only (`127.0.0.1`, Host-checked) node server
-with an embedded single page. No Supabase, no API key, reads operation artifacts only, writes
+`review-app.ts` + `review-page.ts`: a loopback-only node server bound to `127.0.0.1`, with an
+embedded single page. `parseLoopbackHostHeader` parses the Host header as an authority and
+accepts only the exact hostnames `localhost`, `127.0.0.1`, and `::1` (bracketed when ported),
+with a valid optional port — whole-authority equality, never a prefix test, so
+`localhost.evil.example` and `127.0.0.1.evil.example` are refused along with userinfo forms,
+comma-joined authorities, whitespace or control characters, malformed IPv6, out-of-range ports,
+wildcards, `0.0.0.0`, `[::]`, and every non-loopback address. No DNS resolution happens. No Supabase, no API key, reads operation artifacts only, writes
 create-once 0600 decision revisions and exports (`physician_override_manifest`,
 `physician_confirmed_deprioritization`, `physician_rescued_for_stage_b`,
 `systematic_miss_flags`, audit receipt). Cards show the full packet fields, Luna decision,
@@ -143,3 +169,27 @@ negative to be reviewed.
 2. full-corpus Batch preparation → 10. separately authorized Batch submission → 11. physician
    review + audit → 12. Stage-B routing manifests. Every spending step needs its own explicit
    owner confirmation; this document authorizes none of them.
+
+## Independent review and correction (2026-08-18)
+
+The first independent review of PR #114 returned **BLOCKED** with five concrete offline
+reproductions. All five are corrected on the same branch, each with load-bearing regressions
+that fail against the original implementation:
+
+- **LUNA-ROUTE-001** — a selected record with no independent risk result became `riskFlags: []`
+  and could reach `deprioritization_candidate` at high confidence. Independent risk analysis is
+  now mandatory evidence with exact one-to-one coverage asserted at the coordinator and
+  re-validated per record; there is no missing-means-no-risk fallback anywhere.
+- **LUNA-SPEND-001** — negative and NaN costs and record counts could mint spend authority, and
+  one capability could be reused without bound. The envelope is now numerically validated,
+  bound to an exact action / operation / plan / request set, and consumed through a bounded
+  at-most-once ledger; every refusal opens zero sockets.
+- **LUNA-BATCH-001** — an individually oversized first request was accepted as a one-record
+  shard. Oversized and invalid per-request estimates are now refused before rollover.
+- **LUNA-QUALIFY-001** — a one-record `development-430` evaluation could report qualified.
+  Qualification now requires checksum-bound evidence of the exact frozen locked-sanity-200 run.
+- **LUNA-REVIEW-001** — Host validation used a prefix check, so `localhost.evil.example`
+  passed. Host authorities are now parsed and matched exactly.
+
+No API call, Batch submission, Supabase write, migration, deployment, or prediction load
+occurred in the correction pass, and none is authorized by it.
