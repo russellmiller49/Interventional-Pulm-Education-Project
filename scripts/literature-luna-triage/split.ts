@@ -72,7 +72,8 @@ function stratumLabel(key: StratumKey): string {
   return `${key.relevance}|${key.abstractPresent ? 'with_abstract' : 'without_abstract'}`
 }
 
-function sortedIdentityDigest(pmids: readonly string[]): string {
+/** Digest of a C-collation-sorted identity list. The one identity-digest formula in the lane. */
+export function sortedIdentityDigest(pmids: readonly string[]): string {
   const sorted = [...pmids].sort()
   return sha256(sorted.join('\n'))
 }
