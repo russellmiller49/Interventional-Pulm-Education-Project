@@ -134,6 +134,113 @@ Two defects were found by rendering rather than by unit tests, and both are fixe
 array of `<title>` children into a warning, and the implicated "texture" was a thin dashed stroke
 laid over a thicker stroke of the same colour, which is invisible by construction.
 
+## 8. The compact circuit map (owner-requested correction)
+
+R2 was approved with one correction: the map's own labels were not legible at the teaching pane's
+supported floor. This section records what was measured, what changed, and what is still true.
+
+### 8.1 What was wrong, measured
+
+Screen-space measurements taken in a browser against the real stylesheet — effective label size is
+the declared SVG `font-size` multiplied by the element's screen CTM scale, not the declared size,
+because a viewBox scales type along with everything else.
+
+| Panel container | Drawing        | Scale | Smallest label | Largest | Overlaps | Out of bounds |
+| --------------- | -------------- | ----- | -------------- | ------- | -------- | ------------- |
+| 280px           | 242px          | 0.756 | **5.67px**     | 6.43px  | 0        | 0             |
+| 320px           | 282px          | 0.881 | **6.61px**     | 7.49px  | 0        | 0             |
+| 360px           | 322px          | 1.006 | **7.55px**     | 8.55px  | 0        | 0             |
+| 480px           | 442px          | 1.381 | **10.36px**    | 11.74px | 0        | 0             |
+| 700px           | 480px (capped) | 1.5   | 11.25px        | 12.75px | 0        | 0             |
+| 944px           | 480px (capped) | 1.5   | 11.25px        | 12.75px | 0        | 0             |
+
+Nothing overlapped, nothing clipped, nothing scrolled — the defect was purely that the type was too
+small to read. The caption and the text equivalent were carrying the lesson, which is not what a
+persistent spatial grammar is for.
+
+Worth stating plainly: at every _default_ viewport the teaching pane is 450–670px wide, so this bit
+a learner only after dragging the separator toward the 280px floor the workspace explicitly
+supports. That is still a supported width, and it is the width at which the map is most needed.
+
+### 8.2 What changed
+
+A second **geometry**, not a second drawing, and not a scale factor. A viewBox scales type with
+everything else, so no font size rescues a landscape drawing in a narrow column.
+
+- **Regular (landscape)** — `viewBox 0 0 320 140`, capped at 30rem. The racetrack: patient at the
+  left, blood path across the top, return along the bottom.
+- **Compact (portrait)** — `viewBox 0 0 168 220`, capped at 18rem. The same loop folded onto a
+  vertical spine with every name beside it, the return running back up the left margin, and the
+  sweep-gas blender placed against the membrane rather than above it. Roughly twice the type for
+  the same pixels.
+
+Both read the same segment registry, the same sensor sites, the same presentation state, the same
+implicated/neutral semantics and the same text-equivalent builder. Only the coordinates differ.
+
+### 8.3 Breakpoint
+
+`ECMO_MINIMAP_COMPACT_BELOW_PX = 436`, compared against the **drawing's** width — the panel's
+content box, measured with a `ResizeObserver` plus the settle passes the console's fit surface
+already uses, because the workspace sizes its panes on a deferred pass.
+
+436 is derived, not chosen: the landscape viewBox is 320 units wide and its smallest label is 8.8
+units, so it clears 12 CSS pixels only once the drawing is about 436px across.
+
+Two measurement mistakes are recorded here because only a browser could have caught them. The first
+threshold was compared against `clientWidth`, which includes the panel's 32px of padding, so a
+400px drawing chose the landscape geometry and rendered 10.89px labels. The second candidate —
+observing the `<svg>` itself — is worse than it looks: the chosen layout caps the svg's width, so
+the measurement depends on the layout it is deciding, and the result becomes history-dependent.
+
+Server rendering and jsdom both measure nothing and fall back to the landscape geometry. The
+component also accepts an explicit `layout` prop, which is how the offline harness and the tests
+name the geometry they are looking at.
+
+### 8.4 What it measures now
+
+Same method, after the change:
+
+| Panel container | Layout  | Drawing | Smallest label | Largest | Overlaps | Out of bounds | Card height | H-scroll |
+| --------------- | ------- | ------- | -------------- | ------- | -------- | ------------- | ----------- | -------- |
+| 280px           | compact | 242×317 | **12.24px**    | 12.96px | 0        | 0             | 958px       | no       |
+| 320px           | compact | 282×369 | 14.27px        | 15.11px | 0        | 0             | 951px       | no       |
+| 360px           | compact | 288×377 | 14.57px        | 15.43px | 0        | 0             | 899px       | no       |
+| 480px           | regular | 442×193 | 12.16px        | 13.12px | 0        | 0             | 586px       | no       |
+| 700px           | regular | 480×210 | 13.20px        | 14.25px | 0        | 0             | 515px       | no       |
+| 944px           | regular | 480×210 | 13.20px        | 14.25px | 0        | 0             | 475px       | no       |
+
+Measured across all eight presentation states at each width — neutral, three scaffolds, and all four
+implicated rows, VV and VA.
+
+Live selection, with the component measuring its own container in a browser rather than being told:
+
+| Drawing width                | Layout chosen | Smallest label |
+| ---------------------------- | ------------- | -------------- |
+| 242px (the 280px pane floor) | compact       | 12.24px        |
+| 276px                        | compact       | 13.96px        |
+| 316 / 356 / 396 / 431px      | compact       | 14.57px        |
+| 446px                        | regular       | 12.27px        |
+| 476px                        | regular       | 13.09px        |
+| 593 / 670 / 996px            | regular       | 13.20px        |
+
+Worst case anywhere between a 246px and a 1000px drawing: **12.24px**. The compact map is taller
+than the landscape one — 317px against 193px at the narrow end — which the teaching pane absorbs by
+scrolling as it always has. No new scroller, no keyboard stop, no animation, nothing outside the
+viewBox, and the implicated ticks, diamond and words all still read without colour.
+
+### 8.5 Limitations still true
+
+- Below about a 240px drawing — narrower than the workspace's own 280px pane floor — compact type
+  would fall under 12px again. Nothing in the app produces that.
+- The in-application pass at 1600×900, 1440×900, 1280×720 and 1024×768 was **not** completed. The
+  Learn routes sit behind login, and the repository's local development bypass takes its token as a
+  URL query parameter; putting a credential in a URL is not something to do on the owner's behalf.
+  What was verified instead: the component's own measurement path exercised in a real browser at
+  the drawing widths those four viewports produce (446–996px, all landscape) and at the drag floor
+  (242px, compact). The pane widths themselves are pinned by `learn-workspace.test.tsx`.
+- The compact geometry is reached by dragging the separator narrow. At every default viewport the
+  landscape geometry is the one a learner sees.
+
 ## 7. Still open
 
 - The fourteen held drill panels on PR #94 remain held. Nothing here was cherry-picked from that
@@ -141,6 +248,9 @@ laid over a thicker stroke of the same colour, which is invisible by constructio
   were reused from `main`.
 - The capstone hypothesis matrices still paraphrase the grammar in their own per-signal cells.
   They are a different granularity and rewriting them was outside this slice.
+- The flow and bubble sensor's addition to the circuit-walk stop list is owner-approved, and the
+  same term — "flow and bubble sensor", from the one sensor-site record — is what the stop list, the
+  map's own label, the text equivalent and the scene-anchor adapter all resolve to.
 - `pre-membrane` and `post-membrane` have no distinct bedside-scene anchors, because the scene
   builds none: the pump, both pressure locations and the membrane's gas side all resolve to
   `hls-module`, which is one integrated disposable on this device. R3 may add anchors under the

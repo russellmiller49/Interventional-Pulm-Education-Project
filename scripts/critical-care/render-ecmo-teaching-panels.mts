@@ -68,6 +68,12 @@ import {
   ecmoDrillTeachingPanelScenarioIds,
 } from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel.tsx'
 import { requireEcmoLearnPrediction } from '../../src/features/cardiohelp-ecmo/content/learnPredictionItems.ts'
+import {
+  EcmoCircuitMinimap,
+  type EcmoCircuitMinimapLayoutId,
+} from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx'
+import type { EcmoCircuitPresentation } from '../../src/features/cardiohelp-ecmo/content/circuitPresentation.ts'
+import { ecmoLocalizationRowIds } from '../../src/features/cardiohelp-ecmo/content/localizationCards.ts'
 
 function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationState {
   let current = state
@@ -464,6 +470,55 @@ const sections = ecmoInteractiveFoundationSectionIds
 const drillCount = ecmoDrillTeachingPanelScenarioIds.length
 const foundationCount = ecmoInteractiveFoundationSectionIds.length
 
+/*
+ * The circuit map on its own, in both geometries.
+ *
+ * The panels above render at the two pane widths they actually get, and at both of those the map
+ * chooses its landscape geometry. The compact geometry only appears in a pane near its 280px floor,
+ * which no panel cell here reproduces — and it is the geometry that exists because the landscape one
+ * rendered six-pixel type down there. Rendering it beside its sibling is the only way this page
+ * shows the thing the compact layout was built for.
+ *
+ * `layout` is named rather than measured because there is no browser here: the component measures
+ * its own container, and `renderToStaticMarkup` gives it nothing to measure.
+ */
+const MAP_STATES: readonly (readonly [string, SupportMode, EcmoCircuitPresentation])[] = [
+  ['neutral — before a commitment', 'vv', { kind: 'neutral' }],
+  ['scaffold · the circuit walk', 'vv', { kind: 'scaffold', emphasis: 'path-order' }],
+  ['scaffold · the console tour', 'vv', { kind: 'scaffold', emphasis: 'sensor-sites' }],
+  ...ecmoLocalizationRowIds.map(
+    (rowId) =>
+      [
+        `implicated · ${rowId}`,
+        rowId === 'return-path-resistance' ? 'va' : 'vv',
+        {
+          kind: 'implicated',
+          rowId,
+        },
+      ] as const,
+  ),
+]
+
+const MAP_LAYOUTS: readonly (readonly [EcmoCircuitMinimapLayoutId, number])[] = [
+  ['compact', 280],
+  ['regular', 480],
+]
+
+const maps = MAP_LAYOUTS.map(
+  ([
+    layout,
+    width,
+  ]) => `<h2>Circuit map — ${layout} geometry <span class="scope">at a ${width}px pane</span></h2>
+<div class="matrix-drill">
+${MAP_STATES.map(
+  ([label, supportMode, presentation]) =>
+    `<div class="cell" style="width:${width}px"><p class="cell-label">${label} · ${supportMode}</p>${renderToStaticMarkup(
+      createElement(EcmoCircuitMinimap, { supportMode, presentation, layout }),
+    )}</div>`,
+).join('\n')}
+</div>`,
+).join('\n')
+
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>ECMO teaching panels — foundation and drill</title>
 <style>
@@ -511,6 +566,7 @@ const html = `<!doctype html>
   .min-w-\\[64rem\\] { min-width: 64rem; }
   .h-auto { height: auto; }
   .max-w-\\[30rem\\] { max-width: 30rem; }
+  .max-w-\\[18rem\\] { max-width: 18rem; }
   .leading-5 { line-height: 1.25rem; }
   /*
    * The circuit minimap draws itself entirely from presentation attributes and \`currentColor\`,
@@ -535,6 +591,10 @@ const html = `<!doctype html>
 
 <h1>Drill panels — B4 pilot slice (${drillCount} panels, ${renderedDrillCells} states, ${PANE_WIDTHS.length} widths each)</h1>
 ${drills}
+
+<h1>Circuit map — both geometries (${MAP_STATES.length} states each)</h1>
+<p>The compact geometry is what a 280px teaching pane gets. Check that no label is smaller than the body text around it, that nothing overlaps, and that the implicated ticks and outline read without colour.</p>
+${maps}
 
 <h1>Foundation panels (${foundationCount} sections, ${renderedCells} states)</h1>
 ${sections}
