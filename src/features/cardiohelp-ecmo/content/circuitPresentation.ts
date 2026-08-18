@@ -4,6 +4,7 @@ import {
   ecmoCircuitSegment,
   ecmoGasPathSegments,
   ecmoSensorSite,
+  ecmoSensorSites,
   resolveEcmoModeText,
   type EcmoCircuitSegmentId,
   type EcmoSensorSiteId,
@@ -75,25 +76,41 @@ export function deriveEcmoCircuitPresentation(
 /** The console pressure channels, which every state flags because every state is about them. */
 const PRESSURE_CHANNEL_SITE_IDS: readonly EcmoSensorSiteId[] = ['pVen', 'pInt', 'deltaP', 'pArt']
 
-/** What the circuit-walk stop list names, which is the pressures plus the two saturations. */
-const WALK_SITE_IDS: readonly EcmoSensorSiteId[] = [
-  'pVen',
-  'pInt',
-  'svo2-venous-cell',
-  'deltaP',
-  'pArt',
-  'post-oxygenator-saturation',
-]
+/**
+ * Every site the registry places on the circuit, in registry order.
+ *
+ * Derived rather than listed, so the map cannot fall behind the stop list beside it. It did once:
+ * the walk emphasis carried a hand-written six of the seven, and the lesson's own stop list — which
+ * reads the registry — named the flow and bubble sensor the map was not drawing.
+ */
+const ALL_SITE_IDS: readonly EcmoSensorSiteId[] = ecmoSensorSites.map((site) => site.id)
 
 export function ecmoMapSensorSiteIds(
   presentation: EcmoCircuitPresentation,
 ): readonly EcmoSensorSiteId[] {
+  if (presentation.kind === 'implicated') {
+    /*
+     * The pressure channels, plus whatever this row actually turns on.
+     *
+     * Without the second half the gas row's map flagged four pressure channels and omitted the
+     * post-membrane saturation — the one signal that moves in the fault being explained, and the
+     * only thing on the map the row's own text is about.
+     */
+    const rowSites = ecmoLocalizationRow(presentation.rowId).sensorSiteIds
+    return ALL_SITE_IDS.filter(
+      (siteId) => PRESSURE_CHANNEL_SITE_IDS.includes(siteId) || rowSites.includes(siteId),
+    )
+  }
   if (presentation.kind !== 'scaffold') return PRESSURE_CHANNEL_SITE_IDS
   switch (presentation.emphasis) {
+    /*
+     * The circuit walk and the console tour both flag everything: one is teaching that every signal
+     * has a place, the other that the places are what you verify. They are kept as separate names
+     * because they are separate lessons, and because R3's walk will want a subset per stop.
+     */
     case 'path-order':
-      return WALK_SITE_IDS
     case 'sensor-sites':
-      return [...WALK_SITE_IDS, 'flow-bubble-sensor']
+      return ALL_SITE_IDS
     case 'pressure-zones':
       return PRESSURE_CHANNEL_SITE_IDS
   }

@@ -16,6 +16,7 @@ import {
   ecmoLocalizationRowTextEquivalent,
   ecmoLocalizationRows,
   ecmoLocalizationScaffoldTextEquivalent,
+  ecmoLocalizationZoneSentence,
   validateEcmoLocalizationCardRegistry,
 } from '../content/localizationCards'
 import { ecmoDerivedValueGuides } from '../content/ecmoValueGuides'
@@ -208,6 +209,37 @@ describe('ECMO localization-card registry', () => {
         for (const cause of row.causes) expect(scaffold).not.toContain(cause)
         expect(scaffold).not.toContain(row.actionClass)
         expect(scaffold).not.toContain(row.harmfulReflex)
+      }
+    }
+  })
+
+  it('sends a learner to read a change, except where the finding is that nothing changed', () => {
+    /*
+     * The gas row names the same three pressure groupings as the others and means the opposite by
+     * them. The lead lives on the row so the card's block and the card's prose cannot disagree —
+     * they did: the block said "quiet" while the paragraph beneath it said "read in", which sent
+     * the learner hunting for a pressure change this simulation provably cannot produce.
+     */
+    expect(ecmoLocalizationZoneSentence('gas-path-failure')).toMatch(
+      /^Quiet, and that is the finding:/,
+    )
+    expect(ecmoLocalizationZoneSentence('gas-path-failure')).not.toMatch(/Read in/)
+    expect(ecmoLocalizationRowTextEquivalent('vv', 'gas-path-failure')).not.toMatch(/Read in/)
+
+    for (const rowId of [
+      'drainage-limitation',
+      'return-path-resistance',
+      'membrane-resistance',
+    ] as const) {
+      expect(ecmoLocalizationZoneSentence(rowId)).toMatch(/^Read in:/)
+    }
+
+    // Whatever the lead is, both surfaces use the same one.
+    for (const row of ecmoLocalizationRows) {
+      for (const mode of MODES) {
+        expect(ecmoLocalizationRowTextEquivalent(mode, row.id)).toContain(
+          ecmoLocalizationZoneSentence(row.id),
+        )
       }
     }
   })

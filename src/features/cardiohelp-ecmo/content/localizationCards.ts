@@ -67,6 +67,17 @@ export interface EcmoLocalizationRow {
   readonly problemLocation: string
   /** The reading groupings the pattern shows in, in the order a learner reads them. */
   readonly zoneIds: readonly [EcmoPressureZoneId, ...EcmoPressureZoneId[]]
+  /**
+   * How those groupings are introduced.
+   *
+   * Three rows send a learner to read a change. The gas row sends them to notice an absence — what
+   * localizes it is that the blood-path pressures have *not* moved — and telling them to "read in"
+   * those zones would send them hunting for a pressure change this model cannot produce. The lead
+   * lives here rather than in a renderer because the card draws each row twice, as a block and as
+   * prose, and the first version of that split had the block saying "quiet" while the paragraph
+   * under it said "read in".
+   */
+  readonly zoneLead: 'read-in' | 'quiet'
   /** The channels that carry the pattern. */
   readonly sensorSiteIds: readonly [EcmoSensorSiteId, ...EcmoSensorSiteId[]]
   /** What the minimap marks when this row is the explanation. */
@@ -105,6 +116,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       'Drainage pressure becomes more negative; flow stops following speed and may become unstable.',
     problemLocation: 'Upstream of the pump — the drainage path from patient to pump inlet.',
     zoneIds: ['upstream-of-pump', 'downstream-of-pump'],
+    zoneLead: 'read-in',
     sensorSiteIds: ['pVen', 'pInt', 'pArt'],
     implicatedSegmentIds: ['drainage'],
     causes: [
@@ -152,6 +164,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
     problemLocation:
       'Downstream of the membrane — the return path from membrane outlet to the patient.',
     zoneIds: ['downstream-of-pump', 'across-membrane'],
+    zoneLead: 'read-in',
     sensorSiteIds: ['pInt', 'pArt', 'deltaP'],
     implicatedSegmentIds: ['post-membrane', 'return'],
     causes: [
@@ -197,6 +210,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       'The pre-membrane pressure separates from the return pressure; the gradient widens. Read that separation at similar blood flow, against this circuit’s own earlier gradient.',
     problemLocation: 'The membrane lung itself.',
     zoneIds: ['across-membrane', 'downstream-of-pump'],
+    zoneLead: 'read-in',
     sensorSiteIds: ['pInt', 'pArt', 'deltaP', 'post-oxygenator-saturation'],
     implicatedSegmentIds: ['membrane'],
     causes: [
@@ -244,6 +258,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
     problemLocation:
       'Not the blood path — the gas path: the source, the blender, the line into the membrane, and the membrane’s gas side.',
     zoneIds: ['upstream-of-pump', 'downstream-of-pump', 'across-membrane'],
+    zoneLead: 'quiet',
     sensorSiteIds: ['post-oxygenator-saturation', 'pVen', 'pInt', 'pArt'],
     implicatedSegmentIds: ['gas-supply', 'membrane-gas-side'],
     causes: [
@@ -316,6 +331,23 @@ export function ecmoLocalizationRow(id: EcmoLocalizationRowId): EcmoLocalization
   return row
 }
 
+const ZONE_LEAD_TEXT: Readonly<Record<EcmoLocalizationRow['zoneLead'], string>> = {
+  'read-in': 'Read in',
+  quiet: 'Quiet, and that is the finding',
+}
+
+/**
+ * Where the pattern shows, phrased the way this row needs it phrased.
+ *
+ * Used by the rendered row block and by the row's prose equivalent, so the two cannot disagree
+ * about whether a learner is being sent to read a change or to notice its absence.
+ */
+export function ecmoLocalizationZoneSentence(rowId: EcmoLocalizationRowId): string {
+  const row = ecmoLocalizationRow(rowId)
+  const zones = row.zoneIds.map((zoneId) => ecmoPressureZone(zoneId).label)
+  return `${ZONE_LEAD_TEXT[row.zoneLead]}: ${zones.join(', ')}.`
+}
+
 export function ecmoLocalizationRowsForZone(
   zoneId: EcmoPressureZoneId,
 ): readonly EcmoLocalizationRow[] {
@@ -333,7 +365,6 @@ export function ecmoLocalizationRowTextEquivalent(
   rowId: EcmoLocalizationRowId,
 ): string {
   const row = ecmoLocalizationRow(rowId)
-  const zones = row.zoneIds.map((zoneId) => ecmoPressureZone(zoneId).label).join(', ')
   const sites = row.sensorSiteIds
     .map((siteId) => {
       const site = ecmoSensorSite(siteId)
@@ -342,7 +373,7 @@ export function ecmoLocalizationRowTextEquivalent(
     .join(', ')
   const sentences = [
     `${row.label}. ${resolveEcmoModeText(row.signature, supportMode)}`,
-    `Read in: ${zones}, from ${sites}.`,
+    `${ecmoLocalizationZoneSentence(rowId)} Carried by ${sites}.`,
     `Where the problem lives: ${row.problemLocation}`,
     `What to inspect: ${row.causes.join('; ')}.`,
     `What fits: ${row.actionClass}`,

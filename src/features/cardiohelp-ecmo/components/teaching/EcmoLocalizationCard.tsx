@@ -1,13 +1,14 @@
 import { useId } from 'react'
 
 import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
-import { ecmoPressureZone, resolveEcmoModeText } from '../../content/circuitSegments'
+import { resolveEcmoModeText } from '../../content/circuitSegments'
 import { evidenceById } from '../../content/evidence'
 import {
   ECMO_LOCALIZATION_FOOTER,
   ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY,
   ecmoLocalizationRow,
   ecmoLocalizationRowTextEquivalent,
+  ecmoLocalizationZoneSentence,
   ecmoLocalizationRows,
   ecmoLocalizationScaffoldTextEquivalent,
   type EcmoLocalizationRow,
@@ -34,17 +35,6 @@ import { ModelBoundary, TextEquivalent, styles } from './shared'
  * narrowest pane and a wrapped row keeps its pattern beside its location.
  */
 
-function zoneSentence(row: EcmoLocalizationRow): string {
-  const zones = row.zoneIds.map((zoneId) => ecmoPressureZone(zoneId).label)
-  /*
-   * The gas row reads the same three groupings as the pressure rows, and means the opposite by
-   * them: what localizes a gas-path failure is that the blood-path pressures have *not* moved. A
-   * shared "read in" phrase would have quietly told a learner to go looking for a pressure change.
-   */
-  const lead = row.id === 'gas-path-failure' ? 'Quiet, and that is the finding' : 'Read in'
-  return `${lead}: ${zones.join(', ')}.`
-}
-
 function RowBlock({
   row,
   supportMode,
@@ -61,7 +51,7 @@ function RowBlock({
         {resolveEcmoModeText(row.signature, supportMode)}
       </p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground" data-row-zones>
-        {zoneSentence(row)}
+        {ecmoLocalizationZoneSentence(row.id)}
       </p>
       <p className="mt-1 font-medium" data-row-location>
         Where the problem lives: {row.problemLocation}

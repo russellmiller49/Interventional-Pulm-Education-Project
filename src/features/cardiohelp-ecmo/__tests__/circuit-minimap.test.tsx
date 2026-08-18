@@ -13,6 +13,7 @@ import {
   ecmoCircuitSegmentIds,
   ecmoGasPathSegmentIds,
   ecmoSensorSite,
+  ecmoSensorSites,
   resolveEcmoModeText,
 } from '../content/circuitSegments'
 import { ecmoLocalizationRow, ecmoLocalizationRowIds } from '../content/localizationCards'
@@ -190,6 +191,61 @@ describe('ECMO circuit minimap', () => {
       neutralRender.unmount()
       unmount()
     }
+  })
+
+  it('flags the channels the revealed row is actually about', () => {
+    // The gas row's map used to show four pressure channels and omit the post-membrane saturation,
+    // which is the one signal that moves in the fault it explains.
+    const { container } = render(
+      <EcmoCircuitMinimap
+        supportMode="vv"
+        presentation={{ kind: 'implicated', rowId: 'gas-path-failure' }}
+      />,
+    )
+    const flagged = [...container.querySelectorAll('[data-map-sensor-site]')].map((node) =>
+      node.getAttribute('data-map-sensor-site'),
+    )
+    expect(flagged).toContain('post-oxygenator-saturation')
+    for (const row of [ecmoLocalizationRow('gas-path-failure')]) {
+      for (const siteId of row.sensorSiteIds) expect(flagged).toContain(siteId)
+    }
+  })
+
+  it('flags every site the walk stop list names', () => {
+    // The map and the stop list beside it read the same registry, so the map cannot be missing one.
+    const walk = ecmoMapSensorSiteIds({ kind: 'scaffold', emphasis: 'path-order' })
+    expect(walk).toContain('flow-bubble-sensor')
+    expect([...walk].sort()).toEqual([...ecmoSensorSites.map((site) => site.id)].sort())
+  })
+
+  it('draws every implicated outline inside the canvas it declares', () => {
+    /*
+     * The sweep-gas chip sat three units below the top edge, and the dashed outline that marks it
+     * as implicated is drawn three units outside the shape — so the cue was clipped away exactly
+     * when the gas row was the answer.
+     */
+    for (const rowId of ecmoLocalizationRowIds) {
+      const { container, unmount } = render(
+        <EcmoCircuitMinimap supportMode="vv" presentation={{ kind: 'implicated', rowId }} />,
+      )
+      for (const node of container.querySelectorAll('[data-implicated-texture]')) {
+        const y = Number(node.getAttribute('y'))
+        const x = Number(node.getAttribute('x'))
+        if (Number.isNaN(y)) continue
+        expect(y).toBeGreaterThanOrEqual(0)
+        expect(x).toBeGreaterThanOrEqual(0)
+        expect(y + Number(node.getAttribute('height'))).toBeLessThanOrEqual(140)
+        expect(x + Number(node.getAttribute('width'))).toBeLessThanOrEqual(320)
+      }
+      unmount()
+    }
+  })
+
+  it('reads as sentences in its accessible name', () => {
+    const { container } = render(<EcmoCircuitMinimap supportMode="vv" presentation={NEUTRAL} />)
+    const title = container.querySelector('title')?.textContent ?? ''
+    expect(title).not.toMatch(/\.\S/)
+    expect(title).toMatch(/Venovenous circuit map\. The blood path/)
   })
 
   it('paints nothing with a colour of its own', () => {

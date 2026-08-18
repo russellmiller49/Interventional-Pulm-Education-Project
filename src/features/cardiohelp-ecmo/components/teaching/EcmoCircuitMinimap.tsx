@@ -100,16 +100,19 @@ const SEGMENT_GEOMETRY: Readonly<Record<EcmoCircuitSegmentId, SegmentGeometry>> 
     arrow: true,
   },
   'gas-supply': {
-    rect: { x: 176, y: 2, w: 76, h: 15 },
+    rect: { x: 176, y: 6, w: 76, h: 15 },
     dashed: true,
-    marker: { x: 214, y: 17 },
-    label: { x: 214, y: 12, anchor: 'middle' },
+    // On the right edge rather than the bottom: a diamond centred under the chip sat on its own
+    // label, and the outline that marks it implicated is drawn outside the shape.
+    marker: { x: 252, y: 13 },
+    label: { x: 214, y: 16, anchor: 'middle' },
   },
   'membrane-gas-side': {
     d: 'M198 40 L252 40',
     dashed: true,
     marker: { x: 225, y: 40 },
-    label: { x: 215, y: 27, anchor: 'middle' },
+    // Beside the band rather than above it, clear of the chip's implicated outline.
+    label: { x: 259, y: 43, anchor: 'start' },
   },
 }
 
@@ -141,7 +144,7 @@ const SITE_GEOMETRY: Readonly<
 }
 
 /** The gas drop from the blender chip into the gas side of the membrane. */
-const GAS_DROP_PATH = 'M240 17 L240 32'
+const GAS_DROP_PATH = 'M240 21 L240 32'
 
 /** The bracket that says the gradient spans the membrane rather than sitting at a point. */
 const DELTA_P_BRACKET = 'M194 74 L194 78 L256 78 L256 74'
@@ -161,7 +164,7 @@ export function EcmoCircuitMinimap({ supportMode, presentation }: EcmoCircuitMin
   const siteIds = ecmoMapSensorSiteIds(presentation)
   const caption = ecmoMapImplicatedCaption(presentation, supportMode)
   const mapTitle = [
-    `${supportMode === 'va' ? 'Venoarterial' : 'Venovenous'} circuit map.`,
+    `${supportMode === 'va' ? 'Venoarterial' : 'Venovenous'} circuit map. `,
     'The blood path is drawn solid and the sweep-gas path dashed',
     anyImplicated ? ', with the implicated part of the circuit marked.' : '.',
     ' The description below carries the same information in words.',
