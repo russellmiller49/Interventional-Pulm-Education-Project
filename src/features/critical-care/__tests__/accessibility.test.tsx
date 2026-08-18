@@ -11,10 +11,12 @@ import { EcmoLearnWorkspace } from '@/features/cardiohelp-ecmo/components/EcmoLe
 import { resolveGuidedLesson } from '@/features/cardiohelp-ecmo/components/LearnLessonPlayer'
 import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import { ecmoDrillTeachingPanelScenarioIds } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
+import { EcmoFoundationTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoFoundationTeachingPanel'
 import {
   CARDIOHELP_PROGRESS_STORAGE_KEY,
   createDefaultProgress,
   createInitialSimulationState as createInitialEcmoState,
+  createReferenceSimulationState as createEcmoReferenceState,
   ecmoSimulationReducer,
 } from '@/features/cardiohelp-ecmo/engine'
 import { McsMonitor } from '@/features/mechanical-circulatory-support/components/McsMonitor'
@@ -283,6 +285,28 @@ describe('critical-care accessibility surfaces', () => {
       })
       const after = render(<EcmoDrillTeachingPanel state={committed} />)
       expect(await axe(after.container)).toHaveNoViolations()
+    },
+  )
+
+  /**
+   * The two foundation panels that carry the shared circuit map and the localization table.
+   *
+   * Foundation panels had no automated coverage here at all, which mattered once they started
+   * rendering a diagram: an `<svg role="img">` without an accessible name is a violation, and the
+   * map's name is wired through a generated id that only exists at render time.
+   */
+  it.each(['circuit-flow-path', 'pump-and-pressure-zones'] as const)(
+    'keeps the %s foundation panel free of automated violations',
+    async (sectionId) => {
+      let state = createEcmoReferenceState('vv-reference')
+      for (let tick = 0; tick < 8; tick += 1) {
+        state = ecmoSimulationReducer(state, { type: 'STEP' })
+      }
+      const { container } = render(
+        <EcmoFoundationTeachingPanel sectionId={sectionId} state={state} />,
+      )
+      expect(container.querySelector('[data-circuit-minimap] svg[role="img"]')).not.toBeNull()
+      expect(await axe(container)).toHaveNoViolations()
     },
   )
 
