@@ -16,9 +16,10 @@ import {
   resolveEcmoModeText,
 } from '../content/circuitSegments'
 import { ecmoLocalizationRow, ecmoLocalizationRowIds } from '../content/localizationCards'
+import { requireEcmoLearnPrediction } from '../content/learnPredictionItems'
 import { ecmoSimulationReducer } from '../engine/reducer'
 import { createInitialSimulationState } from '../engine/simulation'
-import type { EcmoSimulationState, SupportMode } from '../engine/types'
+import type { EcmoSimulationState } from '../engine/types'
 
 /**
  * The map, checked for the two things a picture in a teaching pane can get wrong: saying something
@@ -27,12 +28,32 @@ import type { EcmoSimulationState, SupportMode } from '../engine/types'
 
 const MODES = ['vv', 'va'] as const
 
-function settled(supportMode: SupportMode): EcmoSimulationState {
-  let state = createInitialSimulationState(supportMode)
-  for (let index = 0; index < 8; index += 1) {
-    state = ecmoSimulationReducer(state, { type: 'TICK', seconds: 1 })
+/*
+ * The same two helpers the drill-panel suite uses, for the same reason: the gate under test is the
+ * engine's own commitment flag, so the state has to be a real drill reached the way a learner
+ * reaches it. Two earlier drafts of this helper were quietly wrong — `createInitialSimulationState`
+ * takes a scenario id rather than a support mode, and a reference-profile state arrives with a
+ * commitment already recorded, so neither could have failed if the gate were broken.
+ */
+function settled(scenarioId: string, steps = 12): EcmoSimulationState {
+  let state = createInitialSimulationState(scenarioId, 'guided')
+  for (let tick = 0; tick < steps; tick += 1) {
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
   }
   return state
+}
+
+function afterCommitment(state: EcmoSimulationState): EcmoSimulationState {
+  const prediction = requireEcmoLearnPrediction(state.scenario.scenarioId)
+  const best = prediction.item.choices.find((choice) => choice.plausibility === 'best')
+  if (!best) throw new Error(`No best choice for ${state.scenario.scenarioId}`)
+  const commitment = prediction.commitments[best.id]
+  return ecmoSimulationReducer(state, {
+    type: 'COMMIT_PREDICTION',
+    goalId: commitment.goalId,
+    control: commitment.control,
+    direction: commitment.direction,
+  })
 }
 
 const NEUTRAL: EcmoCircuitPresentation = { kind: 'neutral' }
@@ -270,7 +291,7 @@ describe('ECMO circuit minimap', () => {
 
 describe('ECMO circuit presentation, derived from the engine', () => {
   it('holds a drill neutral until the learner has actually committed', () => {
-    const state = settled('vv')
+    const state = settled('preload-drainage-collapse')
     expect(state.scenario.prediction.committed).toBe(false)
     expect(
       deriveEcmoCircuitPresentation(state, {
@@ -281,23 +302,33 @@ describe('ECMO circuit presentation, derived from the engine', () => {
   })
 
   it('reveals the row once the engine records a commitment', () => {
-    const committed = ecmoSimulationReducer(settled('vv'), {
-      type: 'COMMIT_PREDICTION',
-      goalId: 'initiate-vv-support',
-      control: 'rpm',
-      direction: 'decrease',
-    })
-    expect(committed.scenario.prediction.committed).toBe(true)
+    const state = afterCommitment(settled('preload-drainage-collapse'))
+    expect(state.scenario.prediction.committed).toBe(true)
     expect(
-      deriveEcmoCircuitPresentation(committed, {
+      deriveEcmoCircuitPresentation(state, {
         kind: 'drill-reveal',
         rowId: 'drainage-limitation',
       }),
     ).toEqual({ kind: 'implicated', rowId: 'drainage-limitation' })
   })
 
+  it('closes again when the scenario is reloaded', () => {
+    const reloaded = ecmoSimulationReducer(afterCommitment(settled('preload-drainage-collapse')), {
+      type: 'LOAD_SCENARIO',
+      scenarioId: 'preload-drainage-collapse',
+    })
+    expect(reloaded.scenario.prediction.committed).toBe(false)
+    expect(
+      deriveEcmoCircuitPresentation(reloaded, {
+        kind: 'drill-reveal',
+        rowId: 'drainage-limitation',
+      }),
+    ).toEqual({ kind: 'neutral' })
+  })
+
   it('scaffolds the console tour whether or not anything has been committed', () => {
-    for (const state of [settled('vv'), settled('va')]) {
+    const tour = settled('startup-sensor-orientation')
+    for (const state of [tour, afterCommitment(tour)]) {
       expect(deriveEcmoCircuitPresentation(state, { kind: 'drill-orientation-scaffold' })).toEqual({
         kind: 'scaffold',
         emphasis: 'sensor-sites',
@@ -307,7 +338,7 @@ describe('ECMO circuit presentation, derived from the engine', () => {
 
   it('lets a foundation lesson choose its own emphasis, since it teaches rather than tests', () => {
     expect(
-      deriveEcmoCircuitPresentation(settled('vv'), {
+      deriveEcmoCircuitPresentation(settled('preload-drainage-collapse'), {
         kind: 'foundation-scaffold',
         emphasis: 'path-order',
       }),

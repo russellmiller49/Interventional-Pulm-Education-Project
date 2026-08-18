@@ -296,6 +296,17 @@ export const ECMO_LOCALIZATION_FOOTER = {
   readonly valueGuideKey: keyof typeof ecmoDerivedValueGuides
 }
 
+/**
+ * What the scaffolded table is, said where a learner meets it.
+ *
+ * The four rows each carry a boundary about the fault they explain, and none of those is the right
+ * thing to say beside a table shown against a circuit with nothing wrong with it. This one answers
+ * the question that view actually raises: these are directions the simulation can produce, not a
+ * catalogue of everything a real circuit does.
+ */
+export const ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY =
+  'These are the patterns this simulation can produce and the places it can put them. A real circuit fails in ways this model does not represent, and none of these rows is a complete list of what could be wrong.'
+
 export const ecmoLocalizationRowById: ReadonlyMap<EcmoLocalizationRowId, EcmoLocalizationRow> =
   new Map(ecmoLocalizationRows.map((row) => [row.id, row]))
 
@@ -450,6 +461,13 @@ export function validateEcmoLocalizationCardRegistry(): readonly string[] {
 
   if (/\d/.test(ECMO_LOCALIZATION_FOOTER.text))
     errors.push('footer: a number appears in the footer')
+
+  if (/\d/.test(ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY)) {
+    errors.push('scaffold boundary: a number appears in it')
+  }
+  if (!/simulation|model/i.test(ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY)) {
+    errors.push('scaffold boundary: does not say which simulation it is about')
+  }
 
   return errors
 }
