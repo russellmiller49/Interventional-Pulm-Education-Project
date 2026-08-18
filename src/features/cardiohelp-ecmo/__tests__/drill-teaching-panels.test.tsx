@@ -7,6 +7,12 @@ import {
 } from '@/features/critical-care/test-support/teachingPanelContract'
 
 import { ecmoFoundationSections } from '../content/foundationLessons'
+import { resolveEcmoModeText } from '../content/circuitSegments'
+import {
+  ecmoLocalizationRow,
+  ecmoLocalizationRowTextEquivalent,
+  ecmoLocalizationRows,
+} from '../content/localizationCards'
 import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import { requireEcmoLearnPrediction } from '../content/learnPredictionItems'
 import {
@@ -434,5 +440,118 @@ describe('B4: the panels read the live circuit rather than static prose', () => 
     expect(boundaries).toMatch(/limitation of the lab, not a statement that flow does not matter/i)
     expect(container.textContent).toMatch(/femoral|post-membrane/i)
     expect(container.textContent).toMatch(/pArt/)
+  })
+})
+
+/**
+ * The shared circuit map and localization row, where they were added to a pilot drill.
+ *
+ * Three drills carry them. The console tour gets the map in its sensor-sites state, before and
+ * after commitment alike, because its subject is where the sensors are and its own signal register
+ * already prints every one of those locations beside a reading. The drainage and gas-path drills
+ * get a neutral map that becomes an implicated one, and the row that explains what happened, both
+ * released by the same engine flag the rest of the panel is gated on.
+ *
+ * The scan below is deliberately over the serialised DOM rather than the visible text: an answer
+ * hidden in an `aria-label`, an SVG `<title>`, or a `data-` attribute is still an answer, and every
+ * one of those is a place a diagram can leak that a prose panel cannot.
+ */
+const MAPPED_PILOTS = {
+  'startup-sensor-orientation': { presentation: 'scaffold', rowId: null },
+  'preload-drainage-collapse': { presentation: 'neutral', rowId: 'drainage-limitation' },
+  'gas-source-interruption': { presentation: 'neutral', rowId: 'gas-path-failure' },
+} as const
+
+describe('R2: the circuit map and localization row inside the pilot drills', () => {
+  it.each(PILOT_IDS)('%s shows a map only where one was added, in its allowed state', (id) => {
+    const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
+    const map = container.querySelector('[data-circuit-minimap]')
+    const expected = (MAPPED_PILOTS as Record<string, { presentation: string } | undefined>)[id]
+
+    if (!expected) {
+      expect(map).toBeNull()
+      return
+    }
+    expect(map).not.toBeNull()
+    expect(map?.getAttribute('data-presentation')).toBe(expected.presentation)
+  })
+
+  it.each(PILOT_IDS)('%s reveals no localization content before a commitment', (id) => {
+    const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
+
+    expect(container.querySelector('[data-localization-card]')).toBeNull()
+    expect(container.querySelector('[data-localization-row]')).toBeNull()
+    expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
+    expect(container.querySelector('[data-implicated-caption]')).toBeNull()
+    expect(container.querySelector('[data-implicated-marker]')).toBeNull()
+    expect(container.querySelector('[data-segment-state="implicated"]')).toBeNull()
+
+    /*
+     * Attributes, accessible names and SVG description text included — an answer hidden in an
+     * `aria-label` or a `<title>` is still an answer.
+     *
+     * What is scanned for is the row as composed: its name, its signature, where it says the
+     * problem lives, the response, the reflex, and the prose equivalent that carries the shortlist.
+     * Individual cause items are deliberately not scanned. They are two-word clinical nouns —
+     * "Cannula position", "Volume state" — and the recirculation panel has always named several of
+     * them in its own model boundary, as a list of what the simulation does *not* represent.
+     * Failing on that would be reporting a leak where there is a coincidence of vocabulary, and the
+     * first version of this check did exactly that.
+     */
+    const serialised = `${container.innerHTML} ${container.textContent ?? ''}`
+    for (const row of ecmoLocalizationRows) {
+      expect(serialised).not.toContain(row.label)
+      expect(serialised).not.toContain(row.problemLocation)
+      expect(serialised).not.toContain(row.actionClass)
+      expect(serialised).not.toContain(row.harmfulReflex)
+      expect(serialised).not.toContain(row.modelBoundary)
+      for (const mode of ['vv', 'va'] as const) {
+        expect(serialised).not.toContain(resolveEcmoModeText(row.signature, mode))
+        expect(serialised).not.toContain(ecmoLocalizationRowTextEquivalent(mode, row.id))
+      }
+      // The shortlist as the card renders it, rather than any single item of it.
+      expect(serialised).not.toContain(row.causes.join('; '))
+    }
+  })
+
+  it.each(Object.keys(MAPPED_PILOTS))('%s opens the map and the row together', (id) => {
+    const plan = MAPPED_PILOTS[id as keyof typeof MAPPED_PILOTS]
+    const { container } = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
+
+    if (!plan.rowId) {
+      // The console tour never implicates anything: it has no fault to localize.
+      expect(container.querySelector('[data-localization-row]')).toBeNull()
+      expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
+      expect(
+        container.querySelector('[data-circuit-minimap]')?.getAttribute('data-presentation'),
+      ).toBe('scaffold')
+      return
+    }
+
+    const row = ecmoLocalizationRow(plan.rowId)
+    expect(container.querySelector(`[data-localization-row="${row.id}"]`)).not.toBeNull()
+
+    const map = container.querySelector('[data-circuit-minimap]')
+    expect(map?.getAttribute('data-presentation')).toBe('implicated')
+    expect(map?.getAttribute('data-implicated-row')).toBe(row.id)
+    const marked = [...container.querySelectorAll('[data-circuit-implicated="true"]')].map((node) =>
+      node.getAttribute('data-map-segment'),
+    )
+    expect(marked).toEqual([...row.implicatedSegmentIds])
+
+    // The row is inside the same gate as the rest of the mechanism teaching, not beside it.
+    expect(
+      container.querySelector('[data-after-commitment] [data-localization-card]'),
+    ).not.toBeNull()
+  })
+
+  it.each(Object.keys(MAPPED_PILOTS))('%s closes both again when the scenario reloads', (id) => {
+    const reloaded = ecmoSimulationReducer(afterCommitment(settled(id)), {
+      type: 'LOAD_SCENARIO',
+      scenarioId: id,
+    })
+    const { container } = render(<EcmoDrillTeachingPanel state={reloaded} />)
+    expect(container.querySelector('[data-localization-row]')).toBeNull()
+    expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
   })
 })
