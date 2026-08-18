@@ -4,11 +4,14 @@ import {
   createDefaultProgress,
   parseProgress,
   readProgress,
+  recordFoundationSectionCompleted,
   recordLearnLessonCompleted,
   recordScenarioResult,
   setLastCaseForMode,
   setLastLessonForMode,
+  setLastStation,
   setLastVisited,
+  withMastery,
 } from '../engine/progress'
 
 describe('CARDIOHELP ECMO progress', () => {
@@ -183,5 +186,113 @@ describe('CARDIOHELP ECMO progress', () => {
       'va-startup-sensor-orientation',
     ])
     expect(parseProgress(JSON.stringify(progress))).toEqual(progress)
+  })
+})
+
+/**
+ * Foundation traversal: the one field added so that the seven foundation sections in each track's
+ * pathway can take part in "what comes next".
+ *
+ * It is optional, and shaped like `lastVisited` on purpose. That is what let the storage key and
+ * `version: 2` stay exactly where they were: every envelope written before the field existed still
+ * parses, unchanged, with no migration step to get wrong.
+ */
+describe('CARDIOHELP ECMO foundation traversal', () => {
+  const v2WithoutTheField = JSON.stringify(createDefaultProgress())
+
+  it('loads an envelope written before the field existed, without migrating it', () => {
+    const parsed = parseProgress(v2WithoutTheField)
+    expect(parsed).not.toBeNull()
+    expect(parsed).toEqual(createDefaultProgress())
+    expect('completedFoundationSectionIds' in parsed!).toBe(false)
+  })
+
+  it('keeps the field off the default envelope, so the stored shape does not grow on its own', () => {
+    expect(Object.keys(createDefaultProgress())).not.toContain('completedFoundationSectionIds')
+  })
+
+  it('round-trips the field once a section has been worked', () => {
+    const worked = recordFoundationSectionCompleted(
+      createDefaultProgress(),
+      'why-extracorporeal-support',
+    )
+    expect(worked.completedFoundationSectionIds).toEqual(['why-extracorporeal-support'])
+    expect(parseProgress(JSON.stringify(worked))).toEqual(worked)
+  })
+
+  it('records each section once and returns the same object when nothing changed', () => {
+    const first = recordFoundationSectionCompleted(
+      createDefaultProgress(),
+      'why-extracorporeal-support',
+    )
+    const second = recordFoundationSectionCompleted(first, 'circuit-flow-path')
+    expect(second.completedFoundationSectionIds).toEqual([
+      'why-extracorporeal-support',
+      'circuit-flow-path',
+    ])
+
+    // Same reference, so a repeat commit cannot become a repeat write.
+    expect(recordFoundationSectionCompleted(second, 'circuit-flow-path')).toBe(second)
+  })
+
+  it('rejects the whole envelope when the field is present but malformed', () => {
+    const base = createDefaultProgress()
+    expect(
+      parseProgress(JSON.stringify({ ...base, completedFoundationSectionIds: [42] })),
+    ).toBeNull()
+    expect(
+      parseProgress(
+        JSON.stringify({ ...base, completedFoundationSectionIds: 'circuit-flow-path' }),
+      ),
+    ).toBeNull()
+    expect(
+      parseProgress(JSON.stringify({ ...base, completedFoundationSectionIds: { a: 'b' } })),
+    ).toBeNull()
+  })
+
+  it('survives every writer in the module, and a JSON round trip afterwards', () => {
+    // The field is optional, so the one way it could be lost silently is a writer that rebuilds an
+    // envelope from named fields instead of spreading the previous one. Driving all of them in
+    // sequence is cheaper than trusting that no future writer will be written that way.
+    let progress = recordFoundationSectionCompleted(
+      createDefaultProgress(),
+      'why-extracorporeal-support',
+    )
+    progress = setLastStation(progress, 'sweep')
+    progress = recordLearnLessonCompleted(progress, 'startup-sensor-orientation')
+    progress = setLastVisited(progress, {
+      section: 'learn',
+      scenarioId: 'startup-sensor-orientation',
+      supportMode: 'vv',
+    })
+    progress = setLastLessonForMode(progress, 'vv', 'startup-sensor-orientation')
+    progress = setLastCaseForMode(progress, 'vv', 'clinical-vv-initiation-ards')
+    progress = recordScenarioResult(progress, {
+      scenarioId: 'clinical-vv-initiation-ards',
+      score: 90,
+      criticalError: false,
+      completed: true,
+    })
+    progress = withMastery(progress, ['startup-sensor-orientation'])
+
+    expect(progress.completedFoundationSectionIds).toEqual(['why-extracorporeal-support'])
+    expect(parseProgress(JSON.stringify(progress))).toEqual(progress)
+  })
+
+  it('leaves a migrated v1 payload without foundation history rather than inventing any', () => {
+    const migrated = parseProgress(
+      JSON.stringify({
+        version: 1,
+        lastStation: 'troubleshooting',
+        completedLabs: ['clinical-vv-occult-hemorrhage'],
+        scenarioAttempts: { 'clinical-vv-occult-hemorrhage': 2 },
+        bestScores: { 'clinical-vv-occult-hemorrhage': 91 },
+        criticalErrorStatus: { 'clinical-vv-occult-hemorrhage': false },
+        mastery: false,
+      }),
+    )
+    expect(migrated).not.toBeNull()
+    expect(migrated!.completedFoundationSectionIds).toBeUndefined()
+    expect(migrated!.completedLabs).toEqual(['clinical-vv-occult-hemorrhage'])
   })
 })

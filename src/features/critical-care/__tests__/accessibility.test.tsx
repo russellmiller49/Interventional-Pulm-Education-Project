@@ -4,12 +4,16 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 
 import { CrrtPressureLocalizationLab } from '@/features/baxter-crrt/components/CrrtPressureLocalizationLab'
+import { CardiohelpHub } from '@/features/cardiohelp-ecmo/components/CardiohelpHub'
 import { CircuitAndMonitors } from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
+import { EcmoContinueCta } from '@/features/cardiohelp-ecmo/components/EcmoContinueCta'
 import { EcmoLearnWorkspace } from '@/features/cardiohelp-ecmo/components/EcmoLearnWorkspace'
 import { resolveGuidedLesson } from '@/features/cardiohelp-ecmo/components/LearnLessonPlayer'
 import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import { ecmoDrillTeachingPanelScenarioIds } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import {
+  CARDIOHELP_PROGRESS_STORAGE_KEY,
+  createDefaultProgress,
   createInitialSimulationState as createInitialEcmoState,
   ecmoSimulationReducer,
 } from '@/features/cardiohelp-ecmo/engine'
@@ -29,11 +33,26 @@ jest.mock('@/i18n/navigation', () => ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    // The ECMO entry surfaces pass the object form, which `next/link` accepts and this mock has to
+    // resolve so the rendered anchor still carries a real href for axe and for keyboard checks.
+    href: string | { pathname: string; query?: Record<string, string> }
+    children: ReactNode
+  }) => {
+    const resolved =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}${
+            href.query && Object.keys(href.query).length > 0
+              ? `?${new URLSearchParams(href.query).toString()}`
+              : ''
+          }`
+    return (
+      <a href={resolved} {...props}>
+        {children}
+      </a>
+    )
+  },
 }))
 
 const catalog: CriticalCarePublicClientCatalog = {
@@ -286,6 +305,75 @@ describe('critical-care accessibility surfaces', () => {
     for (const label of ['Live simulator', 'Teaching', 'Current task']) {
       expect(screen.getByRole('region', { name: `${label} panel` })).toBeInTheDocument()
     }
+    expect(await axe(view.container)).toHaveNoViolations()
+  })
+
+  /**
+   * The module's entry surfaces, which had no accessibility coverage at all while they were the
+   * two pages every learner meets first.
+   */
+  it('keeps the ECMO hub accessible for a fresh learner and for one part-way through', async () => {
+    const fresh = render(<CardiohelpHub />)
+    expect(await axe(fresh.container)).toHaveNoViolations()
+    fresh.unmount()
+
+    window.localStorage.setItem(
+      CARDIOHELP_PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        ...createDefaultProgress(),
+        completedFoundationSectionIds: ['why-extracorporeal-support', 'circuit-flow-path'],
+      }),
+    )
+    try {
+      const partway = render(<CardiohelpHub />)
+      expect(await axe(partway.container)).toHaveNoViolations()
+    } finally {
+      window.localStorage.clear()
+    }
+  })
+
+  it('gives the ECMO hub one primary action, reachable and named, at any width', async () => {
+    const view = render(<CardiohelpHub />)
+
+    // Exactly one primary call to action, so nothing competes with it at a compact width.
+    expect(view.container.querySelectorAll('[data-ecmo-continue]')).toHaveLength(1)
+
+    const primary = screen.getByRole('link', { name: /^Continue —/ })
+    const browse = screen.getByRole('link', { name: /^Browse all \d+ sections$/ })
+    // Real links, so they are in the tab order and operable by keyboard without a handler.
+    for (const control of [primary, browse]) {
+      expect(control.tagName).toBe('A')
+      expect(control).toHaveAttribute('href')
+    }
+
+    // The track chooser is a real radio group — not just the markup of one. Exactly one option is
+    // in the tab sequence and the arrow keys move within the group, which is the half that was
+    // missing: the roles promised a radio group to assistive technology while the control behaved
+    // like two buttons. Full keyboard coverage is in `hub-track-radiogroup.test.tsx`.
+    const chooser = screen.getByRole('radiogroup', { name: 'ECMO support mode' })
+    const options = within(chooser).getAllByRole('radio')
+    expect(options).toHaveLength(2)
+    expect(options.filter((option) => option.getAttribute('aria-checked') === 'true')).toHaveLength(
+      1,
+    )
+    expect(options.filter((option) => option.tabIndex === 0)).toHaveLength(1)
+
+    fireEvent.keyDown(options[0]!, { key: 'ArrowRight' })
+    expect(options[1]).toHaveAttribute('aria-checked', 'true')
+    expect(document.activeElement).toBe(options[1])
+
+    // State is carried in text, not only in colour.
+    expect(chooser.textContent).toContain('Selected')
+  })
+
+  it('keeps the ECMO Learn landing call to action accessible before and after hydration', async () => {
+    const view = render(<EcmoContinueCta supportMode="vv" />)
+
+    const cta = screen.getByRole('link', { name: /^Continue —/ })
+    expect(cta).toHaveAttribute(
+      'href',
+      '/cardiohelp-ecmo/learn?lesson=why-extracorporeal-support&track=vv',
+    )
     expect(await axe(view.container)).toHaveNoViolations()
   })
 })

@@ -7,6 +7,8 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
+import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
+import { CARDIOHELP_PROGRESS_STORAGE_KEY, parseProgress } from '../engine/progress'
 import {
   ecmoFoundationInitialVariant,
   ecmoFoundationInitialVariantId,
@@ -537,15 +539,86 @@ describe('phase restoration writes nothing and reconstructs no engine state', ()
     // The remount key still includes the section, the resolved mode and the phase.
     expect(activitySource).toContain('key={`${sectionId}:${resolvedMode}:${initialPhase}`}')
     for (const source of [activitySource, runtimeSource]) {
-      // Comments are stripped first: both files *discuss* stored progress at length, saying that
-      // none of it is written, and a guard that fired on the explanation would be deleted rather
-      // than obeyed.
+      // Comments are stripped first: both files *discuss* stored progress at length, saying what is
+      // and is not written, and a guard that fired on the explanation would be deleted rather than
+      // obeyed.
       const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
       expect(code).not.toMatch(/localStorage|sessionStorage/)
       expect(code).not.toMatch(/ProgressV2/)
-      expect(code).not.toMatch(/from '[^']*progress/i)
       // No engine state is serialized to be replayed: a variant is rebuilt from its authored source.
       expect(code).not.toMatch(/JSON\.(?:stringify|parse)/)
+    }
+
+    // The activity reaches persistence exactly once, through one named writer that takes the
+    // section id and nothing else. The phase is not passed to it, so it cannot be stored by it —
+    // which is the property this test exists to protect. The runtime file reaches it not at all.
+    const activityCode = activitySource
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+    expect(activityCode.match(/from '[^']*progress/gi)).toHaveLength(1)
+    expect(activityCode).toContain(
+      "import { persistFoundationSectionCompleted } from '../engine/progress'",
+    )
+    expect(activityCode.match(/persistFoundationSectionCompleted\(/g)).toHaveLength(1)
+    expect(activityCode).toContain('persistFoundationSectionCompleted(sectionId)')
+    expect(runtimeSource).not.toMatch(/from '[^']*progress/i)
+  })
+
+  /**
+   * The behavioural half of the persistence contract.
+   *
+   * Source-string bans cannot prove this on their own — a writer reached through the `../engine`
+   * barrel would slip past every one of them — so the write is exercised for real: nothing on
+   * mount, exactly one write when the learner commits the transfer answer, and a payload that
+   * carries the section id and no score, mastery, or Practice pointer with it.
+   */
+  it('writes nothing on mount and exactly one traversal marker on transfer commit', () => {
+    window.localStorage.clear()
+    const setItem = jest.spyOn(Storage.prototype, 'setItem')
+    try {
+      mountAt('why-extracorporeal-support', 'vv', 'transfer')
+      expect(setItem).not.toHaveBeenCalled()
+
+      const items = ecmoFoundationLearningItemsFor('why-extracorporeal-support')
+      fireEvent.click(screen.getByRole('button', { name: items.transfer.choices[0]!.label }))
+
+      expect(setItem).toHaveBeenCalledTimes(1)
+      const [key, payload] = setItem.mock.calls[0] as [string, string]
+      expect(key).toBe(CARDIOHELP_PROGRESS_STORAGE_KEY)
+
+      const stored = parseProgress(payload)
+      expect(stored?.completedFoundationSectionIds).toEqual(['why-extracorporeal-support'])
+      // Worked, not mastered: nothing on the scoring side moved.
+      expect(stored?.completedLearnLessonIds).toEqual([])
+      expect(stored?.completedLabs).toEqual([])
+      expect(stored?.bestScores).toEqual({})
+      expect(stored?.mastery).toBe(false)
+      expect(stored?.lastVisited).toBeUndefined()
+    } finally {
+      setItem.mockRestore()
+      window.localStorage.clear()
+    }
+  })
+
+  it('does not write again when a section that was already worked is committed again', () => {
+    window.localStorage.clear()
+    try {
+      const items = ecmoFoundationLearningItemsFor('why-extracorporeal-support')
+      mountAt('why-extracorporeal-support', 'vv', 'transfer')
+      fireEvent.click(screen.getByRole('button', { name: items.transfer.choices[0]!.label }))
+
+      const setItem = jest.spyOn(Storage.prototype, 'setItem')
+      try {
+        mountAt('why-extracorporeal-support', 'vv', 'transfer')
+        fireEvent.click(
+          screen.getAllByRole('button', { name: items.transfer.choices[0]!.label })[0]!,
+        )
+        expect(setItem).not.toHaveBeenCalled()
+      } finally {
+        setItem.mockRestore()
+      }
+    } finally {
+      window.localStorage.clear()
     }
   })
 

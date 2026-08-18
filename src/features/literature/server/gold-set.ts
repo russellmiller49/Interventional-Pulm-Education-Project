@@ -16,8 +16,31 @@ import {
   resolveEffectiveLiteratureGoldExportReview,
 } from '@/features/literature/gold-set/export'
 
-import { createLiteratureAdmin } from './database-client'
-import type { LiteratureServerResult } from './types'
+import { literatureClientForOperation } from './database-client'
+import { capabilityFromArticleCount, capabilityFromFailure } from './runtime-capability'
+import type { LiteratureCapabilityResult, LiteratureServerResult } from './types'
+
+/**
+ * Acquire a client for a gold-set operation, or the reason there is none.
+ *
+ * Every function in this module needs one, and under the dedicated project none of them can have
+ * one: the gold-set migrations are deliberately deferred, so `literature_gold_set_*` and the
+ * `*_gold_*` RPCs do not exist there. Routing the acquisition through the activation contract
+ * means these call sites report "the workflow is not installed" instead of attempting an RPC that
+ * would surface a raw PostgREST schema-cache error, and it keeps the refusal in one place rather
+ * than seven.
+ */
+function goldSetClient(operation: 'gold_set_read' | 'gold_set_mutation') {
+  const acquired = literatureClientForOperation(operation)
+  if (acquired.client) {
+    return { client: acquired.client, unavailable: null, capability: null }
+  }
+  return {
+    client: null,
+    unavailable: { data: null, error: acquired.capability.message } as const,
+    capability: acquired.capability,
+  }
+}
 
 interface GoldBatchRow {
   id: string
@@ -285,14 +308,22 @@ function normalizeGoldReviewItem(value: unknown): LiteratureGoldReviewItem | nul
   }
 }
 
+/**
+ * The batch list is the gold-set page's first call, so it is the one that carries the capability:
+ * the page needs to tell "the workflow is not installed here" from "the workflow is installed and
+ * has no batches" before it renders a review workspace around an empty array.
+ */
 export async function listLiteratureGoldSetBatches(): Promise<
-  LiteratureServerResult<LiteratureGoldSetBatchSummary[]>
+  LiteratureCapabilityResult<LiteratureGoldSetBatchSummary[]>
 > {
-  const client = createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { client, unavailable, capability } = goldSetClient('gold_set_read')
+  if (!client) return { ...unavailable, capability }
 
   const { data, error } = await client.rpc('list_literature_gold_batches_v2')
-  if (error) return { data: null, error: error.message }
+  if (error) {
+    const failure = capabilityFromFailure(error, { projectRef: null, surface: 'gold_workflow' })
+    return { data: null, error: failure.message, capability: failure }
+  }
 
   return {
     data: ((data ?? []) as GoldBatchRow[]).map((row) => ({
@@ -317,6 +348,7 @@ export async function listLiteratureGoldSetBatches(): Promise<
       frozenAt: row.frozen_at,
     })),
     error: null,
+    capability: capabilityFromArticleCount(Array.isArray(data) ? data.length : 0, null),
   }
 }
 
@@ -326,8 +358,8 @@ export async function loadLiteratureGoldReviewItem(
   status: 'all' | 'unresolved' | 'return_later' | 'completed' = 'unresolved',
   split: 'development' | 'test' | 'all' = 'development',
 ): Promise<LiteratureServerResult<LiteratureGoldReviewItem | null>> {
-  const client = createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { client, unavailable } = goldSetClient('gold_set_read')
+  if (!client) return unavailable
 
   const { data, error } = await client.rpc('get_literature_gold_review_item_v2', {
     p_batch_id: batchId ?? null,
@@ -357,8 +389,8 @@ export async function saveLiteratureGoldReview(
   complete: boolean,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { client, unavailable } = goldSetClient('gold_set_mutation')
+  if (!client) return unavailable
   const { data, error } = await client.rpc('save_literature_gold_review_v1', {
     p_item_id: itemId,
     p_actor_user_id: user.id,
@@ -376,8 +408,8 @@ export async function updateLiteratureGoldReviewItem(
   action: LiteratureGoldSetItemAction,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { client, unavailable } = goldSetClient('gold_set_mutation')
+  if (!client) return unavailable
   const { data, error } = await client.rpc('update_literature_gold_item_v1', {
     p_item_id: itemId,
     p_actor_user_id: user.id,
@@ -393,8 +425,8 @@ export async function freezeLiteratureGoldSetBatch(
   batchId: string,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { client, unavailable } = goldSetClient('gold_set_mutation')
+  if (!client) return unavailable
   const { data, error } = await client.rpc('freeze_literature_gold_batch_v1', {
     p_batch_id: batchId,
     p_actor_user_id: user.id,
@@ -410,8 +442,8 @@ export async function unlockLiteratureGoldTestSplit(
   reason: string,
   user: User,
 ): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  const client = createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  const { client, unavailable } = goldSetClient('gold_set_mutation')
+  if (!client) return unavailable
   const { data, error } = await client.rpc('unlock_literature_gold_test_split_v1', {
     p_batch_id: batchId,
     p_actor_user_id: user.id,
@@ -478,8 +510,14 @@ export async function exportLiteratureGoldSet(
   includeHistory: boolean,
   clientOverride?: SupabaseClient,
 ): Promise<LiteratureServerResult<LiteratureGoldExport>> {
-  const client = clientOverride ?? createLiteratureAdmin()
-  if (!client) return { data: null, error: 'The literature database is not configured.' }
+  // The override is the seam the export CLI and its tests use against a local corpus; without
+  // one, the same activation contract as every other gold-set call applies.
+  const acquired = clientOverride ? null : goldSetClient('gold_set_read')
+  const client = clientOverride ?? acquired?.client
+  if (!client)
+    return (
+      acquired?.unavailable ?? { data: null, error: 'The literature database is not configured.' }
+    )
 
   const { data: batchData, error: batchError } = await client
     .from('literature_gold_set_batches')

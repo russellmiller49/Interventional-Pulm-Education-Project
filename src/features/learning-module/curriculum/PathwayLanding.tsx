@@ -13,6 +13,15 @@ interface PathwayLandingProps {
   readonly eyebrow?: string
   readonly intro: string
   readonly startLabel?: string
+  /**
+   * Replaces the default start link in the hero.
+   *
+   * The default sends every learner to section one, which is right for a landing page that knows
+   * nothing about them. A module that tracks progress can pass a client island here instead, so
+   * that its landing page and its hub resolve "continue" through the same function and cannot
+   * disagree about where a learner is. Modules that pass nothing keep the previous behaviour.
+   */
+  readonly startCta?: ReactNode
   /** Optional notice rendered under the hero — review status, source boundaries, and the like. */
   readonly notice?: ReactNode
   readonly sectionsHeading?: string
@@ -31,6 +40,7 @@ export function PathwayLanding({
   eyebrow = 'One continuous guided pathway',
   intro,
   startLabel = 'Start at the beginning',
+  startCta,
   notice,
   sectionsHeading = 'Choose where to begin',
   sectionsNote,
@@ -55,12 +65,14 @@ export function PathwayLanding({
             </span>
           </div>
         </div>
-        <Link
-          href={sectionHref(firstSectionId) as Route}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
-        >
-          {startLabel} <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
+        {startCta ?? (
+          <Link
+            href={sectionHref(firstSectionId) as Route}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            {startLabel} <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        )}
       </section>
 
       {notice ? <div className="mt-6">{notice}</div> : null}

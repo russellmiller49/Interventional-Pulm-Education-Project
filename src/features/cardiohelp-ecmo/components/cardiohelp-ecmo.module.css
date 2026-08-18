@@ -5189,6 +5189,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  /*
+    Section titles are full sentences, so the label is capped and allowed to wrap rather than
+    stretching the hero into one unreadable line. Two or three short lines beside the secondary
+    action reads better than one long one, and it keeps both actions on screen when the pane
+    narrows.
+  */
+  max-width: 34rem;
   padding: 0.7rem 1.1rem;
   color: var(--navy);
   text-decoration: none;
@@ -5210,6 +5217,49 @@
   font-size: 0.78rem;
   font-weight: 600;
   opacity: 0.85;
+}
+/*
+  One primary action and one secondary, wrapping rather than shrinking so the compact width keeps
+  both reachable and neither competes for "primary".
+*/
+.hubEntryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.hubBrowseAll {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.7rem 1.05rem;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font-weight: 600;
+}
+.hubBrowseAll:hover {
+  border-color: rgba(113, 225, 229, 0.5);
+}
+.hubEntryComposition {
+  margin: 0.85rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.hubTrackDone {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--ink);
+  font-weight: 600;
+}
+.hubSavedAside {
+  margin: 0.55rem 0 0;
+  font-size: 0.85rem;
+}
+.hubSavedAside a {
+  color: var(--cyan-bright);
 }
 
 .hubHowItWorks,

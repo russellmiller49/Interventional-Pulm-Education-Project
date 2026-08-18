@@ -1,5 +1,14 @@
 # Rollout runbook — dedicated Literature Supabase project
 
+> **Superseded in part by the production bring-up.** This document records the _foundation
+> rollout_ sequence, and stays accurate as that record. Two of its statements are no longer
+> present-tense facts: the foundation migration **has been applied** to `IP_Literature`
+> (provider-recorded version `20260815223259`, name `add_literature_explorer`), and the production
+> Literature runtime **is activated** — `LITERATURE_PRODUCTION_RUNTIME_ACTIVATION` is now
+> `activated_by_reviewed_cutover`, so the three dedicated variables connect the read path instead
+> of being validated and ignored. Activation is still a source constant rather than a variable.
+> For the stages that follow the migration, use the production bring-up operator runbook.
+
 Status: **not executable.** This describes a future sequence. No step below has been performed, and
 nothing in this repository will perform any of them on its own.
 
@@ -92,10 +101,12 @@ Merge this PR only after the independent review in
 [`dedicated-supabase-codex-review-handoff.md`](./dedicated-supabase-codex-review-handoff.md)
 completes. Record the resulting `main` commit — it becomes the owner-approved commit.
 
-> After this merges and until the capability-gating package of step 7 ships, production Literature
-> reports _not configured_ rather than silently reading `Endoreels` — and it reports that even if
-> the step-8 variables are set, because the production runtime is not activated. Both render no
-> articles; the new behaviour is the honest one.
+> _Historical note, superseded by the production bring-up._ At the time this step was written, the
+> merge changed production Literature from silently reading `Endoreels` to reporting _not
+> configured_, and it kept reporting that even with the step-8 variables set. The second half no
+> longer holds: the capability-gating package has since shipped and the activation constant is set,
+> so the step-8 variables now connect the read path. The first half stands — there is still no
+> fallback to `Endoreels`.
 
 ### 2. Implement and independently review Layer 3
 

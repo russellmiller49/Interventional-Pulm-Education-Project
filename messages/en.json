@@ -2303,6 +2303,33 @@
   "literature": {
     "title": "IP Literature Explorer",
     "draftBadge": "Admin preview",
+    "capability": {
+      "unavailableValue": "Unavailable",
+      "unavailableHint": "This value could not be read. It is not a report of zero.",
+      "bannerTitle": "Literature database status",
+      "projectLabel": "Dedicated project",
+      "state": {
+        "not_configured": "Not configured. This deployment has no dedicated Literature database settings, so nothing was read. Counts are unavailable rather than zero.",
+        "foundation_missing": "The dedicated Literature project is reachable, but its foundation tables are absent. Counts are unavailable rather than zero.",
+        "foundation_ready_empty": "The foundation schema is present and holds no records yet. The zeros below are measurements.",
+        "foundation_ready_populated": "The foundation schema is present and holds records.",
+        "gold_workflow_unavailable": "The gold-set review workflow is not installed in this project. Its migrations are deliberately deferred.",
+        "write_capability_withheld": "This build carries no Literature write path. Curation and gold-set changes are unavailable by design.",
+        "temporarily_unavailable": "The dedicated Literature project did not answer. Counts are unavailable rather than zero.",
+        "not_observed": "The request was rejected before it reached the database, so nothing was measured.",
+        "foundation_ready_filtered": "The foundation schema is present and answered this query. The counts shown reflect the active filters, not the size of the corpus."
+      },
+      "curation": {
+        "title": "Curation is not available in this build",
+        "body": "This deployment reads the dedicated Literature project for review and verification only. It carries no Literature write path, so curation decisions cannot be saved here. Enabling them is a separate reviewed change."
+      },
+      "reason": "Reported reason",
+      "goldSet": {
+        "title": "Gold-set review workflow is not installed",
+        "body": "This deployment reads the dedicated Literature project, which carries the foundation schema only. The gold-set review tables and functions are part of a separate, deliberately deferred migration set, so there is nothing to review here yet.",
+        "back": "Back to Literature administration"
+      }
+    },
     "loading": "Loading literature…",
     "workflow": {
       "relevance": {
@@ -2492,10 +2519,10 @@
       "disclaimer": "Educational use only. Search results do not establish evidence quality, recommendation strength, or suitability for a particular patient or procedure."
     },
     "admin": {
-      "metadataTitle": "Literature review queue",
+      "metadataTitle": "All Literature administration",
       "eyebrow": "Site administrator",
-      "heading": "Literature review and curation",
-      "description": "Inspect imports, filter the review queue, and make durable human decisions with an append-only audit trail.",
+      "heading": "All Literature",
+      "description": "Inspect the full imported corpus, its retrieval provenance, and its existing append-only audit history.",
       "openPreview": "Open search preview",
       "invalidFilters": "The review filters are invalid.",
       "stats": {
@@ -2553,10 +2580,131 @@
         "page": "Page {page} of {pages}",
         "unavailable": "The literature review queue is temporarily unavailable."
       },
+      "curated": {
+        "metadataTitle": "Physician-reviewed Curated Literature",
+        "eyebrow": "Site administrator · Reviewed collection",
+        "heading": "Curated Literature",
+        "description": "A read-only collection defined exactly by complete physician-reviewed overlays classified as Core IP or Adjacent IP.",
+        "invalidFilters": "The Curated Literature filters are invalid.",
+        "navigation": {
+          "label": "Literature administration collections",
+          "curated": "Curated",
+          "all": "All Literature"
+        },
+        "stats": {
+          "heading": "One corpus, distinct review counts",
+          "description": "These live counts describe different sets and must not be read as interchangeable.",
+          "fullCorpus": "Full corpus",
+          "fullCorpusHelp": "Every imported bibliography record.",
+          "physicianReviewed": "Physician reviewed",
+          "physicianReviewedHelp": "All five reviewed fields are populated.",
+          "curated": "Curated",
+          "curatedHelp": "Core IP plus Adjacent IP.",
+          "core": "Core IP",
+          "coreHelp": "Reviewed as directly within core IP scope.",
+          "adjacent": "Adjacent IP",
+          "adjacentHelp": "Reviewed as relevant adjacent literature.",
+          "exclusions": "Reviewed exclusions",
+          "exclusionsHelp": "Reviewed as outside this collection; not unreviewed."
+        },
+        "classes": {
+          "core": "Core IP",
+          "adjacent": "Adjacent IP"
+        },
+        "provenance": {
+          "physician_confirmed": "Physician-confirmed enrichment",
+          "physician_modified": "Physician-modified enrichment",
+          "qc_accepted": "QC-accepted enrichment"
+        },
+        "search": {
+          "heading": "Search within Curated",
+          "description": "Search and sort on the server; only the current page of reviewed-relevant records is returned."
+        },
+        "filters": {
+          "classLabel": "Filter Curated by reviewed class",
+          "all": "All Curated",
+          "core": "Core only",
+          "adjacent": "Adjacent only",
+          "query": "Search Curated Literature",
+          "queryPlaceholder": "Search title, abstract, keywords, PMID, or DOI",
+          "sort": "Sort",
+          "sortNewest": "Newest publication year",
+          "sortOldest": "Oldest publication year",
+          "sortTitle": "Title A–Z",
+          "apply": "Apply",
+          "clear": "Clear"
+        },
+        "results": {
+          "count": "{count, plural, =0 {No Curated articles} =1 {One Curated article} other {# Curated articles}}",
+          "empty": "No Curated articles match these filters.",
+          "unavailable": "Curated Literature is temporarily unavailable",
+          "physicianReviewed": "Physician reviewed",
+          "abstractUnavailable": "No abstract is available.",
+          "retracted": "Retracted",
+          "correction": "Correction",
+          "conferenceAbstract": "Conference abstract",
+          "pmid": "PMID",
+          "doi": "DOI",
+          "reviewedOn": "Reviewed",
+          "pubMed": "PubMed"
+        },
+        "pagination": {
+          "label": "Curated Literature pages",
+          "previous": "Previous",
+          "next": "Next",
+          "page": "Page {page} of {pages}"
+        },
+        "methods": {
+          "heading": "Methods and provenance",
+          "summary": "How Curated membership and these counts are defined",
+          "currentCounts": "The full bibliography contains {fullCorpus} records. {physicianReviewed} received physician review; {curated} are in Curated ({core} Core IP and {adjacent} Adjacent IP); {exclusions} are reviewed exclusions.",
+          "countsUnavailable": "Live counts could not be read. This is not a report of zero records.",
+          "classDistinction": "Core IP and Adjacent IP remain distinct physician-reviewed scope classes; neither is an evidence-quality grade.",
+          "exclusions": "Reviewed exclusions remain in the database, All Literature, and audit surfaces. Unreviewed articles are not exclusions.",
+          "allDraft": "All articles currently remain Draft.",
+          "draftCount": "{draft} of {fullCorpus} articles currently remain Draft; this feature does not change visibility.",
+          "draftUnavailable": "Draft-state counts are unavailable; this feature does not change visibility.",
+          "aiBoundary": "AI triage or suggestions are not shown as physician truth, and this collection makes no AI-validation or held-out-performance claim.",
+          "completeness": "Curated is not a systematic-review completeness claim and does not claim complete capture of all interventional pulmonology literature or guideline endorsement.",
+          "releaseBoundary": "This feature performs no public release, publication, ingestion, curation write, or overlay mutation."
+        }
+      },
       "article": {
         "metadataTitle": "Curate literature article PMID {pmid}",
         "loadError": "The literature article could not be loaded. Try again later.",
         "back": "Back to review queue",
+        "navigation": {
+          "label": "Literature administration collections",
+          "curated": "Curated",
+          "all": "All Literature"
+        },
+        "reviewed": {
+          "title": "Physician-reviewed provenance",
+          "description": "The historical reviewed overlay is displayed separately from the current working relevance state.",
+          "physicianReviewed": "Physician reviewed",
+          "unreviewed": "Unreviewed",
+          "unreviewedDescription": "No complete physician-reviewed overlay is recorded. This article is unreviewed, not excluded or judged irrelevant.",
+          "unavailable": "Reviewed provenance is unavailable",
+          "core": "Core IP",
+          "adjacent": "Adjacent IP",
+          "excluded": "Reviewed exclusion",
+          "reviewedClass": "Reviewed class",
+          "provenanceLabel": "Enrichment provenance",
+          "reviewedDate": "Reviewed date",
+          "source": "Reviewed source",
+          "curatedMembership": "Curated membership",
+          "curatedYes": "Included in Curated",
+          "curatedNo": "Not in Curated — reviewed exclusion",
+          "provenance": {
+            "physician_confirmed": "Physician-confirmed enrichment",
+            "physician_modified": "Physician-modified enrichment",
+            "qc_accepted": "QC-accepted enrichment"
+          },
+          "sourceKinds": {
+            "owner_authorized_development_cohort": "Owner-authorized physician-reviewed development cohort",
+            "physician_reviewed_source": "Physician-reviewed source"
+          }
+        },
         "landmark": "Landmark",
         "openPubMed": "Open in PubMed",
         "curationTitle": "Human curation",

@@ -97,6 +97,45 @@ describe('the restore-then-act sequence is gone', () => {
     }
   })
 
+  /**
+   * The positive half of the persistence contract.
+   *
+   * This activity used to persist nothing at all, and that was asserted by banning strings. Once a
+   * single traversal marker became necessary — the seven foundation sections in each pathway could
+   * not otherwise take part in "what comes next" — the string bans stopped being sufficient on
+   * their own: a writer reached through the `../engine` barrel would satisfy every one of them
+   * while writing whatever it liked. So the write is pinned positively as well: one import, one
+   * call, and no direct storage API in this file. The behaviour itself — nothing on mount, exactly
+   * one write on commit — is asserted against a rendered component in
+   * `foundation-phase-restoration.test.tsx`.
+   */
+  it('persists through exactly one named writer, and touches no storage API directly', () => {
+    const progressImports =
+      activitySource.match(/import \{[^}]*\} from '\.\.\/engine\/progress'/g) ?? []
+    expect(progressImports).toHaveLength(1)
+    expect(progressImports[0]).toContain('persistFoundationSectionCompleted')
+
+    // Exactly one call site. The import mentions the name without parentheses, so this counts calls.
+    expect(activitySource.match(/persistFoundationSectionCompleted\(/g)).toHaveLength(1)
+
+    for (const forbidden of ['localStorage', 'sessionStorage', 'JSON.parse', 'JSON.stringify']) {
+      expect(activitySource).not.toContain(forbidden)
+    }
+  })
+
+  it('marks the section worked from the transfer commit, not from navigation', () => {
+    // The continue link does not render on the last section of a pathway, so recording there would
+    // leave a learner who finished everything permanently one section short of done.
+    expect(activitySource).toMatch(/onClick=\{\(\) => commitTransfer\(choice\.id\)\}/)
+
+    const commitTransfer = activitySource.slice(
+      activitySource.indexOf('const commitTransfer'),
+      activitySource.indexOf('const commitTransfer') + 400,
+    )
+    expect(commitTransfer).toContain('setCommittedTransferId(choiceId)')
+    expect(commitTransfer).toContain('persistFoundationSectionCompleted(sectionId)')
+  })
+
   it('offers no way to declare the lesson finished', () => {
     expect(activitySource).not.toMatch(/mark lesson complete/i)
   })

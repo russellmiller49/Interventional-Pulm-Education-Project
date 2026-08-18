@@ -1,6 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import {
   ArrowRight,
   BookOpenCheck,
@@ -11,15 +17,18 @@ import {
 } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
 import { cardiohelpDeviceProfile, cardiohelpEcmoPublicationStatus } from '../content/deviceProfile'
 import {
-  cardiohelpCurriculum,
-  nextRecommendedActivity,
-  type RecommendedActivity,
-} from '../content/curriculum'
-import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
+  ecmoPathwayComposition,
+  ecmoPathwayGroups,
+  ecmoWorkedSectionIds,
+  nextIncompleteSectionLink,
+  type EcmoPathwayGroup,
+} from '../content/pathwayResolver'
+import { orderedCaseScenarioIds } from '../content/curriculum'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { createDefaultProgress, readProgress, type ProgressV2, type SupportMode } from '../engine'
 import { CardiohelpModuleFrame } from './CardiohelpModuleFrame'
@@ -30,54 +39,101 @@ interface CardiohelpHubProps {
   locale?: string
 }
 
-interface ActivityLink {
+interface SavedActivityLink {
   pathname: string
   query: Record<string, string>
   label: string
 }
 
-function activityLink(activity: RecommendedActivity, supportMode: SupportMode): ActivityLink {
-  if (activity.kind === 'lesson') {
-    const lesson = cardiohelpLearnLessonByScenarioId.get(activity.scenarioId)
+/**
+ * Where a learner left a case or the challenge, if they left one open.
+ *
+ * The hub's primary call to action used to be this, which is why a fresh learner was sent to the
+ * console tour: it fell through to the curriculum's unit walker, and that walker's first entry is
+ * the console drill. The primary call to action now always resolves through the pathway, and this
+ * survives only as a small aside — Practice and the challenge are not on the Learn pathway, so
+ * without it a learner who stopped mid-case would have no way back to it from here.
+ *
+ * Returns null for a Learn pointer (the pathway already covers that), and for a case id that is no
+ * longer in the registry rather than labelling a link with a raw identifier.
+ */
+function savedActivityLink(progress: ProgressV2): SavedActivityLink | null {
+  const lastVisited = progress.lastVisited
+  if (!lastVisited || lastVisited.section === 'learn') return null
+
+  if (lastVisited.section === 'assess') {
     return {
-      pathname: `${cardiohelpEcmoNavBase}/learn`,
-      query: { lesson: activity.scenarioId, track: supportMode },
-      label: `Lesson: ${lesson?.title ?? activity.scenarioId}`,
+      pathname: `${cardiohelpEcmoNavBase}/assess`,
+      query: { track: lastVisited.supportMode },
+      label: `${lastVisited.supportMode.toUpperCase()} challenge`,
     }
   }
-  if (activity.kind === 'case') {
-    const clinicalCase = clinicalPracticeScenarioById.get(activity.scenarioId)
-    return {
-      pathname: `${cardiohelpEcmoNavBase}/practice`,
-      query: { case: activity.scenarioId, track: supportMode },
-      label: `Case: ${clinicalCase?.title ?? activity.scenarioId}`,
-    }
-  }
+
+  const clinicalCase = clinicalPracticeScenarioById.get(lastVisited.scenarioId)
+  if (!clinicalCase) return null
   return {
-    pathname: `${cardiohelpEcmoNavBase}/assess`,
-    query: { track: supportMode },
-    label: `${supportMode.toUpperCase()} challenge`,
+    pathname: `${cardiohelpEcmoNavBase}/practice`,
+    query: { case: lastVisited.scenarioId, track: lastVisited.supportMode },
+    label: clinicalCase.title,
   }
 }
 
-function continueLink(progress: ProgressV2, track: SupportMode): ActivityLink | null {
-  const lastVisited = progress.lastVisited
-  if (lastVisited) {
-    if (lastVisited.section === 'assess') {
-      return {
-        pathname: `${cardiohelpEcmoNavBase}/assess`,
-        query: { track: lastVisited.supportMode },
-        label: `${lastVisited.supportMode.toUpperCase()} challenge`,
-      }
-    }
-    const kind = lastVisited.section === 'learn' ? 'lesson' : 'case'
-    return activityLink(
-      { kind, scenarioId: lastVisited.scenarioId, unitId: '' },
-      lastVisited.supportMode,
-    )
-  }
-  const recommended = nextRecommendedActivity(progress, track)
-  return recommended ? activityLink(recommended, track) : null
+/**
+ * Which sections a group holds, and how long they run.
+ *
+ * Positions come from the canonical order, not from counting within the group, so the numbers a
+ * learner reads here are the same ones the pathway rail and the section headers show them.
+ */
+function groupSpanLabel(group: EcmoPathwayGroup, track: SupportMode): string {
+  const order = criticalCareLearningPathway('cardiohelp-ecmo', track).sections
+  const positions = group.sections.map(
+    (section) => order.findIndex((candidate) => candidate.id === section.id) + 1,
+  )
+  const minutes = group.sections.reduce((total, section) => total + section.minutes, 0)
+  const first = Math.min(...positions)
+  const last = Math.max(...positions)
+  const span = first === last ? `Section ${first}` : `Sections ${first}–${last}`
+  return `${span} · ${minutes} minutes`
+}
+
+/**
+ * The two tracks, as data, so the radio group's keyboard model is written once rather than per
+ * option.
+ */
+const TRACK_OPTIONS: readonly {
+  readonly mode: SupportMode
+  readonly title: string
+  readonly description: string
+  readonly icon: typeof Wind
+}[] = [
+  {
+    mode: 'vv',
+    title: 'VV ECMO',
+    description:
+      'For failing lungs. Gas exchange happens in series with the native circulation: femoral vein drainage → pump + oxygenator → femoral vein return toward the right atrium.',
+    icon: Wind,
+  },
+  {
+    mode: 'va',
+    title: 'Peripheral VA ECMO',
+    description:
+      'For a failing heart or circulation. Circuit flow runs in parallel with whatever the heart still ejects: femoral vein drainage → pump + oxygenator → femoral artery return toward the aorta, with mode-specific upper-body, LV-loading, and limb risks.',
+    icon: HeartPulse,
+  },
+]
+
+/** The composition line, counted from the registry so it cannot drift out of step with it. */
+function compositionLine(track: SupportMode): string {
+  const { total, foundations, consoleOrientation, drills, capstone } = ecmoPathwayComposition(track)
+  return [
+    `${total} sections`,
+    `${foundations} foundations`,
+    consoleOrientation === 1
+      ? 'console orientation'
+      : `${consoleOrientation} console orientation sections`,
+    `${drills} drills`,
+    capstone === 1 ? 'integration capstone' : `${capstone} integration capstones`,
+  ].join(' · ')
 }
 
 export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
@@ -92,15 +148,70 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
     setHydrated(true)
   }, [])
 
-  const completedLessons = new Set(progress.completedLearnLessonIds)
+  /**
+   * The track chooser, as a real ARIA radio group rather than the shape of one.
+   *
+   * It declared `role="radiogroup"` and two `role="radio"` buttons while implementing none of that
+   * pattern's keyboard model: both options sat in the tab sequence and no arrow key did anything.
+   * Nothing was unreachable — that is why this is a correctness problem rather than a trap — but
+   * the markup told assistive technology it was a radio group and then behaved like two buttons.
+   *
+   * Selection follows focus, which is the pattern for a radio group: moving to an option chooses
+   * it. Both entry actions and the grouped list read from the same `track` state, so they follow
+   * the keyboard the same way they follow a click.
+   *
+   * Native `<input type="radio">` would give all of this for free, and was not used because the
+   * approved presentation is fourteen CSS rules selecting `.supportModeTabs button`, two inside
+   * width breakpoints. Reproducing it around a hidden input and a label would have rewritten the
+   * presentation rather than fixed the behaviour.
+   */
+  const trackRefs = useRef<Partial<Record<SupportMode, HTMLButtonElement | null>>>({})
+
+  const selectTrackAt = useCallback((index: number) => {
+    const option = TRACK_OPTIONS[(index + TRACK_OPTIONS.length) % TRACK_OPTIONS.length]!
+    setTrack(option.mode)
+    trackRefs.current[option.mode]?.focus()
+  }, [])
+
+  const onTrackKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          event.preventDefault()
+          selectTrackAt(index + 1)
+          break
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          event.preventDefault()
+          selectTrackAt(index - 1)
+          break
+        case 'Home':
+          event.preventDefault()
+          selectTrackAt(0)
+          break
+        case 'End':
+          event.preventDefault()
+          selectTrackAt(TRACK_OPTIONS.length - 1)
+          break
+        case ' ':
+          // Enter already activates a button natively; Space needs to be claimed so the page does
+          // not scroll underneath the choice.
+          event.preventDefault()
+          selectTrackAt(index)
+          break
+        default:
+          break
+      }
+    },
+    [selectTrackAt],
+  )
+
+  const workedSections = ecmoWorkedSectionIds(progress)
   const completedCases = new Set(progress.completedLabs)
-  const units = cardiohelpCurriculum[track]
-  const resume = continueLink(progress, track)
-  const recommended = nextRecommendedActivity(progress, track)
-  const started =
-    progress.completedLearnLessonIds.length > 0 ||
-    progress.completedLabs.length > 0 ||
-    progress.lastVisited !== undefined
+  const groups = ecmoPathwayGroups(track)
+  const next = nextIncompleteSectionLink(track, progress)
+  const saved = savedActivityLink(progress)
 
   return (
     <CardiohelpModuleFrame locale={locale} activeHref={cardiohelpEcmoNavBase}>
@@ -112,28 +223,47 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             VA ECMO: learn each reasoning sequence step by step, apply it to an evolving case, then
             try a harder challenge with less help.
           </p>
-          {resume && started ? (
+          <div className={styles.hubEntryActions}>
+            {next ? (
+              <Link
+                className={styles.hubContinue}
+                data-ecmo-continue={hydrated ? 'resolved' : 'pending'}
+                href={next.linkTarget}
+              >
+                <ArrowRight aria-hidden="true" />
+                <span>
+                  <strong>Continue — {next.section.title}</strong>
+                  <small>
+                    Section {next.index + 1} of {next.total} · {next.section.minutes} minutes
+                  </small>
+                </span>
+              </Link>
+            ) : (
+              <p className={styles.hubTrackDone} data-ecmo-continue="complete">
+                Every section of the {track.toUpperCase()} track is worked through. Revisit any of
+                them below, or take the challenge.
+              </p>
+            )}
+            {/*
+              Carries the track, like the primary action and every chip beside it. Without it the
+              landing falls back to VV, so a learner who had just chosen VA would be shown the VV
+              pathway by the second of the two actions on this screen — the same disagreement
+              between entry surfaces this package exists to remove.
+            */}
             <Link
-              className={styles.hubContinue}
-              href={{ pathname: resume.pathname, query: resume.query }}
+              className={styles.hubBrowseAll}
+              href={{ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track } }}
             >
-              <ArrowRight aria-hidden="true" />
-              <span>
-                <strong>Continue where you left off</strong>
-                <small>{resume.label}</small>
-              </span>
+              Browse all {ecmoPathwayComposition(track).total} sections
             </Link>
-          ) : resume ? (
-            <Link
-              className={styles.hubContinue}
-              href={{ pathname: resume.pathname, query: resume.query }}
-            >
-              <ArrowRight aria-hidden="true" />
-              <span>
-                <strong>Start the curriculum</strong>
-                <small>{resume.label}</small>
-              </span>
-            </Link>
+          </div>
+          <p className={styles.hubEntryComposition}>{compositionLine(track)}</p>
+          {saved ? (
+            <p className={styles.hubSavedAside}>
+              <Link href={{ pathname: saved.pathname, query: saved.query }}>
+                Return to your saved work: {saved.label}
+              </Link>
+            </p>
           ) : null}
         </header>
 
@@ -146,8 +276,9 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <GraduationCap aria-hidden="true" />
                 <strong>Learn</strong>
                 <p>
-                  Guided walkthroughs on the simulated console: where to look, what to do, and why.
-                  Ten lessons per track.
+                  One ordered pathway per track on the simulated console: the physiology, the
+                  controls, then one failure at a time. {ecmoPathwayComposition(track).total}{' '}
+                  sections per track.
                 </p>
               </Link>
             </li>
@@ -157,8 +288,9 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <SlidersHorizontal aria-hidden="true" />
                 <strong>Practice</strong>
                 <p>
-                  Clinical cases that apply each lesson: commit a plan, treat the patient and
-                  circuit, reassess, and debrief. Seven cases per track.
+                  Clinical cases that apply what each drill taught: commit a plan, treat the patient
+                  and circuit, reassess, and debrief. {orderedCaseScenarioIds(track).length} cases
+                  per track.
                 </p>
               </Link>
             </li>
@@ -180,143 +312,143 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
           <h2 id="hub-track-heading">Choose a track</h2>
           <p>
             The console workflow is shared, but the return vessel, patient physiology, monitoring,
-            lessons, cases, and capstone change with the configuration. Work either track first—your
-            progress is saved separately for each.
+            drills, cases, and capstone change with the configuration. New to extracorporeal
+            support? Work VV first: VA is VV plus two added ideas — the artery pushes back on the
+            return limb, and there are two circulations to keep track of.
+          </p>
+          <p>
+            Work either track first. The first four sections are shared by both, so working them
+            once covers both tracks; everything after them is followed separately.
           </p>
           <div className={styles.supportModeTabs} role="radiogroup" aria-label="ECMO support mode">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={track === 'vv'}
-              data-active={track === 'vv'}
-              onClick={() => setTrack('vv')}
-            >
-              <Wind aria-hidden="true" />
-              <span>
-                <strong>VV ECMO</strong>
-                <small>
-                  Gas-exchange support: femoral vein drainage → pump + oxygenator → femoral vein
-                  return toward the right atrium.
-                </small>
-              </span>
-              <em>{track === 'vv' ? 'Selected' : 'View VV track'}</em>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={track === 'va'}
-              data-active={track === 'va'}
-              onClick={() => setTrack('va')}
-            >
-              <HeartPulse aria-hidden="true" />
-              <span>
-                <strong>Peripheral VA ECMO</strong>
-                <small>
-                  Circulatory support: femoral vein drainage → pump + oxygenator → femoral artery
-                  return toward the aorta, with mode-specific upper-body, LV-loading, and limb
-                  risks.
-                </small>
-              </span>
-              <em>{track === 'va' ? 'Selected' : 'View VA track'}</em>
-            </button>
+            {TRACK_OPTIONS.map((option, index) => {
+              const Icon = option.icon
+              const selected = track === option.mode
+              return (
+                <button
+                  key={option.mode}
+                  ref={(node) => {
+                    trackRefs.current[option.mode] = node
+                  }}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  data-active={selected}
+                  // Roving tabindex: the group is one Tab stop, and the arrow keys move within it.
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => setTrack(option.mode)}
+                  onKeyDown={(event) => onTrackKeyDown(event, index)}
+                >
+                  <Icon aria-hidden="true" />
+                  <span>
+                    <strong>{option.title}</strong>
+                    <small>{option.description}</small>
+                  </span>
+                  <em>{selected ? 'Selected' : `View ${option.mode.toUpperCase()} track`}</em>
+                </button>
+              )
+            })}
           </div>
         </section>
 
         <section className={styles.hubCurriculum} aria-labelledby="hub-curriculum-heading">
           <div className={styles.hubCurriculumHeading}>
-            <h2 id="hub-curriculum-heading">{track.toUpperCase()} curriculum</h2>
-            <span>Open in any order · personal history stays local</span>
+            <h2 id="hub-curriculum-heading">{track.toUpperCase()} pathway</h2>
+            <span>Grouped by unit · open any section · personal history stays local</span>
           </div>
+          {/*
+            The seven units, each holding its own run of the pathway. Every one of the seventeen
+            sections appears here exactly once and in order, so this is a view of the sequence
+            rather than a second sequence: `pathway-resolver.test.ts` asserts that flattening these
+            groups reproduces the pathway. The physiology sections used to be missing from this
+            list entirely, which is how a learner could read the hub and never learn they existed.
+          */}
           <ol className={styles.hubUnitList}>
-            {units.map((unit, index) => {
-              if (unit.capstoneScenarioId) {
-                return (
-                  <li key={unit.id} className={styles.hubCapstoneCard}>
-                    <div className={styles.hubUnitHeading}>
-                      <span aria-hidden="true">{index + 1}</span>
-                      <div>
-                        <h3>{unit.title}</h3>
-                        <p>{unit.summary}</p>
-                      </div>
-                      <BookOpenCheck aria-hidden="true" />
-                    </div>
+            {groups.map((group, index) => (
+              <li
+                key={group.unitId}
+                className={group.capstoneScenarioId ? styles.hubCapstoneCard : styles.hubUnitCard}
+              >
+                <div className={styles.hubUnitHeading}>
+                  <span aria-hidden="true">{index + 1}</span>
+                  <div>
+                    <h3>{group.title}</h3>
+                    {/*
+                      The span leads, and the unit's own summary follows. The summaries were
+                      authored to describe a unit's drills and cases, and the first unit now also
+                      carries the six physiology sections that come before its drill — so a learner
+                      reading only the summary would not know the runway was there. Saying which
+                      sections a group holds is the part that has to be exact.
+                    */}
+                    <p>{groupSpanLabel(group, track)}</p>
+                    <p>{group.summary}</p>
+                  </div>
+                  {group.capstoneScenarioId ? (
+                    <BookOpenCheck aria-hidden="true" />
+                  ) : (
+                    <small className={styles.hubUnitCount}>Choose what is useful now</small>
+                  )}
+                </div>
+                <div className={styles.hubChipRow}>
+                  {group.sections.map((section) => {
+                    const worked = workedSections.has(section.id)
+                    const isNext = next?.section.id === section.id
+                    return (
+                      <Link
+                        key={section.id}
+                        className={styles.hubChip}
+                        data-kind="section"
+                        data-complete={worked}
+                        data-recommended={isNext}
+                        href={{
+                          pathname: `${cardiohelpEcmoNavBase}/learn`,
+                          query: { lesson: section.id, track },
+                        }}
+                      >
+                        <GraduationCap aria-hidden="true" />
+                        {section.title}
+                        {worked ? ' ✓ worked through' : ''}
+                        {isNext ? <em>Up next</em> : null}
+                      </Link>
+                    )
+                  })}
+                  {group.caseScenarioIds.map((caseId) => {
+                    const clinicalCase = clinicalPracticeScenarioById.get(caseId)
+                    const complete = completedCases.has(caseId)
+                    return (
+                      <Link
+                        key={caseId}
+                        className={styles.hubChip}
+                        data-kind="case"
+                        data-complete={complete}
+                        href={{
+                          pathname: `${cardiohelpEcmoNavBase}/practice`,
+                          query: { case: caseId, track },
+                        }}
+                      >
+                        <BookOpenCheck aria-hidden="true" />
+                        {clinicalCase?.title ?? caseId}
+                        {complete ? ' ✓ worked through' : ''}
+                      </Link>
+                    )
+                  })}
+                  {group.capstoneScenarioId ? (
                     <Link
                       className={styles.hubChip}
                       data-kind="capstone"
+                      data-complete={completedCases.has(group.capstoneScenarioId)}
                       href={{
                         pathname: `${cardiohelpEcmoNavBase}/assess`,
                         query: { track },
                       }}
                     >
                       <ArrowRight aria-hidden="true" /> Open the {track.toUpperCase()} challenge
-                      {completedCases.has(unit.capstoneScenarioId) ? ' · worked through' : ''}
+                      {completedCases.has(group.capstoneScenarioId) ? ' ✓ worked through' : ''}
                     </Link>
-                  </li>
-                )
-              }
-              return (
-                <li key={unit.id} className={styles.hubUnitCard}>
-                  <div className={styles.hubUnitHeading}>
-                    <span aria-hidden="true">{index + 1}</span>
-                    <div>
-                      <h3>{unit.title}</h3>
-                      <p>{unit.summary}</p>
-                    </div>
-                    <small className={styles.hubUnitCount}>Choose what is useful now</small>
-                  </div>
-                  <div className={styles.hubChipRow}>
-                    {unit.lessonScenarioIds.map((lessonId) => {
-                      const lesson = cardiohelpLearnLessonByScenarioId.get(lessonId)
-                      const complete = completedLessons.has(lessonId)
-                      const isRecommended =
-                        recommended?.kind === 'lesson' && recommended.scenarioId === lessonId
-                      return (
-                        <Link
-                          key={lessonId}
-                          className={styles.hubChip}
-                          data-kind="lesson"
-                          data-complete={complete}
-                          data-recommended={isRecommended}
-                          href={{
-                            pathname: `${cardiohelpEcmoNavBase}/learn`,
-                            query: { lesson: lessonId, track },
-                          }}
-                        >
-                          <GraduationCap aria-hidden="true" />
-                          {lesson?.title ?? lessonId}
-                          {complete ? ' ✓' : ''}
-                          {isRecommended ? <em>Up next</em> : null}
-                        </Link>
-                      )
-                    })}
-                    {unit.caseScenarioIds.map((caseId) => {
-                      const clinicalCase = clinicalPracticeScenarioById.get(caseId)
-                      const complete = completedCases.has(caseId)
-                      const isRecommended =
-                        recommended?.kind === 'case' && recommended.scenarioId === caseId
-                      return (
-                        <Link
-                          key={caseId}
-                          className={styles.hubChip}
-                          data-kind="case"
-                          data-complete={complete}
-                          data-recommended={isRecommended}
-                          href={{
-                            pathname: `${cardiohelpEcmoNavBase}/practice`,
-                            query: { case: caseId, track },
-                          }}
-                        >
-                          <BookOpenCheck aria-hidden="true" />
-                          {clinicalCase?.title ?? caseId}
-                          {complete ? ' ✓' : ''}
-                          {isRecommended ? <em>Up next</em> : null}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </li>
-              )
-            })}
+                  ) : null}
+                </div>
+              </li>
+            ))}
           </ol>
         </section>
 
@@ -335,7 +467,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             <strong>thApp</strong> {cardiohelpDeviceProfile.thApp}
           </span>
           <span>
-            <strong>Curriculum</strong> VV + peripheral VA · draft review
+            <strong>Pathway</strong> VV + peripheral VA · draft review
           </span>
         </section>
 

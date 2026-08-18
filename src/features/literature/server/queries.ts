@@ -3,20 +3,39 @@ import type { User } from '@supabase/supabase-js'
 import { flattenLiteratureTaxonomy, literatureQueryRegistry } from '@/features/literature/config'
 import type {
   LiteratureAdminArticleUpdate,
+  LiteratureCuratedCollectionQuery,
   LiteratureReviewQueueQuery,
   LiteratureSearchQuery,
 } from '@/features/literature/schemas/search'
+import {
+  hasCompleteReviewedOverlay,
+  hasNoReviewedOverlay,
+  isCuratedReviewedOverlay,
+  literatureCuratedRelevanceValues,
+  type LiteratureReviewedOverlayCandidate,
+} from '@/features/literature/domain/reviewed-overlay'
 
-import { createLiteratureAdmin } from './database-client'
+import { literatureClientForOperation } from './database-client'
+import {
+  capabilityFromArticleCount,
+  capabilityFromFailure,
+  capabilityFromFilteredRead,
+  capabilityNotObserved,
+} from './runtime-capability'
 import type {
   LiteratureAdminStats,
   LiteratureArticleDetail,
+  LiteratureCapabilityResult,
+  LiteratureCuratedCollection,
+  LiteratureCuratedResult,
+  LiteratureCuratedStats,
   LiteratureCurationEventDisplay,
   LiteratureDisplayTopic,
   LiteratureReviewQueueItem,
+  LiteratureReviewedMetadata,
+  LiteratureReviewedSourceKind,
   LiteratureSearchResponse,
   LiteratureSearchResult,
-  LiteratureServerResult,
   LiteratureSourceDisplay,
   LiteratureTopicAssignmentDisplay,
 } from './types'
@@ -108,6 +127,28 @@ interface CurationEventRow {
   after_value: unknown
   reason: string | null
   created_at: string
+}
+
+interface ReviewedOverlayRow extends LiteratureReviewedOverlayCandidate {
+  pmid: string
+}
+
+interface CuratedArticleRow extends ReviewedOverlayRow {
+  doi: string | null
+  title: string
+  abstract: string | null
+  authors: unknown
+  journal_title: string | null
+  journal_abbreviation: string | null
+  publication_year: number | null
+  volume: string | null
+  issue: string | null
+  pages: string | null
+  publication_types: string[] | null
+  is_retracted: boolean
+  is_correction: boolean
+  is_conference_abstract: boolean
+  visibility_state: LiteratureCuratedResult['visibilityState']
 }
 
 const topicById = new Map(
@@ -231,6 +272,40 @@ function numberRecord(value: unknown) {
   )
 }
 
+interface ReviewedOverlayFilter<T> {
+  not(column: string, operator: string, value: unknown): T
+}
+
+/** Apply the five-field atomic reviewed-overlay predicate to a PostgREST query. */
+function requireCompleteReviewedOverlay<T extends ReviewedOverlayFilter<T>>(query: T): T {
+  return query
+    .not('reviewed_relevance', 'is', null)
+    .not('reviewed_enrichment_provenance', 'is', null)
+    .not('reviewed_source_identity', 'is', null)
+    .not('reviewed_at', 'is', null)
+    .not('reviewed_operation_id', 'is', null)
+}
+
+function reviewedSourceKind(sourceIdentity: string): LiteratureReviewedSourceKind {
+  return sourceIdentity.startsWith('owner-authorized-development-cohort-630/')
+    ? 'owner_authorized_development_cohort'
+    : 'physician_reviewed_source'
+}
+
+function reviewedMetadata(row: ReviewedOverlayRow): LiteratureReviewedMetadata | null {
+  if (!hasCompleteReviewedOverlay(row)) {
+    return null
+  }
+
+  return {
+    reviewedRelevance: row.reviewed_relevance,
+    enrichmentProvenance: row.reviewed_enrichment_provenance,
+    sourceKind: reviewedSourceKind(row.reviewed_source_identity),
+    reviewedAt: row.reviewed_at,
+    curated: isCuratedReviewedOverlay(row),
+  }
+}
+
 export function validateKnownLiteratureFilters(query: LiteratureSearchQuery) {
   const topicIds = new Set(topicById.keys())
 
@@ -241,18 +316,55 @@ export function validateKnownLiteratureFilters(query: LiteratureSearchQuery) {
   }
 }
 
+/**
+ * Whether a search observed the whole corpus rather than a slice of it.
+ *
+ * Only such a search can report `foundation_ready_empty` / `foundation_ready_populated` honestly;
+ * anything narrower measures its own result set. `adminPreview` is excluded from the test on
+ * purpose — it widens visibility rather than narrowing the rows, so an unfiltered admin-preview
+ * search still speaks for the corpus.
+ */
+function searchIsUnfiltered(query: LiteratureSearchQuery): boolean {
+  // `== null` on purpose, matching both `null` and `undefined`.
+  //
+  // `literatureSearchSchema` preprocesses an absent year to `undefined`, so a strict `=== null`
+  // was false for every schema-parsed query and this guard never once returned true — which made
+  // `capabilityFromArticleCount` unreachable from the search path and left the "only an unfiltered
+  // search may report empty versus populated" rule unimplemented. zod infers the field as `any`,
+  // so the type checker had nothing to say about it.
+  return (
+    !query.q &&
+    query.journalIds.length === 0 &&
+    query.topicIds.length === 0 &&
+    query.publicationTypes.length === 0 &&
+    query.yearFrom == null &&
+    query.yearTo == null &&
+    !query.landmarkOnly
+  )
+}
+
 export async function searchLiterature(
   query: LiteratureSearchQuery,
-): Promise<LiteratureServerResult<LiteratureSearchResponse>> {
+): Promise<LiteratureCapabilityResult<LiteratureSearchResponse>> {
+  const acquired = literatureClientForOperation('article_search')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
   try {
     validateKnownLiteratureFilters(query)
   } catch {
-    return { data: null, error: 'One or more search filters are invalid.' }
-  }
-
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+    // A rejected filter is a fact about the request, not about the corpus, so the capability says
+    // the database was never asked rather than inventing an empty result or an outage.
+    return {
+      data: null,
+      error: 'One or more search filters are invalid.',
+      capability: capabilityNotObserved(
+        projectRef,
+        'The search was rejected before it reached the Literature database.',
+      ),
+    }
   }
 
   const { data, error } = await client.rpc('search_literature_v1', {
@@ -271,7 +383,8 @@ export async function searchLiterature(
 
   if (error) {
     console.error('Literature search failed', { code: error.code })
-    return { data: null, error: 'Literature search is temporarily unavailable.' }
+    const capability = capabilityFromFailure(error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   const rows = (data ?? []) as SearchRow[]
@@ -314,13 +427,19 @@ export async function searchLiterature(
       adminPreview: query.adminPreview,
     },
     error: null,
+    // The search applies filters (and a query string), so `total` measures the result set, not the
+    // corpus. Only an unfiltered, queryless search can speak for the corpus as a whole.
+    capability: searchIsUnfiltered(query)
+      ? capabilityFromArticleCount(total, projectRef)
+      : capabilityFromFilteredRead(projectRef),
   }
 }
 
 async function loadAssociations(pmids: string[]) {
-  const client = createLiteratureAdmin()
+  const acquired = literatureClientForOperation('article_detail')
+  const client = acquired.client
   if (!client || pmids.length === 0) {
-    return { sources: [] as SourceRow[], topics: [] as TopicAssignmentRow[] }
+    return { sources: [] as SourceRow[], topics: [] as TopicAssignmentRow[], failure: null }
   }
 
   const [sourcesResult, topicsResult] = await Promise.all([
@@ -339,22 +458,36 @@ async function loadAssociations(pmids: string[]) {
   ])
 
   if (sourcesResult.error || topicsResult.error) {
-    throw new Error('Unable to load literature associations.')
+    // Deliberately not a throw. This runs inside `Promise.all` alongside the article and event
+    // reads, so throwing here rejected the whole detail load and escaped the capability model
+    // entirely — the page 500'd instead of reporting which state it was in. Associations are
+    // supplementary; the caller reports the failure through its own classified capability.
+    console.error('Literature associations failed', {
+      sourcesCode: sourcesResult.error?.code,
+      topicsCode: topicsResult.error?.code,
+    })
+    return {
+      sources: [] as SourceRow[],
+      topics: [] as TopicAssignmentRow[],
+      failure: sourcesResult.error ?? topicsResult.error,
+    }
   }
 
   return {
     sources: (sourcesResult.data ?? []) as SourceRow[],
     topics: (topicsResult.data ?? []) as TopicAssignmentRow[],
+    failure: null,
   }
 }
 
 export async function getLiteratureArticle(
   pmid: string,
-): Promise<LiteratureServerResult<LiteratureArticleDetail | null>> {
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+): Promise<LiteratureCapabilityResult<LiteratureArticleDetail | null>> {
+  const acquired = literatureClientForOperation('article_detail')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
   }
+  const { client, projectRef } = acquired
 
   const [articleResult, associations, eventsResult] = await Promise.all([
     client
@@ -373,15 +506,20 @@ export async function getLiteratureArticle(
       .limit(100),
   ])
 
-  if (articleResult.error || eventsResult.error) {
+  const readFailure = articleResult.error ?? eventsResult.error ?? associations.failure
+  if (readFailure) {
     console.error('Literature article lookup failed', {
       articleCode: articleResult.error?.code,
       eventCode: eventsResult.error?.code,
+      associationCode: associations.failure?.code,
     })
-    return { data: null, error: 'Unable to load the literature article.' }
+    const capability = capabilityFromFailure(readFailure, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
   if (!articleResult.data) {
-    return { data: null, error: null }
+    // A successful lookup that matched nothing. The foundation answered, so this is a real
+    // "no such article", not an outage — the detail page renders its not-found state.
+    return { data: null, error: null, capability: capabilityFromArticleCount(0, projectRef) }
   }
 
   const row = articleResult.data as ArticleRow
@@ -421,27 +559,34 @@ export async function getLiteratureArticle(
       curationEvents: ((eventsResult.data ?? []) as CurationEventRow[]).map(curationEventDisplay),
     },
     error: null,
+    capability: capabilityFromArticleCount(1, projectRef),
   }
 }
 
 export async function loadLiteratureAdminStats(): Promise<
-  LiteratureServerResult<LiteratureAdminStats>
+  LiteratureCapabilityResult<LiteratureAdminStats>
 > {
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+  const acquired = literatureClientForOperation('admin_stats')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
   }
+  const { client, projectRef } = acquired
 
   const { data, error } = await client.rpc('literature_admin_stats_v1')
   if (error || !data || typeof data !== 'object') {
     console.error('Literature statistics failed', { code: error?.code })
-    return { data: null, error: 'Unable to load literature statistics.' }
+    // An RPC that answered with a non-object is not a zero either; it is an unusable answer, and
+    // `classifyLiteratureQueryFailure` reports the null-error case as unclassified rather than
+    // guessing that the migration is missing.
+    const capability = capabilityFromFailure(error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   const value = data as Record<string, unknown>
+  const totalArticles = Number(value.total_articles) || 0
   return {
     data: {
-      totalArticles: Number(value.total_articles) || 0,
+      totalArticles,
       withAbstract: Number(value.with_abstract) || 0,
       withoutAbstract: Number(value.without_abstract) || 0,
       relevanceCounts: numberRecord(value.relevance_counts),
@@ -461,11 +606,235 @@ export async function loadLiteratureAdminStats(): Promise<
           : null,
     },
     error: null,
+    capability: capabilityFromArticleCount(totalArticles, projectRef),
+  }
+}
+
+/**
+ * Counts for the authenticated Curated surface.
+ *
+ * Every reviewed count applies the complete five-field overlay predicate. Curated is then derived
+ * from the two fine physician-reviewed classes, never from the coarse `relevance_state` column.
+ */
+export async function loadLiteratureCuratedStats(): Promise<
+  LiteratureCapabilityResult<LiteratureCuratedStats>
+> {
+  const acquired = literatureClientForOperation('reviewed_overlay_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
+  const countQuery = () =>
+    client.from('literature_articles').select('pmid', { count: 'exact', head: true })
+
+  const fullCorpusQuery = countQuery()
+  const physicianReviewedQuery = requireCompleteReviewedOverlay(countQuery())
+  const coreQuery = requireCompleteReviewedOverlay(countQuery()).eq(
+    'reviewed_relevance',
+    'include_core',
+  )
+  const adjacentQuery = requireCompleteReviewedOverlay(countQuery()).eq(
+    'reviewed_relevance',
+    'include_adjacent',
+  )
+  const reviewedExclusionsQuery = requireCompleteReviewedOverlay(countQuery()).eq(
+    'reviewed_relevance',
+    'exclude',
+  )
+  const draftArticlesQuery = countQuery().eq('visibility_state', 'draft')
+
+  const results = await Promise.all([
+    fullCorpusQuery,
+    physicianReviewedQuery,
+    coreQuery,
+    adjacentQuery,
+    reviewedExclusionsQuery,
+    draftArticlesQuery,
+  ])
+  const failed = results.find(
+    (result) => result.error || typeof result.count !== 'number' || !Number.isFinite(result.count),
+  )
+  if (failed) {
+    console.error('Curated Literature statistics failed', { code: failed.error?.code })
+    const capability = capabilityFromFailure(failed.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
+
+  const [fullCorpus, physicianReviewed, core, adjacent, reviewedExclusions, draftArticles] =
+    results.map((result) => result.count) as number[]
+
+  return {
+    data: {
+      fullCorpus,
+      physicianReviewed,
+      curated: core + adjacent,
+      core,
+      adjacent,
+      reviewedExclusions,
+      draftArticles,
+    },
+    error: null,
+    capability: capabilityFromArticleCount(fullCorpus, projectRef),
+  }
+}
+
+/** Server-side, paginated search over the two physician-reviewed relevant classes. */
+export async function loadLiteratureCuratedCollection(
+  filters: LiteratureCuratedCollectionQuery,
+): Promise<LiteratureCapabilityResult<LiteratureCuratedCollection>> {
+  const acquired = literatureClientForOperation('reviewed_overlay_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
+  let query = requireCompleteReviewedOverlay(
+    client
+      .from('literature_articles')
+      .select(
+        'pmid,doi,title,abstract,authors,journal_title,journal_abbreviation,publication_year,volume,issue,pages,publication_types,is_retracted,is_correction,is_conference_abstract,visibility_state,reviewed_relevance,reviewed_enrichment_provenance,reviewed_source_identity,reviewed_at,reviewed_operation_id',
+        { count: 'exact' },
+      ),
+  )
+
+  if (filters.q) {
+    query = query.textSearch('search_vector', filters.q, {
+      config: 'english',
+      type: 'websearch',
+    })
+  }
+
+  if (filters.reviewedClass === 'core') {
+    query = query.eq('reviewed_relevance', 'include_core')
+  } else if (filters.reviewedClass === 'adjacent') {
+    query = query.eq('reviewed_relevance', 'include_adjacent')
+  } else {
+    query = query.in('reviewed_relevance', [...literatureCuratedRelevanceValues])
+  }
+
+  if (filters.sort === 'oldest') {
+    query = query
+      .order('publication_year', { ascending: true, nullsFirst: false })
+      .order('pmid', { ascending: true })
+  } else if (filters.sort === 'title') {
+    query = query.order('title', { ascending: true }).order('pmid', { ascending: false })
+  } else {
+    query = query
+      .order('publication_year', { ascending: false, nullsFirst: false })
+      .order('pmid', { ascending: false })
+  }
+
+  const start = (filters.page - 1) * filters.pageSize
+  const result = await query.range(start, start + filters.pageSize - 1)
+  if (result.error || typeof result.count !== 'number' || !Number.isFinite(result.count)) {
+    console.error('Curated Literature search failed', { code: result.error?.code })
+    const capability = capabilityFromFailure(result.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
+
+  const rows = (result.data ?? []) as unknown as CuratedArticleRow[]
+  if (rows.some((row) => !isCuratedReviewedOverlay(row))) {
+    const capability = capabilityFromFailure(null, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
+  }
+
+  const items = rows.map((row): LiteratureCuratedResult => {
+    const reviewed = reviewedMetadata(row)
+    if (!reviewed) {
+      // Guarded above; retained as a local invariant so a future predicate change fails closed.
+      throw new Error('Curated query returned a row without a complete reviewed overlay.')
+    }
+    return {
+      pmid: row.pmid,
+      doi: row.doi,
+      title: row.title,
+      abstractSnippet: row.abstract?.slice(0, 500) ?? null,
+      authors: normalizeAuthors(row.authors),
+      journalTitle: row.journal_title,
+      journalAbbreviation: row.journal_abbreviation,
+      publicationYear: row.publication_year,
+      volume: row.volume,
+      issue: row.issue,
+      pages: row.pages,
+      publicationTypes: row.publication_types ?? [],
+      isRetracted: row.is_retracted,
+      isCorrection: row.is_correction,
+      isConferenceAbstract: row.is_conference_abstract,
+      visibilityState: row.visibility_state,
+      reviewed,
+    }
+  })
+
+  return {
+    data: {
+      items,
+      total: result.count,
+      page: filters.page,
+      pageSize: filters.pageSize,
+      pageCount: result.count === 0 ? 0 : Math.ceil(result.count / filters.pageSize),
+    },
+    error: null,
+    capability: capabilityFromFilteredRead(projectRef),
+  }
+}
+
+/** Read the physician-reviewed overlay for one authenticated admin article detail. */
+export async function getLiteratureReviewedMetadata(
+  pmid: string,
+): Promise<LiteratureCapabilityResult<LiteratureReviewedMetadata | null>> {
+  const acquired = literatureClientForOperation('reviewed_overlay_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
+  const result = await client
+    .from('literature_articles')
+    .select(
+      'pmid,reviewed_relevance,reviewed_enrichment_provenance,reviewed_source_identity,reviewed_at,reviewed_operation_id',
+    )
+    .eq('pmid', pmid)
+    .maybeSingle()
+
+  if (result.error) {
+    console.error('Literature reviewed provenance lookup failed', { code: result.error.code })
+    const capability = capabilityFromFailure(result.error, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
+  if (!result.data) {
+    return { data: null, error: null, capability: capabilityFromFilteredRead(projectRef) }
+  }
+
+  const row = result.data as ReviewedOverlayRow
+  if (hasNoReviewedOverlay(row)) {
+    return { data: null, error: null, capability: capabilityFromFilteredRead(projectRef) }
+  }
+
+  const metadata = reviewedMetadata(row)
+  if (!metadata) {
+    const capability = capabilityFromFailure(null, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
+  }
+
+  return {
+    data: metadata,
+    error: null,
+    capability: capabilityFromFilteredRead(projectRef),
   }
 }
 
 export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQuery): Promise<
-  LiteratureServerResult<{
+  LiteratureCapabilityResult<{
     items: LiteratureReviewQueueItem[]
     total: number
     page: number
@@ -473,16 +842,24 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
     pageCount: number
   }>
 > {
+  const acquired = literatureClientForOperation('review_queue_read')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
+  }
+  const { client, projectRef } = acquired
+
   if (
     (filters.topicId && !topicById.has(filters.topicId)) ||
     (filters.journalId && !knownJournalIds.has(filters.journalId))
   ) {
-    return { data: null, error: 'One or more review filters are invalid.' }
-  }
-
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+    return {
+      data: null,
+      error: 'One or more review filters are invalid.',
+      capability: capabilityNotObserved(
+        projectRef,
+        'The review-queue request was rejected before it reached the Literature database.',
+      ),
+    }
   }
 
   const relationFields = [
@@ -548,11 +925,33 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
 
   if (result.error) {
     console.error('Literature review queue failed', { code: result.error.code })
-    return { data: null, error: 'Unable to load the literature review queue.' }
+    const capability = capabilityFromFailure(result.error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   const rows = (result.data ?? []) as unknown as ArticleRow[]
   const associations = await loadAssociations(rows.map((row) => row.pmid))
+  if (associations.failure) {
+    /*
+     * The second call site of `loadAssociations`, and the one the earlier fix missed.
+     *
+     * Making that helper return a failure instead of throwing was right — a throw inside
+     * `Promise.all` escaped the capability model and 500'd the detail page — but only
+     * `getLiteratureArticle` was updated to fold the result in. Here the failure was dropped, so a
+     * project that grants select on `literature_articles` but not on the two association tables
+     * produced a queue listing every article with "No source provenance" and no topics, under a
+     * banner saying the project answered. That is precisely the misleading-empty this package
+     * exists to eliminate, reintroduced by the fix for a different instance of it.
+     */
+    console.error('Literature review queue associations failed', {
+      code: associations.failure.code,
+    })
+    const capability = capabilityFromFailure(associations.failure, {
+      projectRef,
+      surface: 'foundation',
+    })
+    return { data: null, error: capability.message, capability }
+  }
   const sourcesByPmid = new Map<string, LiteratureSourceDisplay[]>()
   const topicsByPmid = new Map<string, LiteratureTopicAssignmentDisplay[]>()
   for (const source of associations.sources) {
@@ -594,6 +993,10 @@ export async function loadLiteratureReviewQueue(filters: LiteratureReviewQueueQu
       pageCount: total === 0 ? 0 : Math.ceil(total / filters.pageSize),
     },
     error: null,
+    // `total` counts rows matching the active filters, which is legitimately zero while the corpus
+    // is populated. The capability therefore reports a reachable foundation and a filtered count,
+    // and leaves the corpus-population claim to the administration statistics call.
+    capability: capabilityFromFilteredRead(projectRef),
   }
 }
 
@@ -601,14 +1004,25 @@ export async function curateLiteratureArticle(
   pmid: string,
   update: LiteratureAdminArticleUpdate,
   actor: User,
-): Promise<LiteratureServerResult<Record<string, unknown>>> {
-  if (update.topicDecisions?.some((decision) => !topicById.has(decision.topicId))) {
-    return { data: null, error: 'One or more topic decisions are invalid.' }
+): Promise<LiteratureCapabilityResult<Record<string, unknown>>> {
+  // Withheld by the activation contract, so this returns before any argument is inspected: the
+  // build carries no Literature write path, and saying so is more useful than validating a payload
+  // that can never be sent.
+  const acquired = literatureClientForOperation('article_curation')
+  if (!acquired.client) {
+    return { data: null, error: acquired.capability.message, capability: acquired.capability }
   }
+  const { client, projectRef } = acquired
 
-  const client = createLiteratureAdmin()
-  if (!client) {
-    return { data: null, error: 'The literature database is not configured.' }
+  if (update.topicDecisions?.some((decision) => !topicById.has(decision.topicId))) {
+    return {
+      data: null,
+      error: 'One or more topic decisions are invalid.',
+      capability: capabilityNotObserved(
+        projectRef,
+        'The curation request was rejected before it reached the Literature database.',
+      ),
+    }
   }
 
   const { data, error } = await client.rpc('curate_literature_article_v1', {
@@ -624,11 +1038,13 @@ export async function curateLiteratureArticle(
 
   if (error) {
     console.error('Literature curation failed', { code: error.code })
-    return { data: null, error: 'Unable to save the literature curation decision.' }
+    const capability = capabilityFromFailure(error, { projectRef, surface: 'foundation' })
+    return { data: null, error: capability.message, capability }
   }
 
   return {
     data: data && typeof data === 'object' ? (data as Record<string, unknown>) : { pmid },
     error: null,
+    capability: capabilityFromArticleCount(1, projectRef),
   }
 }

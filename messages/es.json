@@ -2303,6 +2303,33 @@
   "literature": {
     "title": "Explorador de literatura de IP",
     "draftBadge": "Vista previa administrativa",
+    "capability": {
+      "unavailableValue": "No disponible",
+      "unavailableHint": "Este valor no se pudo leer. No indica cero.",
+      "bannerTitle": "Estado de la base de datos de literatura",
+      "projectLabel": "Proyecto dedicado",
+      "state": {
+        "not_configured": "Sin configurar. Este despliegue no tiene ajustes de base de datos de literatura dedicada, por lo que no se leyó nada. Los recuentos no están disponibles; no son cero.",
+        "foundation_missing": "El proyecto de literatura dedicado responde, pero faltan sus tablas base. Los recuentos no están disponibles; no son cero.",
+        "foundation_ready_empty": "El esquema base existe y aún no contiene registros. Los ceros que aparecen abajo son mediciones reales.",
+        "foundation_ready_populated": "El esquema base existe y contiene registros.",
+        "gold_workflow_unavailable": "El flujo de revisión del conjunto de referencia no está instalado en este proyecto. Sus migraciones se aplazaron deliberadamente.",
+        "write_capability_withheld": "Esta versión no incluye ninguna ruta de escritura de literatura. Los cambios de curación y de conjunto de referencia no están disponibles por diseño.",
+        "temporarily_unavailable": "El proyecto de literatura dedicado no respondió. Los recuentos no están disponibles; no son cero.",
+        "not_observed": "La solicitud se rechazó antes de llegar a la base de datos, por lo que no se midió nada.",
+        "foundation_ready_filtered": "El esquema base existe y respondió a esta consulta. Los recuentos mostrados reflejan los filtros activos, no el tamaño del corpus."
+      },
+      "curation": {
+        "title": "La curación no está disponible en esta versión",
+        "body": "Este despliegue lee el proyecto de literatura dedicado solo para revisión y verificación. No incluye ninguna ruta de escritura, así que las decisiones de curación no se pueden guardar aquí. Habilitarlas es un cambio revisado aparte."
+      },
+      "reason": "Motivo informado",
+      "goldSet": {
+        "title": "El flujo de revisión del conjunto de referencia no está instalado",
+        "body": "Este despliegue lee el proyecto de literatura dedicado, que solo incluye el esquema base. Las tablas y funciones de revisión del conjunto de referencia pertenecen a un grupo de migraciones aplazado deliberadamente, así que todavía no hay nada que revisar aquí.",
+        "back": "Volver a la administración de literatura"
+      }
+    },
     "loading": "Cargando literatura…",
     "workflow": {
       "relevance": {
@@ -2492,10 +2519,10 @@
       "disclaimer": "Solo para uso educativo. Los resultados de búsqueda no establecen la calidad de la evidencia, la fuerza de una recomendación ni la idoneidad para un paciente o procedimiento concreto."
     },
     "admin": {
-      "metadataTitle": "Cola de revisión de literatura",
+      "metadataTitle": "Administración de toda la literatura",
       "eyebrow": "Administrador del sitio",
-      "heading": "Revisión y curación de literatura",
-      "description": "Inspecciona las importaciones, filtra la cola de revisión y toma decisiones humanas duraderas con un registro de auditoría de solo anexado.",
+      "heading": "Toda la literatura",
+      "description": "Inspecciona el corpus importado completo, su procedencia de recuperación y su historial de auditoría de solo anexado.",
       "openPreview": "Abrir vista previa de búsqueda",
       "invalidFilters": "Los filtros de revisión no son válidos.",
       "stats": {
@@ -2553,10 +2580,131 @@
         "page": "Página {page} de {pages}",
         "unavailable": "La cola de revisión de literatura no está disponible temporalmente."
       },
+      "curated": {
+        "metadataTitle": "Literatura seleccionada revisada por médicos",
+        "eyebrow": "Administrador del sitio · Colección revisada",
+        "heading": "Literatura seleccionada",
+        "description": "Colección de solo lectura definida exactamente por superposiciones completas de revisión médica clasificadas como IP central o IP adyacente.",
+        "invalidFilters": "Los filtros de literatura seleccionada no son válidos.",
+        "navigation": {
+          "label": "Colecciones de administración de literatura",
+          "curated": "Seleccionada",
+          "all": "Toda la literatura"
+        },
+        "stats": {
+          "heading": "Un corpus, recuentos de revisión distintos",
+          "description": "Estos recuentos en vivo describen conjuntos diferentes y no deben interpretarse como equivalentes.",
+          "fullCorpus": "Corpus completo",
+          "fullCorpusHelp": "Todos los registros bibliográficos importados.",
+          "physicianReviewed": "Revisados por médicos",
+          "physicianReviewedHelp": "Los cinco campos de revisión están completos.",
+          "curated": "Seleccionada",
+          "curatedHelp": "IP central más IP adyacente.",
+          "core": "IP central",
+          "coreHelp": "Revisado como directamente incluido en el ámbito central de IP.",
+          "adjacent": "IP adyacente",
+          "adjacentHelp": "Revisado como literatura adyacente relevante.",
+          "exclusions": "Exclusiones revisadas",
+          "exclusionsHelp": "Revisadas como fuera de esta colección; no sin revisar."
+        },
+        "classes": {
+          "core": "IP central",
+          "adjacent": "IP adyacente"
+        },
+        "provenance": {
+          "physician_confirmed": "Enriquecimiento confirmado por un médico",
+          "physician_modified": "Enriquecimiento modificado por un médico",
+          "qc_accepted": "Enriquecimiento aceptado por control de calidad"
+        },
+        "search": {
+          "heading": "Buscar en la colección seleccionada",
+          "description": "La búsqueda y el orden se realizan en el servidor; solo se devuelve la página actual de registros revisados y relevantes."
+        },
+        "filters": {
+          "classLabel": "Filtrar por clase revisada",
+          "all": "Toda la colección",
+          "core": "Solo central",
+          "adjacent": "Solo adyacente",
+          "query": "Buscar literatura seleccionada",
+          "queryPlaceholder": "Buscar título, resumen, palabras clave, PMID o DOI",
+          "sort": "Ordenar",
+          "sortNewest": "Año de publicación más reciente",
+          "sortOldest": "Año de publicación más antiguo",
+          "sortTitle": "Título A–Z",
+          "apply": "Aplicar",
+          "clear": "Limpiar"
+        },
+        "results": {
+          "count": "{count, plural, =0 {Ningún artículo seleccionado} =1 {Un artículo seleccionado} other {# artículos seleccionados}}",
+          "empty": "Ningún artículo seleccionado coincide con estos filtros.",
+          "unavailable": "La literatura seleccionada no está disponible temporalmente",
+          "physicianReviewed": "Revisado por un médico",
+          "abstractUnavailable": "No hay resumen disponible.",
+          "retracted": "Retractado",
+          "correction": "Corrección",
+          "conferenceAbstract": "Resumen de congreso",
+          "pmid": "PMID",
+          "doi": "DOI",
+          "reviewedOn": "Revisado",
+          "pubMed": "PubMed"
+        },
+        "pagination": {
+          "label": "Páginas de literatura seleccionada",
+          "previous": "Anterior",
+          "next": "Siguiente",
+          "page": "Página {page} de {pages}"
+        },
+        "methods": {
+          "heading": "Métodos y procedencia",
+          "summary": "Cómo se definen la pertenencia a la colección y estos recuentos",
+          "currentCounts": "La bibliografía completa contiene {fullCorpus} registros. {physicianReviewed} recibieron revisión médica; {curated} están en la colección seleccionada ({core} de IP central y {adjacent} de IP adyacente); {exclusions} son exclusiones revisadas.",
+          "countsUnavailable": "No se pudieron leer los recuentos en vivo. Esto no indica cero registros.",
+          "classDistinction": "IP central e IP adyacente siguen siendo clases de ámbito distintas revisadas por médicos; ninguna es una calificación de calidad de evidencia.",
+          "exclusions": "Las exclusiones revisadas permanecen en la base de datos, Toda la literatura y las superficies de auditoría. Los artículos sin revisar no son exclusiones.",
+          "allDraft": "Actualmente todos los artículos permanecen en Borrador.",
+          "draftCount": "{draft} de {fullCorpus} artículos permanecen actualmente en Borrador; esta función no cambia la visibilidad.",
+          "draftUnavailable": "Los recuentos de borrador no están disponibles; esta función no cambia la visibilidad.",
+          "aiBoundary": "La selección o las sugerencias de IA no se muestran como verdad médica, y esta colección no afirma validación por IA ni rendimiento en datos reservados.",
+          "completeness": "La colección no afirma la integridad de una revisión sistemática ni la captura completa de toda la literatura de neumología intervencionista o el respaldo de guías.",
+          "releaseBoundary": "Esta función no realiza publicación pública, publicación académica, ingestión, escritura de curación ni mutación de la superposición."
+        }
+      },
       "article": {
         "metadataTitle": "Curar artículo de literatura PMID {pmid}",
         "loadError": "No se pudo cargar el artículo de literatura. Inténtalo de nuevo más tarde.",
         "back": "Volver a la cola de revisión",
+        "navigation": {
+          "label": "Colecciones de administración de literatura",
+          "curated": "Seleccionada",
+          "all": "Toda la literatura"
+        },
+        "reviewed": {
+          "title": "Procedencia revisada por médicos",
+          "description": "La superposición histórica revisada se muestra por separado del estado de relevancia de trabajo actual.",
+          "physicianReviewed": "Revisado por un médico",
+          "unreviewed": "Sin revisar",
+          "unreviewedDescription": "No hay una superposición completa de revisión médica. Este artículo está sin revisar, no excluido ni considerado irrelevante.",
+          "unavailable": "La procedencia revisada no está disponible",
+          "core": "IP central",
+          "adjacent": "IP adyacente",
+          "excluded": "Exclusión revisada",
+          "reviewedClass": "Clase revisada",
+          "provenanceLabel": "Procedencia del enriquecimiento",
+          "reviewedDate": "Fecha de revisión",
+          "source": "Fuente revisada",
+          "curatedMembership": "Pertenencia a la colección",
+          "curatedYes": "Incluido en la colección seleccionada",
+          "curatedNo": "No incluido — exclusión revisada",
+          "provenance": {
+            "physician_confirmed": "Enriquecimiento confirmado por un médico",
+            "physician_modified": "Enriquecimiento modificado por un médico",
+            "qc_accepted": "Enriquecimiento aceptado por control de calidad"
+          },
+          "sourceKinds": {
+            "owner_authorized_development_cohort": "Cohorte de desarrollo revisada por médicos y autorizada por el propietario",
+            "physician_reviewed_source": "Fuente revisada por médicos"
+          }
+        },
         "landmark": "Referencia",
         "openPubMed": "Abrir en PubMed",
         "curationTitle": "Curación humana",

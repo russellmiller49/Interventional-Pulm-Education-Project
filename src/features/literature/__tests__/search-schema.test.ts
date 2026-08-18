@@ -1,6 +1,8 @@
 import {
   literatureAdminArticleUpdateSchema,
   literatureBulkReviewSchema,
+  literatureCuratedCollectionInputFromUrl,
+  literatureCuratedCollectionSchema,
   literatureSearchInputFromUrl,
   literatureSearchSchema,
 } from '@/features/literature/schemas/search'
@@ -50,6 +52,34 @@ describe('literature search contracts', () => {
         q: 'x'.repeat(301),
       }),
     ).toThrow()
+  })
+
+  it('parses only closed Curated filters, sorts, and bounded pagination', () => {
+    const query = literatureCuratedCollectionSchema.parse(
+      literatureCuratedCollectionInputFromUrl(
+        new URLSearchParams('q=airway+stent&class=adjacent&sort=title&page=2&pageSize=10'),
+      ),
+    )
+    expect(query).toEqual({
+      q: 'airway stent',
+      reviewedClass: 'adjacent',
+      sort: 'title',
+      page: 2,
+      pageSize: 10,
+    })
+
+    for (const invalid of [
+      'class=exclude',
+      'sort=reviewed_operation_id',
+      'page=0',
+      'pageSize=51',
+    ]) {
+      expect(() =>
+        literatureCuratedCollectionSchema.parse(
+          literatureCuratedCollectionInputFromUrl(new URLSearchParams(invalid)),
+        ),
+      ).toThrow()
+    }
   })
 
   it('requires a reason for exclusion and at least one actual change', () => {

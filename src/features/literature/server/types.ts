@@ -6,6 +6,12 @@ import type {
   LiteratureTopicAssignmentState,
   LiteratureVisibilityState,
 } from '@/features/literature/types'
+import type {
+  LiteratureReviewedEnrichmentProvenance,
+  LiteratureReviewedRelevance,
+} from '@/features/literature/domain/reviewed-overlay'
+
+import type { LiteratureCapability } from './runtime-capability'
 
 export interface LiteratureDisplayTopic {
   id: string
@@ -158,4 +164,65 @@ export interface LiteratureAdminStats {
   lastSuccessfulImport: LiteratureImportSummary | null
 }
 
+export type LiteratureReviewedSourceKind =
+  | 'owner_authorized_development_cohort'
+  | 'physician_reviewed_source'
+
+export interface LiteratureReviewedMetadata {
+  reviewedRelevance: LiteratureReviewedRelevance
+  enrichmentProvenance: LiteratureReviewedEnrichmentProvenance
+  sourceKind: LiteratureReviewedSourceKind
+  reviewedAt: string
+  curated: boolean
+}
+
+export interface LiteratureCuratedResult {
+  pmid: string
+  doi: string | null
+  title: string
+  abstractSnippet: string | null
+  authors: Array<{ fullName: string; abbreviatedName: string | null }>
+  journalTitle: string | null
+  journalAbbreviation: string | null
+  publicationYear: number | null
+  volume: string | null
+  issue: string | null
+  pages: string | null
+  publicationTypes: string[]
+  isRetracted: boolean
+  isCorrection: boolean
+  isConferenceAbstract: boolean
+  visibilityState: LiteratureVisibilityState
+  reviewed: LiteratureReviewedMetadata
+}
+
+export interface LiteratureCuratedCollection {
+  items: LiteratureCuratedResult[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}
+
+export interface LiteratureCuratedStats {
+  fullCorpus: number
+  physicianReviewed: number
+  curated: number
+  core: number
+  adjacent: number
+  reviewedExclusions: number
+  draftArticles: number
+}
+
 export type LiteratureServerResult<T> = { data: T; error: null } | { data: null; error: string }
+
+/**
+ * A server result that also states the runtime capability it was produced under.
+ *
+ * Used by every surface that renders counts. Carrying the capability alongside the data is what
+ * lets a view distinguish "the corpus is empty" from "the query failed" without inspecting an error
+ * string, which is how the misleading `?? 0` fallbacks got written in the first place.
+ */
+export type LiteratureCapabilityResult<T> = LiteratureServerResult<T> & {
+  capability: LiteratureCapability
+}

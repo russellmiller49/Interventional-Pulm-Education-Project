@@ -138,16 +138,15 @@ describe('byte-exact production URL (H-3)', () => {
     expect(LITERATURE_CANONICAL_PRODUCTION_URL_EXACT).toBe(
       'https://itcttmkxdxvwmwcmzmey.supabase.co/',
     )
-    // Validation still runs to completion for the exactly correct value — it just stops short of
-    // activating a client (third review, finding 4). The withheld state proves every strict gate
-    // was satisfied: a wrong URL, ref, or credential class produces `unbound` with its own reason.
+    // Validation runs to completion for the exactly correct value and binds. That every strict
+    // gate was satisfied is what `bound` now means: a wrong URL, ref, or credential class produces
+    // `unbound` with its own reason instead.
     const binding = resolve(strictEnvironment())
-    expect(binding.status).toBe('not_activated')
-    if (binding.status !== 'not_activated') throw new Error('expected a withheld result')
-    expect(binding.reason).toBe('dedicated_runtime_not_activated')
+    expect(binding.status).toBe('bound')
+    if (binding.status !== 'bound') throw new Error('expected a bound result')
     expect(binding.projectRef).toBe(APPROVED_REF)
     expect(binding.credentialClass).toBe('secret')
-    expect(binding).not.toHaveProperty('secretKey')
+    expect(binding.url).toBe(LITERATURE_CANONICAL_PRODUCTION_URL_EXACT)
   })
 
   // Every variant differs from the approved constant by at least one byte, so each fails the
@@ -540,13 +539,10 @@ describe('legacy credential variable', () => {
   })
 
   it('accepts byte-identical values as one credential', () => {
-    // Under the strict contract "accepted" now means "validated through to the activation gate":
-    // an ambiguous pair would have stopped earlier with `ambiguous_credentials`.
+    // Two variables holding the same bytes are one credential, not an ambiguous pair — an
+    // ambiguous pair stops earlier with `ambiguous_credentials`.
     const binding = resolve(strictEnvironment({ LITERATURE_SUPABASE_SERVICE_ROLE_KEY: SECRET_KEY }))
-    expect(binding).toMatchObject({
-      status: 'not_activated',
-      reason: 'dedicated_runtime_not_activated',
-    })
+    expect(binding).toMatchObject({ status: 'bound', credentialClass: 'secret' })
 
     // Local mode still binds, and still records which variable supplied the credential.
     const local = resolveLiteratureDedicatedBinding(
@@ -583,9 +579,10 @@ describe('secret safety', () => {
     const diagnostics = describeLiteratureBinding(resolve(strictEnvironment()))
     expect(JSON.stringify(diagnostics)).not.toContain(SECRET_KEY)
     expect(diagnostics).toMatchObject({
-      status: 'not_activated',
-      reason: 'dedicated_runtime_not_activated',
+      status: 'bound',
+      reason: null,
       projectRef: APPROVED_REF,
+      credentialClass: 'secret',
     })
 
     const localDiagnostics = describeLiteratureBinding(
@@ -603,16 +600,18 @@ describe('secret safety', () => {
  * validates fully and withholds, and the switch is a source constant rather than a variable.
  */
 describe('production runtime activation (third review, finding 4)', () => {
-  it('is a source constant set to not_activated, not an environment variable', () => {
-    expect(LITERATURE_PRODUCTION_RUNTIME_ACTIVATION).toBe('not_activated')
+  it('is a source constant, not an environment variable', () => {
+    expect(LITERATURE_PRODUCTION_RUNTIME_ACTIVATION).toBe('activated_by_reviewed_cutover')
 
     const source = readFileSync(
       join(process.cwd(), 'src/features/literature/server/dedicated-project-contract.ts'),
       'utf8',
     )
     // The value is a literal in source, and nothing reads an activation variable from anywhere.
+    // This is the property the third review's finding actually turned on: activation moved from
+    // "set three variables" to "edit and review this file", and flipping it did not move it back.
     expect(source).toMatch(
-      /export const LITERATURE_PRODUCTION_RUNTIME_ACTIVATION: LiteratureProductionRuntimeActivation =\s*'not_activated'/u,
+      /export const LITERATURE_PRODUCTION_RUNTIME_ACTIVATION: LiteratureProductionRuntimeActivation =\s*'activated_by_reviewed_cutover'/u,
     )
 
     // Scan executable code only: the module header legitimately *mentions* process.env to say it
@@ -626,8 +625,10 @@ describe('production runtime activation (third review, finding 4)', () => {
     expect(executable).not.toMatch(/^\s*[A-Z_]*ACTIVAT[A-Z_]*\??:/mu)
   })
 
-  it('never resolves to bound in strict mode, for any configuration shape', () => {
-    const environments: LiteratureDedicatedEnvironment[] = [
+  it('resolves to bound in strict mode for the exact approved configuration only', () => {
+    // Every shape that was refused before activation is still refused. Activation relaxed no
+    // validation rule; it removed a terminal `not_activated` branch that sat after all of them.
+    const refused: LiteratureDedicatedEnvironment[] = [
       {},
       { LITERATURE_SUPABASE_URL: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT },
       { LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY },
@@ -635,24 +636,36 @@ describe('production runtime activation (third review, finding 4)', () => {
         LITERATURE_SUPABASE_URL: LITERATURE_CANONICAL_PRODUCTION_URL_EXACT,
         LITERATURE_SUPABASE_SECRET_KEY: SECRET_KEY,
       },
+      strictEnvironment({ LITERATURE_SUPABASE_URL: LITERATURE_CANONICAL_PRODUCTION_ORIGIN }),
+      strictEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY }),
+    ]
+    for (const environment of refused) {
+      expect(resolveLiteratureDedicatedBinding(environment).status).toBe('unbound')
+    }
+
+    // The complete configuration binds, including under every near-miss runtime-mode spelling,
+    // which all resolve to the strict hosted contract rather than relaxing the host allowlist.
+    const bound: LiteratureDedicatedEnvironment[] = [
       strictEnvironment(),
       strictEnvironment({ LITERATURE_SUPABASE_RUNTIME_MODE: 'production' }),
       strictEnvironment({ LITERATURE_SUPABASE_RUNTIME_MODE: 'Local' }),
       strictEnvironment({ LITERATURE_SUPABASE_RUNTIME_MODE: ' local ' }),
-      strictEnvironment({ LITERATURE_SUPABASE_URL: LITERATURE_CANONICAL_PRODUCTION_ORIGIN }),
-      strictEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY }),
     ]
-    for (const environment of environments) {
-      // The mode is derived here rather than forced, so a near-miss mode value is exercised too.
-      expect(resolveLiteratureDedicatedBinding(environment).status).not.toBe('bound')
+    for (const environment of bound) {
+      expect(resolveLiteratureDedicatedBinding(environment)).toMatchObject({
+        status: 'bound',
+        mode: 'production_strict',
+        projectRef: LITERATURE_APPROVED_PRODUCTION_PROJECT_REF,
+        credentialClass: 'secret',
+      })
     }
   })
 
-  it('still distinguishes an invalid configuration from a valid withheld one', () => {
+  it('still distinguishes an invalid configuration from a complete one', () => {
     expect(
       resolve(strictEnvironment({ LITERATURE_SUPABASE_SECRET_KEY: PUBLISHABLE_KEY })),
     ).toMatchObject({ status: 'unbound', reason: 'invalid_credential_class' })
-    expect(resolve(strictEnvironment())).toMatchObject({ status: 'not_activated' })
+    expect(resolve(strictEnvironment())).toMatchObject({ status: 'bound' })
   })
 
   it('allows only the canonical local hosts through the local runtime allowlist', () => {

@@ -6,6 +6,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { flattenLiteratureTaxonomy } from '@/features/literature/config'
+import { LiteratureCapabilityNotice } from '@/features/literature/components/LiteratureCapabilityNotice'
+import { LiteratureAdminCollectionNav } from '@/features/literature/components/LiteratureAdminCollectionNav'
+import { LiteratureReviewedProvenance } from '@/features/literature/components/LiteratureReviewedProvenance'
 import { LiteratureReviewForm } from '@/features/literature/components/LiteratureReviewForm'
 import {
   compactLiteratureAuthors,
@@ -14,7 +17,12 @@ import {
 } from '@/features/literature/domain/display'
 import { pmidSchema } from '@/features/literature/schemas/search'
 import { requireLiteratureSiteAdminPage } from '@/features/literature/server/access'
-import { getLiteratureArticle } from '@/features/literature/server/queries'
+import { literatureOperationActivated } from '@/features/literature/server/database-client'
+import {
+  getLiteratureArticle,
+  getLiteratureReviewedMetadata,
+} from '@/features/literature/server/queries'
+import { capabilityForWithheldOperation } from '@/features/literature/server/runtime-capability'
 import { isActiveLocale, type ActiveLocale } from '@/i18n/locale'
 import { Link } from '@/i18n/navigation'
 
@@ -22,6 +30,7 @@ export const dynamic = 'force-dynamic'
 
 interface LiteratureAdminArticlePageProps {
   params: Promise<{ locale: string; pmid: string }>
+  searchParams?: Promise<{ from?: string | string[] }>
 }
 
 function resolveLocale(locale: string): ActiveLocale {
@@ -44,6 +53,7 @@ export async function generateMetadata({
 
 export default async function LiteratureAdminArticlePage({
   params,
+  searchParams,
 }: LiteratureAdminArticlePageProps) {
   const { locale: rawLocale, pmid: rawPmid } = await params
   const locale = resolveLocale(rawLocale)
@@ -51,31 +61,59 @@ export default async function LiteratureAdminArticlePage({
   await requireLiteratureSiteAdminPage(locale, `/admin/literature/article/${rawPmid}`)
   const t = await getTranslations('literature.admin.article')
   const workflowT = await getTranslations('literature.workflow')
+  const capabilityT = await getTranslations('literature.capability')
   const pmid = pmidSchema.safeParse(rawPmid)
   if (!pmid.success) {
     notFound()
   }
-  const result = await getLiteratureArticle(pmid.data)
-  if (result.error) {
+  const [detail, reviewed] = await Promise.all([
+    getLiteratureArticle(pmid.data),
+    getLiteratureReviewedMetadata(pmid.data),
+  ])
+  if (detail.error) {
+    // Which failure it was matters here: a missing foundation, an unconfigured deployment, and a
+    // transient outage all reach this branch and have different remedies.
     return (
-      <div className="container py-12">
+      <div className="container max-w-3xl space-y-6 py-12">
         <Card className="border-destructive/40">
-          <CardContent className="p-6">{t('loadError')}</CardContent>
+          <CardHeader>
+            <CardTitle>{t('loadError')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LiteratureCapabilityNotice
+              capability={detail.capability}
+              title={capabilityT('bannerTitle')}
+              description={capabilityT(`state.${detail.capability.state}`)}
+              projectLabel={capabilityT('projectLabel')}
+              reasonLabel={capabilityT('reason')}
+            />
+          </CardContent>
         </Card>
       </div>
     )
   }
-  if (!result.data) {
+  if (!detail.data) {
     notFound()
   }
-  const article = result.data
+  const article = detail.data
+  const curationAvailable = literatureOperationActivated('article_curation')
   const authors = compactLiteratureAuthors(article.authors, article.collectiveAuthors)
   const citation = literatureCitationParts(article)
+  const requestedFrom = (await searchParams)?.from
+  const fromCurated = requestedFrom === 'curated'
 
   return (
     <div className="container space-y-8 py-10 md:py-14">
+      <LiteratureAdminCollectionNav
+        active={fromCurated ? 'curated' : 'all'}
+        labels={{
+          all: t('navigation.all'),
+          curated: t('navigation.curated'),
+          navigation: t('navigation.label'),
+        }}
+      />
       <Link
-        href="/admin/literature"
+        href={fromCurated ? '/admin/literature/curated' : '/admin/literature'}
         className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -108,18 +146,80 @@ export default async function LiteratureAdminArticlePage({
         </div>
       </header>
 
+      <LiteratureReviewedProvenance
+        result={reviewed}
+        locale={locale}
+        labels={{
+          adjacent: t('reviewed.adjacent'),
+          core: t('reviewed.core'),
+          curatedMembership: t('reviewed.curatedMembership'),
+          curatedNo: t('reviewed.curatedNo'),
+          curatedYes: t('reviewed.curatedYes'),
+          description: t('reviewed.description'),
+          excluded: t('reviewed.excluded'),
+          physicianReviewed: t('reviewed.physicianReviewed'),
+          provenance: {
+            physician_confirmed: t('reviewed.provenance.physician_confirmed'),
+            physician_modified: t('reviewed.provenance.physician_modified'),
+            qc_accepted: t('reviewed.provenance.qc_accepted'),
+          },
+          provenanceLabel: t('reviewed.provenanceLabel'),
+          reviewedClass: t('reviewed.reviewedClass'),
+          reviewedDate: t('reviewed.reviewedDate'),
+          source: t('reviewed.source'),
+          sourceKinds: {
+            owner_authorized_development_cohort: t(
+              'reviewed.sourceKinds.owner_authorized_development_cohort',
+            ),
+            physician_reviewed_source: t('reviewed.sourceKinds.physician_reviewed_source'),
+          },
+          title: t('reviewed.title'),
+          unreviewed: t('reviewed.unreviewed'),
+          unreviewedDescription: t('reviewed.unreviewedDescription'),
+        }}
+        capabilityLabels={{
+          title: t('reviewed.unavailable'),
+          description: capabilityT(`state.${reviewed.capability.state}`),
+          projectLabel: capabilityT('projectLabel'),
+          reasonLabel: capabilityT('reason'),
+        }}
+      />
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
         <Card>
           <CardHeader>
             <CardTitle>{t('curationTitle')}</CardTitle>
-            <CardDescription>{t('curationDescription')}</CardDescription>
+            <CardDescription>
+              {curationAvailable ? t('curationDescription') : capabilityT('curation.body')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <LiteratureReviewForm
-              article={article}
-              locale={locale}
-              topics={flattenLiteratureTaxonomy()}
-            />
+            {curationAvailable ? (
+              <LiteratureReviewForm
+                article={article}
+                locale={locale}
+                topics={flattenLiteratureTaxonomy()}
+              />
+            ) : (
+              /*
+               * The form is withheld rather than disabled-in-place.
+               * `article_curation` is not on the activated allowlist, so every submission would
+               * reach `curateLiteratureArticle`, be refused before the payload is even validated,
+               * and surface as a generic save error — an admin would reasonably read that as data
+               * loss or a bug. Saying so up front is the honest presentation.
+               */
+              <LiteratureCapabilityNotice
+                capability={capabilityForWithheldOperation(
+                  detail.capability.projectRef,
+                  'write_capability_withheld',
+                  capabilityT('curation.body'),
+                )}
+                title={capabilityT('curation.title')}
+                description={capabilityT('state.write_capability_withheld')}
+                projectLabel={capabilityT('projectLabel')}
+                reasonLabel={capabilityT('reason')}
+              />
+            )}
           </CardContent>
         </Card>
 
