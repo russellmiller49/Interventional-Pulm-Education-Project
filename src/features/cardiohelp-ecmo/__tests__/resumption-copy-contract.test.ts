@@ -39,6 +39,13 @@ const COPY_SOURCES: readonly string[] = [
   'src/features/cardiohelp-ecmo/engine/reducer.ts',
   'src/features/cardiohelp-ecmo/engine/types.ts',
   'src/features/critical-care/content/learningPathways.ts',
+  // The shared circuit grammar. It carries no resumption copy today, and it is scanned so that a
+  // later package adding an air-event row to it cannot quietly teach a clamp order here instead.
+  'src/features/cardiohelp-ecmo/content/circuitSegments.ts',
+  'src/features/cardiohelp-ecmo/content/localizationCards.ts',
+  'src/features/cardiohelp-ecmo/content/circuitPresentation.ts',
+  'src/features/cardiohelp-ecmo/components/teaching/EcmoLocalizationCard.tsx',
+  'src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx',
   'docs/cardiohelp-ecmo/e5-model-limitations.md',
   'docs/cardiohelp-ecmo/b3-b4-novice-think-aloud-script.md',
 ]

@@ -1,5 +1,12 @@
+import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
+import {
+  ecmoBloodPathSegments,
+  ecmoSensorSitesForSegment,
+  resolveEcmoModeText,
+} from '../../content/circuitSegments'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../engine/types'
+import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
 import { ChannelValue, GuidedValue, ModelBoundary, TextEquivalent, styles } from './shared'
 
 /**
@@ -8,87 +15,58 @@ import { ChannelValue, GuidedValue, ModelBoundary, TextEquivalent, styles } from
  * The blood path and the gas path are drawn as separate rows with different stroke patterns as
  * well as different labels, because a learner who cannot distinguish them by colour still has to
  * be able to tell sweep gas from blood.
+ *
+ * The stops and the sensors at them now come from the shared circuit registry rather than from a
+ * list kept here. This lesson was where that vocabulary was first written down, and three other
+ * surfaces had since paraphrased it; naming the places once means the map above this list, the
+ * localization rows in the drills, and this stop list cannot disagree about where anything is.
+ * Completing the registry also finished this list: the flow probe on the return limb had always
+ * been missing from it, which is a strange omission in a lesson whose subject is every signal at
+ * its own location.
  */
-
-interface Segment {
-  readonly id: string
-  readonly label: string
-  readonly detail: string
-  readonly sensors: readonly string[]
-}
-
-function bloodPath(state: EcmoSimulationState): readonly Segment[] {
-  const returnTarget =
-    state.supportMode === 'va' ? 'Arterial return to the patient' : 'Venous return to the patient'
-  const returnDetail =
-    state.supportMode === 'va'
-      ? 'Returned to the arterial side, so circuit flow runs in parallel with the native heart and competes with it.'
-      : 'Returned to the venous side, so circuit blood is in series with the native lung and some of it can be drained straight back.'
-  return [
-    {
-      id: 'drainage',
-      label: 'Patient venous drainage',
-      detail: 'Blood is pulled from the venous circulation into the drainage limb.',
-      sensors: ['pVen'],
-    },
-    {
-      id: 'pump',
-      label: 'Centrifugal pump',
-      detail: 'Generates the flow by pulling on drainage and pushing into the membrane.',
-      sensors: [],
-    },
-    {
-      id: 'pre-membrane',
-      label: 'Pre-oxygenator location',
-      detail: 'After the pump, before the membrane lung. This is where pInt is reported.',
-      sensors: ['pInt', 'SvO₂ (venous measuring cell)'],
-    },
-    {
-      id: 'membrane',
-      label: 'Membrane lung',
-      detail:
-        'Gas exchange happens here, across a membrane the sweep gas passes on the other side of.',
-      sensors: ['ΔP spans this'],
-    },
-    {
-      id: 'post-membrane',
-      label: 'Post-oxygenator / return location',
-      detail: 'After the membrane, on the return limb. This is where pArt is reported.',
-      sensors: ['pArt', 'Post-oxygenator saturation'],
-    },
-    { id: 'return', label: returnTarget, detail: returnDetail, sensors: [] },
-  ]
-}
 
 export function CircuitFlowPathPanel({ state }: { readonly state: EcmoSimulationState }) {
   const { circuit, gas } = state
-  const segments = bloodPath(state)
+  const segments = ecmoBloodPathSegments()
 
   return (
     <div className={styles.panel} data-teaching-panel="circuit-flow-path">
+      <EcmoCircuitMinimap
+        supportMode={state.supportMode}
+        presentation={deriveEcmoCircuitPresentation(state, {
+          kind: 'foundation-scaffold',
+          emphasis: 'path-order',
+        })}
+      />
+
       <section className={styles.section} aria-labelledby="path-heading">
         <h3 id="path-heading" className={styles.heading}>
           The blood path, in order
         </h3>
 
         <ol className="mt-3 grid gap-2" data-blood-path>
-          {segments.map((segment, index) => (
-            <li
-              key={segment.id}
-              className="rounded-xl border-l-4 border-solid bg-muted/30 p-3"
-              data-circuit-segment={segment.id}
-            >
-              <p className="text-sm font-semibold">
-                {index + 1}. {segment.label}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{segment.detail}</p>
-              {segment.sensors.length > 0 ? (
-                <p className="mt-1 text-xs font-medium">
-                  Reported here: {segment.sensors.join(' · ')}
+          {segments.map((segment, index) => {
+            const sensors = ecmoSensorSitesForSegment(segment.id)
+            return (
+              <li
+                key={segment.id}
+                className="rounded-xl border-l-4 border-solid bg-muted/30 p-3"
+                data-circuit-segment={segment.id}
+              >
+                <p className="text-sm font-semibold">
+                  {index + 1}. {resolveEcmoModeText(segment.label, state.supportMode)}
                 </p>
-              ) : null}
-            </li>
-          ))}
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {resolveEcmoModeText(segment.detail, state.supportMode)}
+                </p>
+                {sensors.length > 0 ? (
+                  <p className="mt-1 text-xs font-medium">
+                    Reported here: {sensors.map((site) => site.stopLabel).join(' · ')}
+                  </p>
+                ) : null}
+              </li>
+            )
+          })}
         </ol>
 
         <div className="mt-4 rounded-xl border border-dashed p-3" data-gas-path>

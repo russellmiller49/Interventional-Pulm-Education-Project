@@ -1,5 +1,7 @@
 import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../../engine/types'
+import { deriveEcmoCircuitPresentation } from '../../../content/circuitPresentation'
+import { EcmoCircuitMinimap } from '../EcmoCircuitMinimap'
 import { GuidedValue, TextEquivalent, styles } from '../shared'
 import {
   AfterCommitment,
@@ -129,6 +131,19 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
           </p>
         ) : null}
       </section>
+
+      {/*
+        The circuit this console is attached to, with every channel flagged where it is taken.
+        Commitment-independent, and safe to be: this drill asks what has been established before
+        support starts rather than what has gone wrong, and the register directly below already
+        prints each of these locations beside its reading. What the map adds is the geometry — that
+        two of these sit either side of the pump and one spans the membrane — which is exactly the
+        thing a table of names cannot show and the reason a learner mistakes one for another.
+      */}
+      <EcmoCircuitMinimap
+        supportMode="vv"
+        presentation={deriveEcmoCircuitPresentation(state, { kind: 'drill-orientation-scaffold' })}
+      />
 
       <SignalRegister
         rows={[

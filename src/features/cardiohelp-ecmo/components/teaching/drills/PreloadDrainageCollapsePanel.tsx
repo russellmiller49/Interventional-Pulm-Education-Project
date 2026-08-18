@@ -1,5 +1,8 @@
+import { deriveEcmoCircuitPresentation } from '../../../content/circuitPresentation'
 import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../../engine/types'
+import { EcmoCircuitMinimap } from '../EcmoCircuitMinimap'
+import { EcmoDrillLocalization } from '../EcmoLocalizationCard'
 import { isInterpretable } from '../../channelReadout'
 import { GuidedValue, TextEquivalent, styles } from '../shared'
 import {
@@ -57,6 +60,20 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
         'Echocardiography, imaging of cannula position, and the volume picture decide this at the bedside, and none of the three is reproduced here. The single corrective action in this lab stands for all of them.',
       ]}
     >
+      {/*
+        Where these channels sit, in front of the table that reads them. Neutral until the learner
+        commits — the map is the same for every fault, so a segment marked before a prediction would
+        be the prediction. After the commitment it marks the part of the circuit the row explains,
+        which is the localization this drill exists to teach.
+      */}
+      <EcmoCircuitMinimap
+        supportMode="vv"
+        presentation={deriveEcmoCircuitPresentation(state, {
+          kind: 'drill-reveal',
+          rowId: 'drainage-limitation',
+        })}
+      />
+
       <SignalRegister
         rows={[
           valueSignalRow(
@@ -168,6 +185,8 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
       />
 
       <AfterCommitment state={state}>
+        <EcmoDrillLocalization state={state} rowId="drainage-limitation" />
+
         <Mechanism>
           <p>
             The location of the pressure change localises this. Available venous return has become
