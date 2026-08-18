@@ -452,6 +452,8 @@ describe('apply gates and preconditions', () => {
     await expect(runApply(dependencies(transport), baseOptions())).rejects.toThrow(
       /reviewed-overlay schema is not present/u,
     )
+    expect(transport.observeCalls).toBe(1)
+    expect(transport.applyCalls).toBe(0)
   })
 
   it('refuses a corpus whose total is not exactly the fixed corpus', async () => {
