@@ -13,6 +13,7 @@ import {
   normalizeIdentityWhitespace,
   parseOptions,
   servedIdentityLeaks,
+  stitchFlightChunks,
   REQUIRED_ROBOTS_DIRECTIVES,
 } from '../verify-unlisted-beta'
 
@@ -126,20 +127,58 @@ describe('deriveIdentityLeakTokens', () => {
     for (const token of tokens.keys()) {
       expect(catalogs.some((catalog) => containsToken(catalog, token))).toBe(false)
     }
-    // The genuine public-copy mention stays excluded, the hash-key coincidences stay in.
-    expect(tokens.has('um-s20-17s')).toBe(false)
-    expect(tokens.has('10530')).toBe(true)
-    expect(tokens.has('10358a')).toBe(true)
-    expect(tokens.has('10384b')).toBe(true)
+    // The boundary-matched exclusion is a property of the predicate, so it is pinned on the
+    // predicate rather than on a data coincidence: a catalog number whose only "occurrence"
+    // in a message bundle sits inside a translation-key hex id is NOT excluded, while a
+    // genuine standalone mention is.
+    expect(containsToken('{"h_1a7610530739":"morphology slide 3"}', '10530')).toBe(false)
+    expect(containsToken('<td>catalog no. 10530</td>', '10530')).toBe(true)
+    expect(containsToken('the um-s20-17s radial probe is named in public copy', 'um-s20-17s')).toBe(
+      true,
+    )
+    // D2B moved the previously pinned instances (Karl Storz 10530/10358a/10384b, Olympus
+    // UM-S20-17S) into the atlas cohort, so they are no longer screened identities at all.
+    // Whatever coincidences the CURRENT non-cohort population carries are re-derived here,
+    // and each must still be a token: raw containment inside a message bundle must never
+    // unscreen an identity.
+    const rawOnlyCoincidences = [...tokens.keys()].filter(
+      (token) =>
+        catalogs.some((catalog) => catalog.includes(token)) &&
+        !catalogs.some((catalog) => containsToken(catalog, token)),
+    )
+    for (const token of rawOnlyCoincidences) {
+      expect({ token, screened: tokens.has(token) }).toEqual({ token, screened: true })
+    }
   })
 
   it('excludes phrases the cohort records’ own prose already serves', () => {
     // The cohort record is the approved payload: the atlas renders its description and
     // compatibility text verbatim, so a phrase those fields carry cannot be a leak of
-    // itself even when a non-cohort accessory is named exactly that phrase. The concrete
-    // committed instance: a cohort unit's description says it includes a two-pedal
-    // footswitch, and a non-cohort accessory's product_name is that phrase.
+    // itself even when a non-cohort product is named exactly that phrase. Under D2B the
+    // previously pinned instance (the "Two-Pedal Footswitch" accessory) is itself a cohort
+    // product, so the phrase is doubly unscreened; the exclusion is therefore re-derived
+    // from the current data rather than pinned to that one row.
     expect(tokens.has('two-pedal footswitch')).toBe(false)
+    const products = JSON.parse(
+      readFileSync(
+        path.join(REPO_ROOT, 'data/ip-preference-cards/generated/catalog-products.json'),
+        'utf8',
+      ),
+    ) as Array<Record<string, unknown>>
+    const cohortProse = products
+      .filter((product) => isAtlasCohortProduct(product as never))
+      .flatMap((product) =>
+        [product.description, product.compatibility_text, product.notes].filter(
+          (value): value is string => typeof value === 'string',
+        ),
+      )
+      .map((value) => normalizeIdentityWhitespace(value.toLowerCase()))
+    for (const token of tokens.keys()) {
+      expect({
+        token,
+        servedByCohortProse: cohortProse.some((prose) => containsToken(prose, token)),
+      }).toEqual({ token, servedByCohortProse: false })
+    }
   })
 
   it('excludes governed vocabulary labels the D1 surface deliberately renders', () => {
@@ -189,6 +228,35 @@ describe('deriveIdentityLeakTokens', () => {
     for (const token of tokens.keys()) {
       expect(cohortIdentity.some((identity) => containsToken(identity, token))).toBe(false)
     }
+  })
+})
+
+describe('stitchFlightChunks', () => {
+  const SEAM = '"])</script><script>self.__next_f.push([1,"'
+
+  it('rejoins an identifier split across an RSC flight chunk boundary', () => {
+    // The committed reproduction: serving the CHEST_TUBE workspace put a seam inside
+    // PRD-BDB5AF3EB5 (a cohort product), so a raw scan saw the phantom "PRD-BDB5AF3E" and
+    // reported a leak that does not exist.
+    const served = `<p>/en/devices/PRD-BDB5AF3E${SEAM}B5\\",\\"className\\":\\"x</p>`
+    expect(served.match(/PRD-[A-Z0-9]{6,20}/g)).toEqual(['PRD-BDB5AF3E'])
+    expect(stitchFlightChunks(served).match(/PRD-[A-Z0-9]{6,20}/g)).toEqual(['PRD-BDB5AF3EB5'])
+  })
+
+  it('reveals a straddling NON-cohort identity the raw scan would have missed', () => {
+    // The direction that actually matters for the wall: without stitching, a hidden id split
+    // across a seam is invisible as a full id. Stitching makes the scan strictly stronger.
+    const fixtures = deriveProductFixtures(REPO_ROOT)
+    const hidden = fixtures.nonCohortProductIds[0]
+    const split = Math.floor(hidden.length / 2) + 2
+    const served = `<a href="/x/${hidden.slice(0, split)}${SEAM}${hidden.slice(split)}">y</a>`
+    expect(served.includes(hidden)).toBe(false)
+    expect(stitchFlightChunks(served).includes(hidden)).toBe(true)
+  })
+
+  it('leaves ordinary markup untouched', () => {
+    const plain = '<p>PRD-ABCDEF12</p><script>self.__next_f=[]</script>'
+    expect(stitchFlightChunks(plain)).toBe(plain)
   })
 })
 
@@ -280,50 +348,66 @@ describe('manufacturer-qualified short-identifier composites (P92-C4)', () => {
   const tokens = deriveIdentityLeakTokens(REPO_ROOT)
 
   /**
-   * The exact Codex reproduction, pinned: PRD-104DF655AD is a hidden Olympus product whose
-   * catalog/model number "KV-6" sits under the five-character standalone floor, so
-   * "Olympus KV-6" in a served page produced no leak on the reviewed head.
+   * The Codex reproduction, re-pinned for D2B. The original exemplar (Olympus KV-6,
+   * PRD-104DF655AD) was a HIDDEN verified-source product, so the inclusion-first cohort now
+   * serves it deliberately and it is no longer a screened identity. The defect class is
+   * unchanged and still live in the candidate-grade population: PRD-64481A5C4F is a
+   * candidate-grade TRACOE product whose catalog number "332" sits under the five-character
+   * standalone floor, so "TRACOE 332" in a served page would produce no leak without the
+   * manufacturer-qualified composite.
    */
-  it('derives the Olympus KV-6 composite for the hidden suction pump', () => {
-    expect(tokens.get('olympus kv-6')).toBe(
-      'PRD-104DF655AD catalog_number (manufacturer-qualified)',
-    )
-    expect(tokens.get('olympus kv 6')).toBe(
-      'PRD-104DF655AD catalog_number (manufacturer-qualified)',
-    )
+  it('derives the TRACOE 332 composite for the withheld candidate-grade set', () => {
+    expect(tokens.get('tracoe 332')).toBe('PRD-64481A5C4F catalog_number (manufacturer-qualified)')
+    // The bare identifier is correctly NOT a standalone token — that is the whole reason the
+    // composite has to exist.
+    expect(tokens.has('332')).toBe(false)
   })
 
-  it('flags <title>Olympus KV-6</title> as a leak', () => {
-    const leaks = servedIdentityLeaks('<title>Olympus KV-6</title>', tokens)
-    expect(leaks.some((leak) => leak.includes('olympus kv-6'))).toBe(true)
+  it('still derives both hyphen and space renderings of a composite', () => {
+    // The KV-6 case also covered "KV 6" vs "KV-6"; no candidate-grade identifier under the
+    // standalone floor carries a hyphen, so the variant derivation is pinned on the
+    // hyphenated candidate identifier that does exist.
+    expect(tokens.get('efer bx-5500-fa')).toBe(
+      'PRD-6C1DE73547 catalog_number (manufacturer-qualified)',
+    )
+    expect(tokens.get('efer bx 5500 fa')).toBe(
+      'PRD-6C1DE73547 catalog_number (manufacturer-qualified)',
+    )
+    expect(
+      servedIdentityLeaks('<p>Efer BX 5500 FA</p>', tokens).some((leak) =>
+        leak.includes('efer bx 5500 fa'),
+      ),
+    ).toBe(true)
+  })
+
+  it('flags <title>TRACOE 332</title> as a leak', () => {
+    const leaks = servedIdentityLeaks('<title>TRACOE 332</title>', tokens)
+    expect(leaks.some((leak) => leak.includes('tracoe 332'))).toBe(true)
   })
 
   it.each([
-    ['the composite itself', 'olympus kv-6'],
-    ['an HTML title', '<html><head><title>Olympus KV-6 Suction Pump</title></head></html>'],
-    ['an aria-label', '<button aria-label="Select Olympus KV-6">Select</button>'],
-    ['a title attribute', '<span title="Olympus KV-6"></span>'],
-    ['a JSON/RSC string', '{"device":"Olympus KV-6","status":"hidden"}'],
-    ['RSC flight text', 'self.__next_f.push([1,"7:[\\"Olympus KV-6\\",null]"])'],
-    ['a hyphenless rendering', '<p>Olympus KV 6</p>'],
-    ['an NBSP-joined rendering', '<p>Olympus&nbsp;KV-6</p>'],
-    ['a doubled-space rendering', '<p>Olympus  KV-6</p>'],
-    ['punctuation boundaries', '(Olympus KV-6)'],
-    ['sentence punctuation', 'Use the Olympus KV-6, then flush.'],
+    ['the composite itself', 'tracoe 332'],
+    ['an HTML title', '<html><head><title>TRACOE 332 Tracheostomy Tube</title></head></html>'],
+    ['an aria-label', '<button aria-label="Select TRACOE 332">Select</button>'],
+    ['a title attribute', '<span title="TRACOE 332"></span>'],
+    ['a JSON/RSC string', '{"device":"TRACOE 332","status":"withheld"}'],
+    ['RSC flight text', 'self.__next_f.push([1,"7:[\\"TRACOE 332\\",null]"])'],
+    ['an NBSP-joined rendering', '<p>TRACOE&nbsp;332</p>'],
+    ['a doubled-space rendering', '<p>TRACOE  332</p>'],
+    ['punctuation boundaries', '(TRACOE 332)'],
+    ['sentence punctuation', 'Use the TRACOE 332, then flush.'],
   ])('detects the identity in %s', (_shape, body) => {
     expect(servedIdentityLeaks(body, tokens).length).toBeGreaterThan(0)
   })
 
   it.each([
-    ['a longer unrelated identifier', '<p>Olympus KV-6789 pump</p>'],
-    ['a prefixed identifier run', '<p>XOLYMPUS KV-6</p>'],
-    ['a suffixed alphanumeric run', '<p>Olympus KV-6X</p>'],
-    ['manufacturer and model far apart', '<p>Olympus scopes</p><footer>room KV, bed 6</footer>'],
-    ['a different manufacturer adjacent', '<p>Storz KV-6</p>'],
+    ['a longer unrelated identifier', '<p>TRACOE 3320 cannula</p>'],
+    ['a prefixed identifier run', '<p>XTRACOE 332</p>'],
+    ['a suffixed alphanumeric run', '<p>TRACOE 332X</p>'],
+    ['manufacturer and model far apart', '<p>TRACOE tubes</p><footer>room 332, bed 4</footer>'],
+    ['a different manufacturer adjacent', '<p>Storz 332</p>'],
   ])('does not flag %s — boundary safety over eagerness', (_shape, body) => {
-    expect(servedIdentityLeaks(body, tokens).filter((leak) => leak.includes('olympus kv'))).toEqual(
-      [],
-    )
+    expect(servedIdentityLeaks(body, tokens).filter((leak) => leak.includes('tracoe'))).toEqual([])
   })
 
   it('covers every manufacturer + below-floor identifier combination in the committed data', () => {
@@ -364,41 +448,51 @@ describe('manufacturer-qualified short-identifier composites (P92-C4)', () => {
         ).toBeGreaterThan(0)
       }
     }
-    // Codex counted 17 real manufacturer/short-identifier combinations; the committed data
-    // still carries exactly those. A data change legitimately moves this number — with this
-    // assertion updated deliberately, beside the data.
-    expect(pairs.size).toBe(17)
+    // Codex counted 17 real manufacturer/short-identifier combinations when the cohort was
+    // `verified_source AND prototype_visible`. D2B admits every verified-source product, so
+    // 9 of those 17 are now deliberately served cohort identities and the screened set is
+    // the 8 combinations belonging to candidate-grade products. A data change legitimately
+    // moves this number — with this assertion updated deliberately, beside the data.
+    expect(pairs.size).toBe(8)
   })
 
-  it('keeps detecting a composite whose standalone identifier is corpus-excluded', () => {
-    // The exclusion-interaction contract: "eu-me3" standalone sits in the public translation
-    // catalogs (the EBUS processor is named in public educational copy), so the bare token
-    // is screened — and that exclusion must NOT carry over to "olympus eu-me3", which no
-    // public corpus serves.
-    expect(tokens.has('eu-me3')).toBe(false)
-    expect(tokens.get('olympus eu-me3')).toBe(
-      'PRD-2B8AACAB67 catalog_number (manufacturer-qualified)',
-    )
+  it('keeps detecting a composite whose standalone identifier is absent from the map', () => {
+    // The exclusion-interaction contract: whatever screens out the BARE identifier must not
+    // carry over to the manufacturer-qualified composite. The always-present instance is the
+    // standalone-floor screen — "332" is never a bare token, yet "tracoe 332" is derived and
+    // detects.
+    expect(tokens.has('332')).toBe(false)
     expect(
-      servedIdentityLeaks('<p>Processor: Olympus EU-ME3</p>', tokens).some((leak) =>
-        leak.includes('olympus eu-me3'),
+      servedIdentityLeaks('<p>Cannula set: TRACOE 332</p>', tokens).some((leak) =>
+        leak.includes('tracoe 332'),
       ),
     ).toBe(true)
+
+    // The stronger corpus-exclusion instance Codex pinned (Olympus EU-ME3: a bare identifier
+    // at or above the floor that public educational copy names, whose composite must survive)
+    // belonged to a hidden verified-source product that D2B now serves. Any equivalent case
+    // in the current non-cohort population is re-derived and must behave the same way.
+    for (const [composite, provenance] of tokens) {
+      if (!provenance.includes('(manufacturer-qualified)')) continue
+      const identifier = composite.slice(composite.indexOf(' ') + 1)
+      if (identifier.length < 5 || tokens.has(identifier)) continue
+      expect({
+        composite,
+        detected: servedIdentityLeaks(`<p>${composite}</p>`, tokens).some((leak) =>
+          leak.includes(composite),
+        ),
+      }).toEqual({ composite, detected: true })
+    }
   })
 
   it('boundary-matches the cohort-identity exclusion, exactly like the detection', () => {
-    // Lens D: substring containment let the hidden Storz applicator's catalog number
-    // "10520" vanish because those five digits sit inside an unrelated cohort GTIN
-    // (04547410520545) — a containment no page can ever boundary-render. Boundary-matched
-    // containment keeps the standalone token detectable in a bare catalog-number cell,
-    // alongside its manufacturer composite.
-    expect(tokens.get('10520')).toBe('PRD-BB11C206A4 catalog_number')
-    expect(tokens.get('karl storz 10520')).toBe(
-      'PRD-BB11C206A4 catalog_number (manufacturer-qualified)',
-    )
-    expect(servedIdentityLeaks('<td>Catalog no. 10520</td>', tokens)).toEqual([
-      '"10520" (PRD-BB11C206A4 catalog_number)',
-    ])
+    // Lens D: substring containment let the Storz applicator's catalog number "10520" vanish
+    // because those five digits sit inside an unrelated cohort GTIN (04547410520545) — a
+    // containment no page can ever boundary-render. That product is verified-source, so D2B
+    // serves it and the concrete instance is gone; the RULE is what mattered, so it is pinned
+    // directly on the predicate the exclusion and the detection share.
+    expect(containsToken('04547410520545', '10520')).toBe(false)
+    expect(containsToken('<td>Catalog no. 10520</td>', '10520')).toBe(true)
     // Sibling-SKU containment still excludes: a token at a word boundary inside a cohort
     // identity is the cohort sibling's own naming, not a leak vector.
     expect(tokens.has('bf-1t180')).toBe(false)
@@ -432,13 +526,13 @@ describe('manufacturer-qualified short-identifier composites (P92-C4)', () => {
 
   it('detects hex-escaped NBSP renderings', () => {
     expect(
-      servedIdentityLeaks('<p>Olympus&#xA0;KV-6</p>', tokens).some((leak) =>
-        leak.includes('olympus kv-6'),
+      servedIdentityLeaks('<p>TRACOE&#xA0;332</p>', tokens).some((leak) =>
+        leak.includes('tracoe 332'),
       ),
     ).toBe(true)
     expect(
-      servedIdentityLeaks('<p>Olympus&#xa0;KV-6</p>', tokens).some((leak) =>
-        leak.includes('olympus kv-6'),
+      servedIdentityLeaks('<p>TRACOE&#xa0;332</p>', tokens).some((leak) =>
+        leak.includes('tracoe 332'),
       ),
     ).toBe(true)
   })

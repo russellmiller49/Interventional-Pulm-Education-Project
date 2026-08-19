@@ -12,8 +12,11 @@ import {
   isDeprecatedRoleCode,
 } from '@/features/preference-cards/domain/role-taxonomy'
 import { EvidenceBadge } from '@/features/device-intelligence/components/EvidenceBadge'
+import { ProductStatusBadges } from '@/features/device-intelligence/components/ProductStatus'
 import { isExemplarProcedureCode } from '@/features/device-intelligence/domain/exemplars'
+import { UNRESEARCHED_PRODUCT_STATUS } from '@/features/device-intelligence/domain/product-status'
 import { getAtlasUseDetail } from '@/features/device-intelligence/server/atlas.server'
+import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 import { getRoleSlotUsage } from '@/features/device-intelligence/server/procedures.server'
 
 export const dynamic = 'force-dynamic'
@@ -65,8 +68,9 @@ export default async function ClinicalRolePage({ params }: PageProps) {
 
   const use = getAtlasUseDetail(requestedRoleCode)
   if (!use) notFound()
-  const { detail } = use
+  const { detail, statusByProductId } = use
   const slotUsage = getRoleSlotUsage(detail.role.role_code)
+  const statusLabels = await getProductStatusLabels(locale)
 
   // Owner-review F-22: the availability fact, hoisted above the product listing and derived
   // from the same rung classifier the workspace uses.
@@ -184,10 +188,13 @@ export default async function ClinicalRolePage({ params }: PageProps) {
                   ) : null}
                   <ul className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                     {group.items.map((item) => (
-                      <li key={item.productId}>
+                      <li
+                        key={item.productId}
+                        className="rounded-xl border border-border px-3 py-2 text-sm transition focus-within:border-primary hover:border-primary"
+                      >
                         <Link
                           href={`/${locale}/devices/${item.productId}` as Route}
-                          className="block rounded-xl border border-border px-3 py-2 text-sm transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <span className="font-medium">{item.productName}</span>
                           {item.sizeDisplay ? (
@@ -201,6 +208,19 @@ export default async function ClinicalRolePage({ params }: PageProps) {
                             </span>
                           ) : null}
                         </Link>
+                        {/* D2B: role discovery lists now include products whose current
+                            availability is unestablished, so each entry carries its own
+                            compact market/safety marks rather than reading as "current".
+                            Kept OUTSIDE the link so the link's accessible name stays the
+                            product identity. */}
+                        <div className="mt-1.5">
+                          <ProductStatusBadges
+                            status={
+                              statusByProductId[item.productId] ?? UNRESEARCHED_PRODUCT_STATUS
+                            }
+                            labels={statusLabels}
+                          />
+                        </div>
                       </li>
                     ))}
                   </ul>

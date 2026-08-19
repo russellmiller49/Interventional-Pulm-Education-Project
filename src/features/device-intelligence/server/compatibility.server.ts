@@ -24,7 +24,7 @@ import { getAtlasCatalogStore } from './atlas-store.server'
  * surface, the row's texts are checked against the catalog's own EXACT normalized
  * identifiers (product id, catalog number, GTIN, part numbers, alternate ids — the same
  * `searchableIds` the search layer already uses; nothing fuzzy). A row that deterministically
- * references a product outside the D1 cohort is returned as a `WithheldCompatibilityStatement`
+ * references a product outside the D2B cohort is returned as a `WithheldCompatibilityStatement`
  * carrying only non-identifying provenance, and the page renders a generic locale-backed
  * explanation instead of the statement.
  */
@@ -47,7 +47,10 @@ export interface RawCompatibilityStatement {
 
 /**
  * A raw statement withheld from the public atlas because it references a product outside
- * the D1 cohort. Deliberately fail-closed in shape: no participant text, no resolved ids —
+ * the D2B cohort — candidate-grade, unknown-grade, or explicitly owner-excluded. D2B widens
+ * the cohort, so a statement naming a formerly hidden verified-source product is now
+ * displayable; the wall itself is unchanged and still fails closed on ambiguity.
+ * Deliberately fail-closed in shape: no participant text, no resolved ids —
  * only provenance fields that cannot identify the hidden product.
  */
 export interface WithheldCompatibilityStatement {
@@ -140,7 +143,7 @@ function nonCohortIdsFor(normalized: string): boolean {
 }
 
 /**
- * True when the text deterministically references a product outside the D1 cohort by one of
+ * True when the text deterministically references a product outside the D2B cohort by one of
  * its exact identifiers — as the whole (normalized) string, or as any whitespace/punctuation
  * delimited token (hyphens kept, since identifiers carry them; normalization strips them on
  * both sides of the comparison). Exact lookups only; no similarity of any kind.
@@ -190,7 +193,7 @@ function toPublicStatement(row: RawRow, selfId?: string): AtlasCompatibilityStat
 
 /**
  * Raw statements whose resolved source or target is this product — for the ATLAS device page.
- * Every row passes the C-03 wall above: a row whose counterpart resolves outside the D1
+ * Every row passes the C-03 wall above: a row whose counterpart resolves outside the D2B
  * cohort, or whose texts exactly name a non-cohort product (e.g. a hidden scope's catalog
  * number quoted verbatim in an otherwise-resolved statement), is returned withheld rather
  * than printing a hidden/candidate product's identity on a public-cohort surface.

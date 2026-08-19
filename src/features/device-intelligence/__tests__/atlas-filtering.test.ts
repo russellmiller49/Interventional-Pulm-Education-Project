@@ -8,6 +8,7 @@ import {
   searchCatalog,
 } from '@/features/preference-cards/server/catalog'
 import { isAtlasCohortProduct } from '@/features/device-intelligence/domain/atlas-cohort'
+import { getAtlasVisibilityExclusions } from '@/features/device-intelligence/domain/atlas-visibility-exclusions'
 import { getAtlasCatalogStore } from '@/features/device-intelligence/server/atlas-store.server'
 import {
   getAtlasFacets,
@@ -17,24 +18,58 @@ import {
   searchAtlas,
 } from '@/features/device-intelligence/server/atlas.server'
 
-describe('D1 atlas cohort filtering', () => {
-  it('contains exactly the verified_source AND prototype_visible products', () => {
+/**
+ * D2B inclusion-first cohort. The D1 predicate (`verified_source` AND `prototype_visible`)
+ * is superseded: sourced identity alone decides membership, minus explicit reviewed owner
+ * exclusions. Candidate- and unknown-grade products stay outside Device Intelligence.
+ */
+
+/** A newly included exemplar: verified-source, canonically hidden, real roles and slots. */
+const NEWLY_INCLUDED_PRODUCT_ID = 'PRD-CB1622624D'
+const NEWLY_INCLUDED_CATALOG_NUMBER = 'BF-MP190F'
+
+describe('D2B atlas cohort inclusion', () => {
+  it('contains exactly the verified_source products, hidden ones included', () => {
     const full = getCatalogStore()
     const expected = full.products.filter(isAtlasCohortProduct).map((p) => p.product_id)
     const atlas = getAtlasCatalogStore()
     expect(atlas.products.map((p) => p.product_id).sort()).toEqual([...expected].sort())
-    // The audit-pinned intersection: 753 prototype_visible products, all verified_source.
-    expect(atlas.products.length).toBe(753)
+    // 753 formerly prototype-visible + 578 formerly hidden verified-source products.
+    expect(atlas.products.length).toBe(1331)
     for (const product of atlas.products) {
       expect(product.verification_grade).toBe('verified_source')
-      expect(product.visibility_state).toBe('prototype_visible')
     }
+    // The inclusion-first change is not cosmetic: the newly admitted population is exactly
+    // the hidden verified-source products, and it is large.
+    const newlyIncluded = atlas.products.filter(
+      (product) => product.visibility_state !== 'prototype_visible',
+    )
+    expect(newlyIncluded.length).toBe(578)
+    for (const product of newlyIncluded) expect(product.visibility_state).toBe('hidden')
   })
 
-  it('excludes every candidate-grade and every hidden product, including direct id requests', () => {
+  it('does NOT read visibility_state as a gate', () => {
+    // The predicate must not merely have moved the old conjunct behind another name.
+    expect(isAtlasCohortProduct({ verification_grade: 'verified_source' })).toBe(true)
+    expect(
+      isAtlasCohortProduct({ verification_grade: 'verified_source', visibility_state: 'hidden' }),
+    ).toBe(true)
+    expect(
+      isAtlasCohortProduct({
+        verification_grade: 'verified_source',
+        visibility_state: 'prototype_visible',
+      }),
+    ).toBe(true)
+  })
+
+  it('still excludes every candidate-grade and unknown-grade product, including by direct id', () => {
     const full = getCatalogStore()
     const excluded = full.products.filter((product) => !isAtlasCohortProduct(product))
-    expect(excluded.length).toBeGreaterThan(0)
+    // 200 candidate + 1 unknown; no owner exclusion is populated today.
+    expect(excluded.length).toBe(201)
+    expect(getAtlasVisibilityExclusions().size).toBe(0)
+    expect(excluded.filter((p) => p.verification_grade === 'candidate').length).toBe(200)
+    expect(excluded.filter((p) => p.verification_grade === 'unknown').length).toBe(1)
     const atlas = getAtlasCatalogStore()
     for (const product of excluded) {
       expect(atlas.productById.has(product.product_id)).toBe(false)
@@ -53,24 +88,67 @@ describe('D1 atlas cohort filtering', () => {
       for (const item of response.items) {
         expect(item.verificationTier).toBe('verified')
         seen.add(item.productId)
+        // Every returned row resolves a status — the map is total, never partial.
+        expect(response.statusByProductId[item.productId]).toBeDefined()
       }
       page += 1
     } while (page <= pageCount)
-    expect(seen.size).toBe(753)
-    expect(searchAtlas(query).total).toBe(753)
+    expect(seen.size).toBe(1331)
+    expect(searchAtlas(query).total).toBe(1331)
   })
 
-  it('counts facets over the cohort only', () => {
+  it('counts facets over the expanded cohort', () => {
     const facets = getAtlasFacets()
     const total = facets.manufacturers.reduce((sum, entry) => sum + entry.productCount, 0)
-    expect(total).toBe(753)
+    expect(total).toBe(1331)
     expect(getAtlasOverview()).toEqual({
-      productCount: 753,
+      productCount: 1331,
       manufacturerCount: facets.manufacturers.length,
       roleCount: 135,
       procedureCount: 15,
-      verifiedCount: 753,
+      verifiedCount: 1331,
     })
+  })
+
+  it('makes a newly included hidden verified-source product fully reachable', () => {
+    const full = getCatalogStore()
+    const canonical = full.productById.get(NEWLY_INCLUDED_PRODUCT_ID)!
+    // The canonical record is untouched: still verified_source, still hidden.
+    expect(canonical.verification_grade).toBe('verified_source')
+    expect(canonical.visibility_state).toBe('hidden')
+
+    // Direct route resolves.
+    const detail = getAtlasProductDetail(NEWLY_INCLUDED_PRODUCT_ID)
+    expect(detail).not.toBeNull()
+    expect(detail!.product.catalog_number).toBe(NEWLY_INCLUDED_CATALOG_NUMBER)
+
+    // Exact identifier search finds it.
+    const hits = searchAtlas(catalogSearchSchema.parse({ q: NEWLY_INCLUDED_CATALOG_NUMBER }))
+    expect(hits.items.map((item) => item.productId)).toContain(NEWLY_INCLUDED_PRODUCT_ID)
+
+    // Manufacturer and category facets include it.
+    const facets = getAtlasFacets()
+    expect(facets.manufacturers.map((entry) => entry.displayName)).toContain(
+      detail!.product.manufacturerDisplay,
+    )
+    if (detail!.product.primary_category) {
+      expect(facets.categories.map((entry) => entry.name)).toContain(
+        detail!.product.primary_category,
+      )
+    }
+
+    // Its governed role listings include it.
+    expect(detail!.roles.length).toBeGreaterThan(0)
+    for (const role of detail!.roles) {
+      const use = getAtlasUseDetail(role.roleCode)!
+      const listed = use.detail.manufacturerGroups.flatMap((group) =>
+        group.items.map((item) => item.productId),
+      )
+      expect({ role: role.roleCode, listed: listed.includes(NEWLY_INCLUDED_PRODUCT_ID) }).toEqual({
+        role: role.roleCode,
+        listed: true,
+      })
+    }
   })
 
   it('lists only cohort products on role pages and in related-product lists', () => {
@@ -80,6 +158,7 @@ describe('D1 atlas cohort filtering', () => {
     for (const group of use!.detail.manufacturerGroups) {
       for (const item of group.items) {
         expect(atlas.productById.has(item.productId)).toBe(true)
+        expect(use!.statusByProductId[item.productId]).toBeDefined()
       }
     }
     const anyProduct = atlas.products[0]

@@ -5,6 +5,11 @@ dist
 build
 # Preserve the fixed-image runner's checksum-bound canonical JSON bytes.
 scripts/literature/fixtures/post-migration-schema-security-definition-identity.json
+# Same reason: the Device Intelligence status overlay is emitted byte-deterministically by
+# `npm run ip-intel:status-overlay`, and its `--check` mode compares committed bytes against a
+# fresh generation. Prettier collapses single-element arrays, which would make every commit
+# report the artifact as stale.
+data/ip-device-intelligence/generated/
 *.log
 .env*
 .DS_Store

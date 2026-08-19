@@ -206,6 +206,8 @@ All ten decisions below were recorded by the physician owner on **2026-08-08**. 
 
 **DECISION (2026-08-08): ACCEPTED WITH MODIFICATION — narrowed initial public cohort.** When public indexing is later authorized (see D-03), the initial public-indexable atlas cohort must satisfy `verification_grade = verified_source` AND `visibility_state = prototype_visible`. Candidate-grade manufacturer-sourced facts remain authenticated/unlisted until a separate public-content review. The existing emerging-device cohort may retain its separately labeled investigational context. Proposals and draft clinical-use relationships are never public.
 
+> **SUPERSEDED IN PART (2026-08-15) by D-11 — the Device Atlas cohort predicate is now inclusion-first.** The `visibility_state = prototype_visible` conjunct above is no longer the atlas gate. See [D-11](#d-11-inclusion-first-device-atlas-visibility-d2b) below. The rest of this decision stands: candidate-grade and unknown-grade products remain outside Device Intelligence, proposals and draft clinical-use relationships are never public, and public indexing remains a separate decision under D-03.
+
 ---
 
 ### D-08. Which relationships may drive operational outputs
@@ -329,8 +331,40 @@ The D-10 slice was implemented on branch `claude/device-intelligence-vertical-sl
 - **D-03/D-04 honored.** Six new routes under `/[locale]/devices`, `/[locale]/clinical-roles`, `/[locale]/procedures` — every one public-unlisted, per-page robots-noindexed, proxy-stamped `X-Robots-Tag`, absent from navigation, behind a new production env flag (`NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE`, set nowhere). All existing preference-card routes preserved; two additive cross-links only.
 - **D-05 honored.** The procedure surfaces serve exactly `EBUS_TBNA`, `THERAPEUTIC_BRONCH`, `CHEST_TUBE`; every other code 404s and the index labels the set as the Phase D1 exemplars.
 - **D-06 honored.** No new relationship structures; `productFamily` untouched; discovery `familyKey` rendered display-only with its caption.
-- **D-07 honored.** Atlas cohort = `verified_source` AND `prototype_visible`, enforced at store construction (753 products); candidate/hidden products unreachable on the new routes including by direct id.
+- **D-07 honored (as of D1; superseded by D-11 on 2026-08-15).** Atlas cohort = `verified_source` AND `prototype_visible`, enforced at store construction (753 products); candidate/hidden products unreachable on the new routes including by direct id. Phase D2B replaced this predicate with the inclusion-first rule — see [D-11](#d-11-inclusion-first-device-atlas-visibility-d2b).
 - **D-08 honored.** Readiness and output previews are driven only by the existing governed walls; proposals render as counts and never satisfy anything; candidate/unknown/demo evidence can never produce plain `ready`.
 - **D-10 boundaries held.** No persistence of any kind (no table, no Supabase write, no localStorage key, no new cache beyond a second in-memory index over the same imported JSON), no migration, no catalog/seed/reviewed/generated data change, no release or pointer change, no governance-state change, no equivalence/substitution claim, no second resolution engine, no server action, no write API. The Phase D0 audit artifact remained byte-identical and the 54-entry publication baseline unchanged throughout.
 
 Two pre-existing-code changes were required and are within scope: the catalog Fuse cache became per-store (a latent single-slot cache that would have cross-contaminated two store instances), and the two preserved catalog pages gained the cross-links R6 calls for. Implementation details: [d1-implementation.md](./d1-implementation.md); validation: [d1-validation.md](./d1-validation.md); review packet: [d1-review/](./d1-review/). Public indexing, candidate-cohort review, and route consolidation remain open owner decisions.
+
+---
+
+## Part 4 — Phase D2B decision record (added 2026-08-15)
+
+### D-11. Inclusion-first Device Atlas visibility (D2B)
+
+**Context.** Phase D1 shipped the atlas cohort as `verification_grade = verified_source` AND `visibility_state = prototype_visible` (D-07 as modified). The merged current-U.S.-status research package (PR #105, merged as `d93e210039aee3a0a28701f19ad550f38663d232`) then researched all 779 hidden products and could conclusively establish current U.S. distribution for very few of them: of the 578 hidden **verified-source** products, 10 reached high confidence, 24 moderate, 18 were conflicted, and 526 remained unresolved for reasons that are limits of the research method (`identity_unresolved`, `insufficient_evidence`), not defects in the products' sourcing. Under D-07 all 578 stayed absent from an educational catalog.
+
+**Owner decision (2026-08-15): ACCEPTED — false exclusion is the greater harm.**
+
+> It is acceptable for a small number of legacy or no-longer-orderable products to appear and be corrected later. It is not acceptable for hundreds of adequately sourced products to remain absent merely because current availability has not been conclusively established.
+
+**The predicate.** Device Atlas inclusion is decided by sourced identity alone:
+
+```
+include ⟺ verification_grade = verified_source AND NOT explicitly excluded by the owner
+```
+
+`visibility_state` is no longer an atlas gate. It remains governed canonical data driving the preserved preference-card dropdown and admin surfaces, which D2B does not touch.
+
+**Consequences.**
+
+- Atlas cohort 753 → **1,331**; **578** verified-source products newly included; 200 candidate-grade + 1 unknown-grade still excluded; 0 explicit owner exclusions.
+- Current market status and FDA safety actions become **overlays** — controlled labels on the product, generated from the PR #105 package into a compact 212 KB / 578-row artifact that pins the source SHA-256. They change what a page says, never whether it exists.
+- An **active exact safety action** sets a recommendation gate (`blocked_active_safety_action`) that disqualifies a product from being a default or a recommendation. It does not affect visibility, and it is never mistaken for a discontinuation — the three ERBE flexible cryoprobes stay listed as current U.S. distribution _and_ carry a prominent lot-specific FDA notice.
+- The only mechanism that removes an otherwise-verified product is a reviewed owner exclusion for a data-quality defect or an explicit owner decision. There is no denylist based on market status, recall status, or availability.
+- Candidate-grade and unknown-grade products remain outside Device Intelligence; D-07's other provisions are unaffected.
+- `NEXT_PUBLIC_ENABLE_DEVICE_INTELLIGENCE` is unchanged and remains off/unset; feature-off 404s, `noindex, nofollow, noarchive`, absence from navigation and sitemap, the three-exemplar procedure limit, and public-unlisted status all hold.
+- Correction path: owner exclusions for wrong admissions, refreshed status overlays for stale market/safety knowledge. Neither reintroduces a visibility gate on current availability.
+
+**Implemented in:** [d2b-inclusion-first-visibility.md](./d2b-inclusion-first-visibility.md). Accounting artifact: [d2b-review/newly-included-products.csv](./d2b-review/newly-included-products.csv).
