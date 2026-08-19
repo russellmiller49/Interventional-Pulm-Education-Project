@@ -24,6 +24,7 @@ import {
 import { createFoundationVariantState } from '../session/foundationSession'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoBloodPathSegmentIds } from '../content/circuitSegments'
+import { ecmoCircuitWalkStopsForSection, ecmoWalkStopSegmentIds } from '../content/circuitWalk'
 import { ecmoLocalizationRowIds, ecmoLocalizationRows } from '../content/localizationCards'
 import { ecmoReferenceProfileForMode } from '../content/referenceProfiles'
 import '../content/ecmoValueGuides'
@@ -388,40 +389,54 @@ describe('foundation teaching panels', () => {
     expect(container.textContent).toMatch(/Configured setting/i)
   })
 
-  it('circuit-flow-path places each pressure at its own location and separates the gas path', () => {
-    const { container } = render(
-      <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
-    )
-    const order = [...container.querySelectorAll('[data-circuit-segment]')].map((node) =>
-      node.getAttribute('data-circuit-segment'),
-    )
-    expect(order).toEqual([
+  it('circuit-flow-path walks the blood path one place at a time, and keeps the gas path apart', () => {
+    /*
+     * The list this used to assert is now the walk.
+     *
+     * It read six `data-circuit-segment` nodes in blood-path order out of a panel that printed all
+     * six at once — which is exactly what the lesson's own recognize phase told the learner to step
+     * through, and exactly what nothing stepped. The same claim survives, made against the walk:
+     * the four stops of this section stand at the whole blood path, in order, one at a time. The
+     * registry validator makes the same assertion from the other side, so a stop cannot be
+     * reordered here and left alone there.
+     */
+    const stops = ecmoCircuitWalkStopsForSection('circuit-flow-path')
+    expect(stops.flatMap((stop) => ecmoWalkStopSegmentIds(stop))).toEqual([
       'drainage',
       'pump',
-      'pre-membrane',
       'membrane',
+      'pre-membrane',
       'post-membrane',
       'return',
     ])
-    expect(container.querySelector('[data-gas-path]')?.textContent).toMatch(/sweep/i)
-    expect(container.querySelector('[data-blood-path]')).toBeInTheDocument()
+    expect(
+      stops
+        .flatMap((stop) => ecmoWalkStopSegmentIds(stop))
+        .filter((id) => (ecmoBloodPathSegmentIds as readonly string[]).includes(id))
+        .slice()
+        .sort(),
+    ).toEqual([...ecmoBloodPathSegmentIds].sort())
 
-    /*
-     * The stop list now reads from the canonical segment registry, and this assertion is the proof
-     * that the promotion changed nothing a learner sees: the same six ids, in the same order, from
-     * a literal array that the registry does not get a vote on.
-     */
-    expect(order).toEqual([...ecmoBloodPathSegmentIds])
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
+    )
+    // One stop on screen, not a list of six.
+    expect(container.querySelector('[data-circuit-walk]')?.getAttribute('data-walk-stop')).toBe(
+      'walk-drainage',
+    )
+    expect(container.querySelector('[data-gas-path]')?.textContent).toMatch(/sweep/i)
   })
 
-  it('circuit-flow-path draws the circuit it is describing', () => {
+  it('circuit-flow-path draws the circuit, marked where the walk is standing', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
     )
     const map = container.querySelector('[data-circuit-minimap]')
     expect(map).not.toBeNull()
-    expect(map?.getAttribute('data-presentation')).toBe('scaffold')
-    expect(map?.getAttribute('data-scaffold-emphasis')).toBe('path-order')
+    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
+    expect(map?.getAttribute('data-walk-stop')).toBe('walk-drainage')
+    // Exactly one map in the pane: the walk's replaced the section's rather than joining it.
+    expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
     // A foundation map teaches; it never marks a segment as the culprit.
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
   })
@@ -483,7 +498,9 @@ describe('foundation teaching panels', () => {
       <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,
     )
     const map = container.querySelector('[data-circuit-minimap]')
-    expect(map?.getAttribute('data-scaffold-emphasis')).toBe('pressure-zones')
+    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
+    expect(map?.getAttribute('data-walk-stop')).toBe('walk-pump-under-load')
+    expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
 
     // The scaffold is pattern and location. The shortlist, the response and the reflex belong to

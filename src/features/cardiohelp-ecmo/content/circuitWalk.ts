@@ -127,7 +127,9 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
       'Drinking through a straw. The pump can only move what actually reaches it, and it has to pull to get it.',
     checklist: ['A kinked limb', 'A clotted limb', 'The volume available', 'Cannula position'],
     primarySegmentId: 'drainage',
-    secondarySegmentIds: ['patient'],
+    // Not `patient`. The terminus resolves to both access sites in the bedside scene, so naming it
+    // here lit the return cannula at the stop about drainage — caught by looking at the render.
+    secondarySegmentIds: [],
     sensorSiteIds: ['pVen'],
     pressureZoneIds: ['upstream-of-pump'],
     takeaway:
@@ -199,7 +201,9 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
       { vv: 'The vessel it returns into', va: 'The artery pushing back' },
     ],
     primarySegmentId: 'post-membrane',
-    secondarySegmentIds: ['return', 'patient'],
+    // `patient` is left out for the same reason it is left out of the drainage stop: it resolves to
+    // both access sites, and this stop is about the one blood is going back through.
+    secondarySegmentIds: ['return'],
     sensorSiteIds: ['pArt', 'post-oxygenator-saturation', 'flow-bubble-sensor'],
     pressureZoneIds: ['downstream-of-pump'],
     takeaway: {

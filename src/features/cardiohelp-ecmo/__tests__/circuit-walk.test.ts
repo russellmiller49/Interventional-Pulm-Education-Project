@@ -193,6 +193,28 @@ describe('the walk reaches the bedside scene through the R2 seam and nothing els
    * declined it and says so in the stop copy instead. If a later package adds the anchors, this
    * test is where the change announces itself.
    */
+  /*
+   * Found by looking at the render rather than by reasoning about it.
+   *
+   * The terminus segment resolves to *both* femoral access sites, because the loop opens and closes
+   * on the patient. Naming it as a secondary place — which reads as obviously right — lit the return
+   * cannula at the stop about drainage, and the drainage cannula at the stop about return. Neither
+   * stop stands at the patient, so neither names it, and this is the pin.
+   */
+  it('never lights the access site at the far end of the circuit from the stop', () => {
+    expect(ecmoWalkStopSceneLabelIds(ecmoCircuitWalkStop('walk-drainage'), 'vv')).not.toContain(
+      'return-site',
+    )
+    expect(ecmoWalkStopSceneLabelIds(ecmoCircuitWalkStop('walk-return'), 'vv')).not.toContain(
+      'drainage-site',
+    )
+    for (const stop of ecmoCircuitWalkStops) {
+      expect(
+        `${stop.id} stands at patient: ${ecmoWalkStopSegmentIds(stop).includes('patient')}`,
+      ).toBe(`${stop.id} stands at patient: false`)
+    }
+  })
+
   it('lights the same one object at the pump and at the membrane, and says so', () => {
     for (const id of ['walk-pump', 'walk-membrane'] as const) {
       expect(`${id}: ${ecmoWalkStopSceneLabelIds(ecmoCircuitWalkStop(id), 'vv').join()}`).toBe(

@@ -8,6 +8,7 @@ import { ecmoFoundationSections } from '../../content/foundationLessons'
 import { cardiohelpScenarios } from '../../content/scenarios'
 import type { EcmoSimulationState } from '../../engine/types'
 import type { EcmoFoundationSnapshot } from '../../session/foundationSession'
+import type { EcmoWalkPanelProps } from './useEcmoCircuitWalk'
 import { BloodFlowVsSweepPanel } from './BloodFlowVsSweepPanel'
 import { CircuitFlowPathPanel } from './CircuitFlowPathPanel'
 import { PumpPressureZonesPanel } from './PumpPressureZonesPanel'
@@ -23,6 +24,15 @@ export interface EcmoFoundationTeachingPanelProps {
   readonly state: EcmoSimulationState
   /** A baseline captured in this session, for the panels that compare a circuit with itself. */
   readonly snapshot?: EcmoFoundationSnapshot | null
+  /**
+   * Where the circuit walk is standing, for the two sections that carry one.
+   *
+   * Optional, and ignored by the other eight panels. Supplying it hands the walk's position to the
+   * caller, which is how the activity keeps the bedside scene lit on the place the stop is about;
+   * omitting it leaves the panel to hold its own, which is how a test or the offline harness renders
+   * a stop without standing up a host.
+   */
+  readonly walk?: EcmoWalkPanelProps
 }
 
 /**
@@ -125,11 +135,13 @@ export function EcmoFoundationTeachingPanel({
   sectionId,
   state,
   snapshot,
+  walk,
 }: {
   readonly sectionId: EcmoInteractiveFoundationSectionId
   readonly state: EcmoSimulationState
   readonly snapshot?: EcmoFoundationSnapshot | null
+  readonly walk?: EcmoWalkPanelProps
 }) {
   const Panel = panels[sectionId]
-  return <Panel state={state} snapshot={snapshot} />
+  return <Panel state={state} snapshot={snapshot} walk={walk} />
 }

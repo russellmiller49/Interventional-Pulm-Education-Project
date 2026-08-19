@@ -1,8 +1,9 @@
-import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
+'use client'
+
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { ecmoReferenceProfileForMode } from '../../content/referenceProfiles'
 import type { EcmoSimulationState } from '../../engine/types'
-import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
+import { EcmoCircuitWalk } from './EcmoCircuitWalk'
 import { EcmoLocalizationCard } from './EcmoLocalizationCard'
 import {
   ChannelValue,
@@ -13,6 +14,7 @@ import {
   directionWord,
   styles,
 } from './shared'
+import { useEcmoCircuitWalkNavigation, type EcmoWalkPanelProps } from './useEcmoCircuitWalk'
 
 /**
  * Speed is selected; flow is what the circuit returns under its current loading.
@@ -32,8 +34,15 @@ import {
  * circuit with nothing wrong with it and has not been asked to diagnose anything yet.
  */
 
-export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulationState }) {
+export function PumpPressureZonesPanel({
+  state,
+  walk,
+}: {
+  readonly state: EcmoSimulationState
+  readonly walk?: EcmoWalkPanelProps
+}) {
   const { circuit, device } = state
+  const navigation = useEcmoCircuitWalkNavigation('pump-and-pressure-zones', walk)
   const profile = ecmoReferenceProfileForMode(state.supportMode)
   const referenceFlow = (profile.expected.bloodFlow.low + profile.expected.bloodFlow.high) / 2
   const referenceDeltaP = (profile.expected.deltaP.low + profile.expected.deltaP.high) / 2
@@ -50,6 +59,8 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
 
   return (
     <div className={styles.panel} data-teaching-panel="pump-and-pressure-zones">
+      <EcmoCircuitWalk {...navigation} state={state} />
+
       <section className={styles.section} aria-labelledby="pump-heading">
         <h3 id="pump-heading" className={styles.heading}>
           Setting, result, and the zones that report them
@@ -105,14 +116,6 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
           a normal range for ECMO. The reference values are teaching anchors for this simulation.
         </ModelBoundary>
       </section>
-
-      <EcmoCircuitMinimap
-        supportMode={state.supportMode}
-        presentation={deriveEcmoCircuitPresentation(state, {
-          kind: 'foundation-scaffold',
-          emphasis: 'pressure-zones',
-        })}
-      />
 
       <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
 

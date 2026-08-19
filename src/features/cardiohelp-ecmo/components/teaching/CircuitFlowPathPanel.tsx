@@ -1,73 +1,43 @@
-import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
-import {
-  ecmoBloodPathSegments,
-  ecmoSensorSitesForSegment,
-  resolveEcmoModeText,
-} from '../../content/circuitSegments'
+'use client'
+
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../engine/types'
-import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
+import { EcmoCircuitWalk } from './EcmoCircuitWalk'
 import { ChannelValue, GuidedValue, ModelBoundary, TextEquivalent, styles } from './shared'
+import { useEcmoCircuitWalkNavigation, type EcmoWalkPanelProps } from './useEcmoCircuitWalk'
 
 /**
- * Every console signal placed where it physically sits, before any value is interpreted.
+ * Every console signal placed where it physically sits, one place at a time.
  *
- * The blood path and the gas path are drawn as separate rows with different stroke patterns as
- * well as different labels, because a learner who cannot distinguish them by colour still has to
- * be able to tell sweep gas from blood.
+ * This lesson's `recognize` phase has always told the learner to "step through the circuit segments
+ * in order". Nothing stepped: the panel printed all six at once and the learner scrolled a list.
+ * The list is now the walk, which is the same six places from the same registry, reached one at a
+ * time with the map marking where they are standing — so the instruction describes what is on the
+ * screen, the way R2 made the `act`-phase instruction describe the map it had just built.
  *
- * The stops and the sensors at them now come from the shared circuit registry rather than from a
- * list kept here. This lesson was where that vocabulary was first written down, and three other
- * surfaces had since paraphrased it; naming the places once means the map above this list, the
- * localization rows in the drills, and this stop list cannot disagree about where anything is.
- * Completing the registry also finished this list: the flow probe on the return limb had always
- * been missing from it, which is a strange omission in a lesson whose subject is every signal at
- * its own location.
+ * What stays below the walk is what belongs to the section rather than to a place on it: the gas
+ * path, which is a second path rather than a stop; the four pressure channels as a set, because
+ * reading them together is the skill; and the registered value guides.
  */
 
-export function CircuitFlowPathPanel({ state }: { readonly state: EcmoSimulationState }) {
+export function CircuitFlowPathPanel({
+  state,
+  walk,
+}: {
+  readonly state: EcmoSimulationState
+  readonly walk?: EcmoWalkPanelProps
+}) {
   const { circuit, gas } = state
-  const segments = ecmoBloodPathSegments()
+  const navigation = useEcmoCircuitWalkNavigation('circuit-flow-path', walk)
 
   return (
     <div className={styles.panel} data-teaching-panel="circuit-flow-path">
-      <EcmoCircuitMinimap
-        supportMode={state.supportMode}
-        presentation={deriveEcmoCircuitPresentation(state, {
-          kind: 'foundation-scaffold',
-          emphasis: 'path-order',
-        })}
-      />
+      <EcmoCircuitWalk {...navigation} state={state} />
 
       <section className={styles.section} aria-labelledby="path-heading">
         <h3 id="path-heading" className={styles.heading}>
-          The blood path, in order
+          The paths this circuit runs, and the channels that describe them
         </h3>
-
-        <ol className="mt-3 grid gap-2" data-blood-path>
-          {segments.map((segment, index) => {
-            const sensors = ecmoSensorSitesForSegment(segment.id)
-            return (
-              <li
-                key={segment.id}
-                className="rounded-xl border-l-4 border-solid bg-muted/30 p-3"
-                data-circuit-segment={segment.id}
-              >
-                <p className="text-sm font-semibold">
-                  {index + 1}. {resolveEcmoModeText(segment.label, state.supportMode)}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {resolveEcmoModeText(segment.detail, state.supportMode)}
-                </p>
-                {sensors.length > 0 ? (
-                  <p className="mt-1 text-xs font-medium">
-                    Reported here: {sensors.map((site) => site.stopLabel).join(' · ')}
-                  </p>
-                ) : null}
-              </li>
-            )
-          })}
-        </ol>
 
         <div className="mt-4 rounded-xl border border-dashed p-3" data-gas-path>
           <p className="text-sm font-semibold">Sweep-gas path — a separate path, drawn dashed</p>

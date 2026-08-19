@@ -34,6 +34,13 @@ import { ecmoLocalizationRow, type EcmoLocalizationRowId } from './localizationC
  * three scaffolded lessons actually disagree about. Nothing in a scaffold marks a segment — marking
  * is what `implicated` does, and keeping the two vocabularies disjoint means a leak test can assert
  * the absence of one attribute rather than reasoning about degrees of emphasis.
+ *
+ * `sensor-sites` is the console tour's. The other two have no consumer since the circuit walk gave
+ * both foundation sections a map that follows the stop instead of annotating the whole instrument —
+ * which is the outcome the note under `path-order` below was written in anticipation of. They are
+ * kept for the same reason the localization registry keeps rows no pilot drill consumes yet: the
+ * vocabulary is authored once and consumed by reference, and deleting a name the moment its last
+ * caller moves is how a registry ends up being re-derived by the next package that wants it.
  */
 export type EcmoCircuitScaffoldEmphasis = 'path-order' | 'sensor-sites' | 'pressure-zones'
 
