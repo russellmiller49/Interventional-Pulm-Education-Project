@@ -30,12 +30,20 @@ here), `ecmo-circuit/layout.ts` and `SceneLabels.tsx` (read the text back; empha
 `EcmoFoundationTeachingPanel.tsx` (one optional prop), `EcmoFoundationLessonActivity.tsx` (owns the
 position), `foundationLessonRuntime.ts` (two states, two appended actions, a wider speed step),
 `foundationLearningItems.ts` (one number in one stem), `teaching/shared.tsx` (a comparison phrase),
-and the render harness.
+`localizationCards.ts` (one qualifier, §6b), and the render harness.
+
+Twenty-eight files in all.
 
 Untouched: the engine, every scenario, every route, `progress.ts`, the storage key, the progress
 envelope, scoring, mastery, Practice, Assess, publication status, `learningPathways.ts`,
-`pathwayResolver.ts`, `circuitSegments.ts`, `localizationCards.ts`, `ecmoValueGuides.ts`,
-`evidence.ts`, the six frozen pilot panels, and PR #94.
+`pathwayResolver.ts`, `circuitSegments.ts`, `ecmoValueGuides.ts`, `evidence.ts`, the six frozen
+pilot panels, and PR #94.
+
+`localizationCards.ts` is the one R2 registry this package edits, and it edits one sentence: the
+`return-path-resistance` signature gains the flow-matching qualifier the card's own footer and the
+registered gradient guide have always carried. No row id, structure, source, boundary or cause list
+changed, and no number entered. The reason is in §6b — R3 is what made a state exist that falsified
+the sentence without it.
 
 ## 2. Owner decisions, as taken
 
