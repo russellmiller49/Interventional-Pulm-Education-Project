@@ -150,12 +150,64 @@ whole-walk count; both tracks open at their own first stop; the sensor-name gate
 the section's own actions; a stop change does not touch the loaded state),
 `foundation-session.test.ts` (the speed the bounded action reaches).
 
+## 6b. What an independent review found, and what changed
+
+Five read-only lenses were run over the finished diff, then a completeness critic over their
+reports. Six findings survived and all six are fixed. They are recorded because four of them are
+the kind that a package reviewing itself does not find.
+
+**The walk answered the question beside it.** `pump-and-pressure-zones` opens on stop five, whose
+conclusion — flow follows speed, and it is bought with suction — is both halves of that section's
+keyed prediction, rendered ungated in the pane next to the question. Four lenses found it
+independently, and the package's own plan had predicted it in a deny list that was then not
+implemented. The takeaway is now gated per stop, the analogy names the two dials without the
+coupling, and there is a test that checks the _claim_ rather than the words.
+
+**The accessible copy was the surface leaking.** The card's text equivalent printed
+"Reported here: pre-membrane pressure (pInt)…" unconditionally while the two blocks beside it were
+correctly withheld — so the affordance built for the learner who cannot read the picture was the one
+answering "where does the circuit report pInt?". Gated, along with the map's sensor labels: ringing
+exactly the channel a prediction asks a learner to place is a sharper pointer than the seven that
+map flagged in every phase before the walk existed.
+
+**The row contradicted the state the walk now loads beneath it.** `return-path-resistance` said the
+gradient "changes little". It was authored when nothing in this section could load a resisted
+return; R3 gave it one, and at unchanged speed the engine drops flow by a third and the gradient
+with it — so the panel's own comparison line said "the gradient is lower" three hundred pixels above
+a row saying it does not move. A learner holding the row as the rule would have ruled out the
+correct answer. The row now reads "read at similar blood flow, the gradient across the membrane
+changes little", which is the qualification the card's footer and the registered gradient guide have
+always carried.
+
+**Stop six called a three-millimetre move quiet**, in a section that had just widened its own speed
+step so a one-millimetre drainage change would be countable. It now states the direction instead.
+
+**The beats bypassed a deliberate gate.** The activity hides its bounded actions in `recognize` and
+`predict`; the beat buttons load states through those same actions and rendered regardless.
+
+**The harness could not render the state the package added.** The walk matrix multiplied stops
+across three hand-built profile states, so the comparative stop was reviewed only against circuits
+with nothing wrong with them. It now reads each walk section's own authored variants, so a variant
+added to a lesson gets cells without this file being edited a second time.
+
+Two smaller things the critic was right about and which are also fixed: the rendered comparison
+sentence had no render-level pin, so reverting the whitespace fix left the whole suite green; and
+the walk had removed the last renderer of `EcmoCircuitSegment.detail`, leaving registry prose that
+tests still asserted and nothing displayed. The stop card now renders it, and the stop's own sources.
+
+`EcmoSensorSite.stopLabel` remains unrendered. Its consumer was the static list the walk replaced,
+and the card's `plain name (device label)` phrasing reads better than "ΔP spans this" in a sentence.
+Recorded rather than deleted, on the same reasoning as the unused scaffold emphases.
+
 ## 7. Verified
 
-- `npx jest src/features/cardiohelp-ecmo src/features/critical-care src/features/learning-module 'src/app/\[locale\]/cardiohelp-ecmo' --runInBand` — 83 suites, 1714 tests, green.
+- `npx jest src/features/cardiohelp-ecmo src/features/critical-care src/features/learning-module 'src/app/\[locale\]/cardiohelp-ecmo' --runInBand` — 83 suites, green.
 - `npm run type-check`, `npm run lint` (no new warning), `npm run test:a11y` — green.
-- `npm run render:ecmo-teaching` — sixty-nine foundation cells, every stop against every state its
-  section is rendered on, both tracks. Reviewed on :8099.
+- `npm run render:ecmo-teaching` — every stop against every state its own section declares, both
+  tracks, including the resisted return the comparative stop is about. Reviewed on :8099: the cell
+  for stop six against that state shows pVen −32, pInt 335, pArt 313, ΔP 22, the panel's line "the
+  gradient is lower than this circuit's reference state", and the row's qualified signature, on one
+  screen and no longer contradicting each other.
 - **In the running application**, at `/cardiohelp-ecmo/learn`, on the `claude-worktree` dev server.
   The ECMO routes are public-unlisted in `src/lib/site-auth/access.ts`, not behind login — the R2
   record says otherwise and is out of date, and commit `d7c3c743` had already corrected three other
@@ -168,6 +220,15 @@ any of them; the compact tab arrangement at 1024, where the map holds 14.57px la
 which produced 4.05 / 2.83 / 2.84 L/min with gradients 31 / 22 / 23 mmHg and post-pump pressures
 242+211 / 335+313 / 214+191. That is the lesson: at matched flow the gradient is the same and only
 the load has moved.
+
+## 7b. Copy budget, measured
+
+The plan set roughly a hundred and twenty learner-facing words per stop, excluding text equivalents
+and boundary and source disclosures. Measured: 60, 48, 72, 60, 75 and 77 words of stop copy. Stop
+six carries a further 78 words across its three comparison-beat labels and their one-line reading
+instructions, which take it to 155 in total — over the budget if beats count as stop copy, and the
+choice taken is that they do not: they are three buttons a learner reads one at a time as they work
+through the comparison, the same way the bounded-action labels beside them are not counted.
 
 ## 8. Limitations still true
 

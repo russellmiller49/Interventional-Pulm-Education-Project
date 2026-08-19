@@ -159,8 +159,22 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
   {
     id: 'return-path-resistance',
     label: 'Return-side resistance',
+    /*
+     * The qualifier moved into the sentence, because a state now exists that falsifies it without.
+     *
+     * This row was authored when nothing in the module could load a resisted return beside it. R3
+     * gave the pump section that state, and at an unchanged pump speed the engine drops flow by
+     * about a third — so the gradient, which is a resistance multiplied by a flow, drops with it.
+     * The panel's own comparison line says so, three hundred pixels above this row: "the gradient is
+     * lower than this circuit's reference state". A learner holding the unqualified sentence as the
+     * rule would have ruled out the return side, which is the correct answer.
+     *
+     * The qualification is not new — the card's own footer and the registered gradient guide have
+     * both always said to read this at similar blood flow. It is only now load-bearing inside the
+     * row, because the row is now read against numbers.
+     */
     signature:
-      'Both post-pump pressures rise together; the gradient across the membrane changes little.',
+      'Both post-pump pressures rise together; read at similar blood flow, the gradient across the membrane changes little.',
     problemLocation:
       'Downstream of the membrane — the return path from membrane outlet to the patient.',
     zoneIds: ['downstream-of-pump', 'across-membrane'],

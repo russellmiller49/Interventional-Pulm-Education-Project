@@ -459,6 +459,43 @@ describe('foundation teaching panels', () => {
     expect(container.textContent).toMatch(/Arterial return to the patient/i)
   })
 
+  /*
+   * A render-level pin for the sentence, not just for the phrase map.
+   *
+   * The comparison read "about the samethan this circuit's reference state" on main, for two
+   * reasons at once — a preposition that did not match the flat case, and a JSX transform that drops
+   * the leading space of a text node following an expression. Both were fixed, and both were fixed
+   * invisibly to the suite: reverting either left every test green, because the only new assertions
+   * were on the constants. A whitespace defect can only be caught by looking at rendered text.
+   */
+  it('pump-and-pressure-zones states the comparison as a sentence, at rest and after a change', () => {
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,
+    )
+    expect(container.querySelector('[data-resulting-flow]')?.textContent).toMatch(
+      /about the same as this circuit/,
+    )
+    expect(container.textContent).toMatch(/The gradient is about the same as this circuit/)
+    expect(container.textContent).not.toMatch(/same than|higher as|lower as/)
+    // The run-together the JSX transform produced, in every form it could take here.
+    expect(container.textContent).not.toMatch(/(same|higher|lower)(as|than)this/)
+
+    let faster = settled('vv')
+    faster = ecmoSimulationReducer(faster, {
+      type: 'SET_RPM',
+      rpm: faster.device.rpmSetpoint + 400,
+    })
+    for (let tick = 0; tick < 8; tick += 1) {
+      faster = ecmoSimulationReducer(faster, { type: 'STEP' })
+    }
+    const { container: raised } = render(
+      <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={faster} />,
+    )
+    expect(raised.querySelector('[data-resulting-flow]')?.textContent).toMatch(
+      /higher than this circuit/,
+    )
+  })
+
   it('pump-and-pressure-zones compares with the authored reference, not a normal range', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,

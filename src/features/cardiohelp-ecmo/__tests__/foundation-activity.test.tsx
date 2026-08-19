@@ -791,8 +791,21 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     )
   })
 
+  it('offers no comparison before the section has taken its prediction', () => {
+    // The activity hides its "Bounded actions" block in recognize and predict. These beats load
+    // states through those very actions, so an ungated beat button was a second door into a room
+    // the first door is locked out of.
+    mount('pump-and-pressure-zones')
+    fireEvent.click(screen.getByRole('button', { name: 'predict' }))
+    press('[data-walk-next]')
+    expect(stopId()).toBe('walk-downstream-load')
+    expect(walkCard().querySelector('[data-walk-comparison]')).toBeNull()
+    expect(walkCard().querySelectorAll('[data-walk-beat]')).toHaveLength(0)
+  })
+
   it('runs a comparison beat through the action the section already declares', () => {
     mount('pump-and-pressure-zones')
+    fireEvent.click(screen.getByRole('button', { name: 'act' }))
     press('[data-walk-next]')
     expect(stopId()).toBe('walk-downstream-load')
 

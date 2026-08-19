@@ -148,6 +148,20 @@ export function EcmoCircuitWalk({
 
       <p className="mt-2 text-sm leading-6">{resolveEcmoModeText(stop.analogy, supportMode)}</p>
 
+      {/*
+        What happens at this place, from the segment registry.
+
+        This sentence was the circuit-walk stop list's, and the list became the walk — so without it
+        the registry's own per-place prose had no renderer at all while its tests went on asserting
+        it. Gated, because two of the six say where a channel is reported, and this section's
+        prediction asks exactly that.
+      */}
+      {pastPrediction ? (
+        <p className="mt-2 text-sm leading-6" data-walk-place-detail>
+          {resolveEcmoModeText(ecmoCircuitSegment(stop.primarySegmentId).detail, supportMode)}
+        </p>
+      ) : null}
+
       <ul className="mt-3 grid gap-1" data-walk-checklist>
         {stop.checklist.map((item) => {
           const text = resolveEcmoModeText(item, supportMode)
@@ -217,7 +231,15 @@ export function EcmoCircuitWalk({
         </p>
       ) : null}
 
-      {stop.kind === 'comparative' && stop.comparison && onRunComparison ? (
+      {/*
+        Gated with the bounded actions next door, not separately.
+
+        The activity hides its "Bounded actions" block in `recognize` and `predict` on purpose. These
+        beats load states through the very same guided actions, so leaving them on screen would have
+        been a second door into a room the first door is locked out of — and a learner could change
+        the circuit out from under a prediction they had not yet made.
+      */}
+      {pastPrediction && stop.kind === 'comparative' && stop.comparison && onRunComparison ? (
         <div className="mt-4 grid gap-2" data-walk-comparison>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Load each state and read it before loading the next
@@ -256,6 +278,10 @@ export function EcmoCircuitWalk({
       </TextEquivalent>
 
       <ModelBoundary>{resolveEcmoModeText(stop.modelBoundary, supportMode)}</ModelBoundary>
+
+      <p className="mt-3 text-xs leading-5 text-muted-foreground" data-walk-sources>
+        Sources: {stop.sourceIds.join(', ')}
+      </p>
 
       <nav className="mt-4 flex flex-wrap items-center gap-2" aria-label="Circuit walk">
         <button

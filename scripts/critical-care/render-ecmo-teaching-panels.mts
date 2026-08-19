@@ -38,6 +38,7 @@ import { EcmoFoundationTeachingPanel } from '../../src/features/cardiohelp-ecmo/
 import {
   ecmoFoundationLessonRuntime,
   ecmoFoundationVariant,
+  ecmoFoundationVariants,
   ecmoInteractiveFoundationSectionIds,
   ecmoSharedFoundationSectionIds,
   ecmoVaOnlyFoundationSectionIds,
@@ -297,12 +298,32 @@ function walkVariants(
   )
 }
 
+/**
+ * Every state a walk section itself declares, per track.
+ *
+ * `sharedVariants` builds three hand-written profile states, which is right for the sections that
+ * only ever show a reference circuit — and wrong for a section that authors its own. The first cut
+ * of the walk matrix multiplied stops across those three, so the return-resistance state this
+ * package added had no cell anywhere: the comparative stop was reviewed only against circuits with
+ * nothing wrong with them, which is the one thing it is not about. Reading the runtime means a
+ * variant added to a lesson gets cells without this file being edited a second time.
+ */
+function authoredVariants(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
+  const runtime = ecmoFoundationLessonRuntime(sectionId)
+  return (['vv', 'va'] as const).flatMap((mode) =>
+    ecmoFoundationVariants(runtime, mode).map((variant) => ({
+      label: `${mode} · ${variant.label}`,
+      state: createEcmoFoundationSessionState(variant).simulation,
+    })),
+  )
+}
+
 function variantsFor(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
   if (isEcmoSharedFoundationSectionId(sectionId)) {
-    return walkVariants(
-      sectionId,
-      profiles.flatMap((profileId) => sharedVariants(profileId)),
-    )
+    if (ecmoCircuitWalkStopsForSection(sectionId).length > 0) {
+      return walkVariants(sectionId, authoredVariants(sectionId))
+    }
+    return profiles.flatMap((profileId) => sharedVariants(profileId))
   }
   if (isEcmoVvOnlyFoundationSectionId(sectionId)) return vvOnlyVariants(sectionId)
   if (isEcmoVaOnlyFoundationSectionId(sectionId)) return vaOnlyVariants(sectionId)
