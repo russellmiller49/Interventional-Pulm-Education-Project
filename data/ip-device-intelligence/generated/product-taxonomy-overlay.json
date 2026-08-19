@@ -4,13 +4,13 @@
   "method_version": "d2c-taxonomy-v1",
   "source_rules": {
     "path": "data/ip-device-intelligence/reviewed/product-taxonomy-rules.json",
-    "sha256": "38a87585f9fb15251d8c01bbf8c4dfcaddb90f3c2d4f8e23c243b9701b36d451"
+    "sha256": "4d3cf43d3a2608028c5c4ad12e7d621e02c067cc8496d9715e98680bc677544c"
   },
   "row_scope": "atlas_cohort_verified_source_minus_owner_exclusions",
   "counts": {
     "rows": 1331,
     "device_class": {
-      "accessory": 102,
+      "accessory": 100,
       "airway_stent": 233,
       "balloon_dilation": 25,
       "bronchoscope": 95,
@@ -18,22 +18,23 @@
       "console_capital": 31,
       "cryotherapy": 18,
       "cytology_brush": 16,
+      "delivery_applicator": 1,
       "electrosurgical": 108,
       "endoscopic_telescope": 30,
-      "forceps_instrument": 133,
+      "forceps_instrument": 140,
       "guidewire": 4,
       "implant_delivery": 10,
       "laser_system": 6,
       "navigation_system": 28,
-      "needle": 46,
+      "needle": 48,
       "pleural_drainage": 137,
-      "pleurodesis_agent": 5,
       "powered_shaver": 8,
       "reprocessing": 21,
-      "retrieval_device": 10,
+      "retrieval_basket": 5,
       "sizing_measuring": 5,
-      "specimen_collection": 6,
-      "suction_irrigation": 46,
+      "specimen_collection": 7,
+      "suction_irrigation": 43,
+      "therapeutic_agent": 4,
       "tracheostomy_tube": 124,
       "trocar_access": 24,
       "ultrasound_device": 35,
@@ -46,8 +47,8 @@
     },
     "needs_review": 1,
     "classification_basis": {
-      "name_rule": 61,
-      "pair_rule": 1270
+      "name_rule": 68,
+      "pair_rule": 1263
     }
   },
   "rows": [
@@ -893,11 +894,11 @@
     },
     {
       "product_id": "PRD-129E6C270A",
-      "device_class_code": "suction_irrigation",
-      "device_subtype_code": "rigid_suction_catheter",
+      "device_class_code": "specimen_collection",
+      "device_subtype_code": "specimen_trap",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-12CFCE9A6C",
@@ -1533,11 +1534,11 @@
     },
     {
       "product_id": "PRD-212BC58910",
-      "device_class_code": "accessory",
-      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-212CEA70A3",
@@ -1853,7 +1854,7 @@
     },
     {
       "product_id": "PRD-2677F0C69F",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -2301,11 +2302,11 @@
     },
     {
       "product_id": "PRD-2F1A67DE53",
-      "device_class_code": "suction_irrigation",
-      "device_subtype_code": "rigid_suction_catheter",
+      "device_class_code": "needle",
+      "device_subtype_code": "aspiration_biopsy_needle",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-2F1DF55F3C",
@@ -3461,8 +3462,8 @@
     },
     {
       "product_id": "PRD-4E9069C30F",
-      "device_class_code": "retrieval_device",
-      "device_subtype_code": "retrieval_basket",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6117,8 +6118,8 @@
     },
     {
       "product_id": "PRD-8C6A6B2ACE",
-      "device_class_code": "pleurodesis_agent",
-      "device_subtype_code": "talc_vial",
+      "device_class_code": "therapeutic_agent",
+      "device_subtype_code": "sterile_talc",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6501,7 +6502,7 @@
     },
     {
       "product_id": "PRD-9844E2B578",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -6653,7 +6654,7 @@
     },
     {
       "product_id": "PRD-9C633556C2",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -6901,11 +6902,11 @@
     },
     {
       "product_id": "PRD-A2FCA81CFA",
-      "device_class_code": "accessory",
-      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-A2FFE725BD",
@@ -7373,8 +7374,8 @@
     },
     {
       "product_id": "PRD-AF1D02BED5",
-      "device_class_code": "pleurodesis_agent",
-      "device_subtype_code": "talc_vial",
+      "device_class_code": "therapeutic_agent",
+      "device_subtype_code": "sterile_talc",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7437,8 +7438,8 @@
     },
     {
       "product_id": "PRD-B1203FF71F",
-      "device_class_code": "retrieval_device",
-      "device_subtype_code": "retrieval_basket",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8061,7 +8062,7 @@
     },
     {
       "product_id": "PRD-BEB189750B",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -8213,11 +8214,11 @@
     },
     {
       "product_id": "PRD-C2CB78AC4C",
-      "device_class_code": "retrieval_device",
-      "device_subtype_code": "foreign_body_grasping_forceps",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-C32CFEC594",
@@ -8445,7 +8446,7 @@
     },
     {
       "product_id": "PRD-C88B1CD284",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -8765,8 +8766,8 @@
     },
     {
       "product_id": "PRD-D14312CC6A",
-      "device_class_code": "pleurodesis_agent",
-      "device_subtype_code": "talc_applicator",
+      "device_class_code": "delivery_applicator",
+      "device_subtype_code": "powder_blower",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8789,7 +8790,7 @@
     },
     {
       "product_id": "PRD-D1DCE936D2",
-      "device_class_code": "pleurodesis_agent",
+      "device_class_code": "therapeutic_agent",
       "device_subtype_code": "talc_poudrage_kit",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -8933,7 +8934,7 @@
     },
     {
       "product_id": "PRD-D5A6823E45",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -8965,7 +8966,7 @@
     },
     {
       "product_id": "PRD-D630438171",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
@@ -9054,10 +9055,10 @@
     {
       "product_id": "PRD-D7A7620198",
       "device_class_code": "suction_irrigation",
-      "device_subtype_code": "suction_accessory",
+      "device_subtype_code": "rigid_suction_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-D7F9A3A5D0",
@@ -9389,11 +9390,11 @@
     },
     {
       "product_id": "PRD-DF989CBDCB",
-      "device_class_code": "suction_irrigation",
-      "device_subtype_code": "rigid_suction_catheter",
+      "device_class_code": "needle",
+      "device_subtype_code": "aspiration_biopsy_needle",
       "taxonomy_confidence": "high",
       "needs_review": false,
-      "classification_basis": "pair_rule"
+      "classification_basis": "name_rule"
     },
     {
       "product_id": "PRD-DFBA1DB7E3",
@@ -9893,8 +9894,8 @@
     },
     {
       "product_id": "PRD-EB27F8D657",
-      "device_class_code": "pleurodesis_agent",
-      "device_subtype_code": "talc_vial",
+      "device_class_code": "therapeutic_agent",
+      "device_subtype_code": "sterile_talc",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"

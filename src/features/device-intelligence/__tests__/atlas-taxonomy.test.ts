@@ -125,6 +125,26 @@ describe('D2C device-class facet', () => {
     const catalogScoped = searchCatalog(parse({ category: 'Airway stenting' }), store)
     expect(catalogScoped.total).toBe(3)
   })
+
+  it('never applies the retired legacy subcategory filter on the atlas (D2C-REV-005)', () => {
+    const withLegacy = searchAtlas(parse({ subcategory: 'Pulmonary guidewire' }))
+    expect(withLegacy.total).toBe(1331)
+    // The preserved preference-card catalog keeps exact subcategory filtering.
+    const catalogScoped = searchCatalog(parse({ subcategory: 'Pulmonary guidewire' }), store)
+    expect(catalogScoped.total).toBeGreaterThan(0)
+    expect(catalogScoped.total).toBeLessThan(1331)
+  })
+
+  it('offers the corrected Retrieval basket class as a facet with its full basket cohort', () => {
+    const facets = getAtlasFacets()
+    const basketFacet = facets.deviceClasses.find((facet) => facet.code === 'retrieval_basket')
+    expect(basketFacet?.productCount).toBe(5)
+    const results = allResults({ deviceClass: 'retrieval_basket' })
+    expect(results.slice().sort()).toEqual(idsForClass('retrieval_basket'))
+    // The retired mixed class is not a facet and not a valid filter value.
+    expect(facets.deviceClasses.map((facet) => facet.code)).not.toContain('retrieval_device')
+    expect(validateAtlasFilters(parse({ deviceClass: 'retrieval_device' }))).toBe('device class')
+  })
 })
 
 describe('D2C taxonomy search', () => {
@@ -172,6 +192,41 @@ describe('D2C taxonomy search', () => {
     for (const id of idsForClass('guidewire')) expect(spanish).toContain(id)
     const chinese = allResults({ q: '支气管镜' })
     for (const id of idsForClass('bronchoscope')) expect(chinese).toContain(id)
+  })
+
+  it('expands an exact Chinese class label to exactly the Bronchoscope class (D2C-REV-004)', () => {
+    // 支气管镜 IS the controlled zh-CN class label: taxonomy expansion adds that class
+    // only, never the accessory/forceps/telescope/needle cohorts whose subtype labels
+    // merely contain the phrase. Product names are Latin, so no fuzzy name noise here:
+    // the result is exactly the Bronchoscope-class cohort.
+    const match = matchTaxonomyCodesForQuery('支气管镜')
+    expect([...match.classCodes]).toEqual(['bronchoscope'])
+    expect(match.subtypeCodes.size).toBe(0)
+    const results = allResults({ q: '支气管镜' })
+    const bronchoscopes = idsForClass('bronchoscope')
+    expect(bronchoscopes.length).toBe(95)
+    expect(results.slice().sort()).toEqual(bronchoscopes)
+  })
+
+  it('gives exact English and Spanish class labels the same class-only precedence', () => {
+    for (const query of ['Bronchoscope', 'bronchoscope', 'Broncoscopio']) {
+      const match = matchTaxonomyCodesForQuery(query)
+      expect([...match.classCodes]).toEqual(['bronchoscope'])
+      expect(match.subtypeCodes.size).toBe(0)
+    }
+    const guidewire = matchTaxonomyCodesForQuery('Guidewire')
+    expect([...guidewire.classCodes]).toEqual(['guidewire'])
+    expect(guidewire.subtypeCodes.size).toBe(0)
+  })
+
+  it('keeps additive class+subtype expansion for non-exact class phrases', () => {
+    // A phrase that is NOT a controlled class label keeps the pre-correction additive
+    // behavior: subtype labels still match ("EBUS bronchoscope"), token matching still
+    // works ("sizing device").
+    const ebus = matchTaxonomyCodesForQuery('EBUS bronchoscope')
+    expect([...ebus.subtypeCodes]).toContain('ebus_bronchoscope')
+    const sizing = matchTaxonomyCodesForQuery('sizing device')
+    expect([...sizing.classCodes]).toContain('sizing_measuring')
   })
 
   it('leaves exact catalog-number search untouched, exact matches first', () => {

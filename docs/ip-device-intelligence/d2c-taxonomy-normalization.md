@@ -1,6 +1,6 @@
 # Phase D2C — Normalized Device Atlas product taxonomy
 
-Status: implemented on `claude/device-intelligence-d2c-taxonomy-normalization-v1` (base `9fd7838858b249654631f3d4152faf9ebb749119`), draft PR pending independent review. Decision record: [decision-log.md](./decision-log.md), D-12.
+Status: implemented on `claude/device-intelligence-d2c-taxonomy-normalization-v1` (base `9fd7838858b249654631f3d4152faf9ebb749119`), draft PR pending independent review. The first independent review returned **B. FAIL** (protected architecture passed; three medium user-facing semantic taxonomy defects plus five low findings), and one bounded correction pass (2026-08-19, D2C-REV-001…008 below) has been applied; the final independent review remains pending. Decision record: [decision-log.md](./decision-log.md), D-12.
 
 ## Why the source categories could not be the public taxonomy
 
@@ -35,24 +35,24 @@ Clinical use is already represented by role and procedure, so applications ("Air
 
 ## Controlled vocabulary
 
-28 populated device classes (29 with the reserved `other_needs_review` fallback, currently empty), within the owner target of ~15–35; 138 controlled subtypes, each owned by exactly one class (`DEVICE_SUBTYPE_CLASS` in [product-taxonomy.ts](../../src/features/device-intelligence/domain/product-taxonomy.ts) is the single source of that relation). Cohort counts at this head:
+29 populated device classes (30 with the reserved `other_needs_review` fallback, currently empty), within the owner target of ~15–35; 140 controlled subtypes, each owned by exactly one class (`DEVICE_SUBTYPE_CLASS` in [product-taxonomy.ts](../../src/features/device-intelligence/domain/product-taxonomy.ts) is the single source of that relation). Cohort counts at this head:
 
 | Class                | Products |     | Class               | Products |
 | -------------------- | -------: | --- | ------------------- | -------: |
 | airway_stent         |      233 |     | cryotherapy         |       18 |
-| pleural_drainage     |      137 |     | valve_occluder      |       17 |
-| forceps_instrument   |      133 |     | cytology_brush      |       16 |
+| forceps_instrument   |      140 |     | valve_occluder      |       17 |
+| pleural_drainage     |      137 |     | cytology_brush      |       16 |
 | tracheostomy_tube    |      124 |     | implant_delivery    |       10 |
-| electrosurgical      |      108 |     | retrieval_device    |       10 |
-| accessory            |      102 |     | catheter_sheath     |        8 |
-| bronchoscope         |       95 |     | powered_shaver      |        8 |
-| needle               |       46 |     | laser_system        |        6 |
-| suction_irrigation   |       46 |     | specimen_collection |        6 |
-| ultrasound_device    |       35 |     | pleurodesis_agent   |        5 |
-| console_capital      |       31 |     | sizing_measuring    |        5 |
-| endoscopic_telescope |       30 |     | guidewire           |        4 |
-| navigation_system    |       28 |     | other_needs_review  |        0 |
-| balloon_dilation     |       25 |     |                     |          |
+| electrosurgical      |      108 |     | catheter_sheath     |        8 |
+| accessory            |      100 |     | powered_shaver      |        8 |
+| bronchoscope         |       95 |     | specimen_collection |        7 |
+| needle               |       48 |     | laser_system        |        6 |
+| suction_irrigation   |       43 |     | retrieval_basket    |        5 |
+| ultrasound_device    |       35 |     | sizing_measuring    |        5 |
+| console_capital      |       31 |     | guidewire           |        4 |
+| endoscopic_telescope |       30 |     | therapeutic_agent   |        4 |
+| navigation_system    |       28 |     | delivery_applicator |        1 |
+| balloon_dilation     |       25 |     | other_needs_review  |        0 |
 | trocar_access        |       24 |     |                     |          |
 | reprocessing         |       21 |     |                     |          |
 
@@ -62,7 +62,7 @@ Labels are localized in `messages/{en,es,zh-CN}.json` under `deviceIntelligence.
 
 Everything is reproducible from two committed inputs:
 
-- **Reviewed rules** — [`data/ip-device-intelligence/reviewed/product-taxonomy-rules.json`](../../data/ip-device-intelligence/reviewed/product-taxonomy-rules.json): 222 pair rules (one per (primary_category, subcategory) pair in the cohort — complete coverage by construction), 16 name rules (deterministic `product_name` regexes scoped to one exact pair, for the pairs that mix physical types), 0 product overrides today (the mechanism exists for owner corrections).
+- **Reviewed rules** — [`data/ip-device-intelligence/reviewed/product-taxonomy-rules.json`](../../data/ip-device-intelligence/reviewed/product-taxonomy-rules.json): 222 pair rules (one per (primary_category, subcategory) pair in the cohort — complete coverage by construction), 21 name rules (deterministic `product_name` regexes scoped to one exact pair, for the pairs that mix physical types), 0 product overrides today (the mechanism exists for owner corrections; committed overrides are validated against the current atlas cohort before generation — an unknown, candidate/unknown-grade, or owner-excluded id fails the build instead of riding along as a silent no-op).
 - **Generator** — `npm run ip-intel:taxonomy-overlay` ([build-taxonomy-overlay.ts](../../scripts/ip-device-intelligence/build-taxonomy-overlay.ts)) evaluates, per cohort product, in fixed precedence: product override → first matching name rule → pair rule → explicit `other_needs_review` fallback (unused today; asserted zero). Output is the runtime overlay, byte-deterministic, rows sorted by product id, rules pinned by SHA-256; `--check` fails on staleness.
 
 Permitted evidence is exactly what the rules read: `product_name` and the canonical category pair (plus, for a future override, a product id). Roles/procedures disambiguated nothing at this head and never substitute for physical class. AI assistance was used only to _author_ the reviewed rules during implementation; every committed row is reproducible from the rules file alone, and no AI inference is presented as source evidence.
@@ -71,8 +71,8 @@ Permitted evidence is exactly what the rules read: `product_name` and the canoni
 
 | Code                 | Meaning                                   |  Rows |
 | -------------------- | ----------------------------------------- | ----: |
-| `pair_rule`          | Reviewed (category, subcategory) mapping  | 1,270 |
-| `name_rule`          | Reviewed name pattern within one pair     |    61 |
+| `pair_rule`          | Reviewed (category, subcategory) mapping  | 1,263 |
+| `name_rule`          | Reviewed name pattern within one pair     |    68 |
 | `product_override`   | Reviewed per-product assignment           |     0 |
 | `unmatched_fallback` | No rule matched (honest degradation path) |     0 |
 
@@ -92,13 +92,13 @@ Row scope is the D2B inclusion-first cohort (`verified_source` minus explicit ow
 2. Record the correction as a `product_overrides` entry (per product) or amend the pair/name rule (per group) in the reviewed rules file; overrides always win.
 3. `npm run ip-intel:taxonomy-overlay && npm run ip-intel:d2c-review`, commit both regenerated artifacts; `--check` and the coverage tests hold the line.
 
-Review subsets at this head: **1** needs-review product; **335** products whose normalized class differs from the majority class of their source category (`taxonomy-review-class-changed.csv` — the products the normalization actually moved); **11** source categories split into ≥2 normalized classes; **20** normalized classes assembled from ≥2 source categories.
+Review subsets at this head: **1** needs-review product; **338** products whose normalized class differs from the majority class of their source category (`taxonomy-review-class-changed.csv` — the products the normalization actually moved); **12** source categories split into ≥2 normalized classes; **20** normalized classes assembled from ≥2 source categories.
 
 ## What D2C changed in the atlas UI — and what it preserved
 
-- The **Category** facet (exact `primary_category` match) is replaced by **Device class** (normalized codes, localized labels, cohort counts). A stale `?category=` link is reported with an honest replacement notice and _not applied_; an unknown `deviceClass` value gets the standard unknown-filter notice. Manufacturer, Clinical role, and Procedure facets are unchanged.
+- The **Category** facet (exact `primary_category` match) is replaced by **Device class** (normalized codes, localized labels, cohort counts). A stale `?category=` or `?subcategory=` link is reported with an honest replacement notice and _not applied_; an unknown `deviceClass` value gets the standard unknown-filter notice. Manufacturer, Clinical role, and Procedure facets are unchanged.
 - The **Kind / category** table column became **Device type**, showing the normalized subtype label.
-- Atlas **search** additionally matches normalized class/subtype labels in all three locales ("guidewire", "EBUS bronchoscope", "sizing device", "支气管镜") by deterministic token/substring matching; matched cohorts join the candidate list _after_ exact-identifier and fuzzy matches, so exact catalog-number behavior is byte-for-byte preserved.
+- Atlas **search** additionally matches normalized class/subtype labels in all three locales ("guidewire", "EBUS bronchoscope", "sizing device", "支气管镜") by deterministic token/substring matching; matched cohorts join the candidate list _after_ exact-identifier and fuzzy matches, so exact catalog-number behavior is byte-for-byte preserved. When the normalized query **exactly equals a controlled class label** in any locale, taxonomy expansion adds that class only and never also expands through subtype-label substring matches (D2C-REV-004) — so the exact zh-CN class label 支气管镜 returns exactly the 95 Bronchoscope-class products instead of 235 products swept in by subtype labels that merely contain the phrase.
 - **Product detail** leads with Device class / Device subtype; canonical `primary_category` / `subcategory` / `product_kind` moved into an explicitly labeled "Source catalog classification" provenance area with the no-equivalence caption.
 - Admin module labels updated to durable beta wording (`src/lib/non-public-modules.ts`); routes stay public-unlisted + noindex, out of navigation.
 
@@ -111,3 +111,16 @@ Review subsets at this head: **1** needs-review product; **335** products whose 
 | GenCut Core Biopsy System (`PRD-5E5E5933A2`) | `needle` / `core_biopsy_device` | Core sampling device inside the "Navigation-compatible biopsy device" subcategory; broad class plausible, exact physical type for owner confirmation |
 
 Softer review candidates (assigned `moderate`, not flagged): the 98 moderate-confidence rows in `taxonomy-review-full.csv`, dominated by mixed accessory pairs (`Rigid bronchoscope accessory/system`, `Platform accessory`), the ERBE CO2/gas items split between electrosurgical and cryotherapy, and the Fujifilm/Olympus therapeutic-model name rules.
+
+## Independent-review corrections (2026-08-19)
+
+The first independent review returned **B. FAIL**: the protected architecture passed, but three medium user-facing semantic taxonomy defects and five low findings required one bounded correction pass. All eight were corrected here; the nonblocking count-map hardening observation was deliberately **not** pursued (the generator recomputes counts, the committed `--check` gates reconcile them, and runtime never trusts caller-supplied count maps). The pass moved exactly **21** of 1,331 rows; every role and procedure code is unchanged for all 1,331 products (verified by diffing `taxonomy-review-full.csv` before/after).
+
+- **D2C-REV-001 — retrieval forceps and baskets.** The mixed `retrieval_device` class (7 forceps + 3 baskets) is retired. The seven flexible foreign-body grasping forceps are now `forceps_instrument` / `foreign_body_grasping_forceps` (physically forceps; retrieval use stays in the governed role/procedure facets — materially analogous rigid foreign-body forceps were already `forceps_instrument` with rigid/optical subtypes). All five physical baskets — the two Zero Tip Airway Retrieval Baskets, the Mini Grasping Basket (`PRD-C2CB78AC4C`, no longer typed as forceps), and the two rigid Foreign Body Baskets (`PRD-212BC58910`, `PRD-A2FCA81CFA`, no longer generic accessories) — share the new coherent class `retrieval_basket` / `foreign_body_retrieval_basket`. Documented exception: the Wire Basket for the ERBECRYO 2 Cart (`PRD-913352C891`) is a storage basket on capital equipment, not a patient-facing retrieval instrument, and stays `cryotherapy` / `cryotherapy_accessory`. The two Retrieval-category nets are candidate-grade and outside the atlas cohort.
+- **D2C-REV-002 — the aspiration/irrigation source pair splits by physical type.** Within the exact pair `Rigid bronchoscopy » Bronchoscopy aspiration/irrigation accessory` (8 products): the Angled and Straight Aspiration Biopsy Needles (`PRD-2F1A67DE53`, `PRD-DF989CBDCB`) are now `needle` / `aspiration_biopsy_needle`; the Single-Use Plastic Collection Device (`PRD-129E6C270A`) is now `specimen_collection` / `specimen_trap`; the two aspirators, two HUZLY suction tubes, and the HUZLY aspirator/irrigator remain `suction_irrigation` / `rigid_suction_catheter`. Implemented as exact-pair-scoped name rules, never a broadened regex.
+- **D2C-REV-003 — pleurodesis agent versus delivery instrument.** The mixed `pleurodesis_agent` class (label "Pleurodesis agent or applicator") is retired; no class label unions agent with applicator anymore. The three STERITALC vials are `therapeutic_agent` / `sterile_talc`; the reusable Optical Powder Blower (`PRD-D14312CC6A`) is `delivery_applicator` / `powder_blower`. **Dominant-identity decision for the disposable kit:** the STERITALC PF3 Poudrage Kit (`PRD-D1DCE936D2`) is named and dosed by its 3 g talc content, sits in the same STERITALC family as the F2/F4 vials, and is refilled by the PF3 Supplement Vial sold under `Sterile talc vial` — the sold item's dominant catalog identity is the talc agent, so it is `therapeutic_agent` / `talc_poudrage_kit` (also recorded in the reviewed rule's note). Clinical pleurodesis role/procedure membership is untouched.
+- **D2C-REV-004 — exact class-label search precedence.** See the search bullet above; regression-tested in en/es/zh-CN, with fuzzy product-name behavior, additive non-exact taxonomy search, and exact catalog-number ordering all preserved.
+- **D2C-REV-005 — stale subcategory notice.** A stale `?subcategory=` URL now renders the same honest replacement notice as `?category=` and is never silently applied on the atlas (canonical preference-card subcategory filtering unchanged).
+- **D2C-REV-006 — override validation.** Committed `product_overrides` are validated against the loaded current atlas cohort before generation in both generators; unknown canonical ids (e.g. `PRD-0000000000`), candidate/unknown-grade ids, and owner-excluded ids fail the build with the reason, duplicates fail the rules schema, and a valid override is proven to change exactly one generated row.
+- **D2C-REV-007 — literal NUL.** The pair-rule dedup delimiter in `taxonomy-overlay-schema.ts` is now the reviewable source escape `\u0000` instead of a raw NUL byte; runtime semantics are identical (split-vs-duplicate pair keys regression-tested) and Git treats the file as ordinary text.
+- **D2C-REV-008 — suction catheter subtype.** The Suction Catheter 5 Fr, Pack of 6 (`PRD-D7A7620198`) now shares `rigid_suction_catheter` with the analogous 5/6/7 Fr "with Adapter" catheters via a narrow name rule; the three "Adapter for … Fr" products remain `suction_accessory`.

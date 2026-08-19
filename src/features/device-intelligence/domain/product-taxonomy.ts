@@ -42,11 +42,12 @@ export const DEVICE_CLASS_CODES = [
   'cytology_brush',
   'catheter_sheath',
   'suction_irrigation',
-  'retrieval_device',
+  'retrieval_basket',
   'trocar_access',
   'tracheostomy_tube',
   'pleural_drainage',
-  'pleurodesis_agent',
+  'therapeutic_agent',
+  'delivery_applicator',
   'electrosurgical',
   'cryotherapy',
   'laser_system',
@@ -122,8 +123,11 @@ export const DEVICE_SUBTYPE_CLASS: Record<string, DeviceClassCode> = {
   rigid_biopsy_needle: 'needle',
   pleural_biopsy_needle: 'needle',
   access_needle: 'needle',
-  // Forceps and hand instruments.
+  aspiration_biopsy_needle: 'needle',
+  // Forceps and hand instruments. Foreign-body grasping forceps are physically forceps
+  // (D2C-REV-001): clinical retrieval use lives in the governed role/procedure facets.
   flexible_biopsy_forceps: 'forceps_instrument',
+  foreign_body_grasping_forceps: 'forceps_instrument',
   ebus_miniforceps: 'forceps_instrument',
   rigid_forceps: 'forceps_instrument',
   optical_rigid_forceps: 'forceps_instrument',
@@ -146,9 +150,9 @@ export const DEVICE_SUBTYPE_CLASS: Record<string, DeviceClassCode> = {
   suction_accessory: 'suction_irrigation',
   suction_pump: 'suction_irrigation',
   irrigation_pump: 'suction_irrigation',
-  // Retrieval.
-  retrieval_basket: 'retrieval_device',
-  foreign_body_grasping_forceps: 'retrieval_device',
+  // Retrieval baskets — one coherent physical type (D2C-REV-001). Storage baskets on
+  // equipment carts are cart accessories, not retrieval baskets.
+  foreign_body_retrieval_basket: 'retrieval_basket',
   // Access.
   thoracoscopy_trocar: 'trocar_access',
   // Tracheostomy tubes.
@@ -167,10 +171,13 @@ export const DEVICE_SUBTYPE_CLASS: Record<string, DeviceClassCode> = {
   thoracentesis_set: 'pleural_drainage',
   percutaneous_drainage_kit: 'pleural_drainage',
   thoracic_drainage_cannula: 'pleural_drainage',
-  // Pleurodesis.
-  talc_vial: 'pleurodesis_agent',
-  talc_poudrage_kit: 'pleurodesis_agent',
-  talc_applicator: 'pleurodesis_agent',
+  // Pleurodesis: the chemical/consumable talc agent and the mechanical delivery
+  // instrument are different physical kinds and never share a class (D2C-REV-003).
+  // The disposable poudrage kit sits with the agent per its dominant catalog identity
+  // (named and dosed by talc grams; the delivery bulb is single-use packaging).
+  sterile_talc: 'therapeutic_agent',
+  talc_poudrage_kit: 'therapeutic_agent',
+  powder_blower: 'delivery_applicator',
   // Electrosurgery / APC.
   electrosurgical_generator: 'electrosurgical',
   apc_unit: 'electrosurgical',
@@ -224,6 +231,7 @@ export const DEVICE_SUBTYPE_CLASS: Record<string, DeviceClassCode> = {
   // Specimen collection.
   specimen_container: 'specimen_collection',
   specimen_sampler: 'specimen_collection',
+  specimen_trap: 'specimen_collection',
   bal_kit: 'specimen_collection',
   // Accessories.
   bite_block: 'accessory',

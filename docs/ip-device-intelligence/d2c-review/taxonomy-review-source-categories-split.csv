@@ -11,11 +11,11 @@ Endobronchial valve,3,sizing_measuring,4
 Endobronchial valve,3,valve_occluder,9
 Endoscopy platform,9,accessory,9
 Endoscopy platform,9,console_capital,23
+Endoscopy platform,9,delivery_applicator,1
 Endoscopy platform,9,electrosurgical,4
 Endoscopy platform,9,forceps_instrument,1
 Endoscopy platform,9,implant_delivery,4
 Endoscopy platform,9,pleural_drainage,1
-Endoscopy platform,9,pleurodesis_agent,1
 Endoscopy platform,9,reprocessing,3
 Endoscopy platform,9,suction_irrigation,32
 Medical thoracoscopy,5,endoscopic_telescope,18
@@ -34,13 +34,17 @@ Peripheral navigation,5,cytology_brush,1
 Peripheral navigation,5,forceps_instrument,1
 Peripheral navigation,5,navigation_system,14
 Peripheral navigation,5,needle,1
-Rigid bronchoscopy,7,accessory,81
-Rigid bronchoscopy,7,bronchoscope,44
-Rigid bronchoscopy,7,endoscopic_telescope,12
-Rigid bronchoscopy,7,forceps_instrument,97
-Rigid bronchoscopy,7,needle,1
-Rigid bronchoscopy,7,powered_shaver,8
-Rigid bronchoscopy,7,suction_irrigation,13
+Retrieval,2,forceps_instrument,7
+Retrieval,2,retrieval_basket,3
+Rigid bronchoscopy,9,accessory,79
+Rigid bronchoscopy,9,bronchoscope,44
+Rigid bronchoscopy,9,endoscopic_telescope,12
+Rigid bronchoscopy,9,forceps_instrument,97
+Rigid bronchoscopy,9,needle,3
+Rigid bronchoscopy,9,powered_shaver,8
+Rigid bronchoscopy,9,retrieval_basket,2
+Rigid bronchoscopy,9,specimen_collection,1
+Rigid bronchoscopy,9,suction_irrigation,10
 Sampling,3,cytology_brush,10
 Sampling,3,forceps_instrument,13
 Sampling,3,needle,24

@@ -66,6 +66,12 @@ describe('D2C taxonomy vocabulary', () => {
     expect(isDeviceClassCode('airway_stenting')).toBe(false)
     expect(isDeviceClassCode('flexible_bronchoscopy')).toBe(false)
     expect(isDeviceSubtypeCode('bronchoscope')).toBe(false)
+    // Retired by the independent-review corrections: the mixed forceps+basket class
+    // (D2C-REV-001) and the mixed agent+applicator class (D2C-REV-003).
+    expect(isDeviceClassCode('retrieval_device')).toBe(false)
+    expect(isDeviceClassCode('pleurodesis_agent')).toBe(false)
+    expect(isDeviceSubtypeCode('talc_vial')).toBe(false)
+    expect(isDeviceSubtypeCode('talc_applicator')).toBe(false)
   })
 
   it.each(locales)(
@@ -107,6 +113,18 @@ describe('D2C taxonomy vocabulary', () => {
       // "reprocessing" ("Reprocessing and cleaning equipment" names the equipment, not
       // the workflow), but the bare application phrase is not a class.
       expect(enClasses).not.toContain(banned)
+    }
+  })
+
+  it('bars classes that combine unlike physical identities in one label', () => {
+    // D2C-REV-003: "Pleurodesis agent or applicator" mixed a chemical consumable with a
+    // mechanical instrument. No locale's class label may render an "X or applicator"
+    // style union of agent and instrument again.
+    for (const [, messages] of locales) {
+      for (const label of Object.values(taxonomyMessages(messages).classes)) {
+        expect(label).not.toMatch(/agent or applicator/i)
+        expect(label).not.toMatch(/agente o aplicador/i)
+      }
     }
   })
 

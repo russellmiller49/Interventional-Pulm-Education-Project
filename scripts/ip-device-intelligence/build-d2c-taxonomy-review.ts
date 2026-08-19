@@ -2,7 +2,11 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { isAtlasCohortProduct } from '../../src/features/device-intelligence/domain/atlas-cohort'
-import { classifyProduct, loadTaxonomyInputs } from './build-taxonomy-overlay'
+import {
+  classifyProduct,
+  loadTaxonomyInputs,
+  validateProductOverrides,
+} from './build-taxonomy-overlay'
 
 import enMessages from '../../messages/en.json'
 
@@ -106,6 +110,10 @@ export function buildReviewFiles(repoRoot = REPO_ROOT): Record<string, string> {
     if (!existing.includes(procedure)) existing.push(procedure)
     proceduresByProduct.set(option.product_id, existing)
   }
+
+  // Same wall as the overlay generator (D2C-REV-006): a committed override must land on
+  // exactly one current atlas-cohort row, never ride along as a silent no-op.
+  validateProductOverrides(rules, catalog)
 
   const cohort = catalog
     .filter(isAtlasCohortProduct)

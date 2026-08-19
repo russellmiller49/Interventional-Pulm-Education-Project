@@ -9,9 +9,13 @@ import {
   buildTaxonomyOverlay,
   loadTaxonomyInputs,
   serializeTaxonomyOverlay,
+  validateProductOverrides,
 } from '../../../../scripts/ip-device-intelligence/build-taxonomy-overlay'
 import { isAtlasCohortProduct } from '@/features/device-intelligence/domain/atlas-cohort'
-import { taxonomyOverlayArtifactSchema } from '@/features/device-intelligence/domain/taxonomy-overlay-schema'
+import {
+  taxonomyOverlayArtifactSchema,
+  taxonomyRulesArtifactSchema,
+} from '@/features/device-intelligence/domain/taxonomy-overlay-schema'
 import { getAtlasCatalogStore } from '@/features/device-intelligence/server/atlas-store.server'
 import {
   getProductTaxonomy,
@@ -175,6 +179,93 @@ describe('D2C taxonomy overlay schema walls', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects a committed override for an unknown canonical product ID (D2C-REV-006)', () => {
+    const inputs = loadTaxonomyInputs(REPO_ROOT)
+    const rules = {
+      ...inputs.rules,
+      product_overrides: [
+        {
+          product_id: 'PRD-0000000000',
+          device_class_code: 'accessory',
+          device_subtype_code: 'bite_block',
+          confidence: 'high',
+        } as never,
+      ],
+    }
+    expect(() => buildTaxonomyOverlay({ ...inputs, rules })).toThrow(
+      /PRD-0000000000: unknown canonical product ID/,
+    )
+  })
+
+  it('rejects a committed override for a candidate-grade (non-cohort) product ID', () => {
+    const inputs = loadTaxonomyInputs(REPO_ROOT)
+    const candidateRow = (
+      productsJson as { product_id: string; verification_grade?: string | null }[]
+    ).find((product) => product.verification_grade === 'candidate')!
+    const rules = {
+      ...inputs.rules,
+      product_overrides: [
+        {
+          product_id: candidateRow.product_id,
+          device_class_code: 'accessory',
+          device_subtype_code: 'bite_block',
+          confidence: 'high',
+        } as never,
+      ],
+    }
+    expect(() => buildTaxonomyOverlay({ ...inputs, rules })).toThrow(
+      /candidate-grade, outside the atlas cohort/,
+    )
+    expect(() => validateProductOverrides(rules as never, inputs.catalog)).toThrow(
+      new RegExp(candidateRow.product_id),
+    )
+  })
+
+  it('rejects a duplicate committed override at the rules schema', () => {
+    const inputs = loadTaxonomyInputs(REPO_ROOT)
+    const override = {
+      product_id: base.rows[0].product_id,
+      device_class_code: 'accessory',
+      device_subtype_code: 'bite_block',
+      confidence: 'high',
+    }
+    const result = taxonomyRulesArtifactSchema.safeParse({
+      ...JSON.parse(JSON.stringify(inputs.rules)),
+      product_overrides: [override, { ...override }],
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('applies a valid cohort override to exactly one generated row, never zero', () => {
+    const inputs = loadTaxonomyInputs(REPO_ROOT)
+    const target = base.rows[0].product_id
+    const rules = {
+      ...inputs.rules,
+      product_overrides: [
+        {
+          product_id: target,
+          device_class_code: 'accessory',
+          device_subtype_code: 'bite_block',
+          confidence: 'moderate',
+        } as never,
+      ],
+    }
+    const rebuilt = buildTaxonomyOverlay({ ...inputs, rules })
+    const overridden = rebuilt.rows.filter((row) => row.classification_basis === 'product_override')
+    expect(overridden.length).toBe(1)
+    expect(overridden[0]).toMatchObject({
+      product_id: target,
+      device_class_code: 'accessory',
+      device_subtype_code: 'bite_block',
+      taxonomy_confidence: 'moderate',
+    })
+    // Exactly one row changed relative to the committed artifact.
+    const changed = rebuilt.rows.filter(
+      (row, index) => JSON.stringify(row) !== JSON.stringify(base.rows[index]),
+    )
+    expect(changed.map((row) => row.product_id)).toEqual([target])
+  })
+
   it('excludes a candidate-grade product even if the catalog input drifts', () => {
     // The generator filters through the SAME cohort predicate as the atlas store.
     const inputs = loadTaxonomyInputs(REPO_ROOT)
@@ -184,5 +275,43 @@ describe('D2C taxonomy overlay schema walls', () => {
     expect(isAtlasCohortProduct(candidateRow)).toBe(false)
     const artifact = buildTaxonomyOverlay(inputs)
     expect(artifact.rows.some((row) => row.product_id === candidateRow.product_id)).toBe(false)
+  })
+})
+
+describe('D2C rules schema source and pair-key delimiter (D2C-REV-007)', () => {
+  it('contains no literal NUL byte — the delimiter is the reviewable \\u0000 escape', () => {
+    const source = readFileSync(
+      join(REPO_ROOT, 'src/features/device-intelligence/domain/taxonomy-overlay-schema.ts'),
+    )
+    expect(source.includes(0)).toBe(false)
+    expect(source.toString('utf8')).toContain('\\u0000')
+  })
+
+  it('keeps NUL-delimiter semantics: split pair names never collide, true duplicates do', () => {
+    const inputs = loadTaxonomyInputs(REPO_ROOT)
+    const assignment = {
+      device_class_code: 'accessory',
+      device_subtype_code: 'bite_block',
+      confidence: 'high',
+    }
+    // ("A B", "C") vs ("A", "B C") — a space-delimited key would falsely collide.
+    const distinct = taxonomyRulesArtifactSchema.safeParse({
+      ...JSON.parse(JSON.stringify(inputs.rules)),
+      pair_rules: [
+        ...inputs.rules.pair_rules,
+        { primary_category: 'A B', subcategory: 'C', ...assignment },
+        { primary_category: 'A', subcategory: 'B C', ...assignment },
+      ],
+    })
+    expect(distinct.success).toBe(true)
+    const duplicate = taxonomyRulesArtifactSchema.safeParse({
+      ...JSON.parse(JSON.stringify(inputs.rules)),
+      pair_rules: [
+        ...inputs.rules.pair_rules,
+        { primary_category: 'A B', subcategory: 'C', ...assignment },
+        { primary_category: 'A B', subcategory: 'C', ...assignment },
+      ],
+    })
+    expect(duplicate.success).toBe(false)
   })
 })

@@ -167,6 +167,20 @@ export function matchTaxonomyCodesForQuery(query: string): TaxonomyQueryMatch {
   const normalizedQuery = query.trim().toLowerCase()
   const isCjkQuery = /[㐀-鿿]/.test(normalizedQuery)
   if (normalizedQuery.length < (isCjkQuery ? 2 : 3)) return match
+  // Exact class-label precedence (D2C-REV-004): when the query IS a controlled class
+  // label in any locale, taxonomy expansion adds that class only — never the subtype
+  // cohorts whose labels merely CONTAIN it ("支气管镜" must mean the Bronchoscope class,
+  // not every accessory whose subtype label mentions bronchoscopes). Ordinary product-name
+  // matching and exact catalog-number ordering are untouched either way; a non-exact
+  // phrase keeps the additive class+subtype expansion below.
+  for (const messages of Object.values(TAXONOMY_MESSAGES_BY_LOCALE)) {
+    for (const [code, label] of Object.entries(messages.classes)) {
+      if (label.trim().toLowerCase() === normalizedQuery) {
+        match.classCodes.add(code as DeviceClassCode)
+      }
+    }
+  }
+  if (match.classCodes.size > 0) return match
   const queryTokens = tokensOf(normalizedQuery)
   for (const messages of Object.values(TAXONOMY_MESSAGES_BY_LOCALE)) {
     for (const [code, label] of Object.entries(messages.classes)) {

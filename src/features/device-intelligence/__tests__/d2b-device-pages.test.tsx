@@ -237,9 +237,26 @@ describe('D2B product page — market and safety panel', () => {
         searchParams: Promise.resolve({ category: 'Airway stenting' }),
       }),
     )
-    getByText(/The Category filter has been replaced by the normalized Device class filter/)
+    getByText(
+      /The Category and Subcategory filters have been replaced by the normalized Device class filter/,
+    )
     // Not applied: the unfiltered first page renders (canonical "Airway stenting" holds
     // only 3 products, so a full default page proves the filter was ignored).
+    expect(container.querySelectorAll('tbody tr').length).toBe(25)
+  })
+
+  it('reports a stale legacy subcategory filter with the same replacement notice (D2C-REV-005)', async () => {
+    const { container, getByText } = await renderPage(
+      DevicesIndexPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ subcategory: 'Pulmonary guidewire' }),
+      }),
+    )
+    getByText(
+      /The Category and Subcategory filters have been replaced by the normalized Device class filter/,
+    )
+    // Not silently applied: the unfiltered first page renders (the canonical
+    // "Pulmonary guidewire" subcategory holds far fewer than a full page).
     expect(container.querySelectorAll('tbody tr').length).toBe(25)
   })
 

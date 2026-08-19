@@ -49,9 +49,10 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
   const parsed = catalogSearchSchema.safeParse(catalogSearchInputFromUrl(urlSearchParams))
   const query = parsed.success ? parsed.data : catalogSearchSchema.parse({})
   const unknownFilter = parsed.success ? validateAtlasFilters(query) : null
-  // D2C: a stale bookmark can still carry the retired `category` filter. It is reported
-  // honestly and never applied — the normalized Device class facet replaced it.
-  const legacyCategoryRequested = Boolean(query.category)
+  // D2C: a stale bookmark can still carry the retired `category` or `subcategory`
+  // filter. Both are reported honestly and never applied — the normalized Device class
+  // facet replaced that axis (searchAtlas strips both before querying).
+  const legacyCategoryRequested = Boolean(query.category || query.subcategory)
 
   const facets = getAtlasFacets()
   const overview = getAtlasOverview()

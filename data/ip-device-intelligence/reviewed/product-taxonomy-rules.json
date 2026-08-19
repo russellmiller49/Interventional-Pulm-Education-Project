@@ -461,9 +461,10 @@
     {
       "primary_category": "Endoscopy platform",
       "subcategory": "Talc poudrage applicator",
-      "device_class_code": "pleurodesis_agent",
-      "device_subtype_code": "talc_applicator",
-      "confidence": "high"
+      "device_class_code": "delivery_applicator",
+      "device_subtype_code": "powder_blower",
+      "confidence": "high",
+      "note": "D2C-REV-003: the reusable Optical Powder Blower is a mechanical delivery instrument, never the agent."
     },
     {
       "primary_category": "Endoscopy platform",
@@ -902,16 +903,18 @@
     {
       "primary_category": "Pleurodesis",
       "subcategory": "Sterile talc vial",
-      "device_class_code": "pleurodesis_agent",
-      "device_subtype_code": "talc_vial",
-      "confidence": "high"
+      "device_class_code": "therapeutic_agent",
+      "device_subtype_code": "sterile_talc",
+      "confidence": "high",
+      "note": "D2C-REV-003: the vials are the chemical/consumable agent, never an applicator."
     },
     {
       "primary_category": "Pleurodesis",
       "subcategory": "Talc poudrage kit",
-      "device_class_code": "pleurodesis_agent",
+      "device_class_code": "therapeutic_agent",
       "device_subtype_code": "talc_poudrage_kit",
-      "confidence": "high"
+      "confidence": "high",
+      "note": "D2C-REV-003 dominant-identity decision: the STERITALC PF3 kit is named and dosed by its 3 g talc content, in the same STERITALC family as the F2/F4 vials, and its refill is the PF3 Supplement Vial sold as sterile talc — the single-use delivery bulb is packaging around the agent, so the sold item's dominant catalog identity is the talc."
     },
     {
       "primary_category": "Reprocessing",
@@ -958,23 +961,26 @@
     {
       "primary_category": "Retrieval",
       "subcategory": "Airway retrieval basket",
-      "device_class_code": "retrieval_device",
-      "device_subtype_code": "retrieval_basket",
-      "confidence": "high"
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
+      "confidence": "high",
+      "note": "D2C-REV-001: baskets are one coherent physical type; retrieval use stays in role/procedure facets."
     },
     {
       "primary_category": "Retrieval",
       "subcategory": "Flexible grasping forceps",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
-      "confidence": "high"
+      "confidence": "high",
+      "note": "D2C-REV-001: physically forceps, so classed with forceps; retrieval use stays in role/procedure facets."
     },
     {
       "primary_category": "Retrieval",
       "subcategory": "Foreign body retrieval device",
-      "device_class_code": "retrieval_device",
+      "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
-      "confidence": "high"
+      "confidence": "high",
+      "note": "D2C-REV-001: the subcategory is forceps-dominated; the one basket is split out by the Basket name rule."
     },
     {
       "primary_category": "Rigid bronchoscopy",
@@ -1703,6 +1709,51 @@
       "device_subtype_code": "super_stiff_guidewire",
       "confidence": "high",
       "note": "The Amplatz Super Stiff is the super-stiff exchange wire; the generic pair rule stays broad."
+    },
+    {
+      "primary_category": "Retrieval",
+      "subcategory": "Foreign body retrieval device",
+      "pattern": "Basket",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
+      "confidence": "high",
+      "note": "D2C-REV-001: the Mini Grasping Basket is a physical basket inside a forceps-dominated subcategory."
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscopy accessory",
+      "pattern": "^Foreign Body Basket",
+      "device_class_code": "retrieval_basket",
+      "device_subtype_code": "foreign_body_retrieval_basket",
+      "confidence": "high",
+      "note": "D2C-REV-001: the two rigid Foreign Body Baskets (35/50 cm) are physical retrieval baskets, not generic accessories."
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Bronchoscopy aspiration/irrigation accessory",
+      "pattern": "Aspiration Biopsy Needle",
+      "device_class_code": "needle",
+      "device_subtype_code": "aspiration_biopsy_needle",
+      "confidence": "high",
+      "note": "D2C-REV-002: the angled and straight aspiration biopsy needles are needles, not suction tubes."
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Bronchoscopy aspiration/irrigation accessory",
+      "pattern": "Collection Device",
+      "device_class_code": "specimen_collection",
+      "device_subtype_code": "specimen_trap",
+      "confidence": "high",
+      "note": "D2C-REV-002: the Single-Use Plastic Collection Device is an in-line specimen trap, not a suction tube."
+    },
+    {
+      "primary_category": "Endoscopy platform",
+      "subcategory": "Rigid suction catheter accessory",
+      "pattern": "^Suction Catheter",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "rigid_suction_catheter",
+      "confidence": "high",
+      "note": "D2C-REV-008: the packaged 5 Fr catheters are the same physical catheter as the 5/6/7 Fr 'with Adapter' listings; the 'Adapter for … Fr' rows stay accessories via the pair rule."
     }
   ],
   "product_overrides": []

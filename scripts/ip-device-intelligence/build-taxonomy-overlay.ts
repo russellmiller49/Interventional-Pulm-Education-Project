@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { isAtlasCohortProduct } from '../../src/features/device-intelligence/domain/atlas-cohort'
+import { isOwnerExcludedFromAtlas } from '../../src/features/device-intelligence/domain/atlas-visibility-exclusions'
 import {
   FALLBACK_DEVICE_CLASS,
   FALLBACK_DEVICE_SUBTYPE,
@@ -119,6 +120,36 @@ export function classifyProduct(
   }
 }
 
+/**
+ * D2C-REV-006: the rules file corrects the CURRENT atlas cohort, so every committed
+ * override must land on exactly one generated row. An override whose id is unknown,
+ * candidate-grade, unknown-grade, or owner-excluded would be a silent no-op riding in a
+ * reviewed artifact — rejected before any generation. (Duplicate overrides are already
+ * rejected by the rules schema.)
+ */
+export function validateProductOverrides(
+  rules: TaxonomyRulesArtifact,
+  catalog: TaxonomyCatalogRow[],
+): void {
+  const catalogById = new Map(catalog.map((product) => [product.product_id, product]))
+  for (const override of rules.product_overrides) {
+    const product = catalogById.get(override.product_id)
+    if (!product) {
+      throw new Error(
+        `product override ${override.product_id}: unknown canonical product ID — overrides may only correct current atlas-cohort products`,
+      )
+    }
+    if (!isAtlasCohortProduct(product)) {
+      const reason = isOwnerExcludedFromAtlas(product.product_id)
+        ? 'owner-excluded from the atlas'
+        : `${product.verification_grade ?? 'unknown'}-grade, outside the atlas cohort`
+      throw new Error(
+        `product override ${override.product_id}: ${reason} — overrides may only correct current atlas-cohort products`,
+      )
+    }
+  }
+}
+
 function sha256(bytes: Buffer): string {
   return createHash('sha256').update(bytes).digest('hex')
 }
@@ -135,6 +166,8 @@ export function buildTaxonomyOverlay(options: {
   catalog: TaxonomyCatalogRow[]
 }): TaxonomyOverlayArtifact {
   const { rules, rulesBytes, catalog } = options
+
+  validateProductOverrides(rules, catalog)
 
   const rows: TaxonomyOverlayRow[] = catalog
     .filter(isAtlasCohortProduct)
