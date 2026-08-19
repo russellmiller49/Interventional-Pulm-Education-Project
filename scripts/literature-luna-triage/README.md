@@ -44,8 +44,21 @@ manifest remains the future evaluation authority. But in this release the locked
 executable pathway at all. `packets --cohort locked-sanity-200` is refused outright, and every
 preparation command additionally refuses **actual membership**: an operation calling itself
 `development-430` while carrying even one locked identity is refused before any request bytes
-exist. `full-corpus` is the one documented exception to the membership check, because it is the
-entire 132,350-record corpus rather than a selection of it — and nothing here can send it.
+exist.
+
+Membership is established **before** anything is created, and it fails closed. A missing,
+malformed, truncated, over-long, duplicated, misordered, digest-mismatched, symlinked, or
+unreadable split authority all refuse — none of them is permission to proceed. The stored split
+files are a cache, never an authority over themselves: their identities are re-counted,
+re-deduplicated, re-ordered, and re-digested, and the manifest beside them has to agree with
+what those identities actually hash to. Pass `--artifact` and the split is additionally
+recomputed from physician truth and the stored files proven equal to it. `packets` resolves
+this authority before the operation directory exists, so a run that cannot establish membership
+leaves nothing behind.
+
+`full-corpus` is the one documented exception to the membership check, because it is the entire
+132,350-record corpus rather than a selection of it — and the exception is held to exactly that
+count, so a selection relabelled `full-corpus` is still refused. Nothing here can send either.
 
 ### Evaluation is descriptive
 
@@ -102,6 +115,14 @@ Every prepared request and every prepared shard is re-read from its own bytes an
 back the record id and token contribution the manifest claims. A plan whose metadata and bytes
 disagree is refused rather than written.
 
+Stored request metadata is **evidence, never authority**. Every command that consumes a stored
+request set — `estimate`, `batch-prepare`, `ingest` — reads it through one shared validator that
+keeps the raw ordered rows, recomputes each `bodySha256` from the exact stored body bytes,
+recomputes the ordered request-set and custom-id-sequence digests from those recomputations,
+and requires the manifest to agree with all of it. Uniqueness of custom ids and of the record
+ids recovered from the bodies is proven over that raw sequence; a lookup map is constructed only
+afterwards, so a duplicated row can never collapse before it has been counted.
+
 ### After result files exist
 
 Stage-A outputs are produced elsewhere and land under the operation's
@@ -120,7 +141,9 @@ npx tsx scripts/literature-luna-triage/cli.ts review-app    --operation <OP> --p
 
 The review app binds to `127.0.0.1` only and needs neither Supabase nor an API key. Routing
 manifests and the Stage-B queue come from `route`; physician exports come from the review
-app's Export button.
+app's Export button. Its optional audit-sample read is containment-checked from the state root
+down like every other artifact: only "the file is not there yet" is optional, while a symlinked
+directory or leaf, an external target, wrong permissions, or malformed contents all refuse.
 
 ## Future work (separate PRs)
 

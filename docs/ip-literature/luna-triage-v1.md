@@ -104,9 +104,21 @@ command, no freeze receipt, and no locked-sanity packet set. `packets --cohort
 locked-sanity-200` is refused outright; every preparation command additionally refuses actual
 membership, so an operation relabelled `development-430` while carrying one locked identity is
 refused before any request bytes exist (`locked.ts`, `assertGenericCommandNotLocked` +
-`assertNoLockedMembership`). `full-corpus` is the one documented exception to the membership
-check: it is the entire 132,350-record corpus rather than a selection of it, and nothing in
-this release can send it.
+`assertNoLockedMembership`).
+
+Establishing that membership fails **closed** (`locked-authority.ts`). A missing, malformed,
+truncated, over-long, duplicated, misordered, digest-mismatched, symlinked, or unreadable split
+authority all refuse; none is convertible into permission, and no caller catches the refusal.
+The stored split files are validated on their own terms — exact 430/200 counts, no duplicates,
+canonical ascending order, and a manifest that agrees with what the identities actually hash to
+— and with `--artifact` the split is additionally recomputed from physician truth and the
+stored files proven equal to it. `packets` resolves the authority before the operation
+directory is created, so a refusal leaves no directory, no salt, no packet, and no estimate.
+
+`full-corpus` is the one documented exception to the membership check: it is the entire
+132,350-record corpus rather than a selection of it, and nothing in this release can send it.
+The exception is held to that exact count, so an operation merely relabelled `full-corpus` is a
+selection wearing the exception's name and is refused like any other selection.
 
 ## Evaluation (descriptive), and the qualification boundary
 
@@ -270,3 +282,41 @@ The narrowing is enforced by regression, not by convention: the CLI inventory is
 exactly, each withheld command is proven unavailable and side-effect-free, and the transitive
 import closure of the CLI is proven to contain no credential name, no remote host, and no
 client transport construct.
+
+## Offline-core correction pass (2026-08-18)
+
+The first independent review of the narrowed offline platform closed the executable inventory,
+the removal of remote execution and qualification, the packet firewall, the routing and
+evaluation semantics, the review app's Host/CSRF boundaries, and static isolation — and
+returned **BLOCKED** on four reproductions inside the retained offline surface. All four were
+the same class of mistake: a derived or declared value was trusted in place of the thing it was
+derived from.
+
+- **LUNA-LOCKED-002** — locked-membership authority errors failed _open_. A relabelled
+  `development-430` operation with a malformed locked authority reached `prepare-requests`,
+  which wrote model-request material, because the authority error was caught and execution
+  continued. Membership resolution now lives in `locked-authority.ts`, refuses on every way it
+  can fail, is never caught-and-continued, and runs before the operation directory, any packet,
+  request, shard, estimate, or plan exists. The `full-corpus` exception is bounded to the exact
+  132,350-record corpus.
+- **LUNA-REQUEST-002** — stored request-body drift was accepted. A body edited from
+  `gpt-5.6-luna` to the same-length `gpt-5.6-lunb`, with its recorded `bodySha256` and the
+  request-set digest left stale, was emitted into a Batch shard. `prepared-requests.ts` now
+  recomputes each digest _from the exact stored bytes_, recomputes the ordered request-set and
+  custom-id-sequence digests from those recomputations, and requires the manifest to agree —
+  a manifest never authorizes the rows beside it.
+- **LUNA-REQUEST-003** — duplicate stored custom ids collapsed before validation. Two stored
+  rows became one planned record because a lookup `Map` was built straight off the stored
+  sequence. Raw-row multiplicity — unique custom ids, unique recovered record ids, exact count,
+  exact order — is now proven over the raw sequence, and the map is constructed only afterwards.
+  `estimate`, `batch-prepare`, and `ingest` all read prepared requests through this one
+  validator.
+- **LUNA-REVIEW-002** — the audit-sample read could follow a symlink outside the state root.
+  The operation's `audit/` directory was replaced with a link to an external directory and the
+  review app marked an externally chosen record as sampled, because the read passed no
+  `StateRoot` and caught every error as "no audit sample". The read is now containment-checked
+  from the root down, re-proven at read time, mode-0600-checked, and shape-validated; only a
+  genuine file-not-found is optional.
+
+No API call, Batch submission, Supabase contact, migration, deployment, held-out access,
+prediction, or production load occurred in this correction pass, and none is authorized by it.
