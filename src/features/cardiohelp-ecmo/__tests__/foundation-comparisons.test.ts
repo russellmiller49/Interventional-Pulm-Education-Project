@@ -190,3 +190,109 @@ describe('the bounded speed change shows the learner what they committed to', ()
     },
   )
 })
+
+describe('the return-resistance comparison is three real engine states', () => {
+  const BEATS = {
+    baseline: 'restore-reference',
+    obstructed: 'load-return-resistance',
+    matched: 'reference-at-matched-flow',
+  } as const
+
+  function beat(id: string, supportMode: SupportMode) {
+    return displayed(afterGuidedAction('pump-and-pressure-zones', id, supportMode))
+  }
+
+  it.each(TRACKS)(
+    '%s: at one pump setting, resistance beyond the membrane drops the flow and lifts both post-pump pressures',
+    (supportMode) => {
+      const baseline = beat(BEATS.baseline, supportMode)
+      const obstructed = beat(BEATS.obstructed, supportMode)
+
+      // Same setting. The comparison is only about load if the speed did not move.
+      expect(obstructed.rpm).toBe(baseline.rpm)
+
+      expect(obstructed.flow).toBeLessThan(baseline.flow)
+      expect(obstructed.pInt!).toBeGreaterThan(baseline.pInt!)
+      expect(obstructed.pArt!).toBeGreaterThan(baseline.pArt!)
+
+      // The drainage side quiets rather than diving, which is what separates this pattern from a
+      // drainage limitation. Reading it the other way round is the error the drills exist to stop.
+      expect(obstructed.pVen!).toBeGreaterThan(baseline.pVen!)
+    },
+  )
+
+  it.each(TRACKS)(
+    '%s: the gradient falls with the flow, so the copy may not call it unchanged',
+    (supportMode) => {
+      const baseline = beat(BEATS.baseline, supportMode)
+      const obstructed = beat(BEATS.obstructed, supportMode)
+      // Stated as an assertion rather than left implicit: the engine moves this number, and any
+      // stop copy that says the gradient holds still at the same speed contradicts what is drawn.
+      expect(obstructed.deltaP!).toBeLessThan(baseline.deltaP!)
+    },
+  )
+
+  it.each(TRACKS)(
+    '%s: at matched flow the membrane reads the same and the load does not',
+    (supportMode) => {
+      const obstructed = beat(BEATS.obstructed, supportMode)
+      const matched = beat(BEATS.matched, supportMode)
+
+      // Close enough to read as the same flow. The teaching is the comparison, not the third decimal.
+      expect(Math.abs(matched.flow - obstructed.flow)).toBeLessThanOrEqual(0.05)
+
+      // The membrane has not changed: the gradient is the same on both circuits at the same flow.
+      expect(Math.abs(matched.deltaP! - obstructed.deltaP!)).toBeLessThanOrEqual(1)
+
+      // What has changed is everything downstream of the pump.
+      expect(obstructed.pInt!).toBeGreaterThan(matched.pInt! + 50)
+      expect(obstructed.pArt!).toBeGreaterThan(matched.pArt! + 50)
+    },
+  )
+
+  /*
+   * The safety property of the whole comparison.
+   *
+   * `return-path-resistance` names driving the pump harder against the resistance as the reflex to
+   * avoid, and this engine would show that reflex working — flow comes back and the gradient
+   * returns to its reference value. So the matched-flow beat slows the healthy circuit instead, and
+   * no beat is allowed to raise the speed at all.
+   */
+  it.each(TRACKS)('%s: no beat drives the pump harder than the reference speed', (supportMode) => {
+    const reference = settledReference(supportMode).device.rpmSetpoint
+    for (const id of Object.values(BEATS)) {
+      const state = beat(id, supportMode)
+      expect(`${id}: ${state.rpm} vs reference ${reference}`).toBe(
+        `${id}: ${Math.min(state.rpm, reference)} vs reference ${reference}`,
+      )
+    }
+  })
+
+  it.each(TRACKS)('%s: reads every channel on every beat, and charges nothing', (supportMode) => {
+    for (const id of Object.values(BEATS)) {
+      const state = afterGuidedAction('pump-and-pressure-zones', id, supportMode)
+      for (const channel of ['pVen', 'pInt', 'pArt', 'deltaP'] as const) {
+        expect(`${id} ${channel}: ${state.circuit.readouts[channel].status}`).toBe(
+          `${id} ${channel}: valid`,
+        )
+      }
+      expect(`${id}: ${state.scenario.criticalErrors.join()}`).toBe(`${id}: `)
+      // A resisted return is not a drainage limitation, and must never present as one.
+      expect(`${id}: ${state.circuit.drainageChatter}`).toBe(`${id}: false`)
+    }
+  })
+
+  it.each(TRACKS)(
+    '%s: loads its own case, never the case belonging to the other track',
+    (supportMode) => {
+      const state = afterGuidedAction('pump-and-pressure-zones', BEATS.obstructed, supportMode)
+      expect(state.supportMode).toBe(supportMode)
+      expect(state.scenario.scenarioId).toBe(
+        supportMode === 'va'
+          ? 'va-afterload-arterial-return-obstruction'
+          : 'afterload-return-obstruction',
+      )
+      expect(state.scenario.activeFaults).toContain('return-obstruction')
+    },
+  )
+})
