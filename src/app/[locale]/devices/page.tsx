@@ -19,6 +19,7 @@ import {
   searchAtlas,
   validateAtlasFilters,
 } from '@/features/device-intelligence/server/atlas.server'
+import { getTaxonomyLabels } from '@/features/device-intelligence/server/product-taxonomy.server'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 
 export const dynamic = 'force-dynamic'
@@ -48,11 +49,22 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
   const parsed = catalogSearchSchema.safeParse(catalogSearchInputFromUrl(urlSearchParams))
   const query = parsed.success ? parsed.data : catalogSearchSchema.parse({})
   const unknownFilter = parsed.success ? validateAtlasFilters(query) : null
+  // D2C: a stale bookmark can still carry the retired `category` filter. It is reported
+  // honestly and never applied — the normalized Device class facet replaced it.
+  const legacyCategoryRequested = Boolean(query.category)
 
   const facets = getAtlasFacets()
   const overview = getAtlasOverview()
   const results = unknownFilter ? null : searchAtlas(query)
   const statusLabels = await getProductStatusLabels(locale)
+  const taxonomyLabels = getTaxonomyLabels(locale)
+  const deviceTypeByProductId = Object.fromEntries(
+    Object.entries(results?.taxonomyByProductId ?? {}).map(([productId, taxonomy]) => [
+      productId,
+      taxonomyLabels.subtypes[taxonomy.deviceSubtypeCode] ??
+        taxonomyLabels.classes[taxonomy.deviceClassCode],
+    ]),
+  )
 
   return (
     <div className="container space-y-6 py-8 md:py-10">
@@ -79,11 +91,12 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
             locale={locale}
             query={query}
             facets={facets}
+            deviceClassLabels={taxonomyLabels.classes}
             labels={{
               search: t('form.search'),
               searchPlaceholder: t('form.searchPlaceholder'),
               manufacturer: t('form.manufacturer'),
-              category: t('form.category'),
+              deviceClass: t('form.deviceClass'),
               role: t('form.role'),
               procedure: t('form.procedure'),
               any: t('form.any'),
@@ -98,6 +111,17 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
         <Card>
           <CardContent className="p-5 text-sm text-muted-foreground">
             {t('unknownFilter', { filter: unknownFilter })}{' '}
+            <Link href={`/${locale}/devices` as Route} className="underline">
+              {t('form.clear')}
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {legacyCategoryRequested ? (
+        <Card>
+          <CardContent className="p-5 text-sm text-muted-foreground">
+            {t('legacyCategoryNotice')}{' '}
             <Link href={`/${locale}/devices` as Route} className="underline">
               {t('form.clear')}
             </Link>
@@ -120,11 +144,12 @@ export default async function DevicesIndexPage({ params, searchParams }: PagePro
               locale={locale}
               items={results.items}
               statusByProductId={results.statusByProductId}
+              deviceTypeByProductId={deviceTypeByProductId}
               statusLabels={statusLabels}
               labels={{
                 product: t('table.product'),
                 manufacturer: t('table.manufacturer'),
-                kind: t('table.kind'),
+                deviceType: t('table.deviceType'),
                 catalogNumber: t('table.catalogNumber'),
                 size: t('table.size'),
                 evidence: t('table.evidence'),

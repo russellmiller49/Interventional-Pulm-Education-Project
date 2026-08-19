@@ -16,6 +16,7 @@ import {
 import { PRODUCT_ID_PATTERN } from '@/features/device-intelligence/domain/atlas-cohort'
 import { isExemplarProcedureCode } from '@/features/device-intelligence/domain/exemplars'
 import { getAtlasProductDetail } from '@/features/device-intelligence/server/atlas.server'
+import { getTaxonomyLabels } from '@/features/device-intelligence/server/product-taxonomy.server'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 
 export const dynamic = 'force-dynamic'
@@ -49,6 +50,9 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   if (!detail) notFound()
   const { product } = detail
   const statusLabels = await getProductStatusLabels(locale)
+  const taxonomyLabels = getTaxonomyLabels(locale)
+  const deviceClassLabel = taxonomyLabels.classes[detail.taxonomy.deviceClassCode]
+  const deviceSubtypeLabel = taxonomyLabels.subtypes[detail.taxonomy.deviceSubtypeCode]
 
   const verificationLabels = {
     verified: tVerification('verified'),
@@ -126,18 +130,14 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           {/* D2B: compact market/safety marks in the header; the full statement, its
               snapshot date, and the required disclaimers live in the panel below. */}
           <ProductStatusBadges status={detail.status} labels={statusLabels} />
-          {[product.product_kind, product.primary_category, product.subcategory]
-            .filter((value): value is string => Boolean(value))
-            .map((value) => (
-              <Badge
-                key={value}
-                variant="outline"
-                size="sm"
-                className="normal-case tracking-normal"
-              >
-                {value}
-              </Badge>
-            ))}
+          {/* D2C: the normalized physical taxonomy is the primary product-type answer.
+              Canonical category fields moved to the labeled provenance area below. */}
+          <Badge variant="outline" size="sm" className="normal-case tracking-normal">
+            {t('taxonomy.classLabel')}: {deviceClassLabel}
+          </Badge>
+          <Badge variant="outline" size="sm" className="normal-case tracking-normal">
+            {t('taxonomy.subtypeLabel')}: {deviceSubtypeLabel}
+          </Badge>
         </div>
         {detail.primaryRole ? (
           // Owner-review F-17: the functional orientation — what this device is FOR — leads
@@ -488,6 +488,37 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </div>
         </section>
       ) : null}
+
+      {/* D2C: the explicitly labeled provenance/debug area for the canonical catalog
+          classification. Never the primary product type — that is the normalized class
+          and subtype in the header. */}
+      <section className="space-y-2" aria-label={t('provenanceHeading')}>
+        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground">
+          {t('provenanceHeading')}
+        </h2>
+        <Card className="border-border/60">
+          <CardContent className="p-4">
+            <dl className="grid gap-x-8 gap-y-1 text-xs text-muted-foreground sm:grid-cols-3">
+              <div className="flex flex-wrap gap-1.5">
+                <dt className="font-medium">{t('fields.sourcePrimaryCategory')}:</dt>
+                <dd>{product.primary_category ?? tCommon('notRecorded')}</dd>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <dt className="font-medium">{t('fields.sourceSubcategory')}:</dt>
+                <dd>{product.subcategory ?? tCommon('notRecorded')}</dd>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <dt className="font-medium">{t('fields.productKind')}:</dt>
+                <dd>{product.product_kind ?? tCommon('notRecorded')}</dd>
+              </div>
+            </dl>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">{t('provenanceNote')}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {t('taxonomy.discoveryNote')}
+            </p>
+          </CardContent>
+        </Card>
+      </section>
 
       <p className="border-t border-border/70 pt-6 text-xs leading-5 text-muted-foreground">
         {tCommon('unlistedNote')} {tCommon('noEquivalenceNote')}

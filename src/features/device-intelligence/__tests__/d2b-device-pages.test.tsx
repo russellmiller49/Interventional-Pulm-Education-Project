@@ -195,6 +195,72 @@ describe('D2B product page — market and safety panel', () => {
     unverified.getByText('2026-08-13')
   })
 
+  it('renders the D2C normalized device type in the results table, never source categories or codes', async () => {
+    const { container, getAllByText } = await renderPage(
+      DevicesIndexPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ q: 'MAXXwire' }),
+      }),
+    )
+    // Both MAXXwire lengths show the normalized subtype label in the Device type column.
+    expect(getAllByText('Pulmonary guidewire').length).toBeGreaterThanOrEqual(2)
+    // The retired mixed-axis source category never renders on the index.
+    expect(container.textContent).not.toContain('Airway stenting')
+    // Internal codes never render.
+    expect(container.textContent).not.toContain('pulmonary_guidewire')
+    expect(container.textContent).not.toContain('guidewire (')
+  })
+
+  it('offers the Device class facet with localized labels and cohort counts', async () => {
+    const { container } = await renderPage(
+      DevicesIndexPage({ params: Promise.resolve({ locale: 'en' }) }),
+    )
+    const select = container.querySelector<HTMLSelectElement>('#atlas-device-class')!
+    expect(select).not.toBeNull()
+    expect(select.getAttribute('name')).toBe('deviceClass')
+    const options = [...select.querySelectorAll('option')]
+    // "Any" plus the populated classes; the legacy Category select is gone.
+    expect(options.length).toBeGreaterThanOrEqual(20)
+    expect(container.querySelector('select[name="category"]')).toBeNull()
+    const guidewireOption = options.find((option) => option.getAttribute('value') === 'guidewire')!
+    expect(guidewireOption.textContent).toBe('Guidewire (4)')
+    const bronchoscopeOption = options.find(
+      (option) => option.getAttribute('value') === 'bronchoscope',
+    )!
+    expect(bronchoscopeOption.textContent).toMatch(/^Bronchoscope \(\d+\)$/)
+  })
+
+  it('reports a stale legacy category filter honestly instead of applying it', async () => {
+    const { container, getByText } = await renderPage(
+      DevicesIndexPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ category: 'Airway stenting' }),
+      }),
+    )
+    getByText(/The Category filter has been replaced by the normalized Device class filter/)
+    // Not applied: the unfiltered first page renders (canonical "Airway stenting" holds
+    // only 3 products, so a full default page proves the filter was ignored).
+    expect(container.querySelectorAll('tbody tr').length).toBe(25)
+  })
+
+  it('shows normalized class and subtype on the product page, with source fields only as labeled provenance', async () => {
+    const AEROSIZER = 'PRD-513E7E5BCD'
+    const { container, getByText, getByRole } = await detailFor(AEROSIZER)
+    getByText(/Device class: Sizing or measuring device/)
+    getByText(/Device subtype: Airway sizing device/)
+    // Source category appears ONLY inside the explicitly labeled provenance area.
+    const provenance = getByRole('region', { name: 'Source catalog classification' })
+    expect(within(provenance).getByText('Airway stenting')).toBeInTheDocument()
+    const headerText = container.querySelector('header')!.textContent!
+    expect(headerText).not.toContain('Airway stenting')
+    // The taxonomy caption denies equivalence/substitution readings.
+    getByText(/never clinical-equivalence, substitution, compatibility/)
+    // Internal codes never render.
+    expect(container.textContent).not.toContain('sizing_measuring')
+    expect(container.textContent).not.toContain('airway_sizing_device')
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
   it('keeps the atlas accessible at every verified viewport width', async () => {
     // Layout is CSS-driven (the results table scrolls inside its own labeled region), so the
     // structural guarantee is asserted here and the visual pass is recorded in the D2B doc.

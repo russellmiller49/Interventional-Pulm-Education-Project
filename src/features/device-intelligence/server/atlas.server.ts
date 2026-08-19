@@ -15,8 +15,20 @@ import {
 } from '@/features/preference-cards/server/catalog'
 import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
 import type { ProductStatusView } from '@/features/device-intelligence/domain/product-status'
+import {
+  isDeviceClassCode,
+  type ProductTaxonomyView,
+} from '@/features/device-intelligence/domain/product-taxonomy'
 import { getAtlasCatalogStore } from './atlas-store.server'
 import { getProductStatus, getProductStatusMap } from './product-status.server'
+import {
+  getDeviceClassFacets,
+  getProductIdsForDeviceClass,
+  getProductTaxonomy,
+  getProductTaxonomyMap,
+  getTaxonomyTextMatchIds,
+  type DeviceClassFacet,
+} from './product-taxonomy.server'
 import {
   getRawStatementsForProduct,
   getTypedRuleConditionsForRoles,
@@ -39,18 +51,46 @@ export interface AtlasSearchResponse extends CatalogSearchResponse {
   /** Market/safety status for every product in `items`. Total: an unresearched product
    *  resolves to the honest "not recently verified" default, never to nothing. */
   statusByProductId: Record<string, ProductStatusView>
+  /** D2C normalized taxonomy for every product in `items`. Total for the same reason. */
+  taxonomyByProductId: Record<string, ProductTaxonomyView>
 }
 
 export function searchAtlas(query: CatalogSearchQuery): AtlasSearchResponse {
-  const response = searchCatalog(query, getAtlasCatalogStore())
+  const store = getAtlasCatalogStore()
+  // D2C: canonical primary_category/subcategory are no longer atlas browsing facets. A
+  // legacy `category` URL value is reported honestly by the page (see
+  // `validateAtlasFilters`) and never silently applied here; the normalized Device class
+  // facet replaces it. The preserved preference-card catalog keeps both filters.
+  const atlasQuery: CatalogSearchQuery = { ...query, category: undefined, subcategory: undefined }
+  const trimmed = atlasQuery.q.trim()
+  const response = searchCatalog(atlasQuery, store, {
+    restrictToProductIds: atlasQuery.deviceClass
+      ? getProductIdsForDeviceClass(store, atlasQuery.deviceClass)
+      : undefined,
+    // Normalized class/subtype labels are searchable ("guidewire", "EBUS bronchoscope"):
+    // matched cohorts join the candidates AFTER exact-identifier and fuzzy matches, so
+    // exact catalog-number behavior is untouched.
+    additionalTextMatchIds:
+      trimmed.length > 0 ? getTaxonomyTextMatchIds(store, trimmed) : undefined,
+  })
   return {
     ...response,
     statusByProductId: getProductStatusMap(response.items.map((item) => item.productId)),
+    taxonomyByProductId: getProductTaxonomyMap(response.items.map((item) => item.productId)),
   }
 }
 
-export function getAtlasFacets(): CatalogFacets {
-  return getCatalogFacets(getAtlasCatalogStore())
+export interface AtlasFacets extends CatalogFacets {
+  /** The D2C normalized Device-class facet, replacing the canonical category facet. */
+  deviceClasses: DeviceClassFacet[]
+}
+
+export function getAtlasFacets(): AtlasFacets {
+  const store = getAtlasCatalogStore()
+  return {
+    ...getCatalogFacets(store),
+    deviceClasses: getDeviceClassFacets(store),
+  }
 }
 
 export function getAtlasOverview(): CatalogOverview {
@@ -58,6 +98,10 @@ export function getAtlasOverview(): CatalogOverview {
 }
 
 export function validateAtlasFilters(query: CatalogSearchQuery): string | null {
+  // D2C: an unknown device-class code is a friendly no-op notice, exactly like the other
+  // unknown filters. Legacy `category` values are handled separately by the page (an
+  // honest replacement notice), not as "unrecognized" — they were real canonical values.
+  if (query.deviceClass && !isDeviceClassCode(query.deviceClass)) return 'device class'
   return validateKnownCatalogFilters(query, getAtlasCatalogStore())
 }
 
@@ -92,6 +136,12 @@ export interface AtlasProductDetail extends ProductDetail {
    * a gate on it: a blocked or review-required product renders the same page with a notice.
    */
   status: ProductStatusView
+  /**
+   * D2C normalized physical taxonomy: the primary "what kind of device is this" answer.
+   * Discovery grouping only — never an equivalence, compatibility, or formulary claim;
+   * canonical category fields stay on `product` untouched, as provenance.
+   */
+  taxonomy: ProductTaxonomyView
 }
 
 /**
@@ -164,6 +214,7 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
     procedureStatusByCode,
     primaryRole,
     status: getProductStatus(productId),
+    taxonomy: getProductTaxonomy(productId),
   }
 }
 

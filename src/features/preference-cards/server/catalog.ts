@@ -352,9 +352,33 @@ export interface CatalogSearchResponse {
   excludedMissingSpecCount: number
 }
 
+/**
+ * Optional, caller-supplied search extensions. Introduced for the D2C Device Atlas
+ * taxonomy so the atlas keeps using THIS one search implementation instead of growing a
+ * second one. Both fields are inert unless provided; no preserved preference-card caller
+ * passes them.
+ */
+export interface CatalogSearchExtensions {
+  /**
+   * Restrict every returned product to this id set, applied with the other filters
+   * BEFORE sorting and pagination (the atlas Device-class facet). An id outside the
+   * store is simply never matched; the set can only narrow, never admit.
+   */
+  restrictToProductIds?: ReadonlySet<string>
+  /**
+   * With a non-empty text query, ALSO admit these store products as candidates, after
+   * the exact-identifier and fuzzy matches, in stable store order (the atlas
+   * taxonomy-label matches, e.g. "EBUS bronchoscope"). Exact catalog-number behavior is
+   * untouched: exact matches still come first. Without a text query every store product
+   * is already a candidate, so this adds nothing.
+   */
+  additionalTextMatchIds?: ReadonlySet<string>
+}
+
 export function searchCatalog(
   query: CatalogSearchQuery,
   store: CatalogStore = getCatalogStore(),
+  extensions: CatalogSearchExtensions = {},
 ): CatalogSearchResponse {
   let candidates: CatalogProduct[]
 
@@ -376,6 +400,17 @@ export function searchCatalog(
       .map((result) => result.item)
       .filter((product) => !exactMatchIds.has(product.product_id))
     candidates = [...exactMatches, ...fuzzy]
+    if (extensions.additionalTextMatchIds && extensions.additionalTextMatchIds.size > 0) {
+      const alreadyIncluded = new Set(candidates.map((product) => product.product_id))
+      for (const product of store.products) {
+        if (
+          extensions.additionalTextMatchIds.has(product.product_id) &&
+          !alreadyIncluded.has(product.product_id)
+        ) {
+          candidates.push(product)
+        }
+      }
+    }
   } else {
     candidates = store.products
   }
@@ -394,6 +429,12 @@ export function searchCatalog(
   let excludedMissingSpecCount = 0
 
   for (const product of candidates) {
+    if (
+      extensions.restrictToProductIds &&
+      !extensions.restrictToProductIds.has(product.product_id)
+    ) {
+      continue
+    }
     if (manufacturerFilter && !manufacturerFilter.has(product.manufacturerGroupId)) continue
     if (query.category && product.primary_category !== query.category) continue
     if (query.subcategory && product.subcategory !== query.subcategory) continue

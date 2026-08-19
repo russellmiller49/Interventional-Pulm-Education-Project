@@ -1,0 +1,62 @@
+device_class_code,source_category_count,source_primary_category,product_count
+accessory,6,Bronchoscopy accessory,2
+accessory,6,Bronchoscopy platform,1
+accessory,6,EBUS accessory,3
+accessory,6,Endoscopy platform,9
+accessory,6,Rigid bronchoscopy,81
+accessory,6,Sampling accessory,6
+bronchoscope,5,Bronchoscopy platform,29
+bronchoscope,5,EBUS platform,2
+bronchoscope,5,Flexible bronchoscopy,16
+bronchoscope,5,Peripheral navigation,4
+bronchoscope,5,Rigid bronchoscopy,44
+catheter_sheath,2,Bronchoscopic lung volume reduction,2
+catheter_sheath,2,Peripheral bronchoscopy,6
+console_capital,3,Bronchoscopic lung volume reduction,2
+console_capital,3,Bronchoscopy platform,6
+console_capital,3,Endoscopy platform,23
+cytology_brush,3,Peripheral bronchoscopy,5
+cytology_brush,3,Peripheral navigation,1
+cytology_brush,3,Sampling,10
+electrosurgical,3,Endoscopy platform,4
+electrosurgical,3,Energy platform,4
+electrosurgical,3,Therapeutic bronchoscopy,100
+endoscopic_telescope,2,Medical thoracoscopy,18
+endoscopic_telescope,2,Rigid bronchoscopy,12
+forceps_instrument,6,Endoscopy platform,1
+forceps_instrument,6,Medical thoracoscopy,18
+forceps_instrument,6,Peripheral bronchoscopy,3
+forceps_instrument,6,Peripheral navigation,1
+forceps_instrument,6,Rigid bronchoscopy,97
+forceps_instrument,6,Sampling,13
+guidewire,2,Airway stenting,2
+guidewire,2,Guidewire,2
+implant_delivery,3,Airway stent accessory,4
+implant_delivery,3,Endobronchial valve,2
+implant_delivery,3,Endoscopy platform,4
+navigation_system,2,Peripheral bronchoscopy,14
+navigation_system,2,Peripheral navigation,14
+needle,6,EBUS sampling,8
+needle,6,Medical thoracoscopy,2
+needle,6,Peripheral bronchoscopy,10
+needle,6,Peripheral navigation,1
+needle,6,Rigid bronchoscopy,1
+needle,6,Sampling,24
+pleural_drainage,2,Endoscopy platform,1
+pleural_drainage,2,Pleural procedures,136
+pleurodesis_agent,2,Endoscopy platform,1
+pleurodesis_agent,2,Pleurodesis,4
+reprocessing,2,Endoscopy platform,3
+reprocessing,2,Reprocessing,18
+sizing_measuring,2,Airway stenting,1
+sizing_measuring,2,Endobronchial valve,4
+specimen_collection,2,Bronchoscopy sampling,3
+specimen_collection,2,Specimen management,3
+suction_irrigation,3,Endoscopy platform,32
+suction_irrigation,3,Medical thoracoscopy,1
+suction_irrigation,3,Rigid bronchoscopy,13
+ultrasound_device,2,Peripheral bronchoscopy,3
+ultrasound_device,2,Ultrasound platform,32
+valve_occluder,3,Airway isolation,4
+valve_occluder,3,Endobronchial occlusion,4
+valve_occluder,3,Endobronchial valve,9

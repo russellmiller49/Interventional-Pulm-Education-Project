@@ -16,24 +16,31 @@ import { ProductStatusBadges, type ProductStatusLabels } from './ProductStatus'
  *
  * D2B adds one compact market/safety column. It is deliberately the LAST column and made of
  * small badges: under the inclusion-first policy most rows carry an uncertainty label, and
- * uncertainty must not visually outweigh the product's name, manufacturer, kind, or catalog
- * number.
+ * uncertainty must not visually outweigh the product's name, manufacturer, device type, or
+ * catalog number.
  */
 export function AtlasResultsTable({
   locale,
   items,
   statusByProductId,
+  deviceTypeByProductId,
   statusLabels,
   labels,
 }: {
   locale: string
   items: CatalogListItem[]
   statusByProductId: Record<string, ProductStatusView>
+  /**
+   * D2C: the localized normalized device-subtype label per product. The column shows the
+   * normalized physical type, never canonical primary_category/subcategory and never an
+   * internal taxonomy code.
+   */
+  deviceTypeByProductId: Record<string, string>
   statusLabels: ProductStatusLabels
   labels: {
     product: string
     manufacturer: string
-    kind: string
+    deviceType: string
     catalogNumber: string
     size: string
     evidence: string
@@ -62,7 +69,7 @@ export function AtlasResultsTable({
               {labels.manufacturer}
             </th>
             <th scope="col" className="px-3 py-2 font-semibold">
-              {labels.kind}
+              {labels.deviceType}
             </th>
             <th scope="col" className="px-3 py-2 font-semibold">
               {labels.catalogNumber}
@@ -91,7 +98,7 @@ export function AtlasResultsTable({
               </td>
               <td className="px-3 py-2">{item.manufacturerDisplay}</td>
               <td className="px-3 py-2">
-                {item.subcategory ?? item.primaryCategory ?? (
+                {deviceTypeByProductId[item.productId] ?? (
                   <span className="italic text-muted-foreground">{labels.notRecorded}</span>
                 )}
               </td>

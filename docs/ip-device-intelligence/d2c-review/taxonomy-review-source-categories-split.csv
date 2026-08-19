@@ -1,0 +1,48 @@
+source_primary_category,normalized_class_count,device_class_code,product_count
+Airway stenting,2,guidewire,2
+Airway stenting,2,sizing_measuring,1
+Bronchoscopic lung volume reduction,2,catheter_sheath,2
+Bronchoscopic lung volume reduction,2,console_capital,2
+Bronchoscopy platform,3,accessory,1
+Bronchoscopy platform,3,bronchoscope,29
+Bronchoscopy platform,3,console_capital,6
+Endobronchial valve,3,implant_delivery,2
+Endobronchial valve,3,sizing_measuring,4
+Endobronchial valve,3,valve_occluder,9
+Endoscopy platform,9,accessory,9
+Endoscopy platform,9,console_capital,23
+Endoscopy platform,9,electrosurgical,4
+Endoscopy platform,9,forceps_instrument,1
+Endoscopy platform,9,implant_delivery,4
+Endoscopy platform,9,pleural_drainage,1
+Endoscopy platform,9,pleurodesis_agent,1
+Endoscopy platform,9,reprocessing,3
+Endoscopy platform,9,suction_irrigation,32
+Medical thoracoscopy,5,endoscopic_telescope,18
+Medical thoracoscopy,5,forceps_instrument,18
+Medical thoracoscopy,5,needle,2
+Medical thoracoscopy,5,suction_irrigation,1
+Medical thoracoscopy,5,trocar_access,24
+Peripheral bronchoscopy,6,catheter_sheath,6
+Peripheral bronchoscopy,6,cytology_brush,5
+Peripheral bronchoscopy,6,forceps_instrument,3
+Peripheral bronchoscopy,6,navigation_system,14
+Peripheral bronchoscopy,6,needle,10
+Peripheral bronchoscopy,6,ultrasound_device,3
+Peripheral navigation,5,bronchoscope,4
+Peripheral navigation,5,cytology_brush,1
+Peripheral navigation,5,forceps_instrument,1
+Peripheral navigation,5,navigation_system,14
+Peripheral navigation,5,needle,1
+Rigid bronchoscopy,7,accessory,81
+Rigid bronchoscopy,7,bronchoscope,44
+Rigid bronchoscopy,7,endoscopic_telescope,12
+Rigid bronchoscopy,7,forceps_instrument,97
+Rigid bronchoscopy,7,needle,1
+Rigid bronchoscopy,7,powered_shaver,8
+Rigid bronchoscopy,7,suction_irrigation,13
+Sampling,3,cytology_brush,10
+Sampling,3,forceps_instrument,13
+Sampling,3,needle,24
+Therapeutic bronchoscopy,2,cryotherapy,18
+Therapeutic bronchoscopy,2,electrosurgical,100
