@@ -169,6 +169,8 @@ describe('deviceIntelligence copy safety', () => {
     'device.rolesDiscoveryNote',
     'device.displayOnlyGroupingNote',
     'device.roleDiscoveryCaption',
+    // D2C: the taxonomy caption must name equivalence/substitution in order to deny it.
+    'device.taxonomy.discoveryNote',
     'role.membershipNote',
     'readiness.noProcurementNote',
   ])

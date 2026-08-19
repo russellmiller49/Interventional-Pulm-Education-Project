@@ -2,28 +2,36 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
-import type { CatalogFacets } from '@/features/preference-cards/server/catalog'
 import type { CatalogSearchQuery } from '@/features/preference-cards/schemas/catalog-search'
+import type { AtlasFacets } from '@/features/device-intelligence/server/atlas.server'
 
 /**
  * Plain GET form — filters live entirely in URL params, so the index is linkable,
  * server-rendered, and needs no client JavaScript. Selects and inputs are labeled for
  * keyboard and screen-reader use.
+ *
+ * D2C: the canonical-category facet is replaced by the normalized Device class facet.
+ * Options are the controlled device classes present in the atlas cohort, displayed by
+ * localized label (sorted by that label, so es/zh menus read naturally) with cohort
+ * counts. The submitted value is the stable class CODE, never the label.
  */
 export function AtlasSearchForm({
   locale,
   query,
   facets,
+  deviceClassLabels,
   labels,
 }: {
   locale: string
   query: CatalogSearchQuery
-  facets: CatalogFacets
+  facets: AtlasFacets
+  /** Localized label per device-class code, from the taxonomy message bundle. */
+  deviceClassLabels: Record<string, string>
   labels: {
     search: string
     searchPlaceholder: string
     manufacturer: string
-    category: string
+    deviceClass: string
     role: string
     procedure: string
     any: string
@@ -32,6 +40,13 @@ export function AtlasSearchForm({
   }
 }) {
   const action = `/${locale}/devices`
+  const deviceClassOptions = facets.deviceClasses
+    .map((facet) => ({
+      code: facet.code,
+      productCount: facet.productCount,
+      label: deviceClassLabels[facet.code] ?? facet.code,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label, locale))
   return (
     <form action={action} method="get" className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
       <div className="flex flex-col gap-1 xl:col-span-2">
@@ -66,19 +81,19 @@ export function AtlasSearchForm({
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor="atlas-category" className="text-xs font-semibold text-muted-foreground">
-          {labels.category}
+        <label htmlFor="atlas-device-class" className="text-xs font-semibold text-muted-foreground">
+          {labels.deviceClass}
         </label>
         <select
-          id="atlas-category"
-          name="category"
-          defaultValue={query.category ?? ''}
+          id="atlas-device-class"
+          name="deviceClass"
+          defaultValue={query.deviceClass ?? ''}
           className="h-9 rounded-lg border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">{labels.any}</option>
-          {facets.categories.map((category) => (
-            <option key={category.name} value={category.name}>
-              {category.name} ({category.productCount})
+          {deviceClassOptions.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.label} ({option.productCount})
             </option>
           ))}
         </select>

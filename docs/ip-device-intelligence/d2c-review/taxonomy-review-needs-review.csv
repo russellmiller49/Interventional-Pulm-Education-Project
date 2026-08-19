@@ -1,0 +1,2 @@
+product_id,manufacturer,product_name,catalog_number,source_primary_category,source_subcategory,device_class_code,device_class_label_en,device_subtype_code,device_subtype_label_en,taxonomy_confidence,needs_review,classification_basis,role_codes,procedure_codes
+PRD-5E5E5933A2,Medtronic,GenCut Core Biopsy System,SDCT01,Peripheral bronchoscopy,Navigation-compatible biopsy device,needle,Needle,core_biopsy_device,Core biopsy device,needs_review,true,name_rule,BIOPSY_FORCEPS_FLEX,FLEX_DIAGNOSTIC|ICU_BRONCH|TB_RULEOUT|THERAPEUTIC_BRONCH

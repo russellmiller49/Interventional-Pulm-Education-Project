@@ -1,0 +1,203 @@
+import { z } from 'zod'
+
+import {
+  CLASSIFICATION_BASES,
+  DEVICE_CLASS_CODES,
+  DEVICE_SUBTYPE_CODES,
+  TAXONOMY_CONFIDENCES,
+  deviceClassOfSubtype,
+} from './product-taxonomy'
+import { PRODUCT_ID_PATTERN } from './product-id'
+
+/**
+ * The compact D2C taxonomy overlay
+ * (`data/ip-device-intelligence/generated/product-taxonomy-overlay.json`).
+ *
+ * Contract between the deterministic generator (`npm run ip-intel:taxonomy-overlay`) and
+ * the runtime reader, deliberately CLOSED (`.strict()` everywhere) like the D2B status
+ * overlay: the reviewed rules file and the D2C review CSVs carry source-category copy and
+ * classification working notes, and none of that may reach application runtime code or a
+ * client bundle. Every row value is drawn from a controlled vocabulary.
+ *
+ * Row scope is the D2B inclusion-first atlas cohort — exactly the products Device
+ * Intelligence can display. Candidate-grade and unknown-grade identities must never
+ * appear here; a row for one would be data the UI can never use and an identity leak in a
+ * committed artifact.
+ */
+
+const sha256Schema = z.string().regex(/^[0-9a-f]{64}$/, 'must be a lowercase sha-256 hex digest')
+
+export const taxonomyOverlayRowSchema = z
+  .object({
+    product_id: z.string().regex(PRODUCT_ID_PATTERN),
+    device_class_code: z.enum(DEVICE_CLASS_CODES),
+    device_subtype_code: z.enum(DEVICE_SUBTYPE_CODES as [string, ...string[]]),
+    taxonomy_confidence: z.enum(TAXONOMY_CONFIDENCES),
+    needs_review: z.boolean(),
+    classification_basis: z.enum(CLASSIFICATION_BASES),
+  })
+  .strict()
+
+export type TaxonomyOverlayRow = z.infer<typeof taxonomyOverlayRowSchema>
+
+const countsSchema = z.record(z.string(), z.number().int().nonnegative())
+
+export const taxonomyOverlayArtifactSchema = z
+  .object({
+    format_version: z.literal(1),
+    artifact_kind: z.literal('device_intelligence_product_taxonomy_overlay'),
+    method_version: z.literal('d2c-taxonomy-v1'),
+    /** The pinned reviewed rules artifact: path plus sha-256 of its exact bytes. */
+    source_rules: z
+      .object({
+        path: z.string().min(1),
+        sha256: sha256Schema,
+      })
+      .strict(),
+    /** Which catalog products the overlay covers, stated rather than implied. */
+    row_scope: z.literal('atlas_cohort_verified_source_minus_owner_exclusions'),
+    counts: z
+      .object({
+        rows: z.number().int().nonnegative(),
+        device_class: countsSchema,
+        taxonomy_confidence: countsSchema,
+        needs_review: z.number().int().nonnegative(),
+        classification_basis: countsSchema,
+      })
+      .strict(),
+    rows: z.array(taxonomyOverlayRowSchema),
+  })
+  .strict()
+  .superRefine((artifact, context) => {
+    const seen = new Set<string>()
+    for (const [index, row] of artifact.rows.entries()) {
+      if (seen.has(row.product_id)) {
+        context.addIssue({
+          code: 'custom',
+          message: `duplicate product_id ${row.product_id}`,
+          path: ['rows', index, 'product_id'],
+        })
+      }
+      seen.add(row.product_id)
+      // The subtype→class ownership is single-sourced in the vocabulary; a row that
+      // disagrees is a generator bug, not a datum.
+      if (deviceClassOfSubtype(row.device_subtype_code as never) !== row.device_class_code) {
+        context.addIssue({
+          code: 'custom',
+          message: `subtype ${row.device_subtype_code} does not belong to class ${row.device_class_code}`,
+          path: ['rows', index, 'device_subtype_code'],
+        })
+      }
+      // Confidence is review metadata; `needs_review` must at least cover it.
+      if (row.taxonomy_confidence === 'needs_review' && !row.needs_review) {
+        context.addIssue({
+          code: 'custom',
+          message: 'needs_review confidence requires needs_review=true',
+          path: ['rows', index, 'needs_review'],
+        })
+      }
+    }
+    const ids = artifact.rows.map((row) => row.product_id)
+    if (ids.join('|') !== [...ids].sort().join('|')) {
+      context.addIssue({
+        code: 'custom',
+        message: 'rows must be sorted by product_id so generation is byte-deterministic',
+        path: ['rows'],
+      })
+    }
+    if (artifact.counts.rows !== artifact.rows.length) {
+      context.addIssue({
+        code: 'custom',
+        message: 'counts.rows must equal rows.length',
+        path: ['counts', 'rows'],
+      })
+    }
+  })
+
+export type TaxonomyOverlayArtifact = z.infer<typeof taxonomyOverlayArtifactSchema>
+
+/**
+ * The reviewed classification rules file
+ * (`data/ip-device-intelligence/reviewed/product-taxonomy-rules.json`).
+ *
+ * Three deterministic rule kinds, applied in strict precedence order per product:
+ * product override → first matching name rule for the product's exact
+ * (primary_category, subcategory) pair → pair rule. `note` fields are reviewer-facing
+ * working text; they are consumed by the review artifacts and never copied into the
+ * runtime overlay.
+ */
+const ruleAssignmentShape = {
+  device_class_code: z.enum(DEVICE_CLASS_CODES),
+  device_subtype_code: z.enum(DEVICE_SUBTYPE_CODES as [string, ...string[]]),
+  confidence: z.enum(TAXONOMY_CONFIDENCES),
+  needs_review: z.boolean().optional(),
+  note: z.string().optional(),
+}
+
+export const taxonomyPairRuleSchema = z
+  .object({
+    primary_category: z.string().min(1),
+    subcategory: z.string().min(1),
+    ...ruleAssignmentShape,
+  })
+  .strict()
+
+export const taxonomyNameRuleSchema = z
+  .object({
+    primary_category: z.string().min(1),
+    subcategory: z.string().min(1),
+    /** JS regular expression source, applied to `product_name` with no flags. */
+    pattern: z.string().min(1),
+    ...ruleAssignmentShape,
+  })
+  .strict()
+
+export const taxonomyProductOverrideSchema = z
+  .object({
+    product_id: z.string().regex(PRODUCT_ID_PATTERN),
+    ...ruleAssignmentShape,
+  })
+  .strict()
+
+export const taxonomyRulesArtifactSchema = z
+  .object({
+    format_version: z.literal(1),
+    artifact_kind: z.literal('device_intelligence_product_taxonomy_rules'),
+    method_version: z.literal('d2c-taxonomy-v1'),
+    pair_rules: z.array(taxonomyPairRuleSchema),
+    name_rules: z.array(taxonomyNameRuleSchema),
+    product_overrides: z.array(taxonomyProductOverrideSchema),
+  })
+  .strict()
+  .superRefine((artifact, context) => {
+    const pairKeys = new Set<string>()
+    for (const [index, rule] of artifact.pair_rules.entries()) {
+      // NUL-delimited so ("A B", "C") and ("A", "B C") never collide; spelled as the
+      // `\u0000` escape so this source file stays reviewable text (never a raw NUL byte).
+      const key = `${rule.primary_category}\u0000${rule.subcategory}`
+      if (pairKeys.has(key)) {
+        context.addIssue({
+          code: 'custom',
+          message: `duplicate pair rule for ${rule.primary_category} » ${rule.subcategory}`,
+          path: ['pair_rules', index],
+        })
+      }
+      pairKeys.add(key)
+    }
+    const overrideIds = new Set<string>()
+    for (const [index, override] of artifact.product_overrides.entries()) {
+      if (overrideIds.has(override.product_id)) {
+        context.addIssue({
+          code: 'custom',
+          message: `duplicate product override for ${override.product_id}`,
+          path: ['product_overrides', index],
+        })
+      }
+      overrideIds.add(override.product_id)
+    }
+  })
+
+export type TaxonomyRulesArtifact = z.infer<typeof taxonomyRulesArtifactSchema>
+export type TaxonomyPairRule = z.infer<typeof taxonomyPairRuleSchema>
+export type TaxonomyNameRule = z.infer<typeof taxonomyNameRuleSchema>
+export type TaxonomyProductOverride = z.infer<typeof taxonomyProductOverrideSchema>

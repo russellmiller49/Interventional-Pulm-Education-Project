@@ -33,6 +33,12 @@ export const catalogSearchSchema = z
     manufacturers: z.array(z.string().trim().min(1).max(120)).max(30).default([]),
     category: z.string().trim().min(1).max(160).optional(),
     subcategory: z.string().trim().min(1).max(160).optional(),
+    /**
+     * Normalized Device Atlas device-class code (D2C). Only the atlas surfaces read it;
+     * the preference-card catalog ignores it entirely. It lives in the shared schema so
+     * pagination and URL round-trips preserve it like every other filter.
+     */
+    deviceClass: z.string().trim().min(1).max(80).optional(),
     role: z.string().trim().min(1).max(80).optional(),
     procedure: z.string().trim().min(1).max(80).optional(),
     tier: z.enum(catalogTierValues).default('all'),
@@ -89,6 +95,7 @@ export function catalogSearchInputFromUrl(searchParams: URLSearchParams) {
     manufacturers: parseList(searchParams, 'manufacturer'),
     category: searchParams.get('category') || undefined,
     subcategory: searchParams.get('subcategory') || undefined,
+    deviceClass: searchParams.get('deviceClass') || undefined,
     role: searchParams.get('role') || undefined,
     procedure: searchParams.get('procedure') || undefined,
     tier: searchParams.get('tier') || 'all',
@@ -110,6 +117,7 @@ export function serializeCatalogSearchQuery(query: CatalogSearchQuery): string {
   for (const manufacturer of query.manufacturers) params.append('manufacturer', manufacturer)
   if (query.category) params.set('category', query.category)
   if (query.subcategory) params.set('subcategory', query.subcategory)
+  if (query.deviceClass) params.set('deviceClass', query.deviceClass)
   if (query.role) params.set('role', query.role)
   if (query.procedure) params.set('procedure', query.procedure)
   if (query.tier !== 'all') params.set('tier', query.tier)

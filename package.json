@@ -138,7 +138,9 @@
     "ip-cards:gudid-confirm": "tsx scripts/ip-preference-cards/gudid-confirm.ts",
     "ip-intel:audit": "tsx scripts/ip-device-intelligence/audit-data-readiness.ts",
     "ip-intel:status-overlay": "tsx scripts/ip-device-intelligence/build-status-overlay.ts",
-    "ip-intel:d2b-review": "tsx scripts/ip-device-intelligence/build-d2b-inclusion-review.ts"
+    "ip-intel:d2b-review": "tsx scripts/ip-device-intelligence/build-d2b-inclusion-review.ts",
+    "ip-intel:taxonomy-overlay": "tsx scripts/ip-device-intelligence/build-taxonomy-overlay.ts",
+    "ip-intel:d2c-review": "tsx scripts/ip-device-intelligence/build-d2c-taxonomy-review.ts"
   },
   "engines": {
     "node": ">=20.19.0"

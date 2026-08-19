@@ -368,3 +368,27 @@ include ⟺ verification_grade = verified_source AND NOT explicitly excluded by 
 - Correction path: owner exclusions for wrong admissions, refreshed status overlays for stale market/safety knowledge. Neither reintroduces a visibility gate on current availability.
 
 **Implemented in:** [d2b-inclusion-first-visibility.md](./d2b-inclusion-first-visibility.md). Accounting artifact: [d2b-review/newly-included-products.csv](./d2b-review/newly-included-products.csv).
+
+---
+
+## Part 5 — Phase D2C decision record (added 2026-08-18)
+
+### D-12. Normalized Device Atlas taxonomy (D2C)
+
+**Context.** After D2B went live, the physician owner reviewed the production atlas and found the user-facing category facet materially inconsistent: `Guidewire` and `Airway stenting` both held guidewires (Amplatz/Jagwire vs the two MAXXwires), `Airway stenting` also held the AEROSIZER sizing device, and physically identical bronchoscopes were split across `Flexible bronchoscopy`, `Bronchoscopy platform`, `EBUS platform`, and `Peripheral navigation` by manufacturer and workflow. The canonical categories mix physical class, subtype, clinical application, procedure domain, and platform grouping in one facet.
+
+**Owner decision (2026-08-18): the Device Atlas browses by a normalized physical taxonomy.** The primary user-facing facet answers "what kind of device is this"; clinical use stays with the governed Clinical role and Procedure facets. Canonical `primary_category` / `subcategory` are **retained unchanged for compatibility and provenance but are no longer the Device Atlas browsing taxonomy** — they keep driving the preserved preference-card catalog surfaces, and they render on atlas product pages only inside an explicitly labeled provenance area.
+
+**Mechanism.** A reviewed, deterministic classification layer (`data/ip-device-intelligence/reviewed/product-taxonomy-rules.json`: pair rules covering all 222 cohort category pairs, 16 scoped name rules, per-product overrides for corrections) generates a compact controlled-code overlay (`data/ip-device-intelligence/generated/product-taxonomy-overlay.json`, 1,331 rows) via `npm run ip-intel:taxonomy-overlay`. 28 populated device classes, 138 controlled subtypes, confidence high/moderate/needs_review as review metadata only.
+
+**Boundaries.** Taxonomy state is never a visibility, search, membership, market/safety, or recommendation gate; ambiguous products stay visible with the most plausible broad class and `needs_review`. Inclusion-first D-11 accounting is unchanged (1,331 / 200 / 1 / 0). No canonical field, verification grade, visibility state, selectability, product-role or procedure-role link, compatibility rule, market/safety overlay row, or published release changed. Full record: [d2c-taxonomy-normalization.md](./d2c-taxonomy-normalization.md); review artifacts: [d2c-review/](./d2c-review/).
+
+### D-12a. D2C correction pass after first independent review (2026-08-19)
+
+The first independent review of D2C returned **B. FAIL** — protected architecture passed; three medium user-facing semantic taxonomy defects (D2C-REV-001/002/003) plus five low findings (REV-004…008). One bounded correction pass amended the class vocabulary under the standing D2C policy (physical kind decides the class; use lives in role/procedure; smallest coherent physical vocabulary, no forced count stability):
+
+- Retired the mixed classes `retrieval_device` (forceps + baskets) and `pleurodesis_agent` (chemical agent + mechanical applicator; its "Pleurodesis agent or applicator" label no longer renders anywhere).
+- Added `retrieval_basket` (subtype `foreign_body_retrieval_basket`), `therapeutic_agent` (subtypes `sterile_talc`, `talc_poudrage_kit` — the disposable STERITALC PF3 kit follows its dominant catalog identity, the 3 g talc dose), and `delivery_applicator` (subtype `powder_blower` for the reusable Optical Powder Blower).
+- Moved `foreign_body_grasping_forceps` under `forceps_instrument`; added `aspiration_biopsy_needle` (needle) and `specimen_trap` (specimen_collection) for the mixed aspiration/irrigation source pair; corrected the packed 5 Fr suction catheter to `rigid_suction_catheter`.
+
+Result: 29 populated classes (30 with the empty fallback), 140 subtypes, exactly 21 of 1,331 rows moved, all role/procedure codes unchanged, all D-12 boundaries intact. Exact-class-label search precedence, the stale-subcategory replacement notice, generation-time override validation, and the NUL-free rules-schema source were corrected in the same pass. Full correction record: [d2c-taxonomy-normalization.md](./d2c-taxonomy-normalization.md), "Independent-review corrections". Final independent review pending; PR #116 remains draft.

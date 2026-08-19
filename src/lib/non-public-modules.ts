@@ -42,26 +42,26 @@ export const nonPublicModules: NonPublicModule[] = [
   },
   {
     path: '/devices',
-    title: 'Device Atlas (D1 vertical slice)',
+    title: 'Device Atlas — Device Intelligence beta',
     group: 'IP tooling',
     summary:
-      'Read-only device and clinical-use atlas over the verified, prototype-visible catalog cohort. Public-unlisted and noindex throughout Phase D1.',
+      'Read-only device atlas over the inclusion-first verified-source cohort, browsed by a normalized device taxonomy (device class and subtype) with market-status and safety overlays. Public-unlisted and noindex.',
   },
   {
-    // A representative role page: the area has no index route in Phase D1 (only
+    // A representative role page: the area has no index route (only
     // /clinical-roles/[roleCode] exists), and the admin index links entry paths directly.
     path: '/clinical-roles/EBUS_SCOPE',
-    title: 'Clinical Roles (D1 vertical slice)',
+    title: 'Clinical Roles — Device Intelligence beta',
     group: 'IP tooling',
     summary:
       'Read-only clinical-role pages: authored selection guidance, atlas-cohort products by manufacturer, and the procedures that request each role. Linked here via a representative role; the area is addressed per role code.',
   },
   {
     path: '/procedures',
-    title: 'Procedure Workspaces (D1 vertical slice)',
+    title: 'Procedure Workspaces — Device Intelligence beta',
     group: 'IP tooling',
     summary:
-      'Read-only procedure workspaces for the three Phase D1 exemplar procedures, with a demo-data-only readiness view. Draft-watermarked; no writes.',
+      'Read-only procedure workspaces for the three exemplar procedures, with a demo-data-only readiness view. Draft-watermarked; no writes.',
   },
   {
     path: '/literature',
