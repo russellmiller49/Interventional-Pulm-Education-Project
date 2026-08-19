@@ -29,6 +29,12 @@ export interface RequestManifest {
   readonly totalEstimatedInputTokens: number
   readonly totalEstimatedOutputTokenAllowance: number
   readonly requestSetSha256: string
+  /**
+   * The ordered custom-id sequence, digested separately from the bodies. A reader validating a
+   * stored set has to prove both *which* requests it holds and *in what order*; a body-digest
+   * set alone cannot distinguish a renamed row from a reordered one.
+   */
+  readonly customIdSequenceSha256: string
 }
 
 export interface PreparedRequestSet {
@@ -88,6 +94,7 @@ export function prepareRequestSet(
       0,
     ),
     requestSetSha256: sha256(canonicalJson(requests.map((request) => request.bodySha256))),
+    customIdSequenceSha256: sha256(canonicalJson(requests.map((request) => request.customId))),
   }
   return { requests, manifest }
 }

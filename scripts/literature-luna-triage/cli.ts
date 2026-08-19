@@ -44,18 +44,27 @@ import {
   operationPaths,
   readMapping,
   readPackets,
-  readRequests,
   readRiskFlags,
   readRoutedRecords,
   readTerminalStates,
   type OperationPaths,
 } from './operation'
 import { buildPacket, mintOperationSalt } from './packet'
+import {
+  loadPreparedRequestSet,
+  requirePreparedRequestSet,
+  type ValidatedPreparedRequestSet,
+} from './prepared-requests'
 import { loadStageAPrompt } from './prompt'
 import { reconcileRequestBodyText, reconcileShardContent } from './reconcile'
 import { ingestStageAResponses, type RawResponseRecord } from './results'
 import { startReviewServer } from './review-app'
 import { assertGenericCommandNotLocked, assertNoLockedMembership } from './locked'
+import {
+  assertExactLockedAuthority,
+  assertFullCorpusExceptionCount,
+  requireStoredLockedAuthority,
+} from './locked-authority'
 import { buildRoutedRecords, buildRoutingManifest } from './routing'
 import { prepareRequestSet, type PreparedRequest } from './runner'
 import {
@@ -189,13 +198,18 @@ interface SplitArtifactFiles {
   readonly manifest: Record<string, unknown>
 }
 
+/**
+ * The stored split files, read with the state root's containment proof. Reading them is not
+ * the same as trusting them: every caller runs them through the authority validation before a
+ * single identity is used.
+ */
 async function readSplitArtifacts(state: StateRoot): Promise<SplitArtifactFiles> {
   const developmentPath = resolveInsideRoot(state, 'split', 'development-pmids.json')
   const sanityPath = resolveInsideRoot(state, 'split', 'locked-sanity-pmids.json')
   const manifestPath = resolveInsideRoot(state, 'split', 'split-manifest.json')
-  const development = JSON.parse(await readRegularFile(developmentPath)) as string[]
-  const lockedSanity = JSON.parse(await readRegularFile(sanityPath)) as string[]
-  const manifest = JSON.parse(await readRegularFile(manifestPath)) as Record<string, unknown>
+  const development = JSON.parse(await readRegularFile(developmentPath, state)) as string[]
+  const lockedSanity = JSON.parse(await readRegularFile(sanityPath, state)) as string[]
+  const manifest = JSON.parse(await readRegularFile(manifestPath, state)) as Record<string, unknown>
   return { development, lockedSanity, manifest }
 }
 
@@ -284,29 +298,42 @@ function stratifiedSelection(
 }
 
 /**
- * The locked-membership set this run will check selections against.
+ * The split authority this run will check selections against.
  *
- * When physician truth is available it is **recomputed** canonically and the stored split is
- * proven to equal it; otherwise the stored locked list is read directly. Either way the set
- * goes to `assertNoLockedMembership`, which refuses to answer membership questions from a set
- * that is not exactly 200 — so a missing, truncated, or emptied split file fails closed
- * instead of silently reporting "no overlap".
+ * When physician truth is in reach the split is **recomputed** canonically and the stored
+ * artifacts are proven to equal it. Otherwise the stored artifacts are validated on their own
+ * terms — exact 430/200 counts, no duplicates, canonical ordering, and a manifest that agrees
+ * with what the identities actually hash to.
+ *
+ * There is no third branch. A missing, malformed, truncated, over-long, duplicated,
+ * misordered, digest-mismatched, symlinked, or unreadable authority all raise, and no caller
+ * may catch that and continue: an inability to establish membership is not permission to
+ * proceed, and the previous release's blanket catch-and-allow is exactly the defect this
+ * function exists to make impossible.
  */
+async function splitAuthority(
+  state: StateRoot,
+  artifactPath: string | undefined,
+): Promise<{ lockedSanityPmids: ReadonlySet<string>; developmentPmids: ReadonlySet<string> }> {
+  const stored = await requireStoredLockedAuthority(state)
+  if (artifactPath) {
+    const canonical = await canonicalSplitAuthority(state, artifactPath)
+    assertExactLockedAuthority(canonical.lockedSanityPmids)
+    return {
+      lockedSanityPmids: canonical.lockedSanityPmids,
+      developmentPmids: new Set(canonical.canonical.split.developmentPmids),
+    }
+  }
+  assertExactLockedAuthority(stored.lockedSanityPmids)
+  return stored
+}
+
+/** The locked-membership set alone, for callers that only ask the membership question. */
 async function lockedMembershipSet(
   state: StateRoot,
   artifactPath: string | undefined,
-): Promise<Set<string>> {
-  if (artifactPath) {
-    return (await canonicalSplitAuthority(state, artifactPath)).lockedSanityPmids
-  }
-  try {
-    return new Set((await readSplitArtifacts(state)).lockedSanity)
-  } catch {
-    throw new CliUsageError(
-      'This cohort must be proven free of locked-sanity members, but no split artifacts were ' +
-        'found in the state directory. Run `split --artifact <path>` first, or pass --artifact.',
-    )
-  }
+): Promise<ReadonlySet<string>> {
+  return (await splitAuthority(state, artifactPath)).lockedSanityPmids
 }
 
 /**
@@ -325,24 +352,24 @@ async function runPackets(argv: readonly string[]): Promise<void> {
   assertGenericCommandNotLocked(cohort, 'packets')
   const operationId = requireFlag(argv, 'operation')
   const artifactPath = flagValue(argv, 'artifact')
+  if (cohort === 'pilot-1000' && !artifactPath) {
+    throw new CliUsageError(
+      '--artifact is required for pilot-1000: the pilot excludes the 630 reviewed records.',
+    )
+  }
+
+  // The exact locked authority is established **first**: before the operation directory
+  // exists, before a salt is minted, and long before a packet byte is written. A run that
+  // cannot establish membership leaves nothing behind at all.
+  const authority = cohort === 'full-corpus' ? null : await splitAuthority(state, artifactPath)
+  if (authority) assertExactLockedAuthority(authority.lockedSanityPmids)
 
   let selection: Set<string> | null = null
-  if (LUNA_CALIBRATION_COHORTS.includes(cohort)) {
-    const split = await readSplitArtifacts(state)
-    if (cohort === 'development-430') {
-      selection = new Set(split.development)
-    } else {
-      // Smoke: stratified by evidence profile inside the development cohort. Presence is
-      // resolved from the corpus during the stream below, so selection happens afterward.
-      selection = null
-    }
-  } else if (cohort === 'pilot-1000') {
-    if (!artifactPath) {
-      throw new CliUsageError(
-        '--artifact is required for pilot-1000: the pilot excludes the 630 reviewed records.',
-      )
-    }
+  if (cohort === 'development-430') {
+    selection = new Set(authority?.developmentPmids ?? [])
   }
+  // Smoke: stratified by evidence profile inside the development cohort. Presence is resolved
+  // from the corpus during the stream below, so its selection happens afterward.
 
   const excluded =
     cohort === 'pilot-1000' && artifactPath
@@ -358,8 +385,7 @@ async function runPackets(argv: readonly string[]): Promise<void> {
   // encountered, so full-corpus packet builds never hold the corpus in memory.
   let members: Set<string>
   if (cohort === 'smoke-30') {
-    const split = await readSplitArtifacts(state)
-    const development = new Set(split.development)
+    const development = authority?.developmentPmids ?? new Set<string>()
     const groups = new Map<string, string[]>([
       ['with_abstract', []],
       ['without_abstract', []],
@@ -390,13 +416,10 @@ async function runPackets(argv: readonly string[]): Promise<void> {
   }
 
   // Membership, not the label. Whatever this cohort calls itself, a selection that touches
-  // even one locked identity is refused before a single packet is written.
-  if (cohort !== 'full-corpus') {
-    assertNoLockedMembership(
-      [...members],
-      await lockedMembershipSet(state, artifactPath),
-      'packets',
-    )
+  // even one locked identity is refused before a single packet is written — against the same
+  // authority that was already proven exact above, never a freshly re-read one.
+  if (authority) {
+    assertNoLockedMembership([...members], authority.lockedSanityPmids, 'packets')
   }
 
   const packetWriter = await openExclusiveJournalWriter(paths.packetsJsonl)
@@ -459,6 +482,8 @@ interface RequestPreparation {
   readonly paths: OperationPaths
   readonly requests: readonly PreparedRequest[]
   readonly manifest: Record<string, unknown>
+  /** The stored set this operation already holds, proven against its own bytes, if any. */
+  readonly stored: ValidatedPreparedRequestSet | null
 }
 
 async function prepareRequestsForOperation(
@@ -470,6 +495,11 @@ async function prepareRequestsForOperation(
   const operationId = requireFlag(argv, 'operation')
   const paths = operationPaths(state, operationId)
   await assertPreparationPathwayNotLocked(state, paths, argv, command)
+  // Whatever prepared material this operation already holds is validated through the one
+  // shared reader before anything new is computed from it or beside it. `estimate` reads
+  // prepared request material; if that material has drifted from its own digests, the number
+  // it would report describes bytes nobody prepared.
+  const stored = await loadPreparedRequestSet(state, paths)
   const packets = await readPackets(paths)
   const prompt = loadStageAPrompt()
   const model = flagValue(argv, 'model') ?? LUNA_DEFAULT_MODEL
@@ -521,7 +551,7 @@ async function prepareRequestsForOperation(
     )
     await exclusiveWriteFile(paths.requestManifestJson, `${canonicalJson(manifest)}\n`)
   }
-  return { paths, requests: prepared.requests, manifest }
+  return { paths, requests: prepared.requests, manifest, stored }
 }
 
 async function runEstimate(argv: readonly string[]): Promise<void> {
@@ -537,7 +567,18 @@ async function runEstimate(argv: readonly string[]): Promise<void> {
   if (maxRecords !== undefined) assertWithinRecordCeiling(estimate.records, maxRecords)
   const maxCost = numberFlag(argv, 'max-estimated-cost-usd')
   if (maxCost !== undefined) assertWithinCostCeiling(estimate, maxCost)
-  print({ command: 'estimate', manifest: preparation.manifest, estimate })
+  print({
+    command: 'estimate',
+    manifest: preparation.manifest,
+    estimate,
+    storedRequestSet: preparation.stored
+      ? {
+          requestCount: preparation.stored.requests.length,
+          requestSetSha256: preparation.stored.manifest.requestSetSha256,
+          customIdSequenceSha256: preparation.stored.manifest.customIdSequenceSha256,
+        }
+      : null,
+  })
 }
 
 async function runPrepareRequests(argv: readonly string[]): Promise<void> {
@@ -583,21 +624,20 @@ async function assertPreparationPathwayNotLocked(
 ): Promise<void> {
   const metadata = await loadOperationMetadata(paths)
   assertGenericCommandNotLocked(metadata.cohort, command)
-  if (metadata.cohort === 'full-corpus') return
-  const artifactPath = flagValue(argv, 'artifact')
-  let lockedSanityPmids: Set<string>
-  try {
-    lockedSanityPmids = await lockedMembershipSet(state, artifactPath)
-  } catch {
-    // No split artifacts and no truth in reach: there is nothing to check membership against,
-    // and inventing an empty set here would turn the guard into a rubber stamp.
+  const pmids = (await readMapping(paths)).map((row) => row.pmid)
+  if (metadata.cohort === 'full-corpus') {
+    // The documented exception, held to its exact terms: the complete fixed corpus, and
+    // nothing else wearing the label. A selection relabelled `full-corpus` is still a
+    // selection, and a selection must prove its membership like every other one.
+    assertFullCorpusExceptionCount(new Set(pmids).size)
     return
   }
-  assertNoLockedMembership(
-    (await readMapping(paths)).map((row) => row.pmid),
-    lockedSanityPmids,
-    command,
-  )
+  // No catch. If the locked authority cannot be established — missing, malformed, truncated,
+  // over-long, duplicated, misordered, digest-mismatched, symlinked, or unreadable — this
+  // command stops here, before any request, shard, estimate, or plan exists.
+  const lockedSanityPmids = await lockedMembershipSet(state, flagValue(argv, 'artifact'))
+  assertExactLockedAuthority(lockedSanityPmids)
+  assertNoLockedMembership(pmids, lockedSanityPmids, command)
 }
 
 async function runBatchPrepare(argv: readonly string[]): Promise<void> {
@@ -605,12 +645,14 @@ async function runBatchPrepare(argv: readonly string[]): Promise<void> {
   const operationId = requireFlag(argv, 'operation')
   const paths = operationPaths(state, operationId)
   await assertPreparationPathwayNotLocked(state, paths, argv, 'batch-prepare')
-  const stored = await readRequests(paths)
+  // The one authoritative read of stored prepared requests: raw ordered rows, each re-hashed
+  // from its own bytes, multiplicity and order proven over the sequence, and the manifest
+  // proven against that recomputation. A lookup map exists only inside it, only afterwards.
+  const stored = await requirePreparedRequestSet(state, paths)
   const maxRecords = numberFlag(argv, 'max-records')
   if (maxRecords !== undefined) {
-    assertWithinRecordCeiling(stored.length, maxRecords)
+    assertWithinRecordCeiling(stored.requests.length, maxRecords)
   }
-  const requestsById = new Map(stored.map((row) => [row.customId, row]))
   const prompt = loadStageAPrompt()
   const model = flagValue(argv, 'model') ?? LUNA_DEFAULT_MODEL
   const reasoningEffort = parseReasoning(flagValue(argv, 'reasoning'))
@@ -631,7 +673,7 @@ async function runBatchPrepare(argv: readonly string[]): Promise<void> {
       DEFAULT_SHARD_CEILINGS.maxEstimatedTokensPerShard,
   }
   const plan = planBatchShards(
-    [...requestsById.values()].map((row) => ({ customId: row.customId, body: row.body })),
+    stored.requests.map((row) => ({ customId: row.customId, body: row.body })),
     estimates,
     ceilings,
   )
@@ -722,9 +764,13 @@ async function runIngest(argv: readonly string[]): Promise<void> {
   const paths = operationPaths(state, operationId)
   const mapping = await readMapping(paths)
   const selectedRecordIds = mapping.map((row) => row.recordId)
-  let attemptedRecordIds: string[]
-  try {
-    const requests = await readRequests(paths)
+  // Prepared requests are consumed here as attempt evidence, so they arrive through the same
+  // shared validator every other consumer uses. An operation with no prepared requests has an
+  // empty attempt set; an operation whose prepared requests drifted from their own digests is
+  // refused rather than quietly reported as "nothing attempted".
+  const preparedSet = await loadPreparedRequestSet(state, paths)
+  let attemptedRecordIds: string[] = []
+  if (preparedSet) {
     const ledger = await readJournalLines(paths.ledgerJsonl).catch(() => [] as unknown[])
     const ledgerIds = new Set(
       ledger
@@ -741,7 +787,7 @@ async function runIngest(argv: readonly string[]): Promise<void> {
       if (results.some((entry) => entry.endsWith('.jsonl'))) {
         const shards = await readdir(paths.batchShardsDir)
         for (const shard of shards.filter((entry) => entry.endsWith('.jsonl'))) {
-          const content = await readRegularFile(join(paths.batchShardsDir, shard))
+          const content = await readRegularFile(join(paths.batchShardsDir, shard), state)
           for (const line of content.split('\n')) {
             if (line.trim().length === 0) continue
             const parsed = JSON.parse(line) as { custom_id?: string }
@@ -752,11 +798,9 @@ async function runIngest(argv: readonly string[]): Promise<void> {
     } catch {
       // No batch artifacts at all: nothing was attempted through that route.
     }
-    attemptedRecordIds = requests
+    attemptedRecordIds = preparedSet.requests
       .map((row) => row.customId)
       .filter((customId) => ledgerIds.has(customId) || batchAttempted.has(customId))
-  } catch {
-    attemptedRecordIds = []
   }
   const responses = await collectRawResponses(paths, source)
   const ingestion = ingestStageAResponses({
@@ -958,7 +1002,8 @@ async function runAuditSample(argv: readonly string[]): Promise<void> {
       ]),
     ),
   })
-  await exclusiveWriteFile(paths.auditSampleJson, `${canonicalJson(sample)}\n`)
+  // Written under the same containment proof the review app re-runs when it reads it back.
+  await exclusiveWriteFile(paths.auditSampleJson, `${canonicalJson(sample)}\n`, state)
   print({
     command: 'audit-sample',
     requestedSize: sample.requestedSize,

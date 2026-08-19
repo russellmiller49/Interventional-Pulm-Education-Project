@@ -192,27 +192,15 @@ export async function readRiskFlags(paths: OperationPaths): Promise<RiskFlagRow[
   })
 }
 
-export interface StoredRequestRow {
-  readonly customId: string
-  readonly bodySha256: string
-  readonly body: Record<string, unknown>
-}
-
-export async function readRequests(paths: OperationPaths): Promise<StoredRequestRow[]> {
-  const lines = await readJournalLines(paths.requestsJsonl)
-  return lines.map((line) => {
-    const row = line as StoredRequestRow
-    if (
-      typeof row.customId !== 'string' ||
-      typeof row.bodySha256 !== 'string' ||
-      !row.body ||
-      typeof row.body !== 'object'
-    ) {
-      throw new Error('A stored request row is malformed.')
-    }
-    return row
-  })
-}
+/**
+ * There is deliberately no shape-only reader for `requests.jsonl` here.
+ *
+ * A reader that merely validated each row's shape is what let an edited body with a stale
+ * digest through, and what let a duplicated row collapse into a lookup map before anything
+ * counted it. Stored prepared requests have exactly one entrance — `prepared-requests.ts` —
+ * which re-hashes every body from its own bytes, proves multiplicity and order over the raw
+ * sequence, and only then builds a map. A weaker second door beside it would be reached for.
+ */
 
 export async function readTerminalStates(paths: OperationPaths): Promise<TerminalAssignment[]> {
   const lines = await readJournalLines(paths.terminalStatesJsonl)

@@ -5,6 +5,12 @@ import { join } from 'node:path'
 
 import { LUNA_CLI_COMMANDS, WITHHELD_COMMANDS, WithheldCommandError, runLunaTriageCli } from './cli'
 import {
+  LUNA_DEVELOPMENT_COHORT_SIZE,
+  LUNA_LOCKED_SANITY_COHORT_SIZE,
+  LUNA_SPLIT_SEED,
+  LUNA_SPLIT_VERSION,
+} from './constants'
+import {
   syntheticCorpusRecord,
   syntheticPmid,
   syntheticResponseBody,
@@ -12,7 +18,8 @@ import {
 } from './fixtures'
 import { appendJsonlRows, createOperation, operationPaths } from './operation'
 import { buildPacket, type OperationSalt } from './packet'
-import { ensureStateDirectory, exclusiveWriteFile, resolveStateRoot } from './state'
+import { buildSplitManifest } from './split'
+import { ensureStateDirectory, exclusiveWriteFile, resolveStateRoot, type StateRoot } from './state'
 
 /**
  * An end-to-end pass over the offline pipeline: a synthetic pilot operation goes through
@@ -29,6 +36,42 @@ let root: string
 let stateDir: string
 const printed: string[] = []
 let writeSpy: jest.SpyInstance
+
+/**
+ * The locked-sanity 200 and development 430 this state directory will answer membership from.
+ * Preparation is only permitted against a valid, canonical, exact-200 authority, so every
+ * pathway test that expects to *get through* has to seed one.
+ */
+const LOCKED_PMIDS = Array.from({ length: LUNA_LOCKED_SANITY_COHORT_SIZE }, (_unused, index) =>
+  syntheticPmid(index + 1),
+).sort()
+const DEVELOPMENT_PMIDS = Array.from({ length: LUNA_DEVELOPMENT_COHORT_SIZE }, (_unused, index) =>
+  syntheticPmid(index + 1_000),
+).sort()
+
+async function seedValidSplitAuthority(state: StateRoot): Promise<void> {
+  await ensureStateDirectory(state, 'split')
+  await exclusiveWriteFile(
+    join(state.root, 'split', 'locked-sanity-pmids.json'),
+    `${JSON.stringify(LOCKED_PMIDS)}\n`,
+  )
+  await exclusiveWriteFile(
+    join(state.root, 'split', 'development-pmids.json'),
+    `${JSON.stringify(DEVELOPMENT_PMIDS)}\n`,
+  )
+  await exclusiveWriteFile(
+    join(state.root, 'split', 'split-manifest.json'),
+    `${JSON.stringify(
+      buildSplitManifest({
+        version: LUNA_SPLIT_VERSION,
+        seed: LUNA_SPLIT_SEED,
+        developmentPmids: DEVELOPMENT_PMIDS,
+        lockedSanityPmids: LOCKED_PMIDS,
+        strata: [],
+      }),
+    )}\n`,
+  )
+}
 
 beforeAll(() => {
   writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(((chunk: unknown) => {
@@ -89,14 +132,10 @@ describe('offline pipeline end to end', () => {
       paths.riskFlagsJsonl,
       built.map((item) => ({ recordId: item.mapping.recordId, riskFlags: item.riskFlags })),
     )
-    await appendJsonlRows(
-      paths.requestsJsonl,
-      built.map((item) => ({
-        customId: item.mapping.recordId,
-        bodySha256: 'a'.repeat(64),
-        body: { model: 'gpt-5.6-luna' },
-      })),
-    )
+    // Genuine prepared material: ingest reads prepared requests through the same validator
+    // every other consumer uses, so a hand-written stand-in would (correctly) be refused.
+    await seedValidSplitAuthority(state)
+    await runLunaTriageCli(['prepare-requests', '--state-dir', stateDir, '--operation', 'op-pilot'])
     // Ledger: three requests were actually attempted; `silent` never was.
     await appendJsonlRows(
       paths.ledgerJsonl,
@@ -204,9 +243,6 @@ describe('offline pipeline end to end', () => {
     await appendJsonlRows(paths.riskFlagsJsonl, [
       { recordId: built.mapping.recordId, riskFlags: built.riskFlags },
     ])
-    await appendJsonlRows(paths.requestsJsonl, [
-      { customId: built.mapping.recordId, bodySha256: 'a'.repeat(64), body: {} },
-    ])
     await runLunaTriageCli(['ingest', '--state-dir', stateDir, '--operation', 'op-once'])
     await expect(
       runLunaTriageCli(['ingest', '--state-dir', stateDir, '--operation', 'op-once']),
@@ -235,14 +271,6 @@ describe('every preparation command refuses the locked cohort', () => {
     await appendJsonlRows(
       paths.mappingJsonl,
       built.map((item) => item.mapping),
-    )
-    await appendJsonlRows(
-      paths.requestsJsonl,
-      built.map((item) => ({
-        customId: item.mapping.recordId,
-        bodySha256: 'a'.repeat(64),
-        body: { model: 'gpt-5.6-luna' },
-      })),
     )
     return { state, paths }
   }
@@ -274,8 +302,9 @@ describe('every preparation command refuses the locked cohort', () => {
     await expect(readdir(operationPaths(state, 'op-packets-locked').root)).rejects.toThrow()
   })
 
-  it('still runs a non-locked cohort through the same command', async () => {
+  it('still runs a non-locked cohort through the same command, against a valid authority', async () => {
     const state = await resolveStateRoot(stateDir)
+    await seedValidSplitAuthority(state)
     const paths = await createOperation(state, 'op-dev', 'development-430', 'test', 'now')
     const built = buildPacket(SALT, syntheticCorpusRecord('900000305'))
     await appendJsonlRows(paths.packetsJsonl, [built.packet])
@@ -377,23 +406,9 @@ describe('operation paths guardrail', () => {
  * request bytes, shard, or estimate exists for it.
  */
 describe('preparation refuses actual locked membership, not merely the label', () => {
-  async function seedSplit(state: Awaited<ReturnType<typeof resolveStateRoot>>) {
-    const lockedSanity = Array.from({ length: 200 }, (_unused, index) => syntheticPmid(index + 1))
-    const development = Array.from({ length: 430 }, (_unused, index) => syntheticPmid(index + 1000))
-    await ensureStateDirectory(state, 'split')
-    await exclusiveWriteFile(
-      join(state.root, 'split', 'locked-sanity-pmids.json'),
-      `${JSON.stringify(lockedSanity)}\n`,
-    )
-    await exclusiveWriteFile(
-      join(state.root, 'split', 'development-pmids.json'),
-      `${JSON.stringify(development)}\n`,
-    )
-    await exclusiveWriteFile(
-      join(state.root, 'split', 'split-manifest.json'),
-      `${JSON.stringify({ lockedSanityCount: 200, developmentCount: 430 })}\n`,
-    )
-    return { lockedSanity, development }
+  async function seedSplit(state: StateRoot) {
+    await seedValidSplitAuthority(state)
+    return { lockedSanity: LOCKED_PMIDS, development: DEVELOPMENT_PMIDS }
   }
 
   async function relabelledOperation(operationId: string, pmids: readonly string[]) {
@@ -447,6 +462,10 @@ describe('preparation refuses actual locked membership, not merely the label', (
         'op-truncated',
       ]),
     ).rejects.toThrow(/not 200/u)
+    // The refusal is not a rubber stamp in the other direction either: nothing was prepared.
+    await expect(
+      readFile(operationPaths(state, 'op-truncated').requestManifestJson, 'utf8'),
+    ).rejects.toThrow()
   })
 
   it('lets the same command through once no locked identity is present', async () => {
@@ -468,6 +487,7 @@ describe('preparation refuses actual locked membership, not merely the label', (
 describe('offline preparation is deterministic through the CLI', () => {
   async function prepareIn(directory: string, operationId: string) {
     const state = await resolveStateRoot(directory)
+    await seedValidSplitAuthority(state)
     const paths = await createOperation(state, operationId, 'pilot-1000', 'test', 'now')
     const built = [5101, 5102, 5103].map((index) =>
       buildPacket(SALT, syntheticCorpusRecord(syntheticPmid(index), { title: `Article ${index}` })),
