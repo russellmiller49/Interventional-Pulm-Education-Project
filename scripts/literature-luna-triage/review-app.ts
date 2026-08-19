@@ -1,6 +1,7 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto'
+import { lstat } from 'node:fs/promises'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import type { UniversalPacket } from '../../src/features/literature/classifier/packet-contract'
 import { canonicalJson, sha256 } from '../literature-production-ingest/canonical'
@@ -24,6 +25,7 @@ import {
 import { reviewPageHtml } from './review-page'
 import type { RoutedRecord } from './routing'
 import {
+  StatePathError,
   assertContainedDirectory,
   assertContainedRealPath,
   exclusiveWriteFile,
@@ -71,19 +73,87 @@ export interface ReviewData {
   readonly paths: OperationPaths
 }
 
-async function readAuditSampleIds(paths: OperationPaths): Promise<Set<string>> {
+function isFileNotFound(error: unknown): boolean {
+  return (
+    !(error instanceof StatePathError) &&
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'ENOENT'
+  )
+}
+
+/** Present-and-contained, or genuinely absent. Nothing in between. */
+export type AuditSampleRead =
+  | { readonly status: 'absent' }
+  | { readonly status: 'present'; readonly recordIds: ReadonlySet<string> }
+
+/**
+ * Read the operation's audit sample under the same root-down containment guarantees as the
+ * review decision and export paths.
+ *
+ * The audit sample is *optional*, and only that one thing is optional: the file may not exist
+ * yet. Everything else — a symlinked `audit/` directory, a symlinked leaf, a target whose real
+ * path lies outside the state root, wrong permissions, malformed contents, a `StatePathError`
+ * — is a refusal. The earlier read passed no `StateRoot` and caught every error as "no audit
+ * sample", which made a redirected read indistinguishable from an absent one, so an audit
+ * sample chosen outside the operation could mark records as sampled.
+ *
+ * Containment is re-proven at read time rather than remembered from startup, so an ancestor
+ * swapped for a link between one load and the next cannot ride through on an earlier check.
+ */
+export async function readAuditSampleIds(
+  state: StateRoot,
+  paths: OperationPaths,
+): Promise<AuditSampleRead> {
+  const auditDir = dirname(paths.auditSampleJson)
   try {
-    const parsed = JSON.parse(await readRegularFile(paths.auditSampleJson)) as {
-      entries?: readonly { recordId?: string }[]
-    }
-    return new Set(
-      (parsed.entries ?? [])
-        .map((entry) => entry.recordId)
-        .filter((value): value is string => typeof value === 'string'),
-    )
-  } catch {
-    return new Set()
+    await assertContainedDirectory(state, auditDir)
+  } catch (error) {
+    if (isFileNotFound(error)) return { status: 'absent' }
+    throw error
   }
+  let stat
+  try {
+    stat = await lstat(paths.auditSampleJson)
+  } catch (error) {
+    if (isFileNotFound(error)) return { status: 'absent' }
+    throw error
+  }
+  if (stat.isSymbolicLink() || !stat.isFile()) {
+    throw new StatePathError(
+      `Refusing to read ${paths.auditSampleJson}: the audit sample is not a regular file.`,
+    )
+  }
+  if ((stat.mode & 0o777) !== 0o600) {
+    throw new StatePathError(
+      `Refusing to read ${paths.auditSampleJson}: an operation artifact must be mode 0600.`,
+    )
+  }
+  // The read itself re-proves containment from the root down, immediately before the bytes.
+  const raw = await readRegularFile(paths.auditSampleJson, state)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    throw new Error('The stored audit sample is not valid JSON; refusing to use it.')
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('The stored audit sample is not a JSON object; refusing to use it.')
+  }
+  const entries = (parsed as { entries?: unknown }).entries
+  if (!Array.isArray(entries)) {
+    throw new Error('The stored audit sample carries no entry list; refusing to use it.')
+  }
+  const recordIds = new Set<string>()
+  for (const entry of entries) {
+    const recordId = (entry as { recordId?: unknown } | null)?.recordId
+    if (typeof recordId !== 'string' || recordId.length === 0) {
+      throw new Error('A stored audit-sample entry names no record; refusing to use it.')
+    }
+    recordIds.add(recordId)
+  }
+  return { status: 'present', recordIds }
 }
 
 export async function loadReviewData(state: StateRoot, operationId: string): Promise<ReviewData> {
@@ -106,7 +176,9 @@ export async function loadReviewData(state: StateRoot, operationId: string): Pro
   const routed = await readRoutedRecords(paths)
   const terminal = await readTerminalStates(paths)
   const decisions = await readReviewDecisions(paths, state)
-  const auditSample = await readAuditSampleIds(paths)
+  const auditSample = await readAuditSampleIds(state, paths)
+  const sampledRecordIds =
+    auditSample.status === 'present' ? auditSample.recordIds : new Set<string>()
 
   const packetById = new Map<string, UniversalPacket>(
     packets.map((packet) => [packet.record_id, packet]),
@@ -142,7 +214,7 @@ export async function loadReviewData(state: StateRoot, operationId: string): Pro
       route: record.route,
       riskFlags: record.riskFlags,
       mandatoryReview: record.mandatoryPhysicianReview,
-      inAuditSample: auditSample.has(record.recordId),
+      inAuditSample: sampledRecordIds.has(record.recordId),
       decision: decision
         ? { action: decision.action, revision: decision.revision, decidedAt: decision.decidedAt }
         : null,
