@@ -232,12 +232,23 @@ viewBox, and the implicated ticks, diamond and words all still read without colo
 
 - Below about a 240px drawing — narrower than the workspace's own 280px pane floor — compact type
   would fall under 12px again. Nothing in the app produces that.
-- The in-application pass at 1600×900, 1440×900, 1280×720 and 1024×768 was **not** completed. The
+- The in-application pass at 1600×900, 1440×900, 1280×720 and 1024×768 was **not** completed. ~~The
   Learn routes sit behind login, and the repository's local development bypass takes its token as a
-  URL query parameter; putting a credential in a URL is not something to do on the owner's behalf.
+  URL query parameter; putting a credential in a URL is not something to do on the owner's behalf.~~
   What was verified instead: the component's own measurement path exercised in a real browser at
   the drawing widths those four viewports produce (446–996px, all landscape) and at the drag floor
   (242px, compact). The pane widths themselves are pinned by `learn-workspace.test.tsx`.
+
+  > **Documentation correction, made during R3 — this changes nothing about what R2 shipped.**
+  > The stated reason was wrong. `/cardiohelp-ecmo` and its subroutes are in
+  > `PUBLIC_UNLISTED_EXACT_PATHS` and `PUBLIC_UNLISTED_PATH_PREFIXES` in
+  > `src/lib/site-auth/access.ts` — reachable anonymously, `noindex`, no credential of any kind
+  > required. Commit `d7c3c743` had already corrected three other handoff documents on exactly this
+  > point and this record did not pick the correction up. The pass R2 recorded as impossible was
+  > therefore possible; R3 performed it, and its results are in
+  > `r3-implementation-record.md` §7. R2's own verification and conclusions are untouched — only
+  > this sentence's explanation of why one check was skipped was inaccurate.
+
 - The compact geometry is reached by dragging the separator narrow. At every default viewport the
   landscape geometry is the one a learner sees.
 
