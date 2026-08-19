@@ -248,6 +248,7 @@ function CircuitSchematic({
             dispatch={dispatch}
             controlsEnabled={controlsEnabled}
             guidedControlId={guidedControlId}
+            emphasisSceneLabelIds={emphasisSceneLabelIds}
           />
         </SimulationLaunchGate>
       </div>
