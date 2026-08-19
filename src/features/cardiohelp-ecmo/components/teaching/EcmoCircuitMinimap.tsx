@@ -7,6 +7,8 @@ import {
   ecmoMapImplicatedCaption,
   ecmoMapImplicatedSegmentIds,
   ecmoMapSensorSiteIds,
+  ecmoMapWalkStopCaption,
+  ecmoMapWalkStopSegmentIds,
   type EcmoCircuitPresentation,
 } from '../../content/circuitPresentation'
 import {
@@ -332,23 +334,37 @@ export function EcmoCircuitMinimap({
 
   const implicated = new Set(ecmoMapImplicatedSegmentIds(presentation))
   const anyImplicated = implicated.size > 0
+  /*
+   * The walk's marking, kept in its own set.
+   *
+   * Two vocabularies, never mixed: a stop says "you are here", a row says "the problem lives here".
+   * They cannot co-occur — the presentation is one kind or the other — so the drawing can treat
+   * them separately without ever having to decide which wins.
+   */
+  const atStop = new Set(ecmoMapWalkStopSegmentIds(presentation))
+  const anyAtStop = atStop.size > 0
   const siteIds = ecmoMapSensorSiteIds(presentation)
-  const caption = ecmoMapImplicatedCaption(presentation, supportMode)
+  const caption =
+    ecmoMapWalkStopCaption(presentation, supportMode) ??
+    ecmoMapImplicatedCaption(presentation, supportMode)
   const mapTitle = [
     `${supportMode === 'va' ? 'Venoarterial' : 'Venovenous'} circuit map. `,
     'The blood path is drawn solid and the sweep-gas path dashed',
-    anyImplicated ? ', with the implicated part of the circuit marked.' : '.',
+    anyImplicated ? ', with the implicated part of the circuit marked.' : '',
+    anyAtStop ? ', with the part of the circuit this stop is standing at marked.' : '',
+    !anyImplicated && !anyAtStop ? '.' : '',
     ' The description below carries the same information in words.',
   ].join('')
 
   const segment = (id: EcmoCircuitSegmentId) => {
     const shape = geometry.segments[id]
     const isImplicated = implicated.has(id)
+    const isAtStop = atStop.has(id)
     const record = ecmoCircuitSegment(id)
     const shared = {
       fill: 'none',
       stroke: 'currentColor',
-      strokeWidth: isImplicated ? 4.5 : 2,
+      strokeWidth: isImplicated || isAtStop ? 4.5 : 2,
       strokeLinecap: 'round' as const,
       strokeLinejoin: 'round' as const,
       strokeDasharray: shape.dashed ? '5 3' : undefined,
@@ -359,11 +375,15 @@ export function EcmoCircuitMinimap({
       <g
         key={id}
         data-map-segment={id}
+        // Left binary on purpose. The drills' leak test asserts the absence of the implicated
+        // attribute, and a third value here would turn that from a question about presence into a
+        // question about which value — so the walk's marking gets an attribute of its own.
         data-segment-state={isImplicated ? 'implicated' : 'neutral'}
         data-circuit-implicated={isImplicated ? 'true' : undefined}
-        // A redundant cue, never the carrier: weight, the ticks, the diamond and the caption all
+        data-walk-stop-segment={isAtStop ? 'true' : undefined}
+        // A redundant cue, never the carrier: weight, the ticks, the marker and the caption all
         // say the same thing without it.
-        opacity={anyImplicated && !isImplicated ? 0.55 : 1}
+        opacity={(anyImplicated && !isImplicated) || (anyAtStop && !isAtStop) ? 0.55 : 1}
       >
         {shape.d ? <path d={shape.d} {...shared} /> : null}
         {shape.rect ? (
@@ -427,13 +447,33 @@ export function EcmoCircuitMinimap({
             />
           </>
         ) : null}
+        {isAtStop ? (
+          /*
+            A ring, where an implicated segment gets a filled diamond.
+            Different shape rather than different colour or a second weight, so the two marks are
+            told apart by someone reading this printed in one ink — and so a learner who has met the
+            diamond in a drill does not read "you are here" as an accusation. Both geometries share
+            the marker anchor the diamond already uses, so the compact map needed no new coordinates.
+          */
+          <g data-walk-stop-marker>
+            <circle
+              cx={shape.marker.x}
+              cy={shape.marker.y}
+              r={6}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+            />
+            <circle cx={shape.marker.x} cy={shape.marker.y} r={1.8} fill="currentColor" />
+          </g>
+        ) : null}
         {shape.label ? (
           <text
             x={shape.label.x}
             y={shape.label.y}
             textAnchor={shape.label.anchor}
             fontSize={geometry.segmentFontSize}
-            fontWeight={isImplicated ? 700 : 500}
+            fontWeight={isImplicated || isAtStop ? 700 : 500}
             fill="currentColor"
             stroke="none"
           >
@@ -455,6 +495,7 @@ export function EcmoCircuitMinimap({
       data-presentation={presentation.kind}
       data-scaffold-emphasis={presentation.kind === 'scaffold' ? presentation.emphasis : undefined}
       data-implicated-row={presentation.kind === 'implicated' ? presentation.rowId : undefined}
+      data-walk-stop={presentation.kind === 'walk-stop' ? presentation.stopId : undefined}
     >
       <h3 id={headingId} className={styles.heading}>
         The circuit, and where each reading is taken
@@ -553,7 +594,11 @@ export function EcmoCircuitMinimap({
       </svg>
 
       {caption ? (
-        <p className="mt-2 text-xs font-semibold leading-5" data-implicated-caption>
+        <p
+          className="mt-2 text-xs font-semibold leading-5"
+          data-implicated-caption={presentation.kind === 'implicated' ? true : undefined}
+          data-walk-stop-caption={presentation.kind === 'walk-stop' ? true : undefined}
+        >
           {caption}
         </p>
       ) : null}

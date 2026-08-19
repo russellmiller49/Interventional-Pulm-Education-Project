@@ -112,14 +112,6 @@ describe('every place a stop names comes from the shared registry', () => {
    * ids, and it may not restate the labels that belong to them.
    */
   it('does not restate a label the segment registry already owns', () => {
-    const registryLabels = ecmoCircuitSegmentIds.flatMap((segmentId) =>
-      MODES.flatMap((mode) => {
-        const segment = ecmoCircuitSegmentIds.includes(segmentId) ? segmentId : segmentId
-        return [segment]
-      }),
-    )
-    expect(registryLabels.length).toBeGreaterThan(0)
-
     // The walk imports its vocabulary; it does not declare one.
     expect(walkSource).toMatch(/from '\.\/circuitSegments'/)
     expect(walkSource).not.toMatch(/ecmoCircuitSegments\s*[:=]\s*\[/)
