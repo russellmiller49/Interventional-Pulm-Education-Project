@@ -10,6 +10,7 @@ import {
   ecmoFoundationRestoreAction,
   ecmoFoundationSessionReducer,
 } from '../session/foundationSession'
+import { comparisonPhrase } from '../components/teaching/shared'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
 import type { EcmoSimulationState, SupportMode } from '../engine/types'
 
@@ -295,4 +296,19 @@ describe('the return-resistance comparison is three real engine states', () => {
       expect(state.scenario.activeFaults).toContain('return-obstruction')
     },
   )
+})
+
+describe('the comparison a learner reads is a sentence', () => {
+  it('pairs each direction with the preposition that belongs to it', () => {
+    expect(comparisonPhrase.up).toBe('higher than')
+    expect(comparisonPhrase.down).toBe('lower than')
+    // The case the pump lesson opens in, and the one that used to read "about the same than".
+    expect(comparisonPhrase.flat).toBe('about the same as')
+  })
+
+  it('never leaves a stray preposition beside the flat case', () => {
+    for (const phrase of Object.values(comparisonPhrase)) {
+      expect(`${phrase} this circuit’s reference state`).not.toMatch(/same than|higher as|lower as/)
+    }
+  })
 })

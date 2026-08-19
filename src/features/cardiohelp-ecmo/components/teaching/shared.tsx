@@ -60,6 +60,22 @@ export const directionWord: Readonly<Record<'up' | 'down' | 'flat', string>> = {
   flat: 'about the same',
 }
 
+/**
+ * The same three directions, carrying the preposition that goes with each.
+ *
+ * `directionWord` reads correctly on its own — "arterial CO₂ is lower" — and every panel that uses
+ * it that way is fine. It stops reading correctly the moment a sentence appends "than", because the
+ * flat case is "about the same", and "about the same than this circuit's reference state" is what
+ * the pump lesson printed on first load, in the state it opens in, which is the one a learner sees
+ * before they touch anything. The comparison and its preposition move together here so a caller
+ * cannot pick one without the other.
+ */
+export const comparisonPhrase: Readonly<Record<'up' | 'down' | 'flat', string>> = {
+  up: 'higher than',
+  down: 'lower than',
+  flat: 'about the same as',
+}
+
 /** The textual equivalent of a figure. Never decorative — it carries the same numbers. */
 export function TextEquivalent({ children }: { readonly children: ReactNode }) {
   return (
