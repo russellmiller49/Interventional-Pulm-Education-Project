@@ -1,8 +1,16 @@
 # Luna universal triage platform V1
 
-> Status: implemented 2026-08-17 on `claude/literature-luna-universal-triage-v1`. Local,
-> calibration-ready Stage-A platform. No API call, no Batch submission, no production write
-> occurred in the implementing session, and nothing here grants authority for any.
+> **Scope of PR #114 — offline preparation only.** This platform prepares Stage-A triage; it
+> does not execute it. It does not call OpenAI, does not submit or retrieve a Batch job, does
+> not run the locked 200, and does not declare qualification. There is no credential read, no
+> transport, and no remote host anywhere in its executable module graph. Remote execution and
+> the locked/qualification coordinator return as separate PRs with their own review and their
+> own owner spend authorization.
+>
+> Status: implemented 2026-08-17, narrowed to the offline core 2026-08-18, on
+> `claude/literature-luna-universal-triage-v1`. No API call, no Batch submission, no Supabase
+> write, no migration, no deployment, and no prediction load occurred in any session on this
+> branch, and nothing here grants authority for any.
 
 ## Staged architecture
 
@@ -19,7 +27,7 @@
 
 AI output never modifies `relevance_state`, `reviewed_relevance`, visibility, searchability,
 article existence, or physician truth. Stage A is a router between machine stages, gated by a
-qualification test and physician review; it is not clinical validation.
+future qualification test and by physician review; it is not clinical validation.
 
 ## Authorities (imported, never re-declared)
 
@@ -88,54 +96,61 @@ bars the automatic pool and makes the record mandatory physician review.
 apportionment of the 200 locked-sanity quota, SHA-256 rank order under seed
 `literature-luna-split-v1` (the repository's NUL-joined convention via
 `deterministicPmidOrder`). All 630 appear exactly once; identity lists are local 0600 files;
-the committable manifest carries aggregate strata plus digests only. The locked 200 is never
-used for prompt iteration; `run-locked` demands a freeze receipt and consumes a create-once
-per-calibration-version marker — one locked run per frozen calibration, failures included.
+the committable manifest carries aggregate strata plus digests only.
 
-## Freeze, evaluation, qualification
+The locked 200 remain a **future** evaluation authority: this release constructs them
+deterministically and locally and then refuses them everywhere else. There is no locked-run
+command, no freeze receipt, and no locked-sanity packet set. `packets --cohort
+locked-sanity-200` is refused outright; every preparation command additionally refuses actual
+membership, so an operation relabelled `development-430` while carrying one locked identity is
+refused before any request bytes exist (`locked.ts`, `assertGenericCommandNotLocked` +
+`assertNoLockedMembership`). `full-corpus` is the one documented exception to the membership
+check: it is the entire 132,350-record corpus rather than a selection of it, and nothing in
+this release can send it.
 
-- `freeze.ts` pins model, alias, reasoning effort, prompt hash, output-schema hash, reason
-  vocabulary hash, packet schema version, risk-lexicon version, split-manifest hash,
-  evaluation version, and cost-estimator version into one self-checksummed receipt;
-  `assertFreezeReceiptCurrent` names every drifted field.
+## Evaluation (descriptive), and the qualification boundary
+
 - `evaluation.ts` implements denominator discipline (PR #98's evaluation concept,
   reimplemented): selected / attempted / valid predictions / valid abstentions / refusals /
   invalid-quarantined / missing / duplicate / no-attempt, arithmetic reconciliation asserted;
   metric names carry denominators; zero denominators yield null; subgroups below n=20
   suppress rates but report support; a relevant record predicted `insufficient_evidence` is
   an abstention, never a false exclusion.
-- `qualify.ts` encodes the eight-criterion shadow-routing gate (zero core / zero adjacent in
-  the high-confidence bucket, zero relevant routing errors in both evidence profiles, 100%
-  bucket precision, ≥40% exclude yield, no systematic category miss, complete denominators,
-  full review-interface coverage of the bucket). The gate runs only from a checksum-bound
-  `QualificationEvidence`: cohort label exactly `locked-sanity-200`, exactly 200 selected, the
-  evaluated cohort identity digest equal to the frozen locked-sanity digest, a self-consistent
-  freeze receipt whose frozen surfaces still match what would run, the locked-run marker bound
-  to that calibration version and operation, the evaluation artifact's own recorded digest, and
-  once-per-freeze semantics against previously observed run markers. An `EvaluationReport`
-  cannot self-declare qualification.
+- The report is **descriptive only**. It carries no aggregate verdict, no pass flag, and no
+  field a caller could read as a release decision. `evaluationReportSha256` records what was
+  reported; it does not endorse it.
+- The shadow-routing qualification gate is **not in this release**. Deciding that a model
+  qualified is a release decision that requires the locked 200, a frozen execution surface,
+  and a once-per-freeze run marker — none of which exist here. It returns with the locked
+  coordinator, in its own reviewed PR. `qualify` and `freeze` are withheld commands that
+  refuse by name with that explanation.
 
-## Runner, Batch, filesystem
+## Request preparation, Batch preparation, filesystem
 
-- `openai.ts` is the only network module. Spend requires `--confirm-api-spend` **and** an
-  interactively typed `SPEND <operation-id>` phrase, minted into a module-private
-  symbol+WeakMap capability (PR #98's held-out-guard pattern, repurposed): copies and
-  serialized imitations fail. The capability is not a reusable bearer token — it binds an
-  immutable envelope (action, operation, plan digest, record count, token estimate, cost,
-  ceilings) whose every number must be a valid safe integer or finite non-negative amount that
-  reconciles with the priced estimate, plus a bounded execution ledger of exact request
-  identities, each consumed at most once and refused past the budget. Wrong action, wrong
-  operation, drifted plan, drifted request or shard bytes, and over-consumption all fail before
-  the API key is read. The key exists only as `process.env.OPENAI_API_KEY` inside the request
-  function; errors pass through redaction; there is no retry and no semantic repair anywhere.
-- `estimate.ts` is the versioned deterministic cost estimator; `--max-records` and
-  `--max-estimated-cost-usd` are enforced before any socket opens.
+- `request.ts` is pure: packet + parameters in, exact Responses request bytes and their digest
+  out. It holds no credential, no endpoint host, no transport, and no capability. `runner.ts`
+  is likewise pure preparation — packets sorted by record id, one deterministic body each, and
+  a manifest digest over the ordered body digests.
+- **There is no network module.** The former `openai.ts` — spend capability, endpoint URL
+  construction, key provider, and the single socket — is deleted from this PR rather than
+  left exported-but-unreachable, because an unreachable transport in the package is still a
+  transport in the package. `offline-surface.test.ts` walks the CLI's transitive relative
+  import closure and asserts no lane source names a credential, a remote host, or a client
+  transport construct, reachable or not.
+- `estimate.ts` is the versioned deterministic cost estimator. `--max-records` and
+  `--max-estimated-cost-usd` still bite: they gate the prepared plan, which is how a plan is
+  judged before anyone is asked to authorize sending it.
+- `reconcile.ts` recomputes every count from the prepared bytes themselves rather than from
+  plan metadata that travelled beside them, and both `prepare-requests` and `batch-prepare`
+  refuse to record a plan whose metadata and bytes disagree.
 - `batch.ts` prepares deterministic content-addressed JSONL shards under record and
-  estimated-token ceilings (the corpus is never assumed to fit one job), and wraps
-  submission/status/retrieval/parse behind the same gated socket. A request whose own estimate
-  exceeds the per-shard token ceiling is refused before any rollover decision — it cannot fit
-  any shard, so rolling it into a fresh one would only mint an oversized shard; equality with
-  the ceiling fits, and invalid token estimates are refused outright.
+  estimated-token ceilings (the corpus is never assumed to fit one job), and parses Batch
+  output/error JSONL that reaches the machine some other way into accounted raw records. A
+  request whose own estimate exceeds the per-shard token ceiling is refused before any
+  rollover decision — it cannot fit any shard, so rolling it into a fresh one would only mint
+  an oversized shard; equality with the ceiling fits, and invalid token estimates are refused
+  outright. Upload, Batch creation, status polling, and result retrieval are **not present**;
+  Batch submission is documented as a future separately reviewed adapter.
 - `results.ts` is strict ingestion: byte-preserving quarantine wrappers, identity binding of
   outputs to request custom ids, duplicates as their own advancing terminal state, exhaustive
   exactly-one accounting re-asserted arithmetically.
@@ -162,13 +177,39 @@ deterministic stratified audit sample of low-risk candidates (risk-enriched nega
 mandatory review, never sampled), and an AI routing proposal does not wait for every low-risk
 negative to be reviewed.
 
+## The executable command inventory
+
+Exactly twelve commands, all offline: `audit-sample`, `batch-prepare`, `estimate`, `evaluate`,
+`ingest`, `inventory`, `packets`, `prepare-requests`, `review-app`, `review-queue`, `route`,
+`split`. The list is a closed object literal in `cli.ts`, exported as `LUNA_CLI_COMMANDS` and
+pinned by test against both the source literal and the runtime dispatch table.
+
+Seven names are **withheld** rather than merely absent — `run-sync`, `run-locked`,
+`batch-submit`, `batch-status`, `batch-fetch`, `qualify`, `freeze`. Each refuses by name with
+its reason before any flag is parsed, any state directory is resolved, or any file is opened.
+Naming them is deliberate: a capability that vanished without explanation invites someone to
+reimplement it, while one that refuses with its reason states that it was removed on purpose
+and names what has to happen before it returns.
+
 ## Rollout (commands in `scripts/literature-luna-triage/README.md`)
 
-1. corpus inventory → 2. split → 3. smoke-30 packets/requests/sync run → 4. development-430
-   run → 5. freeze → 6. one locked-200 run → 7. evaluate + qualify → 8. pilot-1000 →
-2. full-corpus Batch preparation → 10. separately authorized Batch submission → 11. physician
-   review + audit → 12. Stage-B routing manifests. Every spending step needs its own explicit
-   owner confirmation; this document authorizes none of them.
+What this release can do, in order: 1. corpus inventory → 2. split → 3. packets for a
+permitted cohort → 4. `prepare-requests` + `estimate` → 5. `batch-prepare`. Then, once Stage-A
+result files exist on the machine by some other route: 6. `ingest` → 7. `route` → 8. `evaluate` (descriptive) → 9. `review-queue` + `audit-sample` → 10. `review-app` for
+physician review and export → 11. Stage-B routing manifests.
+
+What this release cannot do, and which future PR owns it:
+
+| Deferred capability                      | Owner                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| Synchronous `/responses` execution       | Remote transport adapter PR (own threat model, own spend authorization) |
+| Batch upload / create / status / fetch   | Same transport adapter PR, or a dedicated Batch adapter PR              |
+| The one locked 200-record run            | Locked coordinator PR (freeze receipt, once-per-freeze marker)          |
+| The shadow-routing qualification verdict | Locked coordinator PR                                                   |
+| Loading predictions into production      | Separate production-write PR                                            |
+
+Every one of those needs its own explicit owner confirmation; this document authorizes none
+of them.
 
 ## Independent review and correction (2026-08-18)
 
@@ -187,9 +228,45 @@ that fail against the original implementation:
 - **LUNA-BATCH-001** — an individually oversized first request was accepted as a one-record
   shard. Oversized and invalid per-request estimates are now refused before rollover.
 - **LUNA-QUALIFY-001** — a one-record `development-430` evaluation could report qualified.
-  Qualification now requires checksum-bound evidence of the exact frozen locked-sanity-200 run.
+  Qualification was first hardened to require checksum-bound evidence of the exact frozen
+  locked-sanity-200 run, and is now removed from this PR entirely: no code path here can claim
+  that a model qualified.
 - **LUNA-REVIEW-001** — Host validation used a prefix check, so `localhost.evil.example`
   passed. Host authorities are now parsed and matched exactly.
 
 No API call, Batch submission, Supabase write, migration, deployment, or prediction load
 occurred in the correction pass, and none is authorized by it.
+
+## Narrowing to the offline core (2026-08-18)
+
+The owner-defined final closure review reproduced further failures in the **remote execution**
+and **locked-run authority** surfaces specifically: mandatory network steps could be skipped,
+byte-derived cost could be understated, uploaded-file identity was caller-substitutable,
+cross-Batch file retrieval remained caller-bindable, and generic execution could proceed
+without authority to determine actual locked membership.
+
+Rather than redesign those protocols again inside this PR, the owner invoked the previously
+defined fallback: **narrow PR #114 to the offline classifier preparation, evaluation, routing,
+and physician-review platform**, and remove or source-disable every remote-execution and
+authoritative locked-run/qualification surface.
+
+Removed from this PR: `openai.ts` (the entire spend-capability, endpoint, key-provider, and
+socket module), `qualify.ts`, `freeze.ts`, the synchronous executor in `runner.ts`, and the
+upload/create/status/fetch half of `batch.ts` — together with the `run-sync`, `run-locked`,
+`batch-submit`, `batch-status`, `batch-fetch`, `qualify`, and `freeze` commands, the
+`OPENAI_API_KEY` environment name, and the OpenAI base URL.
+
+Retained, and still fully tested: the 132,350 corpus authority, the checksum-bound 630
+physician truth and its 283/75/272 and 192/133/305 contracts, the ten-field packet schema and
+its structural leakage firewall, opaque record ids with 0700/0600 storage, the deterministic
+430/200 split, the Stage-A decision/reason schema, the independent risk lexicon, fail-closed
+routing with refusal dominance, offline token and cost estimation, deterministic Responses
+request preparation, deterministic Batch JSONL preparation and sharding, strict result parsing
+and quarantine, exact set-equality accounting, descriptive evaluation, the loopback review app
+with its review decisions/audit sampling/exports/routing manifests, the Stage-B contract, and
+production/static isolation.
+
+The narrowing is enforced by regression, not by convention: the CLI inventory is pinned
+exactly, each withheld command is proven unavailable and side-effect-free, and the transitive
+import closure of the CLI is proven to contain no credential name, no remote host, and no
+client transport construct.

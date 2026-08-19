@@ -68,3 +68,25 @@ Recorded owner policy for corpus-wide Stage-A scoring:
 
 No session may access held-out identities or labels under this amendment; it authorizes only
 blindness-preserving corpus-wide scoring.
+
+## Amendment 3 — offline-only scope for PR #114 (2026-08-18)
+
+PR #114 ships the **offline** Luna triage preparation platform. It does not exercise any part
+of this policy that involves an API:
+
+- it makes no OpenAI call of any kind, standard or Batch (items 7–9 remain unexercised);
+- it reads no `OPENAI_API_KEY` and declares no OpenAI endpoint anywhere in executable source;
+- it submits and retrieves no Batch job;
+- it does not run the locked/held-out 200, and it refuses that cohort both by declared label
+  and by actual membership (item 6, enforced structurally rather than by convention);
+- it produces no predictions and loads nothing into any database (items 1, 4, 10);
+- it declares no qualification verdict — the "after qualification" precondition in this
+  policy's opening sentence is therefore untouched and still unmet.
+
+Amendment 2's blind full-corpus inference remains recorded policy but is **not implemented**
+by PR #114: full-corpus _packet and shard preparation_ is offline and produces no model call,
+and the freeze receipt named in Amendment 2 item 4 is deferred with the locked coordinator.
+
+Remote execution returns only through a separate PR carrying its own transport adapter, its
+own threat model, its own regression suite, and its own explicit owner spend authorization.
+Nothing in PR #114 grants that authorization.
