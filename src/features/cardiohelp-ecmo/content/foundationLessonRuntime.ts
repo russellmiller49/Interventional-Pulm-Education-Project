@@ -588,25 +588,42 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
     },
     guidedActions: [
+      /*
+       * Four hundred, not two.
+       *
+       * The lesson asks the learner to commit to a pairing — flow rises, and the drainage side is
+       * pulled harder to produce it — and then to run this action and watch. At two hundred rpm the
+       * second half of that pairing is invisible: the model moves pVen from −34.72 to −35.32, and
+       * `calculatePressures` rounds pressures to whole millimetres, so the console reads −35 before
+       * and −35 after. A learner who watched carefully saw the distractor that says the drainage
+       * side stays where it is, and the rationale under the keyed answer told them it does not.
+       *
+       * Four hundred moves the displayed value in both directions — −35 → −36 raising, −35 → −33
+       * backing off — with no fault injected, no alarm, and no critical error charged, because a
+       * reference circuit carries no drainage capacity to exceed. The magnitude is the smallest one
+       * this console can show, which is the only reason it was chosen.
+       *
+       * `foundation-comparisons.test.ts` pins both directions against the engine.
+       */
       {
         id: 'increase-rpm',
-        label: 'Increase pump speed by 200 rpm',
+        label: 'Increase pump speed by 400 rpm',
         description: 'A bounded increase from the reference speed, using the existing pump model.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
-          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 200 } as const,
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 400 } as const,
         ],
         settleSeconds: 6,
       },
       {
         id: 'decrease-rpm',
-        label: 'Decrease pump speed by 200 rpm',
+        label: 'Decrease pump speed by 400 rpm',
         description: 'A bounded decrease from the reference speed.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
-          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint - 200 } as const,
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint - 400 } as const,
         ],
         settleSeconds: 6,
       },

@@ -103,8 +103,11 @@ function sharedVariants(profileId: EcmoReferenceProfileId): readonly Variant[] {
   return [
     { label: `${profileId} · reference`, state: reference },
     {
-      label: `${profileId} · after +200 rpm`,
-      state: settled(profileId, { type: 'SET_RPM', rpm: reference.device.rpmSetpoint + 200 }),
+      // Matches the bounded action the pump lesson actually offers. At the two hundred it used to
+      // render, the drainage pressure was identical to the reference column and the page gave no
+      // sign that the comparison the lesson asks for was invisible on the console.
+      label: `${profileId} · after +400 rpm`,
+      state: settled(profileId, { type: 'SET_RPM', rpm: reference.device.rpmSetpoint + 400 }),
     },
     {
       label: `${profileId} · after +1 L/min sweep`,
