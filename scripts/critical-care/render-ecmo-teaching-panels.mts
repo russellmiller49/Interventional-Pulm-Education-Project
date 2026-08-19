@@ -2,8 +2,11 @@
  * Offline visual harness for every ECMO teaching panel — the ten foundation panels and the six
  * live drill panels of the B4 pilot slice.
  *
- * Same reason as the mechanical-ventilation harness: the Learn workspace sits behind login and
- * behind a viewport gate, so the panels cannot be screenshotted in the running app. This renders
+ * Same reason as the mechanical-ventilation harness: this renders one panel at a time without
+ * booting the app, which is faster than driving a route and shows every state side by side. (The
+ * ECMO routes are public-unlisted rather than behind login, so the running application can also be
+ * driven directly — see `src/lib/site-auth/access.ts`. Use both: the page for breadth, the route
+ * for anything that depends on real layout or real interaction.) This renders
  * every panel against the states its own lesson can actually produce — the reference circuits, the
  * post-action states, and the engine-backed teaching previews — so clipping, missing units,
  * duplicated content, overflowing tables and unreadable text are all visible in one page.
@@ -46,6 +49,11 @@ import {
   type EcmoVaOnlyFoundationSectionId,
   type EcmoVvOnlyFoundationSectionId,
 } from '../../src/features/cardiohelp-ecmo/content/foundationLessonRuntime.ts'
+import {
+  ecmoCircuitWalkStops,
+  ecmoCircuitWalkStopsForSection,
+  type EcmoCircuitWalkStopId,
+} from '../../src/features/cardiohelp-ecmo/content/circuitWalk.ts'
 import type { EcmoReferenceProfileId } from '../../src/features/cardiohelp-ecmo/content/referenceProfiles.ts'
 import {
   createEcmoFoundationSessionState,
@@ -96,6 +104,8 @@ interface Variant {
   readonly label: string
   readonly state: EcmoSimulationState
   readonly snapshot?: EcmoFoundationSnapshot | null
+  /** Which walk stop the panel opens at, for the two sections that carry a walk. */
+  readonly walkStopId?: EcmoCircuitWalkStopId
 }
 
 function sharedVariants(profileId: EcmoReferenceProfileId): readonly Variant[] {
@@ -264,9 +274,35 @@ const profiles: readonly EcmoReferenceProfileId[] = ['vv-reference', 'va-referen
  * three guards means an unclassified section is a loud failure naming itself rather than a puzzling
  * missing-variant error, and the compiler rejects a section that belongs to no scope.
  */
+/**
+ * Every stop of a walk, against every state the section is rendered on.
+ *
+ * The walk shows one place at a time, so a page that rendered only the stop it happens to open at
+ * would review a sixth of it. This is the matrix that makes the whole walk visible at once: each
+ * stop is a column, each state a row, and both tracks appear because a stop's copy and its map
+ * labels resolve per track.
+ */
+function walkVariants(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  base: readonly Variant[],
+): readonly Variant[] {
+  const stops = ecmoCircuitWalkStopsForSection(sectionId)
+  if (stops.length === 0) return base
+  return base.flatMap((variant) =>
+    stops.map((stop) => ({
+      ...variant,
+      label: `${variant.label} · stop ${stop.ordinal} (${stop.id})`,
+      walkStopId: stop.id,
+    })),
+  )
+}
+
 function variantsFor(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
   if (isEcmoSharedFoundationSectionId(sectionId)) {
-    return profiles.flatMap((profileId) => sharedVariants(profileId))
+    return walkVariants(
+      sectionId,
+      profiles.flatMap((profileId) => sharedVariants(profileId)),
+    )
   }
   if (isEcmoVvOnlyFoundationSectionId(sectionId)) return vvOnlyVariants(sectionId)
   if (isEcmoVaOnlyFoundationSectionId(sectionId)) return vaOnlyVariants(sectionId)
@@ -461,6 +497,12 @@ const sections = ecmoInteractiveFoundationSectionIds
             sectionId,
             state: variant.state,
             snapshot: variant.snapshot ?? null,
+            // Naming the stop is what makes every one of them reviewable; the sensor names are
+            // shown here because this page is for reading the finished copy, not for checking the
+            // phase gate, which `foundation-activity.test.tsx` drives instead.
+            ...(variant.walkStopId
+              ? { walk: { activeStopId: variant.walkStopId, sensorNamesVisible: true } }
+              : {}),
           }),
         )
         return `<div class="cell"><p class="cell-label">${variant.label}</p>${markup}</div>`
@@ -470,6 +512,7 @@ const sections = ecmoInteractiveFoundationSectionIds
   })
   .join('\n')
 
+const walkStopCount = ecmoCircuitWalkStops.length
 const drillCount = ecmoDrillTeachingPanelScenarioIds.length
 const foundationCount = ecmoInteractiveFoundationSectionIds.length
 
@@ -610,6 +653,7 @@ writeFileSync(outputPath, html, 'utf8')
 console.log(`Wrote ${outputPath}`)
 console.log(
   `${foundationCount} foundation panels (${ecmoSharedFoundationSectionIds.length} shared × 2 profiles × 3 states, ${ecmoVvOnlyFoundationSectionIds.length} VV-only, ${ecmoVaOnlyFoundationSectionIds.length} VA-only) — ${renderedCells} rendered states`,
+  `${walkStopCount} circuit-walk stops, every one against every state its section is rendered on`,
 )
 console.log(
   `${drillCount} drill panels — ${renderedDrillCells} rendered states, each at ${PANE_WIDTHS.map((width) => `${width.px}px`).join(' and ')}`,
