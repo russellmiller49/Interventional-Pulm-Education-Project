@@ -5802,6 +5802,34 @@
   opacity: 0.08;
 }
 
+/*
+ * Where the teaching step is standing.
+ *
+ * Three cues, none of them a hue: a heavier border, a ring standing off the pill, and everything
+ * else pushed back. Colour is deliberately untouched — these pills are already the one accent this
+ * scene has, so tinting the emphasised one differently would be the only distinction, and this
+ * module's rule is that nothing meaningful is carried by colour alone. The words in the teaching
+ * pane name the same objects, which is what actually carries this when the labels are switched off
+ * or the viewport is too narrow to draw them.
+ *
+ * Nothing here moves. A learner who has orbited or panned keeps the view they chose.
+ */
+.circuit3dSceneLabel[data-emphasis='emphasised'] {
+  border-color: rgba(113, 225, 229, 0.95);
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(113, 225, 229, 0.22);
+  opacity: 1;
+}
+
+.circuit3dSceneLabel[data-emphasis='receded'] {
+  opacity: 0.34;
+}
+
+/* The orbit dim still wins: it exists so labels never block inspection. */
+.circuit3dSceneLabel[data-dimmed][data-emphasis] {
+  opacity: 0.08;
+}
+
 .circuit3dSceneChip {
   display: inline-block;
   padding: 0.22rem 0.6rem;

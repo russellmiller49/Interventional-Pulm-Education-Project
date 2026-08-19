@@ -45,6 +45,13 @@ interface SimulationPanelProps {
   circuitViewPreference?: { readonly view: CircuitViewPreference; readonly stepId: string } | null
   initiationTargets?: ClinicalInitiationTargets | null
   onSaveForLater?: () => void
+  /**
+   * Bedside-scene label ids the current teaching step is standing at.
+   *
+   * Strings, and only strings — resolved in `content/` through the segment-to-scene-anchor table, so
+   * nothing that knows where these names sit in space has to cross into the teaching layer.
+   */
+  emphasisSceneLabelIds?: readonly string[] | null
 }
 
 /**
@@ -77,6 +84,7 @@ function CircuitSchematic({
   guidedTarget,
   guidedControlId,
   circuitViewPreference,
+  emphasisSceneLabelIds,
   onSaveForLater,
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)

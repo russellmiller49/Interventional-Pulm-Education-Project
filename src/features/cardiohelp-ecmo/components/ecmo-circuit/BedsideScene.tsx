@@ -108,6 +108,8 @@ export interface BedsideSceneProps {
   controlsEnabled: boolean
   reduceMotion: boolean
   labelsVisible: boolean
+  /** Scene label ids the current teaching step is standing at. */
+  emphasisSceneLabelIds?: readonly string[] | null
 }
 
 export function BedsideScene({
@@ -116,6 +118,7 @@ export function BedsideScene({
   controlsEnabled,
   reduceMotion,
   labelsVisible,
+  emphasisSceneLabelIds = null,
 }: BedsideSceneProps) {
   const layout = useMemo(() => buildCircuitLayout(state.supportMode), [state.supportMode])
   const [orbiting, setOrbiting] = useState(false)
@@ -326,7 +329,12 @@ export function BedsideScene({
         onToggle={() => dispatch({ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return' })}
       />
 
-      <SceneLabels layout={layout} visible={labelsVisible} dimmed={orbiting} />
+      <SceneLabels
+        emphasisIds={emphasisSceneLabelIds}
+        layout={layout}
+        visible={labelsVisible}
+        dimmed={orbiting}
+      />
 
       {/* Floor + soft contact shadows */}
       <mesh position={[0, FLOOR_Y, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>

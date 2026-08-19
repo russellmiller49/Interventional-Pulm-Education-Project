@@ -22,6 +22,13 @@ import {
   pathwaySectionIndex,
 } from '@/features/learning-module/curriculum/types'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
+
+import {
+  ecmoCircuitWalkStopsForSection,
+  ecmoWalkStopSceneLabelIds,
+  type EcmoCircuitWalkStop,
+  type EcmoWalkComparisonBeat,
+} from '../content/circuitWalk'
 import { Link } from '@/i18n/navigation'
 
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
@@ -202,6 +209,24 @@ function EcmoFoundationLessonWorkspace({
    */
   const [focusedPane, setFocusedPane] = useState<FoundationPane | null>(null)
   const [consoleFitMode, setConsoleFitMode] = useState<FitWidthMode>('fit')
+
+  /*
+   * Where the circuit walk is standing, for the two sections that carry one.
+   *
+   * Local, and deliberately not persisted: a stop is a place the learner is reading, not progress.
+   * Visiting one is not completion, credit, or mastery, and the only thing this activity ever writes
+   * is the section-traversal marker the transfer commitment already carries. It lives up here rather
+   * than in the panel because the bedside scene has to follow it, and the panel cannot reach the
+   * scene.
+   *
+   * Nothing resets it explicitly on a track change either — the workspace remounts on
+   * `sectionId:mode:phase`, so a new track arrives with a new component and the first stop.
+   */
+  const walkStops = ecmoCircuitWalkStopsForSection(sectionId)
+  const [activeWalkStop, setActiveWalkStop] = useState<EcmoCircuitWalkStop | null>(
+    walkStops[0] ?? null,
+  )
+  const [activeComparisonId, setActiveComparisonId] = useState<string | null>(null)
 
   const frameRef = useRef<HTMLDivElement>(null)
   const [workspaceOffset, setWorkspaceOffset] = useState<number | null>(null)
@@ -388,6 +413,41 @@ function EcmoFoundationLessonWorkspace({
     )
   }
 
+  /**
+   * A comparison beat is a guided action the section already declares, run by name.
+   *
+   * The walk does not get its own way of loading a state: it points at what the lesson runtime
+   * already offers, so a beat cannot load something the runtime has not validated, and the atomic
+   * restore keeps a comparison from ever being the sum of two interventions.
+   */
+  function runComparisonBeat(beat: EcmoWalkComparisonBeat) {
+    const guided = runtime.guidedActions.find((action) => action.id === beat.guidedActionId)
+    if (!guided) return
+    setActiveComparisonId(beat.id)
+    runGuidedAction(guided)
+  }
+
+  /*
+   * What the bedside scene lights, as label ids and nothing else.
+   *
+   * Resolved through R2's string table, so this component hands the scene a list of names rather
+   * than anything that knows where those names are in space. Null outside the walk sections, which
+   * is what leaves every other lesson's scene exactly as it was.
+   */
+  const emphasisSceneLabelIds = activeWalkStop
+    ? ecmoWalkStopSceneLabelIds(activeWalkStop, supportMode)
+    : null
+
+  /*
+   * Whether the walk may name the readings it is about.
+   *
+   * The flow-path section asks the learner to place a named channel, and its own `act` instruction
+   * is to find the channels on the map — so the names stay withheld until then. This is the same
+   * predicate the bounded-actions block already uses to keep its button labels out of the
+   * pre-commitment surface, written once and read twice rather than guessed at twice.
+   */
+  const pastCommitmentPhases = phase !== 'recognize' && phase !== 'predict'
+
   const pathway = criticalCareLearningPathway('cardiohelp-ecmo', supportMode)
   const sectionIndex = pathwaySectionIndex(pathway, sectionId)
   const next = nextPathwaySection(pathway, sectionId)
@@ -470,6 +530,7 @@ function EcmoFoundationLessonWorkspace({
           state={session.simulation}
           dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
           controlsEnabled={false}
+          emphasisSceneLabelIds={emphasisSceneLabelIds}
         />
       </div>
       <p
@@ -491,6 +552,13 @@ function EcmoFoundationLessonWorkspace({
         sectionId={sectionId}
         state={session.simulation}
         snapshot={session.snapshot}
+        walk={{
+          activeStopId: activeWalkStop?.id,
+          onStopChange: setActiveWalkStop,
+          onRunComparison: runComparisonBeat,
+          activeComparisonId,
+          sensorNamesVisible: pastCommitmentPhases,
+        }}
       />
 
       <section className="rounded-2xl border p-4" aria-labelledby="lesson-narrative-heading">

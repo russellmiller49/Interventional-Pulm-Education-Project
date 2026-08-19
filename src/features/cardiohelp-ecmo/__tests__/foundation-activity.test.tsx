@@ -642,3 +642,151 @@ describe('every interactive section mounts', () => {
     },
   )
 })
+
+describe('the circuit walk, driven the way a learner drives it', () => {
+  function walkCard(): HTMLElement {
+    const card = document.querySelector<HTMLElement>('[data-circuit-walk]')
+    if (!card) throw new Error('no walk card rendered')
+    return card
+  }
+
+  function stopId(): string | null {
+    return walkCard().getAttribute('data-walk-stop')
+  }
+
+  function press(selector: string) {
+    const button = walkCard().querySelector<HTMLButtonElement>(selector)
+    if (!button) throw new Error(`no ${selector} button`)
+    fireEvent.click(button)
+  }
+
+  it('walks the flow path forward and back, one stop at a time', () => {
+    mount('circuit-flow-path')
+    expect(stopId()).toBe('walk-drainage')
+
+    press('[data-walk-next]')
+    expect(stopId()).toBe('walk-pump')
+    press('[data-walk-next]')
+    expect(stopId()).toBe('walk-membrane')
+    press('[data-walk-next]')
+    expect(stopId()).toBe('walk-return')
+
+    // The last stop of this section: there is nowhere further to go inside it.
+    expect(walkCard().querySelector<HTMLButtonElement>('[data-walk-next]')?.disabled).toBe(true)
+
+    press('[data-walk-back]')
+    expect(stopId()).toBe('walk-membrane')
+  })
+
+  it('offers no way back from the first stop, and says so rather than dead-ending', () => {
+    mount('circuit-flow-path')
+    expect(walkCard().querySelector<HTMLButtonElement>('[data-walk-back]')?.disabled).toBe(true)
+    expect(walkCard().textContent).toMatch(/first stop in this section/i)
+  })
+
+  it('moves focus to the stop heading, so a keyboard lands where the content changed', () => {
+    mount('circuit-flow-path')
+    press('[data-walk-next]')
+    const heading = walkCard().querySelector('h3')
+    expect(document.activeElement).toBe(heading)
+    expect(heading?.textContent).toBe('The pump')
+  })
+
+  it('does not steal focus on arrival', () => {
+    mount('circuit-flow-path')
+    expect(document.activeElement).toBe(document.body)
+  })
+
+  it('announces the stop, and only the stop', () => {
+    mount('circuit-flow-path')
+    press('[data-walk-next]')
+    const status = walkCard().querySelector('[data-walk-status]')
+    expect(status?.getAttribute('role')).toBe('status')
+    expect(status?.textContent).toMatch(/^Stop 2 of 6\. The pump\./)
+    // No live value in the announcement: the clock ticks every modelled second and a screen-reader
+    // user would be read a stream rather than a change they asked about.
+    expect(status?.textContent).not.toMatch(/mmHg|L\/min/)
+  })
+
+  it('counts the whole walk, not this section’s share of it', () => {
+    mount('pump-and-pressure-zones')
+    expect(walkCard().textContent).toMatch(/stop 5 of 6/i)
+    press('[data-walk-next]')
+    expect(walkCard().textContent).toMatch(/stop 6 of 6/i)
+  })
+
+  it.each(['vv', 'va'] as const)(
+    '%s: opens each walk section at its own first stop, with no stale stop from the other track',
+    (supportMode) => {
+      mount('circuit-flow-path', supportMode)
+      expect(stopId()).toBe('walk-drainage')
+      cleanup()
+
+      mount('pump-and-pressure-zones', supportMode)
+      expect(stopId()).toBe('walk-pump-under-load')
+    },
+  )
+
+  /*
+   * The gate that keeps the walk from answering the question next door.
+   *
+   * `circuit-flow-path` asks the learner to place a named channel, and its own `act` instruction is
+   * to find the channels on the map. So the stop does not name what it reports until then — which
+   * is the same predicate the bounded-actions block already uses for its button labels.
+   */
+  it('withholds the reading names until the phase whose instruction is to find them', () => {
+    mount('circuit-flow-path')
+    expect(walkCard().querySelector('[data-walk-reported-here]')).toBeNull()
+    expect(walkCard().querySelector('[data-walk-live-signals]')).toBeNull()
+    cleanup()
+
+    mount('circuit-flow-path')
+    fireEvent.click(screen.getByRole('button', { name: 'act' }))
+    expect(walkCard().querySelector('[data-walk-reported-here]')?.textContent).toMatch(
+      /drainage pressure \(pVen\)/,
+    )
+  })
+
+  it('runs a comparison beat through the action the section already declares', () => {
+    mount('pump-and-pressure-zones')
+    press('[data-walk-next]')
+    expect(stopId()).toBe('walk-downstream-load')
+
+    const beats = [...walkCard().querySelectorAll('[data-walk-beat]')].map((node) =>
+      node.getAttribute('data-walk-beat'),
+    )
+    expect(beats).toEqual([
+      'walk-return-load-baseline',
+      'walk-return-load-obstructed',
+      'walk-return-load-matched-flow',
+    ])
+
+    fireEvent.click(walkCard().querySelector('[data-walk-beat="walk-return-load-obstructed"]')!)
+    // The state on screen is the one the beat named, reached through the lesson's own variant.
+    expect(
+      document
+        .querySelector('[data-active-state-variant]')
+        ?.getAttribute('data-active-state-variant'),
+    ).toBe('return-resistance-preview')
+    expect(document.body.textContent).toMatch(/Return-side resistance — mechanism preview/i)
+  })
+
+  it('offers no comparison beats on a stop that is not a comparison', () => {
+    mount('pump-and-pressure-zones')
+    expect(stopId()).toBe('walk-pump-under-load')
+    expect(walkCard().querySelector('[data-walk-comparison]')).toBeNull()
+  })
+
+  it('leaves the loaded state alone when the learner only changes stop', () => {
+    mount('pump-and-pressure-zones')
+    const before = document
+      .querySelector('[data-active-state-variant]')
+      ?.getAttribute('data-active-state-variant')
+    press('[data-walk-next]')
+    expect(
+      document
+        .querySelector('[data-active-state-variant]')
+        ?.getAttribute('data-active-state-variant'),
+    ).toBe(before)
+  })
+})
