@@ -6,6 +6,7 @@ import {
   ecmoCircuitSegmentIds,
   ecmoPressureZoneIds,
   ecmoSensorSiteIds,
+  ecmoSensorSite,
   ecmoSensorSitesForSegment,
   resolveEcmoModeText,
 } from '../content/circuitSegments'
@@ -345,6 +346,100 @@ describe('the comparative stop names actions the lesson runtime declares', () =>
     const comparative = ecmoCircuitWalkStops.filter((stop) => stop.kind === 'comparative')
     expect(comparative.map((stop) => stop.id)).toEqual(['walk-downstream-load'])
     expect((comparative[0].comparison ?? []).length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+/*
+ * The guard that was missing.
+ *
+ * Stop five's conclusion shipped as the keyed answer to its own section's prediction, rendered in
+ * the pane beside the question with nothing committed. Four independent reviewers found it and the
+ * plan's own deny list had predicted it, which is the argument for asserting it rather than
+ * remembering it.
+ *
+ * What is checked is the *claim*, not the words. Stop six has to be able to say that the drainage
+ * side does not become more negative — that is the discriminator its whole comparison exists to
+ * draw, and it is the module's own wording for it — so an explicitly negated form is neutralised
+ * before the phrases are looked for. A guard that could not tell "X" from "not X" would have forced
+ * a paraphrase, and paraphrasing a correct sentence to get past a test is how this module's
+ * vocabulary drifts.
+ */
+describe('no stop states its own section’s answer before the section asks for it', () => {
+  /** The distinctive claims each section's prediction exists to elicit, in affirmative form. */
+  const KEYED_CLAIMS: Readonly<Record<string, readonly RegExp[]>> = {
+    // `ecmo.foundation.path.prediction` — where is pInt reported?
+    'circuit-flow-path': [
+      /\bpInt\b/i,
+      /between the pump (outlet )?and the membrane/i,
+      /pre-membrane pressure/i,
+    ],
+    // `ecmo.foundation.pump.prediction` — a speed rise, and what it costs on the drainage side.
+    'pump-and-pressure-zones': [
+      /becomes? more negative/i,
+      /pull(s|ing) harder/i,
+      /bought with suction/i,
+      /flow follows speed/i,
+    ],
+  }
+
+  /** Explicit denials of a claim are not the claim. */
+  function withoutNegations(copy: string): string {
+    return copy.replace(/\b(does|do|did|is|are|was|were|has|have)\s+not\s+[^.;]*/gi, ' ')
+  }
+
+  function preCommitmentCopy(stop: (typeof ecmoCircuitWalkStops)[number], mode: SupportMode) {
+    const takeawayShown = (stop.takeawayVisibility ?? 'always') === 'always'
+    return [
+      resolveEcmoModeText(stop.title, mode),
+      resolveEcmoModeText(stop.analogy, mode),
+      ...stop.checklist.map((item) => resolveEcmoModeText(item, mode)),
+      ...(takeawayShown ? [resolveEcmoModeText(stop.takeaway, mode)] : []),
+      ...(stop.comparison ?? []).flatMap((beat) => [beat.label, beat.readThis]),
+      ecmoWalkStopTextEquivalent(stop, mode, { readingsVisible: false }),
+    ].join(' ')
+  }
+
+  it.each(MODES)('%s: withholds every claim its own section is about to ask for', (mode) => {
+    for (const stop of ecmoCircuitWalkStops) {
+      const claims = KEYED_CLAIMS[stop.sectionId]
+      if (!claims) continue
+      const copy = withoutNegations(preCommitmentCopy(stop, mode))
+      for (const claim of claims) {
+        expect(`${stop.id}/${mode}: ${claim} → ${claim.test(copy) ? 'STATED' : 'absent'}`).toBe(
+          `${stop.id}/${mode}: ${claim} → absent`,
+        )
+      }
+    }
+  })
+
+  it('neutralises a denial, and nothing else', () => {
+    // The stop-six sentence this exists for, and the affirmative it must still catch.
+    expect(withoutNegations('The drainage side does not become more negative')).not.toMatch(
+      /becomes? more negative/i,
+    )
+    expect(withoutNegations('The drainage pressure becomes more negative')).toMatch(
+      /becomes? more negative/i,
+    )
+  })
+
+  it('says everything once the prediction has been taken', () => {
+    // The gate withholds; it does not delete. Stop five's conclusion is still the conclusion.
+    const stop = ecmoCircuitWalkStop('walk-pump-under-load')
+    expect(stop.takeawayVisibility).toBe('after-prediction')
+    expect(resolveEcmoModeText(stop.takeaway, 'vv')).toMatch(/bought with suction/i)
+    expect(ecmoWalkStopTextEquivalent(stop, 'vv', { readingsVisible: true })).toMatch(
+      /Reported here: drainage pressure/i,
+    )
+  })
+
+  it('names no reading in a text equivalent written before the prediction', () => {
+    for (const stop of ecmoCircuitWalkStops) {
+      const withheld = ecmoWalkStopTextEquivalent(stop, 'vv', { readingsVisible: false })
+      expect(withheld).not.toMatch(/Reported here:/)
+      for (const siteId of stop.sensorSiteIds) {
+        expect(`${stop.id}: ${withheld}`).not.toContain(ecmoSensorSite(siteId).deviceLabel)
+      }
+    }
   })
 })
 

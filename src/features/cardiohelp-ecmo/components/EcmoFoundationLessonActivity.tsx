@@ -439,12 +439,13 @@ function EcmoFoundationLessonWorkspace({
     : null
 
   /*
-   * Whether the walk may name the readings it is about.
+   * Whether the learner has moved past the phase in which this section takes its prediction.
    *
-   * The flow-path section asks the learner to place a named channel, and its own `act` instruction
-   * is to find the channels on the map — so the names stay withheld until then. This is the same
-   * predicate the bounded-actions block already uses to keep its button labels out of the
-   * pre-commitment surface, written once and read twice rather than guessed at twice.
+   * The walk withholds the names of the readings it is about, and any conclusion a stop declares as
+   * an answer, until this is true — the flow-path section's own `act` instruction is to find those
+   * channels on the map, which is exactly where it turns. This is the same predicate the
+   * bounded-actions block already uses to keep its button labels out of the pre-commitment surface,
+   * written once and read twice rather than guessed at twice.
    */
   const pastCommitmentPhases = phase !== 'recognize' && phase !== 'predict'
 
@@ -557,7 +558,7 @@ function EcmoFoundationLessonWorkspace({
           onStopChange: setActiveWalkStop,
           onRunComparison: runComparisonBeat,
           activeComparisonId,
-          sensorNamesVisible: pastCommitmentPhases,
+          pastPrediction: pastCommitmentPhases,
         }}
       />
 

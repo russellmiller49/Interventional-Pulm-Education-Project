@@ -95,6 +95,16 @@ export interface EcmoCircuitWalkStop {
   readonly pressureZoneIds: readonly EcmoPressureZoneId[]
   /** What the learner should be able to say having stood here. Shown after the stop, never before it. */
   readonly takeaway: EcmoModeText
+  /**
+   * When the takeaway may be shown.
+   *
+   * `always` for a stop whose conclusion is not the answer to anything. `after-prediction` for a
+   * stop standing beside a section whose own prediction it would give away — which is not a
+   * hypothetical: stop five's conclusion *is* the keyed answer to this section's prediction, and it
+   * shipped ungated. The field is authored rather than inferred because whether a sentence answers
+   * an item is a fact about the item, not about the sentence.
+   */
+  readonly takeawayVisibility?: 'always' | 'after-prediction'
   /** What this stop does not represent, in learner language, beside the thing it does not represent. */
   readonly modelBoundary: EcmoModeText
   readonly sourceIds: readonly string[]
@@ -220,14 +230,18 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     ordinal: 5,
     kind: 'interactive',
     title: 'Speed is chosen, flow is returned',
+    // The analogy names the two dials without saying how they move together. Saying it here would
+    // answer the prediction the pane next door is about to ask, which is the one commitment this
+    // section is built around.
     analogy:
-      'Pulling harder on the straw. More comes through, and you feel the effort on the drawing side.',
+      'A hand on the straw. There is what you choose to do, and there is what the straw gives back, and they are not the same reading.',
     checklist: [
       'The speed is a setting',
       'The flow is a result',
       'Watch the drainage side while it changes',
       'Read the two together, never one alone',
     ],
+    takeawayVisibility: 'after-prediction',
     primarySegmentId: 'pump',
     secondarySegmentIds: ['drainage'],
     // The speed change is read on the drawing side. The post-pump channels move too, but they are
@@ -250,7 +264,11 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
       'The same straw with a thumb over the far end. The effort shows where you are pushing from, not where the obstruction is.',
     checklist: [
       'Both post-pump readings move together',
-      'The drainage side stays quiet',
+      // A direction, not a stability claim. The drainage pressure does move here — it becomes less
+      // negative, because the pump is moving less blood — and a card that called that "quiet" would
+      // contradict the console beside it, in a section that just widened its own speed step so a
+      // one-millimetre drainage change would be countable.
+      'The drainage side does not become more negative',
       'Compare the gradient at similar flow',
       'The pressures carry the localization',
     ],
@@ -349,7 +367,9 @@ export function ecmoWalkStopSceneLabelIds(
 export function ecmoWalkStopTextEquivalent(
   stop: EcmoCircuitWalkStop,
   supportMode: SupportMode,
+  options: { readonly readingsVisible?: boolean } = {},
 ): string {
+  const readingsVisible = options.readingsVisible ?? true
   const places = ecmoWalkStopSegmentIds(stop)
     .map((segmentId) => resolveEcmoModeText(ecmoCircuitSegment(segmentId).label, supportMode))
     .join(', ')
@@ -364,7 +384,17 @@ export function ecmoWalkStopTextEquivalent(
       .join('; ')}.`,
   ]
 
-  if (stop.sensorSiteIds.length > 0) {
+  if (!readingsVisible) {
+    /*
+     * The gate the card applies, applied here too.
+     *
+     * This sentence used to render unconditionally while the card's own "Reported here" line was
+     * correctly withheld — so the accessible copy, the affordance built for the learner who cannot
+     * read the picture, was the one handing out the answer. A text equivalent describes what is on
+     * screen; when the names are not on screen, it says so.
+     */
+    sentences.push('The readings taken here are named once you have committed your prediction.')
+  } else if (stop.sensorSiteIds.length > 0) {
     const sites = stop.sensorSiteIds
       .map((siteId) => {
         const site = ecmoSensorSite(siteId)

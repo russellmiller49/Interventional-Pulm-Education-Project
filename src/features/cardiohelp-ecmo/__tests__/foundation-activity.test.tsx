@@ -736,14 +736,58 @@ describe('the circuit walk, driven the way a learner drives it', () => {
    */
   it('withholds the reading names until the phase whose instruction is to find them', () => {
     mount('circuit-flow-path')
+    // Asserted on the card's whole text, not on the two blocks that carry the names.
+    // The first version of this checked `[data-walk-reported-here]` and `[data-walk-live-signals]`
+    // were absent — and passed while the card's own text equivalent printed "Reported here: …"
+    // four lines below them. The accessible copy was the surface leaking the answer.
+    expect(walkCard().textContent).not.toMatch(/Reported here/i)
+    expect(walkCard().textContent).not.toMatch(/\bpVen\b/)
     expect(walkCard().querySelector('[data-walk-reported-here]')).toBeNull()
     expect(walkCard().querySelector('[data-walk-live-signals]')).toBeNull()
+    // The map does not label them either: ringing exactly the channel the prediction asks a learner
+    // to place would be a sharper pointer than the seven this map flagged before the walk existed.
+    expect(walkCard().querySelectorAll('[data-map-sensor-site]')).toHaveLength(0)
     cleanup()
 
     mount('circuit-flow-path')
     fireEvent.click(screen.getByRole('button', { name: 'act' }))
     expect(walkCard().querySelector('[data-walk-reported-here]')?.textContent).toMatch(
       /drainage pressure \(pVen\)/,
+    )
+    expect(walkCard().querySelectorAll('[data-map-sensor-site]').length).toBeGreaterThan(0)
+  })
+
+  /*
+   * The stop whose conclusion is its own section's keyed answer.
+   *
+   * `pump-and-pressure-zones` opens on stop five, so this card is what sits beside the prediction
+   * however the learner arrives. Its takeaway is both halves of the keyed choice — flow follows
+   * speed, and it is bought with suction — and it shipped ungated.
+   */
+  it('withholds a stop conclusion that would answer its own section', () => {
+    mount('pump-and-pressure-zones')
+    fireEvent.click(screen.getByRole('button', { name: 'predict' }))
+    expect(walkCard().getAttribute('data-walk-stop')).toBe('walk-pump-under-load')
+
+    // The question is on screen...
+    expect(document.body.textContent).toMatch(/pump speed is about to be raised/i)
+    // ...and the answer is not.
+    expect(walkCard().querySelector('[data-walk-takeaway]')).toBeNull()
+    expect(walkCard().textContent).not.toMatch(/bought with suction/i)
+    expect(walkCard().textContent).not.toMatch(/more negative/i)
+    expect(walkCard().textContent).not.toMatch(/pulls harder|pulling harder/i)
+
+    fireEvent.click(screen.getByRole('button', { name: 'act' }))
+    expect(walkCard().querySelector('[data-walk-takeaway]')?.textContent).toMatch(
+      /bought with suction/i,
+    )
+  })
+
+  it('leaves a stop conclusion that answers nothing on screen throughout', () => {
+    mount('circuit-flow-path')
+    // Stop one's conclusion is about what a drainage pressure is for, which no item asks.
+    expect(walkCard().querySelector('[data-walk-takeaway]')?.textContent).toMatch(
+      /what is available to drain/i,
     )
   })
 

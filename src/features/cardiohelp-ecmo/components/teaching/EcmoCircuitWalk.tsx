@@ -66,14 +66,18 @@ export interface EcmoCircuitWalkProps {
    */
   readonly walkLength: number
   /**
-   * Whether the readings this stop is about may be named yet.
+   * Whether the learner has moved past the phase in which this section takes its prediction.
    *
-   * The flow-path section asks the learner to place a named channel before showing them where it is
-   * taken, so the names stay withheld until the phase whose own instruction is to find them. The
-   * map still flags the stop's locations — it flagged every location in every phase before this
-   * package, so narrowing them is a reduction — but the card does not put the names beside them.
+   * One predicate, several consequences, because they all answer the same question: may this card
+   * say a thing the pane next door is about to ask for? Before it, the card withholds the names of
+   * the readings it is about — including in its own text equivalent and on its map — and withholds
+   * any takeaway a stop declares as an answer. After it, the card is teaching rather than testing
+   * and says everything.
+   *
+   * The flow-path section's own `act` instruction is to find these channels on the map, which is
+   * exactly where this turns true.
    */
-  readonly sensorNamesVisible: boolean
+  readonly pastPrediction: boolean
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
   /** Which beat produced the state on screen, so the card can say which one is being read. */
   readonly activeComparisonId?: string | null
@@ -85,7 +89,7 @@ export function EcmoCircuitWalk({
   onStopChange,
   state,
   walkLength,
-  sensorNamesVisible,
+  pastPrediction,
   onRunComparison,
   activeComparisonId = null,
 }: EcmoCircuitWalkProps) {
@@ -119,7 +123,8 @@ export function EcmoCircuitWalk({
   const title = resolveEcmoModeText(stop.title, supportMode)
   const places = ecmoWalkStopSegmentIds(stop)
   const sceneLabels = ecmoWalkStopSceneLabelIds(stop, supportMode)
-  const readableSites = stop.sensorSiteIds.filter(isReadableSite)
+  const readableSites = pastPrediction ? stop.sensorSiteIds.filter(isReadableSite) : []
+  const takeawayVisible = pastPrediction || (stop.takeawayVisibility ?? 'always') === 'always'
 
   return (
     <section
@@ -160,7 +165,11 @@ export function EcmoCircuitWalk({
           kind: 'foundation-walk-stop',
           stopId: stop.id,
           segmentIds: places,
-          sensorSiteIds: stop.sensorSiteIds,
+          // The map marks where the learner is standing either way; it names the readings only
+          // once naming them cannot answer anything. Ringing and labelling exactly the channel a
+          // prediction asks a learner to place is a sharper pointer than the seven this map used to
+          // flag in every phase, so narrowing without gating would have made it worse, not better.
+          sensorSiteIds: pastPrediction ? stop.sensorSiteIds : [],
         })}
       />
 
@@ -178,7 +187,7 @@ export function EcmoCircuitWalk({
         {sceneLabels.map((id) => ecmoSceneLabelName(id, supportMode)).join(' · ')}.
       </p>
 
-      {readableSites.length > 0 && sensorNamesVisible ? (
+      {readableSites.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-4" data-walk-live-signals>
           {readableSites.map((siteId) => {
             const site = ecmoSensorSite(siteId)
@@ -195,7 +204,7 @@ export function EcmoCircuitWalk({
         </div>
       ) : null}
 
-      {sensorNamesVisible && stop.sensorSiteIds.length > 0 ? (
+      {pastPrediction && stop.sensorSiteIds.length > 0 ? (
         <p className="mt-2 text-xs leading-5" data-walk-reported-here>
           Reported here:{' '}
           {stop.sensorSiteIds
@@ -236,11 +245,15 @@ export function EcmoCircuitWalk({
         everything they are standing here to look at — and out of the text equivalent, which
         describes what is on screen rather than what to conclude from it.
       */}
-      <p className="mt-4 text-sm font-medium leading-6" data-walk-takeaway>
-        {resolveEcmoModeText(stop.takeaway, supportMode)}
-      </p>
+      {takeawayVisible ? (
+        <p className="mt-4 text-sm font-medium leading-6" data-walk-takeaway>
+          {resolveEcmoModeText(stop.takeaway, supportMode)}
+        </p>
+      ) : null}
 
-      <TextEquivalent>{ecmoWalkStopTextEquivalent(stop, supportMode)}</TextEquivalent>
+      <TextEquivalent>
+        {ecmoWalkStopTextEquivalent(stop, supportMode, { readingsVisible: pastPrediction })}
+      </TextEquivalent>
 
       <ModelBoundary>{resolveEcmoModeText(stop.modelBoundary, supportMode)}</ModelBoundary>
 

@@ -31,13 +31,12 @@ export interface EcmoWalkPanelProps {
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
   readonly activeComparisonId?: string | null
   /**
-   * Whether the readings a stop is about may be named yet.
+   * Whether the learner has moved past the phase in which the section takes its prediction.
    *
-   * Defaults to true, because most callers are not asking a learner to place a channel. The
-   * flow-path activity passes false until the phase whose own instruction is to find the channels
-   * on the map, so a stop cannot answer the question the pane next door is asking.
+   * Defaults to true, because most callers — a test reading finished copy, the offline harness —
+   * are not asking a learner to predict anything. The activity passes the real predicate.
    */
-  readonly sensorNamesVisible?: boolean
+  readonly pastPrediction?: boolean
 }
 
 export interface EcmoCircuitWalkNavigation {
@@ -45,7 +44,7 @@ export interface EcmoCircuitWalkNavigation {
   readonly activeStopId: EcmoCircuitWalkStopId
   readonly onStopChange: (id: EcmoCircuitWalkStopId) => void
   readonly walkLength: number
-  readonly sensorNamesVisible: boolean
+  readonly pastPrediction: boolean
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
   readonly activeComparisonId?: string | null
 }
@@ -80,7 +79,7 @@ export function useEcmoCircuitWalkNavigation(
     // The whole walk, not this section's share of it, so "stop five of six" tells a learner
     // arriving at the second section that they are near the end rather than starting again.
     walkLength: ecmoCircuitWalkStops.length,
-    sensorNamesVisible: walk?.sensorNamesVisible ?? true,
+    pastPrediction: walk?.pastPrediction ?? true,
     onRunComparison: walk?.onRunComparison,
     activeComparisonId: walk?.activeComparisonId ?? null,
   }
