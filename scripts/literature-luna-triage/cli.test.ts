@@ -3,12 +3,16 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { canonicalJson } from '../literature-production-ingest/canonical'
-import { runLunaTriageCli } from './cli'
-import { syntheticCorpusRecord, syntheticResponseBody, syntheticStageAOutput } from './fixtures'
+import { LUNA_CLI_COMMANDS, WITHHELD_COMMANDS, WithheldCommandError, runLunaTriageCli } from './cli'
+import {
+  syntheticCorpusRecord,
+  syntheticPmid,
+  syntheticResponseBody,
+  syntheticStageAOutput,
+} from './fixtures'
 import { appendJsonlRows, createOperation, operationPaths } from './operation'
 import { buildPacket, type OperationSalt } from './packet'
-import { exclusiveWriteFile, resolveStateRoot } from './state'
+import { ensureStateDirectory, exclusiveWriteFile, resolveStateRoot } from './state'
 
 /**
  * An end-to-end pass over the offline pipeline: a synthetic pilot operation goes through
@@ -216,7 +220,7 @@ describe('offline pipeline end to end', () => {
  * `--confirm-api-spend` check with a locked-sanity operation, i.e. nothing about the cohort
  * had been consulted at all.
  */
-describe('generic commands refuse the locked cohort', () => {
+describe('every preparation command refuses the locked cohort', () => {
   async function lockedOperation(operationId: string) {
     const state = await resolveStateRoot(stateDir)
     const paths = await createOperation(state, operationId, 'locked-sanity-200', 'test', 'now')
@@ -243,101 +247,117 @@ describe('generic commands refuse the locked cohort', () => {
     return { state, paths }
   }
 
-  it.each([
-    ['run-sync', ['run-sync', '--max-records', '10', '--max-estimated-cost-usd', '10']],
-    ['batch-prepare', ['batch-prepare']],
-    ['batch-submit', ['batch-submit', '--shard', 'shard-0000-000000000000.jsonl']],
-  ])('refuses a locked-sanity operation on %s', async (label, command) => {
-    await lockedOperation(`op-locked-${label}`)
+  it.each([['prepare-requests'], ['estimate'], ['batch-prepare']])(
+    'refuses a locked-sanity operation on %s',
+    async (command) => {
+      await lockedOperation(`op-locked-${command}`)
+      await expect(
+        runLunaTriageCli([command, '--state-dir', stateDir, '--operation', `op-locked-${command}`]),
+      ).rejects.toThrow(/locked-sanity-200 cohort/u)
+    },
+  )
+
+  it('refuses to build packets for the locked cohort at all', async () => {
     await expect(
-      runLunaTriageCli([...command, '--state-dir', stateDir, '--operation', `op-locked-${label}`]),
+      runLunaTriageCli([
+        'packets',
+        '--state-dir',
+        stateDir,
+        '--cohort',
+        'locked-sanity-200',
+        '--operation',
+        'op-packets-locked',
+      ]),
     ).rejects.toThrow(/locked-sanity-200 cohort/u)
+    // The refusal fires before any operation directory exists.
+    const state = await resolveStateRoot(stateDir)
+    await expect(readdir(operationPaths(state, 'op-packets-locked').root)).rejects.toThrow()
   })
 
-  it('still runs a non-locked cohort through the same command up to the spend gate', async () => {
+  it('still runs a non-locked cohort through the same command', async () => {
     const state = await resolveStateRoot(stateDir)
     const paths = await createOperation(state, 'op-dev', 'development-430', 'test', 'now')
     const built = buildPacket(SALT, syntheticCorpusRecord('900000305'))
     await appendJsonlRows(paths.packetsJsonl, [built.packet])
     await appendJsonlRows(paths.mappingJsonl, [built.mapping])
-    await appendJsonlRows(paths.requestsJsonl, [
-      { customId: built.mapping.recordId, bodySha256: 'a'.repeat(64), body: {} },
-    ])
-    // Not a locked refusal: the command proceeds past the cohort gate and stops later, on
-    // this fixture's deliberately stale stored request digest.
-    await expect(
-      runLunaTriageCli(['run-sync', '--state-dir', stateDir, '--operation', 'op-dev']),
-    ).rejects.toThrow(/prepared surface drifted/u)
+    await runLunaTriageCli(['estimate', '--state-dir', stateDir, '--operation', 'op-dev'])
+    const report = JSON.parse(printed.join('')) as {
+      command: string
+      estimate: { records: number }
+    }
+    expect(report.command).toBe('estimate')
+    expect(report.estimate.records).toBe(1)
   })
 })
 
 /**
- * Batch status and fetch derive their Batch id from a validated local submission receipt. An
- * arbitrary id supplied on the command line has no receipt, and therefore no authority.
+ * The withheld commands are the whole point of this release's narrowing. Each must refuse by
+ * name, with its reason, before anything at all happens — no flag parsing, no state
+ * directory, no file read, and certainly no transport.
  */
-describe('receipt-bound Batch identifiers', () => {
-  it('refuses a status or fetch for a Batch this operation never submitted', async () => {
+describe('withheld remote-execution and qualification commands', () => {
+  const WITHHELD = [
+    'run-sync',
+    'run-locked',
+    'batch-submit',
+    'batch-status',
+    'batch-fetch',
+    'qualify',
+    'freeze',
+  ]
+
+  it.each(WITHHELD)('refuses %s as withheld', async (command) => {
+    await expect(runLunaTriageCli([command])).rejects.toThrow(WithheldCommandError)
+    await expect(runLunaTriageCli([command])).rejects.toThrow(/withheld in this release/u)
+  })
+
+  it('refuses a withheld command before it can touch the state directory', async () => {
     const state = await resolveStateRoot(stateDir)
-    await createOperation(state, 'op-batch', 'pilot-1000', 'test', 'now')
-    for (const command of ['batch-status', 'batch-fetch']) {
+    await createOperation(state, 'op-withheld', 'pilot-1000', 'test', 'now')
+    for (const command of WITHHELD) {
       await expect(
         runLunaTriageCli([
           command,
           '--state-dir',
           stateDir,
           '--operation',
-          'op-batch',
-          '--batch-id',
-          'batch_never_submitted',
+          'op-withheld',
           '--max-records',
           '1',
           '--max-estimated-cost-usd',
           '1',
         ]),
-      ).rejects.toThrow(/no validated submission receipt/u)
+      ).rejects.toThrow(WithheldCommandError)
     }
-  })
-
-  it('refuses a traversal or otherwise unsafe Batch id before any lookup', async () => {
-    const state = await resolveStateRoot(stateDir)
-    await createOperation(state, 'op-batch2', 'pilot-1000', 'test', 'now')
-    for (const batchId of ['../../escape', '/etc/passwd', 'batch%2Fescape', 'batch id']) {
-      await expect(
-        runLunaTriageCli([
-          'batch-fetch',
-          '--state-dir',
-          stateDir,
-          '--operation',
-          'op-batch2',
-          '--batch-id',
-          batchId,
-          '--max-records',
-          '1',
-          '--max-estimated-cost-usd',
-          '1',
-        ]),
-      ).rejects.toThrow()
-    }
-    // No artifact was created for any refused id.
-    const paths = operationPaths(state, 'op-batch2')
+    // Nothing was written anywhere in the operation as a side effect of the refusals.
+    const paths = operationPaths(state, 'op-withheld')
     expect(await readdir(paths.batchRawDir)).toHaveLength(0)
-    expect(await readdir(paths.batchReceiptsDir)).toHaveLength(0)
+    expect(await readdir(paths.batchShardsDir)).toHaveLength(0)
+    expect(await readdir(paths.rawResponsesDir)).toHaveLength(0)
   })
-})
 
-describe('locked-run marker discipline', () => {
-  it('refuses a second locked run at the same canonical identity', async () => {
-    const state = await resolveStateRoot(stateDir)
-    const markerDir = join(state.root, 'freeze', 'locked-runs')
-    await expect(readdir(markerDir)).rejects.toThrow()
-    await exclusiveWriteFile(join(state.root, 'corpus-identity.json'), canonicalJson({}))
-    // The marker path is create-once, and its name is the locked-run identity digest, so a
-    // relocated receipt cannot land anywhere else.
-    const { mkdir } = await import('node:fs/promises')
-    await mkdir(markerDir, { recursive: true, mode: 0o700 })
-    const marker = join(markerDir, `${'a'.repeat(64)}.marker.json`)
-    await exclusiveWriteFile(marker, '{}\n')
-    await expect(exclusiveWriteFile(marker, '{}\n')).rejects.toThrow(/not overwritten/u)
+  it('names every withheld command in the usage help for an unknown command', async () => {
+    await expect(runLunaTriageCli(['no-such-command'])).rejects.toThrow(/Withheld in this release/u)
+  })
+
+  it('exposes exactly the offline command inventory', () => {
+    expect(LUNA_CLI_COMMANDS).toEqual([
+      'audit-sample',
+      'batch-prepare',
+      'estimate',
+      'evaluate',
+      'ingest',
+      'inventory',
+      'packets',
+      'prepare-requests',
+      'review-app',
+      'review-queue',
+      'route',
+      'split',
+    ])
+    for (const command of Object.keys(WITHHELD_COMMANDS)) {
+      expect(LUNA_CLI_COMMANDS).not.toContain(command)
+    }
   })
 })
 
@@ -345,5 +365,212 @@ describe('operation paths guardrail', () => {
   it('never resolves an operation outside the state root', async () => {
     const state = await resolveStateRoot(stateDir)
     expect(() => operationPaths(state, '..')).toThrow()
+  })
+})
+
+/**
+ * Label versus fact.
+ *
+ * A cohort label is a claim the operation makes about itself. The membership refusal is the
+ * one that matters: an operation calling itself `development-430` while carrying a locked
+ * identity must be refused by every preparation command, and the refusal must land before any
+ * request bytes, shard, or estimate exists for it.
+ */
+describe('preparation refuses actual locked membership, not merely the label', () => {
+  async function seedSplit(state: Awaited<ReturnType<typeof resolveStateRoot>>) {
+    const lockedSanity = Array.from({ length: 200 }, (_unused, index) => syntheticPmid(index + 1))
+    const development = Array.from({ length: 430 }, (_unused, index) => syntheticPmid(index + 1000))
+    await ensureStateDirectory(state, 'split')
+    await exclusiveWriteFile(
+      join(state.root, 'split', 'locked-sanity-pmids.json'),
+      `${JSON.stringify(lockedSanity)}\n`,
+    )
+    await exclusiveWriteFile(
+      join(state.root, 'split', 'development-pmids.json'),
+      `${JSON.stringify(development)}\n`,
+    )
+    await exclusiveWriteFile(
+      join(state.root, 'split', 'split-manifest.json'),
+      `${JSON.stringify({ lockedSanityCount: 200, developmentCount: 430 })}\n`,
+    )
+    return { lockedSanity, development }
+  }
+
+  async function relabelledOperation(operationId: string, pmids: readonly string[]) {
+    const state = await resolveStateRoot(stateDir)
+    const paths = await createOperation(state, operationId, 'development-430', 'test', 'now')
+    const built = pmids.map((pmid) => buildPacket(SALT, syntheticCorpusRecord(pmid)))
+    await appendJsonlRows(
+      paths.packetsJsonl,
+      built.map((item) => item.packet),
+    )
+    await appendJsonlRows(
+      paths.mappingJsonl,
+      built.map((item) => item.mapping),
+    )
+    return { state, paths }
+  }
+
+  it.each([['prepare-requests'], ['estimate'], ['batch-prepare']])(
+    '%s refuses a relabelled operation holding one locked identity',
+    async (command) => {
+      const state = await resolveStateRoot(stateDir)
+      const { lockedSanity, development } = await seedSplit(state)
+      const operationId = `op-smuggled-${command}`
+      await relabelledOperation(operationId, [development[0], lockedSanity[7]])
+      await expect(
+        runLunaTriageCli([command, '--state-dir', stateDir, '--operation', operationId]),
+      ).rejects.toThrow(/locked-sanity\s+members/u)
+      // Nothing was prepared: no requests journal, no shard, no manifest.
+      const paths = operationPaths(state, operationId)
+      await expect(readFile(paths.requestManifestJson, 'utf8')).rejects.toThrow()
+      expect(await readdir(paths.batchShardsDir)).toHaveLength(0)
+    },
+  )
+
+  it('refuses to answer membership from a truncated locked set rather than passing everything', async () => {
+    const state = await resolveStateRoot(stateDir)
+    await ensureStateDirectory(state, 'split')
+    await exclusiveWriteFile(
+      join(state.root, 'split', 'locked-sanity-pmids.json'),
+      `${JSON.stringify([syntheticPmid(1)])}\n`,
+    )
+    await exclusiveWriteFile(join(state.root, 'split', 'development-pmids.json'), '[]\n')
+    await exclusiveWriteFile(join(state.root, 'split', 'split-manifest.json'), '{}\n')
+    await relabelledOperation('op-truncated', [syntheticPmid(5000)])
+    await expect(
+      runLunaTriageCli([
+        'prepare-requests',
+        '--state-dir',
+        stateDir,
+        '--operation',
+        'op-truncated',
+      ]),
+    ).rejects.toThrow(/not 200/u)
+  })
+
+  it('lets the same command through once no locked identity is present', async () => {
+    const state = await resolveStateRoot(stateDir)
+    await seedSplit(state)
+    await relabelledOperation('op-clean', [syntheticPmid(5001), syntheticPmid(5002)])
+    await runLunaTriageCli(['prepare-requests', '--state-dir', stateDir, '--operation', 'op-clean'])
+    const manifest = JSON.parse(
+      await readFile(operationPaths(state, 'op-clean').requestManifestJson, 'utf8'),
+    ) as { requestCount: number }
+    expect(manifest.requestCount).toBe(2)
+  })
+})
+
+/**
+ * Preparation must be reproducible end to end, not merely inside a unit test: two independent
+ * state directories, the same packets, the same prepared bytes and the same plan digest.
+ */
+describe('offline preparation is deterministic through the CLI', () => {
+  async function prepareIn(directory: string, operationId: string) {
+    const state = await resolveStateRoot(directory)
+    const paths = await createOperation(state, operationId, 'pilot-1000', 'test', 'now')
+    const built = [5101, 5102, 5103].map((index) =>
+      buildPacket(SALT, syntheticCorpusRecord(syntheticPmid(index), { title: `Article ${index}` })),
+    )
+    await appendJsonlRows(
+      paths.packetsJsonl,
+      built.map((item) => item.packet),
+    )
+    await appendJsonlRows(
+      paths.mappingJsonl,
+      built.map((item) => item.mapping),
+    )
+    await runLunaTriageCli([
+      'prepare-requests',
+      '--state-dir',
+      directory,
+      '--operation',
+      operationId,
+    ])
+    await runLunaTriageCli(['batch-prepare', '--state-dir', directory, '--operation', operationId])
+    const manifest = JSON.parse(await readFile(paths.requestManifestJson, 'utf8')) as Record<
+      string,
+      unknown
+    >
+    const plan = JSON.parse(
+      await readFile(join(paths.batchShardsDir, 'shard-plan.json'), 'utf8'),
+    ) as Record<string, unknown>
+    return { manifest, plan, paths }
+  }
+
+  it('produces identical request and shard digests in two independent state directories', async () => {
+    const first = await prepareIn(join(root, 'lane-a'), 'op-det-a')
+    const second = await prepareIn(join(root, 'lane-b'), 'op-det-b')
+    expect(second.manifest.requestSetSha256).toBe(first.manifest.requestSetSha256)
+    expect(second.plan.planSha256).toBe(first.plan.planSha256)
+    expect(
+      (second.plan.shards as readonly { contentSha256: string }[]).map(
+        (shard) => shard.contentSha256,
+      ),
+    ).toEqual(
+      (first.plan.shards as readonly { contentSha256: string }[]).map(
+        (shard) => shard.contentSha256,
+      ),
+    )
+  })
+
+  it('reconciles the recorded estimate back to the prepared bytes', async () => {
+    const { manifest, plan } = await prepareIn(join(root, 'lane-c'), 'op-det-c')
+    expect(manifest.reconciledInputTokens).toBe(manifest.totalEstimatedInputTokens)
+    expect(manifest.reconciledOutputTokenAllowance).toBe(
+      manifest.totalEstimatedOutputTokenAllowance,
+    )
+    const reconciled = plan.reconciledFromShardBytes as Record<string, number>
+    const estimate = plan.estimate as Record<string, number>
+    expect(reconciled.records).toBe(estimate.records)
+    expect(reconciled.estimatedInputTokens).toBe(estimate.inputTokens)
+    expect(reconciled.estimatedOutputTokenAllowance).toBe(estimate.outputTokenAllowance)
+    expect(plan.submission).toMatch(/withheld/u)
+  })
+})
+
+/**
+ * Evaluation reports numbers. It may not report a verdict — no aggregate pass, no release
+ * flag, nothing a caller could treat as "the model qualified".
+ */
+describe('the evaluation report carries no release verdict', () => {
+  it('emits no qualification-shaped key anywhere in the report', async () => {
+    const state = await resolveStateRoot(stateDir)
+    const paths = await createOperation(state, 'op-verdict', 'pilot-1000', 'test', 'now')
+    const built = buildPacket(SALT, syntheticCorpusRecord(syntheticPmid(5200)))
+    await appendJsonlRows(paths.packetsJsonl, [built.packet])
+    await appendJsonlRows(paths.mappingJsonl, [built.mapping])
+    await appendJsonlRows(paths.riskFlagsJsonl, [
+      { recordId: built.mapping.recordId, riskFlags: built.riskFlags },
+    ])
+    await exclusiveWriteFile(
+      join(paths.rawResponsesDir, `${built.mapping.recordId}.json`),
+      syntheticResponseBody(
+        syntheticStageAOutput(built.mapping.recordId, 'obvious_irrelevant', 'high', [
+          'clearly_nonpulmonary_domain',
+        ]),
+      ),
+    )
+    await runLunaTriageCli(['ingest', '--state-dir', stateDir, '--operation', 'op-verdict'])
+    await runLunaTriageCli(['route', '--state-dir', stateDir, '--operation', 'op-verdict'])
+    await runLunaTriageCli(['evaluate', '--state-dir', stateDir, '--operation', 'op-verdict'])
+
+    const keys: string[] = []
+    const walk = (value: unknown): void => {
+      if (!value || typeof value !== 'object') return
+      if (Array.isArray(value)) {
+        value.forEach(walk)
+        return
+      }
+      for (const [key, child] of Object.entries(value)) {
+        keys.push(key)
+        walk(child)
+      }
+    }
+    walk(JSON.parse(await readFile(paths.evaluationReportJson, 'utf8')))
+    expect(keys.length).toBeGreaterThan(0)
+    for (const key of keys) {
+      expect(key).not.toMatch(/qualif|verdict|approv|released?$/iu)
+    }
   })
 })

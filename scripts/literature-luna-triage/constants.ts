@@ -64,10 +64,11 @@ export const LUNA_CALIBRATION_COHORTS: readonly LunaCohort[] = [
 /** State layout. All real artifacts live below this gitignored root. */
 export const LUNA_DEFAULT_STATE_DIRECTORY = 'local-data/literature-luna-triage'
 
-/** Model + API defaults. The runner never calls any endpoint other than this base. */
+/**
+ * Model defaults for offline request preparation. No base URL and no credential name are
+ * declared anywhere in this lane: it prepares request bytes and never sends them.
+ */
 export const LUNA_DEFAULT_MODEL = 'gpt-5.6-luna'
-export const LUNA_OPENAI_BASE_URL = 'https://api.openai.com/v1'
-export const LUNA_OPENAI_API_KEY_ENV_NAME = 'OPENAI_API_KEY'
 export const LUNA_REASONING_EFFORTS = ['minimal', 'low', 'medium', 'high'] as const
 export type LunaReasoningEffort = (typeof LUNA_REASONING_EFFORTS)[number]
 export const LUNA_DEFAULT_REASONING_EFFORT: LunaReasoningEffort = 'low'
@@ -77,8 +78,9 @@ export const LUNA_OUTPUT_SCHEMA_NAME = 'stage_a_triage'
 export const LUNA_MAX_OUTPUT_TOKENS = 2_048
 
 /**
- * Cost estimation. The prices are assumptions recorded for ceiling enforcement, not billing
- * truth; every spend still requires an explicit owner-confirmed ceiling at the CLI.
+ * Cost estimation. The prices are assumptions recorded for planning and ceiling enforcement,
+ * not billing truth. No spend can occur from this lane; the estimate exists so a future,
+ * separately authorized adapter can be reviewed against a number computed here in advance.
  */
 export const LUNA_COST_ESTIMATOR_VERSION = 'literature-luna-cost-estimator/1.0.0'
 export const LUNA_ASSUMED_PRICING = {
@@ -102,17 +104,12 @@ export const LUNA_REASONING_OUTPUT_TOKEN_ALLOWANCE: Readonly<Record<LunaReasonin
 /** Batch sharding ceilings (defaults; the CLI can lower but not remove them). */
 export const LUNA_BATCH_MAX_RECORDS_PER_SHARD = 5_000
 export const LUNA_BATCH_MAX_ESTIMATED_TOKENS_PER_SHARD = 6_000_000
+/** The relative request path written into each prepared Batch line. Not a host. */
 export const LUNA_BATCH_ENDPOINT = '/v1/responses'
-export const LUNA_BATCH_COMPLETION_WINDOW = '24h'
 
-/** Evaluation and gate identities. */
+/** Evaluation identity. Evaluation is descriptive; this lane declares no qualification. */
 export const LUNA_EVALUATION_VERSION = 'literature-luna-evaluation/1.0.0'
-export const LUNA_QUALIFICATION_VERSION = 'literature-luna-qualification/1.0.0'
-export const LUNA_MINIMUM_EXCLUDE_YIELD = 0.4
 export const LUNA_SUBGROUP_SUPPRESSION_MINIMUM = 20
-
-/** Freeze receipts. */
-export const LUNA_FREEZE_RECEIPT_VERSION = 'literature-luna-freeze-receipt/1.0.0'
 
 /** Review artifacts. */
 export const LUNA_REVIEW_ARTIFACT_VERSION = 'literature-luna-review/1.0.0'

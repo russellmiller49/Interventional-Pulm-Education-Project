@@ -3,7 +3,7 @@ import type { UniversalPacket } from '../../src/features/literature/classifier/p
 import { sha256 } from '../literature-production-ingest/canonical'
 import { serializeBatchLine } from './batch'
 import { estimateRequestTokens } from './estimate'
-import { buildStageARequestBody, requestBodyText } from './openai'
+import { buildStageARequestBody, requestBodyText } from './request'
 import { loadStageAPrompt } from './prompt'
 import { ReconciliationError, reconcileRequestBodyText, reconcileShardContent } from './reconcile'
 

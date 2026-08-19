@@ -4,6 +4,7 @@ import {
   type StageAConfidenceBand,
   type StageATerminalState,
 } from '../../src/features/literature/classifier/stage-a-contract'
+import { canonicalJson, sha256 } from '../literature-production-ingest/canonical'
 import type { OverlayRelevance } from '../literature-reviewed-overlay/constants'
 import { LUNA_EVALUATION_VERSION, LUNA_SUBGROUP_SUPPRESSION_MINIMUM } from './constants'
 import type { RoutedRecord } from './routing'
@@ -17,7 +18,12 @@ import type { TerminalAssignment } from './results'
  * suppression minimum report support only, and the reconciliation identities are asserted
  * arithmetically — not merely by construction. A relevant article predicted
  * `insufficient_evidence` is an abstention, not a false exclusion; a relevant article routed
- * into the deprioritization pool is the failure the gate exists to catch.
+ * into the deprioritization pool is the failure this report exists to surface.
+ *
+ * The report is **descriptive only**. It carries no pass/fail verdict, no aggregate boolean,
+ * and no release decision: deciding that a model has qualified is the job of the locked
+ * coordinator, which is not part of this PR. Reading a verdict out of these numbers is a
+ * human act performed against the physician-truth cohort, not something this module claims.
  */
 
 export interface EvaluationDenominators {
@@ -515,4 +521,12 @@ export function buildEvaluationReport(inputs: EvaluationInputs): EvaluationRepor
     byEvidenceProfile,
     byConfidenceBand,
   }
+}
+
+/**
+ * The canonical digest of one evaluation report. A receipt written beside a report records
+ * this digest, so a report edited after the fact no longer matches its own receipt.
+ */
+export function evaluationReportSha256(report: EvaluationReport): string {
+  return sha256(canonicalJson(report))
 }

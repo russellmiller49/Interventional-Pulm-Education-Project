@@ -57,10 +57,8 @@ export interface OperationPaths {
   readonly reviewExportsDir: string
   readonly evaluationReportJson: string
   readonly evaluationReceiptJson: string
-  readonly qualificationReportJson: string
   readonly auditSampleJson: string
   readonly batchShardsDir: string
-  readonly batchReceiptsDir: string
   readonly batchRawDir: string
 }
 
@@ -94,10 +92,8 @@ export function operationPaths(state: StateRoot, operationId: string): Operation
     reviewExportsDir: join(root, 'review', 'exports'),
     evaluationReportJson: join(root, 'evaluation', 'evaluation-report.json'),
     evaluationReceiptJson: join(root, 'evaluation', 'evaluation-receipt.json'),
-    qualificationReportJson: join(root, 'qualification', 'qualification-report.json'),
     auditSampleJson: join(root, 'audit', 'audit-sample.json'),
     batchShardsDir: join(root, 'batch', 'shards'),
-    batchReceiptsDir: join(root, 'batch', 'receipts'),
     batchRawDir: join(root, 'batch', 'raw'),
   }
 }
@@ -128,10 +124,8 @@ export async function createOperation(
     ['review', 'decisions'],
     ['review', 'exports'],
     ['evaluation'],
-    ['qualification'],
     ['audit'],
     ['batch', 'shards'],
-    ['batch', 'receipts'],
     ['batch', 'raw'],
   ] as const) {
     await ensureStateDirectory(state, 'ops', operationId, ...child)

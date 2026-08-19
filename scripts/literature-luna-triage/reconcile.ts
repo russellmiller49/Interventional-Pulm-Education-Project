@@ -9,18 +9,17 @@ import {
 import { estimateCohortCost, estimateRequestTokens } from './estimate'
 
 /**
- * Byte-level reconciliation of what will actually be sent.
+ * Byte-level reconciliation of what was actually prepared.
  *
- * Every count that gates a spend — records, input tokens, output tokens, total tokens, cost,
- * content hashes — is recomputed here from the immutable request or shard bytes themselves,
- * never read from plan metadata that travelled alongside them. The recomputation reproduces
- * `estimateRequestTokens` exactly because it recovers the same three inputs (instructions,
- * packet JSON, reasoning effort) out of the serialized body, so an authorization minted from
- * a plan and a reconciliation performed on the wire bytes are directly comparable.
+ * Every count a future spend would be measured against — records, input tokens, output
+ * tokens, total tokens, cost, content hashes — is recomputed here from the immutable request
+ * or shard bytes themselves, never read from plan metadata that travelled alongside them. The
+ * recomputation reproduces `estimateRequestTokens` exactly because it recovers the same three
+ * inputs (instructions, packet JSON, reasoning effort) out of the serialized body.
  *
- * A shard that says one record but carries two, a plan that undercounts tokens, and a body
- * edited after the owner confirmed the spend all fail an exact-equality check here — before
- * the capability exists, and again before the socket opens.
+ * A shard that says one record but carries two, and a plan that undercounts tokens, both fail
+ * an exact-equality check here. In this PR that check runs at preparation time, which is the
+ * only time there is: nothing in the lane sends anything.
  */
 
 export class ReconciliationError extends Error {
@@ -31,7 +30,7 @@ export class ReconciliationError extends Error {
 }
 
 function refuse(message: string): never {
-  throw new ReconciliationError(`${message} Nothing was sent.`)
+  throw new ReconciliationError(`${message} The prepared artifact is refused.`)
 }
 
 export interface RequestReconciliation {

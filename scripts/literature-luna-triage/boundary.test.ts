@@ -6,9 +6,12 @@ import { LUNA_REVIEW_APP_HOST } from './constants'
 import { corpusReadSql } from './corpus'
 
 /**
- * Source-boundary assertions for the whole lane: the SQL surface, the network surface, the
- * credential surface, and the membership-language surface are each pinned here so a future
- * edit that widens any of them fails this suite before it reaches review.
+ * Source-boundary assertions for the whole lane: the SQL surface, the (now empty) network
+ * surface, the credential surface, and the membership-language surface are each pinned here
+ * so a future edit that widens any of them fails this suite before it reaches review.
+ *
+ * `offline-surface.test.ts` carries the complementary proof — the transitive import closure
+ * and the closed CLI inventory. This file stays focused on what a single source file may say.
  */
 
 const PACKAGE_DIR = resolve(process.cwd(), 'scripts', 'literature-luna-triage')
@@ -85,12 +88,13 @@ describe('the one SQL surface', () => {
   })
 })
 
-describe('the one network surface', () => {
-  const nonTestSources = sourceFiles(PACKAGE_DIR, false)
+describe('the absent network surface', () => {
+  // Executable source only. Prose is allowed to *name* what the code may not contain: the
+  // README explains that there is no environment read precisely because there is none.
+  const nonTestSources = sourceFiles(PACKAGE_DIR, false).filter((path) => path.endsWith('.ts'))
 
-  it('confines fetch to openai.ts, except same-origin browser calls in the review page', () => {
+  it('confines fetch to the review page, and only to same-origin /api paths', () => {
     for (const path of nonTestSources) {
-      if (path.endsWith('openai.ts')) continue
       const source = read(path)
       if (path.endsWith('review-page.ts')) {
         // The embedded client may call only relative same-origin /api paths.
@@ -107,22 +111,23 @@ describe('the one network surface', () => {
     }
   })
 
-  it('confines process.env to openai.ts', () => {
+  it('reads no process environment anywhere in the lane', () => {
     for (const path of nonTestSources) {
-      if (path.endsWith('openai.ts')) continue
-      expect(read(path).includes('process.env')).toBe(false)
+      expect({ path, readsEnv: read(path).includes('process.env') }).toEqual({
+        path,
+        readsEnv: false,
+      })
     }
   })
 
-  it('allows only the OpenAI base URL and loopback origins', () => {
+  it('allows loopback origins only: no remote host survives in the lane', () => {
     for (const path of nonTestSources) {
       const source = read(path)
       const urls = source.match(/https?:\/\/[^\s'"`)]+/gu) ?? []
       for (const url of urls) {
-        // The OpenAI base, plus the loopback origins the review app compares `Origin`
-        // against. Nothing else — no CDN, no telemetry host, no database endpoint.
+        // Only the loopback origins the review app compares `Origin` against. No model API,
+        // no CDN, no telemetry host, no database endpoint.
         const allowed =
-          url.startsWith('https://api.openai.com') ||
           url.startsWith('http://127.0.0.1') ||
           url.startsWith('http://localhost') ||
           url.startsWith('http://[::1]')
@@ -180,11 +185,12 @@ describe('coordinator discipline in the lane sources', () => {
     expect(reviewApp.includes("listen(options.port, '0.0.0.0'")).toBe(false)
   })
 
-  it('reads the API key from the environment name only, never argv or files', () => {
-    const openai = read(join(PACKAGE_DIR, 'openai.ts'))
-    expect(openai.includes('LUNA_OPENAI_API_KEY_ENV_NAME')).toBe(true)
+  it('accepts no credential from anywhere: not a flag, not a file, not the environment', () => {
     const cli = read(join(PACKAGE_DIR, 'cli.ts'))
     expect(cli.includes('api-key')).toBe(false)
-    expect(cli.includes('OPENAI_API_KEY')).toBe(false)
+    expect(cli.includes('api_key')).toBe(false)
+    // Assembled at runtime so this assertion never matches itself.
+    expect(cli.includes('OPENAI' + '_API_KEY')).toBe(false)
+    expect(cli.includes('confirm-api-spend')).toBe(false)
   })
 })

@@ -2,23 +2,15 @@
 import type { UniversalPacket } from '../../src/features/literature/classifier/packet-contract'
 import { sha256 } from '../literature-production-ingest/canonical'
 import { estimateCohortCost, estimateRequestTokens } from './estimate'
-import {
-  buildStageARequestBody,
-  mintSpendAuthorization,
-  networkPlanSha256,
-  requiredConfirmationPhrase,
-  type OpenAiKeyProvider,
-} from './openai'
 import { loadStageAPrompt } from './prompt'
 import { reconcileShardContent } from './reconcile'
+import { buildStageARequestBody } from './request'
 import {
   assertPositiveSafeIntegerCeiling,
-  batchSubmitPlan,
   parseBatchOutputJsonl,
   planBatchShards,
   serializeBatchLine,
   shardPlanSummary,
-  submitBatchShard,
 } from './batch'
 
 const PROMPT = loadStageAPrompt().text
@@ -46,18 +38,6 @@ function line(index: number) {
       reasoning: 'low',
       instructions: PROMPT,
     }),
-  }
-}
-
-/** A counting key provider: a refusal must leave it at zero. */
-function countingKeyProvider(): OpenAiKeyProvider & { reads: () => number } {
-  let reads = 0
-  return {
-    readKey: () => {
-      reads += 1
-      return 'sk-synthetic-test-key-value-not-real'
-    },
-    reads: () => reads,
   }
 }
 
@@ -280,154 +260,6 @@ describe('shard ceiling validation', () => {
   })
 })
 
-describe('batch submission through the gated socket', () => {
-  function shardOf(count: number) {
-    const lines = Array.from({ length: count }, (_unused, index) => line(index + 1))
-    const estimates = new Map(
-      lines.map((entry, index) => [
-        entry.customId,
-        estimateRequestTokens(PROMPT, JSON.stringify(packetFor(index + 1)), 'low'),
-      ]),
-    )
-    return planBatchShards(lines, estimates).shards[0]
-  }
-
-  function mintFor(
-    shardContent: string,
-    overrides: { records?: number; tokens?: { input: number; output: number } } = {},
-  ) {
-    const reconciliation = reconcileShardContent(shardContent)
-    const records = overrides.records ?? reconciliation.recordCount
-    const steps = batchSubmitPlan({ operationId: 'op-b', shardContent, reconciliation })
-    const declared = overrides.tokens ?? {
-      input: reconciliation.estimatedInputTokens,
-      output: reconciliation.estimatedOutputTokenAllowance,
-    }
-    const estimate = {
-      ...estimateCohortCost([], { batch: true }),
-      records,
-      inputTokens: declared.input,
-      outputTokenAllowance: declared.output,
-      totalTokenAllowance: declared.input + declared.output,
-      estimatedCostUsd: reconciliation.estimatedCostUsd,
-    }
-    return mintSpendAuthorization({
-      confirmFlagPresent: true,
-      interactiveTty: true,
-      interactivePhrase: requiredConfirmationPhrase('op-b'),
-      envelope: {
-        action: 'batch-submit',
-        operationId: 'op-b',
-        cohort: 'pilot-1000',
-        planSha256: networkPlanSha256(steps),
-        recordCount: records,
-        estimatedInputTokens: declared.input,
-        estimatedOutputTokenAllowance: declared.output,
-        estimatedTotalTokens: declared.input + declared.output,
-        estimatedCostUsd: reconciliation.estimatedCostUsd,
-        maxRecords: 100,
-        maxEstimatedCostUsd: 100,
-        steps,
-        maxNetworkRequests: 2,
-      },
-      estimate,
-      plannedBodies: [shardContent],
-    })
-  }
-
-  it('uploads the shard then creates the batch, returning a receipt', async () => {
-    const shard = shardOf(2)
-    const authorization = mintFor(shard.content)
-    const keyProvider = countingKeyProvider()
-    const calls: string[] = []
-    const receipt = await submitBatchShard({
-      shard,
-      operationId: 'op-b',
-      authorization,
-      submittedAt: '2026-08-17T00:00:00.000Z',
-      keyProvider,
-      fetchImplementation: (async (url: unknown, init?: RequestInit) => {
-        calls.push(`${String(init?.method)} ${String(url)}`)
-        if (String(url).endsWith('/files')) {
-          expect(init?.body).toBeInstanceOf(FormData)
-          return {
-            ok: true,
-            status: 200,
-            text: async () => JSON.stringify({ id: 'file-123' }),
-          } as unknown as Response
-        }
-        const body = JSON.parse(String(init?.body)) as Record<string, unknown>
-        expect(body.input_file_id).toBe('file-123')
-        expect(body.endpoint).toBe('/v1/responses')
-        return {
-          ok: true,
-          status: 200,
-          text: async () =>
-            JSON.stringify({ id: 'batch-456', status: 'validating', input_file_id: 'file-123' }),
-        } as unknown as Response
-      }) as typeof fetch,
-    })
-    expect(calls).toEqual([
-      'POST https://api.openai.com/v1/files',
-      'POST https://api.openai.com/v1/batches',
-    ])
-    expect(receipt.inputFileId).toBe('file-123')
-    expect(receipt.batchId).toBe('batch-456')
-    expect(receipt.recordCount).toBe(2)
-    expect(receipt.shardSha256).toBe(shard.contentSha256)
-    expect(keyProvider.reads()).toBe(2)
-  })
-
-  it('refuses a shard whose metadata undercounts its records, tokens, or cost', () => {
-    const shard = shardOf(2)
-    // Undercounted records: two real requests minted as one.
-    expect(() => mintFor(shard.content, { records: 1 })).toThrow()
-    // Undercounted tokens: the plan claims less than the bytes actually cost.
-    expect(() => mintFor(shard.content, { tokens: { input: 1, output: 1 } })).toThrow()
-  })
-
-  it('refuses a shard that carries a duplicate custom id', () => {
-    const shard = shardOf(1)
-    const duplicated = `${shard.content}${shard.content}`
-    expect(() => reconcileShardContent(duplicated)).toThrow(/repeats a custom id/u)
-  })
-
-  it('refuses shard bytes that changed after authorization, opening zero sockets', async () => {
-    const shard = shardOf(2)
-    const authorization = mintFor(shard.content)
-    const keyProvider = countingKeyProvider()
-    let calls = 0
-    const forbidden = (async () => {
-      calls += 1
-      throw new Error('fetch must never be reached')
-    }) as typeof fetch
-    const tamperedBytes = `${shard.content}${line(9).customId}\n`
-    await expect(
-      submitBatchShard({
-        shard: { ...shard, content: tamperedBytes },
-        operationId: 'op-b',
-        authorization,
-        submittedAt: '2026-08-17T00:00:00.000Z',
-        keyProvider,
-        fetchImplementation: forbidden,
-      }),
-    ).rejects.toThrow()
-    // Same bytes, wrong operation: refused before the socket too.
-    await expect(
-      submitBatchShard({
-        shard,
-        operationId: 'op-other',
-        authorization,
-        submittedAt: '2026-08-17T00:00:00.000Z',
-        keyProvider,
-        fetchImplementation: forbidden,
-      }),
-    ).rejects.toThrow(/different operation/u)
-    expect(calls).toBe(0)
-    expect(keyProvider.reads()).toBe(0)
-  })
-})
-
 /**
  * Every non-empty line must reach a controlled terminal outcome. One unusable line never stops
  * the rest of the file from being accounted, and no line is ever silently dropped.
@@ -479,5 +311,63 @@ describe('controlled Batch output parsing', () => {
     expect(records).toHaveLength(3)
     expect(records[1].bodyText).toContain('batch_error')
     expect(records[2].bodyText).toContain('batch_http_status')
+  })
+})
+
+/**
+ * The offline reconciliation contract: the cohort estimate a shard plan reports must be
+ * recoverable from the shard bytes themselves. Plan metadata never gets to be the authority
+ * for what a prepared shard would cost.
+ */
+describe('prepared shard bytes reconcile to their estimate', () => {
+  function realisticPlan(count: number) {
+    const lines = Array.from({ length: count }, (_unused, index) => line(index + 1))
+    const estimates = new Map(
+      lines.map((entry, index) => [
+        entry.customId,
+        estimateRequestTokens(PROMPT, JSON.stringify(packetFor(index + 1)), 'low'),
+      ]),
+    )
+    return { lines, estimates, plan: planBatchShards(lines, estimates) }
+  }
+
+  it('recovers each shard record count, token totals, and content digest from its bytes', () => {
+    const { plan } = realisticPlan(4)
+    for (const shard of plan.shards) {
+      const reconciliation = reconcileShardContent(shard.content)
+      expect(reconciliation.recordCount).toBe(shard.recordCount)
+      expect(reconciliation.uniqueCustomIdCount).toBe(shard.recordCount)
+      expect(reconciliation.estimatedInputTokens).toBe(shard.estimatedInputTokens)
+      expect(reconciliation.estimatedOutputTokenAllowance).toBe(shard.estimatedOutputTokenAllowance)
+      expect(reconciliation.contentSha256).toBe(shard.contentSha256)
+      expect(reconciliation.contentSha256).toBe(sha256(shard.content))
+    }
+  })
+
+  it('matches the batch cohort estimate to the totals recovered from every shard', () => {
+    const { estimates, plan } = realisticPlan(6)
+    const estimate = estimateCohortCost([...estimates.values()], { batch: true })
+    const fromBytes = plan.shards
+      .map((shard) => reconcileShardContent(shard.content))
+      .reduce(
+        (sum, row) => ({
+          records: sum.records + row.recordCount,
+          inputTokens: sum.inputTokens + row.estimatedInputTokens,
+          outputTokenAllowance: sum.outputTokenAllowance + row.estimatedOutputTokenAllowance,
+        }),
+        { records: 0, inputTokens: 0, outputTokenAllowance: 0 },
+      )
+    expect(fromBytes.records).toBe(estimate.records)
+    expect(fromBytes.inputTokens).toBe(estimate.inputTokens)
+    expect(fromBytes.outputTokenAllowance).toBe(estimate.outputTokenAllowance)
+    expect(estimate.batchDiscountApplied).toBe(true)
+  })
+
+  it('keeps the shard filename bound to the digest of the bytes it names', () => {
+    const { plan } = realisticPlan(3)
+    for (const shard of plan.shards) {
+      expect(shard.filename).toContain(shard.contentSha256.slice(0, 12))
+      expect(shard.filename.endsWith('.jsonl')).toBe(true)
+    }
   })
 })
