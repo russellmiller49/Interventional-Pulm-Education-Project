@@ -5803,6 +5803,26 @@
 }
 
 /*
+ * No transition on an emphasis change, and the reason is not taste.
+ *
+ * The base rule above fades opacity over a quarter second, which was written for the orbit dim — a
+ * transient state during a drag, where nothing depends on the end value being reached. These labels
+ * are drei `<Html>` portals, and their opacity transitions were observed stuck at `currentTime: 0`
+ * with `playState: "running"`: the transition starts and its timeline never advances, so the element
+ * holds its *start* value indefinitely. Before this package nothing changed these opacities except
+ * that dim, so a frozen transition was invisible. Marking one label per stop made it a correctness
+ * problem — the emphasised object rendered dimmed and the previous stop's labels stayed lit, with
+ * the attributes correct all along. Verified in a production build: adding `transition: none` makes
+ * every stop paint correctly, and removing it again reproduces the freeze.
+ *
+ * It is also what this emphasis should have been anyway. The comment below says nothing here moves,
+ * and a quarter-second fade is motion `prefers-reduced-motion` would have to suppress.
+ */
+.circuit3dSceneLabel[data-emphasis] {
+  transition: none;
+}
+
+/*
  * Where the teaching step is standing.
  *
  * Three cues, none of them a hue: a heavier border, a ring standing off the pill, and everything

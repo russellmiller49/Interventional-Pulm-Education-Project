@@ -477,3 +477,52 @@ describe('the text equivalent replaces looking at the stop', () => {
     expect(ecmoWalkStopTextEquivalent(pump, 'vv')).toMatch(/no reading is taken at this place/i)
   })
 })
+
+/*
+ * The stylesheet, asserted — because the defect it prevents is invisible to every DOM test.
+ *
+ * The emphasis attributes were correct all along; the browser held the previous stop's opacity
+ * because the transition these labels inherit never advanced. Only a production build showed it,
+ * so what is pinned here is the CSS itself: the states carry their own `transition: none`, and the
+ * orbit dim keeps precedence over them.
+ */
+describe('the scene-label emphasis is painted, not animated', () => {
+  const css = readFileSync(
+    join(process.cwd(), 'src/features/cardiohelp-ecmo/components/cardiohelp-ecmo.module.css'),
+    'utf8',
+  )
+
+  function ruleFor(selector: string): string {
+    const start = css.indexOf(selector)
+    expect(`${selector} present: ${start >= 0}`).toBe(`${selector} present: true`)
+    return css.slice(start, css.indexOf('}', start))
+  }
+
+  it('cancels the inherited fade on any emphasis state', () => {
+    expect(ruleFor('.circuit3dSceneLabel[data-emphasis] {')).toMatch(/transition:\s*none/)
+  })
+
+  it('distinguishes the emphasised label by more than opacity', () => {
+    const emphasised = ruleFor(".circuit3dSceneLabel[data-emphasis='emphasised'] {")
+    // Weight and a ring, so the state survives being read by someone who cannot compare two teals.
+    expect(emphasised).toMatch(/border-width/)
+    expect(emphasised).toMatch(/box-shadow/)
+    expect(emphasised).toMatch(/opacity:\s*1/)
+  })
+
+  it('recedes the rest without making them unreadable, and never hides them', () => {
+    const receded = ruleFor(".circuit3dSceneLabel[data-emphasis='receded'] {")
+    const opacity = Number(/opacity:\s*([\d.]+)/.exec(receded)?.[1])
+    expect(opacity).toBeGreaterThan(0.25)
+    expect(opacity).toBeLessThan(1)
+  })
+
+  it('lets the orbit dim win, so labels still clear out of the way while a learner drags', () => {
+    const dimmed = ruleFor('.circuit3dSceneLabel[data-dimmed][data-emphasis] {')
+    expect(dimmed).toMatch(/opacity:\s*0\.08/)
+    // Declared after the emphasis states, so equal specificity resolves in its favour.
+    expect(css.indexOf('[data-dimmed][data-emphasis]')).toBeGreaterThan(
+      css.indexOf("[data-emphasis='emphasised']"),
+    )
+  })
+})
