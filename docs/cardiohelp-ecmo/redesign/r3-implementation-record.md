@@ -238,6 +238,71 @@ instructions, which take it to 155 in total — over the budget if beats count a
 choice taken is that they do not: they are three buttons a learner reads one at a time as they work
 through the comparison, the same way the bounded-action labels beside them are not counted.
 
+## 7c. The 3D visual gate — run in a production build, and it found a defect
+
+The seam was type- and identifier-verified but not pixel-verified when the record was first written,
+because the bedside scene stayed inside its Suspense boundary on the development server. A
+production build (`npm run build`, then the standalone server on an unused port, against the same
+public-unlisted routes) resolves that: the scene mounts, all eight labels render, and the emphasis
+can be inspected.
+
+**It failed on the first run, and the failure was real.** The `data-emphasis` attributes were
+correct at every stop, and the browser painted the previous stop's opacities anyway — the emphasised
+object rendered dimmed at 0.34 while stop one's labels stayed lit at 1. Cause: these labels are drei
+`<Html>` portals, and their opacity transitions were observed with `playState: "running"` and
+`currentTime: 0`, permanently at time zero, so each element held its start value and never reached
+its target. The transition is inherited from the base label rule, written for the orbit dim — a
+transient drag state where nothing depends on the end value, so a frozen transition was invisible
+there. Marking one label per stop is what turned it into a correctness problem.
+
+Diagnosed by injecting `transition: none` into the running production page, watching every label
+snap to the correct value, and removing it again to reproduce the freeze. Fixed in the stylesheet,
+rebuilt, and re-verified. `circuit-walk.test.ts` now asserts the stylesheet directly, because no DOM
+test can see this.
+
+### What the gate checked, per stop, in the rebuilt production application
+
+Measured through computed style in the running page, at every one of the six stops, both sections
+and both tracks:
+
+| Check                                    | Result                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scene leaves the Suspense boundary       | Yes — canvas plus eight labels at every stop                                                                                                                                                                                                                                                               |
+| Emphasised object recognisable           | Opacity 1, 2px border, and a ring; the rest at 0.34 with a 1px border                                                                                                                                                                                                                                      |
+| Map and scene name the same segment      | Yes — every emphasised label appears in the card's own scene line, and the map marks the stop's segments                                                                                                                                                                                                   |
+| Distinguishable without colour           | Yes — emphasised and receded resolve to the _same_ colour; weight, ring and recession carry it                                                                                                                                                                                                             |
+| Unrelated objects still readable         | 0.34, one value across every receded label, never hidden                                                                                                                                                                                                                                                   |
+| Labels usable                            | Unchanged size and position; the orbit dim still takes precedence                                                                                                                                                                                                                                          |
+| Orbit, zoom, bounded pan                 | Untouched — no camera or controls code changed                                                                                                                                                                                                                                                             |
+| Stop change removes the old emphasis     | Yes — exactly the new stop's labels are emphasised                                                                                                                                                                                                                                                         |
+| Back restores the prior emphasis         | Yes — verified stop four → back → stop three                                                                                                                                                                                                                                                               |
+| Section switch leaves no stale highlight | Yes — the pump section opens on stop five with its own emphasis                                                                                                                                                                                                                                            |
+| Reduced motion preserves meaning         | Nothing in the walk card animates or transitions at all — measured, zero nodes with a non-zero duration — and the emphasis states now carry `transition: none` explicitly                                                                                                                                  |
+| Scene absent, lesson still completable   | Yes — at 1024×768 the scene sits in another tab with no scene label in the document, and the card still carries heading, analogy, four-item checklist, map with its "you are here" caption, the scene line, live signal, place detail, takeaway, sources, text equivalent, Back/Next and the status region |
+
+Per-stop emphasis, as measured: stop 1 femoral drainage + drainage clamp · stop 2 HLS module ·
+stop 3 HLS module · stop 4 femoral return + return clamp + flow and bubble sensor · stop 5 HLS
+module + femoral drainage + drainage clamp · stop 6 flow and bubble sensor + HLS module + femoral
+return + return clamp. Loading the resisted-return state at stop six leaves the emphasis unchanged.
+
+### Viewports
+
+| Viewport   | Result                                                                                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1600 × 900 | Three panes; card 320px; zero clipped children; no horizontal document scroll; emphasis 1 / 0.34                                                                                                                                                                                                    |
+| 1440 × 900 | As above                                                                                                                                                                                                                                                                                            |
+| 1280 × 720 | As above; panes 474 / 320 / 309 on fresh load                                                                                                                                                                                                                                                       |
+| 1024 × 768 | Compact tab arrangement; walk in the Teaching tab at 883px; zero clipping; map compact geometry with a smallest label of 14.57px, above R2's twelve-pixel floor; **scene labels hidden, which is the permitted compact behaviour** — the map and the teaching copy remain complete and synchronised |
+
+### What was captured, and what was not
+
+One screenshot records the scene with stop one's emphasis visible — the two drainage labels bright
+against six receded ones. Further per-stop captures were not obtained: this harness does not
+reliably photograph a WebGL canvas, and the two workarounds that place the canvas in the viewport
+(scrolling, or a taller window) each defeat the screenshot path. **The remaining stops are recorded
+by computed-style measurement in the running production application, not by image**, and that
+distinction is stated rather than papered over.
+
 ## 8. Limitations still true
 
 - **The 3D emphasis was not verified in pixels.** The bedside scene's assets serve, the canvas
