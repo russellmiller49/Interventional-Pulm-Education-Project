@@ -75,16 +75,14 @@ describe('ip-device-intelligence data-readiness audit', () => {
 
   it('matches the published ip-cards:validate-data global counts', () => {
     const report = computeDataReadiness(inputs)
-    expect(report.global.products).toBe(1532)
+    expect(report.global.products).toBe(1929)
     expect(report.global.roles).toBe(135)
     expect(report.global.procedures).toBe(15)
-    // Re-pinned for the owner-review data corrections (2026-08-09): F-06 removes four
-    // CHEST_TUBE slots and their 38 authored options (identical option sets remain on the
-    // IPC_PLACEMENT slots); F-10 adds three template rows whose roles are proposal-only,
-    // so the proposal generator emits 18 more machine proposals (813 → 831).
+    // The brochure intake does not alter authored slots or options. Its reviewed role mappings
+    // expand the nonselectable proposal queue from 831 to 1,485.
     expect(report.global.procedureSlots).toBe(232)
     expect(report.global.authoredSlotOptions).toBe(2035)
-    expect(report.global.slotOptionProposals).toBe(831)
+    expect(report.global.slotOptionProposals).toBe(1485)
   })
 
   it('is deterministic: computing twice yields deep-equal reports and identical bytes', async () => {

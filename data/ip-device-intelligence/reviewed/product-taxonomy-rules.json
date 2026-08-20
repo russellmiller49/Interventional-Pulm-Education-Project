@@ -74,6 +74,20 @@
       "confidence": "high"
     },
     {
+      "primary_category": "Airway stenting",
+      "subcategory": "Pulmonary guidewire",
+      "device_class_code": "guidewire",
+      "device_subtype_code": "pulmonary_guidewire",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Airway stenting",
+      "subcategory": "Stent sizing device",
+      "device_class_code": "sizing_measuring",
+      "device_subtype_code": "airway_sizing_device",
+      "confidence": "high"
+    },
+    {
       "primary_category": "Airway stent",
       "subcategory": "J-shaped self-expanding metallic airway stent",
       "device_class_code": "airway_stent",
@@ -92,6 +106,13 @@
       "subcategory": "Silicone BD stent",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Airway stent",
+      "subcategory": "Silicone hourglass stent",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
       "confidence": "high"
     },
     {
@@ -117,13 +138,6 @@
     },
     {
       "primary_category": "Airway stent",
-      "subcategory": "Silicone hourglass stent",
-      "device_class_code": "airway_stent",
-      "device_subtype_code": "silicone_hourglass_stent",
-      "confidence": "high"
-    },
-    {
-      "primary_category": "Airway stent",
       "subcategory": "Straight self-expanding metallic airway stent",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_straight",
@@ -141,20 +155,6 @@
       "subcategory": "Y-shaped self-expanding metallic airway stent",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
-      "confidence": "high"
-    },
-    {
-      "primary_category": "Airway stenting",
-      "subcategory": "Pulmonary guidewire",
-      "device_class_code": "guidewire",
-      "device_subtype_code": "pulmonary_guidewire",
-      "confidence": "high"
-    },
-    {
-      "primary_category": "Airway stenting",
-      "subcategory": "Stent sizing device",
-      "device_class_code": "sizing_measuring",
-      "device_subtype_code": "airway_sizing_device",
       "confidence": "high"
     },
     {
@@ -229,14 +229,14 @@
     },
     {
       "primary_category": "Bronchoscopy platform",
-      "subcategory": "Video processor with integrated light source",
+      "subcategory": "Video processor",
       "device_class_code": "console_capital",
       "device_subtype_code": "video_processor",
       "confidence": "high"
     },
     {
       "primary_category": "Bronchoscopy platform",
-      "subcategory": "Video processor",
+      "subcategory": "Video processor with integrated light source",
       "device_class_code": "console_capital",
       "device_subtype_code": "video_processor",
       "confidence": "high"
@@ -439,16 +439,16 @@
     },
     {
       "primary_category": "Endoscopy platform",
-      "subcategory": "Rigid suction catheter accessory",
+      "subcategory": "Rigid suction catheter",
       "device_class_code": "suction_irrigation",
-      "device_subtype_code": "suction_accessory",
+      "device_subtype_code": "rigid_suction_catheter",
       "confidence": "high"
     },
     {
       "primary_category": "Endoscopy platform",
-      "subcategory": "Rigid suction catheter",
+      "subcategory": "Rigid suction catheter accessory",
       "device_class_code": "suction_irrigation",
-      "device_subtype_code": "rigid_suction_catheter",
+      "device_subtype_code": "suction_accessory",
       "confidence": "high"
     },
     {
@@ -510,10 +510,59 @@
     },
     {
       "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Autofluorescence broncho-fiberscope",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Autofluorescence video bronchoscope",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "reusable_video_bronchoscope",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Flexible bronchoscope irrigation accessory",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "suction_accessory",
+      "confidence": "moderate"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Flexible bronchoscope valve",
+      "device_class_code": "accessory",
+      "device_subtype_code": "endoscope_seal_valve",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Flexible suction catheter",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "flexible_suction_catheter",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Reusable broncho-fiberscope",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
       "subcategory": "Reusable video bronchoscope",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Flexible bronchoscopy",
+      "subcategory": "Video bronchoscope suction accessory",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "suction_accessory",
+      "confidence": "moderate"
     },
     {
       "primary_category": "Guidewire",
@@ -562,6 +611,13 @@
       "subcategory": "Laser system gas filter",
       "device_class_code": "laser_system",
       "device_subtype_code": "laser_accessory",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Medical thoracoscopy",
+      "subcategory": "Integrated-working-channel thoracoscope",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "thoracoscopy_telescope",
       "confidence": "high"
     },
     {
@@ -626,6 +682,13 @@
       "device_class_code": "trocar_access",
       "device_subtype_code": "thoracoscopy_trocar",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Percutaneous tracheostomy",
+      "subcategory": "Percutaneous tracheostomy tray",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "confidence": "needs_review"
     },
     {
       "primary_category": "Peripheral bronchoscopy",
@@ -811,6 +874,13 @@
     },
     {
       "primary_category": "Pleural procedures",
+      "subcategory": "Chest tube set",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
       "subcategory": "IPC drainage supply",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_drainage_supply",
@@ -819,6 +889,13 @@
     {
       "primary_category": "Pleural procedures",
       "subcategory": "IPC dressing kit",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "ipc_accessory",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
+      "subcategory": "IPC insertion accessory",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_accessory",
       "confidence": "high"
@@ -853,6 +930,13 @@
     },
     {
       "primary_category": "Pleural procedures",
+      "subcategory": "Pneumothorax catheter or aspiration set",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pneumothorax_aspiration_set",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
       "subcategory": "Pneumothorax catheter set",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
@@ -864,6 +948,13 @@
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
+      "subcategory": "Post-operative surgical drain",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "confidence": "moderate"
     },
     {
       "primary_category": "Pleural procedures",
@@ -888,6 +979,13 @@
     },
     {
       "primary_category": "Pleural procedures",
+      "subcategory": "Surgical chest tube",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
       "subcategory": "Surgical thoracic catheter",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -895,7 +993,21 @@
     },
     {
       "primary_category": "Pleural procedures",
+      "subcategory": "Thoracentesis catheter",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
       "subcategory": "Thoracentesis catheter/set",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Pleural procedures",
+      "subcategory": "Thoracentesis set",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
       "confidence": "high"
@@ -953,10 +1065,45 @@
     },
     {
       "primary_category": "Reprocessing",
+      "subcategory": "Flexible endoscope leakage tester",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Reprocessing",
+      "subcategory": "Flexible endoscope maintenance accessory",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "confidence": "moderate"
+    },
+    {
+      "primary_category": "Reprocessing",
+      "subcategory": "Flexible endoscope sterilization accessory",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Reprocessing",
+      "subcategory": "Flexible endoscope sterilization container",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Reprocessing",
       "subcategory": "Replacement O-ring",
       "device_class_code": "reprocessing",
       "device_subtype_code": "cleaning_adapter",
       "confidence": "moderate"
+    },
+    {
+      "primary_category": "Reprocessing",
+      "subcategory": "Washer-disinfector leakage-test adapter",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_adapter",
+      "confidence": "high"
     },
     {
       "primary_category": "Retrieval",
@@ -1002,6 +1149,13 @@
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Endoscopic antifog solution",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "confidence": "moderate"
     },
     {
       "primary_category": "Rigid bronchoscopy",
@@ -1061,10 +1215,31 @@
     },
     {
       "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Optical pediatric rigid bronchoscopy forceps",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
       "subcategory": "Optical rigid bronchoscopy forceps",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Pediatric rigid bronchoscope",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Pediatric rigid bronchoscopy instrument set",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "confidence": "moderate"
     },
     {
       "primary_category": "Rigid bronchoscopy",
@@ -1078,6 +1253,13 @@
       "subcategory": "Rigid bronchoscope barrel",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscope base/head",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
       "confidence": "high"
     },
     {
@@ -1096,6 +1278,13 @@
     },
     {
       "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscope or stent-placement accessory",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
       "subcategory": "Rigid bronchoscope system",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -1106,6 +1295,13 @@
       "subcategory": "Rigid bronchoscope telescope adapter",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscope tube",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "confidence": "high"
     },
     {
@@ -1160,6 +1356,13 @@
     {
       "primary_category": "Rigid bronchoscopy",
       "subcategory": "Rigid bronchoscopy forceps",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscopy forceps/instrument",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
       "confidence": "high"
@@ -1250,6 +1453,13 @@
     },
     {
       "primary_category": "Sampling",
+      "subcategory": "Cytology brush component",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "confidence": "moderate"
+    },
+    {
+      "primary_category": "Sampling",
       "subcategory": "EBUS FNA needle",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
@@ -1274,6 +1484,13 @@
       "subcategory": "EBUS needle",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Sampling",
+      "subcategory": "Flexible biopsy forceps",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "confidence": "high"
     },
     {
@@ -1320,6 +1537,13 @@
     },
     {
       "primary_category": "Therapeutic bronchoscopy",
+      "subcategory": "Adapter accessory",
+      "device_class_code": "electrosurgical",
+      "device_subtype_code": "electrosurgical_adapter",
+      "confidence": "moderate"
+    },
+    {
+      "primary_category": "Therapeutic bronchoscopy",
       "subcategory": "APC adapter",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "apc_accessory",
@@ -1338,13 +1562,6 @@
       "device_class_code": "electrosurgical",
       "device_subtype_code": "apc_accessory",
       "confidence": "high"
-    },
-    {
-      "primary_category": "Therapeutic bronchoscopy",
-      "subcategory": "Adapter accessory",
-      "device_class_code": "electrosurgical",
-      "device_subtype_code": "electrosurgical_adapter",
-      "confidence": "moderate"
     },
     {
       "primary_category": "Therapeutic bronchoscopy",
@@ -1369,17 +1586,17 @@
     },
     {
       "primary_category": "Therapeutic bronchoscopy",
-      "subcategory": "CO2 gas bottle adapter",
-      "device_class_code": "cryotherapy",
-      "device_subtype_code": "cryotherapy_accessory",
-      "confidence": "moderate"
-    },
-    {
-      "primary_category": "Therapeutic bronchoscopy",
       "subcategory": "Cart accessory",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "cryotherapy_accessory",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Therapeutic bronchoscopy",
+      "subcategory": "CO2 gas bottle adapter",
+      "device_class_code": "cryotherapy",
+      "device_subtype_code": "cryotherapy_accessory",
+      "confidence": "moderate"
     },
     {
       "primary_category": "Therapeutic bronchoscopy",
@@ -1408,6 +1625,13 @@
       "device_class_code": "cryotherapy",
       "device_subtype_code": "flexible_cryoprobe",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Therapeutic bronchoscopy",
+      "subcategory": "Flexible electrosurgery electrode",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "confidence": "needs_review"
     },
     {
       "primary_category": "Therapeutic bronchoscopy",
@@ -1477,6 +1701,27 @@
       "subcategory": "Return-electrode cable",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "return_electrode_cable",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Tracheostomy",
+      "subcategory": "Cuffed tracheostomy tube",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Tracheostomy",
+      "subcategory": "Cuffless tracheostomy tube",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Tracheostomy",
+      "subcategory": "Extended-length tracheostomy tube",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "confidence": "high"
     },
     {
@@ -1754,6 +1999,15 @@
       "device_subtype_code": "rigid_suction_catheter",
       "confidence": "high",
       "note": "D2C-REV-008: the packaged 5 Fr catheters are the same physical catheter as the 5/6/7 Fr 'with Adapter' listings; the 'Adapter for … Fr' rows stay accessories via the pair rule."
+    },
+    {
+      "primary_category": "Tracheostomy",
+      "subcategory": "Extended-length tracheostomy tube",
+      "pattern": "\\buncuffed\\b",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "confidence": "high",
+      "note": "The shared XLT pair contains cuffed and uncuffed configurations; the product name explicitly states uncuffed before the cuffed pair-rule default."
     }
   ],
   "product_overrides": []

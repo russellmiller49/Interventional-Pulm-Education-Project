@@ -122,12 +122,16 @@ describe('Pulmonx Chartis (F-02)', () => {
     }
   })
 
-  it('omits the XL catheter and says where it went', () => {
-    // The IFU specifies CHR-CA-12.0-XL at a 76 cm working length, but it has no FDA UDI
-    // record — the same rule that excludes the FUJIFILM EB-530XT.
-    expect(store.products.some((product) => product.catalog_number === 'CHR-CA-12.0-XL')).toBe(
-      false,
-    )
+  it('retains the brochure-verified XL identity while keeping current status unverified', () => {
+    const xl = bySku('CHR-CA-12.0-XL')
+    expect(xl).toMatchObject({
+      verification_grade: 'verified_source',
+      visibility_state: 'hidden',
+      working_length_cm: 76,
+      diameter_mm: 2.7,
+      min_working_channel_mm: 2.8,
+    })
+    expect(rolesOf(xl.product_id)).toEqual(['COLLATERAL_VENTILATION_SYSTEM'])
     expect(bySku('CHR-CA-12.0').notes).toEqual(expect.stringContaining('CHR-CA-12.0-XL'))
   })
 

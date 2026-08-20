@@ -10,16 +10,16 @@ import {
   type AdditionRecord,
 } from './catalog-addition-records'
 import { buildTaxonomyV2Additions } from './catalog-additions-taxonomy-v2'
+import { buildBrochureIntakeAdditions } from './catalog-additions-brochure-intake'
+import { formatJson } from './format-json'
 
 /**
  * Builds the curated catalog additions the workbook does not carry: the Getinge/Atrium
  * thoracic drainage line and the FUJIFILM bronchoscope range.
  *
- * Every field is either copied from an FDA GUDID device record (identity, DI/GTIN,
- * distribution status, sterility, single-use) or transcribed from a manufacturer catalog
- * (product naming, dimensions, configuration). Nothing is invented: if GUDID does not list
- * a device as in commercial distribution, it is not emitted — which is why the EB-530XT
- * bronchoscope in the FUJIFILM catalog has no entry here.
+ * Every field is copied from its governed evidence: FDA GUDID records where available, or a
+ * reviewed authoritative manufacturer document for exact brochure-intake identities. The latter
+ * remain hidden and make no current-distribution claim.
  *
  *   npx tsx scripts/ip-preference-cards/build-catalog-additions.ts
  */
@@ -1878,11 +1878,34 @@ async function main() {
   productSources.push(...taxonomyV2.productSources)
   for (const warning of taxonomyV2.warnings) console.warn(warning)
 
+  const brochureIntake = buildBrochureIntakeAdditions({
+    existingProducts: (
+      JSON.parse(
+        await readFile(path.join(GENERATED_DIRECTORY, 'catalog-products.json'), 'utf8'),
+      ) as {
+        product_id: string
+        manufacturer_id: string | null
+        catalog_number: string | null
+      }[]
+    ).concat(
+      products.map((product) => ({
+        product_id: String(product.product_id),
+        manufacturer_id:
+          typeof product.manufacturer_id === 'string' ? product.manufacturer_id : null,
+        catalog_number: typeof product.catalog_number === 'string' ? product.catalog_number : null,
+      })),
+    ),
+  })
+  products.push(...brochureIntake.products)
+  productRoles.push(...brochureIntake.productRoles)
+  productSources.push(...brochureIntake.productSources)
+  for (const warning of brochureIntake.warnings) console.warn(warning)
+
   const additions = {
     format_version: '1.0',
     generated_by: 'scripts/ip-preference-cards/build-catalog-additions.ts',
     notes:
-      'Curated catalog additions merged by the importer. Identity, DI/GTIN, distribution status, sterility, and single-use come from the AccessGUDID release; product family naming, part numbers, and configuration come from the Getinge US thoracic drainage product pages. Only devices GUDID reports as in commercial distribution are included.',
+      'Curated catalog additions merged by the importer. GUDID-backed rows keep their dated FDA identity and distribution evidence; brochure-intake rows use exact manufacturer-document identities, remain hidden, and make no current U.S. distribution or orderability claim.',
     manufacturers: [
       {
         manufacturer_id: manufacturerId,
@@ -1934,6 +1957,7 @@ async function main() {
           'ICU Medical is the GUDID labeler for the Bivona silicone tracheostomy tubes, and for Portex.',
       },
       ...taxonomyV2.manufacturers,
+      ...brochureIntake.manufacturers,
     ],
     sources: [
       {
@@ -1988,9 +2012,9 @@ async function main() {
         as_of_date: null,
         reliability_tier: 'Tier 1 - manufacturer',
         use_policy:
-          'Use for bronchoscope and platform specifications and compatibility. European catalog; US availability is confirmed separately against the FDA UDI database.',
+          'Use for bronchoscope and platform specifications and compatibility. European catalog; current U.S. availability and orderability must be confirmed separately.',
         notes:
-          'Covers the EB-series bronchoscopes, EB-530US with the SU-1 processor, the SP-900 mini probe system, and the ELUXEO light sources and video processors. The EB-530XT and the FB-120 fiberoptic bronchoscopes appear in this catalog but have no FDA UDI record and are therefore not listed.',
+          'Covers the EB-series bronchoscopes, EB-530US with the SU-1 processor, the SP-900 mini probe system, and the ELUXEO light sources and video processors. EB-530XT is included as a hidden brochure-verified identity with current U.S. status unverified; no current-status conclusion is inferred from this European catalog.',
       },
       {
         source_id: PORTEX_SOURCE_ID,
@@ -2021,6 +2045,7 @@ async function main() {
           'Cuff status is taken from the product line, not from the presence of the word "cuffed": Fome-Cuf, Aire-Cuf, and TTS lines are all cuffed.',
       },
       ...taxonomyV2.sources,
+      ...brochureIntake.sources,
     ],
     products,
     product_roles: productRoles,
@@ -2029,7 +2054,7 @@ async function main() {
 
   await writeFile(
     path.join(SEED_DIRECTORY, 'catalog-additions.json'),
-    `${JSON.stringify(additions, null, 2)}\n`,
+    await formatJson(additions),
     'utf8',
   )
 

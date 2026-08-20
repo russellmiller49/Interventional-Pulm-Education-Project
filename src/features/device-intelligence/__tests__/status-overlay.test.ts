@@ -320,10 +320,10 @@ describe('D2B status overlay — runtime reader', () => {
       if (status.researched) researched += 1
       else expect(status).toEqual(UNRESEARCHED_PRODUCT_STATUS)
     }
-    // The 578 newly included products are researched; the 753 previously visible ones are
-    // not, and are labeled "not recently verified" rather than presented as current.
+    // The original 578 hidden products are researched. The 753 prototype-visible products
+    // plus 397 brochure additions are labeled unresearched rather than presented as current.
     expect(researched).toBe(578)
-    expect(atlas.products.length - researched).toBe(753)
+    expect(atlas.products.length - researched).toBe(1150)
   })
 
   it('exposes the pinned provenance to the UI', () => {

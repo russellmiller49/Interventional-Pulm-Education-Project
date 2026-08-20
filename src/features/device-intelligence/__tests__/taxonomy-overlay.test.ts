@@ -33,13 +33,13 @@ const REPO_ROOT = join(__dirname, '../../../..')
 describe('D2C taxonomy overlay coverage', () => {
   const artifact = taxonomyOverlayArtifactSchema.parse(taxonomyOverlayJson)
 
-  it('holds exactly one row for each of the 1,331 atlas-cohort products', () => {
+  it('holds exactly one row for each of the 1,728 atlas-cohort products', () => {
     const cohortIds = getAtlasCatalogStore()
       .products.map((product) => product.product_id)
       .sort()
-    expect(cohortIds.length).toBe(1331)
+    expect(cohortIds.length).toBe(1728)
     expect(artifact.rows.map((row) => row.product_id)).toEqual(cohortIds)
-    expect(artifact.counts.rows).toBe(1331)
+    expect(artifact.counts.rows).toBe(1728)
   })
 
   it('contains no candidate-grade or unknown-grade identity', () => {
@@ -70,12 +70,13 @@ describe('D2C taxonomy overlay coverage', () => {
     expect(artifact.counts.classification_basis).toEqual(basisCounts)
     expect(artifact.counts.needs_review).toBe(needsReview)
     const classTotal = Object.values(classCounts).reduce((sum, count) => sum + count, 0)
-    expect(classTotal).toBe(1331)
+    expect(classTotal).toBe(1728)
   })
 
-  it('classifies every product from a reviewed rule — the unmatched fallback is unused', () => {
+  it('classifies every product from a reviewed rule while preserving explicit review holds', () => {
     expect(artifact.counts.classification_basis.unmatched_fallback ?? 0).toBe(0)
-    expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(0)
+    expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(5)
+    expect(artifact.counts.needs_review).toBe(6)
   })
 
   it('is byte-identical to a fresh generation from the reviewed rules (twice)', () => {
@@ -92,17 +93,22 @@ describe('D2C taxonomy overlay coverage', () => {
 
   it('pins the exact reviewed rules bytes it was generated from', () => {
     const provenance = getTaxonomyOverlayProvenance()
-    expect(provenance.rowCount).toBe(1331)
+    expect(provenance.rowCount).toBe(1728)
     expect(artifact.source_rules.sha256).toBe(provenance.sourceRulesSha256)
     const rulesBytes = readFileSync(join(REPO_ROOT, artifact.source_rules.path))
     expect(createHash('sha256').update(rulesBytes).digest('hex')).toBe(artifact.source_rules.sha256)
   })
 
-  it('resolves a taxonomy for every cohort product at runtime, never the fallback today', () => {
+  it('resolves every cohort product and exposes only the five explicit other-class review holds', () => {
+    const explicitReviewHolds: string[] = []
     for (const product of getAtlasCatalogStore().products) {
       const taxonomy = getProductTaxonomy(product.product_id)
-      expect(taxonomy.deviceClassCode).not.toBe('other_needs_review')
+      if (taxonomy.deviceClassCode === 'other_needs_review') {
+        explicitReviewHolds.push(product.product_id)
+        expect(taxonomy.needsReview).toBe(true)
+      }
     }
+    expect(explicitReviewHolds).toHaveLength(5)
   })
 
   it('stays an honest total function for an id with no row', () => {

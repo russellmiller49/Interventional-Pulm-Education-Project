@@ -1,0 +1,113 @@
+analysis_type,identifier,source_filenames,input_row_numbers,canonical_product_id,canonical_catalog_number,note
+repeated_exact_identifier,EB-530US,,778;789;810,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,EB-710US,,790;809,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81670,,2023;2042,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81680,,2024;2043,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81690,,2025;2044,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81700,,2026;2045,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81710,,2027;2046,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81720,,2028;2047,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81730,,2029;2048,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81740,,2030;2049,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81750,,2031;2050,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81760,,2032;2051,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81770,,2033;2052,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81780,,2034;2053,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81790,,2035;2054,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81800,,2036;2055,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81810,,2037;2056,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81820,,2038;2057,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81830,,2039;2058,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81840,,2040;2059,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_exact_identifier,TT81850,,2041;2060,,,Identifier repeats byte-for-byte in the frozen intake.
+repeated_normalized_identifier,EB-530US,,778;789;810,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,EB-710US,,790;809,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,OSC-6F-17PT,,98;290,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,OSC-8F-12PLT,,103;291,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-5F-10LT,,242;1547,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-5F-12PLT,,264;1548,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-5F-17PLT,,244;1549,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-6F-12PT,,266;1550,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-6F-17PT,,248;1551,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-8F-12PT,,250;1552,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TAPS-8F-17PLT,,251;1553,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81670,,2023;2042,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81680,,2024;2043,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81690,,2025;2044,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81700,,2026;2045,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81710,,2027;2046,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81720,,2028;2047,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81730,,2029;2048,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81740,,2030;2049,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81750,,2031;2050,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81760,,2032;2051,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81770,,2033;2052,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81780,,2034;2053,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81790,,2035;2054,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81800,,2036;2055,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81810,,2037;2056,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81820,,2038;2057,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81830,,2039;2058,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81840,,2040;2059,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+repeated_normalized_identifier,TT81850,,2041;2060,,,Identifier repeats in the frozen intake; manufacturer-aware reconciliation remains authoritative.
+byte_identical_source_files,1b90cad951bd117880a4d2a1707cb15e62b885d58ee46fcc82b4ff18c0c378eb,C_T_PTISGI2_REV0 (1).pdf;C_T_PTISGI2_REV0.pdf,643,,,2 files share this SHA-256; 1 redundant copy/copies.
+byte_identical_source_files,2f951318ef77c1a128099a5b659451ce057fa595e7ae7736f3f158b97ebe63b8,shiley-flexible-adult-tracheostomy-tubes-brochure copy.pdf;shiley-flexible-adult-tracheostomy-tubes-brochure.pdf,1405,,,2 files share this SHA-256; 1 redundant copy/copies.
+byte_identical_source_files,361a1bc46c6f7cc9ea03379e2d1b40e354cf77e7ee39546b253fd3b70154b9bd,aScope_Broncho_Quick_Guide (1).pdf;aScope_Broncho_Quick_Guide.pdf,432;433,,,2 files share this SHA-256; 1 redundant copy/copies.
+byte_identical_source_files,c46aa95be1ed2d93911375edc81aa3382efd1d8354d4301efbc3c4830777138b,CC-D67629-EN-F_IA_1683223150514 (1).pdf;CC-D67629-EN-F_IA_1683223150514.pdf,696;697;698;699;700;701;702;703;704;705;706;707;708;709;710;711;712;713;714;715;716;717,,,2 files share this SHA-256; 1 redundant copy/copies.
+duplicate_source_row,OSC-6F-17-PT,401423001-A.pdf,290,PRD-69BAF13F0C,OSC-6F-17PT,
+duplicate_source_row,OSC-8F-12-PLT,401423001-A.pdf,291,PRD-6BAC2ADE46,OSC-8F-12PLT,
+duplicate_source_row,Not stated in source,Aliya System – Galvanize.pdf,419,PRD-401A185759,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,Aliya System – Galvanize.pdf,421,PRD-792DBA7A57,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,Aliya System – Galvanize.pdf,423,PRD-50C32D45B1,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,deep-research-report-lasers.md,758,,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,deep-research-report-lasers.md,760,,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,en_productbrochure_ziehmvisionrfd3d_rev10_02_2026.pdf,787,PRD-7C2BC9D752,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,EB-530US,Endobronchial Ultrasound (EBUS) scopes - FUJIFILM Healthcare Americas Corporation.pdf,789,PRD-EBAEE8A314,EB-530US,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,BF-2.2S-160-20,ESC-D63441-EN-F_M3_1643214583953.pdf,792,PRD-9DA17FB213,G47687,
+duplicate_source_row,BF-2.2S-160-40,ESC-D63441-EN-F_M3_1643214583953.pdf,793,PRD-DFD79119A6,G47688,
+duplicate_source_row,BF-2.2S-160SP-20,ESC-D63441-EN-F_M3_1643214583953.pdf,794,PRD-7B34314342,G47689,
+duplicate_source_row,BF-2.2S-160SP-40,ESC-D63441-EN-F_M3_1643214583953.pdf,795,PRD-FE81710DC5,G47686,
+duplicate_source_row,BF-2.8SJ-160-20,ESC-D63441-EN-F_M3_1643214583953.pdf,796,PRD-94D3933795,G56992,
+duplicate_source_row,BF-2.8SJ-160-40,ESC-D63441-EN-F_M3_1643214583953.pdf,797,PRD-C43AE95696,G56993,
+duplicate_source_row,BF-2.8SJ-160SP-20,ESC-D63441-EN-F_M3_1643214583953.pdf,798,PRD-A4DEDCB630,G56994,
+duplicate_source_row,BF-2.8SJ-160SP-40,ESC-D63441-EN-F_M3_1643214583953.pdf,799,PRD-2BEB2A325B,G56995,
+duplicate_source_row,EB-710US,factsheet_eb_710us.pdf,809,PRD-F85C161CB5,EB-710US,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,EB-530US,factsheet_eb_710us.pdf; Fujifilm_EndoSolutionsPulmonology_2023_EN_144dpi.pdf; Fujifilm_EUS Brochure_03_2025_EN.pdf,810,PRD-EBAEE8A314,EB-530US,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,C-PPDY-1020-OH-011795- IMH,Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf,813,PRD-B8277C7991,G55726,
+duplicate_source_row,C-PPDY-700-022394-IMH,Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf,814,PRD-6B46EA332F,G55722,
+duplicate_source_row,C-PPDY-850-IMH,Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf,815,PRD-805A7C312F,G55724,
+duplicate_source_row,C-PPD-1200-CHILDRENS- 082694-IMH,Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf,820,PRD-0A33F2E846,G55727,
+duplicate_source_row,C-PPD-850-WCE-IMH,Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf,823,PRD-3355DFC82B,G55715,
+duplicate_source_row,Not stated in source,LungVision® System _ AI-Powered Lung Imaging Technology.pdf,1056,PRD-45AEBC6DFE,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,LungVision® System _ AI-Powered Lung Imaging Technology.pdf,1058,PRD-2C5302C206,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,Mobile C-arm machine - Cios Spin - Siemens Healthineers USA.pdf,1060,PRD-CF779363F3,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,Not stated in source,OEC-3D_Brochure.pdf,1219,PRD-DCFC448718,,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,C-TQTSY-800,Thal-Quick Chest Tube Set and Tray _ Cook Medical.pdf,1534,PRD-754F9ECFDD,G06791,
+duplicate_source_row,TAPS-5F- - t men12uPT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1535,PRD-D5706A45F2,TAPS-5F-12PT,
+duplicate_source_row,TAPS-6F- - t men17uPLT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1536,PRD-3501E07357,TAPS-6F-17PLT,
+duplicate_source_row,TAPS-5F- - 10LT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1547,,TAPS-5F-10LT,
+duplicate_source_row,TAPS-5F- - 12PLT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1548,PRD-03568EABFB,TAPS-5F-12PLT,
+duplicate_source_row,TAPS-5F- - 17PLT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1549,PRD-6652155378,TAPS-5F-17PLT,
+duplicate_source_row,TAPS-6F- - 12PT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1550,PRD-5ADF20DD4A,TAPS-6F-12PT,
+duplicate_source_row,TAPS-6F- - 17PT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1551,PRD-5C42525636,TAPS-6F-17PT,
+duplicate_source_row,TAPS-8F- + 12PT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1552,PRD-892BC2AA9D,TAPS-8F-12PT,
+duplicate_source_row,TAPS-8F- - 17PLT,Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf,1553,PRD-07CD91B74C,TAPS-8F-17PLT,
+duplicate_source_row,TT81670,Y-Stent-Brochure-2022.pdf,2042,PRD-1A0C09927F,TT81670,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81680,Y-Stent-Brochure-2022.pdf,2043,PRD-0D187D741A,TT81680,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81690,Y-Stent-Brochure-2022.pdf,2044,PRD-5D09EFABDD,TT81690,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81700,Y-Stent-Brochure-2022.pdf,2045,PRD-61B1C43B5C,TT81700,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81710,Y-Stent-Brochure-2022.pdf,2046,PRD-71D6D8E081,TT81710,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81720,Y-Stent-Brochure-2022.pdf,2047,PRD-F5CEB7234A,TT81720,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81730,Y-Stent-Brochure-2022.pdf,2048,PRD-89BCEE2895,TT81730,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81740,Y-Stent-Brochure-2022.pdf,2049,PRD-6124E1A326,TT81740,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81750,Y-Stent-Brochure-2022.pdf,2050,PRD-21832A5DCA,TT81750,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81760,Y-Stent-Brochure-2022.pdf,2051,PRD-6D8A97CC06,TT81760,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81770,Y-Stent-Brochure-2022.pdf,2052,PRD-ACA2322DB2,TT81770,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81780,Y-Stent-Brochure-2022.pdf,2053,PRD-AAFEA61B28,TT81780,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81790,Y-Stent-Brochure-2022.pdf,2054,PRD-F9EB14C69E,TT81790,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81800,Y-Stent-Brochure-2022.pdf,2055,PRD-98610CE8EB,TT81800,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81810,Y-Stent-Brochure-2022.pdf,2056,PRD-D5A436E755,TT81810,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81820,Y-Stent-Brochure-2022.pdf,2057,PRD-0FC4F02CEE,TT81820,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81830,Y-Stent-Brochure-2022.pdf,2058,PRD-900AA8F053,TT81830,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81840,Y-Stent-Brochure-2022.pdf,2059,PRD-B07610EC95,TT81840,Repeated canonical identity or family already represented by another assigned input row.
+duplicate_source_row,TT81850,Y-Stent-Brochure-2022.pdf,2060,PRD-D29CE0D10F,TT81850,Repeated canonical identity or family already represented by another assigned input row.

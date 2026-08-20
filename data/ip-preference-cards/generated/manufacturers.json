@@ -7,6 +7,13 @@
     "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
   },
   {
+    "manufacturer_id": "MFR-0A34B2B677",
+    "manufacturer": "PENTAX Medical",
+    "default_distributor": null,
+    "website": "https://www.pentaxmedical.com/",
+    "notes": "Added by the 2026-08-19 brochure product-intake review."
+  },
+  {
     "manufacturer_id": "MFR-122B7208FA",
     "manufacturer": "VisionAir Solutions",
     "default_distributor": null,

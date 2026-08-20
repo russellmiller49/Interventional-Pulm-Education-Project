@@ -223,7 +223,7 @@ describe('D2B product page — market and safety panel', () => {
     expect(options.length).toBeGreaterThanOrEqual(20)
     expect(container.querySelector('select[name="category"]')).toBeNull()
     const guidewireOption = options.find((option) => option.getAttribute('value') === 'guidewire')!
-    expect(guidewireOption.textContent).toBe('Guidewire (4)')
+    expect(guidewireOption.textContent).toBe('Guidewire (6)')
     const bronchoscopeOption = options.find(
       (option) => option.getAttribute('value') === 'bronchoscope',
     )!

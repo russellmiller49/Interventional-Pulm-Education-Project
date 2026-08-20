@@ -4,51 +4,52 @@
   "method_version": "d2c-taxonomy-v1",
   "source_rules": {
     "path": "data/ip-device-intelligence/reviewed/product-taxonomy-rules.json",
-    "sha256": "4d3cf43d3a2608028c5c4ad12e7d621e02c067cc8496d9715e98680bc677544c"
+    "sha256": "3512256bafe53a16f13679b463264069e37fb834f91c1c2327321a9c4de64680"
   },
   "row_scope": "atlas_cohort_verified_source_minus_owner_exclusions",
   "counts": {
-    "rows": 1331,
+    "rows": 1728,
     "device_class": {
-      "accessory": 100,
+      "accessory": 153,
       "airway_stent": 233,
       "balloon_dilation": 25,
-      "bronchoscope": 95,
-      "catheter_sheath": 8,
-      "console_capital": 31,
+      "bronchoscope": 155,
+      "catheter_sheath": 9,
+      "console_capital": 32,
       "cryotherapy": 18,
-      "cytology_brush": 16,
+      "cytology_brush": 18,
       "delivery_applicator": 1,
       "electrosurgical": 108,
-      "endoscopic_telescope": 30,
-      "forceps_instrument": 140,
-      "guidewire": 4,
+      "endoscopic_telescope": 53,
+      "forceps_instrument": 197,
+      "guidewire": 6,
       "implant_delivery": 10,
       "laser_system": 6,
       "navigation_system": 28,
       "needle": 48,
-      "pleural_drainage": 137,
+      "other_needs_review": 5,
+      "pleural_drainage": 302,
       "powered_shaver": 8,
-      "reprocessing": 21,
+      "reprocessing": 33,
       "retrieval_basket": 5,
       "sizing_measuring": 5,
       "specimen_collection": 7,
-      "suction_irrigation": 43,
+      "suction_irrigation": 47,
       "therapeutic_agent": 4,
-      "tracheostomy_tube": 124,
+      "tracheostomy_tube": 136,
       "trocar_access": 24,
       "ultrasound_device": 35,
       "valve_occluder": 17
     },
     "taxonomy_confidence": {
-      "high": 1232,
-      "moderate": 98,
-      "needs_review": 1
+      "high": 1594,
+      "moderate": 128,
+      "needs_review": 6
     },
-    "needs_review": 1,
+    "needs_review": 6,
     "classification_basis": {
-      "name_rule": 68,
-      "pair_rule": 1263
+      "name_rule": 72,
+      "pair_rule": 1656
     }
   },
   "rows": [
@@ -59,6 +60,14 @@
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-00C2BB78A4",
+      "device_class_code": "accessory",
+      "device_subtype_code": "endoscope_seal_valve",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-00FC2A29AC",
@@ -141,9 +150,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0268D7E030",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-027269F110",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "articulated_rigid_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0288AF3C36",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -173,6 +198,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-03568EABFB",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-039120780F",
       "device_class_code": "sizing_measuring",
       "device_subtype_code": "sizing_occlusion_balloon",
@@ -189,9 +222,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-040164F5D4",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-040CC03419",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-040ECD5E76",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -217,6 +266,14 @@
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0451E9F3F7",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -301,6 +358,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0594E8207A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-063913C3C0",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -312,6 +377,14 @@
       "product_id": "PRD-06811F5515",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-068982E6EA",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -333,6 +406,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-070A63D4C6",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0714EF8A7B",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-071D7736C1",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -349,6 +438,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0741F72026",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-075C3EC5EE",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "ultrasound_transducer",
@@ -360,6 +457,22 @@
       "product_id": "PRD-0790420A76",
       "device_class_code": "catheter_sheath",
       "device_subtype_code": "guide_sheath_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-07A68D03D0",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-07CD91B74C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -389,6 +502,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-07FA3BEBCB",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-085F7B7BAF",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-087FFD6337",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -409,6 +538,14 @@
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-08F33F770D",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -469,9 +606,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0A33F2E846",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "small_bore_drainage_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0A7B35E327",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0A889B7C1B",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0A907A3C1A",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -533,6 +694,38 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0BB7A3887E",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0BB94EB28B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0BBA9245DC",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0BC1CD8B0F",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0BCFAC0926",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_bronchoscopy_accessory",
@@ -552,6 +745,14 @@
       "product_id": "PRD-0C13E4001B",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0C25554A9F",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -613,6 +814,38 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0D742CC1FD",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "suction_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0DCE1BFE25",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0DE090D545",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0DE3F1F8C3",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0DE5F7D9EF",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
@@ -624,6 +857,14 @@
       "product_id": "PRD-0E088FC681",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0E17091BA1",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -669,6 +910,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0F0636013C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0F20768341",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "rigid_telescope",
@@ -697,6 +946,14 @@
       "device_class_code": "electrosurgical",
       "device_subtype_code": "return_electrode_cable",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0FBAA7EFB7",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "suction_accessory",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -733,10 +990,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-100C06955D",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-102569C82C",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-10327C6D62",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -805,12 +1078,28 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-10B6E6001C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-112FA15A7C",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_partially_covered",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-119A0435F9",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-11ADF871FE",
@@ -832,6 +1121,22 @@
       "product_id": "PRD-12231F4168",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-122789E385",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-122BC52117",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -893,6 +1198,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1296B5E81A",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-129E6C270A",
       "device_class_code": "specimen_collection",
       "device_subtype_code": "specimen_trap",
@@ -904,6 +1217,14 @@
       "product_id": "PRD-12CFCE9A6C",
       "device_class_code": "console_capital",
       "device_subtype_code": "endoscopy_workstation",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-12E92BF8EC",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -949,9 +1270,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-14681ACB38",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1469E79896",
       "device_class_code": "accessory",
       "device_subtype_code": "vacuum_syringe",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-14AB98C264",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -981,6 +1318,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-14F7428222",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-150ECDCD05",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "suction_pump",
@@ -992,6 +1337,14 @@
       "product_id": "PRD-1517AA42DA",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-151E4308A8",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1093,9 +1446,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-176442701B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-17C3809F8C",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-17D86EEA2B",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1117,6 +1486,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-17F91285B0",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1840ABC86D",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
@@ -1125,9 +1502,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1867BEE0A7",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-188391A3A6",
       "device_class_code": "accessory",
       "device_subtype_code": "vacuum_syringe",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-18877E1C7E",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1173,6 +1566,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-19047EA86A",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1905FD9828",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
@@ -1184,6 +1585,22 @@
       "product_id": "PRD-190EC613D0",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-191CF14386",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-194C99D2D3",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1277,6 +1694,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1B27E1D4BA",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1B787D066C",
+      "device_class_code": "guidewire",
+      "device_subtype_code": "pulmonary_guidewire",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1B9BB00FC8",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
@@ -1296,6 +1729,14 @@
       "product_id": "PRD-1BD0F9BD70",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "gas_supply_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1BE33BF3AD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1373,6 +1814,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1D8D1AF28C",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1DCE96086D",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -1429,6 +1878,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1E84AF18DF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1E9BA85FC4",
       "device_class_code": "console_capital",
       "device_subtype_code": "endoscopy_workstation",
@@ -1477,9 +1934,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1F9120ECB0",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1F9597C1B1",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1FAE9F5EA4",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1FB9854943",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1504,6 +1985,14 @@
       "product_id": "PRD-2058BA100A",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-206C68F0E3",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1549,6 +2038,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-213D82A404",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2158C0F6D1",
       "device_class_code": "implant_delivery",
       "device_subtype_code": "stent_applicator",
@@ -1568,6 +2065,14 @@
       "product_id": "PRD-21832A5DCA",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-21B1E658B7",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1805,7 +2310,31 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-25BBBBEA0F",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "name_rule"
+    },
+    {
       "product_id": "PRD-25D4F080A3",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-260B91DDD4",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-26107A995B",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
@@ -1824,6 +2353,14 @@
       "product_id": "PRD-26349CF364",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-263DB41F76",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1872,6 +2409,22 @@
       "product_id": "PRD-26ABB902BA",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-26B3901F8D",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "ipc_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-26DC60023E",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1952,6 +2505,14 @@
       "product_id": "PRD-28C10C5EE9",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-28CA7E5E8C",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2069,6 +2630,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2AD6ABE818",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2B0E9C0AA9",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2B5132F8C5",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
@@ -2093,6 +2670,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2B86C32C8A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2B8AACAB67",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "ultrasound_processor",
@@ -2112,6 +2697,14 @@
       "product_id": "PRD-2BD5C6261D",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "thoracoscopy_hand_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2BEB2A325B",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2165,6 +2758,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2C9A03C41A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2CCE54EDFD",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_uncovered",
@@ -2181,6 +2782,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2D19D12C17",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2D2AC3B109",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -2192,6 +2801,14 @@
       "product_id": "PRD-2D687D6E32",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2D75D9FB0F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2229,6 +2846,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2DC22218B3",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2E03B33575",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -2248,6 +2873,14 @@
       "product_id": "PRD-2E1A3E4B68",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2E5CDD2315",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2325,6 +2958,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2F7137B1CB",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2F7DDD739E",
       "device_class_code": "reprocessing",
       "device_subtype_code": "precleaning_kit",
@@ -2344,6 +2985,14 @@
       "product_id": "PRD-2FAFEA973E",
       "device_class_code": "console_capital",
       "device_subtype_code": "video_processor",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2FBA3476D5",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "flexible_suction_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2381,9 +3030,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-304BD7E5FC",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3065186BDC",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "apc_unit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3075D02CC0",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2405,10 +3070,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-30FA38490D",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3119D76B4D",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3123E8EF81",
+      "device_class_code": "suction_irrigation",
+      "device_subtype_code": "suction_accessory",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -2434,6 +3115,22 @@
       "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-315E7FA242",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-320FF77256",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -2477,9 +3174,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-33370D3061",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3353BDD6CD",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3355DFC82B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "small_bore_drainage_kit",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2512,6 +3225,14 @@
       "product_id": "PRD-34234ED158",
       "device_class_code": "valve_occluder",
       "device_subtype_code": "endobronchial_valve",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3426CE7B79",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2565,9 +3286,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-3501E07357",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-354ECD3DC4",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-35AFD5B538",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "thoracoscopy_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2613,6 +3350,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-36918C9B9A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-369E8F396B",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -2637,9 +3382,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-36FE8EF239",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-377440703A",
       "device_class_code": "trocar_access",
       "device_subtype_code": "thoracoscopy_trocar",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-386D5501C9",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2656,6 +3417,14 @@
       "product_id": "PRD-38DED67ECF",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pleural_drainage_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-38E67F1EF6",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2693,6 +3462,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-399E8E0192",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-39EB1A695C",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -2701,9 +3478,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-3A10924AF9",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3A183102CF",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "flexible_apc_probe",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3A1A155D08",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_adapter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2845,6 +3638,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-3DCAE65A42",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3EB4013643",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3ED9411F2F",
       "device_class_code": "reprocessing",
       "device_subtype_code": "precleaning_kit",
@@ -2912,6 +3721,14 @@
       "product_id": "PRD-408A683593",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-40955508D7",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2989,6 +3806,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-41CD2EE0E9",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-41F9791461",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
@@ -3037,6 +3862,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4297AD020B",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4298F66678",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
@@ -3061,9 +3894,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4333060F93",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4361785147",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-4379B878E6",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3080,6 +3929,22 @@
       "product_id": "PRD-43A0159EDB",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-43CBDF82B4",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-43D7482BB7",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3125,9 +3990,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-449C642234",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-44A6CBF184",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-44B8646C32",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3149,6 +4030,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4577BB32BB",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-457AC85266",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -3157,9 +4046,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-460B74977C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-460DB62059",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_insertion_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-462ABA77A6",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-46ADECAA71",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3189,6 +4102,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-477B395A73",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-481074A513",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_bronchoscopy_accessory",
@@ -3205,9 +4126,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-483170BE1E",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-48514A48DF",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-486F6703A9",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-48897E4C88",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3261,6 +4206,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-49256F1DC6",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-492FC6BE35",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -3301,6 +4254,14 @@
       "classification_basis": "name_rule"
     },
     {
+      "product_id": "PRD-4A053AA647",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4A13E00131",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
@@ -3313,6 +4274,14 @@
       "device_class_code": "accessory",
       "device_subtype_code": "endoscope_seal_valve",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-4A5B11D28E",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -3333,6 +4302,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4AC9BF53AD",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4AE462CF09",
       "device_class_code": "navigation_system",
       "device_subtype_code": "navigation_platform_hardware",
@@ -3344,6 +4321,14 @@
       "product_id": "PRD-4B4F1501DE",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_uncovered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-4B66601DB1",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3381,6 +4366,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4C18A9D165",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4C3147DF15",
       "device_class_code": "console_capital",
       "device_subtype_code": "endoscopy_workstation",
@@ -3413,9 +4406,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4CDD550305",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4D06DCE96B",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "return_electrode_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-4D08CBA53B",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3485,6 +4494,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4F0040C995",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4F06212417",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
@@ -3536,6 +4553,14 @@
       "product_id": "PRD-4FC1A1B17E",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-50465694B0",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3597,9 +4622,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5197B3D03C",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-51C8A4796F",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-51D601323E",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-51F1495A42",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3624,6 +4673,22 @@
       "product_id": "PRD-529E58AC8C",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "thoracoscopy_hand_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-52AEFAC307",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-52E905C321",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3656,6 +4721,22 @@
       "product_id": "PRD-53C2DB3A04",
       "device_class_code": "navigation_system",
       "device_subtype_code": "navigation_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-53D93A0FAC",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-53EC805ADF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3701,6 +4782,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5483564F3B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-54ACB4FCF8",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-54CEDAAE5B",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -3720,6 +4817,30 @@
       "product_id": "PRD-5543746F59",
       "device_class_code": "reprocessing",
       "device_subtype_code": "endoscope_reprocessor",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-55542C46A8",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5562E69B2A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-559ABA4333",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "ipc_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3773,6 +4894,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-564C66C00A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-56BD135369",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-56DF49383B",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_accessory",
@@ -3792,6 +4929,14 @@
       "product_id": "PRD-574BC79D2B",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_adapter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-575932A508",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3840,6 +4985,14 @@
       "product_id": "PRD-57D0D10F0F",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-57D2C172FD",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3917,6 +5070,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5930BC6020",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5941DF2464",
       "device_class_code": "accessory",
       "device_subtype_code": "endoscope_seal_valve",
@@ -3957,6 +5118,14 @@
       "classification_basis": "name_rule"
     },
     {
+      "product_id": "PRD-59E3D04CC4",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pneumothorax_aspiration_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5A0C3D8844",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
@@ -3968,6 +5137,14 @@
       "product_id": "PRD-5A1DE3192C",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5A1EA28132",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4045,6 +5222,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5ADF20DD4A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5AEEF62066",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "cryotherapy_accessory",
@@ -4085,6 +5270,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5BD9239FCA",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5BDAA5E440",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -4104,6 +5297,14 @@
       "product_id": "PRD-5C40D8FE80",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5C42525636",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4205,6 +5406,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5DA5177DA9",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5DFC2E8E8B",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "cryotherapy_accessory",
@@ -4229,6 +5438,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5E530E651B",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5E5E5933A2",
       "device_class_code": "needle",
       "device_subtype_code": "core_biopsy_device",
@@ -4238,6 +5455,14 @@
     },
     {
       "product_id": "PRD-5E6845A633",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5E73B7DAE9",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
@@ -4333,6 +5558,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-60EF0F869B",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6124E1A326",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
@@ -4365,6 +5598,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-61ABF81DC5",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-61AF4EE90B",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-61B1C43B5C",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
@@ -4376,6 +5625,14 @@
       "product_id": "PRD-61EE4D5DE6",
       "device_class_code": "needle",
       "device_subtype_code": "pleural_biopsy_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6242870599",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4405,9 +5662,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-63306C383B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-633391A337",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_partially_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-633BBCEEBA",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4424,6 +5697,14 @@
       "product_id": "PRD-635FE10D65",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "thoracoscopy_hand_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-63715C8967",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4469,6 +5750,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-640AEAA318",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6488B1F637",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -4485,9 +5774,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-64D83CE808",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-64F3BFC979",
       "device_class_code": "console_capital",
       "device_subtype_code": "video_processor",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-651FBD7EA3",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6546F6126A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4541,6 +5854,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6652155378",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6683FE6ADD",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -4581,6 +5902,22 @@
       "classification_basis": "name_rule"
     },
     {
+      "product_id": "PRD-672F05E9EA",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6792EF1447",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-67D1D03D3F",
       "device_class_code": "trocar_access",
       "device_subtype_code": "thoracoscopy_trocar",
@@ -4592,6 +5929,14 @@
       "product_id": "PRD-685E69DACA",
       "device_class_code": "catheter_sheath",
       "device_subtype_code": "collateral_ventilation_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6877EA4AE6",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4653,6 +5998,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-69BAF13F0C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-69CC9C6D05",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -4669,9 +6022,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6A108CCC84",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6A26802196",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6A282D51B1",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "thoracoscopy_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4693,6 +6062,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6A80B1640D",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6A84EE66C8",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "ultrasound_accessory",
@@ -4701,9 +6078,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6A8C156F24",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6A9E4504F4",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6A9EE6FB1B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "ipc_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6ABC11CE44",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4720,6 +6121,22 @@
       "product_id": "PRD-6B09435B5B",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6B4693A19A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6B46EA332F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "small_bore_drainage_kit",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4757,6 +6174,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6BA107A313",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6BAC2ADE46",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6BC32547CD",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_adapter",
@@ -4776,6 +6209,22 @@
       "product_id": "PRD-6BF80B6E0D",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6BFF59DDAD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pneumothorax_aspiration_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6C0EBFAA26",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4824,6 +6273,14 @@
       "product_id": "PRD-6D1BDDE146",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_insertion_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6D2A5C2FE5",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4885,6 +6342,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6DCD8B4626",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6DF43B832B",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_adapter",
@@ -4904,6 +6369,14 @@
       "product_id": "PRD-6E580584DD",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6EA39A2B3B",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5109,6 +6582,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7214C74DFE",
+      "device_class_code": "cytology_brush",
+      "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-723273697C",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -5144,6 +6625,14 @@
       "product_id": "PRD-72D1C4498C",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "ultrasound_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-72F4A3884F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pneumothorax_aspiration_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5197,6 +6686,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-74097CDF9A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7435E842E8",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -5208,6 +6705,14 @@
       "product_id": "PRD-744A95F952",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "ultrasound_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-74CAC5AA0A",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_adapter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5232,6 +6737,22 @@
       "product_id": "PRD-75434A8582",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-754F9ECFDD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-75564978F2",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5293,10 +6814,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-75CE0E7B40",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-75E555BC77",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-75EC41AEDA",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -5341,6 +6878,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-76CC84AF2F",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-77145058F8",
       "device_class_code": "needle",
       "device_subtype_code": "conventional_tbna_needle",
@@ -5349,9 +6894,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-77147A44EF",
+      "device_class_code": "accessory",
+      "device_subtype_code": "endoscope_seal_valve",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-771F462726",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-773959E0B5",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5393,6 +6954,22 @@
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-781BCEA88E",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7904481858",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -5485,9 +7062,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7B34314342",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7B69AB81B4",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7B8E07DF5F",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7BA7CA85BF",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5504,6 +7105,14 @@
       "product_id": "PRD-7BE12DDECD",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7C20C81CC1",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5549,10 +7158,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7C9E0734EE",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7CAB35AC24",
       "device_class_code": "accessory",
       "device_subtype_code": "vacuum_syringe",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7CD11761AB",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -5565,9 +7190,49 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7D0A88E1E7",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7D2B16DFCF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7D8D97D18F",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7DA7AF0CE9",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7DAB3292D5",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7DBD613DD6",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5637,6 +7302,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7F5DE98072",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7F94CAD8E8",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
@@ -5669,12 +7342,60 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-805A7C312F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "small_bore_drainage_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8068102C32",
+      "device_class_code": "accessory",
+      "device_subtype_code": "endoscope_seal_valve",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8096B8A38E",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-80B451355D",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-80E64865AA",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8106E78F85",
       "device_class_code": "console_capital",
       "device_subtype_code": "endoscopy_workstation",
       "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-81294A9EB3",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-81331808E3",
@@ -5696,6 +7417,14 @@
       "product_id": "PRD-815DC29EF1",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-81D1E660C8",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5725,6 +7454,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-82374FBBE1",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-825B745D18",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
@@ -5744,6 +7481,22 @@
       "product_id": "PRD-82C2B15804",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-83100016E0",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-83188CF097",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5789,9 +7542,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-83EDFED017",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-843BE1E573",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8474F25510",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-847AFDF500",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5837,9 +7614,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8551E04A9E",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-85994FB803",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-85E1F8359A",
       "device_class_code": "reprocessing",
       "device_subtype_code": "cleaning_adapter",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-85FA8619AC",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5877,6 +7678,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8669305653",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-86EE2BCB83",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-86FC0B1E5C",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -5896,6 +7713,14 @@
       "product_id": "PRD-8711E4A1C9",
       "device_class_code": "catheter_sheath",
       "device_subtype_code": "collateral_ventilation_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-876801D999",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5936,6 +7761,14 @@
       "product_id": "PRD-882E06A5A9",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-882FE3DD4D",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "thoracoscopy_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5984,6 +7817,22 @@
       "product_id": "PRD-89259B5C28",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-892BC2AA9D",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-892EA2DACB",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6053,6 +7902,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8A788CE721",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8ACE654E89",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "ultrasound_transducer",
@@ -6077,6 +7934,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8B6012963E",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8B87F7D42B",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -6096,6 +7961,14 @@
       "product_id": "PRD-8C032DCD3A",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8C4710647F",
+      "device_class_code": "console_capital",
+      "device_subtype_code": "video_processor",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6141,6 +8014,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8CC639A8AF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8CDDDC5158",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "modular_forceps_component",
@@ -6173,6 +8054,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8DA3BC1FB4",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8DDD9F07C0",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "flexible_biopsy_forceps",
@@ -6189,9 +8078,41 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8E51EC62D3",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8EAE6762FF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8EC41A9FB6",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pleural_drainage_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8F25A1FB01",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-900390ED3C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6208,6 +8129,14 @@
       "product_id": "PRD-901A1A1C5C",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "thoracoscopy_hand_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9026C9E403",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "ipc_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6325,6 +8254,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-93039B7450",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-93331CA104",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -6437,6 +8374,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-94D3933795",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-94E33ED243",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
@@ -6477,12 +8422,44 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-971388D340",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-973AB2950C",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-973BDAB586",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-978B2478DC",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "therapeutic_video_bronchoscope",
       "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-97A222ED41",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-97B68B1ECE",
@@ -6521,6 +8498,14 @@
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-98EB75029F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -6600,6 +8585,22 @@
       "product_id": "PRD-9B0EE44246",
       "device_class_code": "powered_shaver",
       "device_subtype_code": "shaver_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9B2F13C1BA",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9B4FEC155D",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6717,6 +8718,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-9DA17FB213",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9DA24897A2",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "reprocessor_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-9DA3B7C48B",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "gas_supply_accessory",
@@ -6736,6 +8753,14 @@
       "product_id": "PRD-9DCC5EC86C",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9DEE331FF0",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6765,12 +8790,52 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-9E8587840A",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9E8D77CC60",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-9EB174FBB0",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_tracheoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-9EECE0EDB1",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9F36AD4CFE",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9F5BAD2641",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-9F6F724DC2",
@@ -6801,6 +8866,14 @@
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_drainage_supply",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A0055C636E",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -6853,6 +8926,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A1B3741E75",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A1B7FC0BD4",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
@@ -6864,6 +8945,14 @@
       "product_id": "PRD-A1BB9D424D",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A201D9E5BE",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6885,9 +8974,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A2AFB61CA7",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A2C49C9352",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "flexible_cryoprobe",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A2E61F3CDC",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6933,6 +9038,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A3461153FD",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A3EBA86219",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -6965,6 +9078,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A4662B76B1",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A4793529B7",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -6989,10 +9110,34 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A4D34F0B5D",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A4DEDCB630",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A504350406",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A5606F3A0E",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -7029,12 +9174,28 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A6299876FB",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A64069C0A0",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_uncovered",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-A6DFE867BA",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-A72E811F09",
@@ -7064,6 +9225,30 @@
       "product_id": "PRD-A7D620FEA8",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A810240CB4",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A82615F351",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A82B13E74B",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7133,6 +9318,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A8E0AB361B",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A8F80E7C94",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_drainage_supply",
@@ -7157,6 +9350,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A9C03C078D",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A9C2F393B9",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -7165,9 +9366,49 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AA2564FB7E",
+      "device_class_code": "cytology_brush",
+      "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AA29300E40",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AA3A12BCF8",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AA51641B5A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AA897B2F51",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AACAFBB1E3",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7184,6 +9425,14 @@
       "product_id": "PRD-AAFEA61B28",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AB1FE11C34",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7317,6 +9566,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AD431C7F33",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AD4AAF21E4",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AD5DB57EBC",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
@@ -7397,11 +9662,35 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AF8F8B7F8C",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AF93E56FE5",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AFB67F2AD3",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B027947191",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -7422,6 +9711,14 @@
     },
     {
       "product_id": "PRD-B077E82907",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B08199D221",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
@@ -7477,6 +9774,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B229D186DD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B258E8E859",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "single_use_video_bronchoscope",
@@ -7493,9 +9798,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B2AC8712B7",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B2C431C0F9",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B2DAC54DE1",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B2FEAC3ABE",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7512,6 +9841,14 @@
       "product_id": "PRD-B3B30BCEE7",
       "device_class_code": "accessory",
       "device_subtype_code": "ebus_scope_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B3E2267573",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7629,6 +9966,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B5DEE283B2",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "name_rule"
+    },
+    {
       "product_id": "PRD-B5E107E3AE",
       "device_class_code": "implant_delivery",
       "device_subtype_code": "stent_applicator",
@@ -7677,6 +10022,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B68C2A2F50",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B6A919EF32",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
@@ -7717,9 +10070,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B734D0D7DA",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B79F76C6D6",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "gas_supply_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B8277C7991",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "small_bore_drainage_kit",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7765,10 +10134,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B9352BD52A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B94F3A417B",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "thoracoscopy_hand_instrument",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B9548AC507",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -7885,9 +10270,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-BB0E29F07F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-BB11C206A4",
       "device_class_code": "implant_delivery",
       "device_subtype_code": "stent_applicator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BB1C007EE6",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7957,6 +10358,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-BC55573969",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BC6CB66043",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-BC936E9D71",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "single_use_video_bronchoscope",
@@ -7981,6 +10398,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-BD118B9112",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-BD2D495AB7",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
@@ -7992,6 +10417,14 @@
       "product_id": "PRD-BD43B26C4B",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BD7D0C388D",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8057,6 +10490,14 @@
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BE310A3547",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -8213,12 +10654,44 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C2B436250C",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C2CB78AC4C",
       "device_class_code": "retrieval_basket",
       "device_subtype_code": "foreign_body_retrieval_basket",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-C2D9370B88",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C2DCA71DDE",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C31B1B8423",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-C32CFEC594",
@@ -8237,9 +10710,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C3B7FB7CAE",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C3CCEF8357",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C3CFAD5E58",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8277,12 +10766,36 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C43AE95696",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C4480F30D2",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-C46460490C",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C4699157F4",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-C47EB33229",
@@ -8333,11 +10846,27 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C52FF9A31A",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C580C3FAB4",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C61336D16B",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -8365,6 +10894,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C665E88A51",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C684D9ADCF",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "cryotherapy_accessory",
@@ -8376,6 +10913,14 @@
       "product_id": "PRD-C68942362F",
       "device_class_code": "navigation_system",
       "device_subtype_code": "robotic_navigation_platform",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C6B6BD759E",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8413,6 +10958,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C7719849F9",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "name_rule"
+    },
+    {
       "product_id": "PRD-C783A34A62",
       "device_class_code": "reprocessing",
       "device_subtype_code": "reprocessor_accessory",
@@ -8443,6 +10996,14 @@
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-C811661645",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-C88B1CD284",
@@ -8477,9 +11038,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C9000BB9AD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C90F6F2F20",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C919655C5F",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C93C97F54C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8496,6 +11081,14 @@
       "product_id": "PRD-C9704EAA93",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C9C4E45BB9",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8549,6 +11142,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-CB2AE00175",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-CB585AE377",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
@@ -8561,6 +11162,14 @@
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-CB680CD69F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -8608,6 +11217,14 @@
       "product_id": "PRD-CC88761929",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-CC8E8D081A",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8701,6 +11318,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-CFD20B352F",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D0139E750F",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "navigation_cytology_brush",
@@ -8773,6 +11398,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D1874FEF53",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D18E672989",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_tracheoscope",
@@ -8829,6 +11462,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D2350C1510",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D23CFCF5DD",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "name_rule"
+    },
+    {
       "product_id": "PRD-D273A067EA",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -8841,6 +11490,14 @@
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D2C1E4B75F",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -8864,6 +11521,14 @@
       "product_id": "PRD-D3E87A1251",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D40CA802F4",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8901,6 +11566,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D4EABEA7CA",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D52ED4EF06",
       "device_class_code": "console_capital",
       "device_subtype_code": "collateral_ventilation_console",
@@ -8913,6 +11586,14 @@
       "device_class_code": "cryotherapy",
       "device_subtype_code": "cryotherapy_accessory",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D5706A45F2",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -8941,6 +11622,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D5A822A291",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D5CBD6E254",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -8952,6 +11641,14 @@
       "product_id": "PRD-D5DAB48B5B",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D5ED3DC515",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "bronchofiberscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8992,6 +11689,14 @@
       "product_id": "PRD-D6F54A6D11",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D711DF7EE1",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9141,6 +11846,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DA34CBFF14",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DA396EF06D",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_adapter",
@@ -9149,9 +11862,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DA4769A595",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DA69A8016A",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DA7ECBAE41",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9181,6 +11910,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DB022C1FE8",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DB10C3EACC",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -9200,6 +11937,14 @@
       "product_id": "PRD-DB7366704E",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DB755221C4",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9232,6 +11977,22 @@
       "product_id": "PRD-DC2568EC2B",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DC2AEF06F9",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DC3BA17C2B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pneumothorax_aspiration_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9293,6 +12054,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DD1F7503DE",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DD8657352D",
       "device_class_code": "reprocessing",
       "device_subtype_code": "cleaning_brush",
@@ -9325,6 +12094,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DE790B8608",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DF1BEBD0C9",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
@@ -9349,6 +12126,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DF26D98A85",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DF30B54282",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
@@ -9365,6 +12150,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DF553A815B",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DF5BFBB99D",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "radial_ebus_probe",
@@ -9376,6 +12169,14 @@
       "product_id": "PRD-DF791E6D1F",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DF8AFD026D",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9400,6 +12201,14 @@
       "product_id": "PRD-DFBA1DB7E3",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DFD79119A6",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9629,6 +12438,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-E3E979261F",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-E3EE9B4863",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
@@ -9656,6 +12473,22 @@
       "product_id": "PRD-E4B27EE86A",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-E4BF1CCDFC",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-E4F966BAFD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9757,6 +12590,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-E8039C8893",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-E81D93D123",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -9765,9 +12606,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-E8BAEDDF61",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-E8C63D6C64",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "navigation_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-E8F5C57738",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9784,6 +12641,14 @@
       "product_id": "PRD-E91BAEC04F",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-E92A7EC85C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9840,6 +12705,22 @@
       "product_id": "PRD-EA1D57AC9A",
       "device_class_code": "console_capital",
       "device_subtype_code": "video_processor",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-EA44AB3927",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-EA9341925D",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9917,9 +12798,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-EB9D39DA96",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-EBAEE8A314",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "ebus_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-EBE3C4E5EF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10077,6 +12974,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-EF8D01CBAD",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-EFD54DC9EF",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F00EF2568E",
       "device_class_code": "implant_delivery",
       "device_subtype_code": "stent_applicator",
@@ -10096,6 +13009,22 @@
       "product_id": "PRD-F0279D2028",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F08EF9B50F",
+      "device_class_code": "reprocessing",
+      "device_subtype_code": "cleaning_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F0DFCE18B4",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10133,6 +13062,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F14FD13B3E",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F1632F4CEC",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "cryotherapy_accessory",
@@ -10144,6 +13081,30 @@
       "product_id": "PRD-F1712066B6",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F18D8E0CD8",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F1A98A53E9",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F1BAA98154",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10173,6 +13134,38 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F24CF1B9C7",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F2D56B29CB",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F2DAE07C64",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F2DAE4E583",
+      "device_class_code": "guidewire",
+      "device_subtype_code": "pulmonary_guidewire",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F2F9633FBF",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -10192,6 +13185,14 @@
       "product_id": "PRD-F3307DB1D4",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F33AA311E4",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10237,6 +13238,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F454186BF6",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F4B03B6DFA",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -10248,6 +13257,14 @@
       "product_id": "PRD-F4B4C5FC4D",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F4C019AE18",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10309,6 +13326,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F5AB1E4575",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F5B2165AE3",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
@@ -10333,9 +13358,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F60DA91352",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F61DF2B2E6",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F63C06E063",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F699627250",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10352,6 +13401,14 @@
       "product_id": "PRD-F702345A7B",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "single_use_bronchoscope_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F72B622208",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10421,12 +13478,28 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F8615190BF",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F867027C4E",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "bronchofiberscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-F86A126431",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-F8ECE4182D",
@@ -10440,6 +13513,14 @@
       "product_id": "PRD-F935858A9E",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F946AD81F2",
+      "device_class_code": "catheter_sheath",
+      "device_subtype_code": "collateral_ventilation_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10493,9 +13574,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-FA25C1403D",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-FA325AD5F8",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FA37816545",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pneumothorax_aspiration_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10513,6 +13610,14 @@
       "device_class_code": "navigation_system",
       "device_subtype_code": "navigation_accessory",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FAEB7ED380",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -10557,9 +13662,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-FBF1DDB248",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-FBFA19440C",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FC0DCD11AB",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "rigid_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10589,6 +13710,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-FCE9DE78C0",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-FD2FA688FB",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -10605,6 +13734,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-FD5FCA373B",
+      "device_class_code": "accessory",
+      "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FD8DFD7EA8",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-FD962E14DA",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -10616,6 +13761,22 @@
       "product_id": "PRD-FDAC925AF1",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FDD7F56BCD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FDE3543771",
+      "device_class_code": "endoscopic_telescope",
+      "device_subtype_code": "rigid_telescope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10661,6 +13822,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-FE81710DC5",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-FEA0F47B62",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "rigid_telescope",
@@ -10672,6 +13841,14 @@
       "product_id": "PRD-FEAA795BDD",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_insertion_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FEBFE797DD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"

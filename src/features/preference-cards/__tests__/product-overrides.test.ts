@@ -157,14 +157,14 @@ describe('endoscopic ultrasound processors in the generated catalog', () => {
     ])
   })
 
-  it('excludes models the manufacturer catalog shows but the FDA UDI database does not', () => {
-    // EB-530XT and the FB-120 fiberoptic bronchoscopes are in the pulmonology catalog but
-    // have no UDI record, so the in-commercial-distribution rule keeps them out.
+  it('includes the brochure-verified EB-530XT without admitting unsupported FB-120 models', () => {
+    // Exact authoritative brochure identity is sufficient for the hidden intake catalog;
+    // current U.S. status remains a separate question.
     const detail = getUseDetail('FLEX_SCOPE_THERAPEUTIC')
     const numbers = (detail?.manufacturerGroups ?? [])
       .flatMap((group) => group.items)
       .map((item) => item.catalogNumber)
-    expect(numbers).not.toContain('EB-530XT')
+    expect(numbers).toContain('EB-530XT')
     expect(numbers).not.toContain('FB-120T')
   })
 })

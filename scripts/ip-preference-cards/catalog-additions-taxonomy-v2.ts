@@ -184,9 +184,10 @@ const ERBE_DEVICES: GudidDeviceDefinition[] = [
  * Monarch and Galaxy families.
  *
  * The supplied IFU is the CE-marked international document and carries no FDA statement at
- * all; identity and US distribution come from the UDI records. Only two catalog numbers exist
- * anywhere in that 68-page IFU — CHR-CA-12.0 and CHR-CA-12.0-XL — and the XL has no UDI
- * record, so it is deliberately absent and noted on the standard catheter instead.
+ * all. The standard catheter's identity and US distribution come from the UDI record. Only two
+ * catalog numbers exist anywhere in that 68-page IFU — CHR-CA-12.0 and CHR-CA-12.0-XL. The
+ * later brochure-intake emitter carries the exact XL identity as hidden/verified-source without
+ * inferring a current US distribution status from the international IFU.
  */
 const PULMONX_DEVICES: GudidDeviceDefinition[] = [
   {
@@ -213,7 +214,7 @@ const PULMONX_DEVICES: GudidDeviceDefinition[] = [
       shaft_material: 'Medical-grade PEBAX',
     },
     notes:
-      'A CHR-CA-12.0-XL variant with a 76 cm working length is specified in the same IFU but has no FDA UDI record, so it is not listed as a separate product.',
+      'The same IFU specifies a distinct CHR-CA-12.0-XL variant with a 76 cm working length; the brochure-intake emitter lists that exact identity separately as hidden with current U.S. status unverified.',
   },
   {
     lookup: 'CHR-CA-15.0',
@@ -1696,7 +1697,7 @@ export function buildTaxonomyV2Additions(options: {
       use_policy:
         'Use for catheter working length, outer diameter, airway diameter range, and the minimum bronchoscope working-channel requirement. This is the CE-marked international IFU and contains no FDA statement of any kind; US distribution status comes from the FDA UDI database.',
       notes:
-        'Only two catalog numbers appear anywhere in the document — CHR-CA-12.0 and CHR-CA-12.0-XL. The console and connector set are named as components with no order numbers. The XL has no FDA UDI record and is therefore not listed as a product.',
+        'Only two catalog numbers appear anywhere in the document — CHR-CA-12.0 and CHR-CA-12.0-XL. The console and connector set are named as components with no order numbers. The XL has no FDA UDI record; its brochure-verified catalog row therefore remains hidden with current U.S. status unverified.',
     },
     {
       source_id: RICHARD_WOLF_SOURCE_ID,

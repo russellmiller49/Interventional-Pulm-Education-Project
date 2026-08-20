@@ -13,15 +13,15 @@ describe('exact-slot proposal review data', () => {
     const rows = getSlotOptionReviewRows()
     const summary = summarizeSlotOptionReviewRows(rows, getSlotOptionReviewArtifactSummary())
 
-    // Taxonomy v2 added 369 net-new proposals; all 429 prior ones survive unchanged.
+    // Brochure products remain nonselectable; supported role mappings only expand review rows.
     expect(summary).toMatchObject({
-      totalProposals: 831, // owner-review corrections 2026-08-09: F-10 adds proposal-only flex-core rows (813 -> 831)
-      affectedProducts: 401, // 192 -> 396 distinct products carry a proposal
-      affectedSlots: 108, // owner-review corrections 2026-08-09: the three new flex-core rows carry proposals (105 -> 108)
-      requiredProposals: 426, // 287 -> 426 of the proposals sit on required slots
-      notInDistribution: 32, // 28 of the new proposals are on not_in_distribution products (4 -> 32)
-      conflictingDistribution: 7, // 5 new proposals hit products with conflicting GUDID records (2 -> 7)
-      unknownDistribution: 231, // new proposals reach 131 products with no GUDID distribution evidence (0 -> 214)
+      totalProposals: 1485,
+      affectedProducts: 773,
+      affectedSlots: 124,
+      requiredProposals: 772,
+      notInDistribution: 32,
+      conflictingDistribution: 7,
+      unknownDistribution: 885,
     })
     expect(new Set(rows.map((row) => `${row.slot_id}\u0000${row.product_id}`)).size).toBe(
       rows.length,

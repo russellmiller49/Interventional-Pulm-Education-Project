@@ -88,14 +88,12 @@ describe('catalog verification aggregation', () => {
     const summary = summarizeCatalogVerificationRows(rows)
 
     expect(summary).toMatchObject({
-      // Taxonomy v2 added 53 catalog products (1474 -> 1527); all 53 land after the workbook.
-      totalProducts: 1532,
+      // The 397 brochure products are governed post-workbook additions.
+      totalProducts: 1929,
       workbookBacklogProducts: 1221,
-      // Taxonomy v2: +53 post-workbook additions (253 -> 306).
-      additionsAfterWorkbook: 311,
+      additionsAfterWorkbook: 708,
       strongIdentityCandidates: 718,
-      // Taxonomy v2: the 53 new products carry no strong identity candidate (756 -> 809).
-      withoutStrongIdentityCandidate: 814,
+      withoutStrongIdentityCandidate: 1211,
       gtinConflicts: 99,
     })
     expect(new Set(rows.map((row) => row.productId)).size).toBe(rows.length)
@@ -208,14 +206,12 @@ describe('catalog verification aggregation', () => {
 
     expect(weakOnly.length).toBeGreaterThan(0)
     expect(weakOnly.every((row) => row.identityEvidence === 'weak_candidate_only')).toBe(true)
-    // Taxonomy v2: +53 post-workbook additions (253 -> 306).
-    expect(additions).toHaveLength(311)
+    expect(additions).toHaveLength(708)
     expect(conflicts.length).toBeGreaterThan(0)
     expect(notDistributed.every((row) => row.distributionEvidence === 'not_in_distribution')).toBe(
       true,
     )
-    // Taxonomy v2: catalog products grew 1474 -> 1527.
-    expect(getCatalogVerificationRows()).toHaveLength(1532)
+    expect(getCatalogVerificationRows()).toHaveLength(1929)
   })
 
   it('searches current GUDID candidate DIs rather than only workbook suggestions', () => {

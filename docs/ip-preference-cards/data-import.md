@@ -141,17 +141,45 @@ Cardinal Health would otherwise contribute hundreds of thousands of unrelated re
 
 ### Curated catalog additions
 
-`seed/catalog-additions.json` carries 311 products the workbook does not: Getinge/Atrium and
-Teleflex thoracic drainage, FUJIFILM bronchoscopy/ultrasound equipment, Auris and Noah
-robotic-bronchoscopy equipment, Olympus scope additions, ICU Medical tracheostomy products, and
-reviewed taxonomy-v2 energy, imaging, ablation, laser, photodynamic, and emerging-device cohorts.
+`seed/catalog-additions.json` carries products the workbook does not: Getinge/Atrium and Teleflex
+thoracic drainage, FUJIFILM bronchoscopy/ultrasound equipment, Auris and Noah robotic-bronchoscopy
+equipment, Olympus scope additions, ICU Medical tracheostomy products, reviewed taxonomy-v2
+energy, imaging, ablation, laser, photodynamic, and emerging-device cohorts, plus the dated
+brochure-intake cohort described below.
 Each product retains its source-specific evidence: GUDID supports identity, DI/GTIN, distribution,
 sterility, and single-use fields when available, while manufacturer sources support family naming,
 part numbers, dimensions, and configuration. The earlier GUDID-derived cohort emitted only devices
 reported in commercial distribution; later reviewed cohorts keep their own conservative
 verification and visibility grades rather than inferring current U.S. distribution.
 `apply-catalog-additions.ts` merges them at import time and validates them against the workbook's
-own vocabularies — unknown role codes or source ids, or a colliding product id, fail the import.
+own vocabularies. Its runtime contract rejects malformed or unexpected fields, duplicate IDs and
+relationship pairs, unknown manufacturer/source/role references, missing primary provenance, and
+manufacturer-scoped catalog-number collisions before any additions are returned.
+
+### Reviewed brochure intake
+
+The 2026-08-19 brochure gap audit is a reviewed, data-only input to the same generator:
+
+```text
+data/ip-preference-cards/reviewed/brochure-intake-additions-2026-08-19.json
+  -> scripts/ip-preference-cards/catalog-additions-brochure-intake.ts
+  -> scripts/ip-preference-cards/build-catalog-additions.ts
+  -> data/ip-preference-cards/seed/catalog-additions.json
+  -> scripts/ip-preference-cards/import-catalog.ts
+  -> data/ip-preference-cards/generated/*.json
+```
+
+The reviewed file pins exact manufacturer/catalog identities, deterministic product IDs, source
+locators, conservative hidden/verified-source fields, and only those existing role links supported
+by the evidence. The emitter recomputes each ID and performs manufacturer-aware collision checks,
+including the self-ID case produced by an idempotent rerun. It does not create canonical slot
+options; the existing proposal generator continues to emit any broad-role joins as unreviewed,
+nonselectable proposals.
+
+The comprehensive accounting package under
+`docs/ip-preference-cards/brochure-intake/2026-08-19/` is review evidence, not a runtime input. Its
+row-reconciliation CSV covers every extracted input row, and its source manifest records hashes and
+page counts without committing the external brochure files or local absolute paths.
 
 ### Brand-level discovery
 

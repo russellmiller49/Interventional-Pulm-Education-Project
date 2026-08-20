@@ -27,11 +27,11 @@ const PROHIBITED_CANONICAL_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    '0bad1db25c47015a7da2f6dd4162cd897506a5be89a9383f7191f87cdeee4f33',
+    '8d2f0f210f24d971ac09d8d67a850afbfefc9b4f521303b685cab3abfc9884f0',
   'data/ip-preference-cards/generated/roles.json':
     '8ec7c66cf5db225532c8195258f341af5644559689dd0b69cea7a56e2fd0b571',
   'data/ip-preference-cards/generated/product-roles.json':
-    'f34e6a1603ca4e4f156508a4755bf7e31fbefc138adc98a51530c9560bd3bbde',
+    '6852e1adedd1c4a1d9d057758a7a62ac4f9ece3ecc45c765e019d9f1538db49d',
   'data/ip-preference-cards/generated/procedure-slots.json':
     'c11720c8d209b22c56813265ea53f70a348a0fd3af7b4cef9c6ca1a6b43a3ea7',
   'data/ip-preference-cards/generated/slot-product-options.json':
@@ -65,7 +65,7 @@ const PROHIBITED_CANONICAL_HASHES = {
   'data/ip-preference-cards/generated/release-impact-report.json':
     '272d8cec228d9e4d95d8796661984e726c3d298f97783201877caddad400df60',
   'data/ip-preference-cards/seed/catalog-additions.json':
-    'bd28cb7feade9c3c8916bd06d27b4b5ebaf88d9c55a52437ddd59df182c48dd8',
+    '55a5755c0485c861c52e7ae0ab67ecb24a80aa4f636c71c596af91237b4ed7bc',
   'data/ip-preference-cards/seed/release-bundles.json':
     '892780cb38695b71b8c6d258ca4915ae5bf74062e8e976dff050aa0ced9cdde2',
 } as const
@@ -295,7 +295,7 @@ describe('current U.S. status research safety boundaries', () => {
     const hiddenProducts = catalog.filter((product) => product.visibility_state === 'hidden')
     const hiddenIds = new Set(hiddenProducts.map((product) => product.product_id))
 
-    expect(hiddenProducts).toHaveLength(779)
+    expect(hiddenProducts).toHaveLength(1176)
     expect(
       hiddenProducts.filter((product) => !product.live_dropdown_status.startsWith('Hidden')),
     ).toEqual([])

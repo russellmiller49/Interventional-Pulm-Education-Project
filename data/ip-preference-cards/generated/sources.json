@@ -608,8 +608,8 @@
     "revision_date": "2023",
     "as_of_date": null,
     "reliability_tier": "Tier 1 - manufacturer",
-    "use_policy": "Use for bronchoscope and platform specifications and compatibility. European catalog; US availability is confirmed separately against the FDA UDI database.",
-    "notes": "Covers the EB-series bronchoscopes, EB-530US with the SU-1 processor, the SP-900 mini probe system, and the ELUXEO light sources and video processors. The EB-530XT and the FB-120 fiberoptic bronchoscopes appear in this catalog but have no FDA UDI record and are therefore not listed."
+    "use_policy": "Use for bronchoscope and platform specifications and compatibility. European catalog; current U.S. availability and orderability must be confirmed separately.",
+    "notes": "Covers the EB-series bronchoscopes, EB-530US with the SU-1 processor, the SP-900 mini probe system, and the ELUXEO light sources and video processors. EB-530XT is included as a hidden brochure-verified identity with current U.S. status unverified; no current-status conclusion is inferred from this European catalog."
   },
   {
     "source_id": "SRC052",
@@ -645,7 +645,7 @@
     "as_of_date": null,
     "reliability_tier": "Tier 1 - manufacturer",
     "use_policy": "Use for catheter working length, outer diameter, airway diameter range, and the minimum bronchoscope working-channel requirement. This is the CE-marked international IFU and contains no FDA statement of any kind; US distribution status comes from the FDA UDI database.",
-    "notes": "Only two catalog numbers appear anywhere in the document — CHR-CA-12.0 and CHR-CA-12.0-XL. The console and connector set are named as components with no order numbers. The XL has no FDA UDI record and is therefore not listed as a product."
+    "notes": "Only two catalog numbers appear anywhere in the document — CHR-CA-12.0 and CHR-CA-12.0-XL. The console and connector set are named as components with no order numbers. The XL has no FDA UDI record; its brochure-verified catalog row therefore remains hidden with current U.S. status unverified."
   },
   {
     "source_id": "SRC055",
@@ -850,5 +850,209 @@
     "reliability_tier": "Tier 1 - regulatory device identity",
     "use_policy": "Records what the KTP/Nd:YAG platform is actually cleared for, which is BPH and nothing else: \"intended for use in cutting, coagulating and vaporizing prostatic tissues during treatment of benign prostatic hyperplasia\". Use it to bound the airway claim rather than to support one. It also confirms the physics recorded on the product: ablation and haemostasis at the Nd:YAG 1064 nm wavelength, vaporization at the KTP 532 nm wavelength, KTP being a frequency-doubling crystal rather than a lasing medium of its own.",
     "notes": "Cleared 1998-07-17. The device is classified by the OB/GYN, General Plastic Surgery, and ENT panels, so other clearances exist for the platform; this one does not cover the airway."
+  },
+  {
+    "source_id": "SRC072",
+    "title": "401418001",
+    "filename": "401418001.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Merit Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC073",
+    "title": "BLAKE-Drains-Brochure-050018-210310",
+    "filename": "BLAKE-Drains-Brochure-050018-210310.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Ethicon",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC074",
+    "title": "Blue Rhino® G2-Multi Percutaneous Tracheostomy Introducer Sets and Trays   Cook Medical",
+    "filename": "Blue Rhino® G2-Multi Percutaneous Tracheostomy Introducer Sets and Trays _ Cook Medical.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Cook Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC075",
+    "title": "cardinal-health-cardiothoratic-catalog",
+    "filename": "cardinal-health-cardiothoratic-catalog.pdf",
+    "source_type": "Manufacturer catalog",
+    "publisher": "Cardinal Health",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC076",
+    "title": "CC-D67629-EN-F IA 1683223150514",
+    "filename": "CC-D67629-EN-F_IA_1683223150514.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Cook Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC077",
+    "title": "EB-J10 Bronchoscopes  Advanced High-Definition imaging",
+    "filename": "EB-J10 Bronchoscopes_ Advanced High-Definition imaging.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "PENTAX Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for EB-J10 family-level bronchoscopy relevance and INSPIRA platform association only; the capture does not print an exact orderable EB-J10 model or catalog number.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC078",
+    "title": "ESC-D63441-EN-F M3 1643214583953",
+    "filename": "ESC-D63441-EN-F_M3_1643214583953.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Cook Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC079",
+    "title": "Fuhrman Pleural Pneumopericardial Drainage Set and Tray   Cook Medical",
+    "filename": "Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Cook Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC080",
+    "title": "hood-labs-F973-Airway-catalog-6-2022",
+    "filename": "hood-labs-F973-Airway-catalog-6-2022.pdf",
+    "source_type": "Manufacturer catalog",
+    "publisher": "EFER",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC081",
+    "title": "Hydro-Slide Pulmonary Guidewire - Thoracent",
+    "filename": "Hydro-Slide Pulmonary Guidewire - Thoracent.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Thoracent",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC082",
+    "title": "PleurX™ Pleural Catheter System",
+    "filename": "PleurX™ Pleural Catheter System.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "BD",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC083",
+    "title": "Shiley™ Flexible Adult Tracheostomy Tube   Medtronic",
+    "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Medtronic",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC084",
+    "title": "Shiley™ XLT Extended Length Tracheostomy Tube   Medtronic",
+    "filename": "Shiley™ XLT Extended Length Tracheostomy Tube _ Medtronic.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Medtronic",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC085",
+    "title": "Teleflex Incorporated - Pilling Surgical Instruments Catalog",
+    "filename": "Teleflex Incorporated - Pilling Surgical Instruments Catalog.pdf",
+    "source_type": "Manufacturer catalog",
+    "publisher": "Teleflex",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC086",
+    "title": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set",
+    "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Merit Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC087",
+    "title": "THORAX",
+    "filename": "THORAX.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "Karl Storz",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
+  },
+  {
+    "source_id": "SRC088",
+    "title": "Video Processor INSPIRA  Multi connectable ● PENTAX Medical",
+    "filename": "Video Processor INSPIRA_ Multi connectable ● PENTAX Medical.pdf",
+    "source_type": "Manufacturer brochure or product-page print",
+    "publisher": "PENTAX Medical",
+    "revision_date": null,
+    "as_of_date": null,
+    "reliability_tier": "Tier 1 - manufacturer",
+    "use_policy": "Use for product identity and the exact printed catalog/model number. Confirm current U.S. status, orderability, and the full IFU separately.",
+    "notes": null
   }
 ]
