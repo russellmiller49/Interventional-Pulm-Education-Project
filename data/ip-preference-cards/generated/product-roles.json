@@ -66,10 +66,22 @@
     "notes": "Rigid bronchoscopy forceps/scissors"
   },
   {
+    "product_id": "PRD-0268D7E030",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-027269F110",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Articulated rigid bronchoscopic instrument"
+  },
+  {
+    "product_id": "PRD-0288AF3C36",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-028E85E656",
@@ -108,6 +120,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-03568EABFB",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-039120780F",
     "role_code": "EBV_SIZING_BALLOON",
     "role_fit": "Primary",
@@ -126,10 +144,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-040164F5D4",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-040CC03419",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Neonatal silicone tracheostomy tube, 3 mm I.D."
+  },
+  {
+    "product_id": "PRD-040ECD5E76",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-0410844D48",
@@ -148,6 +178,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-0451E9F3F7",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-045F1D520E",
@@ -234,6 +270,12 @@
     "notes": "Optical rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-0594E8207A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-063913C3C0",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -244,6 +286,12 @@
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
     "notes": "Bronchoscopy aspiration/irrigation accessory"
+  },
+  {
+    "product_id": "PRD-068982E6EA",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-06D2F10782",
@@ -258,6 +306,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-070A63D4C6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-0714EF8A7B",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-071D7736C1",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -270,6 +330,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0741F72026",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-075C3EC5EE",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
@@ -280,6 +346,18 @@
     "role_code": "GUIDE_SHEATH_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-07A68D03D0",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-07CD91B74C",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-07CDEDC2AB",
@@ -298,6 +376,12 @@
     "role_code": "EBV_DELIVERY_CATHETER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-07FA3BEBCB",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-087FFD6337",
@@ -366,16 +450,34 @@
     "notes": "Bronchoscopy aspiration/irrigation accessory"
   },
   {
+    "product_id": "PRD-0A33F2E846",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-0A72BF7A79",
     "role_code": "EBV_DELIVERY_CATHETER",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-0A7B35E327",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-0A889B7C1B",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Pediatric silicone tracheostomy tube, 3 mm I.D."
+  },
+  {
+    "product_id": "PRD-0A907A3C1A",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-0A93A5E8C4",
@@ -426,6 +528,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0BB7A3887E",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-0BB94EB28B",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-0BBA9245DC",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-0BC1CD8B0F",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-0BCFAC0926",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -442,6 +568,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-0C25554A9F",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-0C3327D71D",
@@ -510,6 +642,24 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0DCE1BFE25",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-0DE090D545",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-0DE3F1F8C3",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-0DE5F7D9EF",
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
@@ -526,6 +676,12 @@
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
     "role_fit": "Compatible",
     "notes": "Pleural drainage accessory"
+  },
+  {
+    "product_id": "PRD-0E17091BA1",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-0E6A5953F1",
@@ -562,6 +718,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-0F0636013C",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-0F20768341",
@@ -616,6 +778,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-10327C6D62",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-104DF655AD",
@@ -678,10 +846,22 @@
     "notes": "Optical rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-10B6E6001C",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-112FA15A7C",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-119A0435F9",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-11ADF871FE",
@@ -700,6 +880,18 @@
     "role_code": "PNEUMOTHORAX_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-122789E385",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-122BC52117",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1239820D80",
@@ -744,6 +936,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1296B5E81A",
+    "role_code": "ENDOSCOPE_CLEANING_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-129E6C270A",
     "role_code": "SPECIMEN_TRAP",
     "role_fit": "Exact",
@@ -754,6 +952,12 @@
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Exact",
     "notes": "Endoscopy workstation"
+  },
+  {
+    "product_id": "PRD-12E92BF8EC",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1339050168",
@@ -798,6 +1002,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-14681ACB38",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-1469E79896",
     "role_code": "VACUUM_LOCKING_SYRINGE",
     "role_fit": "Exact",
@@ -808,6 +1018,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-14AB98C264",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-14C4B0C4B4",
@@ -834,6 +1050,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-14F7428222",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-150ECDCD05",
     "role_code": "ENDOSCOPIC_SUCTION_PUMP",
     "role_fit": "Exact",
@@ -844,6 +1066,12 @@
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-151E4308A8",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-152A0BFA3B",
@@ -942,10 +1170,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-176442701B",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-17C3809F8C",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-17D86EEA2B",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-17DB23EBC0",
@@ -960,6 +1200,12 @@
     "notes": "Vacuum locking syringe"
   },
   {
+    "product_id": "PRD-17F91285B0",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-1840ABC86D",
     "role_code": "ENDOSCOPIC_SUCTION_PUMP",
     "role_fit": "Compatible",
@@ -972,10 +1218,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1867BEE0A7",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-188391A3A6",
     "role_code": "VACUUM_LOCKING_SYRINGE",
     "role_fit": "Exact",
     "notes": "Vacuum locking syringe"
+  },
+  {
+    "product_id": "PRD-18877E1C7E",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1894515971",
@@ -1008,6 +1266,12 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-19047EA86A",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-1905FD9828",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -1018,6 +1282,18 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-191CF14386",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-194C99D2D3",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1971F84681",
@@ -1104,6 +1380,18 @@
     "notes": "Pediatric silicone tracheostomy tube, 5.5 mm I.D."
   },
   {
+    "product_id": "PRD-1B27E1D4BA",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-1B787D066C",
+    "role_code": "PULMONARY_GUIDEWIRE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-1B9BB00FC8",
     "role_code": "ENDOSCOPIC_IRRIGATION_PUMP",
     "role_fit": "Compatible",
@@ -1120,6 +1408,12 @@
     "role_code": "APC_GAS_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-1BE33BF3AD",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1C368932FF",
@@ -1188,6 +1482,12 @@
     "notes": "May be used as a cavity/pleural drainage option only when consistent with the current IFU and institutional policy."
   },
   {
+    "product_id": "PRD-1D8D1AF28C",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-1DCE96086D",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -1228,6 +1528,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-1E84AF18DF",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1E9BA85FC4",
@@ -1272,10 +1578,28 @@
     "notes": "Thoracoscopy trocar"
   },
   {
+    "product_id": "PRD-1F9120ECB0",
+    "role_code": "ENDOSCOPE_CLEANING_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-1F9597C1B1",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-1FAE9F5EA4",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-1FB9854943",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-1FE403B84C",
@@ -1294,6 +1618,12 @@
     "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
+  },
+  {
+    "product_id": "PRD-206C68F0E3",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-207F57235E",
@@ -1332,6 +1662,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-213D82A404",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2158C0F6D1",
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Exact",
@@ -1348,6 +1684,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-21B1E658B7",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-21F6CB5BAC",
@@ -1548,10 +1890,28 @@
     "notes": "Pediatric silicone tracheostomy tube, 4 mm I.D."
   },
   {
+    "product_id": "PRD-25BBBBEA0F",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-25D4F080A3",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope accessory"
+  },
+  {
+    "product_id": "PRD-260B91DDD4",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-26107A995B",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-2616E505ED",
@@ -1564,6 +1924,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-263DB41F76",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-2644647C19",
@@ -1612,6 +1978,18 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 8.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-26B3901F8D",
+    "role_code": "IPC_MANAGEMENT_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-26DC60023E",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-272F711392",
@@ -1704,6 +2082,12 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-28CA7E5E8C",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-28DF28AD09",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -1788,6 +2172,18 @@
     "notes": "Thoracoscopy telescope"
   },
   {
+    "product_id": "PRD-2AD6ABE818",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-2B0E9C0AA9",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2B5132F8C5",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Primary",
@@ -1806,6 +2202,12 @@
     "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffless."
   },
   {
+    "product_id": "PRD-2B86C32C8A",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2B8AACAB67",
     "role_code": "ULTRASOUND_PROCESSOR",
     "role_fit": "Exact",
@@ -1822,6 +2224,12 @@
     "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
+  },
+  {
+    "product_id": "PRD-2BEB2A325B",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-2C0C6A3F3C",
@@ -1866,6 +2274,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2C9A03C41A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2CCE54EDFD",
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
@@ -1888,6 +2302,12 @@
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Exact",
     "notes": "Current manufacturer EBUS needle configuration"
+  },
+  {
+    "product_id": "PRD-2D19D12C17",
+    "role_code": "THORACOSCOPE_RIGID",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-2D2AC3B109",
@@ -1920,6 +2340,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2D75D9FB0F",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2D7DC0B764",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -1944,6 +2370,12 @@
     "notes": "Rigid bronchoscope accessory"
   },
   {
+    "product_id": "PRD-2DC22218B3",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2E03B33575",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -1966,6 +2398,12 @@
     "role_code": "LASER_CONSOLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2E5CDD2315",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-2E6996BA6A",
@@ -2028,6 +2466,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2F7137B1CB",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-2F7DDD739E",
     "role_code": "BRONCH_REPROCESSING_KIT",
     "role_fit": "Primary",
@@ -2076,10 +2520,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-304BD7E5FC",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-3065186BDC",
     "role_code": "ENERGY_PLATFORM",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-3075D02CC0",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-3097FD9A2E",
@@ -2098,6 +2554,12 @@
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Compatible",
     "notes": "40 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-30FA38490D",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-3119D76B4D",
@@ -2124,10 +2586,22 @@
     "notes": "Neonatal silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
+    "product_id": "PRD-315E7FA242",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-31DA7C7FF7",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-320FF77256",
+    "role_code": "PERC_TRACH_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-32203FFD61",
@@ -2160,10 +2634,22 @@
     "notes": "Full-lumen rigid bronchoscope/tracheoscope"
   },
   {
+    "product_id": "PRD-33370D3061",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-3353BDD6CD",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-3355DFC82B",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-337D7942C1",
@@ -2188,6 +2674,12 @@
     "role_code": "EBV_VALVE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-3426CE7B79",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-34598AB94A",
@@ -2238,10 +2730,22 @@
     "notes": "2 mm instrument channel."
   },
   {
+    "product_id": "PRD-3501E07357",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-354ECD3DC4",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-35AFD5B538",
+    "role_code": "THORACOSCOPE_RIGID",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-35BAC12D9F",
@@ -2280,6 +2784,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-36918C9B9A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-369E8F396B",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -2304,6 +2814,12 @@
     "notes": "Rigid bronchoscope telescope adapter"
   },
   {
+    "product_id": "PRD-36FE8EF239",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-370FFF1D04",
     "role_code": "LASER_FIBER",
     "role_fit": "Primary",
@@ -2316,6 +2832,12 @@
     "notes": "Thoracoscopy trocar"
   },
   {
+    "product_id": "PRD-386D5501C9",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-388B36D2E2",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -2326,6 +2848,12 @@
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Chest drainage accessory."
+  },
+  {
+    "product_id": "PRD-38E67F1EF6",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-38F9E96675",
@@ -2358,10 +2886,22 @@
     "notes": "Neonatal silicone tracheostomy tube, 4 mm I.D."
   },
   {
+    "product_id": "PRD-399E8E0192",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-39EB1A695C",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-3A10924AF9",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-3A183102CF",
@@ -2484,6 +3024,18 @@
     "notes": "Rigid bronchoscopy telescope"
   },
   {
+    "product_id": "PRD-3DCAE65A42",
+    "role_code": "THORACOSCOPE_RIGID",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-3EB4013643",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-3ED9411F2F",
     "role_code": "BRONCH_REPROCESSING_KIT",
     "role_fit": "Primary",
@@ -2554,6 +3106,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-40955508D7",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-4098113030",
@@ -2634,6 +3192,12 @@
     "notes": "Direct-visualization covered airway SEMS"
   },
   {
+    "product_id": "PRD-41CD2EE0E9",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-41F9791461",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -2670,6 +3234,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4297AD020B",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4298F66678",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -2688,10 +3258,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4333060F93",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4361785147",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
     "notes": "Pulmonary balloon dilator"
+  },
+  {
+    "product_id": "PRD-4379B878E6",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-438D71C59C",
@@ -2710,6 +3292,18 @@
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Compatible",
     "notes": "40 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-43CBDF82B4",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-43D7482BB7",
+    "role_code": "RIGID_BRONCHOSCOPE_HEAD",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-43DF4C56B7",
@@ -2754,6 +3348,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-44B8646C32",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-450492ECBB",
     "role_code": "VIDEO_PROCESSOR",
     "role_fit": "Primary",
@@ -2764,6 +3364,12 @@
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4577BB32BB",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-457AC85266",
@@ -2778,16 +3384,34 @@
     "notes": null
   },
   {
+    "product_id": "PRD-460B74977C",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-460DB62059",
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Exact",
     "notes": "Aspira IPC insertion system"
   },
   {
+    "product_id": "PRD-462ABA77A6",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4692570E45",
     "role_code": "PHOTODYNAMIC_DIFFUSER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-46ADECAA71",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-470EA6C7BA",
@@ -2814,6 +3438,12 @@
     "notes": "Single-use robotic bronchoscope and sheath system."
   },
   {
+    "product_id": "PRD-477B395A73",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-481074A513",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -2824,6 +3454,18 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffed, fenestrated."
+  },
+  {
+    "product_id": "PRD-483170BE1E",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-48514A48DF",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-486F6703A9",
@@ -2868,6 +3510,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-49256F1DC6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-492FC6BE35",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Primary",
@@ -2904,6 +3552,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4A053AA647",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4A13E00131",
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
@@ -2928,6 +3582,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4A5B11D28E",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4A6E122B5D",
     "role_code": "GENERIC_AIRWAY_ADAPTER",
     "role_fit": "Primary",
@@ -2946,6 +3606,12 @@
     "notes": "Optical rigid bronchoscopy forceps"
   },
   {
+    "product_id": "PRD-4AC9BF53AD",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4AE462CF09",
     "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
@@ -2962,6 +3628,12 @@
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4B66601DB1",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-4B6813254B",
@@ -3000,6 +3672,12 @@
     "notes": "36 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-4C18A9D165",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4C3147DF15",
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Compatible",
@@ -3036,10 +3714,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4CDD550305",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4D06DCE96B",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-4D08CBA53B",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-4D4109FA08",
@@ -3090,6 +3780,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4F0040C995",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-4F06212417",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -3130,6 +3826,12 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Neonatal silicone tracheostomy tube, 4 mm I.D."
+  },
+  {
+    "product_id": "PRD-50465694B0",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-5066E92CF8",
@@ -3198,6 +3900,18 @@
     "notes": "Adult PVC tracheostomy tube, 7 mm I.D., cuffed, fenestrated."
   },
   {
+    "product_id": "PRD-5197B3D03C",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-51C8A4796F",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-51D601323E",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -3208,6 +3922,12 @@
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Compatible",
     "notes": "32 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-51F1495A42",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-523148A737",
@@ -3234,10 +3954,22 @@
     "notes": "Thoracoscopy instrument"
   },
   {
+    "product_id": "PRD-52AEFAC307",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-52C5BEC3A1",
     "role_code": "DLT_LEFT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-52E905C321",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-534A17E0C9",
@@ -3268,6 +4000,18 @@
     "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
+  },
+  {
+    "product_id": "PRD-53D93A0FAC",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-53EC805ADF",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-53FF14A0C3",
@@ -3306,6 +4050,18 @@
     "notes": "24 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-5483564F3B",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-54ACB4FCF8",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-54CEDAAE5B",
     "role_code": "RIGID_BRONCHOSCOPE_HEAD",
     "role_fit": "Exact",
@@ -3324,10 +4080,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-55542C46A8",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-5562E69B2A",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5567CCE50B",
     "role_code": "LASER_CONSOLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-559ABA4333",
+    "role_code": "IPC_MANAGEMENT_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-55D98AAFB1",
@@ -3366,10 +4140,22 @@
     "notes": "Adult PVC tracheostomy tube, 9 mm I.D., cuffed."
   },
   {
+    "product_id": "PRD-564C66C00A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-56932BDE51",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-56BD135369",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-56DF49383B",
@@ -3394,6 +4180,12 @@
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-575932A508",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-5788C21B1E",
@@ -3430,6 +4222,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
     "notes": "Fully covered small-airway SEMS"
+  },
+  {
+    "product_id": "PRD-57D2C172FD",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-57DAB5ECAE",
@@ -3492,6 +4290,12 @@
     "notes": "Platform accessory"
   },
   {
+    "product_id": "PRD-5930BC6020",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5941DF2464",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -3522,6 +4326,12 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-59E3D04CC4",
+    "role_code": "PNEUMOTHORAX_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5A0C3D8844",
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
     "role_fit": "Primary",
@@ -3532,6 +4342,12 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
+    "product_id": "PRD-5A1EA28132",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-5A28AF1C52",
@@ -3588,6 +4404,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5ADF20DD4A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5AEEF62066",
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
@@ -3618,6 +4440,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5BD9239FCA",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5BDAA5E440",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -3634,6 +4462,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope/tracheoscope tube"
+  },
+  {
+    "product_id": "PRD-5C42525636",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-5C46BC7DA9",
@@ -3720,6 +4554,12 @@
     "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
   },
   {
+    "product_id": "PRD-5DA5177DA9",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5DFC2E8E8B",
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
@@ -3738,6 +4578,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5E530E651B",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-5E5E5933A2",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "role_fit": "Primary",
@@ -3748,6 +4594,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope/tracheoscope tube"
+  },
+  {
+    "product_id": "PRD-5E73B7DAE9",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-5EC4CBC7BF",
@@ -3822,6 +4674,12 @@
     "notes": "Rigid bronchoscopy forceps/scissors"
   },
   {
+    "product_id": "PRD-60EF0F869B",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6124E1A326",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -3846,6 +4704,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-61ABF81DC5",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-61AF4EE90B",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-61B1C43B5C",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -3856,6 +4726,12 @@
     "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Pleural biopsy needle"
+  },
+  {
+    "product_id": "PRD-6242870599",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6274807854",
@@ -3888,10 +4764,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-63306C383B",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-633391A337",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-633BBCEEBA",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-635895FDEF",
@@ -3904,6 +4792,12 @@
     "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
+  },
+  {
+    "product_id": "PRD-63715C8967",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-638E83CED6",
@@ -3942,6 +4836,12 @@
     "notes": "Direct-visualization covered airway SEMS"
   },
   {
+    "product_id": "PRD-640AEAA318",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-64481A5C4F",
     "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
@@ -3966,10 +4866,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-64D83CE808",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-64F3BFC979",
     "role_code": "VIDEO_PROCESSOR",
     "role_fit": "Primary",
     "notes": "Video processor for the 700 and 500 series bronchoscopes."
+  },
+  {
+    "product_id": "PRD-651FBD7EA3",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-6546F6126A",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6556097624",
@@ -4008,6 +4926,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6652155378",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6683FE6ADD",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -4038,6 +4962,12 @@
     "notes": "3.2 mm instrument channel."
   },
   {
+    "product_id": "PRD-6792EF1447",
+    "role_code": "FLEX_SCOPE_THERAPEUTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-67D1D03D3F",
     "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
@@ -4054,6 +4984,12 @@
     "role_code": "COLLATERAL_VENTILATION_SYSTEM",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-6877EA4AE6",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-68E4686E4B",
@@ -4098,6 +5034,12 @@
     "notes": "Neonatal silicone tracheostomy tube, 3 mm I.D."
   },
   {
+    "product_id": "PRD-69BAF13F0C",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-69C70153C3",
     "role_code": "DLT_RIGHT",
     "role_fit": "Primary",
@@ -4116,10 +5058,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6A108CCC84",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6A26802196",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
     "notes": "Pulmonary balloon dilator"
+  },
+  {
+    "product_id": "PRD-6A282D51B1",
+    "role_code": "THORACOSCOPE_RIGID",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6A53041E10",
@@ -4134,10 +5088,22 @@
     "notes": "Aspira IPC insertion system"
   },
   {
+    "product_id": "PRD-6A80B1640D",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6A84EE66C8",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-6A8C156F24",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6A9E4504F4",
@@ -4146,10 +5112,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6A9EE6FB1B",
+    "role_code": "IPC_MANAGEMENT_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6AAA7898E9",
     "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-6ABC11CE44",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6AE3D5D976",
@@ -4162,6 +5140,18 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Optical rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-6B4693A19A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-6B46EA332F",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6B67179C61",
@@ -4188,6 +5178,18 @@
     "notes": "Rocket IPC placement kit"
   },
   {
+    "product_id": "PRD-6BA107A313",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-6BAC2ADE46",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6BC32547CD",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -4210,6 +5212,18 @@
     "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
+  },
+  {
+    "product_id": "PRD-6BFF59DDAD",
+    "role_code": "PNEUMOTHORAX_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-6C0EBFAA26",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6C1DE73547",
@@ -4264,6 +5278,12 @@
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-6D2A5C2FE5",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6D2D08656C",
@@ -4326,6 +5346,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6DCD8B4626",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-6DF43B832B",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -4348,6 +5374,12 @@
     "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
     "notes": "Thoracoscopy telescope"
+  },
+  {
+    "product_id": "PRD-6EA39A2B3B",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-6EA4535CE1",
@@ -4542,6 +5574,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7214C74DFE",
+    "role_code": "CYTOLOGY_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-723273697C",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -4570,6 +5608,12 @@
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-72F4A3884F",
+    "role_code": "PNEUMOTHORAX_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-733F2370BA",
@@ -4626,6 +5670,12 @@
     "notes": "12 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-74097CDF9A",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-7435E842E8",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -4654,6 +5704,18 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-754F9ECFDD",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-75564978F2",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-7563085A90",
@@ -4722,10 +5784,22 @@
     "notes": "40 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-75CE0E7B40",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-75E555BC77",
     "role_code": "CO2_INSUFFLATOR",
     "role_fit": "Compatible",
     "notes": "Platform accessory"
+  },
+  {
+    "product_id": "PRD-75EC41AEDA",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-762DCA1D6D",
@@ -4764,6 +5838,12 @@
     "notes": "Flexible bronchoscope accessory"
   },
   {
+    "product_id": "PRD-76CC84AF2F",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-77145058F8",
     "role_code": "TBNA_NEEDLE_CONVENTIONAL",
     "role_fit": "Primary",
@@ -4774,6 +5854,12 @@
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
     "notes": "Pulmonary balloon dilator"
+  },
+  {
+    "product_id": "PRD-773959E0B5",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-77C1FEFC4F",
@@ -4806,6 +5892,12 @@
     "notes": "Neonatal silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
+    "product_id": "PRD-781BCEA88E",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-78354BF30F",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -4828,6 +5920,12 @@
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-7904481858",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-790B27C6F7",
@@ -4926,10 +6024,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7B34314342",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-7B69AB81B4",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope/tracheoscope tube"
+  },
+  {
+    "product_id": "PRD-7BA7CA85BF",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-7BC31438E7",
@@ -4942,6 +6052,12 @@
     "role_code": "PNEUMOTHORAX_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-7C20C81CC1",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-7C2BC9D752",
@@ -4986,10 +6102,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7C9E0734EE",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-7CAB35AC24",
     "role_code": "VACUUM_LOCKING_SYRINGE",
     "role_fit": "Exact",
     "notes": "Vacuum locking syringe"
+  },
+  {
+    "product_id": "PRD-7CD11761AB",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-7CDBD7C74A",
@@ -4998,10 +6126,40 @@
     "notes": "Rigid bronchoscopic shaver instrument"
   },
   {
+    "product_id": "PRD-7D0A88E1E7",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-7D2B16DFCF",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-7D8D97D18F",
     "role_code": "GENERIC_DRAINAGE_UNIT",
     "role_fit": "Primary",
     "notes": "Non-digital chest drainage unit — dry suction regulation with calibrated water seal."
+  },
+  {
+    "product_id": "PRD-7DA7AF0CE9",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-7DAB3292D5",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-7DBD613DD6",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-7DC3645CFA",
@@ -5058,6 +6216,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7F5DE98072",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-7F94CAD8E8",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -5094,16 +6258,46 @@
     "notes": null
   },
   {
+    "product_id": "PRD-805A7C312F",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-806A35FA67",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-8096B8A38E",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-80B451355D",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-80E64865AA",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-8106E78F85",
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Compatible",
     "notes": "Platform accessory"
+  },
+  {
+    "product_id": "PRD-81294A9EB3",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-81325BA145",
@@ -5130,6 +6324,12 @@
     "notes": "Cytology brush for the Monarch bronchoscope."
   },
   {
+    "product_id": "PRD-81D1E660C8",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-81D89E1E76",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -5146,6 +6346,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-82374FBBE1",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-825B745D18",
@@ -5170,6 +6376,18 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-83100016E0",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-83188CF097",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-83292E8BA3",
@@ -5202,6 +6420,12 @@
     "notes": "Rigid bronchoscope accessory"
   },
   {
+    "product_id": "PRD-83EDFED017",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-843BE1E573",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -5212,6 +6436,18 @@
     "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-8474F25510",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-847AFDF500",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-848FD7C902",
@@ -5250,10 +6486,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8551E04A9E",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-85994FB803",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-85E1F8359A",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-85FA8619AC",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-86009D6403",
@@ -5280,6 +6534,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8669305653",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-86EE2BCB83",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-86FC0B1E5C",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -5302,6 +6568,12 @@
     "role_code": "COLLATERAL_VENTILATION_SYSTEM",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-876801D999",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-8776B50EA8",
@@ -5340,6 +6612,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-882FE3DD4D",
+    "role_code": "THORACOSCOPE_RIGID",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-88D778F3A4",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -5374,6 +6652,18 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-892BC2AA9D",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-892EA2DACB",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-89702103AF",
@@ -5430,6 +6720,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8A788CE721",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-8ACE654E89",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
@@ -5454,6 +6750,12 @@
     "notes": "Adult PVC tracheostomy tube, 8 mm I.D., cuffed."
   },
   {
+    "product_id": "PRD-8B6012963E",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-8B87F7D42B",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
@@ -5476,6 +6778,12 @@
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
+    "product_id": "PRD-8C4710647F",
+    "role_code": "VIDEO_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-8C4F3E180E",
@@ -5514,6 +6822,12 @@
     "notes": "Non-digital chest drainage unit — wet suction control with water seal."
   },
   {
+    "product_id": "PRD-8CC639A8AF",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-8CDDDC5158",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Primary",
@@ -5544,6 +6858,12 @@
     "notes": "IPC accessory"
   },
   {
+    "product_id": "PRD-8DA3BC1FB4",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-8DDD9F07C0",
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "role_fit": "Primary",
@@ -5562,10 +6882,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8E51EC62D3",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-8E8D4D1565",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-8EAE6762FF",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-8EC41A9FB6",
@@ -5580,6 +6912,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8F25A1FB01",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-900390ED3C",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-900AA8F053",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -5590,6 +6934,12 @@
     "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
     "notes": "Thoracoscopy instrument"
+  },
+  {
+    "product_id": "PRD-9026C9E403",
+    "role_code": "IPC_MANAGEMENT_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-904D5B29E4",
@@ -5712,6 +7062,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-93039B7450",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-93331CA104",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
@@ -5802,6 +7158,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-94D3933795",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-94E33ED243",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Primary",
@@ -5856,16 +7218,40 @@
     "notes": "Rigid bronchoscopic shaver instrument"
   },
   {
+    "product_id": "PRD-971388D340",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-972FD7E1D0",
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-973AB2950C",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-973BDAB586",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-978B2478DC",
     "role_code": "FLEX_SCOPE_THERAPEUTIC",
     "role_fit": "Primary",
     "notes": "FUJIFILM bronchoscope."
+  },
+  {
+    "product_id": "PRD-97A222ED41",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-97B68B1ECE",
@@ -5896,6 +7282,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-98EB75029F",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-993274DBA5",
@@ -5962,6 +7354,18 @@
     "role_code": "RIGID_BRONCH_SHAVER",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopic shaver accessory"
+  },
+  {
+    "product_id": "PRD-9B2F13C1BA",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-9B4FEC155D",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-9BAC333008",
@@ -6078,6 +7482,12 @@
     "notes": "Pulmonary balloon dilator"
   },
   {
+    "product_id": "PRD-9DA17FB213",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-9DA3B7C48B",
     "role_code": "APC_GAS_ACCESSORY",
     "role_fit": "Primary",
@@ -6108,6 +7518,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9DEE331FF0",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-9E24CD4C73",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
@@ -6126,16 +7542,40 @@
     "notes": "Rigid suction catheter accessory"
   },
   {
+    "product_id": "PRD-9E8587840A",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-9E8D77CC60",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-9EB174FBB0",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-9F36AD4CFE",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-9F5884AD09",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-9F5BAD2641",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-9F6F724DC2",
@@ -6160,6 +7600,12 @@
     "role_code": "IPC_DRAINAGE_KIT",
     "role_fit": "Exact",
     "notes": "Rocket IPC drainage supply"
+  },
+  {
+    "product_id": "PRD-A0055C636E",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A0214EBAC0",
@@ -6216,6 +7662,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A1B3741E75",
+    "role_code": "ENDOSCOPE_CLEANING_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A1B7FC0BD4",
     "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
@@ -6226,6 +7678,12 @@
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-A201D9E5BE",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A24DAA76C6",
@@ -6246,10 +7704,22 @@
     "notes": "8 Fr thoracic catheter."
   },
   {
+    "product_id": "PRD-A2AFB61CA7",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A2C49C9352",
     "role_code": "CRYOPROBE_FLEX",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-A2E61F3CDC",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A2F4A953C4",
@@ -6280,6 +7750,12 @@
     "role_code": "PNEUMOTHORAX_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-A3461153FD",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A3EBA86219",
@@ -6318,6 +7794,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A4662B76B1",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A4793529B7",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -6342,10 +7824,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A4D34F0B5D",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-A4DEDCB630",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A504350406",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope accessory"
+  },
+  {
+    "product_id": "PRD-A5606F3A0E",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A5971F1DE3",
@@ -6378,6 +7878,12 @@
     "notes": "Aspira drainage supply"
   },
   {
+    "product_id": "PRD-A6299876FB",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A64069C0A0",
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
@@ -6388,6 +7894,12 @@
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-A6DFE867BA",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A7209784C9",
@@ -6418,6 +7930,24 @@
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
     "role_fit": "Primary",
     "notes": "2 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-A810240CB4",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-A82615F351",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-A82B13E74B",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-A83C7ADE90",
@@ -6474,6 +8004,12 @@
     "notes": "Fully covered small-airway SEMS"
   },
   {
+    "product_id": "PRD-A8E0AB361B",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A8F80E7C94",
     "role_code": "IPC_DRAINAGE_KIT",
     "role_fit": "Exact",
@@ -6492,16 +8028,52 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A9C03C078D",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-A9C2F393B9",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-AA2564FB7E",
+    "role_code": "CYTOLOGY_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-AA29300E40",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-AA3A12BCF8",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Pediatric silicone tracheostomy tube, 4.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-AA51641B5A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-AA897B2F51",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-AACAFBB1E3",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-AACBA3F0AD",
@@ -6520,6 +8092,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-AB1FE11C34",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-AB3747D636",
@@ -6618,6 +8196,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AD431C7F33",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-AD4AAF21E4",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-AD5DB57EBC",
     "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Exact",
@@ -6696,10 +8286,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AF8F8B7F8C",
+    "role_code": "RIGID_BRONCHOSCOPE_HEAD",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-AF93E56FE5",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope accessory"
+  },
+  {
+    "product_id": "PRD-AFB67F2AD3",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-B027947191",
+    "role_code": "PERC_TRACH_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-B05D337994",
@@ -6718,6 +8326,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope/tracheoscope tube"
+  },
+  {
+    "product_id": "PRD-B08199D221",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-B091070F8D",
@@ -6762,6 +8376,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B229D186DD",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B258E8E859",
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
@@ -6780,6 +8400,12 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-B2AC8712B7",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B2B0419598",
     "role_code": "IPC_DRAINAGE_KIT",
     "role_fit": "Primary",
@@ -6792,6 +8418,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B2DAC54DE1",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-B2FEAC3ABE",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B31434240A",
     "role_code": "GENERIC_ULTRASOUND",
     "role_fit": "Primary",
@@ -6802,6 +8440,12 @@
     "role_code": "ULTRASOUND_CABLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-B3E2267573",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-B43064119C",
@@ -6912,6 +8556,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B5DEE283B2",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B5E107E3AE",
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Primary",
@@ -6954,6 +8604,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B68C2A2F50",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B68F5C38B4",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -6990,6 +8646,12 @@
     "notes": "Rigid suction catheter"
   },
   {
+    "product_id": "PRD-B734D0D7DA",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B76CB39194",
     "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Primary",
@@ -7000,6 +8662,12 @@
     "role_code": "APC_GAS_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-B8277C7991",
+    "role_code": "CHEST_TUBE_SMALL_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-B865D0FAF0",
@@ -7038,6 +8706,12 @@
     "notes": "Balloon inflation device"
   },
   {
+    "product_id": "PRD-B9352BD52A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-B9381E6DD2",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -7048,6 +8722,12 @@
     "role_code": "THORACOSCOPY_PROBE",
     "role_fit": "Exact",
     "notes": "Thoracoscopy surgical probe"
+  },
+  {
+    "product_id": "PRD-B9548AC507",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-B98EADB33D",
@@ -7140,10 +8820,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BB0E29F07F",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-BB11C206A4",
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Exact",
     "notes": "Silicone stent applicator"
+  },
+  {
+    "product_id": "PRD-BB1C007EE6",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-BB33BD7BE9",
@@ -7212,6 +8904,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BC55573969",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-BC6CB66043",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-BC936E9D71",
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
@@ -7242,6 +8946,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BD118B9112",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-BD2D495AB7",
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
@@ -7252,6 +8962,12 @@
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
+  },
+  {
+    "product_id": "PRD-BD7D0C388D",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-BD9FC1E209",
@@ -7306,6 +9022,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-BE310A3547",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-BEB189750B",
@@ -7446,6 +9168,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C2B436250C",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C2C49B88CC",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -7456,6 +9184,24 @@
     "role_code": "FOREIGN_BODY_BASKET",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C2D9370B88",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-C2DCA71DDE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-C31B1B8423",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C32CFEC594",
@@ -7470,10 +9216,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C3B7FB7CAE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C3CCEF8357",
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
     "notes": "Adult PVC tracheostomy tube, 8.5 mm I.D., cuffless."
+  },
+  {
+    "product_id": "PRD-C3CFAD5E58",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C3FA589A20",
@@ -7500,10 +9258,28 @@
     "notes": "Manufacturer blocker set"
   },
   {
+    "product_id": "PRD-C43AE95696",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C4480F30D2",
     "role_code": "RIGID_BRONCHOSCOPE_HEAD",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C46460490C",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-C4699157F4",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C47EB33229",
@@ -7548,10 +9324,22 @@
     "notes": "Pediatric silicone tracheostomy tube, 3.5 mm I.D."
   },
   {
+    "product_id": "PRD-C52FF9A31A",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C580C3FAB4",
     "role_code": "GENERIC_DRAINAGE_UNIT",
     "role_fit": "Primary",
     "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
+    "product_id": "PRD-C61336D16B",
+    "role_code": "PERC_TRACH_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C649B4B9C5",
@@ -7572,6 +9360,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C665E88A51",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C684D9ADCF",
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
@@ -7582,6 +9376,12 @@
     "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
     "notes": "Robotic bronchoscopy platform; P2 generation."
+  },
+  {
+    "product_id": "PRD-C6B6BD759E",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C6BE641E4E",
@@ -7612,6 +9412,12 @@
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C7719849F9",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C783A34A62",
@@ -7650,6 +9456,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C811661645",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C88B1CD284",
     "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
     "role_fit": "Primary",
@@ -7680,10 +9492,28 @@
     "notes": "Adult PVC tracheostomy tube, 7.5 mm I.D., cuffed."
   },
   {
+    "product_id": "PRD-C9000BB9AD",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-C90F6F2F20",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-C919655C5F",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 9 mm I.D."
+  },
+  {
+    "product_id": "PRD-C93C97F54C",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C96F155F93",
@@ -7696,6 +9526,12 @@
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-C9C4E45BB9",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-C9FE364632",
@@ -7740,6 +9576,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CB2AE00175",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-CB585AE377",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -7750,6 +9592,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscope/tracheoscope tube"
+  },
+  {
+    "product_id": "PRD-CB680CD69F",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-CB9242F78E",
@@ -7810,6 +9658,12 @@
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
     "notes": "Rigid suction catheter"
+  },
+  {
+    "product_id": "PRD-CC8E8D081A",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-CC913540D8",
@@ -7890,6 +9744,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CFD20B352F",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D0139E750F",
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
@@ -7944,6 +9804,12 @@
     "notes": "Talc poudrage applicator"
   },
   {
+    "product_id": "PRD-D1874FEF53",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D18E672989",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -7986,6 +9852,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D2350C1510",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-D23CFCF5DD",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D273A067EA",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -7996,6 +9874,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-D2C1E4B75F",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-D2C6029A70",
@@ -8028,6 +9912,12 @@
     "notes": "Adult PVC tracheostomy tube, 6 mm I.D., cuffless."
   },
   {
+    "product_id": "PRD-D40CA802F4",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D41DE241C1",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
@@ -8058,6 +9948,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D4EABEA7CA",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D52ED4EF06",
     "role_code": "COLLATERAL_VENTILATION_SYSTEM",
     "role_fit": "Primary",
@@ -8082,6 +9978,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D5706A45F2",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D58A0A54AA",
     "role_code": "RIGID_BRONCH_SHAVER",
     "role_fit": "Exact",
@@ -8100,6 +10002,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D5A822A291",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-D5CBD6E254",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -8116,6 +10024,12 @@
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Compatible",
     "notes": "28 Fr thoracic catheter."
+  },
+  {
+    "product_id": "PRD-D5ED3DC515",
+    "role_code": "FLEX_SCOPE_DIAGNOSTIC",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-D6183226BF",
@@ -8152,6 +10066,12 @@
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-D711DF7EE1",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-D723C6FF62",
@@ -8274,16 +10194,34 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DA34CBFF14",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DA396EF06D",
     "role_code": "ENERGY_CABLE_ADAPTER",
     "role_fit": "Primary",
     "notes": null
   },
   {
+    "product_id": "PRD-DA4769A595",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DA69A8016A",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-DA7ECBAE41",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-DA836B059E",
@@ -8304,6 +10242,12 @@
     "notes": "Silicone stent applicator"
   },
   {
+    "product_id": "PRD-DB022C1FE8",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DB10C3EACC",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
@@ -8320,6 +10264,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy forceps/scissors"
+  },
+  {
+    "product_id": "PRD-DB755221C4",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-DB99B2DA8B",
@@ -8344,6 +10294,18 @@
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 7 mm I.D."
+  },
+  {
+    "product_id": "PRD-DC2AEF06F9",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-DC3BA17C2B",
+    "role_code": "PNEUMOTHORAX_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-DC7D6310BB",
@@ -8394,6 +10356,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DD1F7503DE",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DD4AFE7DE4",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -8436,6 +10404,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DE790B8608",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DF0AB82B2D",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -8460,6 +10434,12 @@
     "notes": "Rigid bronchoscopy forceps/scissors"
   },
   {
+    "product_id": "PRD-DF26D98A85",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DF30B54282",
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Primary",
@@ -8470,6 +10450,12 @@
     "role_code": "ENERGY_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-DF553A815B",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-DF5BFBB99D",
@@ -8490,6 +10476,12 @@
     "notes": "Rigid bronchoscopy accessory"
   },
   {
+    "product_id": "PRD-DF8AFD026D",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-DF917ECDBF",
     "role_code": "ROBOTIC_BRONCH_PLATFORM",
     "role_fit": "Primary",
@@ -8506,6 +10498,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
     "notes": "Optical rigid bronchoscopy forceps"
+  },
+  {
+    "product_id": "PRD-DFD79119A6",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-DFDC63935D",
@@ -8694,6 +10692,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E3E979261F",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-E3EE9B4863",
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
@@ -8716,6 +10720,18 @@
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
     "notes": "Rigid suction catheter"
+  },
+  {
+    "product_id": "PRD-E4BF1CCDFC",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-E4F966BAFD",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-E4FE22C28D",
@@ -8796,6 +10812,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E8039C8893",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-E81D93D123",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -8814,10 +10836,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E8BAEDDF61",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-E8C63D6C64",
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-E8F5C57738",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-E907C0EB2E",
@@ -8836,6 +10870,12 @@
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-E92A7EC85C",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-E94BC99DC8",
@@ -8886,10 +10926,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EA44AB3927",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-EA6F3E44C1",
     "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-EA9341925D",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-EAED780757",
@@ -8946,10 +10998,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EB9D39DA96",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-EBAEE8A314",
     "role_code": "EBUS_SCOPE",
     "role_fit": "Primary",
     "notes": "2 mm instrument channel."
+  },
+  {
+    "product_id": "PRD-EBE3C4E5EF",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-EC1BF76FBC",
@@ -9072,6 +11136,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EF8D01CBAD",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-EF96863018",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -9082,6 +11152,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-EFD54DC9EF",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F008B12AC0",
@@ -9108,6 +11184,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F08EF9B50F",
+    "role_code": "ENDOSCOPE_CLEANING_BRUSH",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-F0DFCE18B4",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F12AF814EE",
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
@@ -9132,6 +11220,12 @@
     "notes": "Rigid bronchoscope accessory"
   },
   {
+    "product_id": "PRD-F14FD13B3E",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F1632F4CEC",
     "role_code": "CRYO_SYSTEM_ACCESSORY",
     "role_fit": "Primary",
@@ -9144,10 +11238,28 @@
     "notes": "Thoracoscopy telescope"
   },
   {
+    "product_id": "PRD-F18D8E0CD8",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F1A94DDA3B",
     "role_code": "ENDOSCOPY_LIGHT_CABLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F1A98A53E9",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-F1BAA98154",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F1D5F37924",
@@ -9174,10 +11286,28 @@
     "notes": "Direct-visualization covered airway SEMS"
   },
   {
+    "product_id": "PRD-F24CF1B9C7",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F2C87C4908",
     "role_code": "FLEX_SCOPE_SINGLE_USE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F2D56B29CB",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-F2DAE4E583",
+    "role_code": "PULMONARY_GUIDEWIRE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F2F9633FBF",
@@ -9196,6 +11326,12 @@
     "role_code": "EBUS_NEEDLE_FNA",
     "role_fit": "Exact",
     "notes": "Current manufacturer EBUS needle configuration"
+  },
+  {
+    "product_id": "PRD-F33AA311E4",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F351B4D76F",
@@ -9246,6 +11382,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F454186BF6",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F4B03B6DFA",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -9256,6 +11398,12 @@
     "role_code": "RIGID_SUCTION_CATHETER",
     "role_fit": "Exact",
     "notes": "Rigid suction catheter"
+  },
+  {
+    "product_id": "PRD-F4C019AE18",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F4D1B1F6F2",
@@ -9306,6 +11454,12 @@
     "notes": "2.2 mm instrument channel."
   },
   {
+    "product_id": "PRD-F5AB1E4575",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F5AE18C06E",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -9348,10 +11502,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F60DA91352",
+    "role_code": "FOREIGN_BODY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-F61DF2B2E6",
+    "role_code": "CHEST_TUBE_LARGE_BORE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F63C06E063",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F699627250",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F6BB76BECF",
@@ -9370,6 +11542,12 @@
     "role_code": "BAL_KIT",
     "role_fit": "Compatible",
     "notes": "Integrated sampler-set configuration for BAL/specimen collection."
+  },
+  {
+    "product_id": "PRD-F72B622208",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F765071278",
@@ -9438,10 +11616,22 @@
     "notes": "FUJIFILM bronchoscope."
   },
   {
+    "product_id": "PRD-F8615190BF",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-F867027C4E",
     "role_code": "FLEX_SCOPE_DIAGNOSTIC",
     "role_fit": "Primary",
     "notes": "Olympus bronchoscope."
+  },
+  {
+    "product_id": "PRD-F86A126431",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F8B8727229",
@@ -9460,6 +11650,12 @@
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 6 mm I.D."
+  },
+  {
+    "product_id": "PRD-F946AD81F2",
+    "role_code": "COLLATERAL_VENTILATION_SYSTEM",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-F96AA87958",
@@ -9510,10 +11706,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FA25C1403D",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-FA325AD5F8",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-FA37816545",
+    "role_code": "PNEUMOTHORAX_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-FA59BE320F",
@@ -9532,6 +11740,12 @@
     "role_code": "NAV_BRONCHOSCOPE_ADAPTER",
     "role_fit": "Compatible",
     "notes": null
+  },
+  {
+    "product_id": "PRD-FAEB7ED380",
+    "role_code": "CHEST_TUBE_SURGICAL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-FB075DFB2D",
@@ -9576,10 +11790,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FBF1DDB248",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-FBFA19440C",
     "role_code": "TRACH_TUBE_CUFFED",
     "role_fit": "Primary",
     "notes": "Adult silicone tracheostomy tube, 9.5 mm I.D."
+  },
+  {
+    "product_id": "PRD-FC0DCD11AB",
+    "role_code": "RIGID_BRONCHOSCOPE_BARREL",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-FC1DF08B67",
@@ -9604,6 +11830,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopy suction/accessory"
+  },
+  {
+    "product_id": "PRD-FCE9DE78C0",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-FCEC968C4E",
@@ -9636,6 +11868,18 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FD5FCA373B",
+    "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-FD8DFD7EA8",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-FD962E14DA",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -9658,6 +11902,18 @@
     "role_code": "EBV_VALVE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-FDD7F56BCD",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-FDE3543771",
+    "role_code": "RIGID_TELESCOPE",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-FDFDD69931",
@@ -9696,6 +11952,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FE81710DC5",
+    "role_code": "BIOPSY_FORCEPS_FLEX",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
     "product_id": "PRD-FEA0F47B62",
     "role_code": "RIGID_TELESCOPE",
     "role_fit": "Exact",
@@ -9706,6 +11968,12 @@
     "role_code": "IPC_INSERTION_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-FEBFE797DD",
+    "role_code": "THORACENTESIS_KIT",
+    "role_fit": "Primary",
+    "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
     "product_id": "PRD-FF130FCDC6",

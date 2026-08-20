@@ -37,7 +37,7 @@ describe('generated IP preference-card import contract', () => {
       stale_exceptions: 0,
       proposal_generation_errors: 0,
     })
-    expect(slotOptionProposals.proposals).toHaveLength(831)
+    expect(slotOptionProposals.proposals).toHaveLength(1485)
     expect(
       slotOptionProposals.proposals.every(
         (proposal) =>

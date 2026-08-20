@@ -161,6 +161,7 @@ describe('D2B — the gate governs recommendation only', () => {
   it('leaves every blocked and review-required product fully in the atlas', () => {
     const atlas = getAtlasCatalogStore()
     const gates = new Map<string, number>()
+    let productsWithoutRole = 0
     for (const product of atlas.products) {
       const status = getProductStatus(product.product_id)
       gates.set(
@@ -168,18 +169,20 @@ describe('D2B — the gate governs recommendation only', () => {
         (gates.get(status.statusRecommendationGate) ?? 0) + 1,
       )
       if (status.statusRecommendationGate === 'clear') continue
-      // Blocked / review-required products keep their page, their identity, and their roles.
+      // Blocked / review-required products keep their page and identity. Brochure identities
+      // without defensible canonical roles remain explicitly unassigned.
       const detail = getAtlasProductDetail(product.product_id)
       expect(detail).not.toBeNull()
       expect(detail!.product.product_name).toBe(product.product_name)
-      expect(detail!.roles.length).toBeGreaterThan(0)
+      if (detail!.roles.length === 0) productsWithoutRole += 1
     }
-    // 23 blocked, 34 review-required from the researched rows, plus the 753 unresearched
-    // products whose safety status is honestly unverified.
+    expect(productsWithoutRole).toBe(19)
+    // 23 blocked and 34 review-required researched rows, plus 1,150 unresearched products
+    // whose safety status is honestly unverified.
     expect(Object.fromEntries([...gates.entries()].sort())).toEqual({
       blocked_active_safety_action: 23,
       clear: 521,
-      review_required: 787,
+      review_required: 1184,
     })
   })
 })

@@ -8,6 +8,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-00C2BB78A4",
+    "source_id": "SRC087",
+    "source_location": "Document p. 54 (PDF page 62)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-00FC2A29AC",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -96,11 +104,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0268D7E030",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-027269F110",
     "source_id": "SRC021",
     "source_location": "p. 13",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0288AF3C36",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -144,6 +168,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-03568EABFB",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-039120780F",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.14 (PDF p. 129)",
@@ -176,6 +208,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-040164F5D4",
+    "source_id": "SRC080",
+    "source_location": "Document p. 5 (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-040CC03419",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006957",
@@ -189,6 +229,14 @@
     "source_location": "Product code 85N030",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-040ECD5E76",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -221,6 +269,14 @@
     "source_location": "p. 24",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0451E9F3F7",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -352,6 +408,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0594E8207A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-063913C3C0",
     "source_id": "SRC013",
     "source_location": "Tracheal stent specifications (PDF p. 12)",
@@ -365,6 +429,14 @@
     "source_location": "p. 92",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-068982E6EA",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -382,6 +454,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified product/SKU identity - exact configuration pending",
     "notes": "Manufacturer page supports product/SKU identity; exact configuration remains to be verified."
+  },
+  {
+    "product_id": "PRD-070A63D4C6",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0714EF8A7B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 94 (PDF page 102)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-071D7736C1",
@@ -416,6 +504,14 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-0741F72026",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-075C3EC5EE",
     "source_id": "SRC034",
     "source_location": "LX transducer and exam-type tables",
@@ -440,6 +536,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-07A68D03D0",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-07CD91B74C",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-07CDEDC2AB",
     "source_id": "SRC031",
     "source_location": "p. 73",
@@ -461,6 +573,22 @@
     "source_location": "pp. 14-15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. HUD manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-07FA3BEBCB",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-085F7B7BAF",
+    "source_id": "SRC087",
+    "source_location": "Document p. 98 (PDF page 106)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -493,6 +621,14 @@
     "source_location": "Soft and firm PVC thoracic catheters",
     "claim_type": "Product family, configuration, and part number",
     "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-08F33F770D",
+    "source_id": "SRC087",
+    "source_location": "Document p. 51 (PDF page 59)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -568,11 +704,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0A33F2E846",
+    "source_id": "SRC079",
+    "source_location": "Document p. 7/18 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0A72BF7A79",
     "source_id": "SRC007",
     "source_location": "Therapeutic bronchoscopy",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A7B35E327",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -589,6 +741,14 @@
     "source_location": "Product code 67P030",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A907A3C1A",
+    "source_id": "SRC080",
+    "source_location": "Document p. 11 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -672,6 +832,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0BB7A3887E",
+    "source_id": "SRC087",
+    "source_location": "Document p. 48 (PDF page 56)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0BB94EB28B",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0BBA9245DC",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0BC1CD8B0F",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0BCFAC0926",
     "source_id": "SRC021",
     "source_location": "p. 26",
@@ -701,6 +893,14 @@
     "source_location": "p. 25",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0C25554A9F",
+    "source_id": "SRC087",
+    "source_location": "Document p. 103 (PDF page 111)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -800,6 +1000,38 @@
     "notes": "Historical brochure added for provenance only; record remains suppressed."
   },
   {
+    "product_id": "PRD-0D742CC1FD",
+    "source_id": "SRC087",
+    "source_location": "Document p. 54 (PDF page 62)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0DCE1BFE25",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0DE090D545",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0DE3F1F8C3",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0DE5F7D9EF",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312005547",
@@ -821,6 +1053,14 @@
     "source_location": "p. 15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog and IFU",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0E17091BA1",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -880,6 +1120,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0F0636013C",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0F20768341",
     "source_id": "SRC021",
     "source_location": "p. 6",
@@ -910,6 +1158,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-0FBAA7EFB7",
+    "source_id": "SRC087",
+    "source_location": "Document p. 44 (PDF page 52)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-0FC4F02CEE",
@@ -944,11 +1200,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-100C06955D",
+    "source_id": "SRC087",
+    "source_location": "Document p. 50 (PDF page 58)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-102569C82C",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-10327C6D62",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1024,12 +1296,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-10B6E6001C",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-112FA15A7C",
     "source_id": "SRC013",
     "source_location": "Tracheal stent specifications (PDF p. 12)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - global/older source",
     "notes": "Exact catalog/SKU evidence from an older global manufacturer catalog; U.S. status unverified."
+  },
+  {
+    "product_id": "PRD-119A0435F9",
+    "source_id": "SRC087",
+    "source_location": "Document p. 75 (PDF page 83)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-11ADF871FE",
@@ -1062,6 +1350,22 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified product/SKU identity - exact configuration pending",
     "notes": "Manufacturer page supports product/SKU identity; exact configuration remains to be verified."
+  },
+  {
+    "product_id": "PRD-122789E385",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-122BC52117",
+    "source_id": "SRC087",
+    "source_location": "Document p. 48 (PDF page 56)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-1239820D80",
@@ -1128,6 +1432,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1296B5E81A",
+    "source_id": "SRC087",
+    "source_location": "Document p. 51 (PDF page 59)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-129E6C270A",
     "source_id": "SRC030",
     "source_location": "p. 92",
@@ -1141,6 +1453,14 @@
     "source_location": "p. 2.05",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-12E92BF8EC",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1208,6 +1528,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-14681ACB38",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1469E79896",
     "source_id": "SRC027",
     "source_location": "p. 13",
@@ -1221,6 +1549,14 @@
     "source_location": "Product list 2025!Sheet6",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-14AB98C264",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1264,6 +1600,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-14F7428222",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-150ECDCD05",
     "source_id": "SRC022",
     "source_location": "p. 7.08",
@@ -1277,6 +1621,14 @@
     "source_location": "pp. 70-71",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-151E4308A8",
+    "source_id": "SRC087",
+    "source_location": "Document p. 76 (PDF page 84)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1408,11 +1760,27 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-176442701B",
+    "source_id": "SRC086",
+    "source_location": "Document p. 20/29 (PDF page 20)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-17C3809F8C",
     "source_id": "SRC030",
     "source_location": "p. 87",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-17D86EEA2B",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1432,6 +1800,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-17F91285B0",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1840ABC86D",
     "source_id": "SRC022",
     "source_location": "p. 7.10",
@@ -1448,11 +1824,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1867BEE0A7",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-188391A3A6",
     "source_id": "SRC027",
     "source_location": "p. 13",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-18877E1C7E",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1504,6 +1896,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-19047EA86A",
+    "source_id": "SRC080",
+    "source_location": "Document p. 9 (PDF page 6)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1905FD9828",
     "source_id": "SRC030",
     "source_location": "p. 72",
@@ -1517,6 +1917,22 @@
     "source_location": "p. 89",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-191CF14386",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-194C99D2D3",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1648,6 +2064,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1B27E1D4BA",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1B787D066C",
+    "source_id": "SRC081",
+    "source_location": "PDF page index 2; printed p. 2/2, PRODUCT SPECIFICATIONS table",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1B9BB00FC8",
     "source_id": "SRC022",
     "source_location": "p. 7.04",
@@ -1670,6 +2102,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-1BE33BF3AD",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-1C368932FF",
@@ -1768,6 +2208,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1D8D1AF28C",
+    "source_id": "SRC087",
+    "source_location": "Document p. 98 (PDF page 106)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1DCE96086D",
     "source_id": "SRC021",
     "source_location": "p. 15",
@@ -1840,6 +2288,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1E84AF18DF",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1E9BA85FC4",
     "source_id": "SRC022",
     "source_location": "p. 2.16",
@@ -1904,11 +2360,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1F9120ECB0",
+    "source_id": "SRC087",
+    "source_location": "Document p. 51 (PDF page 59)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1F9597C1B1",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1FAE9F5EA4",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1FB9854943",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1941,6 +2421,14 @@
     "source_location": "pp. 44-48",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-206C68F0E3",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -1992,6 +2480,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-213D82A404",
+    "source_id": "SRC083",
+    "source_location": "Document p. not stated (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2158C0F6D1",
     "source_id": "SRC030",
     "source_location": "p. 77",
@@ -2013,6 +2509,14 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-21B1E658B7",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2352,11 +2856,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-25BBBBEA0F",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-25D4F080A3",
     "source_id": "SRC021",
     "source_location": "p. 18",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-260B91DDD4",
+    "source_id": "SRC087",
+    "source_location": "Document p. 77 (PDF page 85)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-26107A995B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2373,6 +2901,14 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-263DB41F76",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2437,6 +2973,22 @@
     "source_location": "Product code 670185",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-26B3901F8D",
+    "source_id": "SRC082",
+    "source_location": "Document p. 2/4 (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-26DC60023E",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2565,6 +3117,14 @@
     "source_location": "p. 75",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-28CA7E5E8C",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2712,6 +3272,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2AD6ABE818",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2B0E9C0AA9",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2B5132F8C5",
     "source_id": "SRC003",
     "source_location": "p. 12",
@@ -2744,6 +3320,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2B86C32C8A",
+    "source_id": "SRC087",
+    "source_location": "Document p. 48 (PDF page 56)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2B8AACAB67",
     "source_id": "SRC029",
     "source_location": "p. 2",
@@ -2765,6 +3349,14 @@
     "source_location": "pp. 53-55",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2BEB2A325B",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2840,6 +3432,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2C9A03C41A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2CCE54EDFD",
     "source_id": "SRC003",
     "source_location": "p. 14",
@@ -2888,6 +3488,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2D19D12C17",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP4 (PDF page 270)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2D2AC3B109",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312013740",
@@ -2917,6 +3525,14 @@
     "source_location": "p. 95",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact model/specification - commercial item code required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2D75D9FB0F",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -2960,6 +3576,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2DC22218B3",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2E03B33575",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -2997,6 +3621,14 @@
     "source_location": "ForTec EVOLVE sheet and Interventional Pulmonology product listing",
     "claim_type": "System identity, wavelength, and power ceiling",
     "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2E5CDD2315",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3080,6 +3712,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2F7137B1CB",
+    "source_id": "SRC087",
+    "source_location": "Document p. 48 (PDF page 56)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2F7DDD739E",
     "source_id": "SRC003",
     "source_location": "p. 11",
@@ -3101,6 +3741,14 @@
     "source_location": "p. 95",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact model identity - commercial item code required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2FBA3476D5",
+    "source_id": "SRC087",
+    "source_location": "Document p. 54 (PDF page 62)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3152,6 +3800,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-304BD7E5FC",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3065186BDC",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04050147015692",
@@ -3165,6 +3821,14 @@
     "source_location": "APC waveforms available with APC 3 module",
     "claim_type": "Device identity and platform pairing",
     "verification_status": "Manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3075D02CC0",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3192,6 +3856,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-30FA38490D",
+    "source_id": "SRC087",
+    "source_location": "Document p. 43 (PDF page 51)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3119D76B4D",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 00650862111019",
@@ -3205,6 +3877,14 @@
     "source_location": "Oasis dry suction water seal chest drain — Ordering Information",
     "claim_type": "Product family, configuration, and part number",
     "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3123E8EF81",
+    "source_id": "SRC087",
+    "source_location": "Document p. 51 (PDF page 59)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3240,6 +3920,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-315E7FA242",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-31C1013C19",
     "source_id": "SRC064",
     "source_location": "Breakthrough devices report — NIO Lung Cancer Reveal profile",
@@ -3253,6 +3941,14 @@
     "source_location": "CSV row 25",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-320FF77256",
+    "source_id": "SRC074",
+    "source_location": "Document p. 12/66 (PDF page 12)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3312,12 +4008,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-33370D3061",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3353BDD6CD",
     "source_id": "SRC017",
     "source_location": "Bipolar cables, catalog p. 9",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-3355DFC82B",
+    "source_id": "SRC079",
+    "source_location": "Document p. 5/18 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-337D7942C1",
@@ -3381,6 +4093,14 @@
     "source_location": "Respiratory 14.11 (PDF p. 124)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3426CE7B79",
+    "source_id": "SRC086",
+    "source_location": "Document p. 23/29 (PDF page 23)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3448,11 +4168,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3501E07357",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-354ECD3DC4",
     "source_id": "SRC030",
     "source_location": "p. 86",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-35AFD5B538",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP4 (PDF page 270)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3496,6 +4232,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-36918C9B9A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-369E8F396B",
     "source_id": "SRC013",
     "source_location": "Tracheal stent specifications (PDF p. 12)",
@@ -3528,6 +4272,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-36FE8EF239",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-370FFF1D04",
     "source_id": "SRC068",
     "source_location": "Surgical laser fibres brochure — application matrix",
@@ -3544,6 +4296,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-386D5501C9",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-388B36D2E2",
     "source_id": "SRC021",
     "source_location": "p. 13",
@@ -3557,6 +4317,14 @@
     "source_location": "device.txt, PrimaryDI 04026704428779",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-38E67F1EF6",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3608,11 +4376,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-399E8E0192",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-39EB1A695C",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3A10924AF9",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -3622,6 +4406,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-3A1A155D08",
+    "source_id": "SRC087",
+    "source_location": "Document p. 54 (PDF page 62)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-3A27A7B76D",
@@ -3800,6 +4592,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3DCAE65A42",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP4 (PDF page 270)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3EB4013643",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3ED9411F2F",
     "source_id": "SRC003",
     "source_location": "p. 11",
@@ -3901,6 +4709,14 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-40955508D7",
+    "source_id": "SRC087",
+    "source_location": "Document p. 98 (PDF page 106)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4032,6 +4848,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-41CD2EE0E9",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-41F9791461",
     "source_id": "SRC021",
     "source_location": "p. 20",
@@ -4088,6 +4912,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4297AD020B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4298F66678",
     "source_id": "SRC021",
     "source_location": "p. 25",
@@ -4112,11 +4944,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4333060F93",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4361785147",
     "source_id": "SRC027",
     "source_location": "pp. 9-10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4379B878E6",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4141,6 +4989,22 @@
     "source_location": "device.txt, PrimaryDI 04026704558339",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-43CBDF82B4",
+    "source_id": "SRC086",
+    "source_location": "Document p. 22/29 (PDF page 22)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-43D7482BB7",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4208,11 +5072,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-449C642234",
+    "source_id": "SRC087",
+    "source_location": "Document p. 53 (PDF page 61)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-44A6CBF184",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-44B8646C32",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4240,6 +5120,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-4577BB32BB",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-457AC85266",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -4253,6 +5141,14 @@
     "source_location": "LungVision MOSS brochure",
     "claim_type": "Component identity",
     "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-460B74977C",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4272,11 +5168,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-462ABA77A6",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4692570E45",
     "source_id": "SRC063",
     "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
     "claim_type": "Diffuser lengths and construction",
     "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-46ADECAA71",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4312,6 +5224,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-477B395A73",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-481074A513",
     "source_id": "SRC030",
     "source_location": "p. 91",
@@ -4336,12 +5256,36 @@
     "notes": null
   },
   {
+    "product_id": "PRD-483170BE1E",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-48514A48DF",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-486F6703A9",
     "source_id": "SRC017",
     "source_location": "Bipolar cables, catalog p. 10",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-48897E4C88",
+    "source_id": "SRC087",
+    "source_location": "Document p. 50 (PDF page 58)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-4896D3D636",
@@ -4397,6 +5341,14 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-49256F1DC6",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4456,6 +5408,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4A053AA647",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4A13E00131",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312005738",
@@ -4496,6 +5456,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4A5B11D28E",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4A6E122B5D",
     "source_id": "SRC043",
     "source_location": "p. 1",
@@ -4509,6 +5477,14 @@
     "source_location": "p. 73",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4AC9BF53AD",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4550,6 +5526,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - current manufacturer page capture",
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
+  },
+  {
+    "product_id": "PRD-4B66601DB1",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-4B6813254B",
@@ -4600,6 +5584,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4C18A9D165",
+    "source_id": "SRC086",
+    "source_location": "Document p. 19/29 (PDF page 19)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4C3147DF15",
     "source_id": "SRC022",
     "source_location": "p. 2.13",
@@ -4632,12 +5624,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4CDD550305",
+    "source_id": "SRC087",
+    "source_location": "Document p. 72 (PDF page 80)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4D06DCE96B",
     "source_id": "SRC017",
     "source_location": "Return-electrode cables, catalog p. 14",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-4D08CBA53B",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-4D4109FA08",
@@ -4725,6 +5733,14 @@
     "source_location": "p. 77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer user manual",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F0040C995",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4816,6 +5832,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-50465694B0",
+    "source_id": "SRC087",
+    "source_location": "Document p. 103 (PDF page 111)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5066E92CF8",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558667",
@@ -4904,11 +5928,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5197B3D03C",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-51C8A4796F",
+    "source_id": "SRC087",
+    "source_location": "Document p. 86 (PDF page 94)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-51D601323E",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558568",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-51F1495A42",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4944,11 +5992,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-52AEFAC307",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-52C5BEC3A1",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-52E905C321",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -4981,6 +6045,22 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-53D93A0FAC",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-53EC805ADF",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5024,6 +6104,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5483564F3B",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-54ACB4FCF8",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-54CEDAAE5B",
     "source_id": "SRC021",
     "source_location": "pp. 6-7",
@@ -5048,11 +6144,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-55542C46A8",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5562E69B2A",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5567CCE50B",
     "source_id": "SRC070",
     "source_location": "ForTec neoV Laser - Pulmonology product page",
     "claim_type": "System identity, wavelength, mode, power, and stated bronchoscopic use",
     "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-559ABA4333",
+    "source_id": "SRC082",
+    "source_location": "Document p. 2/4 (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5112,11 +6232,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-564C66C00A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-56932BDE51",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-56BD135369",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 1)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5150,6 +6286,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-575932A508",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-5788C21B1E",
@@ -5213,6 +6357,14 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-57D2C172FD",
+    "source_id": "SRC087",
+    "source_location": "Document p. 76 (PDF page 84)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5296,6 +6448,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5930BC6020",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5941DF2464",
     "source_id": "SRC021",
     "source_location": "p. 5",
@@ -5336,6 +6496,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-59E3D04CC4",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 6",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5A0C3D8844",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410333312",
@@ -5365,6 +6533,14 @@
     "source_location": "Product code 855180",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5A1EA28132",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5464,6 +6640,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5ADF20DD4A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5AEEF62066",
     "source_id": "SRC018",
     "source_location": "Gas bottle adapter table, catalog pp. 4, 7",
@@ -5512,6 +6696,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5BD9239FCA",
+    "source_id": "SRC087",
+    "source_location": "Document p. 50 (PDF page 58)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5BDAA5E440",
     "source_id": "SRC001",
     "source_location": "p. 24",
@@ -5533,6 +6725,14 @@
     "source_location": "p. 15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5C42525636",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5648,6 +6848,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5DA5177DA9",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5DFC2E8E8B",
     "source_id": "SRC018",
     "source_location": "Accessories for ERBECRYO 2, catalog p. 6",
@@ -5672,6 +6880,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5E530E651B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5E5E5933A2",
     "source_id": "SRC043",
     "source_location": "p. 1",
@@ -5685,6 +6901,14 @@
     "source_location": "p. 10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5E73B7DAE9",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5808,6 +7032,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-60EF0F869B",
+    "source_id": "SRC080",
+    "source_location": "Document p. 11 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6124E1A326",
     "source_id": "SRC016",
     "source_location": "Specifications table, brochure p. 2",
@@ -5848,6 +7080,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-61ABF81DC5",
+    "source_id": "SRC087",
+    "source_location": "Document p. 43 (PDF page 51)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-61AF4EE90B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-61B1C43B5C",
     "source_id": "SRC016",
     "source_location": "Specifications table, brochure p. 2",
@@ -5861,6 +7109,14 @@
     "source_location": "p. 145",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6242870599",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -5904,6 +7160,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-63306C383B",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-633391A337",
     "source_id": "SRC003",
     "source_location": "pp. 13-14",
@@ -5926,6 +7190,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - current manufacturer page capture",
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
+  },
+  {
+    "product_id": "PRD-633BBCEEBA",
+    "source_id": "SRC087",
+    "source_location": "Document p. 72 (PDF page 80)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-635895FDEF",
@@ -5957,6 +7229,14 @@
     "source_location": "pp. 53-55",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-63715C8967",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6024,6 +7304,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-640AEAA318",
+    "source_id": "SRC087",
+    "source_location": "Document p. 103 (PDF page 111)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-64481A5C4F",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
@@ -6064,6 +7352,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-64D83CE808",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-64F3BFC979",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410337419",
@@ -6077,6 +7373,22 @@
     "source_location": "p. 31, VP-7000 ELUXEO video processor",
     "claim_type": "Specifications, compatibility, and product naming",
     "verification_status": "Transcribed from the manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-651FBD7EA3",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6546F6126A",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6128,6 +7440,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6652155378",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6683FE6ADD",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312007022",
@@ -6176,6 +7496,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-672F05E9EA",
+    "source_id": "SRC087",
+    "source_location": "Document p. 42 (PDF page 50)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6792EF1447",
+    "source_id": "SRC051",
+    "source_location": "PDF page index 20; printed p. 20, EB-530XT VIDEO BRONCHOSCOPE specifications",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-67D1D03D3F",
     "source_id": "SRC021",
     "source_location": "pp. 49-51",
@@ -6205,6 +7541,14 @@
     "source_location": "Section 1.0 specifications table; Section 4.0 warnings",
     "claim_type": "Working length, outer diameter, and bronchoscope requirement",
     "verification_status": "Manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6877EA4AE6",
+    "source_id": "SRC087",
+    "source_location": "Document p. 48 (PDF page 56)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6272,6 +7616,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-69BAF13F0C",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-69C70153C3",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
@@ -6304,11 +7656,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6A108CCC84",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6A26802196",
     "source_id": "SRC027",
     "source_location": "pp. 9-10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6A282D51B1",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP4 (PDF page 270)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6336,11 +7704,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6A80B1640D",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6A84EE66C8",
     "source_id": "SRC033",
     "source_location": "p. 77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer user manual",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6A8C156F24",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6352,11 +7736,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6A9EE6FB1B",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 14",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6AAA7898E9",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6ABC11CE44",
+    "source_id": "SRC083",
+    "source_location": "Document p. not stated (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6373,6 +7773,22 @@
     "source_location": "p. 21",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6B4693A19A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6B46EA332F",
+    "source_id": "SRC079",
+    "source_location": "Document p. 9/18 (PDF page 9)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6408,6 +7824,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6BA107A313",
+    "source_id": "SRC087",
+    "source_location": "Document p. 75 (PDF page 83)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6BAC2ADE46",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6BC32547CD",
     "source_id": "SRC017",
     "source_location": "Bipolar adapters, catalog p. 17",
@@ -6437,6 +7869,22 @@
     "source_location": "pp. 44-48",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6BFF59DDAD",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 5",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6C0EBFAA26",
+    "source_id": "SRC087",
+    "source_location": "Document p. 76 (PDF page 84)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6528,6 +7976,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6D2A5C2FE5",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6D2D08656C",
     "source_id": "SRC021",
     "source_location": "pp. 53-55",
@@ -6608,6 +8064,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6DCD8B4626",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6DF43B832B",
     "source_id": "SRC017",
     "source_location": "Bipolar adapters, catalog p. 17",
@@ -6629,6 +8093,14 @@
     "source_location": "pp. 44-48",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6EA39A2B3B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -6960,6 +8432,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-7214C74DFE",
+    "source_id": "SRC087",
+    "source_location": "Document p. 53 (PDF page 61)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-723273697C",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006889",
@@ -7013,6 +8493,14 @@
     "source_location": "p. 77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer user manual",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-72F4A3884F",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 7",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7088,6 +8576,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-74097CDF9A",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7435E842E8",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006902",
@@ -7112,6 +8608,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-74CAC5AA0A",
+    "source_id": "SRC087",
+    "source_location": "Document p. 55 (PDF page 63)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-750BCA0F02",
     "source_id": "SRC030",
     "source_location": "p. 78",
@@ -7133,6 +8637,22 @@
     "source_location": "p. 25",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-754F9ECFDD",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75564978F2",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7208,11 +8728,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-75CE0E7B40",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-75E555BC77",
     "source_id": "SRC022",
     "source_location": "p. 6.04",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75EC41AEDA",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7256,6 +8792,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-76CC84AF2F",
+    "source_id": "SRC087",
+    "source_location": "Document p. 75 (PDF page 83)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-77145058F8",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.06 (PDF p. 119)",
@@ -7264,11 +8808,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-77147A44EF",
+    "source_id": "SRC087",
+    "source_location": "Document p. 54 (PDF page 62)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-771F462726",
     "source_id": "SRC027",
     "source_location": "pp. 9-10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-773959E0B5",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7320,6 +8880,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-781BCEA88E",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-78354BF30F",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -7357,6 +8925,14 @@
     "source_location": "CSV row 31",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7904481858",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7504,11 +9080,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7B34314342",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7B69AB81B4",
     "source_id": "SRC021",
     "source_location": "p. 16",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7B8E07DF5F",
+    "source_id": "SRC087",
+    "source_location": "Document p. 53 (PDF page 61)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7BA7CA85BF",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7525,6 +9125,14 @@
     "source_location": "p. 73",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7C20C81CC1",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7584,6 +9192,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7C9E0734EE",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7CAB35AC24",
     "source_id": "SRC027",
     "source_location": "p. 13",
@@ -7592,11 +9208,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7CD11761AB",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7CDBD7C74A",
     "source_id": "SRC021",
     "source_location": "p. 12",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7D0A88E1E7",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7D2B16DFCF",
+    "source_id": "SRC086",
+    "source_location": "Document p. 18/29 (PDF page 18)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7613,6 +9253,30 @@
     "source_location": "Oasis dry suction water seal chest drain",
     "claim_type": "Product family, configuration, and part number",
     "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7DA7AF0CE9",
+    "source_id": "SRC086",
+    "source_location": "Document p. 21/29 (PDF page 21)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7DAB3292D5",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7DBD613DD6",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7704,6 +9368,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7F5DE98072",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7F94CAD8E8",
     "source_id": "SRC021",
     "source_location": "p. 20",
@@ -7752,6 +9424,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-805A7C312F",
+    "source_id": "SRC079",
+    "source_location": "Document p. 11/18 (PDF page 11)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8068102C32",
+    "source_id": "SRC087",
+    "source_location": "Document p. 54 (PDF page 62)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-806A35FA67",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -7760,11 +9448,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8096B8A38E",
+    "source_id": "SRC080",
+    "source_location": "Document p. 4 (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-80B451355D",
+    "source_id": "SRC083",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-80E64865AA",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8106E78F85",
     "source_id": "SRC022",
     "source_location": "p. 2.13",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current market status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-81294A9EB3",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7800,6 +9520,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-81D1E660C8",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-81D89E1E76",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -7821,6 +9549,14 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-82374FBBE1",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7853,6 +9589,22 @@
     "source_location": "Product list 2025!Sheet6",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-83100016E0",
+    "source_id": "SRC086",
+    "source_location": "Document p. 23/29 (PDF page 23)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-83188CF097",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7896,6 +9648,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-83EDFED017",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-843BE1E573",
     "source_id": "SRC030",
     "source_location": "p. 88",
@@ -7909,6 +9669,22 @@
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8474F25510",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-847AFDF500",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -7960,11 +9736,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8551E04A9E",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-85994FB803",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-85E1F8359A",
     "source_id": "SRC001",
     "source_location": "p. 28",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-85FA8619AC",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8000,6 +9800,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8669305653",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-86EE2BCB83",
+    "source_id": "SRC087",
+    "source_location": "Document p. 76 (PDF page 84)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-86FC0B1E5C",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558353",
@@ -8021,6 +9837,14 @@
     "source_location": "device.txt, PrimaryDI 00811907031925",
     "claim_type": "Device identity and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-876801D999",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8088,6 +9912,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-882FE3DD4D",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP4 (PDF page 270)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-88D778F3A4",
     "source_id": "SRC017",
     "source_location": "Bipolar cables, catalog p. 9",
@@ -8133,6 +9965,22 @@
     "source_location": "p. 25",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-892BC2AA9D",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-892EA2DACB",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8208,6 +10056,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8A788CE721",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 1)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8ACE654E89",
     "source_id": "SRC034",
     "source_location": "LX transducer and exam-type tables",
@@ -8256,6 +10112,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8B6012963E",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8B87F7D42B",
     "source_id": "SRC027",
     "source_location": "p. 7",
@@ -8301,6 +10165,22 @@
     "source_location": "Product code 67FHXL90",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8C4710647F",
+    "source_id": "SRC088",
+    "source_location": "INSPIRA official product-page PDF index 5 / printed p. 5/7, exact model EPK-i8020c",
+    "claim_type": "Exact model identity",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8C4710647F",
+    "source_id": "SRC077",
+    "source_location": "PDF page 7 (printed p. 7/8), INSPIRA platform association",
+    "claim_type": "Bronchoscopy relevance and platform association",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8376,6 +10256,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8CC639A8AF",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8CDDDC5158",
     "source_id": "SRC001",
     "source_location": "p. 28",
@@ -8405,6 +10293,14 @@
     "source_location": "p. 6",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8DA3BC1FB4",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8440,11 +10336,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8E51EC62D3",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8E8D4D1565",
     "source_id": "SRC007",
     "source_location": "pleural seed",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8EAE6762FF",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8464,6 +10376,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8F25A1FB01",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-900390ED3C",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-900AA8F053",
     "source_id": "SRC016",
     "source_location": "Specifications table, brochure p. 2",
@@ -8477,6 +10405,14 @@
     "source_location": "pp. 53-55",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9026C9E403",
+    "source_id": "SRC082",
+    "source_location": "Document p. 2/4 (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8672,6 +10608,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-93039B7450",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-93331CA104",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006780",
@@ -8824,6 +10768,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-94D3933795",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-94E33ED243",
     "source_id": "SRC003",
     "source_location": "p. 12",
@@ -8896,6 +10848,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-971388D340",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-972FD7E1D0",
     "source_id": "SRC007",
     "source_location": "Flexible bronchoscopy platforms!10",
@@ -8904,11 +10864,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-973AB2950C",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-973BDAB586",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-978B2478DC",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410520545",
     "claim_type": "Device identity and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-97A222ED41",
+    "source_id": "SRC087",
+    "source_location": "Document p. 50 (PDF page 58)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -8949,6 +10933,14 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-98EB75029F",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9045,6 +11037,22 @@
     "source_location": "p. 11",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9B2F13C1BA",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9B4FEC155D",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9208,6 +11216,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9DA17FB213",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9DA24897A2",
+    "source_id": "SRC087",
+    "source_location": "Document p. 42 (PDF page 50)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9DA3B7C48B",
     "source_id": "SRC019",
     "source_location": "APC pressure reducers and gas accessories, catalog pp. 10-11",
@@ -9238,6 +11262,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-9DEE331FF0",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-9E24CD4C73",
@@ -9272,6 +11304,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9E8587840A",
+    "source_id": "SRC080",
+    "source_location": "Document p. 5 (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9E8D77CC60",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9EB174FBB0",
     "source_id": "SRC001",
     "source_location": "p. 24",
@@ -9280,11 +11328,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9EECE0EDB1",
+    "source_id": "SRC087",
+    "source_location": "Document p. 53 (PDF page 61)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9F36AD4CFE",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9F5884AD09",
     "source_id": "SRC008",
     "source_location": "CSV row 12",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9F5BAD2641",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9325,6 +11397,14 @@
     "source_location": "p. 6",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A0055C636E",
+    "source_id": "SRC087",
+    "source_location": "Document p. 86 (PDF page 94)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9408,6 +11488,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A1B3741E75",
+    "source_id": "SRC087",
+    "source_location": "Document p. 51 (PDF page 59)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A1B7FC0BD4",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
@@ -9422,6 +11510,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-A201D9E5BE",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-A24DAA76C6",
@@ -9448,6 +11544,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A2AFB61CA7",
+    "source_id": "SRC080",
+    "source_location": "Document p. 10 (PDF page 6)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A2C49C9352",
     "source_id": "SRC007",
     "source_location": "Therapeutic bronchoscopy!2",
@@ -9462,6 +11566,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-A2E61F3CDC",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-A2F4A953C4",
@@ -9509,6 +11621,14 @@
     "source_location": "p. 73",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A3461153FD",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9560,6 +11680,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A4662B76B1",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A4793529B7",
     "source_id": "SRC001",
     "source_location": "p. 24",
@@ -9592,11 +11720,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A4D34F0B5D",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A4DEDCB630",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A504350406",
     "source_id": "SRC030",
     "source_location": "pp. 66-70",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A5606F3A0E",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9656,6 +11808,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A6299876FB",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A64069C0A0",
     "source_id": "SRC013",
     "source_location": "Tracheal stent specifications (PDF p. 12)",
@@ -9669,6 +11829,14 @@
     "source_location": "Flexible bronchoscopy platforms!7",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A6DFE867BA",
+    "source_id": "SRC080",
+    "source_location": "Document p. 5 (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9733,6 +11901,30 @@
     "source_location": "EB-530H specifications",
     "claim_type": "Dimensions and optical specifications",
     "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A810240CB4",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A82615F351",
+    "source_id": "SRC087",
+    "source_location": "Document p. 86 (PDF page 94)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A82B13E74B",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9816,6 +12008,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A8E0AB361B",
+    "source_id": "SRC087",
+    "source_location": "Document p. 94 (PDF page 102)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A8F80E7C94",
     "source_id": "SRC026",
     "source_location": "p. 6",
@@ -9840,11 +12040,35 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-A9C03C078D",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A9C2F393B9",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AA2564FB7E",
+    "source_id": "SRC087",
+    "source_location": "Document p. 53 (PDF page 61)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AA29300E40",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9861,6 +12085,30 @@
     "source_location": "Product code 67P045",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AA51641B5A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AA897B2F51",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AACAFBB1E3",
+    "source_id": "SRC080",
+    "source_location": "Document p. 4 (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -9885,6 +12133,14 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AB1FE11C34",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10064,6 +12320,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AD431C7F33",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AD4AAF21E4",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AD5DB57EBC",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
@@ -10208,11 +12480,35 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-AF8F8B7F8C",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AF93E56FE5",
     "source_id": "SRC030",
     "source_location": "pp. 66-70",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AFB67F2AD3",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B027947191",
+    "source_id": "SRC074",
+    "source_location": "Document p. 16/66 (PDF page 16)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10237,6 +12533,14 @@
     "source_location": "p. 10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B08199D221",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10296,6 +12600,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B229D186DD",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B258E8E859",
     "source_id": "SRC032",
     "source_location": "p. 95",
@@ -10309,6 +12621,14 @@
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B2AC8712B7",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10336,6 +12656,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B2DAC54DE1",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B2FEAC3ABE",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B31434240A",
     "source_id": "SRC033",
     "source_location": "p. 77",
@@ -10349,6 +12685,14 @@
     "source_location": "p. 4",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B3E2267573",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10512,6 +12856,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B5DEE283B2",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B5E107E3AE",
     "source_id": "SRC001",
     "source_location": "p. 19",
@@ -10566,6 +12918,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-B68C2A2F50",
+    "source_id": "SRC086",
+    "source_location": "Document p. 24/29 (PDF page 24)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-B68F5C38B4",
@@ -10624,6 +12984,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B734D0D7DA",
+    "source_id": "SRC087",
+    "source_location": "Document p. 98 (PDF page 106)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B76CB39194",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -10638,6 +13006,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-B8277C7991",
+    "source_id": "SRC079",
+    "source_location": "Document p. 13/18 (PDF page 13)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-B865D0FAF0",
@@ -10696,6 +13072,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B9352BD52A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B9381E6DD2",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -10709,6 +13093,14 @@
     "source_location": "p. 52",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B9548AC507",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10880,11 +13272,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BB0E29F07F",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BB11C206A4",
     "source_id": "SRC030",
     "source_location": "p. 77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BB1C007EE6",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -10984,6 +13392,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BC55573969",
+    "source_id": "SRC087",
+    "source_location": "Document p. 76 (PDF page 84)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BC6CB66043",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BC936E9D71",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.12 (PDF p. 125)",
@@ -11024,6 +13448,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BD118B9112",
+    "source_id": "SRC086",
+    "source_location": "Document p. 21/29 (PDF page 21)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BD2D495AB7",
     "source_id": "SRC027",
     "source_location": "pp. 9-10",
@@ -11045,6 +13477,14 @@
     "source_location": "Product code 60AFHXL80",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BD7D0C388D",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11133,6 +13573,14 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BE310A3547",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11384,6 +13832,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C2B436250C",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C2C49B88CC",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -11405,6 +13861,30 @@
     "source_location": "Respiratory 14.13 (PDF p. 126)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C2D9370B88",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C2DCA71DDE",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C31B1B8423",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11432,6 +13912,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C3B7FB7CAE",
+    "source_id": "SRC083",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C3CCEF8357",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15019517077445",
@@ -11445,6 +13933,14 @@
     "source_location": "Ordering information, product code 101/816/085",
     "claim_type": "Tube dimensions, cuff type, fenestration, and product line",
     "verification_status": "Transcribed from the manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C3CFAD5E58",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11480,11 +13976,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C43AE95696",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C4480F30D2",
     "source_id": "SRC001",
     "source_location": "p. 24",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C46460490C",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C4699157F4",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11560,11 +14080,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C52FF9A31A",
+    "source_id": "SRC087",
+    "source_location": "Document p. SP3 (PDF page 269)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C580C3FAB4",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 14026704911933",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C61336D16B",
+    "source_id": "SRC074",
+    "source_location": "Document p. 19/66 (PDF page 19)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11600,6 +14136,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C665E88A51",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C684D9ADCF",
     "source_id": "SRC018",
     "source_location": "Accessories for ERBECRYO 2, catalog p. 7",
@@ -11613,6 +14157,14 @@
     "source_location": "device.txt, PrimaryDI B634MON0000060",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C6B6BD759E",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11653,6 +14205,14 @@
     "source_location": "CSV row 6",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C7719849F9",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11704,6 +14264,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C811661645",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C88B1CD284",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.13 (PDF p. 128)",
@@ -11744,6 +14312,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C9000BB9AD",
+    "source_id": "SRC086",
+    "source_location": "Document p. 20/29 (PDF page 20)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C90F6F2F20",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C919655C5F",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006926",
@@ -11757,6 +14341,14 @@
     "source_location": "Product code 855190",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C93C97F54C",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 3",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11774,6 +14366,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - global/older source",
     "notes": "Exact catalog/SKU evidence from an older global manufacturer catalog; U.S. status unverified."
+  },
+  {
+    "product_id": "PRD-C9C4E45BB9",
+    "source_id": "SRC086",
+    "source_location": "Document p. 24/29 (PDF page 24)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
   },
   {
     "product_id": "PRD-C9FE364632",
@@ -11840,6 +14440,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CB2AE00175",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CB585AE377",
     "source_id": "SRC017",
     "source_location": "Monopolar cables, catalog p. 6",
@@ -11853,6 +14461,14 @@
     "source_location": "p. 16",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CB680CD69F",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -11957,6 +14573,14 @@
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CC8E8D081A",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12080,6 +14704,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CFD20B352F",
+    "source_id": "SRC086",
+    "source_location": "Document p. 22/29 (PDF page 22)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D0139E750F",
     "source_id": "SRC043",
     "source_location": "p. 2",
@@ -12157,6 +14789,14 @@
     "source_location": "p. 143",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D1874FEF53",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12240,6 +14880,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D2350C1510",
+    "source_id": "SRC087",
+    "source_location": "Document p. 72 (PDF page 80)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D23CFCF5DD",
+    "source_id": "SRC084",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D273A067EA",
     "source_id": "SRC030",
     "source_location": "p. 66",
@@ -12253,6 +14909,14 @@
     "source_location": "Specifications table, brochure p. 2",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer/distributor brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D2C1E4B75F",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12296,6 +14960,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D40CA802F4",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D41DE241C1",
     "source_id": "SRC017",
     "source_location": "Monopolar cables, catalog p. 5",
@@ -12336,6 +15008,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D4EABEA7CA",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D52ED4EF06",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 00811907031123",
@@ -12368,6 +15048,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-D5706A45F2",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D58A0A54AA",
     "source_id": "SRC021",
     "source_location": "p. 12",
@@ -12392,6 +15080,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D5A822A291",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D5CBD6E254",
     "source_id": "SRC001",
     "source_location": "p. 25",
@@ -12405,6 +15101,14 @@
     "source_location": "device.txt, PrimaryDI 14026704631565",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D5ED3DC515",
+    "source_id": "SRC087",
+    "source_location": "Document p. 48 (PDF page 56)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12453,6 +15157,14 @@
     "source_location": "Flexible bronchoscopy platforms!4",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D711DF7EE1",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12616,6 +15328,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-DA34CBFF14",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DA396EF06D",
     "source_id": "SRC017",
     "source_location": "Bipolar adapters, catalog p. 17",
@@ -12624,11 +15344,27 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-DA4769A595",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DA69A8016A",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DA7ECBAE41",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12656,6 +15392,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DB022C1FE8",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DB10C3EACC",
     "source_id": "SRC027",
     "source_location": "p. 5",
@@ -12677,6 +15421,14 @@
     "source_location": "p. 86",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DB755221C4",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12733,6 +15485,22 @@
     "source_location": "Product code 60A170",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DC2AEF06F9",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DC3BA17C2B",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12832,6 +15600,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DD1F7503DE",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DD4AFE7DE4",
     "source_id": "SRC008",
     "source_location": "CSV row 10",
@@ -12888,6 +15664,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-DE790B8608",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DF0AB82B2D",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet6",
@@ -12920,6 +15704,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DF26D98A85",
+    "source_id": "SRC080",
+    "source_location": "Document p. 10 (PDF page 6)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DF30B54282",
     "source_id": "SRC003",
     "source_location": "p. 3",
@@ -12941,6 +15733,14 @@
     "source_location": "Product data — Products table",
     "claim_type": "Order number and configuration",
     "verification_status": "Manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DF553A815B",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -12968,6 +15768,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DF8AFD026D",
+    "source_id": "SRC087",
+    "source_location": "Document p. 77 (PDF page 85)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DF917ECDBF",
     "source_id": "SRC037",
     "source_location": "pp. 247-257",
@@ -12989,6 +15797,14 @@
     "source_location": "p. 21",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DFD79119A6",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13264,6 +16080,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E3E979261F",
+    "source_id": "SRC080",
+    "source_location": "Document p. 4 (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E3EE9B4863",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312005721",
@@ -13301,6 +16125,22 @@
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E4BF1CCDFC",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E4F966BAFD",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13424,6 +16264,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E8039C8893",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E81D93D123",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558414",
@@ -13440,11 +16288,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E8BAEDDF61",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E8C63D6C64",
     "source_id": "SRC043",
     "source_location": "p. 2",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E8F5C57738",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13469,6 +16333,14 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E92A7EC85C",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13544,11 +16416,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EA44AB3927",
+    "source_id": "SRC080",
+    "source_location": "Document p. 4 (PDF page 3)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EA6F3E44C1",
     "source_id": "SRC007",
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EA9341925D",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13664,6 +16552,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EB9D39DA96",
+    "source_id": "SRC080",
+    "source_location": "Document p. 12 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EBAEE8A314",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410330182",
@@ -13677,6 +16573,14 @@
     "source_location": "EB-530US specifications",
     "claim_type": "Dimensions and optical specifications",
     "verification_status": "Manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EBE3C4E5EF",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13880,6 +16784,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EF8D01CBAD",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 1)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EF96863018",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -13893,6 +16805,14 @@
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EFD54DC9EF",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13925,6 +16845,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F08EF9B50F",
+    "source_id": "SRC087",
+    "source_location": "Document p. 51 (PDF page 59)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F0DFCE18B4",
+    "source_id": "SRC087",
+    "source_location": "Document p. 74 (PDF page 82)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -13968,6 +16904,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F14FD13B3E",
+    "source_id": "SRC087",
+    "source_location": "Document p. 52 (PDF page 60)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F1632F4CEC",
     "source_id": "SRC018",
     "source_location": "Gas bottle adapter table, catalog pp. 4, 7",
@@ -13984,11 +16928,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F18D8E0CD8",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F1A94DDA3B",
     "source_id": "SRC055",
     "source_location": "Mini-Thoracoscopy Set ordering table",
     "claim_type": "Order number, configuration, and bundle contents",
     "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F1A98A53E9",
+    "source_id": "SRC087",
+    "source_location": "Document p. 50 (PDF page 58)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F1BAA98154",
+    "source_id": "SRC086",
+    "source_location": "Document p. 19/29 (PDF page 19)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14024,11 +16992,43 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F24CF1B9C7",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F2C87C4908",
     "source_id": "SRC007",
     "source_location": "Flexible bronchoscopy platforms!8",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F2D56B29CB",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F2DAE07C64",
+    "source_id": "SRC087",
+    "source_location": "Document p. 101 (PDF page 109)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F2DAE4E583",
+    "source_id": "SRC081",
+    "source_location": "PDF page index 2; printed p. 2/2, PRODUCT SPECIFICATIONS table",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14053,6 +17053,14 @@
     "source_location": "p. 2",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F33AA311E4",
+    "source_id": "SRC080",
+    "source_location": "Document p. 8 (PDF page 5)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14112,6 +17120,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F454186BF6",
+    "source_id": "SRC087",
+    "source_location": "Document p. 71 (PDF page 79)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F4B03B6DFA",
     "source_id": "SRC001",
     "source_location": "p. 25",
@@ -14125,6 +17141,14 @@
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F4C019AE18",
+    "source_id": "SRC087",
+    "source_location": "Document p. 50 (PDF page 58)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14216,6 +17240,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F5AB1E4575",
+    "source_id": "SRC080",
+    "source_location": "Document p. 11 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F5AE18C06E",
     "source_id": "SRC007",
     "source_location": "pleural seed",
@@ -14256,11 +17288,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F60DA91352",
+    "source_id": "SRC087",
+    "source_location": "Document p. 100 (PDF page 108)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F61DF2B2E6",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F63C06E063",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F699627250",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14277,6 +17333,14 @@
     "source_location": "pp. 55-57",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F72B622208",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 1)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14376,11 +17440,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F8615190BF",
+    "source_id": "SRC087",
+    "source_location": "Document p. 75 (PDF page 83)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F867027C4E",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04953170339974",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"Not in Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F86A126431",
+    "source_id": "SRC075",
+    "source_location": "PDF p. 4",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14421,6 +17501,14 @@
     "source_location": "Product code 60A160",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F946AD81F2",
+    "source_id": "SRC054",
+    "source_location": "PDF page index 1; printed p. 1 of 4, Specifications table",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14488,11 +17576,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FA25C1403D",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 4)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FA325AD5F8",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FA37816545",
+    "source_id": "SRC076",
+    "source_location": "PDF p. 7",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14517,6 +17621,14 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FAEB7ED380",
+    "source_id": "SRC073",
+    "source_location": "Document p. not stated (PDF page 10)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14568,6 +17680,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FBF1DDB248",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 12",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FBFA19440C",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312006810",
@@ -14581,6 +17701,14 @@
     "source_location": "Product code 850195",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FC0DCD11AB",
+    "source_id": "SRC085",
+    "source_location": "Document p. not stated (PDF page 1)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14605,6 +17733,14 @@
     "source_location": "p. 26",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FCE9DE78C0",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14648,6 +17784,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FD5FCA373B",
+    "source_id": "SRC080",
+    "source_location": "Document p. 11 (PDF page 7)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FD8DFD7EA8",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FD962E14DA",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558230",
@@ -14669,6 +17821,22 @@
     "source_location": "Therapeutic bronchoscopy",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FDD7F56BCD",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 10",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FDE3543771",
+    "source_id": "SRC087",
+    "source_location": "Document p. 73 (PDF page 81)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {
@@ -14736,6 +17904,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FE81710DC5",
+    "source_id": "SRC078",
+    "source_location": "Document p. not stated (PDF page 2)",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FEA0F47B62",
     "source_id": "SRC021",
     "source_location": "p. 19",
@@ -14765,6 +17941,14 @@
     "source_location": "p. 14",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog and IFU",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FEBFE797DD",
+    "source_id": "SRC072",
+    "source_location": "PDF p. 11",
+    "claim_type": "Product identity and catalog/model number",
+    "verification_status": "Verified against the supplied authoritative manufacturer document",
     "notes": null
   },
   {

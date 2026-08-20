@@ -1,0 +1,287 @@
+{
+  "format_version": "1.0",
+  "reviewed_on": "2026-08-19",
+  "source_csv_filename": "preference_card_products.csv",
+  "source_csv_sha256": "9ddcd7c85f32b116e4f19536937deeaf115b4406ff1c1c90f539416c445fda61",
+  "detected_header": true,
+  "observed_header": ["Product ID", "Product Name", "Manufacturer", "Source File"],
+  "brief_claimed_headerless": true,
+  "brochure_file_count": 125,
+  "brochure_file_extensions": {
+    ".html": 7,
+    ".md": 3,
+    ".pdf": 115
+  },
+  "disposition_counts": {
+    "existing_exact": 803,
+    "existing_alias_or_format_variant": 64,
+    "existing_family_or_package_variant": 35,
+    "new_product_added": 397,
+    "relevant_but_insufficient_identity": 9,
+    "relevant_family_level_only": 13,
+    "duplicate_source_row": 57,
+    "irrelevant_to_current_scope": 615,
+    "source_document_missing": 0,
+    "source_evidence_conflicted": 51,
+    "needs_owner_review": 16
+  },
+  "canonical_products_added": 397,
+  "repeated_identifiers": [
+    {
+      "identifier": "EB-530US",
+      "input_row_numbers": [778, 789, 810]
+    },
+    {
+      "identifier": "EB-710US",
+      "input_row_numbers": [790, 809]
+    },
+    {
+      "identifier": "TT81670",
+      "input_row_numbers": [2023, 2042]
+    },
+    {
+      "identifier": "TT81680",
+      "input_row_numbers": [2024, 2043]
+    },
+    {
+      "identifier": "TT81690",
+      "input_row_numbers": [2025, 2044]
+    },
+    {
+      "identifier": "TT81700",
+      "input_row_numbers": [2026, 2045]
+    },
+    {
+      "identifier": "TT81710",
+      "input_row_numbers": [2027, 2046]
+    },
+    {
+      "identifier": "TT81720",
+      "input_row_numbers": [2028, 2047]
+    },
+    {
+      "identifier": "TT81730",
+      "input_row_numbers": [2029, 2048]
+    },
+    {
+      "identifier": "TT81740",
+      "input_row_numbers": [2030, 2049]
+    },
+    {
+      "identifier": "TT81750",
+      "input_row_numbers": [2031, 2050]
+    },
+    {
+      "identifier": "TT81760",
+      "input_row_numbers": [2032, 2051]
+    },
+    {
+      "identifier": "TT81770",
+      "input_row_numbers": [2033, 2052]
+    },
+    {
+      "identifier": "TT81780",
+      "input_row_numbers": [2034, 2053]
+    },
+    {
+      "identifier": "TT81790",
+      "input_row_numbers": [2035, 2054]
+    },
+    {
+      "identifier": "TT81800",
+      "input_row_numbers": [2036, 2055]
+    },
+    {
+      "identifier": "TT81810",
+      "input_row_numbers": [2037, 2056]
+    },
+    {
+      "identifier": "TT81820",
+      "input_row_numbers": [2038, 2057]
+    },
+    {
+      "identifier": "TT81830",
+      "input_row_numbers": [2039, 2058]
+    },
+    {
+      "identifier": "TT81840",
+      "input_row_numbers": [2040, 2059]
+    },
+    {
+      "identifier": "TT81850",
+      "input_row_numbers": [2041, 2060]
+    }
+  ],
+  "normalized_repeated_identifiers": [
+    {
+      "identifier": "EB-530US",
+      "input_row_numbers": [778, 789, 810]
+    },
+    {
+      "identifier": "EB-710US",
+      "input_row_numbers": [790, 809]
+    },
+    {
+      "identifier": "OSC-6F-17PT",
+      "input_row_numbers": [98, 290]
+    },
+    {
+      "identifier": "OSC-8F-12PLT",
+      "input_row_numbers": [103, 291]
+    },
+    {
+      "identifier": "TAPS-5F-10LT",
+      "input_row_numbers": [242, 1547]
+    },
+    {
+      "identifier": "TAPS-5F-12PLT",
+      "input_row_numbers": [264, 1548]
+    },
+    {
+      "identifier": "TAPS-5F-17PLT",
+      "input_row_numbers": [244, 1549]
+    },
+    {
+      "identifier": "TAPS-6F-12PT",
+      "input_row_numbers": [266, 1550]
+    },
+    {
+      "identifier": "TAPS-6F-17PT",
+      "input_row_numbers": [248, 1551]
+    },
+    {
+      "identifier": "TAPS-8F-12PT",
+      "input_row_numbers": [250, 1552]
+    },
+    {
+      "identifier": "TAPS-8F-17PLT",
+      "input_row_numbers": [251, 1553]
+    },
+    {
+      "identifier": "TT81670",
+      "input_row_numbers": [2023, 2042]
+    },
+    {
+      "identifier": "TT81680",
+      "input_row_numbers": [2024, 2043]
+    },
+    {
+      "identifier": "TT81690",
+      "input_row_numbers": [2025, 2044]
+    },
+    {
+      "identifier": "TT81700",
+      "input_row_numbers": [2026, 2045]
+    },
+    {
+      "identifier": "TT81710",
+      "input_row_numbers": [2027, 2046]
+    },
+    {
+      "identifier": "TT81720",
+      "input_row_numbers": [2028, 2047]
+    },
+    {
+      "identifier": "TT81730",
+      "input_row_numbers": [2029, 2048]
+    },
+    {
+      "identifier": "TT81740",
+      "input_row_numbers": [2030, 2049]
+    },
+    {
+      "identifier": "TT81750",
+      "input_row_numbers": [2031, 2050]
+    },
+    {
+      "identifier": "TT81760",
+      "input_row_numbers": [2032, 2051]
+    },
+    {
+      "identifier": "TT81770",
+      "input_row_numbers": [2033, 2052]
+    },
+    {
+      "identifier": "TT81780",
+      "input_row_numbers": [2034, 2053]
+    },
+    {
+      "identifier": "TT81790",
+      "input_row_numbers": [2035, 2054]
+    },
+    {
+      "identifier": "TT81800",
+      "input_row_numbers": [2036, 2055]
+    },
+    {
+      "identifier": "TT81810",
+      "input_row_numbers": [2037, 2056]
+    },
+    {
+      "identifier": "TT81820",
+      "input_row_numbers": [2038, 2057]
+    },
+    {
+      "identifier": "TT81830",
+      "input_row_numbers": [2039, 2058]
+    },
+    {
+      "identifier": "TT81840",
+      "input_row_numbers": [2040, 2059]
+    },
+    {
+      "identifier": "TT81850",
+      "input_row_numbers": [2041, 2060]
+    }
+  ],
+  "repeated_identifier_summary": {
+    "groups": 21,
+    "rows": 43,
+    "excess_rows": 22
+  },
+  "normalized_repeated_identifier_summary": {
+    "groups": 30,
+    "rows": 61,
+    "excess_rows": 31
+  },
+  "byte_identical_source_groups": [
+    {
+      "sha256": "1b90cad951bd117880a4d2a1707cb15e62b885d58ee46fcc82b4ff18c0c378eb",
+      "source_filenames": ["C_T_PTISGI2_REV0 (1).pdf", "C_T_PTISGI2_REV0.pdf"],
+      "redundant_copies": 1
+    },
+    {
+      "sha256": "2f951318ef77c1a128099a5b659451ce057fa595e7ae7736f3f158b97ebe63b8",
+      "source_filenames": [
+        "shiley-flexible-adult-tracheostomy-tubes-brochure copy.pdf",
+        "shiley-flexible-adult-tracheostomy-tubes-brochure.pdf"
+      ],
+      "redundant_copies": 1
+    },
+    {
+      "sha256": "361a1bc46c6f7cc9ea03379e2d1b40e354cf77e7ee39546b253fd3b70154b9bd",
+      "source_filenames": ["aScope_Broncho_Quick_Guide (1).pdf", "aScope_Broncho_Quick_Guide.pdf"],
+      "redundant_copies": 1
+    },
+    {
+      "sha256": "c46aa95be1ed2d93911375edc81aa3382efd1d8354d4301efbc3c4830777138b",
+      "source_filenames": [
+        "CC-D67629-EN-F_IA_1683223150514 (1).pdf",
+        "CC-D67629-EN-F_IA_1683223150514.pdf"
+      ],
+      "redundant_copies": 1
+    }
+  ],
+  "byte_identical_source_summary": {
+    "groups": 4,
+    "files": 8,
+    "redundant_copies": 4
+  },
+  "total_rows": 2060,
+  "rows_with_exact_identifier": 1997,
+  "rows_with_not_stated_identifier": 63,
+  "unique_manufacturers": 55,
+  "unique_source_filenames": 121,
+  "unresolved_source_filenames": [],
+  "exact_duplicate_rows": []
+}

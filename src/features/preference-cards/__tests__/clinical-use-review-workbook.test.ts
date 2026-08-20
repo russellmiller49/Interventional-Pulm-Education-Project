@@ -391,16 +391,16 @@ describe('full-catalog clinical-use review workbook export', () => {
       },
     )
     expect(workbook.counts).toEqual({
-      // taxonomy v2 grew the catalog 1_474 -> 1_532 and product-role rows 1_567 -> 1_622;
-      // slot-product options were only rewritten in place by the role renames, so they hold.
-      catalogProducts: 1_532,
-      productRoles: 1_622,
+      // The brochure intake adds 397 products and 378 reviewed role mappings; authored slot
+      // options remain unchanged.
+      catalogProducts: 1_929,
+      productRoles: 2_000,
       currentSlots: 2_035,
     })
     const parsed = await parseOoxmlWorkbookBytes(workbook.bytes)
     // Each sheet is its record count plus the header row.
-    expect(parsed.sheets.get('Catalog Products')?.maxRow).toBe(1_533)
-    expect(parsed.sheets.get('Product Role Review')?.maxRow).toBe(1_623)
+    expect(parsed.sheets.get('Catalog Products')?.maxRow).toBe(1_930)
+    expect(parsed.sheets.get('Product Role Review')?.maxRow).toBe(2_001)
     expect(parsed.sheets.get('Current Slot Review')?.maxRow).toBe(2_036)
     expect(workbook.metadata.clinical_use_manifest_sha256).toBe(manifest.clinicalUseManifestSha256)
     expect(await Promise.all(canonicalPaths.map((filename) => readFile(filename)))).toEqual(before)

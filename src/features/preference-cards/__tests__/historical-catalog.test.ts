@@ -166,7 +166,9 @@ describe('the retained catalog artifacts as committed', () => {
       const historical = getHistoricalCatalog(bundle.catalogImportId)
       expect(historical.ok).toBe(true)
       if (!historical.ok) continue
-      expect(historical.productById.size).toBe(products.length)
+      // The brochure intake deliberately does not advance the governed release. Published
+      // bundles continue to reconstruct the previously released 1,532-product catalog.
+      expect(historical.productById.size).toBe(1532)
       expect(historical.roleByCode.size).toBe(roles.length)
     }
   })

@@ -6,24 +6,21 @@ import path from 'node:path'
 // overlay. Product identity, source provenance, and unrelated calibrated artifacts remain
 // byte-protected so a semantic migration cannot silently rewrite its evidence foundation.
 //
-// The four product/provenance hashes moved once, in the taxonomy-v2 milestone, when the ERBE
-// VIO 3 and APC 3, the Pulmonx Chartis line, the Richard Wolf mini-thoracoscopy instruments,
-// the mobile C-arms, LungVision, the Galvanize Aliya line, and the laser, photodynamic, and
-// breakthrough-designated cohorts were added, along with twelve new sources and their
-// manufacturers. Paying that friction deliberately, once per milestone, is the point of the
-// guard; the before/after values are recorded in
-// docs/ip-preference-cards/phase0-5-protected-hash-manifest.md.
+// The product/provenance hashes move only with an explicitly reviewed catalog milestone. The
+// 2026-08-19 brochure intake adds exact brochure-backed identities and sources while preserving
+// all release artifacts. Paying that friction deliberately, once per milestone, is the point of
+// this guard.
 const PROTECTED_FILE_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    '0bad1db25c47015a7da2f6dd4162cd897506a5be89a9383f7191f87cdeee4f33',
+    '8d2f0f210f24d971ac09d8d67a850afbfefc9b4f521303b685cab3abfc9884f0',
   'data/ip-preference-cards/generated/product-sources.json':
-    '1ab96b0bd7ec8665cfed8934193179f04e837fcd5f1cb7cbfffbfed5ba9c927c',
+    'eadc7e3df35b6a53fd227d583317e0608e079f879e995e81f47a54d4806d4714',
   'data/ip-preference-cards/generated/sources.json':
-    'f392aef08ba17577d6fd8e7a6339c0b02582f3306c5189dbb04322fc167fb061',
+    'e847a55932769064cc60d68cc845af7a4e093094435180c2e613e3e80cdc1b91',
   'data/ip-preference-cards/generated/manufacturers.json':
-    '22b1768a036caa92e4d2a2a7c81841e04578dd5f91e1f4c36d1090f159409e25',
+    'c2acde0c7fcde5cd78a1746076cdfe63df49b3edeffa9b46458bce685b9b1f6f',
   'data/ip-preference-cards/generated/verification-backlog.json':
     '25ab658850a5df620986d4596d5043f40e46d17132493dd62d7adaffc36c1b38',
   'data/ip-preference-cards/generated/hospital-formulary-staging.json':
