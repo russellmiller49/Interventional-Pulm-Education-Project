@@ -7,7 +7,7 @@
   "new_evidence_count": 33,
   "new_owner_pdf_count": 1,
   "new_official_web_evidence_count": 32,
-  "runtime_governed_source_count": 16,
+  "runtime_governed_source_count": 18,
   "current_directory_total_files": 127,
   "pdf_count": 122,
   "html_count": 33,
@@ -861,6 +861,46 @@
       "matched_input_row_numbers": [462, 463, 464, 465, 466, 467, 468],
       "canonical_additions_supported": [
         {
+          "product_id": "PRD-B76AF3D731",
+          "catalog_number": "G57682"
+        },
+        {
+          "product_id": "PRD-D0F1748B0D",
+          "catalog_number": "G57683"
+        },
+        {
+          "product_id": "PRD-86B4C57E4C",
+          "catalog_number": "G57684"
+        },
+        {
+          "product_id": "PRD-18D0D3090E",
+          "catalog_number": "G57691"
+        },
+        {
+          "product_id": "PRD-9EE9380618",
+          "catalog_number": "G57692"
+        },
+        {
+          "product_id": "PRD-F93B7FF984",
+          "catalog_number": "G57693"
+        },
+        {
+          "product_id": "PRD-0FD8BE79BA",
+          "catalog_number": "G57694"
+        },
+        {
+          "product_id": "PRD-61930EA6FF",
+          "catalog_number": "G57707"
+        },
+        {
+          "product_id": "PRD-39295A9759",
+          "catalog_number": "G57708"
+        },
+        {
+          "product_id": "PRD-25412B4F20",
+          "catalog_number": "G57709"
+        },
+        {
           "product_id": "PRD-320FF77256",
           "catalog_number": "G57716"
         },
@@ -871,6 +911,26 @@
         {
           "product_id": "PRD-C61336D16B",
           "catalog_number": "G57718"
+        },
+        {
+          "product_id": "PRD-318DD7F80F",
+          "catalog_number": "G57719"
+        },
+        {
+          "product_id": "PRD-FF056E168C",
+          "catalog_number": "G57720"
+        },
+        {
+          "product_id": "PRD-131661EB7C",
+          "catalog_number": "G57721"
+        },
+        {
+          "product_id": "PRD-0B0CC1045A",
+          "catalog_number": "G57722"
+        },
+        {
+          "product_id": "PRD-90327D4D73",
+          "catalog_number": "G57723"
         }
       ]
     },
@@ -985,64 +1045,76 @@
       ],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-070A63D4C6",
-          "catalog_number": "G07243"
+          "product_id": "PRD-83ABCBA52B",
+          "catalog_number": "G02327"
         },
         {
-          "product_id": "PRD-26DC60023E",
-          "catalog_number": "G05777"
-        },
-        {
-          "product_id": "PRD-2DC22218B3",
-          "catalog_number": "G04891"
-        },
-        {
-          "product_id": "PRD-460B74977C",
-          "catalog_number": "G05454"
-        },
-        {
-          "product_id": "PRD-49256F1DC6",
-          "catalog_number": "G04139"
-        },
-        {
-          "product_id": "PRD-4B66601DB1",
-          "catalog_number": "G05161"
-        },
-        {
-          "product_id": "PRD-59E3D04CC4",
-          "catalog_number": "G27292"
-        },
-        {
-          "product_id": "PRD-6BFF59DDAD",
-          "catalog_number": "G56533"
+          "product_id": "PRD-40A16220EC",
+          "catalog_number": "G02791"
         },
         {
           "product_id": "PRD-72F4A3884F",
           "catalog_number": "G03302"
         },
         {
-          "product_id": "PRD-754F9ECFDD",
-          "catalog_number": "G06791"
-        },
-        {
-          "product_id": "PRD-9E8D77CC60",
-          "catalog_number": "G06787"
-        },
-        {
-          "product_id": "PRD-DC3BA17C2B",
-          "catalog_number": "G56537"
-        },
-        {
-          "product_id": "PRD-E8F5C57738",
-          "catalog_number": "G05453"
+          "product_id": "PRD-FA37816545",
+          "catalog_number": "G03311"
         },
         {
           "product_id": "PRD-F61DF2B2E6",
           "catalog_number": "G04137"
         },
         {
-          "product_id": "PRD-FA37816545",
-          "catalog_number": "G03311"
+          "product_id": "PRD-49256F1DC6",
+          "catalog_number": "G04139"
+        },
+        {
+          "product_id": "PRD-2DC22218B3",
+          "catalog_number": "G04891"
+        },
+        {
+          "product_id": "PRD-4B66601DB1",
+          "catalog_number": "G05161"
+        },
+        {
+          "product_id": "PRD-E8F5C57738",
+          "catalog_number": "G05453"
+        },
+        {
+          "product_id": "PRD-460B74977C",
+          "catalog_number": "G05454"
+        },
+        {
+          "product_id": "PRD-26DC60023E",
+          "catalog_number": "G05777"
+        },
+        {
+          "product_id": "PRD-9E8D77CC60",
+          "catalog_number": "G06787"
+        },
+        {
+          "product_id": "PRD-754F9ECFDD",
+          "catalog_number": "G06791"
+        },
+        {
+          "product_id": "PRD-070A63D4C6",
+          "catalog_number": "G07243"
+        },
+        {
+          "product_id": "PRD-59E3D04CC4",
+          "catalog_number": "G27292"
+        },
+        {
+          "product_id": "PRD-27F927260E",
+          "catalog_number": "G36370"
+        },
+        {
+          "product_id": "PRD-6BFF59DDAD",
+          "catalog_number": "G56533"
+        },
+        {
+          "product_id": "PRD-DC3BA17C2B",
+          "catalog_number": "G56537"
         }
       ]
     },
@@ -1603,10 +1675,575 @@
       "manufacturer": "Novatech",
       "publisher": null,
       "official_url": null,
-      "governed_source_ids": [],
+      "governed_source_ids": ["SRC106"],
       "matched_csv_row_count": 1,
       "matched_input_row_numbers": [1069],
-      "canonical_additions_supported": []
+      "canonical_additions_supported": [
+        {
+          "product_id": "PRD-D13A7A8211",
+          "catalog_number": "01BD1020"
+        },
+        {
+          "product_id": "PRD-6C3C818624",
+          "catalog_number": "01BD1030"
+        },
+        {
+          "product_id": "PRD-52D3317209",
+          "catalog_number": "01BD1050"
+        },
+        {
+          "product_id": "PRD-DBEAA70E14",
+          "catalog_number": "01BD1060"
+        },
+        {
+          "product_id": "PRD-999435B5F2",
+          "catalog_number": "01BD1070"
+        },
+        {
+          "product_id": "PRD-834C88FA6C",
+          "catalog_number": "01BD1120"
+        },
+        {
+          "product_id": "PRD-CE40BBC605",
+          "catalog_number": "01BD1130"
+        },
+        {
+          "product_id": "PRD-FC9576E2DA",
+          "catalog_number": "01BD1140"
+        },
+        {
+          "product_id": "PRD-232789C6C1",
+          "catalog_number": "01BD1150"
+        },
+        {
+          "product_id": "PRD-BA2729925D",
+          "catalog_number": "01BD1160"
+        },
+        {
+          "product_id": "PRD-774F5269E2",
+          "catalog_number": "01BD1170"
+        },
+        {
+          "product_id": "PRD-AD18CD2649",
+          "catalog_number": "01BD1220"
+        },
+        {
+          "product_id": "PRD-D73935B1E8",
+          "catalog_number": "01BD1230"
+        },
+        {
+          "product_id": "PRD-366B39FF6B",
+          "catalog_number": "01BD1240"
+        },
+        {
+          "product_id": "PRD-4C7DAEBAE7",
+          "catalog_number": "01BD1250"
+        },
+        {
+          "product_id": "PRD-7E4E2B9FDC",
+          "catalog_number": "01BD1260"
+        },
+        {
+          "product_id": "PRD-3A150854E1",
+          "catalog_number": "01BD1270"
+        },
+        {
+          "product_id": "PRD-B29FAADB4A",
+          "catalog_number": "01BD1280"
+        },
+        {
+          "product_id": "PRD-CDD970B82B",
+          "catalog_number": "01DST141214"
+        },
+        {
+          "product_id": "PRD-32BF963169",
+          "catalog_number": "01DST161416"
+        },
+        {
+          "product_id": "PRD-D141CFA4EF",
+          "catalog_number": "01DST181618"
+        },
+        {
+          "product_id": "PRD-3B47B1AB00",
+          "catalog_number": "01OKI130910"
+        },
+        {
+          "product_id": "PRD-1FF342CE0D",
+          "catalog_number": "01ST121012"
+        },
+        {
+          "product_id": "PRD-C92DE7A290",
+          "catalog_number": "01ST141214"
+        },
+        {
+          "product_id": "PRD-52F1053FEF",
+          "catalog_number": "01ST151315"
+        },
+        {
+          "product_id": "PRD-2414844270",
+          "catalog_number": "01ST161416"
+        },
+        {
+          "product_id": "PRD-1FD99C1C80",
+          "catalog_number": "01ST181618"
+        },
+        {
+          "product_id": "PRD-F4AE2A74E6",
+          "catalog_number": "01TD1120"
+        },
+        {
+          "product_id": "PRD-019F07860E",
+          "catalog_number": "01TD1130"
+        },
+        {
+          "product_id": "PRD-2DDE688499",
+          "catalog_number": "01TD1140"
+        },
+        {
+          "product_id": "PRD-276127E04A",
+          "catalog_number": "01TD1150"
+        },
+        {
+          "product_id": "PRD-6F78474D2A",
+          "catalog_number": "01TD1160"
+        },
+        {
+          "product_id": "PRD-F76492101A",
+          "catalog_number": "01TD1170"
+        },
+        {
+          "product_id": "PRD-9F6EC5CD84",
+          "catalog_number": "01TD1180"
+        },
+        {
+          "product_id": "PRD-7445BA4E0F",
+          "catalog_number": "01TD1220"
+        },
+        {
+          "product_id": "PRD-16087EF21E",
+          "catalog_number": "01TD1230"
+        },
+        {
+          "product_id": "PRD-3986FCB7FE",
+          "catalog_number": "01TD1240"
+        },
+        {
+          "product_id": "PRD-56C6C135B4",
+          "catalog_number": "01TD1250"
+        },
+        {
+          "product_id": "PRD-DD508FDC2F",
+          "catalog_number": "01TD1270"
+        },
+        {
+          "product_id": "PRD-13D5B75D62",
+          "catalog_number": "01TD1280"
+        },
+        {
+          "product_id": "PRD-463BA2D412",
+          "catalog_number": "01TD1330"
+        },
+        {
+          "product_id": "PRD-DBEEFE82FF",
+          "catalog_number": "01TD1340"
+        },
+        {
+          "product_id": "PRD-81640EACFF",
+          "catalog_number": "01TD1350"
+        },
+        {
+          "product_id": "PRD-347CF3D4E6",
+          "catalog_number": "01TD1360"
+        },
+        {
+          "product_id": "PRD-2098582C05",
+          "catalog_number": "01TD1370"
+        },
+        {
+          "product_id": "PRD-CEF84007CF",
+          "catalog_number": "01TD1380"
+        },
+        {
+          "product_id": "PRD-3E26A24907",
+          "catalog_number": "01TD1430"
+        },
+        {
+          "product_id": "PRD-9ED4F80417",
+          "catalog_number": "01TD1440"
+        },
+        {
+          "product_id": "PRD-3A88D5EB25",
+          "catalog_number": "01TD1450"
+        },
+        {
+          "product_id": "PRD-BE8B4A277C",
+          "catalog_number": "01TD1460"
+        },
+        {
+          "product_id": "PRD-9529C72074",
+          "catalog_number": "01TD1470"
+        },
+        {
+          "product_id": "PRD-61727E3C96",
+          "catalog_number": "01TD1480"
+        },
+        {
+          "product_id": "PRD-1C9FDC1255",
+          "catalog_number": "01TD15100"
+        },
+        {
+          "product_id": "PRD-BE7AE1B706",
+          "catalog_number": "01TD15110"
+        },
+        {
+          "product_id": "PRD-4EB1471E00",
+          "catalog_number": "01TD1530"
+        },
+        {
+          "product_id": "PRD-FA89A93009",
+          "catalog_number": "01TD1540"
+        },
+        {
+          "product_id": "PRD-CE0D740AA5",
+          "catalog_number": "01TD1550"
+        },
+        {
+          "product_id": "PRD-1177EAE01C",
+          "catalog_number": "01TD1560"
+        },
+        {
+          "product_id": "PRD-2AF0108F60",
+          "catalog_number": "01TD1570"
+        },
+        {
+          "product_id": "PRD-1732BD35FF",
+          "catalog_number": "01TD1580"
+        },
+        {
+          "product_id": "PRD-ED8351E635",
+          "catalog_number": "01TD1590"
+        },
+        {
+          "product_id": "PRD-5835D2C88F",
+          "catalog_number": "01TD16110"
+        },
+        {
+          "product_id": "PRD-3463CE8678",
+          "catalog_number": "01TD1630"
+        },
+        {
+          "product_id": "PRD-CD3E9E65EF",
+          "catalog_number": "01TD1640"
+        },
+        {
+          "product_id": "PRD-8C0A788C05",
+          "catalog_number": "01TD1650"
+        },
+        {
+          "product_id": "PRD-2CED104B04",
+          "catalog_number": "01TD1660"
+        },
+        {
+          "product_id": "PRD-7C9F7DB2C9",
+          "catalog_number": "01TD1670"
+        },
+        {
+          "product_id": "PRD-A11D1CECF1",
+          "catalog_number": "01TD1680"
+        },
+        {
+          "product_id": "PRD-E3B4B4DAA7",
+          "catalog_number": "01TD1690"
+        },
+        {
+          "product_id": "PRD-B2522D8768",
+          "catalog_number": "01TD1840"
+        },
+        {
+          "product_id": "PRD-DB9A48291E",
+          "catalog_number": "01TD1850"
+        },
+        {
+          "product_id": "PRD-02DE06B9C9",
+          "catalog_number": "01TF1230"
+        },
+        {
+          "product_id": "PRD-3E8090F385",
+          "catalog_number": "01TF1240"
+        },
+        {
+          "product_id": "PRD-5F208B3FCD",
+          "catalog_number": "01TF1250"
+        },
+        {
+          "product_id": "PRD-D3FFC7F061",
+          "catalog_number": "01TF1260"
+        },
+        {
+          "product_id": "PRD-E9E6ABA91B",
+          "catalog_number": "01TF1270"
+        },
+        {
+          "product_id": "PRD-DFCDE71429",
+          "catalog_number": "01TF1280"
+        },
+        {
+          "product_id": "PRD-1A55FCEC7E",
+          "catalog_number": "01TF1330"
+        },
+        {
+          "product_id": "PRD-844FB6A5E1",
+          "catalog_number": "01TF1340"
+        },
+        {
+          "product_id": "PRD-520C940CFE",
+          "catalog_number": "01TF1350"
+        },
+        {
+          "product_id": "PRD-69E6517714",
+          "catalog_number": "01TF1360"
+        },
+        {
+          "product_id": "PRD-2B4FD782FC",
+          "catalog_number": "01TF1370"
+        },
+        {
+          "product_id": "PRD-39573A2536",
+          "catalog_number": "01TF1430"
+        },
+        {
+          "product_id": "PRD-5599EE7DDE",
+          "catalog_number": "01TF1440"
+        },
+        {
+          "product_id": "PRD-DCE2445A69",
+          "catalog_number": "01TF1460"
+        },
+        {
+          "product_id": "PRD-7ACB0B07FD",
+          "catalog_number": "01TF1470"
+        },
+        {
+          "product_id": "PRD-AE4F2E3EBE",
+          "catalog_number": "01TF15100"
+        },
+        {
+          "product_id": "PRD-E7A617F05F",
+          "catalog_number": "01TF15110"
+        },
+        {
+          "product_id": "PRD-AB6FAE841E",
+          "catalog_number": "01TF1530"
+        },
+        {
+          "product_id": "PRD-D4CC0EF49E",
+          "catalog_number": "01TF1540"
+        },
+        {
+          "product_id": "PRD-C5D7A147AD",
+          "catalog_number": "01TF1550"
+        },
+        {
+          "product_id": "PRD-AAB08BB8EE",
+          "catalog_number": "01TF1560"
+        },
+        {
+          "product_id": "PRD-84E9A6010C",
+          "catalog_number": "01TF1570"
+        },
+        {
+          "product_id": "PRD-BD52DE1395",
+          "catalog_number": "01TF1580"
+        },
+        {
+          "product_id": "PRD-9E686BEC27",
+          "catalog_number": "01TF1590"
+        },
+        {
+          "product_id": "PRD-FEBD25B6DC",
+          "catalog_number": "01TF16100"
+        },
+        {
+          "product_id": "PRD-0D28E189BE",
+          "catalog_number": "01TF1640"
+        },
+        {
+          "product_id": "PRD-0E06448C6B",
+          "catalog_number": "01TF1650"
+        },
+        {
+          "product_id": "PRD-FC4E977BDF",
+          "catalog_number": "01TF1660"
+        },
+        {
+          "product_id": "PRD-3D5D1B81EF",
+          "catalog_number": "01TF1670"
+        },
+        {
+          "product_id": "PRD-557DD115A0",
+          "catalog_number": "01TF1680"
+        },
+        {
+          "product_id": "PRD-37749355A5",
+          "catalog_number": "01TF1690"
+        },
+        {
+          "product_id": "PRD-499E95E8F0",
+          "catalog_number": "01TF18100"
+        },
+        {
+          "product_id": "PRD-7DA2AA3A9A",
+          "catalog_number": "01TF18110"
+        },
+        {
+          "product_id": "PRD-B2F1DA2473",
+          "catalog_number": "01TF1840"
+        },
+        {
+          "product_id": "PRD-BB020047FF",
+          "catalog_number": "01TF1850"
+        },
+        {
+          "product_id": "PRD-8C43D4DD1B",
+          "catalog_number": "01TF1870"
+        },
+        {
+          "product_id": "PRD-629D420930",
+          "catalog_number": "01TF1880"
+        },
+        {
+          "product_id": "PRD-F6120153F0",
+          "catalog_number": "01TF1890"
+        },
+        {
+          "product_id": "PRD-364F11177A",
+          "catalog_number": "01TF20100"
+        },
+        {
+          "product_id": "PRD-053D7E2071",
+          "catalog_number": "01TF20110"
+        },
+        {
+          "product_id": "PRD-9F6664E553",
+          "catalog_number": "01TF2040"
+        },
+        {
+          "product_id": "PRD-23BB8EAB48",
+          "catalog_number": "01TF2050"
+        },
+        {
+          "product_id": "PRD-EB403F5C97",
+          "catalog_number": "01TF2060"
+        },
+        {
+          "product_id": "PRD-30FF74237D",
+          "catalog_number": "01TF2070"
+        },
+        {
+          "product_id": "PRD-FFDCFF2DF6",
+          "catalog_number": "01TF2080"
+        },
+        {
+          "product_id": "PRD-F56B9B1935",
+          "catalog_number": "01TF2090"
+        },
+        {
+          "product_id": "PRD-55E04E6B4A",
+          "catalog_number": "01Y121010"
+        },
+        {
+          "product_id": "PRD-E5E73685E9",
+          "catalog_number": "01Y141010V1"
+        },
+        {
+          "product_id": "PRD-AF93E14891",
+          "catalog_number": "01Y151212"
+        },
+        {
+          "product_id": "PRD-CE6BAAD222",
+          "catalog_number": "01Y151212V1"
+        },
+        {
+          "product_id": "PRD-22140843C5",
+          "catalog_number": "01Y151212V2"
+        },
+        {
+          "product_id": "PRD-7ACD240A5C",
+          "catalog_number": "01Y161313V1"
+        },
+        {
+          "product_id": "PRD-6B83734A5B",
+          "catalog_number": "01Y161313V2"
+        },
+        {
+          "product_id": "PRD-6D82EFD1D2",
+          "catalog_number": "01Y181414"
+        },
+        {
+          "product_id": "PRD-EC39DE72EA",
+          "catalog_number": "025301S20"
+        },
+        {
+          "product_id": "PRD-4F72B750FD",
+          "catalog_number": "025301S30"
+        },
+        {
+          "product_id": "PRD-6D61D60C38",
+          "catalog_number": "025301S40"
+        },
+        {
+          "product_id": "PRD-21E82DCB13",
+          "catalog_number": "025301S50"
+        },
+        {
+          "product_id": "PRD-D8651BEFDB",
+          "catalog_number": "026201S20"
+        },
+        {
+          "product_id": "PRD-9891102F8B",
+          "catalog_number": "026201S30"
+        },
+        {
+          "product_id": "PRD-F30F9B6B87",
+          "catalog_number": "026201S40"
+        },
+        {
+          "product_id": "PRD-9E45614EB7",
+          "catalog_number": "026201S50"
+        },
+        {
+          "product_id": "PRD-5FFC64ACE1",
+          "catalog_number": "026501S20"
+        },
+        {
+          "product_id": "PRD-BFBEBBCA02",
+          "catalog_number": "026501S30"
+        },
+        {
+          "product_id": "PRD-DCF8F46465",
+          "catalog_number": "026501S40"
+        },
+        {
+          "product_id": "PRD-4055F48A03",
+          "catalog_number": "026501S50"
+        },
+        {
+          "product_id": "PRD-B69245D8EF",
+          "catalog_number": "026701S20"
+        },
+        {
+          "product_id": "PRD-9227711C8C",
+          "catalog_number": "026701S30"
+        },
+        {
+          "product_id": "PRD-F1B8B5D639",
+          "catalog_number": "026701S40"
+        },
+        {
+          "product_id": "PRD-A2209933C6",
+          "catalog_number": "026701S50"
+        }
+      ]
     },
     {
       "provenance_origin": "old_corpus",
@@ -2793,10 +3430,27 @@
       "manufacturer": "Cook Medical",
       "publisher": null,
       "official_url": null,
-      "governed_source_ids": [],
+      "governed_source_ids": ["SRC105"],
       "matched_csv_row_count": 2,
       "matched_input_row_numbers": [717, 1534],
-      "canonical_additions_supported": []
+      "canonical_additions_supported": [
+        {
+          "product_id": "PRD-B0A5A793EA",
+          "catalog_number": "G04220"
+        },
+        {
+          "product_id": "PRD-D060A8BE6C",
+          "catalog_number": "G05464"
+        },
+        {
+          "product_id": "PRD-7793F60F05",
+          "catalog_number": "G06885"
+        },
+        {
+          "product_id": "PRD-78176D6C9C",
+          "catalog_number": "G07090"
+        }
+      ]
     },
     {
       "provenance_origin": "old_corpus",

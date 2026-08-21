@@ -80,7 +80,7 @@ describe('D2C taxonomy overlay coverage', () => {
 
   it('classifies every product while preserving the intentional CLR fallback and review holds', () => {
     expect(artifact.counts.classification_basis.unmatched_fallback ?? 0).toBe(1)
-    expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(6)
+    expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(21)
     expect(artifact.counts.needs_review).toBe(
       sourceCompletenessCount('taxonomy_needs_review_after'),
     )
@@ -106,7 +106,7 @@ describe('D2C taxonomy overlay coverage', () => {
     expect(createHash('sha256').update(rulesBytes).digest('hex')).toBe(artifact.source_rules.sha256)
   })
 
-  it('resolves every cohort product and exposes only the six other-class review holds', () => {
+  it('resolves every cohort product and exposes only the explicit other-class review holds', () => {
     const explicitReviewHolds: string[] = []
     for (const product of getAtlasCatalogStore().products) {
       const taxonomy = getProductTaxonomy(product.product_id)
@@ -115,7 +115,7 @@ describe('D2C taxonomy overlay coverage', () => {
         expect(taxonomy.needsReview).toBe(true)
       }
     }
-    expect(explicitReviewHolds).toHaveLength(6)
+    expect(explicitReviewHolds).toHaveLength(21)
   })
 
   it('applies the one narrow new pair rule only to the Narwhal cartridge and leaves CLR honest', () => {

@@ -121,7 +121,7 @@ describe('deterministic hidden-product current-U.S.-status cohort', () => {
   it('derives authored and role-mapped procedures plus the three exemplar flags', () => {
     const pending = manifest.products.filter((row) => row.cohort_partition === 'us_status_pending')
     expect(pending.filter((row) => row.device_intelligence_exemplar_flags.CHEST_TUBE)).toHaveLength(
-      88,
+      95,
     )
     expect(pending.filter((row) => row.device_intelligence_exemplar_flags.EBUS_TBNA)).toHaveLength(
       13,

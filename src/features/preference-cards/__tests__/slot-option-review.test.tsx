@@ -19,7 +19,7 @@ describe('exact-slot proposal review data', () => {
     expect(summary).toMatchObject({
       totalProposals: sourceCompletenessCount('unreviewed_slot_proposals_after'),
       affectedProducts: sourceCompletenessCount('proposal_affected_products'),
-      affectedSlots: 135,
+      affectedSlots: 138,
       requiredProposals: sourceCompletenessCount('proposal_required'),
       notInDistribution: 32,
       conflictingDistribution: 7,

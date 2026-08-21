@@ -14,11 +14,11 @@ const PROTECTED_FILE_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    'a6fe291c9b863820c2f820540e4b1a5161c29065ed0b468ce2fde937daf69930',
+    '57cd32ee001e2627878593cdf905366221ce7e508588115bedd0f6484c83f5e6',
   'data/ip-preference-cards/generated/product-sources.json':
-    '285d456b7133d2f2902e3ac7de33e3eedd65c0c1d1537212b1e940f363a4e7a9',
+    '4545b2d4104d16d100ec7d6f936fefc9196d766c0561cf183880366ad711b526',
   'data/ip-preference-cards/generated/sources.json':
-    'c9249470986589c3373e2b72302566978356ee1d8d92581c983e742fab3eee65',
+    '378a525f9a3f4cad5f8a0975f59f2f167c40c8967e5dce676e63c1245420e520',
   'data/ip-preference-cards/generated/manufacturers.json':
     'd2221705577c98a697105eb48410d924c04455d76b848730042f75f4e37574ff',
   'data/ip-preference-cards/generated/verification-backlog.json':

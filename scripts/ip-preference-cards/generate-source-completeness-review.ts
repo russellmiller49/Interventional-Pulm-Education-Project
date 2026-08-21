@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { format, resolveConfig } from 'prettier'
@@ -7,15 +8,29 @@ import { format, resolveConfig } from 'prettier'
 import { stableId } from './catalog-utils'
 import { formatJson } from './format-json'
 import {
+  expandNovatechMatrixRefs,
   expandSourceCompletenessProducts,
   SOURCE_COMPLETENESS_REVIEW,
   sourceCompletenessCount,
   type ExpandedSourceCompletenessProduct,
   type NonAdditionCandidate,
 } from './source-completeness-intake'
+import {
+  normalizeScannedIdentifier,
+  scanOldCorpus,
+  type CorpusScan,
+  type ScannerCandidate,
+} from './source-completeness-corpus-scan'
+import {
+  assignCorpusDispositions,
+  candidateKey,
+  type DispositionAssignment,
+  type DispositionIdentitySets,
+} from './source-completeness-dispositions'
 
 const OUTPUT_DIRECTORY = 'docs/ip-preference-cards/source-completeness/2026-08-20'
 const PRIOR_MANIFEST = 'docs/ip-preference-cards/brochure-intake/2026-08-19/source-manifest.json'
+const CATALOG_PATH = 'data/ip-preference-cards/generated/catalog-products.json'
 
 interface PriorManifest {
   format_version: string
@@ -54,7 +69,7 @@ interface DiscoveryRow {
   rationale: string
 }
 
-function sha256(contents: string): string {
+function sha256(contents: string | Buffer): string {
   return createHash('sha256').update(contents).digest('hex')
 }
 
@@ -98,6 +113,18 @@ function productRationale(product: ExpandedSourceCompletenessProduct): string {
     return 'Absent as an exact product from the old CSV and baseline catalog; current manufacturer evidence supports exact identity and bounded airway scope.'
   }
   if (product.origin === 'old_corpus') {
+    if (product.groupId.startsWith('novatech_gss_matrix')) {
+      return 'Corpus-wide layout-aware extraction found this exact reference in the Novatech stent ordering matrix (pages 12-15) outside the original CSV; dimensions are inherited from the reviewed matrix headers and the full matrix was expanded deterministically.'
+    }
+    if (product.groupId === 'cook_thal_quick_trays_correction') {
+      return 'Corpus-wide layout-aware extraction found this exact order/reference tray row in the one-product-per-page Cook Thal-Quick capture outside the original CSV and baseline catalog.'
+    }
+    if (product.groupId === 'cook_blue_rhino_g2_multi_correction') {
+      return 'Corpus-wide layout-aware extraction reconstructed this hyphen-wrapped order/reference row in the one-product-per-page Blue Rhino capture; absent from the original CSV and baseline catalog.'
+    }
+    if (product.groupId === 'cook_pleural_drainage_accessories_correction') {
+      return 'Corpus-wide layout-aware extraction found this exact order/reference accessory row in the Cook chest-drainage ordering brochure outside the original CSV and baseline catalog.'
+    }
     return 'A deterministic page-by-page table extraction found the exact R-series row outside the original CSV; rendered manufacturer tables and exact FDA evidence support this in-scope identity.'
   }
   return 'Absent from the old CSV and baseline catalog; owner source plus manufacturer/FDA evidence supports an exact in-scope identity.'
@@ -214,6 +241,11 @@ function duplicateAnalysis(
     } else if (product.catalogNumber === 'CC-1000-4') {
       highRiskNote =
         'The FDA CC-1000 cartridge base model is retained only on the exact four-cartridge package.'
+    } else if (product.groupId.startsWith('novatech_gss_matrix')) {
+      highRiskNote =
+        'Novatech matrix reference; the seven already-canonical GSS references are excluded from expansion, so no baseline Novatech identifier is duplicated.'
+    } else if (product.alternateIds) {
+      highRiskNote = `The paired order/reference identifiers (${product.catalogNumber} / ${product.alternateIds}) identify one exact product; the reference number is carried as an alternate identifier, not a second product.`
     } else if (product.distributor) {
       highRiskNote = `${product.manufacturer} remains the sole legal manufacturer; ${product.distributor} is distributor/brand context and does not create a duplicate manufacturer.`
     }
@@ -244,6 +276,256 @@ function duplicateAnalysis(
   )
 }
 
+interface AssignedCandidate {
+  candidate: ScannerCandidate
+  assignment: DispositionAssignment
+}
+
+interface CorpusLedger {
+  scan: CorpusScan
+  assigned: AssignedCandidate[]
+  csvIdentifiers: Set<string>
+  finalCatalogIds: Map<string, string>
+  dispositionCounts: Map<string, number>
+  basisCounts: Map<string, number>
+  highRiskDocuments: string[]
+}
+
+/**
+ * Run the corpus scanner and assign every candidate a controlled disposition. The scanner output
+ * is the authoritative candidate source: the reviewed configuration may only disposition
+ * candidates the scanner produced, and any unhandled candidate fails the build.
+ */
+function buildCorpusLedger(products: ExpandedSourceCompletenessProduct[]): CorpusLedger {
+  const audit = SOURCE_COMPLETENESS_REVIEW.corpus_audit
+  const sourceDirectory = String(audit.source_directory)
+
+  const csvPath = path.join(sourceDirectory, 'preference_card_products.csv')
+  const csvBytes = readFileSync(csvPath)
+  const expectedCsvHash = String(audit.original_csv_sha256)
+  if (sha256(csvBytes) !== expectedCsvHash) {
+    throw new Error(`Original CSV hash changed; expected ${expectedCsvHash}.`)
+  }
+  const csvIdentifiers = new Set<string>()
+  for (const line of csvBytes.toString('utf8').split('\n').slice(1)) {
+    const identifier = line.split(',')[0]
+    if (!identifier) continue
+    const normalized = normalizeScannedIdentifier(identifier)
+    if (normalized.length >= 4) csvIdentifiers.add(normalized)
+  }
+  const csvMinimum =
+    SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.original_csv_identifier_count_minimum
+  if (csvIdentifiers.size < csvMinimum) {
+    throw new Error(
+      `Original CSV yielded ${csvIdentifiers.size} identifiers; expected at least ${csvMinimum}.`,
+    )
+  }
+
+  const sourceFilenamesById = new Map<string, string[]>()
+  for (const source of SOURCE_COMPLETENESS_REVIEW.sources) {
+    if (source.filename) sourceFilenamesById.set(source.sourceId, [source.filename])
+  }
+  sourceFilenamesById.set(
+    SOURCE_COMPLETENESS_REVIEW.novatech_stent_matrix.evidenceSourceId,
+    SOURCE_COMPLETENESS_REVIEW.novatech_stent_matrix.evidenceDocuments,
+  )
+  const generatedSources = JSON.parse(
+    readFileSync('data/ip-preference-cards/generated/sources.json', 'utf8'),
+  ) as { source_id: string; filename?: string | null }[]
+  for (const source of generatedSources) {
+    if (source.filename && !sourceFilenamesById.has(source.source_id)) {
+      sourceFilenamesById.set(source.source_id, [source.filename])
+    }
+  }
+
+  const additionExact = new Map<string, string>()
+  const additionAlias = new Map<string, string>()
+  const additionEvidenceDocuments = new Map<string, Set<string>>()
+  for (const product of products) {
+    const productId = stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`)
+    additionExact.set(normalizeScannedIdentifier(product.catalogNumber), productId)
+    for (const alias of String(product.alternateIds ?? '').split(/[;,]/)) {
+      const normalized = normalizeScannedIdentifier(alias.replace(/^PRIMARY DI\s*/i, ''))
+      if (normalized.length >= 4) additionAlias.set(normalized, productId)
+    }
+    const documents = new Set<string>()
+    for (const evidence of product.evidence) {
+      for (const filename of sourceFilenamesById.get(evidence.sourceId) ?? []) {
+        documents.add(filename)
+      }
+    }
+    additionEvidenceDocuments.set(productId, documents)
+  }
+
+  const catalog = JSON.parse(readFileSync(CATALOG_PATH, 'utf8')) as {
+    product_id: string
+    catalog_number?: string | null
+    alternate_ids?: string | null
+    gtin?: string | null
+  }[]
+  const additionIds = new Set(additionExact.values())
+  const baselineExact = new Map<string, string>()
+  const baselineAlias = new Map<string, string>()
+  const finalCatalogIds = new Map<string, string>()
+  for (const product of catalog) {
+    const exact = normalizeScannedIdentifier(product.catalog_number ?? '')
+    if (exact.length >= 3) finalCatalogIds.set(exact, product.product_id)
+    if (additionIds.has(product.product_id)) continue
+    if (exact.length >= 3) baselineExact.set(exact, product.product_id)
+    for (const alias of String(product.alternate_ids ?? '').split(/[;,]/)) {
+      const normalized = normalizeScannedIdentifier(alias.replace(/^PRIMARY DI\s*/i, ''))
+      if (normalized.length >= 4) baselineAlias.set(normalized, product.product_id)
+    }
+    const gtin = normalizeScannedIdentifier(product.gtin ?? '')
+    if (gtin) baselineAlias.set(gtin, product.product_id)
+  }
+  for (const [identifier, productId] of additionExact) finalCatalogIds.set(identifier, productId)
+
+  const scan = scanOldCorpus(sourceDirectory, PRIOR_MANIFEST)
+  if (scan.pdfsScanned !== 115 || scan.pagesScanned !== 2609) {
+    throw new Error(
+      `Corpus scan covered ${scan.pdfsScanned} PDFs / ${scan.pagesScanned} pages; the frozen corpus is 115 PDFs / 2,609 pages.`,
+    )
+  }
+
+  const identities: DispositionIdentitySets = {
+    additionExact,
+    additionAlias,
+    additionEvidenceDocuments,
+    baselineExact,
+    baselineAlias,
+    csvIdentifiers,
+  }
+  const candidates = scan.documents.flatMap((document) => document.candidates)
+  const { assignments, unhandled } = assignCorpusDispositions(candidates, {
+    overrides: SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.candidate_overrides,
+    documentRules: SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.document_rules,
+    identities,
+  })
+  if (unhandled.length > 0) {
+    throw new Error(
+      `UNHANDLED_SCANNER_CANDIDATES=${unhandled.length}: ${unhandled
+        .slice(0, 5)
+        .map((candidate) => `${candidate.sourceFilename}/${candidate.normalizedIdentifier}`)
+        .join(', ')}${unhandled.length > 5 ? ', ...' : ''}`,
+    )
+  }
+
+  const assigned: AssignedCandidate[] = candidates.map((candidate) => {
+    const assignment = assignments.get(candidate)
+    if (!assignment) {
+      throw new Error(`Candidate ${candidate.normalizedIdentifier} has no disposition.`)
+    }
+    return { candidate, assignment }
+  })
+
+  // Scanner-to-review connectivity: every accepted old-corpus product must be backed by a
+  // scanner candidate in its reviewed evidence document, on the evidence page it claims.
+  const candidatePages = new Map<string, Set<number>>()
+  for (const candidate of candidates) {
+    candidatePages.set(
+      candidateKey(candidate.sourceFilename, candidate.normalizedIdentifier),
+      new Set(candidate.pages),
+    )
+  }
+  const acceptedIds = new Set(
+    assigned
+      .filter(({ assignment }) => assignment.disposition === 'new_exact_product_candidate')
+      .map(({ assignment }) => assignment.canonicalProductId),
+  )
+  for (const product of products) {
+    if (product.origin !== 'old_corpus') continue
+    const productId = stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`)
+    if (!acceptedIds.has(productId)) {
+      throw new Error(
+        `Accepted old-corpus product ${product.catalogNumber} has no backing scanner candidate in its reviewed evidence document.`,
+      )
+    }
+    for (const evidence of product.evidence) {
+      const pageMatch = evidence.sourceLocation.match(/PDF page (\d+)/)
+      if (!pageMatch) continue
+      const page = Number(pageMatch[1])
+      const files = sourceFilenamesById.get(evidence.sourceId) ?? []
+      const supported = files.some((filename) =>
+        candidatePages
+          .get(candidateKey(filename, normalizeScannedIdentifier(product.catalogNumber)))
+          ?.has(page),
+      )
+      if (!supported) {
+        throw new Error(
+          `Evidence locator for ${product.catalogNumber} claims PDF page ${page}, but the scanner did not see that identifier on that page of the evidence document.`,
+        )
+      }
+    }
+  }
+
+  // The reviewed Novatech matrix must equal the scanner's stent-table reference set exactly.
+  const matrix = SOURCE_COMPLETENESS_REVIEW.novatech_stent_matrix
+  const matrixRefs = new Set(expandNovatechMatrixRefs(matrix).map((entry) => entry.ref))
+  for (const filename of matrix.evidenceDocuments) {
+    const document = scan.documents.find((entry) => entry.sourceFilename === filename)
+    if (!document) throw new Error(`Novatech evidence document ${filename} was not scanned.`)
+    const scannedRefs = new Set(
+      document.candidates
+        .filter(
+          (candidate) =>
+            candidate.pages.some((page) => page >= 12 && page <= 15) &&
+            /^(0[0-9]{5}S[0-9]+|01(BD|TD|TF|Y|OKI|ST|DST)[0-9V]+)$/.test(candidate.rawIdentifier),
+        )
+        .map((candidate) => candidate.rawIdentifier),
+    )
+    if (scannedRefs.size !== matrixRefs.size) {
+      throw new Error(
+        `Scanner found ${scannedRefs.size} stent references in ${filename}; the reviewed matrix expands to ${matrixRefs.size}.`,
+      )
+    }
+    for (const ref of scannedRefs) {
+      if (!matrixRefs.has(ref)) {
+        throw new Error(
+          `Scanner reference ${ref} in ${filename} is absent from the reviewed matrix.`,
+        )
+      }
+    }
+  }
+
+  const dispositionCounts = new Map<string, number>()
+  const basisCounts = new Map<string, number>()
+  for (const { assignment } of assigned) {
+    dispositionCounts.set(
+      assignment.disposition,
+      (dispositionCounts.get(assignment.disposition) ?? 0) + 1,
+    )
+    basisCounts.set(assignment.basis, (basisCounts.get(assignment.basis) ?? 0) + 1)
+  }
+
+  const highRiskDocuments = scan.documents
+    .filter(
+      (document) =>
+        document.candidates.length >= 100 ||
+        document.matrixPages.length >= 2 ||
+        document.orderingHeadingPages.length >= 10 ||
+        (document.pageCount > 0 && document.candidates.length / document.pageCount >= 3),
+    )
+    .map((document) => document.sourceFilename)
+    .sort()
+
+  return {
+    scan,
+    assigned,
+    csvIdentifiers,
+    finalCatalogIds,
+    dispositionCounts,
+    basisCounts,
+    highRiskDocuments,
+  }
+}
+
+function sortedCounts(counts: Map<string, number>): Record<string, number> {
+  return Object.fromEntries(
+    [...counts.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  )
+}
+
 function ownerBreakdown(rows: DiscoveryRow[]): string[] {
   const groups = [
     [
@@ -269,35 +551,65 @@ function ownerBreakdown(rows: DiscoveryRow[]): string[] {
   })
 }
 
-function readme(rows: DiscoveryRow[], products: ExpandedSourceCompletenessProduct[]): string {
+function readme(
+  rows: DiscoveryRow[],
+  products: ExpandedSourceCompletenessProduct[],
+  ledger: CorpusLedger,
+): string {
   const counts = SOURCE_COMPLETENESS_REVIEW.count_contract
   const owner = rows.filter((row) => row.origin === 'owner_pdf')
   const web = rows.filter((row) => row.origin === 'official_web_follow_up')
-  const existing = rows.filter((row) => row.disposition.startsWith('existing_'))
+  const oldCorpus = rows.filter(
+    (row) => row.origin === 'old_corpus' && row.disposition === 'new_exact_product_candidate',
+  )
   const irrelevant = rows.filter((row) => row.disposition === 'irrelevant_to_current_scope')
   const ownerReview = rows.filter((row) => row.owner_review_required === 'yes')
+  const totalCandidates = ledger.assigned.length
+  const disposition = (name: string): number => ledger.dispositionCounts.get(name) ?? 0
   return `# Source Completeness + Owner-Supplied Product Intake V2
 
 This is the deterministic review package for the bounded source-first follow-up after PR #118. It does not rewrite the PR #118 package, source workbook, raw source corpus, historical release, or published release pointer.
+
+## Corpus-scan ledger
+
+Every page of all 115 frozen old-corpus PDFs (2,609 pages) is scanned by a layout-aware extractor (\`source-completeness-corpus-scan.ts\`) with no minimum identifier count per page, no contiguous-page requirement, and no page-leading requirement; it reconstructs hyphen-wrapped cells, joins split references, and records matrix header/row context. The scanner output — not a static reviewed list — is the authoritative candidate source for this package: this generator invokes the scanner, joins its candidates against the original CSV, the pre-review catalog, and the reviewed dispositions, and fails closed if any candidate is left without exactly one controlled disposition.
+
+| Ledger measure | Count |
+| --- | ---: |
+| Scanner candidates (unique identifier per document) | ${totalCandidates} |
+| Dispositions assigned | ${totalCandidates} |
+| Unhandled candidates | 0 |
+| Represented in the original CSV | ${disposition('previously_accounted_csv')} |
+| Exact identifiers of pre-review canonical products | ${disposition('existing_exact')} |
+| Alias/format variants of canonical products | ${disposition('existing_alias_or_format_variant')} |
+| Accepted new exact product rows | ${disposition('new_exact_product_candidate')} |
+| Duplicate source occurrences (paired references, duplicate captures) | ${disposition('duplicate_source_occurrence')} |
+| Held in owner review | ${disposition('needs_owner_review')} |
+| Insufficient identity (fragments, truncations) | ${disposition('relevant_but_insufficient_identity')} |
+| Family-level only | ${disposition('relevant_family_level_only')} |
+| Source-evidence conflicts | ${disposition('source_evidence_conflicted')} |
+| Out of current scope | ${disposition('irrelevant_to_current_scope')} |
+| Not product identifiers (citations, patents, billing codes, revision codes) | ${disposition('not_a_product_identifier')} |
+| Objective high-risk documents (density/matrix/ordering criteria) | ${ledger.highRiskDocuments.length} |
 
 ## Outcome
 
 | Measure | Count |
 | --- | ---: |
-| Products discovered in the old corpus but absent from the old CSV | ${counts.old_corpus_products} |
+| Old-corpus exact products added by this review | ${oldCorpus.length} |
 | Owner-supplied PDF candidates | ${owner.length} |
 | Official-web-only candidates | ${web.length} |
-| Already canonical products | ${existing.length} |
-| New exact products added | ${products.length} |
-| Family-level/unresolved rows | ${rows.filter((row) => row.source_scope === 'family_level' || row.disposition === 'needs_owner_review').length} |
-| Irrelevant products | ${irrelevant.length} |
-| Products needing owner review | ${ownerReview.length} |
+| New exact products added (all origins) | ${products.length} |
+| Irrelevant product rows in the product-level ledger | ${irrelevant.length} |
+| Product rows needing owner review | ${ownerReview.length} |
 
-The prior 125 supported source documents were checked against the frozen PR #118 manifest: 115 PDFs, 7 HTML files, and 3 Markdown files comprising 2,609 PDF pages. All 125 still match; no supported source was added, removed, or hash-changed. Deterministic layout-text extraction scanned all 115 PDFs and identified 17 documents with contiguous multi-page table sections without requiring continuation pages to repeat a heading. Risk-based rendered inspection found 14 R-series candidates in the Shiley Flexible tables and eight additional extended-proximal XLT candidates in the adjacent Shiley XLT document. Thirteen R-series and all eight XLT exact manufacturer/FDA identities were added; the printed \`7CN75R\` versus FDA \`7CN80R\` mismatch remains an explicit owner-review conflict. Corpus-wide table-document accounting is in \`old-corpus-multipage-document-scan.csv\`, and the fully rendered correction sections are in \`old-corpus-table-page-coverage.csv\`.
+The prior 125 supported source documents were checked against the frozen PR #118 manifest: 115 PDFs, 7 HTML files, and 3 Markdown files comprising 2,609 PDF pages. All 125 still match; no supported source was added, removed, or hash-changed.
 
-The newly used evidence set adds 33 hashed artifacts: ${counts.new_pdf_evidence_files} PDFs comprising ${counts.new_pdf_evidence_pages} pages (including the owner packet) and 26 official HTML records/pages. Together with the frozen old corpus, the aggregate is ${counts.aggregate_pdf_pages} PDF pages.
+## Corrected cohorts
 
-The old Medtronic brochure contains M5 family context, but it was represented by CSV input row 791; it does not establish an exact source-to-CSV omission. The current Medtronic U.S. pages establish nine new exact powered-airway products. Across the 20-row airway-blade ordering table, seven were accepted, four remain in owner review, and nine laryngeal/ENT-only rows were excluded.
+- **Cook Thal-Quick**: the one-product-per-page capture pairs one order number with one reference part number per page. All 20 rows (10 trays, 10 sets) were reconciled; the four tray configurations absent from both the original CSV and the baseline catalog (G06885/C-TQTSY-1000, G05464/C-TQTSY-1200, G07090/C-TQTSY-1400, G04220/C-TQTSY-2400) were added with the reference part number as an alternate identifier. The Cook omnibus chest-drainage brochure (SRC076) was reconciled row-by-row; it added the two vinyl connecting tubes (G02327, G02791) and the Cook Chest Drain Valve (G36370), while its pericardiocentesis rows are held in owner review.
+- **Novatech DUMON/GSS stents**: the straight-stent diameter-by-length matrix (pages 12-13) and the Y/OKI/ST/DST special-shape tables (pages 14-15) carry 148 exact references. All 148 were reconciled from scanner output; a compact reviewed matrix expands them deterministically, seven were already canonical, and the remaining 141 were added with header-inherited dimensions. The Spanish-edition catalog carries the identical reference set and is accounted as duplicate occurrences.
+- **Blue Rhino G2-Multi**: all 21 one-product-per-page ordering rows were reconciled, reconstructing the hyphen-wrapped reference part numbers; the 15 sets/trays absent from both the original CSV and the baseline catalog were added, and the six existing rows received their in-row reference pairings.
 
 ## Owner packet by manufacturer
 
@@ -305,34 +617,36 @@ The old Medtronic brochure contains M5 family context, but it was represented by
 | --- | ---: | ---: | ---: | ---: |
 ${ownerBreakdown(rows).join('\n')}
 
-The CLR owner page supplied family/component names without order codes. Official CLR IFUs plus AccessGUDID resolved five exact separately identified products. The CLR Irrigator is added with exact identity and remains a physical-taxonomy review item because the controlled vocabulary has no precise pleural suction/irrigation instrument subtype.
-
 ## Reconciliation model
 
-Every discovery row in \`source-product-discovery.csv\` has exactly one controlled disposition. \`missing-from-original-csv.csv\` deliberately includes accepted, unresolved, and excluded exact candidates so absence from the old CSV is not confused with permission to import. \`new-product-additions.csv\` is the accepted ${counts.new_exact_products}-product subset.
+Every scanner candidate in \`old-corpus-candidate-dispositions.csv\` and every product row in \`source-product-discovery.csv\` has exactly one controlled disposition. \`missing-from-original-csv.csv\` deliberately includes accepted, unresolved, and excluded exact candidates so absence from the old CSV is not confused with permission to import. \`new-product-additions.csv\` is the accepted ${counts.new_exact_products}-product subset.
 
-Duplicate checks covered exact and normalized manufacturer/catalog identity, punctuation and spacing, alternate IDs, GTINs, deterministic IDs, package variants, and distributor/legal-manufacturer relationships. The Cook order numbers and ECHO reference numbers resolve to four existing canonical products and receive only new source relationships.
+Duplicate checks covered exact and normalized manufacturer/catalog identity, punctuation and spacing, alternate IDs, GTINs, deterministic IDs, package variants, order/reference pairings, and distributor/legal-manufacturer relationships.
 
 ## Governance
 
 - All ${counts.new_exact_products} new products are \`verified_source\`, \`visibility_state=hidden\`, and make no local-orderability claim.
-- ${counts.product_roles} products receive an existing, evidence-supported role; six remain intentionally roleless. The two Screeni mounting components stay roleless because the existing mount-accessory role is introduced by a later governed overlay, after the catalog-additions validation gate.
+- ${counts.product_roles} products receive an existing, evidence-supported role; six remain intentionally roleless.
 - No canonical slot option is authored or promoted. Potential relationships remain in the unreviewed proposal workflow.
-- Exactly one taxonomy row is produced for every verified-source product. One narrow pair rule was added for \`Therapeutic bronchoscopy / Cryotherapy consumable\`; CLR Irrigator intentionally remains \`other_needs_review\`.
+- Exactly one taxonomy row is produced for every verified-source product.
 - The owner PDF and all remote source captures remain external; only hashes, locations, URLs, and reviewed facts are committed.
 
 ## Files
 
 - \`source-manifest.json\`: unchanged prior corpus plus every newly used owner/manufacturer/FDA evidence artifact and hash.
-- \`source-product-discovery.csv\`: complete ${counts.discovery_rows}-row controlled-disposition ledger.
-- \`old-corpus-multipage-document-scan.csv\`: all ${counts.corpus_wide_multi_page_table_documents} multi-page table documents identified by the corpus-wide extractor.
-- \`old-corpus-table-page-coverage.csv\`: page-by-page contract for the flagged multi-page table section and all ${counts.shiley_candidates_reconciled} reconciled Shiley candidates.
+- \`old-corpus-candidate-extraction.csv\`: the complete ${totalCandidates}-candidate scanner output with detection metadata.
+- \`old-corpus-candidate-dispositions.csv\`: one controlled disposition per scanner candidate, with basis, rule, and rationale.
+- \`old-corpus-page-coverage.csv\`: per-page candidate coverage for all 2,609 corpus pages.
+- \`old-corpus-document-summary.csv\`: per-document accounting for all 115 PDFs.
+- \`scanner-summary.json\`: scan totals, per-rule and per-disposition counts, and the derived high-risk document list.
+- \`old-corpus-table-page-coverage.csv\`: rendered-inspection contract for the reconciled ordering/matrix sections.
+- \`source-product-discovery.csv\`: complete ${counts.discovery_rows}-row product-level controlled-disposition ledger.
 - \`missing-from-original-csv.csv\`: exact candidates absent from the original CSV, with final disposition.
 - \`owner-supplied-products.csv\`: all 40 owner-packet targets.
 - \`new-product-additions.csv\`: the ${counts.new_exact_products} accepted exact products.
 - \`existing-product-matches.csv\`: four Cook alias/exact matches.
-- \`unresolved-relevant-products.csv\`: held exact candidates, the Shiley source conflict, and the added CLR taxonomy-review row.
-- \`irrelevant-products.csv\`: nine constrained ENT exclusions.
+- \`unresolved-relevant-products.csv\`: held exact candidates and controlled conflicts.
+- \`irrelevant-products.csv\`: constrained exclusions.
 - \`duplicate-analysis.csv\`: per-product exact/alias/package/manufacturer duplicate review.
 - \`manufacturer-summary.csv\`: counts by origin and legal manufacturer.
 `
@@ -354,6 +668,8 @@ async function buildFiles(): Promise<Map<string, string>> {
     throw new Error(`Expected 125 prior sources; found ${prior.sources.length}.`)
 
   const products = expandSourceCompletenessProducts()
+  const ledger = buildCorpusLedger(products)
+
   const productRows = products.map(discoveryForProduct)
   const existingRows = discoveryForExisting(productRows.length)
   const nonAdditionStart = productRows.length + existingRows.length
@@ -364,6 +680,19 @@ async function buildFiles(): Promise<Map<string, string>> {
   const expectedDiscoveryRows = sourceCompletenessCount('discovery_rows')
   if (discovery.length !== expectedDiscoveryRows)
     throw new Error(`Expected ${expectedDiscoveryRows} discovery rows; found ${discovery.length}.`)
+
+  const expectedCandidates = sourceCompletenessCount('corpus_scan_candidates')
+  if (ledger.assigned.length !== expectedCandidates) {
+    throw new Error(
+      `Corpus scan produced ${ledger.assigned.length} candidates; the reviewed contract pins ${expectedCandidates}.`,
+    )
+  }
+  const expectedHighRisk = sourceCompletenessCount('corpus_scan_high_risk_documents')
+  if (ledger.highRiskDocuments.length !== expectedHighRisk) {
+    throw new Error(
+      `Derived ${ledger.highRiskDocuments.length} high-risk documents; the reviewed contract pins ${expectedHighRisk}.`,
+    )
+  }
 
   const productByCatalogNumber = new Map(
     products.map((product) => [product.catalogNumber, product] as const),
@@ -428,12 +757,19 @@ async function buildFiles(): Promise<Map<string, string>> {
   if (newPdfPages !== sourceCompletenessCount('new_pdf_evidence_pages')) {
     throw new Error(`New PDF evidence page total does not match the reviewed count contract.`)
   }
+  const bindings = SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.old_corpus_governed_source_bindings
   const priorSources = prior.sources.map((source) => {
     const record = source as {
+      relative_path?: string | null
       governed_source_ids?: string[]
       canonical_additions_supported?: { product_id: string; catalog_number: string }[]
     }
     const sourceIds = new Set(record.governed_source_ids ?? [])
+    for (const binding of bindings) {
+      if ((record.relative_path ?? '').includes(binding.relativePathIncludes)) {
+        sourceIds.add(binding.sourceId)
+      }
+    }
     const addedSupport = products
       .filter(
         (product) =>
@@ -444,7 +780,12 @@ async function buildFiles(): Promise<Map<string, string>> {
         product_id: stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`),
         catalog_number: product.catalogNumber,
       }))
-    if (addedSupport.length === 0) return { provenance_origin: 'old_corpus', ...source }
+    const base = {
+      provenance_origin: 'old_corpus',
+      ...source,
+      governed_source_ids: [...sourceIds].sort(),
+    }
+    if (addedSupport.length === 0) return base
     const supportById = new Map(
       [...(record.canonical_additions_supported ?? []), ...addedSupport].map((item) => [
         item.product_id,
@@ -452,8 +793,7 @@ async function buildFiles(): Promise<Map<string, string>> {
       ]),
     )
     return {
-      provenance_origin: 'old_corpus',
-      ...source,
+      ...base,
       canonical_additions_supported: [...supportById.values()].sort((left, right) =>
         left.catalog_number.localeCompare(right.catalog_number),
       ),
@@ -530,13 +870,13 @@ async function buildFiles(): Promise<Map<string, string>> {
 
   const manufacturerGroups = new Map<string, DiscoveryRow[]>()
   for (const row of discovery) {
-    const key = `${row.origin}\u0000${row.legal_manufacturer}`
+    const key = `${row.origin}|${row.legal_manufacturer}`
     manufacturerGroups.set(key, [...(manufacturerGroups.get(key) ?? []), row])
   }
   const manufacturerSummary = [...manufacturerGroups.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([key, rows]) => {
-      const [origin, manufacturer] = key.split('\u0000')
+      const [origin, manufacturer] = key.split('|')
       return {
         origin,
         legal_manufacturer: manufacturer,
@@ -549,10 +889,154 @@ async function buildFiles(): Promise<Map<string, string>> {
       }
     })
 
+  // ---- corpus-scan artifacts, derived entirely from scanner output + reviewed dispositions.
+  const extractionRows = ledger.assigned.map(({ candidate }) => ({
+    source_filename: candidate.sourceFilename,
+    source_sha256: candidate.sourceSha256,
+    manufacturer: candidate.manufacturer ?? '',
+    document_page_count: candidate.documentPageCount,
+    first_page: candidate.firstPage,
+    pages: candidate.pages.join(';'),
+    occurrence_count: candidate.occurrenceCount,
+    raw_identifier: candidate.rawIdentifier,
+    normalized_identifier: candidate.normalizedIdentifier,
+    detection_rule: candidate.detectionRule,
+    confidence: candidate.confidence,
+    column: candidate.column,
+    column_header: candidate.columnHeader ?? '',
+    row_label: candidate.rowLabel ?? '',
+    paired_identifier: candidate.pairedIdentifier ?? '',
+    heading_context: candidate.headingContext,
+    line_context: candidate.lineContext,
+  }))
+
+  const dispositionRows = ledger.assigned.map(({ candidate, assignment }) => ({
+    source_filename: candidate.sourceFilename,
+    normalized_identifier: candidate.normalizedIdentifier,
+    raw_identifier: candidate.rawIdentifier,
+    first_page: candidate.firstPage,
+    detection_rule: candidate.detectionRule,
+    original_csv_match: ledger.csvIdentifiers.has(candidate.normalizedIdentifier),
+    final_catalog_product_id: ledger.finalCatalogIds.get(candidate.normalizedIdentifier) ?? '',
+    disposition: assignment.disposition,
+    disposition_basis: assignment.basis,
+    rule_id: assignment.ruleId ?? '',
+    canonical_product_id: assignment.canonicalProductId ?? '',
+    owner_review_required: assignment.ownerReviewRequired,
+    rationale: assignment.rationale,
+    evidence_locator: `${candidate.sourceFilename} p.${candidate.pages.join(';')}`,
+  }))
+
+  const pageCoverageRows = ledger.scan.documents.flatMap((document) =>
+    Array.from({ length: document.pageCount }, (_, index) => {
+      const page = index + 1
+      return {
+        source_filename: document.sourceFilename,
+        page,
+        candidate_identifiers: document.pageCandidateCounts.get(page) ?? 0,
+        has_candidates: document.pageCandidateCounts.has(page),
+      }
+    }),
+  )
+
+  const assignmentsByDocument = new Map<string, AssignedCandidate[]>()
+  for (const entry of ledger.assigned) {
+    const key = entry.candidate.sourceFilename
+    assignmentsByDocument.set(key, [...(assignmentsByDocument.get(key) ?? []), entry])
+  }
+  const renderedFilenames = new Set(
+    (SOURCE_COMPLETENESS_REVIEW.corpus_audit.table_page_coverage as { filename: string }[]).map(
+      (row) => row.filename,
+    ),
+  )
+  const documentSummaryRows = ledger.scan.documents.map((document) => {
+    const entries = assignmentsByDocument.get(document.sourceFilename) ?? []
+    const count = (name: string): number =>
+      entries.filter(({ assignment }) => assignment.disposition === name).length
+    return {
+      source_filename: document.sourceFilename,
+      sha256: document.sourceSha256,
+      manufacturer: document.manufacturer ?? '',
+      page_count: document.pageCount,
+      pages_with_candidates: document.pagesWithCandidates.length,
+      candidate_count: document.candidates.length,
+      ordering_heading_pages: document.orderingHeadingPages.length,
+      matrix_pages: document.matrixPages.length,
+      high_risk: ledger.highRiskDocuments.includes(document.sourceFilename),
+      review_method: renderedFilenames.has(document.sourceFilename)
+        ? 'corpus_text_extraction+rendered_manual_inspection'
+        : 'corpus_text_extraction',
+      accepted_new_products: count('new_exact_product_candidate'),
+      existing_exact: count('existing_exact'),
+      existing_alias_or_format_variant: count('existing_alias_or_format_variant'),
+      previously_accounted_csv: count('previously_accounted_csv'),
+      duplicate_source_occurrence: count('duplicate_source_occurrence'),
+      needs_owner_review: count('needs_owner_review'),
+      relevant_but_insufficient_identity: count('relevant_but_insufficient_identity'),
+      relevant_family_level_only: count('relevant_family_level_only'),
+      source_evidence_conflicted: count('source_evidence_conflicted'),
+      irrelevant_to_current_scope: count('irrelevant_to_current_scope'),
+      not_a_product_identifier: count('not_a_product_identifier'),
+    }
+  })
+
+  const scannerSummary = {
+    format_version: '1.0',
+    reviewed_on: SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.reviewed_on,
+    extraction_tool: SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.extraction_tool,
+    scanner_module: 'scripts/ip-preference-cards/source-completeness-corpus-scan.ts',
+    pdfs_scanned: ledger.scan.pdfsScanned,
+    pages_scanned: ledger.scan.pagesScanned,
+    pages_with_candidates: pageCoverageRows.filter((row) => row.has_candidates).length,
+    scanner_candidates: ledger.assigned.length,
+    dispositions_assigned: ledger.assigned.length,
+    unhandled_scanner_candidates: 0,
+    candidate_overrides: SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.candidate_overrides.length,
+    document_rules: SOURCE_COMPLETENESS_REVIEW.corpus_scan_review.document_rules.length,
+    detection_rule_counts: sortedCounts(
+      ledger.assigned.reduce((map, { candidate }) => {
+        map.set(candidate.detectionRule, (map.get(candidate.detectionRule) ?? 0) + 1)
+        return map
+      }, new Map<string, number>()),
+    ),
+    disposition_counts: sortedCounts(ledger.dispositionCounts),
+    disposition_basis_counts: sortedCounts(ledger.basisCounts),
+    high_risk_documents: ledger.highRiskDocuments,
+  }
+
   const files = new Map<string, string>()
-  files.set('README.md', await formatMarkdown(readme(discovery, products)))
+  files.set('README.md', await formatMarkdown(readme(discovery, products, ledger)))
   files.set('source-manifest.json', await formatJson(sourceManifest))
+  files.set('scanner-summary.json', await formatJson(scannerSummary))
   files.set('source-product-discovery.csv', toCsv(discovery, discoveryColumns))
+  files.set(
+    'old-corpus-candidate-extraction.csv',
+    toCsv(
+      extractionRows,
+      Object.keys(extractionRows[0]) as (keyof (typeof extractionRows)[number])[],
+    ),
+  )
+  files.set(
+    'old-corpus-candidate-dispositions.csv',
+    toCsv(
+      dispositionRows,
+      Object.keys(dispositionRows[0]) as (keyof (typeof dispositionRows)[number])[],
+    ),
+  )
+  files.set(
+    'old-corpus-page-coverage.csv',
+    toCsv(
+      pageCoverageRows,
+      Object.keys(pageCoverageRows[0]) as (keyof (typeof pageCoverageRows)[number])[],
+    ),
+  )
+  files.set(
+    'old-corpus-document-summary.csv',
+    toCsv(
+      documentSummaryRows,
+      Object.keys(documentSummaryRows[0]) as (keyof (typeof documentSummaryRows)[number])[],
+    ),
+  )
   const coverage = SOURCE_COMPLETENESS_REVIEW.corpus_audit.table_page_coverage
   if (!Array.isArray(coverage) || coverage.length === 0) {
     throw new Error('Missing reviewed old-corpus table-page coverage contract.')
@@ -563,34 +1047,6 @@ async function buildFiles(): Promise<Map<string, string>> {
       coverage as Record<string, unknown>[],
       Object.keys(coverage[0] as Record<string, unknown>),
     ),
-  )
-  const corpusScan = SOURCE_COMPLETENESS_REVIEW.corpus_audit.corpus_wide_multi_page_table_scan as
-    | { documents?: string[] }
-    | undefined
-  const scannedDocuments = corpusScan?.documents ?? []
-  if (
-    scannedDocuments.length !== sourceCompletenessCount('corpus_wide_multi_page_table_documents')
-  ) {
-    throw new Error('Corpus-wide multi-page table document count is stale.')
-  }
-  const scanRows = scannedDocuments.map((entry) => {
-    const separator = entry.lastIndexOf(':')
-    const filename = entry.slice(0, separator)
-    const tableSections = entry.slice(separator + 1)
-    const correctionDisposition = filename.startsWith('Shiley™ Flexible')
-      ? '14 candidates: 13 added; 1 source conflict'
-      : filename.startsWith('Shiley™ XLT')
-        ? '8 additional candidates: 8 added'
-        : 'risk-screened against PR118 reconciliation; no correction-cohort candidate'
-    return {
-      filename,
-      table_sections: tableSections,
-      correction_disposition: correctionDisposition,
-    }
-  })
-  files.set(
-    'old-corpus-multipage-document-scan.csv',
-    toCsv(scanRows, Object.keys(scanRows[0]) as (keyof (typeof scanRows)[number])[]),
   )
   files.set('missing-from-original-csv.csv', toCsv(exactMissing, discoveryColumns))
   files.set('owner-supplied-products.csv', toCsv(ownerRows, discoveryColumns))

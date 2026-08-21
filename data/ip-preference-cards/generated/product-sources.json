@@ -88,6 +88,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-019F07860E",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1130",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-01F519887A",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
@@ -197,6 +205,14 @@
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-02DE06B9C9",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1230",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -381,6 +397,14 @@
     "source_location": "p. 93",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-053D7E2071",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF20110",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -864,6 +888,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-0B0CC1045A",
+    "source_id": "SRC074",
+    "source_location": "PDF page 41 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57722, reference part number C-PTISYJ-100-HC-G-NA-EVAC7.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0B65831FF3",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -1024,6 +1056,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0D28E189BE",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1640",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0D2C2802C8",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -1125,6 +1165,14 @@
     "source_location": "Product code 60A150",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0E06448C6B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1650",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -1264,6 +1312,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-0FD8BE79BA",
+    "source_id": "SRC074",
+    "source_location": "PDF page 61 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57694, reference part number C-PTIS-100-HC-G-NA-EVAC8.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-0FDB2829E5",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 14026704911902",
@@ -1390,6 +1446,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - global/older source",
     "notes": "Exact catalog/SKU evidence from an older global manufacturer catalog; U.S. status unverified."
+  },
+  {
+    "product_id": "PRD-1177EAE01C",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1560",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-119A0435F9",
@@ -1544,6 +1608,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-131661EB7C",
+    "source_id": "SRC074",
+    "source_location": "PDF page 38 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57721, reference part number C-PTISYJ-100-HC-G-NA-FLEX8.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1339050168",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -1573,6 +1645,14 @@
     "source_location": "p. 6",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-13D5B75D62",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1280",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -1776,6 +1856,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-16087EF21E",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1230",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-16096E045B",
     "source_id": "SRC032",
     "source_location": "p. 95",
@@ -1838,6 +1926,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-1732BD35FF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1580",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-176442701B",
@@ -1973,6 +2069,14 @@
     "source_location": "Product code 85N040",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-18D0D3090E",
+    "source_id": "SRC074",
+    "source_location": "PDF page 54 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57691, reference part number C-PTIS-100-HC-G-NA-FLEX7.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -2160,6 +2264,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1A55FCEC7E",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1330",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1B17AB9452",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312005783",
@@ -2277,6 +2389,14 @@
     "source_location": "p. 12",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1C9FDC1255",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD15100",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -2560,11 +2680,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1FD99C1C80",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS ST Hourglass Stent table, reference 01ST181618",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1FE403B84C",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1FF342CE0D",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS ST Hourglass Stent table, reference 01ST121012",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -2606,6 +2742,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-2098582C05",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1370",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-20CB4910F8",
@@ -2688,12 +2832,28 @@
     "notes": null
   },
   {
+    "product_id": "PRD-21E82DCB13",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 025301S50",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-21F6CB5BAC",
     "source_id": "SRC019",
     "source_location": "FiAPC plus probes, catalog p. 4",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-22140843C5",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y151212V2",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-2218769436",
@@ -2792,6 +2952,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-232789C6C1",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1150",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-234CBAADF6",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15019517077513",
@@ -2856,6 +3024,14 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-23BB8EAB48",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF2050",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-23D02BB26C",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 20650862132209",
@@ -2909,6 +3085,14 @@
     "source_location": "p. 52",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer brochure; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2414844270",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS ST Hourglass Stent table, reference 01ST161416",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -2989,6 +3173,14 @@
     "source_location": "p. 28",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-25412B4F20",
+    "source_id": "SRC074",
+    "source_location": "PDF page 32 of 66, \"Trays without pharmaceuticals, without tracheostomy tube\" ordering row (order number G57709, reference part number C-PTISYJ-100-UNL-HC-G-NA)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -3208,6 +3400,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-276127E04A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1150",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-277D52B6BC",
     "source_id": "SRC030",
     "source_location": "p. 91",
@@ -3269,6 +3469,14 @@
     "source_location": "CSV row 15",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-27F927260E",
+    "source_id": "SRC076",
+    "source_location": "PDF page 16 of 20, Simple Pneumothorax Aspiration Accessory Set ordering table, Cook Chest Drain Valve Only row (order number G36370, reference part number C-CDV-1)",
+    "claim_type": "Cook order number and reference part number",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -3472,11 +3680,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2AF0108F60",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1570",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2B0E9C0AA9",
     "source_id": "SRC075",
     "source_location": "PDF p. 3",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2B4FD782FC",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1370",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -3720,6 +3944,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2CED104B04",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1660",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2D0C9B936A",
     "source_id": "SRC024",
     "source_location": "p. 2",
@@ -3837,6 +4069,14 @@
     "source_location": "PDF p. 10",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2DDE688499",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1140",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4144,6 +4384,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-30FF74237D",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF2070",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3119D76B4D",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 00650862111019",
@@ -4205,6 +4453,14 @@
     "source_location": "Document p. not stated (PDF page 10)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-318DD7F80F",
+    "source_id": "SRC074",
+    "source_location": "PDF page 23 of 66, \"Trays with pharmaceuticals, with tracheostomy tube\" ordering row (order number G57719, reference part number C-PTISY-100-HC-G-NA-EVAC8.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4277,6 +4533,14 @@
     "source_location": "p. 14",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-32BF963169",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS DST Hourglass Stent table, reference 01DST161416",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4400,6 +4664,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3463CE8678",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1630",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-347CF3D4E6",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1360",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-34895D701B",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.12 (PDF p. 125)",
@@ -4504,11 +4784,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-364F11177A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF20100",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-365451442E",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.10 (PDF p. 123)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-366B39FF6B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1240",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4576,6 +4872,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-37749355A5",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1690",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-378597DD7A",
     "source_id": "SRC091",
     "source_location": "Airway Blades ordering information table",
@@ -4640,11 +4944,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-39295A9759",
+    "source_id": "SRC074",
+    "source_location": "PDF page 29 of 66, \"Trays without pharmaceuticals, without tracheostomy tube\" ordering row (order number G57708, reference part number C-PTISYJ-100-UNS-HC-G-NA)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-394135E376",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-39573A2536",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1430",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4661,6 +4981,14 @@
     "source_location": "Bronchoscopic photodynamic therapy report — drug section",
     "claim_type": "Presentation, reconstitution, and dose",
     "verification_status": "Recorded from a secondary research report only. No manufacturer document or FDA record is on file for it here, so it is hidden from selection until one is attached.",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3986FCB7FE",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1240",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4736,6 +5064,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3A150854E1",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS BD Bronchial Stent table, reference 01BD1270",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3A183102CF",
     "source_id": "SRC019",
     "source_location": "FiAPC probes, catalog pp. 5-6",
@@ -4792,6 +5128,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3A88D5EB25",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1450",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3AA4C645B9",
     "source_id": "SRC038",
     "source_location": "p. 57",
@@ -4813,6 +5157,14 @@
     "source_location": "pp. 70-77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3B47B1AB00",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS OKI Oblique Stent table, reference 01OKI130910",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4896,6 +5248,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3D5D1B81EF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1670",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3D8AEACE11",
     "source_id": "SRC003",
     "source_location": "pp. 13-14",
@@ -4940,6 +5300,22 @@
     "source_id": "SRC091",
     "source_location": "Airway Blades ordering information table",
     "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3E26A24907",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1430",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-3E8090F385",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1240",
+    "claim_type": "Exact catalog reference and dimensions",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -5040,6 +5416,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4055F48A03",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026501S50",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4073AAF637",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312013702",
@@ -5085,6 +5469,14 @@
     "source_location": "Soft and firm PVC thoracic catheters",
     "claim_type": "Product family, configuration, and part number",
     "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-40A16220EC",
+    "source_id": "SRC076",
+    "source_location": "PDF page 17 of 20, Vinyl Connecting Tube ordering table, Luer Lock (without a 2-way stopcock) row (order number G02791, reference part number CTU14.0-30)",
+    "claim_type": "Cook order number, reference part number, French size, and tube length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -5544,6 +5936,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-463BA2D412",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1330",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4692570E45",
     "source_id": "SRC063",
     "source_location": "Bronchoscopic photodynamic therapy report — diffuser section",
@@ -5773,6 +6173,14 @@
     "source_location": "p. 24",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-499E95E8F0",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF18100",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6032,6 +6440,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4C7DAEBAE7",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1250",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4CC32EE889",
     "source_id": "SRC040",
     "source_location": "p. 14",
@@ -6176,6 +6592,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-4EB1471E00",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1530",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4EC3E00AB7",
     "source_id": "SRC033",
     "source_location": "p. 77",
@@ -6261,6 +6685,14 @@
     "source_location": "pp. 49-51",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F72B750FD",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 025301S30",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6432,6 +6864,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-520C940CFE",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1350",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-523148A737",
     "source_id": "SRC021",
     "source_location": "p. 10",
@@ -6496,11 +6936,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-52D3317209",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1050",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-52E905C321",
     "source_id": "SRC080",
     "source_location": "Document p. 8 (PDF page 5)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-52F1053FEF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS ST Hourglass Stent table, reference 01ST151315",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6656,10 +7112,26 @@
     "notes": null
   },
   {
+    "product_id": "PRD-557DD115A0",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1680",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5592532651",
     "source_id": "SRC091",
     "source_location": "Airway Blades ordering information table",
     "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5599EE7DDE",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1440",
+    "claim_type": "Exact catalog reference and dimensions",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -6685,6 +7157,14 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-55E04E6B4A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y121010",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6749,6 +7229,14 @@
     "source_location": "Document p. not stated (PDF page 1)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-56C6C135B4",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1250",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6893,6 +7381,14 @@
     "source_location": "Respiratory 14.04 (PDF p. 117)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5835D2C88F",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD16110",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -7488,6 +7984,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5F208B3FCD",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1250",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5F801B5A8E",
     "source_id": "SRC003",
     "source_location": "p. 13",
@@ -7533,6 +8037,14 @@
     "source_location": "Section 1.0; Section 2.0; Section 4.0",
     "claim_type": "Device identity and function",
     "verification_status": "Manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5FFC64ACE1",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026501S20",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -7624,11 +8136,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-61727E3C96",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1480",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-61915862CE",
     "source_id": "SRC003",
     "source_location": "p. 12",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-61930EA6FF",
+    "source_id": "SRC074",
+    "source_location": "PDF page 26 of 66, \"Trays without pharmaceuticals, without tracheostomy tube\" ordering row (order number G57707, reference part number C-PTISYJ-100-HC-G-NA)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -7685,6 +8213,14 @@
     "source_location": "pp. 1-18",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact model identity - commercial configuration required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-629D420930",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1880",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -8208,6 +8744,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-69E6517714",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1360",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6A108CCC84",
     "source_id": "SRC085",
     "source_location": "Document p. not stated (PDF page 2)",
@@ -8376,6 +8920,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6B83734A5B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y161313V2",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6BA107A313",
     "source_id": "SRC087",
     "source_location": "Document p. 75 (PDF page 83)",
@@ -8454,6 +9006,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-6C3C818624",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1030",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-6C43A37366",
@@ -8544,6 +9104,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6D61D60C38",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 025301S40",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6D6815FAE1",
     "source_id": "SRC001",
     "source_location": "p. 24",
@@ -8573,6 +9141,14 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog and flyer",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6D82EFD1D2",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y181414",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -8781,6 +9357,14 @@
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6F78474D2A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1160",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9200,6 +9784,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7445BA4E0F",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1220",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-744A95F952",
     "source_id": "SRC033",
     "source_location": "p. 18",
@@ -9448,6 +10040,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-774F5269E2",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS BD Bronchial Stent table, reference 01BD1170",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7793F60F05",
+    "source_id": "SRC105",
+    "source_location": "PDF page 4 of 35, Tray ordering row (order number G06885, reference part number C-TQTSY-1000)",
+    "claim_type": "Cook order number, reference part number, French size, and catheter length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-77C1FEFC4F",
     "source_id": "SRC027",
     "source_location": "p. 15",
@@ -9493,6 +10101,14 @@
     "source_location": "Product code 67N025",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-78176D6C9C",
+    "source_id": "SRC105",
+    "source_location": "PDF page 8 of 35, Tray ordering row (order number G07090, reference part number C-TQTSY-1400)",
+    "claim_type": "Cook order number, reference part number, French size, and catheter length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9680,11 +10296,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7ACB0B07FD",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1470",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7ACC124BE1",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7ACD240A5C",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y161313V1",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9824,6 +10456,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7C9F7DB2C9",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1670",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7CAB35AC24",
     "source_id": "SRC027",
     "source_location": "p. 13",
@@ -9877,6 +10517,14 @@
     "source_location": "Oasis dry suction water seal chest drain",
     "claim_type": "Product family, configuration, and part number",
     "verification_status": "Manufacturer product page",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7DA2AA3A9A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF18110",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9950,6 +10598,14 @@
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
     "notes": "Upgraded a prior discovery-only seed without changing its stable product_id."
+  },
+  {
+    "product_id": "PRD-7E4E2B9FDC",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1260",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-7E601C1D9F",
@@ -10168,6 +10824,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-81640EACFF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1350",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-81878EEA9B",
     "source_id": "SRC089",
     "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
@@ -10296,11 +10960,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-834C88FA6C",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1120",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-83A71310E6",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI B634MBR000211A0",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-83ABCBA52B",
+    "source_id": "SRC076",
+    "source_location": "PDF page 17 of 20, Vinyl Connecting Tube ordering table, 2-way stopcock row (order number G02327, reference part number CTU14.0-40-ST)",
+    "claim_type": "Cook order number, reference part number, French size, and tube length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -10344,6 +11024,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-844FB6A5E1",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1340",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8474F25510",
     "source_id": "SRC072",
     "source_location": "PDF p. 11",
@@ -10373,6 +11061,14 @@
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-84E9A6010C",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1570",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -10517,6 +11213,14 @@
     "source_location": "Document p. 12 (PDF page 7)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-86B4C57E4C",
+    "source_id": "SRC074",
+    "source_location": "PDF page 52 of 66, \"Sets without tracheostomy tube\" ordering row (order number G57684, reference part number C-PTIS-100-UNL-HC-G-NA)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -10896,6 +11600,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8C0A788C05",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1650",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8C43D4DD1B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1870",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8C4710647F",
     "source_id": "SRC088",
     "source_location": "INSPIRA official product-page PDF index 5 / printed p. 5/7, exact model EPK-i8020c",
@@ -11160,6 +11880,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-90327D4D73",
+    "source_id": "SRC074",
+    "source_location": "PDF page 44 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57723, reference part number C-PTISYJ-100-HC-G-NA-EVAC8.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-904D5B29E4",
     "source_id": "SRC003",
     "source_location": "p. 14",
@@ -11373,6 +12101,14 @@
     "source_location": "p. 91",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9227711C8C",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026701S30",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -11600,6 +12336,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9529C72074",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1470",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-952A7B928E",
     "source_id": "SRC001",
     "source_location": "p. 30",
@@ -11792,6 +12536,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9891102F8B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026201S30",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-98EB75029F",
     "source_id": "SRC073",
     "source_location": "Document p. not stated (PDF page 10)",
@@ -11837,6 +12589,14 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-999435B5F2",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS BD Bronchial Stent table, reference 01BD1070",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -12144,11 +12904,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9E45614EB7",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026201S50",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9E6034F109",
     "source_id": "SRC003",
     "source_location": "p. 12",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9E686BEC27",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1590",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -12184,6 +12960,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9ED4F80417",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1440",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9EE9380618",
+    "source_id": "SRC074",
+    "source_location": "PDF page 56 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57692, reference part number C-PTIS-100-HC-G-NA-FLEX8.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9EECE0EDB1",
     "source_id": "SRC087",
     "source_location": "Document p. 53 (PDF page 61)",
@@ -12213,6 +13005,22 @@
     "source_location": "Document p. 74 (PDF page 82)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9F6664E553",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF2040",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9F6EC5CD84",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1180",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -12312,6 +13120,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A11D1CECF1",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1680",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A12A620A18",
     "source_id": "SRC021",
     "source_location": "pp. 49-51",
@@ -12373,6 +13189,14 @@
     "source_location": "PDF p. 4",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A2209933C6",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026701S50",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13000,6 +13824,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AAB08BB8EE",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1560",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AACAFBB1E3",
     "source_id": "SRC080",
     "source_location": "Document p. 4 (PDF page 3)",
@@ -13077,6 +13909,14 @@
     "source_location": "LX transducer and exam-type tables",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact model identity - commercial configuration required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AB6FAE841E",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1530",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13224,6 +14064,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AD18CD2649",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1220",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AD1CD2C1B2",
     "source_id": "SRC021",
     "source_location": "pp. 49-51",
@@ -13325,6 +14173,14 @@
     "source_location": "p. 25",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AE4F2E3EBE",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF15100",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13437,6 +14293,14 @@
     "source_location": "Document p. 12 (PDF page 7)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AF93E14891",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y151212",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13576,6 +14440,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B0A5A793EA",
+    "source_id": "SRC105",
+    "source_location": "PDF page 16 of 35, Tray ordering row (order number G04220, reference part number C-TQTSY-2400)",
+    "claim_type": "Cook order number, reference part number, French size, and catheter length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B1203FF71F",
     "source_id": "SRC003",
     "source_location": "p. 9",
@@ -13632,11 +14504,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B2522D8768",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1840",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B258E8E859",
     "source_id": "SRC032",
     "source_location": "p. 95",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified exact model/specification - commercial item code required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B29FAADB4A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS BD Bronchial Stent table, reference 01BD1280",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13685,6 +14573,14 @@
     "source_location": "Document p. 12 (PDF page 7)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B2F1DA2473",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1840",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13960,6 +14856,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-B69245D8EF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026701S20",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B6A919EF32",
     "source_id": "SRC021",
     "source_location": "pp. 44-48",
@@ -14013,6 +14917,14 @@
     "source_location": "Document p. 98 (PDF page 106)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B76AF3D731",
+    "source_id": "SRC074",
+    "source_location": "PDF page 47 of 66, \"Sets without tracheostomy tube\" ordering row (order number G57682, reference part number C-PTIS-100-HC-G-NA)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -14200,6 +15112,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BA2729925D",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1160",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BA677F5907",
     "source_id": "SRC006",
     "source_location": "Product list 2025!Sheet5",
@@ -14317,6 +15237,14 @@
     "source_location": "p. 25",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BB020047FF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1850",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -14552,6 +15480,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BD52DE1395",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1580",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BD7D0C388D",
     "source_id": "SRC072",
     "source_location": "PDF p. 11",
@@ -14656,6 +15592,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BE7AE1B706",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD15110",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BE8B4A277C",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1460",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BEB189750B",
     "source_id": "SRC012",
     "source_location": "Respiratory 14.13 (PDF p. 128)",
@@ -14717,6 +15669,14 @@
     "source_location": "p. 18",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BFBEBBCA02",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026501S30",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15168,6 +16128,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-C5D7A147AD",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1550",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-C61336D16B",
     "source_id": "SRC074",
     "source_location": "Document p. 19/66 (PDF page 19)",
@@ -15413,6 +16381,14 @@
     "source_location": "Product code 855190",
     "claim_type": "Tube dimensions, cuff type, and product line",
     "verification_status": "Transcribed from the manufacturer catalog ordering tables",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-C92DE7A290",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS ST Hourglass Stent table, reference 01ST141214",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15696,6 +16672,14 @@
     "notes": "Exact catalog/SKU evidence from an older global manufacturer catalog; U.S. status unverified."
   },
   {
+    "product_id": "PRD-CD3E9E65EF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1640",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CD8F96B3C5",
     "source_id": "SRC040",
     "source_location": "pp. 14-15",
@@ -15712,11 +16696,27 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-CDD970B82B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS DST Hourglass Stent table, reference 01DST141214",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CE081B3A72",
     "source_id": "SRC021",
     "source_location": "p. 25",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CE0D740AA5",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1550",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15728,11 +16728,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-CE40BBC605",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1130",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-CE5DCA0D3A",
     "source_id": "SRC038",
     "source_location": "p. 57",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CE6BAAD222",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y151212V1",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15749,6 +16765,14 @@
     "source_location": "Flexible bronchoscopy platforms!6",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-CEF84007CF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1380",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15800,6 +16824,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-D060A8BE6C",
+    "source_id": "SRC105",
+    "source_location": "PDF page 6 of 35, Tray ordering row (order number G05464, reference part number C-TQTSY-1200)",
+    "claim_type": "Cook order number, reference part number, French size, and catheter length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D063F090C6",
     "source_id": "SRC017",
     "source_location": "Monopolar cables, catalog p. 5",
@@ -15848,11 +16880,35 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D0F1748B0D",
+    "source_id": "SRC074",
+    "source_location": "PDF page 50 of 66, \"Sets without tracheostomy tube\" ordering row (order number G57683, reference part number C-PTIS-100-UNS-HC-G-NA)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D112B2C52A",
     "source_id": "SRC040",
     "source_location": "pp. 14-15",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. HUD manufacturer brochure",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D13A7A8211",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1020",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D141CFA4EF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 15, GSS DST Hourglass Stent table, reference 01DST181618",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -16032,6 +17088,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D3FFC7F061",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1260",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D40CA802F4",
     "source_id": "SRC072",
     "source_location": "PDF p. 10",
@@ -16077,6 +17141,14 @@
     "source_location": "Respiratory 14.17 (PDF p. 132)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D4CC0EF49E",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1540",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -16328,6 +17400,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D73935B1E8",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1230",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D7472146DC",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410482478",
@@ -16430,6 +17510,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-D8651BEFDB",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026201S20",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-D92BDB1551",
@@ -16640,6 +17728,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DB9A48291E",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1850",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DBC74C33F6",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15019517078053",
@@ -16661,6 +17757,22 @@
     "source_location": "pp. 12-13",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DBEAA70E14",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1060",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DBEEFE82FF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1340",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -16760,6 +17872,14 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-DCE2445A69",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1460",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DCEE87A7A4",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15019517078046",
@@ -16784,6 +17904,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-DCF8F46465",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026501S40",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-DCFC448718",
     "source_id": "SRC058",
     "source_location": "OEC 3D brochure",
@@ -16805,6 +17933,14 @@
     "source_location": "CSV row 10",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DD508FDC2F",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1270",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -16989,6 +18125,14 @@
     "source_location": "p. 21",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DFCDE71429",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1280",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -17272,6 +18416,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-E3B4B4DAA7",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1690",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E3C70517F3",
     "source_id": "SRC041",
     "source_location": "pp. 70-77",
@@ -17384,6 +18536,14 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-E5E73685E9",
+    "source_id": "SRC106",
+    "source_location": "PDF page 14, GSS Y Stent table, reference 01Y141010V1",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-E60B906F69",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 20650862130281",
@@ -17446,6 +18606,14 @@
     "claim_type": "GuideSheath kit component compatibility",
     "verification_status": "Verified - manufacturer flyer",
     "notes": "Peripheral Bronchoscopy Solutions flyer."
+  },
+  {
+    "product_id": "PRD-E7A617F05F",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF15110",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-E7FAE36160",
@@ -17573,6 +18741,14 @@
     "source_location": "p. 72",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E9E6ABA91B",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1270",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -17736,6 +18912,14 @@
     "notes": "Upgraded a prior pleural seed using the exact manufacturer catalog table."
   },
   {
+    "product_id": "PRD-EB403F5C97",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF2060",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EB513BCB63",
     "source_id": "SRC003",
     "source_location": "p. 4",
@@ -17805,6 +18989,14 @@
     "source_location": "device.txt, PrimaryDI B634MBR0000140",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EC39DE72EA",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 025301S20",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -17909,6 +19101,14 @@
     "source_location": "p. 5",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-ED8351E635",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1590",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -18168,6 +19368,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F1B8B5D639",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026701S40",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F1BAA98154",
     "source_id": "SRC086",
     "source_location": "Document p. 19/29 (PDF page 19)",
@@ -18272,6 +19480,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F30F9B6B87",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, DUMON BB Bronchial Stent table, reference 026201S40",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F32CE903FF",
     "source_id": "SRC027",
     "source_location": "p. 7",
@@ -18357,6 +19573,14 @@
     "source_location": "Document p. 71 (PDF page 79)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F4AE2A74E6",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1120",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -18464,6 +19688,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F56B9B1935",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF2090",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F586C51621",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04953170356360",
@@ -18528,6 +19760,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F6120153F0",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF1890",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F61DF2B2E6",
     "source_id": "SRC076",
     "source_location": "PDF p. 10",
@@ -18573,6 +19813,14 @@
     "source_location": "Document p. not stated (PDF page 1)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F76492101A",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TD Tracheal Stent table, reference 01TD1170",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -18752,6 +20000,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-F93B7FF984",
+    "source_id": "SRC074",
+    "source_location": "PDF page 59 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57693, reference part number C-PTIS-100-HC-G-NA-EVAC7.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-F946AD81F2",
     "source_id": "SRC054",
     "source_location": "PDF page index 1; printed p. 1 of 4, Specifications table",
@@ -18880,6 +20136,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FA89A93009",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TD Tracheal Stent table, reference 01TD1540",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FAE7E352C7",
     "source_id": "SRC043",
     "source_location": "p. 1",
@@ -18981,6 +20245,22 @@
     "source_location": "p. 1",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer ordering-page capture",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FC4E977BDF",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS TF Thin Tracheal Stent table, reference 01TF1660",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FC9576E2DA",
+    "source_id": "SRC106",
+    "source_location": "PDF page 12, GSS BD Bronchial Stent table, reference 01BD1140",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -19208,11 +20488,27 @@
     "notes": null
   },
   {
+    "product_id": "PRD-FEBD25B6DC",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF16100",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-FEBFE797DD",
     "source_id": "SRC072",
     "source_location": "PDF p. 11",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FF056E168C",
+    "source_id": "SRC074",
+    "source_location": "PDF page 35 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57720, reference part number C-PTISYJ-100-HC-G-NA-FLEX7.5)",
+    "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -19245,6 +20541,14 @@
     "source_location": "Perc trach and WLL",
     "claim_type": "Candidate seed",
     "verification_status": "Candidate - user seed; primary source required",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-FFDCFF2DF6",
+    "source_id": "SRC106",
+    "source_location": "PDF page 13, GSS TF Thin Tracheal Stent table, reference 01TF2080",
+    "claim_type": "Exact catalog reference and dimensions",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   }
 ]

@@ -14,15 +14,15 @@
     "product_sources": 2248
   },
   "count_contract": {
-    "discovery_rows": 85,
-    "new_exact_products": 65,
+    "discovery_rows": 248,
+    "new_exact_products": 228,
     "owner_pdf_products": 35,
     "official_web_products": 9,
-    "old_corpus_products": 21,
+    "old_corpus_products": 184,
     "existing_matches": 4,
     "non_addition_candidates": 16,
-    "product_roles": 59,
-    "product_source_relationships": 158,
+    "product_roles": 222,
+    "product_source_relationships": 321,
     "new_pdf_evidence_files": 7,
     "new_pdf_evidence_pages": 45,
     "aggregate_pdf_pages": 2654,
@@ -30,32 +30,33 @@
     "shiley_products_added": 13,
     "shiley_controlled_conflicts": 1,
     "additional_xlt_products_added": 8,
-    "corpus_wide_multi_page_table_documents": 17,
-    "canonical_products_after": 1994,
-    "verified_source_products_after": 1793,
+    "canonical_products_after": 2157,
+    "verified_source_products_after": 1956,
     "manufacturers_after": 55,
-    "sources_after": 104,
-    "product_source_relationships_after": 2406,
-    "product_role_relationships_after": 2059,
-    "taxonomy_rows_after": 1793,
-    "taxonomy_needs_review_after": 7,
+    "sources_after": 106,
+    "product_source_relationships_after": 2569,
+    "product_role_relationships_after": 2222,
+    "taxonomy_rows_after": 1956,
+    "taxonomy_needs_review_after": 22,
     "canonical_slot_options_after": 2035,
-    "unreviewed_slot_proposals_after": 1615,
+    "unreviewed_slot_proposals_after": 1793,
     "published_products_after": 101,
     "prototype_visible_products_after": 753,
-    "hidden_products_after": 1241,
-    "hidden_verified_source_products_after": 1040,
-    "catalog_additions_after_workbook": 773,
+    "hidden_products_after": 1404,
+    "hidden_verified_source_products_after": 1203,
+    "catalog_additions_after_workbook": 936,
     "workbook_backlog_products": 1221,
-    "products_without_strong_identity_candidate": 1276,
+    "products_without_strong_identity_candidate": 1439,
     "status_researched_products": 578,
-    "status_unresearched_atlas_products": 1215,
-    "status_gate_review_required": 1249,
-    "hidden_catalog_identifier_catalog_number": 1193,
-    "hidden_mapped_role_rows": 1230,
-    "proposal_affected_products": 821,
-    "proposal_required": 857,
-    "proposal_unknown_distribution": 1015
+    "status_unresearched_atlas_products": 1378,
+    "status_gate_review_required": 1412,
+    "hidden_catalog_identifier_catalog_number": 1356,
+    "hidden_mapped_role_rows": 1393,
+    "proposal_affected_products": 984,
+    "proposal_required": 878,
+    "proposal_unknown_distribution": 1193,
+    "corpus_scan_candidates": 5767,
+    "corpus_scan_high_risk_documents": 57
   },
   "corpus_audit": {
     "source_directory": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Research/product-brochure-intake-20260819",
@@ -80,8 +81,8 @@
       "download (1).html"
     ],
     "unreferenced_files_with_relevant_exact_products": 0,
-    "old_corpus_exact_products_absent_from_original_csv": 21,
-    "table_page_review_method": "Deterministic layout-text extraction of every page in the flagged multi-page Shiley table section, followed by rendered inspection of both table pages and exact-identity reconciliation against FDA AccessGUDID evidence.",
+    "old_corpus_exact_products_absent_from_original_csv": 184,
+    "table_page_review_method": "Deterministic layout-aware extraction of every page of all 115 corpus PDFs, followed by rendered manual inspection of the reconciled ordering/matrix sections listed in table_page_coverage and exact-identity reconciliation of accepted candidates against manufacturer and FDA evidence.",
     "table_page_coverage": [
       {
         "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
@@ -104,33 +105,52 @@
         "candidateCatalogNumbers": "50XLTCP; 60XLTCP; 70XLTCP; 80XLTCP; 50XLTUP; 60XLTUP; 70XLTUP; 80XLTUP",
         "candidateCount": 8,
         "allCandidatesDispositioned": true
+      },
+      {
+        "filename": "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf",
+        "sha256": "221993773bfbb7cc04cd06af935f7d55dfb1f2b17f3b97e56191665cf38b87f5",
+        "pdfPages": 20,
+        "section": "DUMON/GSS straight-stent matrix and Y/OKI/ST/DST special-shape tables",
+        "tablePages": "12-15",
+        "renderedPages": "12-15",
+        "candidateCatalogNumbers": "148 exact references (113 straight TD/TF/BD, 16 DUMON BB, 10 Y, 1 OKI, 5 ST, 3 DST)",
+        "candidateCount": 148,
+        "allCandidatesDispositioned": true
+      },
+      {
+        "filename": "Blue Rhino® G2-Multi Percutaneous Tracheostomy Introducer Sets and Trays _ Cook Medical.pdf",
+        "sha256": "deaf57f7f6cfbe6ccba8d135ad770258ee5b2ac75e238d220a4b1c99528b0ff7",
+        "pdfPages": 66,
+        "section": "Set/tray ordering rows, one exact product per page",
+        "tablePages": "2-61",
+        "renderedPages": "2;6;9;12;19;26;29;32;35;44;47;52;54;61",
+        "candidateCatalogNumbers": "G57682; G57683; G57684; G57691; G57692; G57693; G57694; G57703; G57704; G57706; G57707; G57708; G57709; G57716; G57717; G57718; G57719; G57720; G57721; G57722; G57723",
+        "candidateCount": 21,
+        "allCandidatesDispositioned": true
+      },
+      {
+        "filename": "Thal-Quick Chest Tube Set and Tray _ Cook Medical.pdf",
+        "sha256": "85967b29299198089c79975e2979334e30c1975fd90f9b42bac82b235e19627a",
+        "pdfPages": 35,
+        "section": "Tray and set ordering rows, one exact product per page",
+        "tablePages": "2-31",
+        "renderedPages": "2;4;6;8;16;22",
+        "candidateCatalogNumbers": "G06791; G06885; G05464; G07090; G05462; G05461; G05463; G04220; G04226; G07242; G06786; G06787; G05161; G05777; G04891; G05453; G05454; G04137; G04139; G07243",
+        "candidateCount": 20,
+        "allCandidatesDispositioned": true
+      },
+      {
+        "filename": "CC-D67629-EN-F_IA_1683223150514.pdf",
+        "sha256": "c46aa95be1ed2d93911375edc81aa3382efd1d8354d4301efbc3c4830777138b",
+        "pdfPages": 20,
+        "section": "Cook chest tubes and catheters omnibus ordering tables",
+        "tablePages": "4-17",
+        "renderedPages": "10;11;16;17",
+        "candidateCatalogNumbers": "Thal-Quick set/tray rows; Wayne/Turkel thoracentesis rows; G02327; G02791; G36370; G02433; G04507 (pericardiocentesis, held in owner review)",
+        "candidateCount": 40,
+        "allCandidatesDispositioned": true
       }
     ],
-    "corpus_wide_multi_page_table_scan": {
-      "pdfsScanned": 115,
-      "pagesScanned": 2609,
-      "documentsIdentified": 17,
-      "method": "Layout-text extraction examined every page and retained contiguous page runs with at least three product-like row identifiers per page; continuation pages did not need to repeat a heading.",
-      "documents": [
-        "401418001.pdf:2-7;10-13;15-17",
-        "402955011ZHP.pdf:2-3",
-        "402955013ZHP.pdf:2-3",
-        "BMP-MR-PCA-Interventional_Pulmonology_EN.pdf:12-14;24-25",
-        "CC-D67629-EN-F_IA_1683223150514 (1).pdf:10-13",
-        "CC-D67629-EN-F_IA_1683223150514.pdf:10-13",
-        "EFER-BRONCHOSCOPE-USER-MANUAL.pdf:10-12",
-        "NOV-MR-PCA-Instruments_CA003_EN.pdf:8-9",
-        "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf:12-15",
-        "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf:10-12;14-18;22-26;28-29;32-33;37-38;40-41;43-45;47-54;58-59;62-63;65-67;70-75;89-91;93-94;96-97;101-106;108-109;111-112;117-119;123-125",
-        "OAIGI0121CAT38678_RA.pdf:2-3;36-39;42-43;72-73;87-89",
-        "Product-Catalog-MPW10000H-Rev-3-web-1.pdf:7-9;12-14;28-31;35-39;50-56;61-64;67-76",
-        "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf:4-6",
-        "Shiley™ XLT Extended Length Tracheostomy Tube _ Medtronic.pdf:4-5",
-        "cardinal-health-cardiothoratic-catalog.pdf:3-4",
-        "hood-labs-F973-Airway-catalog-6-2022.pdf:4-8;12-13",
-        "novatech__stents_pulmonares__catalogo.pdf:12-15"
-      ]
-    },
     "old_m5_family_source_filename": "ent-why-power-apexcut-blades-brochure.pdf",
     "old_m5_family_source_sha256": "9bbd927dc7087227140a5e253af777ff00d1274eab42dfbf57d68b197066ac6a",
     "old_m5_csv_input_row": 791,
@@ -388,6 +408,32 @@
       "reliabilityTier": "Tier 1 - FDA",
       "usePolicy": "Use for exact primary DI, catalog number, and labeler identity; do not infer local orderability.",
       "notes": null
+    },
+    {
+      "sourceId": "SRC105",
+      "title": "Thal-Quick Chest Tube Set and Tray | Cook Medical (product-page capture)",
+      "filename": "Thal-Quick Chest Tube Set and Tray _ Cook Medical.pdf",
+      "sourceType": "Manufacturer product web capture (PDF)",
+      "publisher": "Cook Medical",
+      "revisionDate": null,
+      "asOfDate": "2026-08-03",
+      "officialUrl": "https://www.cookmedical.com/products/cc_tqts_webds/",
+      "reliabilityTier": "Manufacturer official",
+      "usePolicy": "Reference for exact order/reference identity and configuration",
+      "notes": "Frozen old-corpus capture of the Cook Thal-Quick product page; one exact ordering row per page (trays pp. 2-20, sets pp. 22-31 of 35)."
+    },
+    {
+      "sourceId": "SRC106",
+      "title": "NOVATECH DUMON & GSS Silicone Stents Catalog (EN, CA001 Rev. 7)",
+      "filename": "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf",
+      "sourceType": "Manufacturer catalog (PDF)",
+      "publisher": "Novatech SA",
+      "revisionDate": null,
+      "asOfDate": null,
+      "officialUrl": "https://www.novatech.fr",
+      "reliabilityTier": "Manufacturer official",
+      "usePolicy": "Reference for exact catalog references and dimensions",
+      "notes": "Frozen old-corpus Novatech silicone airway-stent catalog; the straight-stent diameter-by-length matrix spans PDF pages 12-13 and the Y/OKI/ST/DST tables span pages 14-15. The Spanish edition (novatech__stents_pulmonares__catalogo.pdf) carries the identical reference set and is reconciled as a duplicate occurrence."
     }
   ],
   "evidence_manifest": [
@@ -1111,7 +1157,10 @@
           "diameterMm": 6.5,
           "lengthMm": 62,
           "sizeDisplay": "6.5 mm ID; 9.4 mm OD; 5.5 mm inner-cannula ID; 62 mm length",
-          "specJson": { "outer_diameter_mm": 9.4, "inner_cannula_id_mm": 5.5 }
+          "specJson": {
+            "outer_diameter_mm": 9.4,
+            "inner_cannula_id_mm": 5.5
+          }
         },
         {
           "catalogNumber": "5UN70R",
@@ -1119,7 +1168,10 @@
           "diameterMm": 7,
           "lengthMm": 68,
           "sizeDisplay": "7.0 mm ID; 10.1 mm OD; 6.0 mm inner-cannula ID; 68 mm length",
-          "specJson": { "outer_diameter_mm": 10.1, "inner_cannula_id_mm": 6 }
+          "specJson": {
+            "outer_diameter_mm": 10.1,
+            "inner_cannula_id_mm": 6
+          }
         },
         {
           "catalogNumber": "6UN75R",
@@ -1127,7 +1179,10 @@
           "diameterMm": 7.5,
           "lengthMm": 74,
           "sizeDisplay": "7.5 mm ID; 10.8 mm OD; 6.5 mm inner-cannula ID; 74 mm length",
-          "specJson": { "outer_diameter_mm": 10.8, "inner_cannula_id_mm": 6.5 }
+          "specJson": {
+            "outer_diameter_mm": 10.8,
+            "inner_cannula_id_mm": 6.5
+          }
         },
         {
           "catalogNumber": "7UN80R",
@@ -1135,7 +1190,10 @@
           "diameterMm": 8,
           "lengthMm": 77,
           "sizeDisplay": "8.0 mm ID; 11.4 mm OD; 7.0 mm inner-cannula ID; 77 mm length",
-          "specJson": { "outer_diameter_mm": 11.4, "inner_cannula_id_mm": 7 }
+          "specJson": {
+            "outer_diameter_mm": 11.4,
+            "inner_cannula_id_mm": 7
+          }
         },
         {
           "catalogNumber": "8UN85R",
@@ -1143,7 +1201,10 @@
           "diameterMm": 8.5,
           "lengthMm": 79,
           "sizeDisplay": "8.5 mm ID; 12.2 mm OD; 7.5 mm inner-cannula ID; 79 mm length",
-          "specJson": { "outer_diameter_mm": 12.2, "inner_cannula_id_mm": 7.5 }
+          "specJson": {
+            "outer_diameter_mm": 12.2,
+            "inner_cannula_id_mm": 7.5
+          }
         },
         {
           "catalogNumber": "9UN90R",
@@ -1151,7 +1212,10 @@
           "diameterMm": 9,
           "lengthMm": 79,
           "sizeDisplay": "9.0 mm ID; 12.7 mm OD; 8.0 mm inner-cannula ID; 79 mm length",
-          "specJson": { "outer_diameter_mm": 12.7, "inner_cannula_id_mm": 8 }
+          "specJson": {
+            "outer_diameter_mm": 12.7,
+            "inner_cannula_id_mm": 8
+          }
         },
         {
           "catalogNumber": "10UN10R",
@@ -1159,7 +1223,10 @@
           "diameterMm": 10,
           "lengthMm": 79,
           "sizeDisplay": "10.0 mm ID; 13.8 mm OD; 9.0 mm inner-cannula ID; 79 mm length",
-          "specJson": { "outer_diameter_mm": 13.8, "inner_cannula_id_mm": 9 }
+          "specJson": {
+            "outer_diameter_mm": 13.8,
+            "inner_cannula_id_mm": 9
+          }
         }
       ]
     },
@@ -2299,6 +2366,425 @@
           }
         }
       ]
+    },
+    {
+      "groupId": "cook_thal_quick_trays_correction",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-2760A3270C",
+      "manufacturer": "Cook Medical",
+      "distributor": null,
+      "brandFamily": "Thal-Quick",
+      "primaryCategory": "Pleural procedures",
+      "subcategory": "Chest tube set",
+      "productKind": "Kit",
+      "description": "Thal-Quick Seldinger chest-tube trays. The Cook ordering table pairs one order number with one reference part number per exact tray configuration.",
+      "roleCode": null,
+      "evidence": [],
+      "taxonomyClass": "pleural_drainage",
+      "taxonomySubtype": "thoracic_catheter",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "implantable": false,
+      "variants": [
+        {
+          "catalogNumber": "G06885",
+          "productName": "Thal-Quick Chest Tube Tray — 10 Fr",
+          "alternateIds": "C-TQTSY-1000",
+          "gtin": null,
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "evidence": [
+            {
+              "sourceId": "SRC105",
+              "sourceLocation": "PDF page 4 of 35, Tray ordering row (order number G06885, reference part number C-TQTSY-1000)",
+              "claimType": "Cook order number, reference part number, French size, and catheter length"
+            }
+          ],
+          "description": "Seldinger chest-tube tray; 10 Fr x 20 cm catheter; order number G06885 with reference part number C-TQTSY-1000.",
+          "sizeDisplay": "10 Fr x 20 cm",
+          "specJson": null
+        },
+        {
+          "catalogNumber": "G05464",
+          "productName": "Thal-Quick Chest Tube Tray — 12 Fr",
+          "alternateIds": "C-TQTSY-1200",
+          "gtin": null,
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "evidence": [
+            {
+              "sourceId": "SRC105",
+              "sourceLocation": "PDF page 6 of 35, Tray ordering row (order number G05464, reference part number C-TQTSY-1200)",
+              "claimType": "Cook order number, reference part number, French size, and catheter length"
+            }
+          ],
+          "description": "Seldinger chest-tube tray; 12 Fr x 22 cm catheter; order number G05464 with reference part number C-TQTSY-1200.",
+          "sizeDisplay": "12 Fr x 22 cm",
+          "specJson": null
+        },
+        {
+          "catalogNumber": "G07090",
+          "productName": "Thal-Quick Chest Tube Tray — 14 Fr",
+          "alternateIds": "C-TQTSY-1400",
+          "gtin": null,
+          "roleCode": "CHEST_TUBE_SMALL_BORE",
+          "evidence": [
+            {
+              "sourceId": "SRC105",
+              "sourceLocation": "PDF page 8 of 35, Tray ordering row (order number G07090, reference part number C-TQTSY-1400)",
+              "claimType": "Cook order number, reference part number, French size, and catheter length"
+            }
+          ],
+          "description": "Seldinger chest-tube tray; 14 Fr x 41 cm catheter; order number G07090 with reference part number C-TQTSY-1400.",
+          "sizeDisplay": "14 Fr x 41 cm",
+          "specJson": null
+        },
+        {
+          "catalogNumber": "G04220",
+          "productName": "Thal-Quick Chest Tube Tray — 24 Fr",
+          "alternateIds": "C-TQTSY-2400",
+          "gtin": null,
+          "roleCode": "CHEST_TUBE_LARGE_BORE",
+          "evidence": [
+            {
+              "sourceId": "SRC105",
+              "sourceLocation": "PDF page 16 of 35, Tray ordering row (order number G04220, reference part number C-TQTSY-2400)",
+              "claimType": "Cook order number, reference part number, French size, and catheter length"
+            }
+          ],
+          "description": "Seldinger chest-tube tray; 24 Fr x 41 cm catheter; order number G04220 with reference part number C-TQTSY-2400.",
+          "sizeDisplay": "24 Fr x 41 cm",
+          "specJson": null
+        }
+      ]
+    },
+    {
+      "groupId": "cook_pleural_drainage_accessories_correction",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-2760A3270C",
+      "manufacturer": "Cook Medical",
+      "distributor": null,
+      "brandFamily": null,
+      "primaryCategory": "Pleural procedures",
+      "subcategory": "Pleural drainage accessory",
+      "productKind": "Accessory",
+      "description": "Pleural drainage accessories from the Cook chest tubes and catheters ordering brochure (CC-D67629-EN-F).",
+      "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
+      "evidence": [],
+      "taxonomyClass": "pleural_drainage",
+      "taxonomySubtype": "pleural_drainage_accessory",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "implantable": false,
+      "variants": [
+        {
+          "catalogNumber": "G02327",
+          "productName": "Vinyl Connecting Tube — 14 Fr x 40 cm with Stopcock",
+          "alternateIds": "CTU14.0-40-ST",
+          "gtin": null,
+          "evidence": [
+            {
+              "sourceId": "SRC076",
+              "sourceLocation": "PDF page 17 of 20, Vinyl Connecting Tube ordering table, 2-way stopcock row (order number G02327, reference part number CTU14.0-40-ST)",
+              "claimType": "Cook order number, reference part number, French size, and tube length"
+            }
+          ],
+          "description": "Vinyl connecting tube with 2-way stopcock for connecting an external drainage catheter to a drainage system; 14 Fr x 40 cm; order number G02327 with reference part number CTU14.0-40-ST.",
+          "sizeDisplay": "14 Fr x 40 cm"
+        },
+        {
+          "catalogNumber": "G02791",
+          "productName": "Vinyl Connecting Tube — 14 Fr x 30 cm Luer Lock",
+          "alternateIds": "CTU14.0-30",
+          "gtin": null,
+          "evidence": [
+            {
+              "sourceId": "SRC076",
+              "sourceLocation": "PDF page 17 of 20, Vinyl Connecting Tube ordering table, Luer Lock (without a 2-way stopcock) row (order number G02791, reference part number CTU14.0-30)",
+              "claimType": "Cook order number, reference part number, French size, and tube length"
+            }
+          ],
+          "description": "Vinyl connecting tube with Luer lock (no stopcock) for connecting an external drainage catheter to a drainage system; 14 Fr x 30 cm; order number G02791 with reference part number CTU14.0-30.",
+          "sizeDisplay": "14 Fr x 30 cm"
+        },
+        {
+          "catalogNumber": "G36370",
+          "productName": "Cook Chest Drain Valve",
+          "alternateIds": "C-CDV-1",
+          "gtin": null,
+          "evidence": [
+            {
+              "sourceId": "SRC076",
+              "sourceLocation": "PDF page 16 of 20, Simple Pneumothorax Aspiration Accessory Set ordering table, Cook Chest Drain Valve Only row (order number G36370, reference part number C-CDV-1)",
+              "claimType": "Cook order number and reference part number"
+            }
+          ],
+          "description": "Latex-free one-way chest drain valve for removing air from the pleural cavity, sold separately; order number G36370 with reference part number C-CDV-1.",
+          "sizeDisplay": null
+        }
+      ]
+    },
+    {
+      "groupId": "cook_blue_rhino_g2_multi_correction",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-2760A3270C",
+      "manufacturer": "Cook Medical",
+      "distributor": null,
+      "brandFamily": "Blue Rhino G2-Multi",
+      "primaryCategory": "Percutaneous tracheostomy",
+      "subcategory": "Percutaneous tracheostomy tray",
+      "productKind": "Kit",
+      "description": "Blue Rhino G2-Multi percutaneous tracheostomy introducer sets and trays. The Cook product capture lists one exact ordering row per page; reference part numbers wrap across lines in the text layer and were reconstructed and verified against rendered pages.",
+      "roleCode": "PERC_TRACH_KIT",
+      "evidence": [],
+      "taxonomyClass": "other_needs_review",
+      "taxonomySubtype": "unclassified_device",
+      "taxonomyConfidence": "needs_review",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "implantable": false,
+      "variants": [
+        {
+          "catalogNumber": "G57682",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set",
+          "alternateIds": "C-PTIS-100-HC-G-NA",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 47 of 66, \"Sets without tracheostomy tube\" ordering row (order number G57682, reference part number C-PTIS-100-HC-G-NA)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57682 with reference part number C-PTIS-100-HC-G-NA.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57683",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set",
+          "alternateIds": "C-PTIS-100-UNS-HC-G-NA",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 50 of 66, \"Sets without tracheostomy tube\" ordering row (order number G57683, reference part number C-PTIS-100-UNS-HC-G-NA)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set; loading dilator(s) 6.5, 7.0, 7.5, 8.0 mm; order number G57683 with reference part number C-PTIS-100-UNS-HC-G-NA.",
+          "sizeDisplay": "Loading dilators 6.5, 7.0, 7.5, 8.0 mm"
+        },
+        {
+          "catalogNumber": "G57684",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set",
+          "alternateIds": "C-PTIS-100-UNL-HC-G-NA",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 52 of 66, \"Sets without tracheostomy tube\" ordering row (order number G57684, reference part number C-PTIS-100-UNL-HC-G-NA)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set; loading dilator(s) 8.5, 9.0, 10.0 mm; order number G57684 with reference part number C-PTIS-100-UNL-HC-G-NA.",
+          "sizeDisplay": "Loading dilators 8.5, 9.0, 10.0 mm"
+        },
+        {
+          "catalogNumber": "G57691",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 7.5 mm Shiley Flexible Adult Tube",
+          "alternateIds": "C-PTIS-100-HC-G-NA-FLEX7.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 54 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57691, reference part number C-PTIS-100-HC-G-NA-FLEX7.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 7.5 mm Shiley Flexible Adult Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57691 with reference part number C-PTIS-100-HC-G-NA-FLEX7.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57692",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 8.5 mm Shiley Flexible Adult Tube",
+          "alternateIds": "C-PTIS-100-HC-G-NA-FLEX8.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 56 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57692, reference part number C-PTIS-100-HC-G-NA-FLEX8.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 8.5 mm Shiley Flexible Adult Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57692 with reference part number C-PTIS-100-HC-G-NA-FLEX8.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57693",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 7.5 mm Shiley Evac Tube",
+          "alternateIds": "C-PTIS-100-HC-G-NA-EVAC7.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 59 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57693, reference part number C-PTIS-100-HC-G-NA-EVAC7.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 7.5 mm Shiley Evac Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57693 with reference part number C-PTIS-100-HC-G-NA-EVAC7.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57694",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 8.5 mm Shiley Evac Tube",
+          "alternateIds": "C-PTIS-100-HC-G-NA-EVAC8.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy set",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 61 of 66, \"Sets with tracheostomy tube\" ordering row (order number G57694, reference part number C-PTIS-100-HC-G-NA-EVAC8.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set with 8.5 mm Shiley Evac Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57694 with reference part number C-PTIS-100-HC-G-NA-EVAC8.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57707",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals",
+          "alternateIds": "C-PTISYJ-100-HC-G-NA",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 26 of 66, \"Trays without pharmaceuticals, without tracheostomy tube\" ordering row (order number G57707, reference part number C-PTISYJ-100-HC-G-NA)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57707 with reference part number C-PTISYJ-100-HC-G-NA.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57708",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals",
+          "alternateIds": "C-PTISYJ-100-UNS-HC-G-NA",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 29 of 66, \"Trays without pharmaceuticals, without tracheostomy tube\" ordering row (order number G57708, reference part number C-PTISYJ-100-UNS-HC-G-NA)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals; loading dilator(s) 6.5, 7.0, 7.5, 8.0 mm; order number G57708 with reference part number C-PTISYJ-100-UNS-HC-G-NA.",
+          "sizeDisplay": "Loading dilators 6.5, 7.0, 7.5, 8.0 mm"
+        },
+        {
+          "catalogNumber": "G57709",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals",
+          "alternateIds": "C-PTISYJ-100-UNL-HC-G-NA",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 32 of 66, \"Trays without pharmaceuticals, without tracheostomy tube\" ordering row (order number G57709, reference part number C-PTISYJ-100-UNL-HC-G-NA)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals; loading dilator(s) 8.5, 9.0, 10.0 mm; order number G57709 with reference part number C-PTISYJ-100-UNL-HC-G-NA.",
+          "sizeDisplay": "Loading dilators 8.5, 9.0, 10.0 mm"
+        },
+        {
+          "catalogNumber": "G57719",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray with 8.5 mm Shiley Evac Tube",
+          "alternateIds": "C-PTISY-100-HC-G-NA-EVAC8.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 23 of 66, \"Trays with pharmaceuticals, with tracheostomy tube\" ordering row (order number G57719, reference part number C-PTISY-100-HC-G-NA-EVAC8.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray with 8.5 mm Shiley Evac Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57719 with reference part number C-PTISY-100-HC-G-NA-EVAC8.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57720",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 7.5 mm Shiley Flexible Adult Tube",
+          "alternateIds": "C-PTISYJ-100-HC-G-NA-FLEX7.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 35 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57720, reference part number C-PTISYJ-100-HC-G-NA-FLEX7.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 7.5 mm Shiley Flexible Adult Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57720 with reference part number C-PTISYJ-100-HC-G-NA-FLEX7.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57721",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 8.5 mm Shiley Flexible Adult Tube",
+          "alternateIds": "C-PTISYJ-100-HC-G-NA-FLEX8.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 38 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57721, reference part number C-PTISYJ-100-HC-G-NA-FLEX8.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 8.5 mm Shiley Flexible Adult Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57721 with reference part number C-PTISYJ-100-HC-G-NA-FLEX8.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57722",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 7.5 mm Shiley Evac Tube",
+          "alternateIds": "C-PTISYJ-100-HC-G-NA-EVAC7.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 41 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57722, reference part number C-PTISYJ-100-HC-G-NA-EVAC7.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 7.5 mm Shiley Evac Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57722 with reference part number C-PTISYJ-100-HC-G-NA-EVAC7.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        },
+        {
+          "catalogNumber": "G57723",
+          "productName": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 8.5 mm Shiley Evac Tube",
+          "alternateIds": "C-PTISYJ-100-HC-G-NA-EVAC8.5",
+          "gtin": null,
+          "subcategory": "Percutaneous tracheostomy tray",
+          "evidence": [
+            {
+              "sourceId": "SRC074",
+              "sourceLocation": "PDF page 44 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57723, reference part number C-PTISYJ-100-HC-G-NA-EVAC8.5)",
+              "claimType": "Cook order number, reference part number, loading dilators, and tube configuration"
+            }
+          ],
+          "description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Tray without Pharmaceuticals with 8.5 mm Shiley Evac Tube; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57723 with reference part number C-PTISYJ-100-HC-G-NA-EVAC8.5.",
+          "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
+        }
+      ]
     }
   ],
   "existing_matches": [
@@ -2640,5 +3126,1518 @@
       "ownerReviewRequired": false,
       "rationale": "The exact product is laryngeal and lacks direct tracheobronchial or bronchoscopy evidence."
     }
-  ]
+  ],
+  "corpus_scan_review": {
+    "extraction_tool": "pdftotext -layout (Poppler)",
+    "reviewed_on": "2026-08-21",
+    "original_csv_identifier_count_minimum": 1500,
+    "old_corpus_governed_source_bindings": [
+      {
+        "relativePathIncludes": "Thal-Quick Chest Tube Set and Tray _ Cook Medical.pdf",
+        "sourceId": "SRC105"
+      },
+      {
+        "relativePathIncludes": "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf",
+        "sourceId": "SRC106"
+      }
+    ],
+    "candidate_overrides": [
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "BF3C40",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact legacy Olympus scope/probe model named only in accessory-compatibility text on the respiratory pages (113-132); it is not an ordering row in this catalog, so any legacy-model coverage is deferred to owner review."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "BFUC160F",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact legacy Olympus scope/probe model named only in accessory-compatibility text on the respiratory pages (113-132); it is not an ordering row in this catalog, so any legacy-model coverage is deferred to owner review."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "BFUC160FOL8",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact legacy Olympus scope/probe model named only in accessory-compatibility text on the respiratory pages (113-132); it is not an ordering row in this catalog, so any legacy-model coverage is deferred to owner review."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "LTF160",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact legacy Olympus scope/probe model named only in accessory-compatibility text on the respiratory pages (113-132); it is not an ordering row in this catalog, so any legacy-model coverage is deferred to owner review."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "MH908",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact legacy Olympus scope/probe model named only in accessory-compatibility text on the respiratory pages (113-132); it is not an ordering row in this catalog, so any legacy-model coverage is deferred to owner review."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "3C160",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "XP40",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "XP60",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "XP160F",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "XP190",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "UC180F",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "normalizedIdentifier": "4025N",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Fragment of a hyphen-elided model enumeration in respiratory-page compatibility text; the token alone is not a complete model identity."
+      },
+      {
+        "filename": "AccessGUDID - (&quot;Monarch Bronchoscope&quot;)2.pdf",
+        "normalizedIdentifier": "B634MBR0000190",
+        "disposition": "needs_owner_review",
+        "rationale": "Monarch bronchoscope-valve GUDID device identifiers captured in an AccessGUDID search page; catalog-number identity and packaging level need owner confirmation before any import."
+      },
+      {
+        "filename": "AccessGUDID - (&quot;Monarch Bronchoscope&quot;)2.pdf",
+        "normalizedIdentifier": "B634MBR0000191",
+        "disposition": "needs_owner_review",
+        "rationale": "Monarch bronchoscope-valve GUDID device identifiers captured in an AccessGUDID search page; catalog-number identity and packaging level need owner confirmation before any import."
+      },
+      {
+        "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
+        "normalizedIdentifier": "7CN75R",
+        "disposition": "source_evidence_conflicted",
+        "rationale": "Printed 7CN75R conflicts with the FDA-listed 7CN80R identity for the size-7 cuffed reusable-cannula tube; the reviewed correction intentionally withholds both identifiers pending owner resolution."
+      },
+      {
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-brochure.pdf",
+        "normalizedIdentifier": "7CN80R",
+        "disposition": "source_evidence_conflicted",
+        "rationale": "FDA-side identity of the printed-7CN75R/FDA-7CN80R conflict; the reviewed correction intentionally withholds both identifiers pending owner resolution."
+      },
+      {
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-comparison-information-sheet.pdf",
+        "normalizedIdentifier": "7CN80R",
+        "disposition": "source_evidence_conflicted",
+        "rationale": "FDA-side identity of the printed-7CN75R/FDA-7CN80R conflict; the reviewed correction intentionally withholds both identifiers pending owner resolution."
+      },
+      {
+        "filename": "shiley-flexible-tracheostomy-a-sku-sizing-information-sheet.pdf",
+        "normalizedIdentifier": "7CN80R",
+        "disposition": "source_evidence_conflicted",
+        "rationale": "FDA-side identity of the printed-7CN75R/FDA-7CN80R conflict; the reviewed correction intentionally withholds both identifiers pending owner resolution."
+      },
+      {
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-brochure.pdf",
+        "normalizedIdentifier": "4CN65H",
+        "disposition": "existing_alias_or_format_variant",
+        "rationale": "Former H-suffix reference-code convention cited as an example for the current A-suffix product 4CN65A; a format variant of an existing canonical identity.",
+        "canonicalProductId": "PRD-C3B7FB7CAE"
+      },
+      {
+        "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
+        "normalizedIdentifier": "4CN65H",
+        "disposition": "existing_alias_or_format_variant",
+        "rationale": "Former H-suffix reference-code convention cited as an example for the current A-suffix product 4CN65A; a format variant of an existing canonical identity.",
+        "canonicalProductId": "PRD-C3B7FB7CAE"
+      },
+      {
+        "filename": "E0428710_Diagnosis_SPN_Flyer_EN_2023.pdf",
+        "normalizedIdentifier": "FB231D",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Olympus EU-market respiratory references (peripheral biopsy forceps, guide-sheath kits, cytology brush) from the EU diagnosis flyer; potential overlap with US-market catalog identities is unresolved, so import is deferred to owner review."
+      },
+      {
+        "filename": "E0428710_Diagnosis_SPN_Flyer_EN_2023.pdf",
+        "normalizedIdentifier": "FB233D",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Olympus EU-market respiratory references (peripheral biopsy forceps, guide-sheath kits, cytology brush) from the EU diagnosis flyer; potential overlap with US-market catalog identities is unresolved, so import is deferred to owner review."
+      },
+      {
+        "filename": "E0428710_Diagnosis_SPN_Flyer_EN_2023.pdf",
+        "normalizedIdentifier": "SG400C",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Olympus EU-market respiratory references (peripheral biopsy forceps, guide-sheath kits, cytology brush) from the EU diagnosis flyer; potential overlap with US-market catalog identities is unresolved, so import is deferred to owner review."
+      },
+      {
+        "filename": "E0428710_Diagnosis_SPN_Flyer_EN_2023.pdf",
+        "normalizedIdentifier": "SG401C",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Olympus EU-market respiratory references (peripheral biopsy forceps, guide-sheath kits, cytology brush) from the EU diagnosis flyer; potential overlap with US-market catalog identities is unresolved, so import is deferred to owner review."
+      },
+      {
+        "filename": "E0428710_Diagnosis_SPN_Flyer_EN_2023.pdf",
+        "normalizedIdentifier": "BC204D2010",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Olympus EU-market respiratory references (peripheral biopsy forceps, guide-sheath kits, cytology brush) from the EU diagnosis flyer; potential overlap with US-market catalog identities is unresolved, so import is deferred to owner review."
+      },
+      {
+        "filename": "Bronchoscope-Matrix-Chart_41656 (1).pdf",
+        "normalizedIdentifier": "INS7100",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact display/accessory models in the single-use bronchoscope comparison matrix; identity is exact but import is deferred to owner review."
+      },
+      {
+        "filename": "Bronchoscope-Matrix-Chart_41656 (1).pdf",
+        "normalizedIdentifier": "INS7130",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact display/accessory models in the single-use bronchoscope comparison matrix; identity is exact but import is deferred to owner review."
+      },
+      {
+        "filename": "factsheet_eb_710us.pdf",
+        "normalizedIdentifier": "EP8000",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Fujifilm processor model named as a compatible platform on the EB-710US factsheet; a compatibility mention, not an ordering row."
+      },
+      {
+        "filename": "factsheet_eb_710us.pdf",
+        "normalizedIdentifier": "VP7000BL7000",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Compound compatibility token spanning two processor models; not a single orderable identity."
+      },
+      {
+        "filename": "Video Processor INSPIRA_ Multi connectable ● PENTAX Medical.pdf",
+        "normalizedIdentifier": "I20C",
+        "disposition": "relevant_family_level_only",
+        "rationale": "Pentax i20c video-endoscope generation named as a family teaser; no exact orderable configuration on the page."
+      },
+      {
+        "filename": "Diagnostic Bronchoscope (BF-P190) _ Olympus America _ Medical.pdf",
+        "normalizedIdentifier": "BF180",
+        "disposition": "relevant_family_level_only",
+        "rationale": "Comparative reference to the legacy BF-180 bronchoscope series; family-level mention only."
+      },
+      {
+        "filename": "Diagnostic Bronchoscope (BF-XP190) _ Olympus America _ Medical.pdf",
+        "normalizedIdentifier": "BF180",
+        "disposition": "relevant_family_level_only",
+        "rationale": "Comparative reference to the legacy BF-180 bronchoscope series; family-level mention only."
+      },
+      {
+        "filename": "Steris catalog.pdf",
+        "normalizedIdentifier": "CC301",
+        "disposition": "needs_owner_review",
+        "rationale": "truFreeze spray-cryotherapy console and RAPID AV spray-catheter kits with cryodecompression tubes; the platform spans GI and airway spray cryotherapy, so in-scope import is deferred to owner review."
+      },
+      {
+        "filename": "Steris catalog.pdf",
+        "normalizedIdentifier": "2000177",
+        "disposition": "needs_owner_review",
+        "rationale": "truFreeze spray-cryotherapy console and RAPID AV spray-catheter kits with cryodecompression tubes; the platform spans GI and airway spray cryotherapy, so in-scope import is deferred to owner review."
+      },
+      {
+        "filename": "Steris catalog.pdf",
+        "normalizedIdentifier": "2000516",
+        "disposition": "needs_owner_review",
+        "rationale": "truFreeze spray-cryotherapy console and RAPID AV spray-catheter kits with cryodecompression tubes; the platform spans GI and airway spray cryotherapy, so in-scope import is deferred to owner review."
+      },
+      {
+        "filename": "intuitive-ion-system-brochure-1051118.pdf",
+        "normalizedIdentifier": "G53006",
+        "disposition": "needs_owner_review",
+        "rationale": "Cook Captura disposable bronchoscope biopsy-forceps model named as the only Ion-compatible forceps; exact in-scope identity, import deferred to owner review."
+      },
+      {
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "normalizedIdentifier": "12PT",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact product-menu codes in the Centisis set brochure; configuration detail is on adjacent rendered pages and import is deferred to owner review."
+      },
+      {
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "normalizedIdentifier": "17PLT",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact product-menu codes in the Centisis set brochure; configuration detail is on adjacent rendered pages and import is deferred to owner review."
+      },
+      {
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "normalizedIdentifier": "TAPS5F",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Truncated set codes whose trailing suffix wrapped out of the text layer; the complete orderable identity is not recoverable from text alone."
+      },
+      {
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "normalizedIdentifier": "TAPSA5F",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Truncated set codes whose trailing suffix wrapped out of the text layer; the complete orderable identity is not recoverable from text alone."
+      },
+      {
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "normalizedIdentifier": "TAPSA6F",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Truncated set codes whose trailing suffix wrapped out of the text layer; the complete orderable identity is not recoverable from text alone."
+      },
+      {
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "normalizedIdentifier": "TAPSA8F",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Truncated set codes whose trailing suffix wrapped out of the text layer; the complete orderable identity is not recoverable from text alone."
+      },
+      {
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "normalizedIdentifier": "476001000",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Ambu aScope 4 Broncho regional box-level item numbers (US/Canada, 5 per box); the packaging-level import decision relative to existing single-scope identities is deferred to owner review."
+      },
+      {
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "normalizedIdentifier": "476101000US",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Ambu aScope 4 Broncho regional box-level item numbers (US/Canada, 5 per box); the packaging-level import decision relative to existing single-scope identities is deferred to owner review."
+      },
+      {
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "normalizedIdentifier": "477001000",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Ambu aScope 4 Broncho regional box-level item numbers (US/Canada, 5 per box); the packaging-level import decision relative to existing single-scope identities is deferred to owner review."
+      },
+      {
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "normalizedIdentifier": "477101000US",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Ambu aScope 4 Broncho regional box-level item numbers (US/Canada, 5 per box); the packaging-level import decision relative to existing single-scope identities is deferred to owner review."
+      },
+      {
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "normalizedIdentifier": "478001000",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Ambu aScope 4 Broncho regional box-level item numbers (US/Canada, 5 per box); the packaging-level import decision relative to existing single-scope identities is deferred to owner review."
+      },
+      {
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "normalizedIdentifier": "478101000US",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Ambu aScope 4 Broncho regional box-level item numbers (US/Canada, 5 per box); the packaging-level import decision relative to existing single-scope identities is deferred to owner review."
+      },
+      {
+        "filename": "401418001.pdf",
+        "normalizedIdentifier": "680ME",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Generic catheter-securement, vascular-introducer, and utility-supply items (StayFIX, Prelude SNAP, waste basin) in the Merit drainage compendium; commodity/IR accessories outside the procedure-specific scope."
+      },
+      {
+        "filename": "401418001.pdf",
+        "normalizedIdentifier": "685ME",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Generic catheter-securement, vascular-introducer, and utility-supply items (StayFIX, Prelude SNAP, waste basin) in the Merit drainage compendium; commodity/IR accessories outside the procedure-specific scope."
+      },
+      {
+        "filename": "401418001.pdf",
+        "normalizedIdentifier": "SNAP165",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Generic catheter-securement, vascular-introducer, and utility-supply items (StayFIX, Prelude SNAP, waste basin) in the Merit drainage compendium; commodity/IR accessories outside the procedure-specific scope."
+      },
+      {
+        "filename": "401418001.pdf",
+        "normalizedIdentifier": "MBS100",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Generic catheter-securement, vascular-introducer, and utility-supply items (StayFIX, Prelude SNAP, waste basin) in the Merit drainage compendium; commodity/IR accessories outside the procedure-specific scope."
+      },
+      {
+        "filename": "401418001.pdf",
+        "normalizedIdentifier": "48MMT",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Dagger-annotated tubing code in a marketing panel without an ordering-table row; identity insufficient for exact reconciliation."
+      },
+      {
+        "filename": "401423001-A.pdf",
+        "normalizedIdentifier": "680ME",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Generic StayFIX catheter-securement SKUs listed as kit components; commodity securement accessories outside the procedure-specific scope."
+      },
+      {
+        "filename": "401423001-A.pdf",
+        "normalizedIdentifier": "685ME",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Generic StayFIX catheter-securement SKUs listed as kit components; commodity securement accessories outside the procedure-specific scope."
+      },
+      {
+        "filename": "402955011ZHP.pdf",
+        "normalizedIdentifier": "RLC8RLC8REV",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955011ZHP.pdf",
+        "normalizedIdentifier": "RLC14",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955011ZHP.pdf",
+        "normalizedIdentifier": "RLCMB12",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955011ZHP.pdf",
+        "normalizedIdentifier": "038MB",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955013ZHP.pdf",
+        "normalizedIdentifier": "RLC8RLC8SFX",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955013ZHP.pdf",
+        "normalizedIdentifier": "RLCMB12",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955013ZHP.pdf",
+        "normalizedIdentifier": "038MB",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "402955013ZHP.pdf",
+        "normalizedIdentifier": "14SFX",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Line-wrap join artifact or truncated fragment inside the models enumeration of the China-market IFU; not a complete model identity."
+      },
+      {
+        "filename": "Fujifilm_EUS Brochure_03_2025_EN.pdf",
+        "normalizedIdentifier": "B20UR",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Balloons for Fujifilm EG-580UR/UT gastrointestinal EUS endoscopes; GI EUS accessories outside the current scope."
+      },
+      {
+        "filename": "Fujifilm_EUS Brochure_03_2025_EN.pdf",
+        "normalizedIdentifier": "B20UT",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Balloons for Fujifilm EG-580UR/UT gastrointestinal EUS endoscopes; GI EUS accessories outside the current scope."
+      }
+    ],
+    "document_rules": [
+      {
+        "ruleId": "RULE-001",
+        "filename": "NdYAG_2026_EUR_260417.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Industrial Nd:YAG laser-line optics price list (laser mirrors, polarizing optics, nonlinear and laser crystals, optomechanics); photonics components with no medical-device content.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-002",
+        "filename": "Product-Catalog-MPW10000H-Rev-3-web-1.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Micro-Tech Endoscopy 2024 GI endoscopy catalog (biliary, GI biopsy, GI dilation, EUS needles, hemostasis, infection prevention, GI nitinol stents, EMR-ESD, polypectomy/retrieval); the catalog carries no airway ordering section — the only airway mention is a marketing line on a bite-block page.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-003",
+        "filename": "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Olympus EndoTherapy 2024 catalog gastroenterology sections (PDF pages 1-112 and 133-134: ERCP, GI EUS-FNA, hemostasis, stone management, GI stents, EMR/ESD, GI accessories); the respiratory section (PDF pages 113-132) is reconciled row-by-row through identifier matching and candidate overrides.",
+        "reviewMethod": "corpus_text_extraction",
+        "pages": "1-112;133-134"
+      },
+      {
+        "ruleId": "RULE-004",
+        "filename": "OAIGI0121CAT38678_RA.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Olympus GI EndoTherapy 2021 catalog: gastroenterology devices, reprocessing equipment, printers, and cart accessories; no respiratory ordering section.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-005",
+        "filename": "ESC-D63441-EN-F_M3_1643214583953.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Cook Captura flexible biopsy-forceps ordering-table configurations beyond the CSV-represented rows; per-row working-length and scope-fit review is required to establish bronchoscopy relevance before any import.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-006",
+        "filename": "Karl Storz.pdf",
+        "disposition": "duplicate_source_occurrence",
+        "rationale": "Second capture of the same KARL STORZ THORAX 3rd Edition US catalog (byte-different file, identical catalog content); row-level accounting is carried under THORAX.pdf.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-007",
+        "filename": "CC-D67629-EN-F_IA_1683223150514 (1).pdf",
+        "disposition": "duplicate_source_occurrence",
+        "rationale": "Byte-identical duplicate (same SHA-256) of CC-D67629-EN-F_IA_1683223150514.pdf; accounting is carried under the primary file.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-008",
+        "filename": "C_T_PTISGI2_REV0 (1).pdf",
+        "disposition": "duplicate_source_occurrence",
+        "rationale": "Duplicate capture of the Cook percutaneous tracheostomy introducer IFU C_T_PTISGI2_REV0.pdf; accounting is carried under the primary file.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-009",
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-brochure copy.pdf",
+        "disposition": "duplicate_source_occurrence",
+        "rationale": "Duplicate copy of shiley-flexible-adult-tracheostomy-tubes-brochure.pdf; accounting is carried under the primary file.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-010",
+        "filename": "THORAX.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact KARL STORZ ordering references from the THORAX 3rd Edition US catalog (basic thoracoscopy sets, esophagoscopy, bronchoscopy/tracheoscopy, autofluorescence, mediastinoscopy, single-puncture thoracoscopy, VATS chapters); chapter-level scope and import decisions are deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^\\d{5}[A-Z]{0,4}$"
+      },
+      {
+        "ruleId": "RULE-011",
+        "filename": "THORAX.pdf",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Tokens on Storz catalog pages that are fragments of space-separated Storz references or descriptive specification text; none carries a complete orderable identity in the text layer alone.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-012",
+        "filename": "Richard Wolfe.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Richard Wolf ordering references from the bronchoscopy/thoracoscopy/mediastinoscopy catalog; chapter-level scope and import decisions are deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^\\d{5,9}$"
+      },
+      {
+        "ruleId": "RULE-013",
+        "filename": "Richard Wolfe.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Descriptive text fragments (channel counts, jaw configurations, connector descriptions), document codes, and phone numbers; not orderable identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-014",
+        "filename": "Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact KARL STORZ item numbers captured from the US e-catalog rigid-bronchoscopy search pages; exact in-scope identities whose import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^\\d{5}[A-Z0-9]{0,6}$"
+      },
+      {
+        "ruleId": "RULE-015",
+        "filename": "Search - Flexible bronchoscopy _ KARL STORZ Endoskope _ United States.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact KARL STORZ item numbers captured from the US e-catalog flexible-bronchoscopy search pages; exact in-scope identities whose import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^\\d{5}[A-Z0-9]{0,6}$"
+      },
+      {
+        "ruleId": "RULE-016",
+        "filename": "hood-labs-F973-Airway-catalog-6-2022.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Document revision code and dimension fragments in the Hood airway catalog.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(F\\d{4}G\\d{3}|X\\d{2,4})$"
+      },
+      {
+        "ruleId": "RULE-017",
+        "filename": "hood-labs-F973-Airway-catalog-6-2022.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Hood Laboratories airway product codes (silicone stents, T-tubes, plugs, EFER rigid-bronchoscope hardware, sterilization baskets) in a multi-column layout whose text rows interleave; row-exact identity requires rendered owner review before import.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-018",
+        "filename": "EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Hood document revision code on the manual back page.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^F\\d{4}G\\d{3}$"
+      },
+      {
+        "ruleId": "RULE-019",
+        "filename": "EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "EFER/Hood rigid bronchoscope, silicone-stent, and sterilization-accessory ordering pages (PDF pages 10-13); exact codes are present but the multi-column text interleaves rows, so import requires rendered owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "pages": "10-13"
+      },
+      {
+        "ruleId": "RULE-020",
+        "filename": "401418001.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "Merit ReSolve biliary drainage catheter rows (RBC/RBDC) in the drainage compendium; biliary drainage is outside the current scope.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^RB(C|DC)"
+      },
+      {
+        "ruleId": "RULE-021",
+        "filename": "401418001.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Marketing footnote fragments, unit strings, references, and page furniture in the Merit drainage compendium.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-022",
+        "filename": "402955011ZHP.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Merit ReSolve locking/non-locking drainage-catheter model variants listed in the China-market IFU; regional-variant import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(RLC|RLCMB|RNL)"
+      },
+      {
+        "ruleId": "RULE-023",
+        "filename": "402955011ZHP.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit ReSolve China-market IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-024",
+        "filename": "402955013ZHP.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Merit ReSolve drainage-catheter model variants listed in the China-market IFU; regional-variant import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(RLC|RLCMB|RNL)"
+      },
+      {
+        "ruleId": "RULE-025",
+        "filename": "402955013ZHP.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit ReSolve China-market IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-026",
+        "filename": "401295001.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit document footer page; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-027",
+        "filename": "401423001-A.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit kit-component sheet; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-028",
+        "filename": "402955010.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-029",
+        "filename": "402955010MLP.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit multi-language IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-030",
+        "filename": "406168001MLP.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Merit multi-language IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-031",
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-comparison-information-sheet.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Shiley legacy/parallel product-line codes (DCT/DCFS/LPC/CFS) in the old-versus-new comparison table; these product lines were not part of the corrected flexible/XLT cohorts, so import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(4|6|8|10)(DCT|DCFS|LPC|CFS)$"
+      },
+      {
+        "ruleId": "RULE-032",
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-comparison-information-sheet.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Marketing claim footnotes, connector dimensions, and Medtronic literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-033",
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-brochure.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Shiley legacy/parallel product-line codes (DCT/DCFS/LPC/CFS) in the old-versus-new comparison table; these product lines were not part of the corrected flexible/XLT cohorts, so import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(4|6|8|10)(DCT|DCFS|LPC|CFS)$"
+      },
+      {
+        "ruleId": "RULE-034",
+        "filename": "shiley-flexible-adult-tracheostomy-tubes-brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Marketing claim footnotes, citations, and Medtronic literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-035",
+        "filename": "shiley-flex-taperguard-cuff-sizing-guide.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Shiley extended-size (X-suffix) SKUs and parallel DCT-line codes in the cuff-sizing table; a dedicated FDA/GUDID identity pass like the R-series correction has not been performed, so import is deferred to owner review.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(4CN65X|5CN70X|6CN75X|7CN80X|8CN85X|9CN95X|(4|6|8|10)DCT)$"
+      },
+      {
+        "ruleId": "RULE-036",
+        "filename": "shiley-flex-taperguard-cuff-sizing-guide.pdf",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "Truncated size-10 code in the sizing table; the complete SKU suffix is not established by this text row.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^10CN10$"
+      },
+      {
+        "ruleId": "RULE-037",
+        "filename": "shiley-flex-taperguard-cuff-sizing-guide.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cuff-pressure units, marketing footnotes, and Medtronic literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-038",
+        "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Shiley parallel DCT-line code referenced in a testing footnote; the DCT line was not part of the corrected flexible/XLT cohorts.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(4|6|8|10)DCT$"
+      },
+      {
+        "ruleId": "RULE-039",
+        "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Marketing footnotes, internal test-report references, cuff-pressure units, and literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-040",
+        "filename": "shiley-flexible-tracheostomy-a-sku-sizing-information-sheet.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Medtronic internal document references and literature codes on the A-SKU sizing sheet.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-041",
+        "filename": "shiley-flexible-tracheostomy-enhanced-portfolio-comparison-guide.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Shiley parallel DCT-line code referenced in a testing footnote; the DCT line was not part of the corrected flexible/XLT cohorts.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(4|6|8|10)DCT$"
+      },
+      {
+        "ruleId": "RULE-042",
+        "filename": "shiley-flexible-tracheostomy-enhanced-portfolio-comparison-guide.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Marketing claim footnotes and literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-043",
+        "filename": "shiley-flexible-tracheostomy-tube-customer-brochure.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Exact Shiley parallel DCT-line code referenced in a testing footnote; the DCT line was not part of the corrected flexible/XLT cohorts.",
+        "reviewMethod": "corpus_text_extraction",
+        "identifierPattern": "^(4|6|8|10)DCT$"
+      },
+      {
+        "ruleId": "RULE-044",
+        "filename": "shiley-flexible-tracheostomy-tube-customer-brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Marketing claim footnotes and literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-045",
+        "filename": "shiley-xlt-extended-length-tracheostomy-tubes-brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Box-quantity strings, address/phone tokens, indication footnotes, and literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-046",
+        "filename": "Shiley™ XLT Extended Length Tracheostomy Tube _ Medtronic.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Medtronic literature code on the page footer.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-047",
+        "filename": "shiley-speaking-valves-product-brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Citations, connector dimensions, and literature codes in the speaking-valve brochure.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-048",
+        "filename": "tracheostomy-tubes-accessories-reimbursement-coding-guide.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "HCPCS billing codes and CMS references; payer coding content, not manufacturer product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-049",
+        "filename": "Steris catalog.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "STERIS GI endoscopy portfolio (single-use gastroscopes, GI balloon dilation, EFTR clips, snares, GI electrosurgery units, GI EUS biopsy); gastroenterology devices outside the current scope.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-050",
+        "filename": "1-s2.0-S0846537114000175-main.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Peer-reviewed journal article (pulmonary nodule management); tokens are citation page ranges, DOIs, and dimension text.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-051",
+        "filename": "WLL how we do it.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Peer-reviewed whole-lung-lavage technique article; tokens are author affiliations, citations, and physiologic abbreviations.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-052",
+        "filename": "WLLL technical details.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Peer-reviewed whole-lung-lavage review article; tokens are DOIs, citations, and physiologic abbreviations.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-053",
+        "filename": "CC-BUSCALAM-EBSMP-EN-201407_1654867609049.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook airway-exchange clinical overview; tokens are citation superscripts and the document code.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-054",
+        "filename": "1-0023806-0-Tracheal-Stent-System-Y-shaped-IFU.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Micro-Tech Y-shaped tracheal stent IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-055",
+        "filename": "IFU-Chartis-Pulmonary-Assessment-System-Catheter-100-0714-Revision-C-Released-2025-12-18.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Chartis catheter IFU (patent listing, addresses, syringe sizes); tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-056",
+        "filename": "C_T_PPD_REV6.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook pleural/pneumopericardial drainage IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-057",
+        "filename": "C_T_PTISGI2_REV0.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook percutaneous tracheostomy introducer IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-058",
+        "filename": "C_T_THAL_REV11.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook Thal-Quick IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-059",
+        "filename": "D-000010790-REV0-1-1033736-REV1-Adapt-Endoscopic-Ultrasound-Aspiration-Needle-Instructions-f.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Micro-Tech Adapt EUS aspiration-needle IFU; tokens are document revision codes, regulatory/patent identifiers, chemical names, figure or numbered-step references, addresses, or citation fragments — not product identifiers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-060",
+        "filename": "Blue Rhino® G2-Multi Percutaneous Tracheostomy Introducer Sets and Trays _ Cook Medical.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Web-capture page furniture: Cook literature file names, URL identifiers, brand fragments, and the support phone number.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-061",
+        "filename": "Thal-Quick Chest Tube Set and Tray _ Cook Medical.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Web-capture page furniture: Cook literature file names and the support phone number.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-062",
+        "filename": "Fuhrman Pleural_Pneumopericardial Drainage Set and Tray _ Cook Medical.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Web-capture page furniture: Cook literature file names.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-063",
+        "filename": "EchoTip Ultra® Endobronchial HD Ultrasound Needle _ Cook Medical.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Web-capture page furniture: Cook literature file names.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-064",
+        "filename": "CC-D67629-EN-F_IA_1683223150514.pdf",
+        "disposition": "needs_owner_review",
+        "rationale": "Lock pericardiocentesis set/tray ordering rows (G02433/C-PCS-830-LOCK, G04507/C-PCSY-830-LOCK) in the Cook chest-drainage brochure; pericardial drainage sits at the scope boundary, so the inclusion decision is deferred to owner review.",
+        "reviewMethod": "rendered_manual_inspection",
+        "identifierPattern": "^(G02433|G04507|CPCS830LOCK|CPCSY830LOCK)$"
+      },
+      {
+        "ruleId": "RULE-065",
+        "filename": "CC-D67629-EN-F_IA_1683223150514.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Brochure page furniture: document code, stopcock descriptors, and citation superscripts.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-066",
+        "filename": "CC-D55061-EN-F_M3_1599145301215.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook document code and brand fragment on the Blue Rhino spec sheet.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-067",
+        "filename": "CC-WF912959-EN-F_M3_1771864966276.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook document code on the EchoTip reference card.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-068",
+        "filename": "CC-WF913096-EN-F_M3_1772121134246.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cook document code on the EchoTip datasheet.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-069",
+        "filename": "cookmedical.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Family-level Cook overview page; tokens are brand fragments and citation superscripts.",
+        "reviewMethod": "family_level_review"
+      },
+      {
+        "ruleId": "RULE-070",
+        "filename": "BMP-MR-PCA-Interventional_Pulmonology_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Ordering-information narrative, document revision, and citation fragments in the Novatech IP brochure.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-071",
+        "filename": "NOV-MR-PCA-EWS_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "DOIs, VAT number, and citation fragments in the EWS brochure.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-072",
+        "filename": "NOV-MR-PCA-Instruments_CA003_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "VAT number on the instruments catalog imprint.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-073",
+        "filename": "NOV-MR-PCA-SS3_NOVATECH_3D_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "NOVATECH 3D patient-specific stent service brochure; tokens are 3D-service marketing descriptors, imprint codes, and citation fragments (the patient-specific stent service itself already carries a canonical identity).",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-074",
+        "filename": "NOV-MR-PCA-STE_STERITALC_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Citations, particle-size units, print-file names, and the VAT number in the STERITALC brochure.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-075",
+        "filename": "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Catalog imprint (revision code, VAT number) and citation fragments; every stent reference on the table pages is separately reconciled.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-076",
+        "filename": "novatech__stents_pulmonares__catalogo.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Catalog imprint and citation fragments of the Spanish-edition stent catalog; every stent reference is reconciled against the English edition and this file is otherwise a duplicate reference set.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-077",
+        "filename": "Mobile C-arm machine - Cios Spin - Siemens Healthineers USA.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "C-arm marketing page; tokens are study citations and imaging-mode descriptors.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-078",
+        "filename": "OEC-3D_Brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "C-arm brochure; tokens are marketing descriptors and the literature code.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-079",
+        "filename": "en_productbrochure_ziehmvisionrfd3d_rev10_02_2026.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "C-arm brochure; tokens are marketing descriptors, citations, addresses, and footnote markers.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-080",
+        "filename": "Vio 3.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Erbe VIO 3 brochure; tokens are cable-connector descriptors, the EU directive number, and the literature code.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-081",
+        "filename": "85100-165_Cables-and-adapters.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Erbe cable/adapter catalog; tokens are connector descriptors and version strings.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-082",
+        "filename": "85100-169_APC-accessories.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Erbe APC accessory catalog; tokens are connector descriptors and a document code.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-083",
+        "filename": "2025-Distribution-Magneto-Holmium-Laser.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Laser spec sheet; tokens are electrical specification strings.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-084",
+        "filename": "Quanta-Laser-2025 (1).pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Laser spec sheet; residual token is a wattage descriptor.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-085",
+        "filename": "intuitive-ion-system-brochure-1051118.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Ion system brochure; tokens are claim footnotes, study registrations, and the part-number footer.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-086",
+        "filename": "Aliya System – Galvanize.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Galvanize Aliya web capture; tokens are URL paths, media file names, and literature codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-087",
+        "filename": "Compact multi-parameter monitor - CHARTIS - pulmonX - CO2 _ VO2-max _ intensive care.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Monitor listing page; tokens are physiologic abbreviations and claim footnotes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-088",
+        "filename": "BLAKE-Drains-Brochure-050018-210310.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "BLAKE drain brochure; tokens are claim footnotes, citations, internal test references, and descriptive fragments.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-089",
+        "filename": "cardinal-health-cardiothoratic-catalog.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Cardinal Health catalog page furniture: a literature number, a phone number, and a SKU-range expression spanning accounted catheter rows.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-090",
+        "filename": "Teleflex Incorporated - Pilling Surgical Instruments Catalog.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Size descriptors (diameter x length) inside accounted Pilling bronchoscope rows; the orderable item numbers themselves are separately accounted.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-091",
+        "filename": "Thoracentesis & Paracentesis Set - a Convienent All-in-One Centisis Set.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "HCPCS code and table-template fragments in the Centisis brochure.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-092",
+        "filename": "ent-why-power-apexcut-blades-brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "ENT microdebrider marketing brochure; residual tokens are DOIs, PMC identifiers, claim footnotes, and the literature code (the exact ENT blade rows are separately accounted).",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-093",
+        "filename": "aScope-4-Broncho-Datasheets.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Datasheet spec fragments (bending angles, ET-tube sizes, addresses) and label codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-094",
+        "filename": "aScope-5-Broncho-Datasheets.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Datasheet spec fragments (bending angles, ET-tube sizes, addresses) and label codes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-095",
+        "filename": "Scivita-Single-Use-Bronchoscope-Brochure.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Brochure spec fragments and the document code.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-096",
+        "filename": "Diagnostic Bronchoscope (BF-XP190) _ Olympus America _ Medical.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Web-capture page furniture, wrapped title fragments, and URL fragments.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-097",
+        "filename": "EB-J10 Bronchoscopes_ Advanced High-Definition imaging.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Web page URL fragment.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-098",
+        "filename": "Endobronchial Ultrasound (EBUS) scopes - FUJIFILM Healthcare Americas Corporation.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Spec fragments (angulation, observation range) and claim footnotes.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-099",
+        "filename": "factsheet_eb_710us.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Factsheet imprint and address fragments.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-100",
+        "filename": "Fujifilm_EUS Brochure_03_2025_EN.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "GI EUS brochure spec fragments and address tokens.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-101",
+        "filename": "Fujifilm_EndoSolutionsPulmonology_2023_EN_144dpi.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Display/processor specification fragments (video formats, connector types, dimensions) and page furniture in the pulmonology solutions brochure.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-102",
+        "filename": "Bronchoscope-Matrix-Chart_41656 (1).pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Olympus literature code on the comparison chart.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-103",
+        "filename": "E0428710_Diagnosis_SPN_Flyer_EN_2023.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "EU flyer footer numerics (addresses, postbox, phone/fax) and citation fragments.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-104",
+        "filename": "AccessGUDID - (&quot;Monarch Bronchoscope&quot;)2.pdf",
+        "disposition": "irrelevant_to_current_scope",
+        "rationale": "AccessGUDID search-result capture rows for unrelated companies (maggot-therapy wound dressings); not corpus manufacturer ordering content.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-105",
+        "filename": "AccessGUDID - (&quot;Monarch Bronchoscope&quot;3).pdf",
+        "disposition": "relevant_but_insufficient_identity",
+        "rationale": "SOPRO-COMEG scope model numbers split across space-separated tokens in the GUDID capture; each token alone is not a complete model identity.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-106",
+        "filename": "Biopsy Forceps - Pulmonary - Thoracent.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Descriptive handle text on the Thoracent page.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-107",
+        "filename": "Netis Retrieval Net - Pulmonary - Thoracent.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Size-option descriptor on the Thoracent page.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-108",
+        "filename": "TB-Stent-size-chart.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Image URL fragment on the size-chart capture.",
+        "reviewMethod": "corpus_text_extraction"
+      },
+      {
+        "ruleId": "RULE-109",
+        "filename": "2323-07.01-0624USA_Mini_Thoracoscopy_Set_SS.pdf",
+        "disposition": "not_a_product_identifier",
+        "rationale": "Document code and phone token on the Wolf mini-thoracoscopy sheet.",
+        "reviewMethod": "corpus_text_extraction"
+      }
+    ]
+  },
+  "novatech_stent_matrix": {
+    "groupIdPrefix": "novatech_gss_matrix",
+    "origin": "old_corpus",
+    "manufacturerId": "MFR-6208838930",
+    "manufacturer": "Novatech",
+    "brandFamily": "DUMON / GSS",
+    "primaryCategory": "Airway stent",
+    "productKind": "Implant",
+    "material": "Silicone",
+    "implantable": true,
+    "evidenceSourceId": "SRC106",
+    "evidenceDocuments": [
+      "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf",
+      "novatech__stents_pulmonares__catalogo.pdf"
+    ],
+    "alreadyCanonicalRefs": {
+      "01BD1040": "PRD-9CE203EA1C",
+      "01TD1260": "PRD-62E4A72F9D",
+      "01TD16100": "PRD-5070336E33",
+      "01TF1450": "PRD-7051E83D62",
+      "01TF1860": "PRD-CC378D0981",
+      "01Y141010": "PRD-A5DD232514",
+      "01Y161313": "PRD-5C46BC7DA9"
+    },
+    "expectedTableRefs": 148,
+    "expectedNewProducts": 141,
+    "series": [
+      {
+        "seriesCode": "TD",
+        "productName": "GSS TD Tracheal Stent",
+        "subcategory": "Silicone TD stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_STRAIGHT",
+        "taxonomySubtype": "silicone_straight_stent",
+        "description": "GSS TD straight tracheal silicone stent configuration from the NOVATECH DUMON/GSS silicone-stent catalog straight-stent diameter-by-length ordering matrix; dimensions are inherited from the matrix row (outer diameter) and column (length) headers.",
+        "refTemplate": "01TD{dia}{len}",
+        "cellPageBreakLength": 60,
+        "pages": {
+          "atOrBelowBreak": 12,
+          "aboveBreak": 13
+        },
+        "cells": {
+          "11": [20, 30, 40, 50, 60, 70, 80],
+          "12": [20, 30, 40, 50, 60, 70, 80],
+          "13": [30, 40, 50, 60, 70, 80],
+          "14": [30, 40, 50, 60, 70, 80],
+          "15": [30, 40, 50, 60, 70, 80, 90, 100, 110],
+          "16": [30, 40, 50, 60, 70, 80, 90, 100, 110],
+          "18": [40, 50]
+        }
+      },
+      {
+        "seriesCode": "TF",
+        "productName": "GSS TF Thin Tracheal Stent",
+        "subcategory": "Silicone TF stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_STRAIGHT",
+        "taxonomySubtype": "silicone_straight_stent",
+        "description": "GSS TF thin-wall straight tracheal silicone stent configuration from the NOVATECH DUMON/GSS silicone-stent catalog straight-stent diameter-by-length ordering matrix; dimensions are inherited from the matrix row (outer diameter) and column (length) headers.",
+        "refTemplate": "01TF{dia}{len}",
+        "cellPageBreakLength": 60,
+        "pages": {
+          "atOrBelowBreak": 12,
+          "aboveBreak": 13
+        },
+        "cells": {
+          "12": [30, 40, 50, 60, 70, 80],
+          "13": [30, 40, 50, 60, 70],
+          "14": [30, 40, 50, 60, 70],
+          "15": [30, 40, 50, 60, 70, 80, 90, 100, 110],
+          "16": [40, 50, 60, 70, 80, 90, 100],
+          "18": [40, 50, 60, 70, 80, 90, 100, 110],
+          "20": [40, 50, 60, 70, 80, 90, 100, 110]
+        }
+      },
+      {
+        "seriesCode": "BD",
+        "productName": "GSS BD Bronchial Stent",
+        "subcategory": "Silicone BD stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_STRAIGHT",
+        "taxonomySubtype": "silicone_straight_stent",
+        "description": "GSS BD straight bronchial silicone stent configuration from the NOVATECH DUMON/GSS silicone-stent catalog straight-stent diameter-by-length ordering matrix; dimensions are inherited from the matrix row (outer diameter) and column (length) headers.",
+        "refTemplate": "01BD{dia}{len}",
+        "cellPageBreakLength": 60,
+        "pages": {
+          "atOrBelowBreak": 12,
+          "aboveBreak": 13
+        },
+        "cells": {
+          "10": [20, 30, 40, 50, 60, 70],
+          "11": [20, 30, 40, 50, 60, 70],
+          "12": [20, 30, 40, 50, 60, 70, 80]
+        }
+      },
+      {
+        "seriesCode": "BB",
+        "productName": "DUMON BB Bronchial Stent",
+        "subcategory": "Silicone BB stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_STRAIGHT",
+        "taxonomySubtype": "silicone_straight_stent",
+        "description": "DUMON BB small-diameter straight bronchial silicone stent from the straight-stent ordering matrix (5-8 mm outer diameters); dimensions are inherited from the matrix row and column headers.",
+        "explicitRefs": [
+          {
+            "ref": "025301S20",
+            "sizeDisplay": "5 OD x 20 L",
+            "page": 12
+          },
+          {
+            "ref": "025301S30",
+            "sizeDisplay": "5 OD x 30 L",
+            "page": 12
+          },
+          {
+            "ref": "025301S40",
+            "sizeDisplay": "5 OD x 40 L",
+            "page": 12
+          },
+          {
+            "ref": "025301S50",
+            "sizeDisplay": "5 OD x 50 L",
+            "page": 12
+          },
+          {
+            "ref": "026201S20",
+            "sizeDisplay": "6 OD x 20 L",
+            "page": 12
+          },
+          {
+            "ref": "026201S30",
+            "sizeDisplay": "6 OD x 30 L",
+            "page": 12
+          },
+          {
+            "ref": "026201S40",
+            "sizeDisplay": "6 OD x 40 L",
+            "page": 12
+          },
+          {
+            "ref": "026201S50",
+            "sizeDisplay": "6 OD x 50 L",
+            "page": 12
+          },
+          {
+            "ref": "026501S20",
+            "sizeDisplay": "7 OD x 20 L",
+            "page": 12
+          },
+          {
+            "ref": "026501S30",
+            "sizeDisplay": "7 OD x 30 L",
+            "page": 12
+          },
+          {
+            "ref": "026501S40",
+            "sizeDisplay": "7 OD x 40 L",
+            "page": 12
+          },
+          {
+            "ref": "026501S50",
+            "sizeDisplay": "7 OD x 50 L",
+            "page": 12
+          },
+          {
+            "ref": "026701S20",
+            "sizeDisplay": "8 OD x 20 L",
+            "page": 12
+          },
+          {
+            "ref": "026701S30",
+            "sizeDisplay": "8 OD x 30 L",
+            "page": 12
+          },
+          {
+            "ref": "026701S40",
+            "sizeDisplay": "8 OD x 40 L",
+            "page": 12
+          },
+          {
+            "ref": "026701S50",
+            "sizeDisplay": "8 OD x 50 L",
+            "page": 12
+          }
+        ]
+      },
+      {
+        "seriesCode": "Y",
+        "productName": "GSS Y Stent",
+        "subcategory": "Silicone Y stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_Y",
+        "taxonomySubtype": "silicone_y_stent",
+        "description": "GSS Y bifurcated silicone stent from the special-shapes table; outer diameters and limb lengths are the catalog table values (tracheal/bronchial OD 1/2/3 and L1/L2/L3), wall thickness 1.0 mm.",
+        "explicitRefs": [
+          {
+            "ref": "01Y121010",
+            "sizeDisplay": "Trachea 12 OD/70 L; bronchi 10 OD/50 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y141010",
+            "sizeDisplay": "Trachea 14 OD/110 L; bronchi 10 OD/50 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y141010V1",
+            "sizeDisplay": "Trachea 14 OD/40 L; bronchi 10 OD/30 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y151212",
+            "sizeDisplay": "Trachea 15 OD/110 L; bronchi 12 OD/50 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y151212V1",
+            "sizeDisplay": "Trachea 15 OD/40 L; bronchi 12 OD/30 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y151212V2",
+            "sizeDisplay": "Trachea 15 OD/50 L; bronchi 12 OD/30 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y161313",
+            "sizeDisplay": "Trachea 16 OD/110 L; bronchi 13 OD/50 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y161313V1",
+            "sizeDisplay": "Trachea 16 OD/40 L; bronchi 13 OD/30 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y161313V2",
+            "sizeDisplay": "Trachea 16 OD/50 L; bronchi 13 OD/30 L",
+            "page": 14
+          },
+          {
+            "ref": "01Y181414",
+            "sizeDisplay": "Trachea 18 OD/110 L; bronchi 14 OD/50 L",
+            "page": 14
+          }
+        ]
+      },
+      {
+        "seriesCode": "OKI",
+        "productName": "GSS OKI Oblique Stent",
+        "subcategory": "Silicone Y stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_Y",
+        "roleNotes": "Oblique bifurcated (Oki) configuration for the right main bronchus; the existing silicone Y-stent role is the closest supported bifurcated-silicone-stent role.",
+        "taxonomySubtype": "silicone_y_stent",
+        "description": "GSS OKI oblique bifurcated silicone stent from the special-shapes table; OD 13/9/10 mm, lengths 40/17/35 mm, wall thickness 1.0 mm, 30/45 degree limb angles.",
+        "explicitRefs": [
+          {
+            "ref": "01OKI130910",
+            "sizeDisplay": "13/9/10 mm OD; 40/17/35 mm segments",
+            "page": 14
+          }
+        ]
+      },
+      {
+        "seriesCode": "ST",
+        "productName": "GSS ST Hourglass Stent",
+        "subcategory": "Silicone hourglass stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_HOURGLASS",
+        "taxonomySubtype": "silicone_hourglass_stent",
+        "description": "GSS ST hourglass silicone stent (narrower central segment) from the special-shapes table; wall thickness 1.5 mm, segment lengths 15/20/15 mm.",
+        "explicitRefs": [
+          {
+            "ref": "01ST121012",
+            "sizeDisplay": "12/10/12 mm OD; 15/20/15 mm segments",
+            "page": 15
+          },
+          {
+            "ref": "01ST141214",
+            "sizeDisplay": "14/12/14 mm OD; 15/20/15 mm segments",
+            "page": 15
+          },
+          {
+            "ref": "01ST151315",
+            "sizeDisplay": "15/13/15 mm OD; 15/20/15 mm segments",
+            "page": 15
+          },
+          {
+            "ref": "01ST161416",
+            "sizeDisplay": "16/14/16 mm OD; 15/20/15 mm segments",
+            "page": 15
+          },
+          {
+            "ref": "01ST181618",
+            "sizeDisplay": "18/16/18 mm OD; 15/20/15 mm segments",
+            "page": 15
+          }
+        ]
+      },
+      {
+        "seriesCode": "DST",
+        "productName": "GSS DST Hourglass Stent",
+        "subcategory": "Silicone hourglass stent",
+        "roleCode": "AIRWAY_STENT_SILICONE_HOURGLASS",
+        "taxonomySubtype": "silicone_hourglass_stent",
+        "description": "GSS DST hourglass silicone stent with short end segments from the special-shapes table; wall thickness 1.5 mm, segment lengths 7.5/20/7.5 mm.",
+        "explicitRefs": [
+          {
+            "ref": "01DST141214",
+            "sizeDisplay": "14/12/14 mm OD; 7.5/20/7.5 mm segments",
+            "page": 15
+          },
+          {
+            "ref": "01DST161416",
+            "sizeDisplay": "16/14/16 mm OD; 7.5/20/7.5 mm segments",
+            "page": 15
+          },
+          {
+            "ref": "01DST181618",
+            "sizeDisplay": "18/16/18 mm OD; 7.5/20/7.5 mm segments",
+            "page": 15
+          }
+        ]
+      }
+    ]
+  }
 }

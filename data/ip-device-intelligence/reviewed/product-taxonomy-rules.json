@@ -103,6 +103,13 @@
     },
     {
       "primary_category": "Airway stent",
+      "subcategory": "Silicone BB stent",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "confidence": "high"
+    },
+    {
+      "primary_category": "Airway stent",
       "subcategory": "Silicone BD stent",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -682,6 +689,13 @@
       "device_class_code": "trocar_access",
       "device_subtype_code": "thoracoscopy_trocar",
       "confidence": "high"
+    },
+    {
+      "primary_category": "Percutaneous tracheostomy",
+      "subcategory": "Percutaneous tracheostomy set",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "confidence": "needs_review"
     },
     {
       "primary_category": "Percutaneous tracheostomy",

@@ -22,7 +22,7 @@ describe('source-first completeness reviewed intake', () => {
       missing_since_prior_manifest: 0,
       hash_mismatches: 0,
       unreferenced_files_with_relevant_exact_products: 0,
-      old_corpus_exact_products_absent_from_original_csv: 21,
+      old_corpus_exact_products_absent_from_original_csv: 184,
     })
     expect(SOURCE_COMPLETENESS_REVIEW.corpus_audit.previously_unreferenced_files).toHaveLength(4)
   })
@@ -178,7 +178,7 @@ describe('source-first completeness reviewed intake', () => {
   })
 
   test('hashes every newly used owner, manufacturer, and FDA evidence artifact', () => {
-    expect(SOURCE_COMPLETENESS_REVIEW.sources).toHaveLength(16)
+    expect(SOURCE_COMPLETENESS_REVIEW.sources).toHaveLength(18)
     expect(SOURCE_COMPLETENESS_REVIEW.evidence_manifest).toHaveLength(33)
     expect(
       new Set(SOURCE_COMPLETENESS_REVIEW.evidence_manifest.map((row) => row.evidenceId)).size,

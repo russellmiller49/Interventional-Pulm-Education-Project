@@ -1,6 +1,8 @@
 origin,legal_manufacturer,candidates,new_products_added,existing_matches,needs_owner_review,irrelevant
 official_web_follow_up,Medtronic,22,9,0,4,9
+old_corpus,Cook Medical,22,22,0,15,0
 old_corpus,Medtronic,23,21,0,1,0
+old_corpus,Novatech,141,141,0,0,0
 owner_pdf,Axess Vision Technology S.A.S.,9,8,0,1,0
 owner_pdf,CLR Medical,5,5,0,1,0
 owner_pdf,Cook Medical,4,0,4,0,0

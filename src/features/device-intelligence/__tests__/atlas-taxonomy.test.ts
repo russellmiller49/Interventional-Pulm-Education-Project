@@ -50,10 +50,12 @@ describe('D2C device-class facet', () => {
       expect(facet.productCount).toBe(idsForClass(facet.code).length)
       expect(facet.productCount).toBeGreaterThan(0)
     }
-    // The reviewed intake intentionally holds six products in the owner-review class.
+    // The reviewed intake intentionally holds six owner-packet products in the owner-review
+    // class, and the fifteen Blue Rhino sets/trays share the percutaneous-tracheostomy pair
+    // rule whose physical taxonomy is pending like the PR #118 trays.
     expect(
       facets.deviceClasses.find((facet) => facet.code === 'other_needs_review')?.productCount,
-    ).toBe(6)
+    ).toBe(21)
     // Every class label resolves in every locale.
     for (const locale of ['en', 'es', 'zh-CN']) {
       const labels = getTaxonomyLabels(locale)

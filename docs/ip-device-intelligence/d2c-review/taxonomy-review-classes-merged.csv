@@ -45,11 +45,11 @@ needle,6,Peripheral bronchoscopy,10
 needle,6,Peripheral navigation,1
 needle,6,Rigid bronchoscopy,3
 needle,6,Sampling,24
-other_needs_review,3,Percutaneous tracheostomy,3
+other_needs_review,3,Percutaneous tracheostomy,18
 other_needs_review,3,Pleural procedures,1
 other_needs_review,3,Therapeutic bronchoscopy,2
 pleural_drainage,2,Endoscopy platform,1
-pleural_drainage,2,Pleural procedures,305
+pleural_drainage,2,Pleural procedures,312
 reprocessing,2,Endoscopy platform,3
 reprocessing,2,Reprocessing,30
 retrieval_basket,2,Retrieval,3
