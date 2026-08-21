@@ -1409,7 +1409,7 @@
           "roleCode": "TRACH_TUBE_CUFFED",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 97,
+          "catalogProductCount": 107,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1429,7 +1429,7 @@
           "roleCode": "TRACH_TUBE_CUFFED",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 97,
+          "catalogProductCount": 107,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false

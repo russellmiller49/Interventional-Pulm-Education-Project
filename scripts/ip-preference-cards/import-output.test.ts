@@ -3,6 +3,7 @@ import importReport from '../../data/ip-preference-cards/generated/import-report
 import products from '../../data/ip-preference-cards/generated/catalog-products.json'
 import procedureSlots from '../../data/ip-preference-cards/generated/procedure-slots.json'
 import slotOptionProposals from '../../data/ip-preference-cards/generated/slot-product-option-proposals.json'
+import { sourceCompletenessCount } from './source-completeness-intake'
 
 describe('generated IP preference-card import contract', () => {
   it('records workbook provenance, row offsets, counts, and a stable hash', () => {
@@ -28,7 +29,7 @@ describe('generated IP preference-card import contract', () => {
 
   it('reports authored options and unreviewed proposals with accurate names', () => {
     expect(importReport.slot_option_proposals).toEqual({
-      authored_canonical_options: 2035,
+      authored_canonical_options: sourceCompletenessCount('canonical_slot_options_after'),
       generated_unreviewed_proposals: slotOptionProposals.proposals.length,
       excluded_proposal_pairs: 0,
       required_slots_with_catalog_coverage: 82,
@@ -37,7 +38,9 @@ describe('generated IP preference-card import contract', () => {
       stale_exceptions: 0,
       proposal_generation_errors: 0,
     })
-    expect(slotOptionProposals.proposals).toHaveLength(1595)
+    expect(slotOptionProposals.proposals).toHaveLength(
+      sourceCompletenessCount('unreviewed_slot_proposals_after'),
+    )
     expect(
       slotOptionProposals.proposals.every(
         (proposal) =>

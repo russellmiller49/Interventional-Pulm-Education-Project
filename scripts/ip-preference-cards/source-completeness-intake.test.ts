@@ -3,6 +3,7 @@ import {
   expandSourceCompletenessProducts,
   SOURCE_COMPLETENESS_DISPOSITIONS,
   SOURCE_COMPLETENESS_REVIEW,
+  sourceCompletenessCount,
 } from './source-completeness-intake'
 
 describe('source-first completeness reviewed intake', () => {
@@ -21,18 +22,18 @@ describe('source-first completeness reviewed intake', () => {
       missing_since_prior_manifest: 0,
       hash_mismatches: 0,
       unreferenced_files_with_relevant_exact_products: 0,
-      old_corpus_exact_products_absent_from_original_csv: 0,
+      old_corpus_exact_products_absent_from_original_csv: 21,
     })
     expect(SOURCE_COMPLETENESS_REVIEW.corpus_audit.previously_unreferenced_files).toHaveLength(4)
   })
 
-  test('reconciles the complete 63-row discovery cohort with one controlled disposition each', () => {
+  test('reconciles the complete reviewed discovery cohort with one controlled disposition each', () => {
     const candidates = [
       ...products,
       ...SOURCE_COMPLETENESS_REVIEW.existing_matches,
       ...SOURCE_COMPLETENESS_REVIEW.non_addition_candidates,
     ]
-    expect(candidates).toHaveLength(63)
+    expect(candidates).toHaveLength(sourceCompletenessCount('discovery_rows'))
     const allowed = new Set(SOURCE_COMPLETENESS_DISPOSITIONS)
     for (const candidate of SOURCE_COMPLETENESS_REVIEW.non_addition_candidates) {
       expect(allowed.has(candidate.disposition)).toBe(true)
@@ -42,20 +43,25 @@ describe('source-first completeness reviewed intake', () => {
     )
   })
 
-  test('emits exactly 44 deterministic exact additions: 35 owner-supplied and 9 web-follow-up', () => {
-    expect(products).toHaveLength(44)
-    expect(products.filter((product) => product.origin === 'owner_pdf')).toHaveLength(35)
-    expect(products.filter((product) => product.origin === 'official_web_follow_up')).toHaveLength(
-      9,
+  test('emits the single reviewed count contract across all three origins', () => {
+    expect(products).toHaveLength(sourceCompletenessCount('new_exact_products'))
+    expect(products.filter((product) => product.origin === 'owner_pdf')).toHaveLength(
+      sourceCompletenessCount('owner_pdf_products'),
     )
-    expect(new Set(products.map((product) => product.catalogNumber)).size).toBe(44)
+    expect(products.filter((product) => product.origin === 'official_web_follow_up')).toHaveLength(
+      sourceCompletenessCount('official_web_products'),
+    )
+    expect(products.filter((product) => product.origin === 'old_corpus')).toHaveLength(
+      sourceCompletenessCount('old_corpus_products'),
+    )
+    expect(new Set(products.map((product) => product.catalogNumber)).size).toBe(products.length)
     expect(
       new Set(
         products.map((product) =>
           stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`),
         ),
       ).size,
-    ).toBe(44)
+    ).toBe(products.length)
   })
 
   test('covers every required owner and known-Medtronic sentinel without adding duplicates', () => {
@@ -118,6 +124,28 @@ describe('source-first completeness reviewed intake', () => {
       'G34279',
       'G34282',
       'G34280',
+      '4CN65R',
+      '5CN70R',
+      '6CN75R',
+      '7CN75R',
+      '8CN85R',
+      '9CN90R',
+      '10CN10R',
+      '4UN65R',
+      '5UN70R',
+      '6UN75R',
+      '7UN80R',
+      '8UN85R',
+      '9UN90R',
+      '10UN10R',
+      '50XLTCP',
+      '60XLTCP',
+      '70XLTCP',
+      '80XLTCP',
+      '50XLTUP',
+      '60XLTUP',
+      '70XLTUP',
+      '80XLTUP',
     ]
     for (const sentinel of required) {
       expect(accepted.has(sentinel) || existing.has(sentinel) || held.has(sentinel)).toBe(true)
@@ -158,7 +186,63 @@ describe('source-first completeness reviewed intake', () => {
     for (const evidence of SOURCE_COMPLETENESS_REVIEW.evidence_manifest) {
       expect(evidence.sha256).toMatch(/^[a-f0-9]{64}$/u)
       expect(evidence.retrievedOn).toBe('2026-08-20')
+      expect(evidence.supportedCatalogNumbers.length).toBeGreaterThan(0)
+      expect(new Set(evidence.supportedCatalogNumbers).size).toBe(
+        evidence.supportedCatalogNumbers.length,
+      )
     }
+  })
+
+  test('reconciles all 14 Shiley R-series rows and preserves the 7CN source conflict', () => {
+    const accepted = products
+      .filter((product) => product.origin === 'old_corpus' && product.catalogNumber.endsWith('R'))
+      .map((product) => product.catalogNumber)
+    const conflict = SOURCE_COMPLETENESS_REVIEW.non_addition_candidates.find(
+      (candidate) => candidate.catalogNumber === '7CN75R',
+    )
+    expect(accepted).toHaveLength(sourceCompletenessCount('shiley_products_added'))
+    expect(accepted).not.toContain('7CN75R')
+    expect(accepted).not.toContain('7CN80R')
+    expect(conflict).toMatchObject({
+      disposition: 'source_evidence_conflicted',
+      ownerReviewRequired: true,
+    })
+    expect(accepted.length + (conflict ? 1 : 0)).toBe(
+      sourceCompletenessCount('shiley_candidates_reconciled'),
+    )
+  })
+
+  test('preserves corrected clinical facts and restrained evidence scopes', () => {
+    const byCatalog = new Map(products.map((product) => [product.catalogNumber, product]))
+    expect(byCatalog.get('MCB-1000-4')).toMatchObject({
+      alternateIds: 'MCB-1000',
+      sterileStatus: 'Sterile',
+    })
+    expect(byCatalog.get('MCB-1000-Kit')?.alternateIds ?? null).toBeNull()
+    expect(byCatalog.get('MCB-1000-Kit')?.sterileStatus ?? null).toBeNull()
+    expect(byCatalog.get('CC-1000-4')?.sterileStatus).toBe('Nonsterile')
+    expect(byCatalog.get('S012-01-015')?.productName).toBe('CLR Port Cap')
+    expect(byCatalog.get('41010000')?.packageUom).toBe('Box of 10')
+    for (const catalogNumber of ['30030303', '30030010', '31010008']) {
+      expect(byCatalog.get(catalogNumber)?.packageUom ?? null).toBeNull()
+    }
+    expect(byCatalog.get('1899200')?.roleCode).toBe('RIGID_BRONCH_SHAVER')
+    expect(byCatalog.get('1899200')?.notes).not.toMatch(/exact airway blade cohort/iu)
+
+    const praxis = SOURCE_COMPLETENESS_REVIEW.evidence_manifest.find(
+      (source) => source.evidenceId === 'EVID-SC-006',
+    )
+    const hugeMed = SOURCE_COMPLETENESS_REVIEW.evidence_manifest.find(
+      (source) => source.evidenceId === 'EVID-SC-010',
+    )
+    expect(praxis?.scope).toBe('family_level')
+    expect(hugeMed?.supportedCatalogNumbers).toEqual([
+      'BR-M22',
+      'BR-M32',
+      'BR-M40',
+      'BR-M50',
+      'BR-M58',
+    ])
   })
 
   test('keeps five exact candidates in owner review and nine ENT-only products out of scope', () => {

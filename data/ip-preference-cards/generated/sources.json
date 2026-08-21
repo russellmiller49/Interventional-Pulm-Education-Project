@@ -1136,8 +1136,8 @@
     "revision_date": null,
     "as_of_date": "2026-08-20",
     "reliability_tier": "Tier 1 - manufacturer",
-    "use_policy": "Use for exact EndoCore ordering identity, needle geometry, and scope compatibility; confirm local orderability separately.",
-    "notes": "Official URL: https://praxismedicaldevices.com/endocore/"
+    "use_policy": "Use only for EndoCore family context. Exact ordering identity, package configuration, geometry, and scope compatibility require the owner packet and exact AccessGUDID records.",
+    "notes": "The reviewed page did not support product-level claims for the two exact ordering configurations. Official URL: https://praxismedicaldevices.com/endocore/"
   },
   {
     "source_id": "SRC096",
@@ -1157,7 +1157,7 @@
     "filename": "K261068.pdf",
     "source_type": "FDA 510(k) summary",
     "publisher": "U.S. Food and Drug Administration",
-    "revision_date": "2026-05-14",
+    "revision_date": null,
     "as_of_date": "2026-08-20",
     "reliability_tier": "Tier 1 - FDA",
     "use_policy": "Use for legal manufacturer, base model identity, physical configuration, and stated cryobiopsy system use; owner packet supplies exact sales/package suffixes.",
@@ -1181,7 +1181,7 @@
     "filename": "K211894.pdf",
     "source_type": "FDA 510(k) summary",
     "publisher": "U.S. Food and Drug Administration",
-    "revision_date": "2022-02-25",
+    "revision_date": null,
     "as_of_date": "2026-08-20",
     "reliability_tier": "Tier 1 - FDA",
     "use_policy": "Use for manufacturer and Trachealator model-family identity; the owner packet supplies exact order-code dimensions.",

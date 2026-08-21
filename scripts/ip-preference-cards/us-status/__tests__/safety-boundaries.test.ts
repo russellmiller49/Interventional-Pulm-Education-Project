@@ -14,6 +14,7 @@ import {
 } from '../proposal-schemas'
 import { parseResearchArgs } from '../run-us-status-research'
 import { hiddenProductCohortManifestSchema } from '../schemas'
+import { sourceCompletenessCount } from '../../source-completeness-intake'
 
 const GENERATED_ROOT = 'data/ip-preference-cards/generated'
 const RESEARCH_ROOT = 'data/ip-preference-cards/research/us-status'
@@ -27,11 +28,11 @@ const PROHIBITED_CANONICAL_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    'a5e548a1e36370bb13f7eea17d93dca698a965cbfae418931bd70bffa852f7cc',
+    'a6fe291c9b863820c2f820540e4b1a5161c29065ed0b468ce2fde937daf69930',
   'data/ip-preference-cards/generated/roles.json':
     '8ec7c66cf5db225532c8195258f341af5644559689dd0b69cea7a56e2fd0b571',
   'data/ip-preference-cards/generated/product-roles.json':
-    '1b650a977d519976643b3cf4724329e00db13720388249175db0cf899848652d',
+    'aa1a3b19c1f09d3284048217efa76d0bfb0beb34528d1ed994ecaee161045224',
   'data/ip-preference-cards/generated/procedure-slots.json':
     'c11720c8d209b22c56813265ea53f70a348a0fd3af7b4cef9c6ca1a6b43a3ea7',
   'data/ip-preference-cards/generated/slot-product-options.json':
@@ -65,7 +66,7 @@ const PROHIBITED_CANONICAL_HASHES = {
   'data/ip-preference-cards/generated/release-impact-report.json':
     '272d8cec228d9e4d95d8796661984e726c3d298f97783201877caddad400df60',
   'data/ip-preference-cards/seed/catalog-additions.json':
-    'ed34efe86e5e87499d3c76558fa7f2ccacca60aa9bbe4da102b7d18d96b0be0e',
+    'eb29d7375d6bcae5686a65a47668bc8702f67efd6cc5099f12604b6938e4eed2',
   'data/ip-preference-cards/seed/release-bundles.json':
     '892780cb38695b71b8c6d258ca4915ae5bf74062e8e976dff050aa0ced9cdde2',
 } as const
@@ -295,7 +296,7 @@ describe('current U.S. status research safety boundaries', () => {
     const hiddenProducts = catalog.filter((product) => product.visibility_state === 'hidden')
     const hiddenIds = new Set(hiddenProducts.map((product) => product.product_id))
 
-    expect(hiddenProducts).toHaveLength(1220)
+    expect(hiddenProducts).toHaveLength(sourceCompletenessCount('hidden_products_after'))
     expect(
       hiddenProducts.filter((product) => !product.live_dropdown_status.startsWith('Hidden')),
     ).toEqual([])

@@ -7,6 +7,7 @@ import {
   serializeReport,
   type DataReadinessInputs,
 } from '../audit-data-readiness'
+import { sourceCompletenessCount } from '../../ip-preference-cards/source-completeness-intake'
 
 const OUTPUT_PATH = path.resolve('docs/ip-device-intelligence/data-readiness-audit.json')
 
@@ -75,14 +76,18 @@ describe('ip-device-intelligence data-readiness audit', () => {
 
   it('matches the published ip-cards:validate-data global counts', () => {
     const report = computeDataReadiness(inputs)
-    expect(report.global.products).toBe(1973)
+    expect(report.global.products).toBe(sourceCompletenessCount('canonical_products_after'))
     expect(report.global.roles).toBe(135)
     expect(report.global.procedures).toBe(15)
     // Source Completeness V2 does not alter authored slots or options. Its reviewed role
-    // mappings expand only the nonselectable proposal queue from 1,485 to 1,595.
+    // mappings expand only the nonselectable proposal queue.
     expect(report.global.procedureSlots).toBe(232)
-    expect(report.global.authoredSlotOptions).toBe(2035)
-    expect(report.global.slotOptionProposals).toBe(1595)
+    expect(report.global.authoredSlotOptions).toBe(
+      sourceCompletenessCount('canonical_slot_options_after'),
+    )
+    expect(report.global.slotOptionProposals).toBe(
+      sourceCompletenessCount('unreviewed_slot_proposals_after'),
+    )
   })
 
   it('is deterministic: computing twice yields deep-equal reports and identical bytes', async () => {

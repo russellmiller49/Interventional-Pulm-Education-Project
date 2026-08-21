@@ -24,6 +24,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-00910661BA",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-00910661BA",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-00C13A59AA",
     "source_id": "SRC021",
     "source_location": "p. 10",
@@ -1968,6 +1984,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-18DFC39794",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+    "claim_type": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-18DFC39794",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-18F33007D6",
     "source_id": "SRC021",
     "source_location": "p. 15",
@@ -2173,6 +2205,22 @@
     "source_location": "PDF page index 2; printed p. 2/2, PRODUCT SPECIFICATIONS table",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1B7B4B9C6A",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffed ordering table, PDF pages 4-5",
+    "claim_type": "Exact order code, proximal extension, cuff configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1B7B4B9C6A",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -2419,7 +2467,7 @@
     "product_id": "PRD-1ED27ADA45",
     "source_id": "SRC095",
     "source_location": "EndoCore product and ordering information",
-    "claim_type": "Manufacturer identity, exact needle geometry, and compatibility",
+    "claim_type": "EndoCore family context only",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -4536,6 +4584,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-38079F20BD",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-38079F20BD",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-386D5501C9",
     "source_id": "SRC080",
     "source_location": "Document p. 8 (PDF page 5)",
@@ -4633,17 +4697,17 @@
   },
   {
     "product_id": "PRD-39C1BDB306",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
     "product_id": "PRD-39C1BDB306",
-    "source_id": "SRC101",
-    "source_location": "K222910, applicant and device-description sections",
-    "claim_type": "Legal manufacturer and product-family identity",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification table",
+    "claim_type": "Exact non-H model dimensions and working-channel specification",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -5136,6 +5200,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-41C846CC8F",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-41C846CC8F",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-41CD2EE0E9",
     "source_id": "SRC080",
     "source_location": "Document p. 8 (PDF page 5)",
@@ -5480,6 +5560,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-46C823F8EC",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-46C823F8EC",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-470EA6C7BA",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -5641,17 +5737,17 @@
   },
   {
     "product_id": "PRD-48F43B9C6A",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
     "product_id": "PRD-48F43B9C6A",
-    "source_id": "SRC101",
-    "source_location": "K222910, applicant and device-description sections",
-    "claim_type": "Legal manufacturer and product-family identity",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification table",
+    "claim_type": "Exact non-H model dimensions and working-channel specification",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -6041,17 +6137,17 @@
   },
   {
     "product_id": "PRD-4E7880DB69",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
     "product_id": "PRD-4E7880DB69",
-    "source_id": "SRC101",
-    "source_location": "K222910, applicant and device-description sections",
-    "claim_type": "Legal manufacturer and product-family identity",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification table",
+    "claim_type": "Exact non-H model dimensions and working-channel specification",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -6357,6 +6453,22 @@
     "source_location": "p. 75",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-529643988C",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-529643988C",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6781,6 +6893,22 @@
     "source_location": "Respiratory 14.04 (PDF p. 117)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-58CCB8208E",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+    "claim_type": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-58CCB8208E",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9912,6 +10040,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7FEF1C2544",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffless ordering table, PDF page 5",
+    "claim_type": "Exact order code, proximal extension, cuffless configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-7FEF1C2544",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7FFA3EACA4",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704558278",
@@ -10312,6 +10456,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-85F4300C8B",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffed ordering table, PDF pages 4-5",
+    "claim_type": "Exact order code, proximal extension, cuff configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-85F4300C8B",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-85FA8619AC",
     "source_id": "SRC073",
     "source_location": "Document p. not stated (PDF page 10)",
@@ -10672,6 +10832,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8B7BA0C7A5",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8B7BA0C7A5",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8B87F7D42B",
     "source_id": "SRC027",
     "source_location": "p. 7",
@@ -10928,6 +11104,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8EEB25CE00",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffless ordering table, PDF page 5",
+    "claim_type": "Exact order code, proximal extension, cuffless configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-8EEB25CE00",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-8F25A1FB01",
     "source_id": "SRC072",
     "source_location": "PDF p. 11",
@@ -11080,6 +11272,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-9167283C52",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+    "claim_type": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9167283C52",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-9188987BF8",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04547410445886",
@@ -11181,6 +11389,22 @@
     "source_location": "device.txt, PrimaryDI 14026704911926",
     "claim_type": "Device identity, configuration, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-92A8739CF4",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffless ordering table, PDF page 5",
+    "claim_type": "Exact order code, proximal extension, cuffless configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-92A8739CF4",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -11420,14 +11644,6 @@
     "source_id": "SRC089",
     "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
     "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
-    "verification_status": "Verified in the reviewed source-completeness intake",
-    "notes": null
-  },
-  {
-    "product_id": "PRD-961C4B6422",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -12281,14 +12497,6 @@
   },
   {
     "product_id": "PRD-A3852DB56A",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
-    "verification_status": "Verified in the reviewed source-completeness intake",
-    "notes": null
-  },
-  {
-    "product_id": "PRD-A3852DB56A",
     "source_id": "SRC101",
     "source_location": "K222910, applicant and device-description sections",
     "claim_type": "Legal manufacturer and product-family identity",
@@ -12736,6 +12944,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AA2895A2EB",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+    "claim_type": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AA2895A2EB",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AA29300E40",
     "source_id": "SRC075",
     "source_location": "PDF p. 4",
@@ -12883,7 +13107,7 @@
     "product_id": "PRD-AC45D3E510",
     "source_id": "SRC095",
     "source_location": "EndoCore product and ordering information",
-    "claim_type": "Manufacturer identity, exact needle geometry, and compatibility",
+    "claim_type": "EndoCore family context only",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -13232,6 +13456,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AFBD510BCF",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffed ordering table, PDF pages 4-5",
+    "claim_type": "Exact order code, proximal extension, cuff configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AFBD510BCF",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AFF9BDD685",
     "source_id": "SRC089",
     "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
@@ -13241,17 +13481,17 @@
   },
   {
     "product_id": "PRD-AFF9BDD685",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
     "product_id": "PRD-AFF9BDD685",
-    "source_id": "SRC101",
-    "source_location": "K222910, applicant and device-description sections",
-    "claim_type": "Legal manufacturer and product-family identity",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification table",
+    "claim_type": "Exact non-H model dimensions and working-channel specification",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -13276,14 +13516,6 @@
     "source_id": "SRC089",
     "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
     "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
-    "verification_status": "Verified in the reviewed source-completeness intake",
-    "notes": null
-  },
-  {
-    "product_id": "PRD-B02CF0A059",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -15856,6 +16088,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D51CBB0DEE",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+    "claim_type": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D51CBB0DEE",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D52ED4EF06",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 00811907031123",
@@ -16120,6 +16368,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D7858C62B6",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffed ordering table, PDF pages 4-5",
+    "claim_type": "Exact order code, proximal extension, cuff configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D7858C62B6",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D794E57FFE",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 04026704607310",
@@ -16297,17 +16561,17 @@
   },
   {
     "product_id": "PRD-DADEAB2B83",
-    "source_id": "SRC100",
-    "source_location": "Single-use bronchoscope model/specification tables",
-    "claim_type": "Exact model dimensions and working-channel specifications",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
     "product_id": "PRD-DADEAB2B83",
-    "source_id": "SRC101",
-    "source_location": "K222910, applicant and device-description sections",
-    "claim_type": "Legal manufacturer and product-family identity",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification table",
+    "claim_type": "Exact non-H model dimensions and working-channel specification",
     "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
@@ -17744,6 +18008,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EFCF0B85F5",
+    "source_id": "SRC084",
+    "source_location": "Shiley XLT extended-proximal cuffless ordering table, PDF page 5",
+    "claim_type": "Exact order code, proximal extension, cuffless configuration, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-EFCF0B85F5",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-EFD54DC9EF",
     "source_id": "SRC075",
     "source_location": "PDF p. 4",
@@ -17925,6 +18205,22 @@
     "source_location": "p. 7",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F22D94D3A5",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+    "claim_type": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F22D94D3A5",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -18285,6 +18581,22 @@
     "source_location": "p. 19",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F77790BA96",
+    "source_id": "SRC083",
+    "source_location": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+    "claim_type": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F77790BA96",
+    "source_id": "SRC046",
+    "source_location": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+    "claim_type": "Exact FDA device identity and legal labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {

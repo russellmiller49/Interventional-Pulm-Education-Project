@@ -64,7 +64,7 @@ suction_irrigation,4,Flexible bronchoscopy,4
 suction_irrigation,4,Medical thoracoscopy,1
 suction_irrigation,4,Rigid bronchoscopy,10
 tracheostomy_tube,2,Airway management,124
-tracheostomy_tube,2,Tracheostomy,12
+tracheostomy_tube,2,Tracheostomy,33
 ultrasound_device,2,Peripheral bronchoscopy,3
 ultrasound_device,2,Ultrasound platform,32
 valve_occluder,3,Airway isolation,4

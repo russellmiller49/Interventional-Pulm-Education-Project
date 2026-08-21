@@ -52,6 +52,7 @@ export interface EvidenceManifestEntry {
   retrievedOn: string | null
   sha256: string
   pageCount: number | null
+  supportedCatalogNumbers: string[]
 }
 
 export interface SourceCompletenessProductVariant {
@@ -90,7 +91,7 @@ export interface SourceCompletenessProductVariant {
 
 export interface SourceCompletenessProductGroup {
   groupId: string
-  origin: Exclude<DiscoveryOrigin, 'old_corpus'>
+  origin: DiscoveryOrigin
   manufacturerId: string
   manufacturer: string
   distributor: string | null
@@ -167,7 +168,8 @@ export interface SourceCompletenessReview {
   format_version: '1.0'
   reviewed_on: string
   baseline: Record<string, string | number | boolean>
-  corpus_audit: Record<string, string | number | boolean | string[]>
+  count_contract: Record<string, number>
+  corpus_audit: Record<string, unknown>
   manufacturers: Record<string, unknown>[]
   sources: SourceCompletenessSourceDefinition[]
   evidence_manifest: EvidenceManifestEntry[]
@@ -178,6 +180,14 @@ export interface SourceCompletenessReview {
 
 export const SOURCE_COMPLETENESS_REVIEW =
   reviewedSourceCompleteness as unknown as SourceCompletenessReview
+
+export function sourceCompletenessCount(name: string): number {
+  const value = SOURCE_COMPLETENESS_REVIEW.count_contract[name]
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`Missing or invalid source-completeness count contract: ${name}.`)
+  }
+  return value
+}
 
 function inherited<T>(variant: T | undefined, group: T | undefined): T | undefined {
   return variant === undefined ? group : variant

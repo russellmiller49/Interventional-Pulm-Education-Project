@@ -13,6 +13,50 @@
     "sources": 88,
     "product_sources": 2248
   },
+  "count_contract": {
+    "discovery_rows": 85,
+    "new_exact_products": 65,
+    "owner_pdf_products": 35,
+    "official_web_products": 9,
+    "old_corpus_products": 21,
+    "existing_matches": 4,
+    "non_addition_candidates": 16,
+    "product_roles": 59,
+    "product_source_relationships": 158,
+    "new_pdf_evidence_files": 7,
+    "new_pdf_evidence_pages": 45,
+    "aggregate_pdf_pages": 2654,
+    "shiley_candidates_reconciled": 14,
+    "shiley_products_added": 13,
+    "shiley_controlled_conflicts": 1,
+    "additional_xlt_products_added": 8,
+    "corpus_wide_multi_page_table_documents": 17,
+    "canonical_products_after": 1994,
+    "verified_source_products_after": 1793,
+    "manufacturers_after": 55,
+    "sources_after": 104,
+    "product_source_relationships_after": 2406,
+    "product_role_relationships_after": 2059,
+    "taxonomy_rows_after": 1793,
+    "taxonomy_needs_review_after": 7,
+    "canonical_slot_options_after": 2035,
+    "unreviewed_slot_proposals_after": 1615,
+    "published_products_after": 101,
+    "prototype_visible_products_after": 753,
+    "hidden_products_after": 1241,
+    "hidden_verified_source_products_after": 1040,
+    "catalog_additions_after_workbook": 773,
+    "workbook_backlog_products": 1221,
+    "products_without_strong_identity_candidate": 1276,
+    "status_researched_products": 578,
+    "status_unresearched_atlas_products": 1215,
+    "status_gate_review_required": 1249,
+    "hidden_catalog_identifier_catalog_number": 1193,
+    "hidden_mapped_role_rows": 1230,
+    "proposal_affected_products": 821,
+    "proposal_required": 857,
+    "proposal_unknown_distribution": 1015
+  },
   "corpus_audit": {
     "source_directory": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Research/product-brochure-intake-20260819",
     "original_csv_sha256": "9ddcd7c85f32b116e4f19536937deeaf115b4406ff1c1c90f539416c445fda61",
@@ -36,7 +80,57 @@
       "download (1).html"
     ],
     "unreferenced_files_with_relevant_exact_products": 0,
-    "old_corpus_exact_products_absent_from_original_csv": 0,
+    "old_corpus_exact_products_absent_from_original_csv": 21,
+    "table_page_review_method": "Deterministic layout-text extraction of every page in the flagged multi-page Shiley table section, followed by rendered inspection of both table pages and exact-identity reconciliation against FDA AccessGUDID evidence.",
+    "table_page_coverage": [
+      {
+        "filename": "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf",
+        "sha256": "b9939c9871e12f018d155ac4a7e60e9484c9d384db9a6ed01ebac62966f00cd2",
+        "pdfPages": 10,
+        "section": "Reusable-inner-cannula adult tracheostomy tubes",
+        "tablePages": "5-6",
+        "renderedPages": "5-6",
+        "candidateCatalogNumbers": "4CN65R; 5CN70R; 6CN75R; 7CN75R; 8CN85R; 9CN90R; 10CN10R; 4UN65R; 5UN70R; 6UN75R; 7UN80R; 8UN85R; 9UN90R; 10UN10R",
+        "candidateCount": 14,
+        "allCandidatesDispositioned": true
+      },
+      {
+        "filename": "Shiley™ XLT Extended Length Tracheostomy Tube _ Medtronic.pdf",
+        "sha256": "e40f9e4fdd09b10d907789a26572d64278dac50adfa73795e301a511417cb633",
+        "pdfPages": 8,
+        "section": "Extended-proximal cuffed and cuffless XLT tracheostomy tubes",
+        "tablePages": "4-5",
+        "renderedPages": "4-5",
+        "candidateCatalogNumbers": "50XLTCP; 60XLTCP; 70XLTCP; 80XLTCP; 50XLTUP; 60XLTUP; 70XLTUP; 80XLTUP",
+        "candidateCount": 8,
+        "allCandidatesDispositioned": true
+      }
+    ],
+    "corpus_wide_multi_page_table_scan": {
+      "pdfsScanned": 115,
+      "pagesScanned": 2609,
+      "documentsIdentified": 17,
+      "method": "Layout-text extraction examined every page and retained contiguous page runs with at least three product-like row identifiers per page; continuation pages did not need to repeat a heading.",
+      "documents": [
+        "401418001.pdf:2-7;10-13;15-17",
+        "402955011ZHP.pdf:2-3",
+        "402955013ZHP.pdf:2-3",
+        "BMP-MR-PCA-Interventional_Pulmonology_EN.pdf:12-14;24-25",
+        "CC-D67629-EN-F_IA_1683223150514 (1).pdf:10-13",
+        "CC-D67629-EN-F_IA_1683223150514.pdf:10-13",
+        "EFER-BRONCHOSCOPE-USER-MANUAL.pdf:10-12",
+        "NOV-MR-PCA-Instruments_CA003_EN.pdf:8-9",
+        "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf:12-15",
+        "OAIET0124CAT51005_EndoTherapy Catalog_Interactive_2024.pdf:10-12;14-18;22-26;28-29;32-33;37-38;40-41;43-45;47-54;58-59;62-63;65-67;70-75;89-91;93-94;96-97;101-106;108-109;111-112;117-119;123-125",
+        "OAIGI0121CAT38678_RA.pdf:2-3;36-39;42-43;72-73;87-89",
+        "Product-Catalog-MPW10000H-Rev-3-web-1.pdf:7-9;12-14;28-31;35-39;50-56;61-64;67-76",
+        "Shiley™ Flexible Adult Tracheostomy Tube _ Medtronic.pdf:4-6",
+        "Shiley™ XLT Extended Length Tracheostomy Tube _ Medtronic.pdf:4-5",
+        "cardinal-health-cardiothoratic-catalog.pdf:3-4",
+        "hood-labs-F973-Airway-catalog-6-2022.pdf:4-8;12-13",
+        "novatech__stents_pulmonares__catalogo.pdf:12-15"
+      ]
+    },
     "old_m5_family_source_filename": "ent-why-power-apexcut-blades-brochure.pdf",
     "old_m5_family_source_sha256": "9bbd927dc7087227140a5e253af777ff00d1274eab42dfbf57d68b197066ac6a",
     "old_m5_csv_input_row": 791,
@@ -175,8 +269,8 @@
       "asOfDate": "2026-08-20",
       "officialUrl": "https://praxismedicaldevices.com/endocore/",
       "reliabilityTier": "Tier 1 - manufacturer",
-      "usePolicy": "Use for exact EndoCore ordering identity, needle geometry, and scope compatibility; confirm local orderability separately.",
-      "notes": null
+      "usePolicy": "Use only for EndoCore family context. Exact ordering identity, package configuration, geometry, and scope compatibility require the owner packet and exact AccessGUDID records.",
+      "notes": "The reviewed page did not support product-level claims for the two exact ordering configurations."
     },
     {
       "sourceId": "SRC096",
@@ -197,7 +291,7 @@
       "filename": "K261068.pdf",
       "sourceType": "FDA 510(k) summary",
       "publisher": "U.S. Food and Drug Administration",
-      "revisionDate": "2026-05-14",
+      "revisionDate": null,
       "asOfDate": "2026-08-20",
       "officialUrl": "https://www.accessdata.fda.gov/cdrh_docs/pdf26/K261068.pdf",
       "reliabilityTier": "Tier 1 - FDA",
@@ -223,7 +317,7 @@
       "filename": "K211894.pdf",
       "sourceType": "FDA 510(k) summary",
       "publisher": "U.S. Food and Drug Administration",
-      "revisionDate": "2022-02-25",
+      "revisionDate": null,
       "asOfDate": "2026-08-20",
       "officialUrl": "https://www.accessdata.fda.gov/cdrh_docs/pdf21/K211894.pdf",
       "reliabilityTier": "Tier 1 - FDA",
@@ -309,7 +403,44 @@
       "identifierMatched": "All page 1-7 reconciliation targets",
       "retrievedOn": "2026-08-20",
       "sha256": "c708c0c83d5ba4f2a6199bbbaf7918e49204e5dddcfd966e375784a815f0e2a3",
-      "pageCount": 7
+      "pageCount": 7,
+      "supportedCatalogNumbers": [
+        "10040001",
+        "20030001",
+        "30030000",
+        "30030001",
+        "30030010",
+        "30030303",
+        "31010008",
+        "41010000",
+        "BR-M22",
+        "BR-M32",
+        "BR-M40",
+        "BR-M40H",
+        "BR-M50",
+        "BR-M52H",
+        "BR-M58",
+        "BR-M58H",
+        "CC-1000-4",
+        "ENDO-BV-22G-Kit-O",
+        "ENDO-FR-22G-Kit-O",
+        "MCB-1000-4",
+        "MCB-1000-Kit",
+        "S012-01-015",
+        "S012-01-016",
+        "S012-01-019",
+        "S012-01-100",
+        "S012-01-200",
+        "TRD1-06030",
+        "TRD1-07030",
+        "TRD1-08030",
+        "TRD1-09030",
+        "TRD1-10030",
+        "TRD1-12040",
+        "TRD1-14540",
+        "TRD1-16040",
+        "TRD1-18040"
+      ]
     },
     {
       "evidenceId": "EVID-SC-002",
@@ -323,7 +454,8 @@
       "identifierMatched": "1899200; 1899076",
       "retrievedOn": "2026-08-20",
       "sha256": "f8a254e171e504a87ceed7ade851778f836f519295c1c8057a5864bc9e6cc726",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["1899200", "1899076"]
     },
     {
       "evidenceId": "EVID-SC-003",
@@ -337,7 +469,16 @@
       "identifierMatched": "20 CFNs in the official airway ordering table",
       "retrievedOn": "2026-08-20",
       "sha256": "54cc28fc64a065018c274c4f8725ec4696e704ca759437a3c2f05762e5d430c7",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": [
+        "1882936E",
+        "1882937E",
+        "1884031HRE",
+        "1884032",
+        "1884033",
+        "1884033HRE",
+        "1884035HRE"
+      ]
     },
     {
       "evidenceId": "EVID-SC-004",
@@ -351,7 +492,15 @@
       "identifierMatched": "Broncoflex XFlo, Agile, Screeni, and system components",
       "retrievedOn": "2026-08-20",
       "sha256": "6f48af71e5fdc5aae89cdc9691eb607d2d499c4952f059e1fc516e310ab3b342",
-      "pageCount": 20
+      "pageCount": 2,
+      "supportedCatalogNumbers": [
+        "10040001",
+        "20030001",
+        "30030010",
+        "30030303",
+        "31010008",
+        "41010000"
+      ]
     },
     {
       "evidenceId": "EVID-SC-005",
@@ -365,7 +514,8 @@
       "identifierMatched": "Screeni platform",
       "retrievedOn": "2026-08-20",
       "sha256": "825f475be67abf857f05569068512d09c8649a8b78ffaeb18247458604966c28",
-      "pageCount": 2
+      "pageCount": 4,
+      "supportedCatalogNumbers": ["30030000", "30030001"]
     },
     {
       "evidenceId": "EVID-SC-006",
@@ -375,11 +525,12 @@
       "url": "https://praxismedicaldevices.com/endocore/",
       "sourceOrganization": "Praxis Medical",
       "sourceType": "Official manufacturer HTML",
-      "scope": "family_and_exact_product",
-      "identifierMatched": "ENDO-BV-22G-Kit-O; ENDO-FR-22G-Kit-O",
+      "scope": "family_level",
+      "identifierMatched": "EndoCore EBUS biopsy-needle family",
       "retrievedOn": "2026-08-20",
       "sha256": "8f7261dafb20fe31e57d360dc398f6e43d439f26340c0f7ea485c4055f16b3fd",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["ENDO-BV-22G-Kit-O", "ENDO-FR-22G-Kit-O"]
     },
     {
       "evidenceId": "EVID-SC-007",
@@ -393,7 +544,8 @@
       "identifierMatched": "MCB-1000; CC-1000",
       "retrievedOn": "2026-08-20",
       "sha256": "ebf338a4c5a9954f00f5b4729e6e5565661d055d6a6b17292dcf3f74a82cc150",
-      "pageCount": 12
+      "pageCount": 9,
+      "supportedCatalogNumbers": ["MCB-1000-Kit", "MCB-1000-4", "CC-1000-4"]
     },
     {
       "evidenceId": "EVID-SC-008",
@@ -407,7 +559,18 @@
       "identifierMatched": "Trachealator family",
       "retrievedOn": "2026-08-20",
       "sha256": "b0076995b92392ef3e4f6996e31774aecc8cc60641433872fc09f7048f562040",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": [
+        "TRD1-06030",
+        "TRD1-07030",
+        "TRD1-08030",
+        "TRD1-09030",
+        "TRD1-10030",
+        "TRD1-12040",
+        "TRD1-14540",
+        "TRD1-16040",
+        "TRD1-18040"
+      ]
     },
     {
       "evidenceId": "EVID-SC-009",
@@ -421,7 +584,18 @@
       "identifierMatched": "Trachealator family",
       "retrievedOn": "2026-08-20",
       "sha256": "9bb30a7ea0284534c0e762b8689d86c4c28c20b6a95e8b8c7e9b5424d32dfa77",
-      "pageCount": 7
+      "pageCount": 11,
+      "supportedCatalogNumbers": [
+        "TRD1-06030",
+        "TRD1-07030",
+        "TRD1-08030",
+        "TRD1-09030",
+        "TRD1-10030",
+        "TRD1-12040",
+        "TRD1-14540",
+        "TRD1-16040",
+        "TRD1-18040"
+      ]
     },
     {
       "evidenceId": "EVID-SC-010",
@@ -432,10 +606,11 @@
       "sourceOrganization": "HugeMed",
       "sourceType": "Official manufacturer PDF",
       "scope": "family_and_exact_product",
-      "identifierMatched": "BR-M22; BR-M32; BR-M40; BR-M50; BR-M58; BR-M40H; BR-M52H; BR-M58H",
+      "identifierMatched": "BR-M22; BR-M32; BR-M40; BR-M50; BR-M58",
       "retrievedOn": "2026-08-20",
       "sha256": "ba5543bf08957caf54285f19b2c27f9d11fa43a95d05c04c133dd58ff7c39c5c",
-      "pageCount": 12
+      "pageCount": 2,
+      "supportedCatalogNumbers": ["BR-M22", "BR-M32", "BR-M40", "BR-M50", "BR-M58"]
     },
     {
       "evidenceId": "EVID-SC-011",
@@ -445,11 +620,21 @@
       "url": "https://www.accessdata.fda.gov/cdrh_docs/pdf22/K222910.pdf",
       "sourceOrganization": "U.S. Food and Drug Administration",
       "sourceType": "Official FDA PDF",
-      "scope": "family_and_exact_product",
+      "scope": "family_level",
       "identifierMatched": "HugeMed single-use flexible bronchoscopes",
       "retrievedOn": "2026-08-20",
       "sha256": "c61e92d3540b0060d3df427b8e1d4a0027d78aa84430d2c69a064b3101cfbc7f",
-      "pageCount": 8
+      "pageCount": 10,
+      "supportedCatalogNumbers": [
+        "BR-M22",
+        "BR-M32",
+        "BR-M40",
+        "BR-M40H",
+        "BR-M50",
+        "BR-M52H",
+        "BR-M58",
+        "BR-M58H"
+      ]
     },
     {
       "evidenceId": "EVID-SC-012",
@@ -459,11 +644,12 @@
       "url": "https://www.clrmedical.com/lbl-s012-01-211-d_port_ifu-artwork/",
       "sourceOrganization": "CLR Medical",
       "sourceType": "Official manufacturer IFU page",
-      "scope": "family_and_exact_product",
-      "identifierMatched": "CLR Port; Access Cap",
+      "scope": "family_level",
+      "identifierMatched": "CLR Port family",
       "retrievedOn": "2026-08-20",
       "sha256": "2dc73b6191ecd8fb5471c63a73aeba56a5c4f965867a9a659cba4170b1bb935b",
-      "pageCount": 3
+      "pageCount": 3,
+      "supportedCatalogNumbers": ["S012-01-015", "S012-01-019", "S012-01-100"]
     },
     {
       "evidenceId": "EVID-SC-013",
@@ -477,7 +663,8 @@
       "identifierMatched": "CLR Irrigator",
       "retrievedOn": "2026-08-20",
       "sha256": "02a94cfcb3718b87f2d9a25c3ef72cb2d5f0e47479c7201f917ec955aa617bc0",
-      "pageCount": 3
+      "pageCount": 3,
+      "supportedCatalogNumbers": ["S012-01-200"]
     },
     {
       "evidenceId": "EVID-SC-014",
@@ -491,7 +678,8 @@
       "identifierMatched": "CLR Port Injector",
       "retrievedOn": "2026-08-20",
       "sha256": "0426b473076de406486d77c74f5d88d9e75ba4269e81291297a7d8f3f48d079f",
-      "pageCount": 3
+      "pageCount": 3,
+      "supportedCatalogNumbers": ["S012-01-016"]
     },
     {
       "evidenceId": "EVID-SC-015",
@@ -505,7 +693,8 @@
       "identifierMatched": "10040001 / 03664977000103",
       "retrievedOn": "2026-08-20",
       "sha256": "059ff42971c847b766172edf5ab6a76a2aadfb5af63b77e67bd9c86f814e298a",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["10040001"]
     },
     {
       "evidenceId": "EVID-SC-016",
@@ -519,7 +708,8 @@
       "identifierMatched": "20030001 / 03664977020033",
       "retrievedOn": "2026-08-20",
       "sha256": "3cc27eb8492e6b3212196056cc864daac20623df5d77bf262314621299035de8",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["20030001"]
     },
     {
       "evidenceId": "EVID-SC-017",
@@ -533,7 +723,8 @@
       "identifierMatched": "30030001 / 03664977030032",
       "retrievedOn": "2026-08-20",
       "sha256": "38b07808a0ade18d928e94fe309a78abc940adfe8dab5e48e02f4f7ffeabff55",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["30030001"]
     },
     {
       "evidenceId": "EVID-SC-018",
@@ -547,7 +738,8 @@
       "identifierMatched": "41010000 / 03664977000042",
       "retrievedOn": "2026-08-20",
       "sha256": "5de6c67af8c6705c368033a3228974d5bf039cec799c1fde4e7d146fb341f362",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["41010000"]
     },
     {
       "evidenceId": "EVID-SC-019",
@@ -561,7 +753,8 @@
       "identifierMatched": "ENDO-BV-22G-O / ENDO-BV-22G-Kit-O / 10850081350030",
       "retrievedOn": "2026-08-20",
       "sha256": "aefaf81322b50cdb87b905a8515aa9be44aa1f000a48c40ed20f6512b99a1658",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["ENDO-BV-22G-Kit-O"]
     },
     {
       "evidenceId": "EVID-SC-020",
@@ -575,7 +768,8 @@
       "identifierMatched": "ENDO-FR-22G-O / ENDO-FR-22G-Kit-O / 10850081350047",
       "retrievedOn": "2026-08-20",
       "sha256": "a017c76b325210f10094cc591b24da078bcdda48ca1c9ca68ced40c25366ed24",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["ENDO-FR-22G-Kit-O"]
     },
     {
       "evidenceId": "EVID-SC-021",
@@ -589,7 +783,8 @@
       "identifierMatched": "BR-M22 / 06970462546115",
       "retrievedOn": "2026-08-20",
       "sha256": "285a971a546958e770fdd006303c86f65a28111d7ef28019fe8814d53c41ff77",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M22"]
     },
     {
       "evidenceId": "EVID-SC-022",
@@ -603,7 +798,8 @@
       "identifierMatched": "BR-M32 / 06970462546108",
       "retrievedOn": "2026-08-20",
       "sha256": "87a52e0622c82c9707b2a2e5f40d252d2039c93e50c1e0b12287424a9d5c7d91",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M32"]
     },
     {
       "evidenceId": "EVID-SC-023",
@@ -617,7 +813,8 @@
       "identifierMatched": "BR-M40 / 06970462546092",
       "retrievedOn": "2026-08-20",
       "sha256": "4b626b5e927ab5258a99130cc679d2c32a90d223d2a1fe92286504744a889cbd",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M40"]
     },
     {
       "evidenceId": "EVID-SC-024",
@@ -631,7 +828,8 @@
       "identifierMatched": "BR-M50 / 06970462546085",
       "retrievedOn": "2026-08-20",
       "sha256": "3e39f914d345634fd273d65734928b19af702f0ac37a854c17ac2ff7031b5440",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M50"]
     },
     {
       "evidenceId": "EVID-SC-025",
@@ -645,7 +843,8 @@
       "identifierMatched": "BR-M58 / 06970462546061",
       "retrievedOn": "2026-08-20",
       "sha256": "4ebefcdef995369c89c78e6c68dfafcc23b308d64b1994915ba7d366ba94313e",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M58"]
     },
     {
       "evidenceId": "EVID-SC-026",
@@ -659,7 +858,8 @@
       "identifierMatched": "BR-M40H / 06970462546184",
       "retrievedOn": "2026-08-20",
       "sha256": "1fefb258c05d7c682b9c6ff239ef3d1ce7aec28492427252d03803783b3c68ff",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M40H"]
     },
     {
       "evidenceId": "EVID-SC-027",
@@ -673,7 +873,8 @@
       "identifierMatched": "BR-M52H / 06970462546177",
       "retrievedOn": "2026-08-20",
       "sha256": "71d2b0accc68c9e8a5a0d66a7cfaac00c674b210adad7106f570596cab252dd7",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M52H"]
     },
     {
       "evidenceId": "EVID-SC-028",
@@ -687,7 +888,8 @@
       "identifierMatched": "BR-M58H / 06970462546160",
       "retrievedOn": "2026-08-20",
       "sha256": "c2b2631dc8427dd4a06d86892f443aa40ace8aa735e1bb4ba8379479cf8cfbfb",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["BR-M58H"]
     },
     {
       "evidenceId": "EVID-SC-029",
@@ -701,7 +903,8 @@
       "identifierMatched": "S012-01-200 / 00860003054949",
       "retrievedOn": "2026-08-20",
       "sha256": "2b0bc5d0528be1d6ff76d94a5e0b9a505e0319ffd2c37195df3b73511a84533e",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["S012-01-200"]
     },
     {
       "evidenceId": "EVID-SC-030",
@@ -715,7 +918,8 @@
       "identifierMatched": "S012-01-100 / 00860003054918",
       "retrievedOn": "2026-08-20",
       "sha256": "ddc1401aba7bccb465dfdbcd3fa9302c9809f3998a6a6fc42c403c81e69661be",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["S012-01-100"]
     },
     {
       "evidenceId": "EVID-SC-031",
@@ -729,7 +933,8 @@
       "identifierMatched": "S012-01-019 / 00860003054901",
       "retrievedOn": "2026-08-20",
       "sha256": "b2177a5aadc4e2af5ccb726626f51f931c30accf3ad297838af3046153d15ee5",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["S012-01-019"]
     },
     {
       "evidenceId": "EVID-SC-032",
@@ -743,7 +948,8 @@
       "identifierMatched": "S012-01-016 / 00850052377007",
       "retrievedOn": "2026-08-20",
       "sha256": "dd84ccc82a7d14242f2de4c502e748aeadad986b8f6ada6dff2c0e424047f069",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["S012-01-016"]
     },
     {
       "evidenceId": "EVID-SC-033",
@@ -757,10 +963,380 @@
       "identifierMatched": "S012-01-015 / 00860003054994",
       "retrievedOn": "2026-08-20",
       "sha256": "905b62195bec33e9dbd47a31f0c0d6e5c0edecf5a8779266b4754816faa31e34",
-      "pageCount": null
+      "pageCount": null,
+      "supportedCatalogNumbers": ["S012-01-015"]
     }
   ],
   "product_groups": [
+    {
+      "groupId": "SC-MED-SHILEY-R-CUFFED",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-68565E2FD2",
+      "manufacturer": "Medtronic",
+      "distributor": null,
+      "brandFamily": "Shiley Flexible Adult Tracheostomy Tube",
+      "primaryCategory": "Tracheostomy",
+      "subcategory": "Cuffed tracheostomy tube",
+      "productKind": "Tracheostomy tube",
+      "description": "Shiley flexible adult tracheostomy tube with TaperGuard cuff and reusable inner cannula.",
+      "roleCode": "TRACH_TUBE_CUFFED",
+      "roleNotes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied.",
+      "evidence": [
+        {
+          "sourceId": "SRC083",
+          "sourceLocation": "Shiley flexible adult tracheostomy tube table, PDF pages 5-6",
+          "claimType": "Exact R-series order code, cuff configuration, reusable inner cannula, dimensions, and units per box"
+        },
+        {
+          "sourceId": "SRC046",
+          "sourceLocation": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+          "claimType": "Exact FDA device identity and legal labeler"
+        }
+      ],
+      "taxonomyClass": "tracheostomy_tube",
+      "taxonomySubtype": "cuffed_tracheostomy_tube",
+      "taxonomyConfidence": "high",
+      "packageUom": "Each",
+      "adultPeds": "Adult",
+      "notes": "The printed 7CN75R row is excluded and separately dispositioned because current FDA evidence identifies the same 8.0 mm configuration as 7CN80R.",
+      "variants": [
+        {
+          "catalogNumber": "4CN65R",
+          "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — 4CN65R",
+          "diameterMm": 6.5,
+          "lengthMm": 62,
+          "sizeDisplay": "6.5 mm ID; 9.4 mm OD; 5.5 mm inner-cannula ID; 62 mm length",
+          "specJson": {
+            "outer_diameter_mm": 9.4,
+            "inner_cannula_id_mm": 5.5,
+            "cuff_resting_diameter_mm": 20.6
+          }
+        },
+        {
+          "catalogNumber": "5CN70R",
+          "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — 5CN70R",
+          "diameterMm": 7,
+          "lengthMm": 68,
+          "sizeDisplay": "7.0 mm ID; 10.1 mm OD; 6.0 mm inner-cannula ID; 68 mm length",
+          "specJson": {
+            "outer_diameter_mm": 10.1,
+            "inner_cannula_id_mm": 6,
+            "cuff_resting_diameter_mm": 23
+          }
+        },
+        {
+          "catalogNumber": "6CN75R",
+          "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — 6CN75R",
+          "diameterMm": 7.5,
+          "lengthMm": 74,
+          "sizeDisplay": "7.5 mm ID; 10.8 mm OD; 6.5 mm inner-cannula ID; 74 mm length",
+          "specJson": {
+            "outer_diameter_mm": 10.8,
+            "inner_cannula_id_mm": 6.5,
+            "cuff_resting_diameter_mm": 25.4
+          }
+        },
+        {
+          "catalogNumber": "8CN85R",
+          "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — 8CN85R",
+          "diameterMm": 8.5,
+          "lengthMm": 79,
+          "sizeDisplay": "8.5 mm ID; 12.2 mm OD; 7.5 mm inner-cannula ID; 79 mm length",
+          "specJson": {
+            "outer_diameter_mm": 12.2,
+            "inner_cannula_id_mm": 7.5,
+            "cuff_resting_diameter_mm": 26.6
+          }
+        },
+        {
+          "catalogNumber": "9CN90R",
+          "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — 9CN90R",
+          "diameterMm": 9,
+          "lengthMm": 79,
+          "sizeDisplay": "9.0 mm ID; 12.7 mm OD; 8.0 mm inner-cannula ID; 79 mm length",
+          "specJson": {
+            "outer_diameter_mm": 12.7,
+            "inner_cannula_id_mm": 8,
+            "cuff_resting_diameter_mm": 27.6
+          }
+        },
+        {
+          "catalogNumber": "10CN10R",
+          "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — 10CN10R",
+          "diameterMm": 10,
+          "lengthMm": 79,
+          "sizeDisplay": "10.0 mm ID; 13.8 mm OD; 9.0 mm inner-cannula ID; 79 mm length",
+          "specJson": {
+            "outer_diameter_mm": 13.8,
+            "inner_cannula_id_mm": 9,
+            "cuff_resting_diameter_mm": 28.6
+          }
+        }
+      ]
+    },
+    {
+      "groupId": "SC-MED-SHILEY-R-CUFFLESS",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-68565E2FD2",
+      "manufacturer": "Medtronic",
+      "distributor": null,
+      "brandFamily": "Shiley Flexible Adult Tracheostomy Tube",
+      "primaryCategory": "Tracheostomy",
+      "subcategory": "Cuffless tracheostomy tube",
+      "productKind": "Tracheostomy tube",
+      "description": "Shiley flexible adult cuffless tracheostomy tube with reusable inner cannula.",
+      "roleCode": "TRACH_TUBE_CUFFLESS",
+      "roleNotes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied.",
+      "evidence": [
+        {
+          "sourceId": "SRC083",
+          "sourceLocation": "Shiley flexible adult cuffless tracheostomy tube table, PDF page 6",
+          "claimType": "Exact R-series order code, cuffless configuration, reusable inner cannula, dimensions, and units per box"
+        },
+        {
+          "sourceId": "SRC046",
+          "sourceLocation": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+          "claimType": "Exact FDA device identity and legal labeler"
+        }
+      ],
+      "taxonomyClass": "tracheostomy_tube",
+      "taxonomySubtype": "cuffless_tracheostomy_tube",
+      "taxonomyConfidence": "high",
+      "packageUom": "Each",
+      "adultPeds": "Adult",
+      "variants": [
+        {
+          "catalogNumber": "4UN65R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 4UN65R",
+          "diameterMm": 6.5,
+          "lengthMm": 62,
+          "sizeDisplay": "6.5 mm ID; 9.4 mm OD; 5.5 mm inner-cannula ID; 62 mm length",
+          "specJson": { "outer_diameter_mm": 9.4, "inner_cannula_id_mm": 5.5 }
+        },
+        {
+          "catalogNumber": "5UN70R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 5UN70R",
+          "diameterMm": 7,
+          "lengthMm": 68,
+          "sizeDisplay": "7.0 mm ID; 10.1 mm OD; 6.0 mm inner-cannula ID; 68 mm length",
+          "specJson": { "outer_diameter_mm": 10.1, "inner_cannula_id_mm": 6 }
+        },
+        {
+          "catalogNumber": "6UN75R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 6UN75R",
+          "diameterMm": 7.5,
+          "lengthMm": 74,
+          "sizeDisplay": "7.5 mm ID; 10.8 mm OD; 6.5 mm inner-cannula ID; 74 mm length",
+          "specJson": { "outer_diameter_mm": 10.8, "inner_cannula_id_mm": 6.5 }
+        },
+        {
+          "catalogNumber": "7UN80R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 7UN80R",
+          "diameterMm": 8,
+          "lengthMm": 77,
+          "sizeDisplay": "8.0 mm ID; 11.4 mm OD; 7.0 mm inner-cannula ID; 77 mm length",
+          "specJson": { "outer_diameter_mm": 11.4, "inner_cannula_id_mm": 7 }
+        },
+        {
+          "catalogNumber": "8UN85R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 8UN85R",
+          "diameterMm": 8.5,
+          "lengthMm": 79,
+          "sizeDisplay": "8.5 mm ID; 12.2 mm OD; 7.5 mm inner-cannula ID; 79 mm length",
+          "specJson": { "outer_diameter_mm": 12.2, "inner_cannula_id_mm": 7.5 }
+        },
+        {
+          "catalogNumber": "9UN90R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 9UN90R",
+          "diameterMm": 9,
+          "lengthMm": 79,
+          "sizeDisplay": "9.0 mm ID; 12.7 mm OD; 8.0 mm inner-cannula ID; 79 mm length",
+          "specJson": { "outer_diameter_mm": 12.7, "inner_cannula_id_mm": 8 }
+        },
+        {
+          "catalogNumber": "10UN10R",
+          "productName": "Shiley Flexible Adult Cuffless Tracheostomy Tube with Reusable Inner Cannula — 10UN10R",
+          "diameterMm": 10,
+          "lengthMm": 79,
+          "sizeDisplay": "10.0 mm ID; 13.8 mm OD; 9.0 mm inner-cannula ID; 79 mm length",
+          "specJson": { "outer_diameter_mm": 13.8, "inner_cannula_id_mm": 9 }
+        }
+      ]
+    },
+    {
+      "groupId": "SC-MED-SHILEY-XLT-PROXIMAL-CUFFED",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-68565E2FD2",
+      "manufacturer": "Medtronic",
+      "distributor": null,
+      "brandFamily": "Shiley XLT Extended Length Tracheostomy Tube",
+      "primaryCategory": "Tracheostomy",
+      "subcategory": "Cuffed tracheostomy tube",
+      "productKind": "Tracheostomy tube",
+      "description": "Shiley XLT cuffed tracheostomy tube with proximal extension and disposable inner cannula.",
+      "roleCode": "TRACH_TUBE_CUFFED",
+      "roleNotes": "Manufacturer and FDA evidence support an exact cuffed extended-proximal tracheostomy-tube identity; no substitution is implied.",
+      "evidence": [
+        {
+          "sourceId": "SRC084",
+          "sourceLocation": "Shiley XLT extended-proximal cuffed ordering table, PDF pages 4-5",
+          "claimType": "Exact order code, proximal extension, cuff configuration, dimensions, and units per box"
+        },
+        {
+          "sourceId": "SRC046",
+          "sourceLocation": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+          "claimType": "Exact FDA device identity and legal labeler"
+        }
+      ],
+      "taxonomyClass": "tracheostomy_tube",
+      "taxonomySubtype": "cuffed_tracheostomy_tube",
+      "taxonomyConfidence": "high",
+      "packageUom": "Each",
+      "adultPeds": "Adult",
+      "variants": [
+        {
+          "catalogNumber": "50XLTCP",
+          "productName": "Shiley XLT Cuffed Tracheostomy Tube — Extended Proximal, 50 size",
+          "diameterMm": 5,
+          "lengthMm": 90,
+          "sizeDisplay": "5.0 mm ID; 9.6 mm OD; 90 mm total; 20 mm proximal; 33 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 9.6,
+            "proximal_length_mm": 20,
+            "radial_length_mm": 37,
+            "distal_length_mm": 33,
+            "cuff_diameter_mm": 29
+          }
+        },
+        {
+          "catalogNumber": "60XLTCP",
+          "productName": "Shiley XLT Cuffed Tracheostomy Tube — Extended Proximal, 60 size",
+          "diameterMm": 6,
+          "lengthMm": 95,
+          "sizeDisplay": "6.0 mm ID; 11.0 mm OD; 95 mm total; 23 mm proximal; 34 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 11,
+            "proximal_length_mm": 23,
+            "radial_length_mm": 38,
+            "distal_length_mm": 34,
+            "cuff_diameter_mm": 31
+          }
+        },
+        {
+          "catalogNumber": "70XLTCP",
+          "productName": "Shiley XLT Cuffed Tracheostomy Tube — Extended Proximal, 70 size",
+          "diameterMm": 7,
+          "lengthMm": 100,
+          "sizeDisplay": "7.0 mm ID; 12.3 mm OD; 100 mm total; 27 mm proximal; 34 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 12.3,
+            "proximal_length_mm": 27,
+            "radial_length_mm": 39,
+            "distal_length_mm": 34,
+            "cuff_diameter_mm": 35
+          }
+        },
+        {
+          "catalogNumber": "80XLTCP",
+          "productName": "Shiley XLT Cuffed Tracheostomy Tube — Extended Proximal, 80 size",
+          "diameterMm": 8,
+          "lengthMm": 105,
+          "sizeDisplay": "8.0 mm ID; 13.3 mm OD; 105 mm total; 30 mm proximal; 35 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 13.3,
+            "proximal_length_mm": 30,
+            "radial_length_mm": 40,
+            "distal_length_mm": 35,
+            "cuff_diameter_mm": 35
+          }
+        }
+      ]
+    },
+    {
+      "groupId": "SC-MED-SHILEY-XLT-PROXIMAL-CUFFLESS",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-68565E2FD2",
+      "manufacturer": "Medtronic",
+      "distributor": null,
+      "brandFamily": "Shiley XLT Extended Length Tracheostomy Tube",
+      "primaryCategory": "Tracheostomy",
+      "subcategory": "Cuffless tracheostomy tube",
+      "productKind": "Tracheostomy tube",
+      "description": "Shiley XLT cuffless tracheostomy tube with proximal extension and disposable inner cannula.",
+      "roleCode": "TRACH_TUBE_CUFFLESS",
+      "roleNotes": "Manufacturer and FDA evidence support an exact cuffless extended-proximal tracheostomy-tube identity; no substitution is implied.",
+      "evidence": [
+        {
+          "sourceId": "SRC084",
+          "sourceLocation": "Shiley XLT extended-proximal cuffless ordering table, PDF page 5",
+          "claimType": "Exact order code, proximal extension, cuffless configuration, dimensions, and units per box"
+        },
+        {
+          "sourceId": "SRC046",
+          "sourceLocation": "AccessGUDID Delimited Full Release 20260723 exact-device row",
+          "claimType": "Exact FDA device identity and legal labeler"
+        }
+      ],
+      "taxonomyClass": "tracheostomy_tube",
+      "taxonomySubtype": "cuffless_tracheostomy_tube",
+      "taxonomyConfidence": "high",
+      "packageUom": "Each",
+      "adultPeds": "Adult",
+      "variants": [
+        {
+          "catalogNumber": "50XLTUP",
+          "productName": "Shiley XLT Cuffless Tracheostomy Tube — Extended Proximal, 50 size",
+          "diameterMm": 5,
+          "lengthMm": 90,
+          "sizeDisplay": "5.0 mm ID; 9.6 mm OD; 90 mm total; 20 mm proximal; 33 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 9.6,
+            "proximal_length_mm": 20,
+            "radial_length_mm": 37,
+            "distal_length_mm": 33
+          }
+        },
+        {
+          "catalogNumber": "60XLTUP",
+          "productName": "Shiley XLT Cuffless Tracheostomy Tube — Extended Proximal, 60 size",
+          "diameterMm": 6,
+          "lengthMm": 95,
+          "sizeDisplay": "6.0 mm ID; 11.0 mm OD; 95 mm total; 23 mm proximal; 34 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 11,
+            "proximal_length_mm": 23,
+            "radial_length_mm": 38,
+            "distal_length_mm": 34
+          }
+        },
+        {
+          "catalogNumber": "70XLTUP",
+          "productName": "Shiley XLT Cuffless Tracheostomy Tube — Extended Proximal, 70 size",
+          "diameterMm": 7,
+          "lengthMm": 100,
+          "sizeDisplay": "7.0 mm ID; 12.3 mm OD; 100 mm total; 27 mm proximal; 34 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 12.3,
+            "proximal_length_mm": 27,
+            "radial_length_mm": 39,
+            "distal_length_mm": 34
+          }
+        },
+        {
+          "catalogNumber": "80XLTUP",
+          "productName": "Shiley XLT Cuffless Tracheostomy Tube — Extended Proximal, 80 size",
+          "diameterMm": 8,
+          "lengthMm": 105,
+          "sizeDisplay": "8.0 mm ID; 13.3 mm OD; 105 mm total; 30 mm proximal; 35 mm distal",
+          "specJson": {
+            "outer_diameter_mm": 13.3,
+            "proximal_length_mm": 30,
+            "radial_length_mm": 40,
+            "distal_length_mm": 35
+          }
+        }
+      ]
+    },
     {
       "groupId": "SC-MED-M5",
       "origin": "official_web_follow_up",
@@ -771,9 +1347,9 @@
       "primaryCategory": "Rigid bronchoscopy",
       "subcategory": "Rigid bronchoscopic shaver handpiece",
       "productKind": "Reusable handpiece",
-      "description": "StraightShot M5 powered microdebrider component used with application-specific airway blades.",
+      "description": "StraightShot M5 powered microdebrider handpiece; compatibility with any exact blade ordering cohort is not asserted in this intake.",
       "roleCode": "RIGID_BRONCH_SHAVER",
-      "roleNotes": "Powered handpiece used with the exact airway blade cohort reviewed in this pass.",
+      "roleNotes": "Powered handpiece with a restrained rigid-bronchoscopic shaver discovery role; no exact handpiece-to-blade compatibility is asserted.",
       "evidence": [
         {
           "sourceId": "SRC090",
@@ -786,7 +1362,7 @@
       "taxonomyConfidence": "high",
       "reuseStatus": "Reusable",
       "packageUom": "Each",
-      "notes": "Current U.S. manufacturer evidence establishes exact identity. Airway relevance is established by use with the reviewed Medtronic airway-blade cohort; local orderability was not researched.",
+      "notes": "Current U.S. manufacturer evidence establishes exact identity. The separately reviewed airway-blade table is not used to infer exact M5 compatibility; local orderability was not researched.",
       "variants": [
         {
           "catalogNumber": "1899200",
@@ -1079,6 +1655,7 @@
           "catalogNumber": "41010000",
           "productName": "Easy BAL Clip",
           "gtin": "03664977000042",
+          "packageUom": "Box of 10",
           "specJson": {
             "gudid_primary_di": "03664977000042"
           },
@@ -1093,18 +1670,21 @@
         {
           "catalogNumber": "30030303",
           "productName": "Screeni Knurled Screw",
+          "packageUom": null,
           "roleCode": null,
           "roleNotes": "Intentionally roleless at intake; the existing mount-accessory role is introduced later in the import overlay and is not available to the catalog-additions gate."
         },
         {
           "catalogNumber": "30030010",
           "productName": "Screeni Quick Mounting Bracket",
+          "packageUom": null,
           "roleCode": null,
           "roleNotes": "Intentionally roleless at intake; the existing mount-accessory role is introduced later in the import overlay and is not available to the catalog-additions gate."
         },
         {
           "catalogNumber": "31010008",
           "productName": "Screeni Medical-Grade Power Supply",
+          "packageUom": null,
           "roleCode": null
         }
       ]
@@ -1131,7 +1711,7 @@
         {
           "sourceId": "SRC095",
           "sourceLocation": "EndoCore product and ordering information",
-          "claimType": "Manufacturer identity, exact needle geometry, and compatibility"
+          "claimType": "EndoCore family context only"
         }
       ],
       "taxonomyClass": "needle",
@@ -1214,14 +1794,13 @@
       "taxonomySubtype": "flexible_cryoprobe",
       "taxonomyConfidence": "high",
       "reuseStatus": "Single use",
-      "sterileStatus": "Sterile",
       "packageUom": "Each",
-      "notes": "Serpex Medical is canonical manufacturer; Maverix is the system brand and Thoracent is recorded as distributor.",
+      "notes": "Serpex Medical is canonical manufacturer; Maverix is the system brand and Thoracent is recorded as distributor. FDA evidence distinguishes the sterile probe from the nonsterile cartridge; the kit contains both separately packaged components.",
       "variants": [
         {
           "catalogNumber": "MCB-1000-Kit",
           "productName": "Narwhal Cryobiopsy Probe and Cartridge Kit",
-          "alternateIds": "MCB-1000",
+          "sterileStatus": null,
           "diameterMm": 1.3,
           "workingLengthCm": 115,
           "minWorkingChannelMm": 2,
@@ -1236,6 +1815,7 @@
           "catalogNumber": "MCB-1000-4",
           "productName": "Narwhal Cryobiopsy Probe",
           "alternateIds": "MCB-1000",
+          "sterileStatus": "Sterile",
           "diameterMm": 1.3,
           "workingLengthCm": 115,
           "minWorkingChannelMm": 2,
@@ -1253,6 +1833,7 @@
           "productKind": "Single-use accessory",
           "description": "Four-cartridge nitrous-oxide pack for the Narwhal Cryo System.",
           "roleCode": null,
+          "sterileStatus": "Nonsterile",
           "taxonomyClass": "cryotherapy",
           "taxonomySubtype": "cryotherapy_accessory",
           "taxonomyConfidence": "high",
@@ -1387,11 +1968,6 @@
           "claimType": "Exact model and physical configuration; BR-M50 visually confirmed against OCR"
         },
         {
-          "sourceId": "SRC100",
-          "sourceLocation": "Single-use bronchoscope model/specification tables",
-          "claimType": "Exact model dimensions and working-channel specifications"
-        },
-        {
           "sourceId": "SRC101",
           "sourceLocation": "K222910, applicant and device-description sections",
           "claimType": "Legal manufacturer and product-family identity"
@@ -1417,6 +1993,11 @@
           },
           "evidence": [
             {
+              "sourceId": "SRC100",
+              "sourceLocation": "Single-use bronchoscope model/specification table",
+              "claimType": "Exact non-H model dimensions and working-channel specification"
+            },
+            {
               "sourceId": "SRC102",
               "sourceLocation": "AccessGUDID Primary DI 06970462546115",
               "claimType": "Exact model, primary DI, and labeler"
@@ -1435,6 +2016,11 @@
           },
           "evidence": [
             {
+              "sourceId": "SRC100",
+              "sourceLocation": "Single-use bronchoscope model/specification table",
+              "claimType": "Exact non-H model dimensions and working-channel specification"
+            },
+            {
               "sourceId": "SRC102",
               "sourceLocation": "AccessGUDID Primary DI 06970462546108",
               "claimType": "Exact model, primary DI, and labeler"
@@ -1452,6 +2038,11 @@
             "gudid_primary_di": "06970462546092"
           },
           "evidence": [
+            {
+              "sourceId": "SRC100",
+              "sourceLocation": "Single-use bronchoscope model/specification table",
+              "claimType": "Exact non-H model dimensions and working-channel specification"
+            },
             {
               "sourceId": "SRC102",
               "sourceLocation": "AccessGUDID Primary DI 06970462546092",
@@ -1472,6 +2063,11 @@
           },
           "evidence": [
             {
+              "sourceId": "SRC100",
+              "sourceLocation": "Single-use bronchoscope model/specification table",
+              "claimType": "Exact non-H model dimensions and working-channel specification"
+            },
+            {
               "sourceId": "SRC102",
               "sourceLocation": "AccessGUDID Primary DI 06970462546085",
               "claimType": "Exact model, primary DI, and labeler"
@@ -1489,6 +2085,11 @@
             "gudid_primary_di": "06970462546061"
           },
           "evidence": [
+            {
+              "sourceId": "SRC100",
+              "sourceLocation": "Single-use bronchoscope model/specification table",
+              "claimType": "Exact non-H model dimensions and working-channel specification"
+            },
             {
               "sourceId": "SRC102",
               "sourceLocation": "AccessGUDID Primary DI 06970462546061",
@@ -1635,7 +2236,7 @@
         },
         {
           "catalogNumber": "S012-01-015",
-          "productName": "CLR Access Cap",
+          "productName": "CLR Port Cap",
           "gtin": "00860003054994",
           "specJson": {
             "gudid_primary_di": "00860003054994"
@@ -1798,6 +2399,22 @@
       "disposition": "previously_accounted_csv",
       "ownerReviewRequired": false,
       "rationale": "The old brochure contained M5 family context and did produce CSV row 791, so it is not an exact source-to-CSV omission. PR #118 classified that row as ENT-only; exact M5 ordering identities were resolved in this pass from the current Medtronic page."
+    },
+    {
+      "origin": "old_corpus",
+      "catalogNumber": "7CN75R",
+      "productName": "Shiley Flexible Adult Cuffed Tracheostomy Tube with Reusable Inner Cannula — printed 7CN75R row",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC083",
+      "sourceLocation": "Shiley Flexible Adult Tracheostomy Tube, PDF page 6, first continued cuffed-table row",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "moderate",
+      "clinicalScopeDisposition": "in_scope_identity_conflict",
+      "disposition": "source_evidence_conflicted",
+      "ownerReviewRequired": true,
+      "rationale": "The manufacturer table prints 7CN75R for the 8.0 mm ID / 11.4 mm OD / 77 mm configuration, while the current FDA AccessGUDID exact device is 7CN80R. No product is emitted until Medtronic resolves the catalog-number conflict."
     },
     {
       "origin": "owner_pdf",

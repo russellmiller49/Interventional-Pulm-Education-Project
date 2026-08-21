@@ -5,7 +5,11 @@ import manufacturers from '../../data/ip-preference-cards/generated/manufacturer
 import releaseBundles from '../../data/ip-preference-cards/seed/release-bundles.json'
 import slotOptions from '../../data/ip-preference-cards/generated/slot-product-options.json'
 import { stableId } from './catalog-utils'
-import { buildSourceCompletenessAdditions } from './catalog-additions-source-completeness'
+import {
+  buildSourceCompletenessAdditions,
+  validateSourceCompletenessIdentities,
+} from './catalog-additions-source-completeness'
+import { sourceCompletenessCount } from './source-completeness-intake'
 
 describe('source-completeness catalog additions', () => {
   const additions = buildSourceCompletenessAdditions({
@@ -20,9 +24,11 @@ describe('source-completeness catalog additions', () => {
     expect(additions.warnings).toEqual([])
     expect(additions.manufacturers).toHaveLength(6)
     expect(additions.sources).toHaveLength(16)
-    expect(additions.products).toHaveLength(44)
-    expect(additions.productRoles).toHaveLength(38)
-    expect(additions.productSources).toHaveLength(119)
+    expect(additions.products).toHaveLength(sourceCompletenessCount('new_exact_products'))
+    expect(additions.productRoles).toHaveLength(sourceCompletenessCount('product_roles'))
+    expect(additions.productSources).toHaveLength(
+      sourceCompletenessCount('product_source_relationships'),
+    )
   })
 
   test('uses deterministic manufacturer-aware product identities and rejects no exact configuration', () => {
@@ -31,7 +37,7 @@ describe('source-completeness catalog additions', () => {
         stableId('PRD', `${String(product.manufacturer)}|${String(product.catalog_number)}`),
       )
     }
-    expect(productIds.size).toBe(44)
+    expect(productIds.size).toBe(sourceCompletenessCount('new_exact_products'))
     expect(new Set(additions.products.map((product) => product.gtin).filter(Boolean)).size).toBe(19)
   })
 
@@ -56,8 +62,14 @@ describe('source-completeness catalog additions', () => {
     expect(byCatalog.get('MCB-1000-Kit')).toMatchObject({
       manufacturer: 'Serpex Medical',
       distributor: 'Thoracent',
-      alternate_ids: 'MCB-1000',
+      alternate_ids: null,
     })
+    expect(byCatalog.get('MCB-1000-4')).toMatchObject({
+      alternate_ids: 'MCB-1000',
+      sterile_status: 'Sterile',
+    })
+    expect(byCatalog.get('MCB-1000-Kit')?.sterile_status).toBeNull()
+    expect(byCatalog.get('CC-1000-4')?.sterile_status).toBe('Nonsterile')
     expect(byCatalog.get('BR-M50')).toMatchObject({
       manufacturer: 'Shenzhen HugeMed Medical Technical Development Co., Ltd.',
       distributor: 'EndoTherapeutics',
@@ -114,5 +126,83 @@ describe('source-completeness catalog additions', () => {
     expect(slotOptions.some((option) => productIds.has(option.product_id))).toBe(false)
     const releaseBytes = JSON.stringify(releaseBundles)
     for (const productId of productIds) expect(releaseBytes).not.toContain(productId)
+  })
+})
+
+describe('source-completeness cross-product identity guards', () => {
+  type Candidate = Parameters<typeof validateSourceCompletenessIdentities>[0][number]
+  const candidate = (catalogNumber: string, overrides: Partial<Candidate> = {}): Candidate => ({
+    manufacturer: 'Example Medical',
+    manufacturerId: 'MFR-EXAMPLE',
+    catalogNumber,
+    alternateIds: null,
+    gtin: null,
+    ...overrides,
+  })
+
+  test('rejects two new products sharing one manufacturer-scoped alias', () => {
+    expect(() =>
+      validateSourceCompletenessIdentities(
+        [
+          candidate('ONE', { alternateIds: 'SHARED' }),
+          candidate('TWO', { alternateIds: 'SHARED' }),
+        ],
+        [],
+      ),
+    ).toThrow(/alternate identifier .* shared/iu)
+  })
+
+  test('rejects a new alternate identifier colliding with another new exact catalog', () => {
+    expect(() =>
+      validateSourceCompletenessIdentities(
+        [candidate('ONE', { alternateIds: 'TWO' }), candidate('TWO')],
+        [],
+      ),
+    ).toThrow(/alternate identifier .* collides with catalog number/iu)
+  })
+
+  test('rejects new aliases colliding with existing exact catalogs or aliases', () => {
+    const existing = [
+      {
+        product_id: 'PRD-EXISTING',
+        manufacturer_id: 'MFR-EXAMPLE',
+        manufacturer: 'Example Medical',
+        catalog_number: 'BASE',
+        alternate_ids: 'LEGACY',
+        gtin: null,
+      },
+    ]
+    expect(() =>
+      validateSourceCompletenessIdentities([candidate('ONE', { alternateIds: 'BASE' })], existing),
+    ).toThrow(/existing catalog number/iu)
+    expect(() =>
+      validateSourceCompletenessIdentities(
+        [candidate('ONE', { alternateIds: 'LEGACY' })],
+        existing,
+      ),
+    ).toThrow(/already an alias/iu)
+  })
+
+  test('rejects duplicate new GTINs and an existing GTIN collision', () => {
+    expect(() =>
+      validateSourceCompletenessIdentities(
+        [candidate('ONE', { gtin: '000123' }), candidate('TWO', { gtin: '000123' })],
+        [],
+      ),
+    ).toThrow(/duplicate reviewed GTIN/iu)
+    expect(() =>
+      validateSourceCompletenessIdentities(
+        [candidate('ONE', { gtin: '000123' })],
+        [
+          {
+            product_id: 'PRD-EXISTING',
+            manufacturer_id: 'MFR-OTHER',
+            catalog_number: 'OTHER',
+            alternate_ids: null,
+            gtin: '000123',
+          },
+        ],
+      ),
+    ).toThrow(/already belongs/iu)
   })
 })

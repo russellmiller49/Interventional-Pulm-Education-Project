@@ -6,6 +6,12 @@
     "notes": "Pleural irrigation/suction instrument used with indwelling chest tubes or pigtail catheters."
   },
   {
+    "product_id": "PRD-00910661BA",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-00C13A59AA",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -1272,6 +1278,12 @@
     "notes": "Endoscopy light cable"
   },
   {
+    "product_id": "PRD-18DFC39794",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-18F33007D6",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -1402,6 +1414,12 @@
     "role_code": "PULMONARY_GUIDEWIRE",
     "role_fit": "Primary",
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-1B7B4B9C6A",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed extended-proximal tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-1B9BB00FC8",
@@ -2880,6 +2898,12 @@
     "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
   },
   {
+    "product_id": "PRD-38079F20BD",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-386D5501C9",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -3252,6 +3276,12 @@
     "notes": "Direct-visualization covered airway SEMS"
   },
   {
+    "product_id": "PRD-41C846CC8F",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-41CD2EE0E9",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -3472,6 +3502,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Primary",
     "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-46C823F8EC",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-470EA6C7BA",
@@ -4026,6 +4062,12 @@
     "notes": "Rigid suction catheter accessory"
   },
   {
+    "product_id": "PRD-529643988C",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-529E58AC8C",
     "role_code": "THORACOSCOPY_BIOPSY_FORCEPS",
     "role_fit": "Exact",
@@ -4342,6 +4384,12 @@
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-58CCB8208E",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-58CFB02C8E",
@@ -6360,6 +6408,12 @@
     "notes": "Pediatric silicone tracheostomy tube, 2.5 mm I.D."
   },
   {
+    "product_id": "PRD-7FEF1C2544",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless extended-proximal tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-7FFA3EACA4",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -6636,6 +6690,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-85F4300C8B",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed extended-proximal tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-85FA8619AC",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -6888,6 +6948,12 @@
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
+    "product_id": "PRD-8B7BA0C7A5",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-8B87F7D42B",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
@@ -7044,6 +7110,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-8EEB25CE00",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless extended-proximal tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-8F25A1FB01",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -7143,7 +7215,13 @@
     "product_id": "PRD-9163FB693E",
     "role_code": "RIGID_BRONCH_SHAVER",
     "role_fit": "Primary",
-    "notes": "Powered handpiece used with the exact airway blade cohort reviewed in this pass."
+    "notes": "Powered handpiece with a restrained rigid-bronchoscopic shaver discovery role; no exact handpiece-to-blade compatibility is asserted."
+  },
+  {
+    "product_id": "PRD-9167283C52",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-9188987BF8",
@@ -7198,6 +7276,12 @@
     "role_code": "GENERIC_DRAINAGE_UNIT",
     "role_fit": "Primary",
     "notes": "Non-digital chest drainage unit — wet suction control with water seal."
+  },
+  {
+    "product_id": "PRD-92A8739CF4",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless extended-proximal tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-92C95201F3",
@@ -8208,6 +8292,12 @@
     "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
+    "product_id": "PRD-AA2895A2EB",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-AA29300E40",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -8476,6 +8566,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Primary",
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-AFBD510BCF",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed extended-proximal tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-AFF9BDD685",
@@ -10152,6 +10248,12 @@
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
+    "product_id": "PRD-D51CBB0DEE",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-D52ED4EF06",
     "role_code": "COLLATERAL_VENTILATION_SYSTEM",
     "role_fit": "Primary",
@@ -10324,6 +10426,12 @@
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-D7858C62B6",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed extended-proximal tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-D794E57FFE",
@@ -11376,6 +11484,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-EFCF0B85F5",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless extended-proximal tracheostomy-tube identity; no substitution is implied."
+  },
+  {
     "product_id": "PRD-EFD54DC9EF",
     "role_code": "CHEST_TUBE_SURGICAL",
     "role_fit": "Primary",
@@ -11506,6 +11620,12 @@
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Exact",
     "notes": "Direct-visualization covered airway SEMS"
+  },
+  {
+    "product_id": "PRD-F22D94D3A5",
+    "role_code": "TRACH_TUBE_CUFFED",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffed adult tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-F24CF1B9C7",
@@ -11776,6 +11896,12 @@
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-F77790BA96",
+    "role_code": "TRACH_TUBE_CUFFLESS",
+    "role_fit": "Primary",
+    "notes": "Manufacturer and FDA evidence support an exact cuffless adult tracheostomy-tube identity; no substitution is implied."
   },
   {
     "product_id": "PRD-F7968862EF",

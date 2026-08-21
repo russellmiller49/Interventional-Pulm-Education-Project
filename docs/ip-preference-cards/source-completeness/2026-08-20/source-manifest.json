@@ -12,14 +12,14 @@
   "pdf_count": 122,
   "html_count": 33,
   "markdown_count": 3,
-  "total_pdf_pages": 2677,
+  "total_pdf_pages": 2654,
   "old_corpus_pdf_count": 115,
   "old_corpus_html_count": 7,
   "old_corpus_markdown_count": 3,
   "old_corpus_total_pdf_pages": 2609,
   "new_evidence_pdf_count": 7,
   "new_evidence_html_count": 26,
-  "new_evidence_total_pdf_pages": 68,
+  "new_evidence_total_pdf_pages": 45,
   "prior_manifest_sha256": "7cdc492ad5042197df294ed4787bbf70b2e5136a7b277ee8d75b38cd08abedba",
   "prior_source_hash_mismatches": 0,
   "prior_sources_missing": 0,
@@ -1905,20 +1905,72 @@
       ],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-213D82A404",
-          "catalog_number": "5UN70A"
+          "product_id": "PRD-58CCB8208E",
+          "catalog_number": "10CN10R"
+        },
+        {
+          "product_id": "PRD-8B7BA0C7A5",
+          "catalog_number": "10UN10R"
+        },
+        {
+          "product_id": "PRD-C3B7FB7CAE",
+          "catalog_number": "4CN65A"
+        },
+        {
+          "product_id": "PRD-9167283C52",
+          "catalog_number": "4CN65R"
         },
         {
           "product_id": "PRD-6ABC11CE44",
           "catalog_number": "4UN65A"
         },
         {
+          "product_id": "PRD-529643988C",
+          "catalog_number": "4UN65R"
+        },
+        {
           "product_id": "PRD-80B451355D",
           "catalog_number": "5CN70A"
         },
         {
-          "product_id": "PRD-C3B7FB7CAE",
-          "catalog_number": "4CN65A"
+          "product_id": "PRD-D51CBB0DEE",
+          "catalog_number": "5CN70R"
+        },
+        {
+          "product_id": "PRD-213D82A404",
+          "catalog_number": "5UN70A"
+        },
+        {
+          "product_id": "PRD-38079F20BD",
+          "catalog_number": "5UN70R"
+        },
+        {
+          "product_id": "PRD-AA2895A2EB",
+          "catalog_number": "6CN75R"
+        },
+        {
+          "product_id": "PRD-46C823F8EC",
+          "catalog_number": "6UN75R"
+        },
+        {
+          "product_id": "PRD-41C846CC8F",
+          "catalog_number": "7UN80R"
+        },
+        {
+          "product_id": "PRD-F22D94D3A5",
+          "catalog_number": "8CN85R"
+        },
+        {
+          "product_id": "PRD-00910661BA",
+          "catalog_number": "8UN85R"
+        },
+        {
+          "product_id": "PRD-18DFC39794",
+          "catalog_number": "9CN90R"
+        },
+        {
+          "product_id": "PRD-F77790BA96",
+          "catalog_number": "9UN90R"
         }
       ]
     },
@@ -1939,36 +1991,68 @@
       ],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-17D86EEA2B",
-          "catalog_number": "80XLTCD"
+          "product_id": "PRD-C2DCA71DDE",
+          "catalog_number": "50XLTCD"
         },
         {
-          "product_id": "PRD-25BBBBEA0F",
-          "catalog_number": "80XLTUD"
-        },
-        {
-          "product_id": "PRD-51F1495A42",
-          "catalog_number": "70XLTCD"
-        },
-        {
-          "product_id": "PRD-892EA2DACB",
-          "catalog_number": "60XLTCD"
+          "product_id": "PRD-D7858C62B6",
+          "catalog_number": "50XLTCP"
         },
         {
           "product_id": "PRD-B5DEE283B2",
           "catalog_number": "50XLTUD"
         },
         {
-          "product_id": "PRD-C2DCA71DDE",
-          "catalog_number": "50XLTCD"
+          "product_id": "PRD-8EEB25CE00",
+          "catalog_number": "50XLTUP"
+        },
+        {
+          "product_id": "PRD-892EA2DACB",
+          "catalog_number": "60XLTCD"
+        },
+        {
+          "product_id": "PRD-AFBD510BCF",
+          "catalog_number": "60XLTCP"
         },
         {
           "product_id": "PRD-C7719849F9",
           "catalog_number": "60XLTUD"
         },
         {
+          "product_id": "PRD-EFCF0B85F5",
+          "catalog_number": "60XLTUP"
+        },
+        {
+          "product_id": "PRD-51F1495A42",
+          "catalog_number": "70XLTCD"
+        },
+        {
+          "product_id": "PRD-85F4300C8B",
+          "catalog_number": "70XLTCP"
+        },
+        {
           "product_id": "PRD-D23CFCF5DD",
           "catalog_number": "70XLTUD"
+        },
+        {
+          "product_id": "PRD-7FEF1C2544",
+          "catalog_number": "70XLTUP"
+        },
+        {
+          "product_id": "PRD-17D86EEA2B",
+          "catalog_number": "80XLTCD"
+        },
+        {
+          "product_id": "PRD-1B7B4B9C6A",
+          "catalog_number": "80XLTCP"
+        },
+        {
+          "product_id": "PRD-25BBBBEA0F",
+          "catalog_number": "80XLTUD"
+        },
+        {
+          "product_id": "PRD-92A8739CF4",
+          "catalog_number": "80XLTUP"
         }
       ]
     },
@@ -3707,20 +3791,56 @@
           "catalog_number": "30030001"
         },
         {
-          "product_id": "PRD-0A90C0B244",
-          "catalog_number": "41010000"
+          "product_id": "PRD-07A1B4DA10",
+          "catalog_number": "30030010"
         },
         {
           "product_id": "PRD-1B6B236545",
           "catalog_number": "30030303"
         },
         {
-          "product_id": "PRD-07A1B4DA10",
-          "catalog_number": "30030010"
-        },
-        {
           "product_id": "PRD-AAECD27F75",
           "catalog_number": "31010008"
+        },
+        {
+          "product_id": "PRD-0A90C0B244",
+          "catalog_number": "41010000"
+        },
+        {
+          "product_id": "PRD-DADEAB2B83",
+          "catalog_number": "BR-M22"
+        },
+        {
+          "product_id": "PRD-AFF9BDD685",
+          "catalog_number": "BR-M32"
+        },
+        {
+          "product_id": "PRD-39C1BDB306",
+          "catalog_number": "BR-M40"
+        },
+        {
+          "product_id": "PRD-A3852DB56A",
+          "catalog_number": "BR-M40H"
+        },
+        {
+          "product_id": "PRD-48F43B9C6A",
+          "catalog_number": "BR-M50"
+        },
+        {
+          "product_id": "PRD-961C4B6422",
+          "catalog_number": "BR-M52H"
+        },
+        {
+          "product_id": "PRD-4E7880DB69",
+          "catalog_number": "BR-M58"
+        },
+        {
+          "product_id": "PRD-B02CF0A059",
+          "catalog_number": "BR-M58H"
+        },
+        {
+          "product_id": "PRD-75D987903F",
+          "catalog_number": "CC-1000-4"
         },
         {
           "product_id": "PRD-1ED27ADA45",
@@ -3731,16 +3851,32 @@
           "catalog_number": "ENDO-FR-22G-Kit-O"
         },
         {
-          "product_id": "PRD-F9BA60E9A6",
-          "catalog_number": "MCB-1000-Kit"
-        },
-        {
           "product_id": "PRD-AED3720BF6",
           "catalog_number": "MCB-1000-4"
         },
         {
-          "product_id": "PRD-75D987903F",
-          "catalog_number": "CC-1000-4"
+          "product_id": "PRD-F9BA60E9A6",
+          "catalog_number": "MCB-1000-Kit"
+        },
+        {
+          "product_id": "PRD-D59133B2EE",
+          "catalog_number": "S012-01-015"
+        },
+        {
+          "product_id": "PRD-BC2856A7CB",
+          "catalog_number": "S012-01-016"
+        },
+        {
+          "product_id": "PRD-003C4641E6",
+          "catalog_number": "S012-01-019"
+        },
+        {
+          "product_id": "PRD-2FA3F3A0DD",
+          "catalog_number": "S012-01-100"
+        },
+        {
+          "product_id": "PRD-2CD37C1E67",
+          "catalog_number": "S012-01-200"
         },
         {
           "product_id": "PRD-973D3F9656",
@@ -3777,58 +3913,6 @@
         {
           "product_id": "PRD-4F290FD9D3",
           "catalog_number": "TRD1-18040"
-        },
-        {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
-        },
-        {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-001",
@@ -3879,32 +3963,32 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-3E1556EBE5",
-          "catalog_number": "1884035HRE"
-        },
-        {
-          "product_id": "PRD-5CF4F1857F",
-          "catalog_number": "1884033HRE"
-        },
-        {
-          "product_id": "PRD-5592532651",
-          "catalog_number": "1884033"
-        },
-        {
-          "product_id": "PRD-E23034FC46",
-          "catalog_number": "1884032"
-        },
-        {
-          "product_id": "PRD-378597DD7A",
-          "catalog_number": "1884031HRE"
+          "product_id": "PRD-7B8C092373",
+          "catalog_number": "1882936E"
         },
         {
           "product_id": "PRD-7DFA867CB6",
           "catalog_number": "1882937E"
         },
         {
-          "product_id": "PRD-7B8C092373",
-          "catalog_number": "1882936E"
+          "product_id": "PRD-378597DD7A",
+          "catalog_number": "1884031HRE"
+        },
+        {
+          "product_id": "PRD-E23034FC46",
+          "catalog_number": "1884032"
+        },
+        {
+          "product_id": "PRD-5592532651",
+          "catalog_number": "1884033"
+        },
+        {
+          "product_id": "PRD-5CF4F1857F",
+          "catalog_number": "1884033HRE"
+        },
+        {
+          "product_id": "PRD-3E1556EBE5",
+          "catalog_number": "1884035HRE"
         }
       ],
       "evidence_id": "EVID-SC-003",
@@ -3917,7 +4001,7 @@
       "source_filename": "P116-EN-02-052025-Broncoflex-Brochure-EU-EN.pdf",
       "relative_path": null,
       "sha256": "6f48af71e5fdc5aae89cdc9691eb607d2d499c4952f059e1fc516e310ab3b342",
-      "page_count": 20,
+      "page_count": 2,
       "document_type": "Official manufacturer PDF",
       "manufacturer": "TSC Life / Axess Vision Technology",
       "publisher": "TSC Life / Axess Vision Technology",
@@ -3935,20 +4019,20 @@
           "catalog_number": "20030001"
         },
         {
-          "product_id": "PRD-0A90C0B244",
-          "catalog_number": "41010000"
+          "product_id": "PRD-07A1B4DA10",
+          "catalog_number": "30030010"
         },
         {
           "product_id": "PRD-1B6B236545",
           "catalog_number": "30030303"
         },
         {
-          "product_id": "PRD-07A1B4DA10",
-          "catalog_number": "30030010"
-        },
-        {
           "product_id": "PRD-AAECD27F75",
           "catalog_number": "31010008"
+        },
+        {
+          "product_id": "PRD-0A90C0B244",
+          "catalog_number": "41010000"
         }
       ],
       "evidence_id": "EVID-SC-004",
@@ -3961,7 +4045,7 @@
       "source_filename": "P133-EN-02-022025-Cysto-Technical-Datasheet-EU-EN.pdf",
       "relative_path": null,
       "sha256": "825f475be67abf857f05569068512d09c8649a8b78ffaeb18247458604966c28",
-      "page_count": 2,
+      "page_count": 4,
       "document_type": "Official manufacturer PDF",
       "manufacturer": "TSC Life / Axess Vision Technology",
       "publisher": "TSC Life / Axess Vision Technology",
@@ -4008,8 +4092,8 @@
         }
       ],
       "evidence_id": "EVID-SC-006",
-      "evidence_scope": "family_and_exact_product",
-      "identifier_matched": "ENDO-BV-22G-Kit-O; ENDO-FR-22G-Kit-O",
+      "evidence_scope": "family_level",
+      "identifier_matched": "EndoCore EBUS biopsy-needle family",
       "retrieved_on": "2026-08-20"
     },
     {
@@ -4017,7 +4101,7 @@
       "source_filename": "K261068.pdf",
       "relative_path": null,
       "sha256": "ebf338a4c5a9954f00f5b4729e6e5565661d055d6a6b17292dcf3f74a82cc150",
-      "page_count": 12,
+      "page_count": 9,
       "document_type": "Official FDA PDF",
       "manufacturer": "U.S. Food and Drug Administration",
       "publisher": "U.S. Food and Drug Administration",
@@ -4105,7 +4189,7 @@
       "source_filename": "K211894.pdf",
       "relative_path": null,
       "sha256": "9bb30a7ea0284534c0e762b8689d86c4c28c20b6a95e8b8c7e9b5424d32dfa77",
-      "page_count": 7,
+      "page_count": 11,
       "document_type": "Official FDA PDF",
       "manufacturer": "U.S. Food and Drug Administration",
       "publisher": "U.S. Food and Drug Administration",
@@ -4161,7 +4245,7 @@
       "source_filename": "ENG-EU-CATA-fBRS-suBR-INTENT-202306V1.0.pdf",
       "relative_path": null,
       "sha256": "ba5543bf08957caf54285f19b2c27f9d11fa43a95d05c04c133dd58ff7c39c5c",
-      "page_count": 12,
+      "page_count": 2,
       "document_type": "Official manufacturer PDF",
       "manufacturer": "HugeMed",
       "publisher": "HugeMed",
@@ -4189,23 +4273,11 @@
         {
           "product_id": "PRD-4E7880DB69",
           "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-010",
       "evidence_scope": "family_and_exact_product",
-      "identifier_matched": "BR-M22; BR-M32; BR-M40; BR-M50; BR-M58; BR-M40H; BR-M52H; BR-M58H",
+      "identifier_matched": "BR-M22; BR-M32; BR-M40; BR-M50; BR-M58",
       "retrieved_on": "2026-08-20"
     },
     {
@@ -4213,7 +4285,7 @@
       "source_filename": "K222910.pdf",
       "relative_path": null,
       "sha256": "c61e92d3540b0060d3df427b8e1d4a0027d78aa84430d2c69a064b3101cfbc7f",
-      "page_count": 8,
+      "page_count": 10,
       "document_type": "Official FDA PDF",
       "manufacturer": "U.S. Food and Drug Administration",
       "publisher": "U.S. Food and Drug Administration",
@@ -4235,20 +4307,20 @@
           "catalog_number": "BR-M40"
         },
         {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
           "product_id": "PRD-A3852DB56A",
           "catalog_number": "BR-M40H"
         },
         {
+          "product_id": "PRD-48F43B9C6A",
+          "catalog_number": "BR-M50"
+        },
+        {
           "product_id": "PRD-961C4B6422",
           "catalog_number": "BR-M52H"
+        },
+        {
+          "product_id": "PRD-4E7880DB69",
+          "catalog_number": "BR-M58"
         },
         {
           "product_id": "PRD-B02CF0A059",
@@ -4256,7 +4328,7 @@
         }
       ],
       "evidence_id": "EVID-SC-011",
-      "evidence_scope": "family_and_exact_product",
+      "evidence_scope": "family_level",
       "identifier_matched": "HugeMed single-use flexible bronchoscopes",
       "retrieved_on": "2026-08-20"
     },
@@ -4275,29 +4347,21 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
           "product_id": "PRD-D59133B2EE",
           "catalog_number": "S012-01-015"
         },
         {
           "product_id": "PRD-003C4641E6",
           "catalog_number": "S012-01-019"
+        },
+        {
+          "product_id": "PRD-2FA3F3A0DD",
+          "catalog_number": "S012-01-100"
         }
       ],
       "evidence_id": "EVID-SC-012",
-      "evidence_scope": "family_and_exact_product",
-      "identifier_matched": "CLR Port; Access Cap",
+      "evidence_scope": "family_level",
+      "identifier_matched": "CLR Port family",
       "retrieved_on": "2026-08-20"
     },
     {
@@ -4317,22 +4381,6 @@
         {
           "product_id": "PRD-2CD37C1E67",
           "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-013",
@@ -4355,24 +4403,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
           "product_id": "PRD-BC2856A7CB",
           "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-014",
@@ -4397,18 +4429,6 @@
         {
           "product_id": "PRD-2632FFBF07",
           "catalog_number": "10040001"
-        },
-        {
-          "product_id": "PRD-D55094A08A",
-          "catalog_number": "20030001"
-        },
-        {
-          "product_id": "PRD-6F15A8C9B5",
-          "catalog_number": "30030001"
-        },
-        {
-          "product_id": "PRD-0A90C0B244",
-          "catalog_number": "41010000"
         }
       ],
       "evidence_id": "EVID-SC-015",
@@ -4431,20 +4451,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2632FFBF07",
-          "catalog_number": "10040001"
-        },
-        {
           "product_id": "PRD-D55094A08A",
           "catalog_number": "20030001"
-        },
-        {
-          "product_id": "PRD-6F15A8C9B5",
-          "catalog_number": "30030001"
-        },
-        {
-          "product_id": "PRD-0A90C0B244",
-          "catalog_number": "41010000"
         }
       ],
       "evidence_id": "EVID-SC-016",
@@ -4467,20 +4475,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2632FFBF07",
-          "catalog_number": "10040001"
-        },
-        {
-          "product_id": "PRD-D55094A08A",
-          "catalog_number": "20030001"
-        },
-        {
           "product_id": "PRD-6F15A8C9B5",
           "catalog_number": "30030001"
-        },
-        {
-          "product_id": "PRD-0A90C0B244",
-          "catalog_number": "41010000"
         }
       ],
       "evidence_id": "EVID-SC-017",
@@ -4502,18 +4498,6 @@
       "matched_csv_row_count": 0,
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
-        {
-          "product_id": "PRD-2632FFBF07",
-          "catalog_number": "10040001"
-        },
-        {
-          "product_id": "PRD-D55094A08A",
-          "catalog_number": "20030001"
-        },
-        {
-          "product_id": "PRD-6F15A8C9B5",
-          "catalog_number": "30030001"
-        },
         {
           "product_id": "PRD-0A90C0B244",
           "catalog_number": "41010000"
@@ -4541,10 +4525,6 @@
         {
           "product_id": "PRD-1ED27ADA45",
           "catalog_number": "ENDO-BV-22G-Kit-O"
-        },
-        {
-          "product_id": "PRD-AC45D3E510",
-          "catalog_number": "ENDO-FR-22G-Kit-O"
         }
       ],
       "evidence_id": "EVID-SC-019",
@@ -4566,10 +4546,6 @@
       "matched_csv_row_count": 0,
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
-        {
-          "product_id": "PRD-1ED27ADA45",
-          "catalog_number": "ENDO-BV-22G-Kit-O"
-        },
         {
           "product_id": "PRD-AC45D3E510",
           "catalog_number": "ENDO-FR-22G-Kit-O"
@@ -4597,34 +4573,6 @@
         {
           "product_id": "PRD-DADEAB2B83",
           "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-021",
@@ -4647,36 +4595,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
           "product_id": "PRD-AFF9BDD685",
           "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-022",
@@ -4699,36 +4619,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
           "product_id": "PRD-39C1BDB306",
           "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-023",
@@ -4751,36 +4643,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
           "product_id": "PRD-48F43B9C6A",
           "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-024",
@@ -4803,36 +4667,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
           "product_id": "PRD-4E7880DB69",
           "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-025",
@@ -4855,36 +4691,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
           "product_id": "PRD-A3852DB56A",
           "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-026",
@@ -4907,36 +4715,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
           "product_id": "PRD-961C4B6422",
           "catalog_number": "BR-M52H"
-        },
-        {
-          "product_id": "PRD-B02CF0A059",
-          "catalog_number": "BR-M58H"
         }
       ],
       "evidence_id": "EVID-SC-027",
@@ -4958,34 +4738,6 @@
       "matched_csv_row_count": 0,
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
-        {
-          "product_id": "PRD-DADEAB2B83",
-          "catalog_number": "BR-M22"
-        },
-        {
-          "product_id": "PRD-AFF9BDD685",
-          "catalog_number": "BR-M32"
-        },
-        {
-          "product_id": "PRD-39C1BDB306",
-          "catalog_number": "BR-M40"
-        },
-        {
-          "product_id": "PRD-48F43B9C6A",
-          "catalog_number": "BR-M50"
-        },
-        {
-          "product_id": "PRD-4E7880DB69",
-          "catalog_number": "BR-M58"
-        },
-        {
-          "product_id": "PRD-A3852DB56A",
-          "catalog_number": "BR-M40H"
-        },
-        {
-          "product_id": "PRD-961C4B6422",
-          "catalog_number": "BR-M52H"
-        },
         {
           "product_id": "PRD-B02CF0A059",
           "catalog_number": "BR-M58H"
@@ -5013,22 +4765,6 @@
         {
           "product_id": "PRD-2CD37C1E67",
           "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-029",
@@ -5051,24 +4787,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
           "product_id": "PRD-2FA3F3A0DD",
           "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-030",
@@ -5090,22 +4810,6 @@
       "matched_csv_row_count": 0,
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
-        {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
         {
           "product_id": "PRD-003C4641E6",
           "catalog_number": "S012-01-019"
@@ -5131,24 +4835,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
           "product_id": "PRD-BC2856A7CB",
           "catalog_number": "S012-01-016"
-        },
-        {
-          "product_id": "PRD-D59133B2EE",
-          "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-032",
@@ -5171,24 +4859,8 @@
       "matched_input_row_numbers": [],
       "canonical_additions_supported": [
         {
-          "product_id": "PRD-2CD37C1E67",
-          "catalog_number": "S012-01-200"
-        },
-        {
-          "product_id": "PRD-2FA3F3A0DD",
-          "catalog_number": "S012-01-100"
-        },
-        {
-          "product_id": "PRD-BC2856A7CB",
-          "catalog_number": "S012-01-016"
-        },
-        {
           "product_id": "PRD-D59133B2EE",
           "catalog_number": "S012-01-015"
-        },
-        {
-          "product_id": "PRD-003C4641E6",
-          "catalog_number": "S012-01-019"
         }
       ],
       "evidence_id": "EVID-SC-033",

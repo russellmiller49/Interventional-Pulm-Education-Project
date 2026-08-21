@@ -12,7 +12,10 @@ import {
   validateProductOverrides,
 } from '../../../../scripts/ip-device-intelligence/build-taxonomy-overlay'
 import { stableId } from '../../../../scripts/ip-preference-cards/catalog-utils'
-import { expandSourceCompletenessProducts } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
+import {
+  expandSourceCompletenessProducts,
+  sourceCompletenessCount,
+} from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 import { isAtlasCohortProduct } from '@/features/device-intelligence/domain/atlas-cohort'
 import {
   taxonomyOverlayArtifactSchema,
@@ -35,13 +38,13 @@ const REPO_ROOT = join(__dirname, '../../../..')
 describe('D2C taxonomy overlay coverage', () => {
   const artifact = taxonomyOverlayArtifactSchema.parse(taxonomyOverlayJson)
 
-  it('holds exactly one row for each of the 1,772 atlas-cohort products', () => {
+  it('holds exactly one row for each contract-governed atlas-cohort product', () => {
     const cohortIds = getAtlasCatalogStore()
       .products.map((product) => product.product_id)
       .sort()
-    expect(cohortIds.length).toBe(1772)
+    expect(cohortIds.length).toBe(sourceCompletenessCount('taxonomy_rows_after'))
     expect(artifact.rows.map((row) => row.product_id)).toEqual(cohortIds)
-    expect(artifact.counts.rows).toBe(1772)
+    expect(artifact.counts.rows).toBe(sourceCompletenessCount('taxonomy_rows_after'))
   })
 
   it('contains no candidate-grade or unknown-grade identity', () => {
@@ -72,13 +75,15 @@ describe('D2C taxonomy overlay coverage', () => {
     expect(artifact.counts.classification_basis).toEqual(basisCounts)
     expect(artifact.counts.needs_review).toBe(needsReview)
     const classTotal = Object.values(classCounts).reduce((sum, count) => sum + count, 0)
-    expect(classTotal).toBe(1772)
+    expect(classTotal).toBe(sourceCompletenessCount('taxonomy_rows_after'))
   })
 
   it('classifies every product while preserving the intentional CLR fallback and review holds', () => {
     expect(artifact.counts.classification_basis.unmatched_fallback ?? 0).toBe(1)
     expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(6)
-    expect(artifact.counts.needs_review).toBe(7)
+    expect(artifact.counts.needs_review).toBe(
+      sourceCompletenessCount('taxonomy_needs_review_after'),
+    )
   })
 
   it('is byte-identical to a fresh generation from the reviewed rules (twice)', () => {
@@ -95,7 +100,7 @@ describe('D2C taxonomy overlay coverage', () => {
 
   it('pins the exact reviewed rules bytes it was generated from', () => {
     const provenance = getTaxonomyOverlayProvenance()
-    expect(provenance.rowCount).toBe(1772)
+    expect(provenance.rowCount).toBe(sourceCompletenessCount('taxonomy_rows_after'))
     expect(artifact.source_rules.sha256).toBe(provenance.sourceRulesSha256)
     const rulesBytes = readFileSync(join(REPO_ROOT, artifact.source_rules.path))
     expect(createHash('sha256').update(rulesBytes).digest('hex')).toBe(artifact.source_rules.sha256)
@@ -145,7 +150,9 @@ describe('D2C taxonomy overlay coverage', () => {
         stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`),
       ),
     )
-    expect(artifact.rows.filter((row) => additionIds.has(row.product_id))).toHaveLength(44)
+    expect(artifact.rows.filter((row) => additionIds.has(row.product_id))).toHaveLength(
+      sourceCompletenessCount('new_exact_products'),
+    )
     for (const product of expandSourceCompletenessProducts()) {
       expect(
         getProductTaxonomy(stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`)),

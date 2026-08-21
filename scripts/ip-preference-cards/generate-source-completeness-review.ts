@@ -9,6 +9,7 @@ import { formatJson } from './format-json'
 import {
   expandSourceCompletenessProducts,
   SOURCE_COMPLETENESS_REVIEW,
+  sourceCompletenessCount,
   type ExpandedSourceCompletenessProduct,
   type NonAdditionCandidate,
 } from './source-completeness-intake'
@@ -95,6 +96,9 @@ function productRationale(product: ExpandedSourceCompletenessProduct): string {
   }
   if (product.origin === 'official_web_follow_up') {
     return 'Absent as an exact product from the old CSV and baseline catalog; current manufacturer evidence supports exact identity and bounded airway scope.'
+  }
+  if (product.origin === 'old_corpus') {
+    return 'A deterministic page-by-page table extraction found the exact R-series row outside the original CSV; rendered manufacturer tables and exact FDA evidence support this in-scope identity.'
   }
   return 'Absent from the old CSV and baseline catalog; owner source plus manufacturer/FDA evidence supports an exact in-scope identity.'
 }
@@ -201,9 +205,15 @@ function duplicateAnalysis(
     if (product.catalogNumber === '30030000' || product.catalogNumber === '30030001') {
       highRiskNote =
         '30030000 and 30030001 are separately listed package configurations. Only 30030001 carries the corroborated primary DI; 30030000 is retained without that GTIN.'
-    } else if (/^(MCB|CC)-1000/.test(product.catalogNumber)) {
+    } else if (product.catalogNumber === 'MCB-1000-4') {
       highRiskNote =
-        'The FDA base model is retained as an alternate identifier; distinct owner-supplied package suffixes remain separate orderable configurations.'
+        'The FDA MCB-1000 base model is retained only on the exact probe product; the kit does not reuse that alias.'
+    } else if (product.catalogNumber === 'MCB-1000-Kit') {
+      highRiskNote =
+        'The owner-supplied kit code is a distinct configuration and does not claim the FDA MCB-1000 probe alias.'
+    } else if (product.catalogNumber === 'CC-1000-4') {
+      highRiskNote =
+        'The FDA CC-1000 cartridge base model is retained only on the exact four-cartridge package.'
     } else if (product.distributor) {
       highRiskNote = `${product.manufacturer} remains the sole legal manufacturer; ${product.distributor} is distributor/brand context and does not create a duplicate manufacturer.`
     }
@@ -260,6 +270,7 @@ function ownerBreakdown(rows: DiscoveryRow[]): string[] {
 }
 
 function readme(rows: DiscoveryRow[], products: ExpandedSourceCompletenessProduct[]): string {
+  const counts = SOURCE_COMPLETENESS_REVIEW.count_contract
   const owner = rows.filter((row) => row.origin === 'owner_pdf')
   const web = rows.filter((row) => row.origin === 'official_web_follow_up')
   const existing = rows.filter((row) => row.disposition.startsWith('existing_'))
@@ -273,7 +284,7 @@ This is the deterministic review package for the bounded source-first follow-up 
 
 | Measure | Count |
 | --- | ---: |
-| Products discovered in the old corpus but absent from the old CSV | 0 |
+| Products discovered in the old corpus but absent from the old CSV | ${counts.old_corpus_products} |
 | Owner-supplied PDF candidates | ${owner.length} |
 | Official-web-only candidates | ${web.length} |
 | Already canonical products | ${existing.length} |
@@ -282,9 +293,9 @@ This is the deterministic review package for the bounded source-first follow-up 
 | Irrelevant products | ${irrelevant.length} |
 | Products needing owner review | ${ownerReview.length} |
 
-The prior 125 supported source documents were rescanned source-first: 115 PDFs, 7 HTML files, and 3 Markdown files comprising 2,609 PDF pages. All 125 still match the PR #118 manifest; no supported source was added, removed, or hash-changed. Four previously unreferenced files were directly inspected, and none contains a relevant exact product table omitted from the CSV.
+The prior 125 supported source documents were checked against the frozen PR #118 manifest: 115 PDFs, 7 HTML files, and 3 Markdown files comprising 2,609 PDF pages. All 125 still match; no supported source was added, removed, or hash-changed. Deterministic layout-text extraction scanned all 115 PDFs and identified 17 documents with contiguous multi-page table sections without requiring continuation pages to repeat a heading. Risk-based rendered inspection found 14 R-series candidates in the Shiley Flexible tables and eight additional extended-proximal XLT candidates in the adjacent Shiley XLT document. Thirteen R-series and all eight XLT exact manufacturer/FDA identities were added; the printed \`7CN75R\` versus FDA \`7CN80R\` mismatch remains an explicit owner-review conflict. Corpus-wide table-document accounting is in \`old-corpus-multipage-document-scan.csv\`, and the fully rendered correction sections are in \`old-corpus-table-page-coverage.csv\`.
 
-The newly used evidence set adds 33 hashed artifacts: 7 PDFs comprising 68 pages (including the owner packet) and 26 official HTML records/pages.
+The newly used evidence set adds 33 hashed artifacts: ${counts.new_pdf_evidence_files} PDFs comprising ${counts.new_pdf_evidence_pages} pages (including the owner packet) and 26 official HTML records/pages. Together with the frozen old corpus, the aggregate is ${counts.aggregate_pdf_pages} PDF pages.
 
 The old Medtronic brochure contains M5 family context, but it was represented by CSV input row 791; it does not establish an exact source-to-CSV omission. The current Medtronic U.S. pages establish nine new exact powered-airway products. Across the 20-row airway-blade ordering table, seven were accepted, four remain in owner review, and nine laryngeal/ENT-only rows were excluded.
 
@@ -298,14 +309,14 @@ The CLR owner page supplied family/component names without order codes. Official
 
 ## Reconciliation model
 
-Every discovery row in \`source-product-discovery.csv\` has exactly one controlled disposition. \`missing-from-original-csv.csv\` deliberately includes accepted, unresolved, and excluded exact candidates so absence from the old CSV is not confused with permission to import. \`new-product-additions.csv\` is the accepted 44-product subset.
+Every discovery row in \`source-product-discovery.csv\` has exactly one controlled disposition. \`missing-from-original-csv.csv\` deliberately includes accepted, unresolved, and excluded exact candidates so absence from the old CSV is not confused with permission to import. \`new-product-additions.csv\` is the accepted ${counts.new_exact_products}-product subset.
 
 Duplicate checks covered exact and normalized manufacturer/catalog identity, punctuation and spacing, alternate IDs, GTINs, deterministic IDs, package variants, and distributor/legal-manufacturer relationships. The Cook order numbers and ECHO reference numbers resolve to four existing canonical products and receive only new source relationships.
 
 ## Governance
 
-- All 44 new products are \`verified_source\`, \`visibility_state=hidden\`, and make no local-orderability claim.
-- Thirty-eight products receive an existing, evidence-supported role; six remain intentionally roleless. The two Screeni mounting components stay roleless because the existing mount-accessory role is introduced by a later governed overlay, after the catalog-additions validation gate.
+- All ${counts.new_exact_products} new products are \`verified_source\`, \`visibility_state=hidden\`, and make no local-orderability claim.
+- ${counts.product_roles} products receive an existing, evidence-supported role; six remain intentionally roleless. The two Screeni mounting components stay roleless because the existing mount-accessory role is introduced by a later governed overlay, after the catalog-additions validation gate.
 - No canonical slot option is authored or promoted. Potential relationships remain in the unreviewed proposal workflow.
 - Exactly one taxonomy row is produced for every verified-source product. One narrow pair rule was added for \`Therapeutic bronchoscopy / Cryotherapy consumable\`; CLR Irrigator intentionally remains \`other_needs_review\`.
 - The owner PDF and all remote source captures remain external; only hashes, locations, URLs, and reviewed facts are committed.
@@ -313,12 +324,14 @@ Duplicate checks covered exact and normalized manufacturer/catalog identity, pun
 ## Files
 
 - \`source-manifest.json\`: unchanged prior corpus plus every newly used owner/manufacturer/FDA evidence artifact and hash.
-- \`source-product-discovery.csv\`: complete 63-row controlled-disposition ledger.
+- \`source-product-discovery.csv\`: complete ${counts.discovery_rows}-row controlled-disposition ledger.
+- \`old-corpus-multipage-document-scan.csv\`: all ${counts.corpus_wide_multi_page_table_documents} multi-page table documents identified by the corpus-wide extractor.
+- \`old-corpus-table-page-coverage.csv\`: page-by-page contract for the flagged multi-page table section and all ${counts.shiley_candidates_reconciled} reconciled Shiley candidates.
 - \`missing-from-original-csv.csv\`: exact candidates absent from the original CSV, with final disposition.
 - \`owner-supplied-products.csv\`: all 40 owner-packet targets.
-- \`new-product-additions.csv\`: the 44 accepted exact products.
+- \`new-product-additions.csv\`: the ${counts.new_exact_products} accepted exact products.
 - \`existing-product-matches.csv\`: four Cook alias/exact matches.
-- \`unresolved-relevant-products.csv\`: five held candidates plus the added CLR taxonomy-review row.
+- \`unresolved-relevant-products.csv\`: held exact candidates, the Shiley source conflict, and the added CLR taxonomy-review row.
 - \`irrelevant-products.csv\`: nine constrained ENT exclusions.
 - \`duplicate-analysis.csv\`: per-product exact/alias/package/manufacturer duplicate review.
 - \`manufacturer-summary.csv\`: counts by origin and legal manufacturer.
@@ -348,35 +361,60 @@ async function buildFiles(): Promise<Map<string, string>> {
     (candidate, offset) => discoveryForNonAddition(candidate, nonAdditionStart + offset),
   )
   const discovery = [...productRows, ...existingRows, ...nonAdditionRows]
-  if (discovery.length !== 63)
-    throw new Error(`Expected 63 discovery rows; found ${discovery.length}.`)
+  const expectedDiscoveryRows = sourceCompletenessCount('discovery_rows')
+  if (discovery.length !== expectedDiscoveryRows)
+    throw new Error(`Expected ${expectedDiscoveryRows} discovery rows; found ${discovery.length}.`)
 
-  const newEvidence = SOURCE_COMPLETENESS_REVIEW.evidence_manifest.map((source) => ({
-    provenance_origin: source.sourceId === 'SRC089' ? 'owner_pdf' : 'official_web_follow_up',
-    source_filename: source.filename,
-    relative_path: null,
-    sha256: source.sha256,
-    page_count: source.pageCount,
-    document_type: source.sourceType,
-    manufacturer: source.sourceOrganization,
-    publisher: source.sourceOrganization,
-    official_url: source.url,
-    governed_source_ids: source.sourceId ? [source.sourceId] : [],
-    matched_csv_row_count: 0,
-    matched_input_row_numbers: [],
-    canonical_additions_supported: products
-      .filter((product) =>
-        product.evidence.some((evidence) => evidence.sourceId === source.sourceId),
+  const productByCatalogNumber = new Map(
+    products.map((product) => [product.catalogNumber, product] as const),
+  )
+
+  const newEvidence = SOURCE_COMPLETENESS_REVIEW.evidence_manifest.map((source) => {
+    if (
+      source.supportedCatalogNumbers.length === 0 ||
+      new Set(source.supportedCatalogNumbers).size !== source.supportedCatalogNumbers.length
+    ) {
+      throw new Error(
+        `Evidence ${source.evidenceId} must enumerate a nonempty, duplicate-free product list.`,
       )
-      .map((product) => ({
+    }
+    const supportedProducts = source.supportedCatalogNumbers.map((catalogNumber) => {
+      const product = productByCatalogNumber.get(catalogNumber)
+      if (!product) {
+        throw new Error(
+          `Evidence ${source.evidenceId} references unknown catalog number ${catalogNumber}.`,
+        )
+      }
+      if (!product.evidence.some((evidence) => evidence.sourceId === source.sourceId)) {
+        throw new Error(
+          `Evidence ${source.evidenceId} does not have a reviewed ${source.sourceId} relationship to ${catalogNumber}.`,
+        )
+      }
+      return product
+    })
+    return {
+      provenance_origin: source.sourceId === 'SRC089' ? 'owner_pdf' : 'official_web_follow_up',
+      source_filename: source.filename,
+      relative_path: null,
+      sha256: source.sha256,
+      page_count: source.pageCount,
+      document_type: source.sourceType,
+      manufacturer: source.sourceOrganization,
+      publisher: source.sourceOrganization,
+      official_url: source.url,
+      governed_source_ids: source.sourceId ? [source.sourceId] : [],
+      matched_csv_row_count: 0,
+      matched_input_row_numbers: [],
+      canonical_additions_supported: supportedProducts.map((product) => ({
         product_id: stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`),
         catalog_number: product.catalogNumber,
       })),
-    evidence_id: source.evidenceId,
-    evidence_scope: source.scope,
-    identifier_matched: source.identifierMatched,
-    retrieved_on: source.retrievedOn,
-  }))
+      evidence_id: source.evidenceId,
+      evidence_scope: source.scope,
+      identifier_matched: source.identifierMatched,
+      retrieved_on: source.retrievedOn,
+    }
+  })
   const newPdfEvidence = SOURCE_COMPLETENESS_REVIEW.evidence_manifest.filter((source) =>
     source.sourceType.includes('PDF'),
   )
@@ -384,6 +422,43 @@ async function buildFiles(): Promise<Map<string, string>> {
     (source) => !source.sourceType.includes('PDF'),
   )
   const newPdfPages = newPdfEvidence.reduce((total, source) => total + (source.pageCount ?? 0), 0)
+  if (newPdfEvidence.length !== sourceCompletenessCount('new_pdf_evidence_files')) {
+    throw new Error(`New PDF evidence count does not match the reviewed count contract.`)
+  }
+  if (newPdfPages !== sourceCompletenessCount('new_pdf_evidence_pages')) {
+    throw new Error(`New PDF evidence page total does not match the reviewed count contract.`)
+  }
+  const priorSources = prior.sources.map((source) => {
+    const record = source as {
+      governed_source_ids?: string[]
+      canonical_additions_supported?: { product_id: string; catalog_number: string }[]
+    }
+    const sourceIds = new Set(record.governed_source_ids ?? [])
+    const addedSupport = products
+      .filter(
+        (product) =>
+          product.origin === 'old_corpus' &&
+          product.evidence.some((evidence) => sourceIds.has(evidence.sourceId)),
+      )
+      .map((product) => ({
+        product_id: stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`),
+        catalog_number: product.catalogNumber,
+      }))
+    if (addedSupport.length === 0) return { provenance_origin: 'old_corpus', ...source }
+    const supportById = new Map(
+      [...(record.canonical_additions_supported ?? []), ...addedSupport].map((item) => [
+        item.product_id,
+        item,
+      ]),
+    )
+    return {
+      provenance_origin: 'old_corpus',
+      ...source,
+      canonical_additions_supported: [...supportById.values()].sort((left, right) =>
+        left.catalog_number.localeCompare(right.catalog_number),
+      ),
+    }
+  })
   const sourceManifest = {
     format_version: '1.0',
     reviewed_on: SOURCE_COMPLETENESS_REVIEW.reviewed_on,
@@ -410,10 +485,10 @@ async function buildFiles(): Promise<Map<string, string>> {
     prior_source_hash_mismatches: 0,
     prior_sources_missing: 0,
     prior_sources_added: 0,
-    sources: [
-      ...prior.sources.map((source) => ({ provenance_origin: 'old_corpus', ...source })),
-      ...newEvidence,
-    ],
+    sources: [...priorSources, ...newEvidence],
+  }
+  if (sourceManifest.total_pdf_pages !== sourceCompletenessCount('aggregate_pdf_pages')) {
+    throw new Error(`Aggregate PDF page total does not match the reviewed count contract.`)
   }
 
   const discoveryColumns = Object.keys(discovery[0]) as (keyof DiscoveryRow)[]
@@ -424,8 +499,7 @@ async function buildFiles(): Promise<Map<string, string>> {
   )
   const ownerRows = discovery.filter((row) => row.origin === 'owner_pdf')
   const unresolved = discovery.filter(
-    (row) =>
-      row.disposition === 'needs_owner_review' || row.taxonomy_class === 'other_needs_review',
+    (row) => row.owner_review_required === 'yes' || row.taxonomy_class === 'other_needs_review',
   )
   const irrelevant = discovery.filter((row) => row.disposition === 'irrelevant_to_current_scope')
 
@@ -479,6 +553,45 @@ async function buildFiles(): Promise<Map<string, string>> {
   files.set('README.md', await formatMarkdown(readme(discovery, products)))
   files.set('source-manifest.json', await formatJson(sourceManifest))
   files.set('source-product-discovery.csv', toCsv(discovery, discoveryColumns))
+  const coverage = SOURCE_COMPLETENESS_REVIEW.corpus_audit.table_page_coverage
+  if (!Array.isArray(coverage) || coverage.length === 0) {
+    throw new Error('Missing reviewed old-corpus table-page coverage contract.')
+  }
+  files.set(
+    'old-corpus-table-page-coverage.csv',
+    toCsv(
+      coverage as Record<string, unknown>[],
+      Object.keys(coverage[0] as Record<string, unknown>),
+    ),
+  )
+  const corpusScan = SOURCE_COMPLETENESS_REVIEW.corpus_audit.corpus_wide_multi_page_table_scan as
+    | { documents?: string[] }
+    | undefined
+  const scannedDocuments = corpusScan?.documents ?? []
+  if (
+    scannedDocuments.length !== sourceCompletenessCount('corpus_wide_multi_page_table_documents')
+  ) {
+    throw new Error('Corpus-wide multi-page table document count is stale.')
+  }
+  const scanRows = scannedDocuments.map((entry) => {
+    const separator = entry.lastIndexOf(':')
+    const filename = entry.slice(0, separator)
+    const tableSections = entry.slice(separator + 1)
+    const correctionDisposition = filename.startsWith('Shiley™ Flexible')
+      ? '14 candidates: 13 added; 1 source conflict'
+      : filename.startsWith('Shiley™ XLT')
+        ? '8 additional candidates: 8 added'
+        : 'risk-screened against PR118 reconciliation; no correction-cohort candidate'
+    return {
+      filename,
+      table_sections: tableSections,
+      correction_disposition: correctionDisposition,
+    }
+  })
+  files.set(
+    'old-corpus-multipage-document-scan.csv',
+    toCsv(scanRows, Object.keys(scanRows[0]) as (keyof (typeof scanRows)[number])[]),
+  )
   files.set('missing-from-original-csv.csv', toCsv(exactMissing, discoveryColumns))
   files.set('owner-supplied-products.csv', toCsv(ownerRows, discoveryColumns))
   files.set(

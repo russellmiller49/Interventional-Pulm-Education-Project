@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
 
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
+
 import { CatalogVerificationQueue } from '../components/CatalogVerificationQueue'
 import { CatalogVerificationWorkspace } from '../components/CatalogVerificationWorkspace'
 import {
@@ -89,11 +91,13 @@ describe('catalog verification aggregation', () => {
 
     expect(summary).toMatchObject({
       // Governed post-workbook additions include the source-completeness intake.
-      totalProducts: 1973,
-      workbookBacklogProducts: 1221,
-      additionsAfterWorkbook: 752,
+      totalProducts: sourceCompletenessCount('canonical_products_after'),
+      workbookBacklogProducts: sourceCompletenessCount('workbook_backlog_products'),
+      additionsAfterWorkbook: sourceCompletenessCount('catalog_additions_after_workbook'),
       strongIdentityCandidates: 718,
-      withoutStrongIdentityCandidate: 1255,
+      withoutStrongIdentityCandidate: sourceCompletenessCount(
+        'products_without_strong_identity_candidate',
+      ),
       gtinConflicts: 99,
     })
     expect(new Set(rows.map((row) => row.productId)).size).toBe(rows.length)
@@ -206,12 +210,14 @@ describe('catalog verification aggregation', () => {
 
     expect(weakOnly.length).toBeGreaterThan(0)
     expect(weakOnly.every((row) => row.identityEvidence === 'weak_candidate_only')).toBe(true)
-    expect(additions).toHaveLength(752)
+    expect(additions).toHaveLength(sourceCompletenessCount('catalog_additions_after_workbook'))
     expect(conflicts.length).toBeGreaterThan(0)
     expect(notDistributed.every((row) => row.distributionEvidence === 'not_in_distribution')).toBe(
       true,
     )
-    expect(getCatalogVerificationRows()).toHaveLength(1973)
+    expect(getCatalogVerificationRows()).toHaveLength(
+      sourceCompletenessCount('canonical_products_after'),
+    )
   })
 
   it('searches current GUDID candidate DIs rather than only workbook suggestions', () => {
