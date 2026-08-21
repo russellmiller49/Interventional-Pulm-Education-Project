@@ -176,13 +176,13 @@ describe('D2B — the gate governs recommendation only', () => {
       expect(detail!.product.product_name).toBe(product.product_name)
       if (detail!.roles.length === 0) productsWithoutRole += 1
     }
-    expect(productsWithoutRole).toBe(19)
-    // 23 blocked and 34 review-required researched rows, plus 1,150 unresearched products
+    expect(productsWithoutRole).toBe(25)
+    // 23 blocked and 34 review-required researched rows, plus 1,194 unresearched products
     // whose safety status is honestly unverified.
     expect(Object.fromEntries([...gates.entries()].sort())).toEqual({
       blocked_active_safety_action: 23,
       clear: 521,
-      review_required: 1184,
+      review_required: 1228,
     })
   })
 })

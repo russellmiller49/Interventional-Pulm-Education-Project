@@ -125,9 +125,9 @@ describe('full-catalog clinical-use review data', () => {
     })
 
     expect(data.counts).toEqual({
-      // The brochure intake adds 397 products and 378 evidence-supported role mappings.
-      catalogProducts: 1929,
-      productRoles: 2000,
+      // Source Completeness V2 adds 44 products and 38 evidence-supported role mappings.
+      catalogProducts: 1973,
+      productRoles: 2038,
       // Owner-review corrections 2026-08-09 (F-06): 2073 -> 2035 — the four removed
       // CHEST_TUBE IPC rows carried 38 authored options (identical sets remain on the
       // IPC_PLACEMENT slots); the three new flex-core rows ship only unreviewed proposals.
@@ -136,8 +136,8 @@ describe('full-catalog clinical-use review data', () => {
     expect(getClinicalUseReviewCounts()).toEqual(data.counts)
     expect(data.roleOptions).toHaveLength(135) // taxonomy v2 roles 116 -> 134
     expect(data.slotOptions).toHaveLength(232) // owner-review corrections 2026-08-09: 233 - 4 IPC rows (F-06) + 3 flex-core rows (F-10)
-    expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1929)
-    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(2000)
+    expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1973)
+    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(2038)
     expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2035)
     expect(data.productRoles.every((row) => row.reviewKey.startsWith('product_role:'))).toBe(true)
     expect(data.currentSlots.every((row) => row.reviewKey.startsWith('slot_product:'))).toBe(true)

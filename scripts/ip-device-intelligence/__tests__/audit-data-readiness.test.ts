@@ -75,14 +75,14 @@ describe('ip-device-intelligence data-readiness audit', () => {
 
   it('matches the published ip-cards:validate-data global counts', () => {
     const report = computeDataReadiness(inputs)
-    expect(report.global.products).toBe(1929)
+    expect(report.global.products).toBe(1973)
     expect(report.global.roles).toBe(135)
     expect(report.global.procedures).toBe(15)
-    // The brochure intake does not alter authored slots or options. Its reviewed role mappings
-    // expand the nonselectable proposal queue from 831 to 1,485.
+    // Source Completeness V2 does not alter authored slots or options. Its reviewed role
+    // mappings expand only the nonselectable proposal queue from 1,485 to 1,595.
     expect(report.global.procedureSlots).toBe(232)
     expect(report.global.authoredSlotOptions).toBe(2035)
-    expect(report.global.slotOptionProposals).toBe(1485)
+    expect(report.global.slotOptionProposals).toBe(1595)
   })
 
   it('is deterministic: computing twice yields deep-equal reports and identical bytes', async () => {

@@ -334,7 +334,7 @@ describe('exact-slot clinician review workbook export', () => {
     ).toHaveLength(2)
 
     const realRows = getSlotOptionReviewRows()
-    expect(realRows).toHaveLength(1485)
+    expect(realRows).toHaveLength(1595)
     const workbook = await createExactSlotReviewWorkbook(
       { scope: 'all', locale: 'en' },
       'https://example.test',
@@ -346,15 +346,15 @@ describe('exact-slot clinician review workbook export', () => {
       },
     )
     // The brochure role mappings expand only the nonselectable proposal review queue.
-    expect(workbook.proposalKeys).toHaveLength(1485)
+    expect(workbook.proposalKeys).toHaveLength(1595)
     const parsed = await parseOoxmlWorkbookBytes(workbook.bytes)
-    expect(parsed.sheets.get('Exact Slot Review')?.maxRow).toBe(1486)
+    expect(parsed.sheets.get('Exact Slot Review')?.maxRow).toBe(1596)
 
     const preview = await importExactSlotReviewWorkbook(workbook.bytes, importOptions(realRows))
     expect(preview.summary).toMatchObject({
-      matchedProposalKeys: 1485,
+      matchedProposalKeys: 1595,
       missingCurrentProposals: 0,
-      rowsWithoutDecision: 1485,
+      rowsWithoutDecision: 1595,
       validCompletedDecisions: 0,
     })
     expect(preview.canExportNormalized).toBe(true)

@@ -1,5 +1,29 @@
 [
   {
+    "product_id": "PRD-003C4641E6",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 6, CLR Irrigator panel",
+    "claim_type": "Clinical-scope and family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-003C4641E6",
+    "source_id": "SRC103",
+    "source_location": "CLR Irrigator IFU LBL S012-01-203 Rev D",
+    "claim_type": "Exact product function and thoracic indication",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-003C4641E6",
+    "source_id": "SRC104",
+    "source_location": "AccessGUDID Primary DI 00860003054901",
+    "claim_type": "Exact catalog number, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-00C13A59AA",
     "source_id": "SRC021",
     "source_location": "p. 10",
@@ -536,6 +560,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-07A1B4DA10",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, system-accessory ordering list",
+    "claim_type": "Exact accessory reference and component name",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-07A1B4DA10",
+    "source_id": "SRC092",
+    "source_location": "Broncoflex system component information",
+    "claim_type": "Manufacturer-specific system relationship",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-07A68D03D0",
     "source_id": "SRC085",
     "source_location": "Document p. not stated (PDF page 2)",
@@ -749,6 +789,30 @@
     "source_location": "Document p. 11 (PDF page 7)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A90C0B244",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, system-accessory ordering list",
+    "claim_type": "Exact accessory reference and component name",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A90C0B244",
+    "source_id": "SRC092",
+    "source_location": "Broncoflex system component information",
+    "claim_type": "Manufacturer-specific system relationship",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-0A90C0B244",
+    "source_id": "SRC094",
+    "source_location": "AccessGUDID Primary DI 03664977000042",
+    "claim_type": "Exact device identity, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -1808,6 +1872,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-181DE98372",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, Screeni references 30030000 / 30030001",
+    "claim_type": "Two separately listed exact ordering configurations",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-181DE98372",
+    "source_id": "SRC093",
+    "source_location": "Screeni technical datasheet",
+    "claim_type": "Platform identity and legal manufacturer",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1840ABC86D",
     "source_id": "SRC022",
     "source_location": "p. 7.10",
@@ -2072,6 +2152,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-1B6B236545",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, system-accessory ordering list",
+    "claim_type": "Exact accessory reference and component name",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1B6B236545",
+    "source_id": "SRC092",
+    "source_location": "Broncoflex system component information",
+    "claim_type": "Manufacturer-specific system relationship",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-1B787D066C",
     "source_id": "SRC081",
     "source_location": "PDF page index 2; printed p. 2/2, PRODUCT SPECIFICATIONS table",
@@ -2309,6 +2405,30 @@
     "source_location": "pp. 9-10",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1ED27ADA45",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 2, EndoCore ordering table",
+    "claim_type": "Exact order number, package GTIN, gauge, channel minimum, and Olympus configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1ED27ADA45",
+    "source_id": "SRC095",
+    "source_location": "EndoCore product and ordering information",
+    "claim_type": "Manufacturer identity, exact needle geometry, and compatibility",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-1ED27ADA45",
+    "source_id": "SRC096",
+    "source_location": "AccessGUDID Primary DI 00850081350033",
+    "claim_type": "Exact model, primary DI, package DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -2896,6 +3016,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2632FFBF07",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, Broncoflex ordering panel",
+    "claim_type": "Exact reference and physical configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2632FFBF07",
+    "source_id": "SRC092",
+    "source_location": "Broncoflex system and specification tables",
+    "claim_type": "System identity, legal manufacturer, and specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2632FFBF07",
+    "source_id": "SRC094",
+    "source_location": "AccessGUDID Primary DI 03664977000103",
+    "claim_type": "Exact device identity, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-26349CF364",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -3368,6 +3512,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-2C1F1ABA62",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2C1F1ABA62",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2C1F1ABA62",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2C1F40E815",
     "source_id": "SRC046",
     "source_location": "device.txt, PrimaryDI 15021312015669",
@@ -3464,6 +3632,30 @@
     "notes": "Exact ordering table and product specifications shown on manufacturer page capture."
   },
   {
+    "product_id": "PRD-2CD37C1E67",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 6, CLR irrigation-system component panel",
+    "claim_type": "Product-family scope and separately named components",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2CD37C1E67",
+    "source_id": "SRC103",
+    "source_location": "CLR product pages and component IFUs",
+    "claim_type": "Manufacturer, separate-component identity, and pleural drainage/irrigation function",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2CD37C1E67",
+    "source_id": "SRC104",
+    "source_location": "AccessGUDID Primary DI 00860003054949",
+    "claim_type": "Exact catalog number, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-2CE58D8A14",
     "source_id": "SRC008",
     "source_location": "CSV row 16",
@@ -3486,6 +3678,14 @@
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer brochure",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2D0C9B936A",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 7, 22G Pentax row",
+    "claim_type": "Cook order number, reference part number, gauge, and scope configuration",
+    "verification_status": "Existing canonical product reconciled against owner-supplied source",
+    "notes": "Existing exact Cook order number G34279 already carries alternate identifier ECHO-HD-22-EBUS-P-C."
   },
   {
     "product_id": "PRD-2D19D12C17",
@@ -3558,6 +3758,14 @@
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer brochure",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2DA93F54B9",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 7, 25G Olympus row",
+    "claim_type": "Cook order number, reference part number, gauge, and scope configuration",
+    "verification_status": "Existing canonical product reconciled against owner-supplied source",
+    "notes": "Existing exact Cook order number G34282 already carries alternate identifier ECHO-HD-25-EBUS-O-C."
   },
   {
     "product_id": "PRD-2DACCAD2B4",
@@ -3725,6 +3933,30 @@
     "source_location": "p. 11",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2FA3F3A0DD",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 6, CLR irrigation-system component panel",
+    "claim_type": "Product-family scope and separately named components",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2FA3F3A0DD",
+    "source_id": "SRC103",
+    "source_location": "CLR product pages and component IFUs",
+    "claim_type": "Manufacturer, separate-component identity, and pleural drainage/irrigation function",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-2FA3F3A0DD",
+    "source_id": "SRC104",
+    "source_location": "AccessGUDID Primary DI 00860003054918",
+    "claim_type": "Exact catalog number, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4296,6 +4528,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-378597DD7A",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-386D5501C9",
     "source_id": "SRC080",
     "source_location": "Document p. 8 (PDF page 5)",
@@ -4381,6 +4621,38 @@
     "source_location": "PDF p. 12",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-39C1BDB306",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-39C1BDB306",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-39C1BDB306",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-39C1BDB306",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546092",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -4600,6 +4872,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-3E1556EBE5",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-3EB4013643",
     "source_id": "SRC085",
     "source_location": "Document p. not stated (PDF page 2)",
@@ -4646,6 +4926,14 @@
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - current manufacturer brochure",
     "notes": null
+  },
+  {
+    "product_id": "PRD-3F51C7D66F",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 7, 25G Pentax row",
+    "claim_type": "Cook order number, reference part number, gauge, and scope configuration",
+    "verification_status": "Existing canonical product reconciled against owner-supplied source",
+    "notes": "Existing exact Cook order number G34280 already carries alternate identifier ECHO-HD-25-EBUS-P-C."
   },
   {
     "product_id": "PRD-3FB3ACD1F6",
@@ -5344,6 +5632,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-48F43B9C6A",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-48F43B9C6A",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-48F43B9C6A",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-48F43B9C6A",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546085",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-49256F1DC6",
     "source_id": "SRC076",
     "source_location": "PDF p. 10",
@@ -5712,6 +6032,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-4E7880DB69",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4E7880DB69",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4E7880DB69",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4E7880DB69",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546061",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-4E9069C30F",
     "source_id": "SRC003",
     "source_location": "p. 9",
@@ -5773,6 +6125,30 @@
     "source_location": "device.txt, PrimaryDI 00850048825017",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F290FD9D3",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F290FD9D3",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-4F290FD9D3",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6165,6 +6541,14 @@
     "source_location": "ForTec neoV Laser - Pulmonology product page",
     "claim_type": "System identity, wavelength, mode, power, and stated bronchoscopic use",
     "verification_status": "Manufacturer document; no FDA UDI record located",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5592532651",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -6624,6 +7008,30 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-5AC73F2FA3",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5AC73F2FA3",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5AC73F2FA3",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-5ACC570E45",
     "source_id": "SRC001",
     "source_location": "pp. 12-13",
@@ -6768,6 +7176,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5CC8131FDE",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 7, 22G Olympus row",
+    "claim_type": "Cook order number, reference part number, gauge, and scope configuration",
+    "verification_status": "Existing canonical product reconciled against owner-supplied source",
+    "notes": "Existing exact Cook order number G34281 already carries alternate identifier ECHO-HD-22-EBUS-O-C."
+  },
+  {
     "product_id": "PRD-5CCBBDD4CF",
     "source_id": "SRC030",
     "source_location": "pp. 70-73",
@@ -6797,6 +7213,14 @@
     "source_location": "Respiratory 14.12 (PDF p. 125)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-5CF4F1857F",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -8168,6 +8592,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6F15A8C9B5",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, Screeni references 30030000 / 30030001",
+    "claim_type": "Two separately listed exact ordering configurations",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6F15A8C9B5",
+    "source_id": "SRC093",
+    "source_location": "Screeni technical datasheet",
+    "claim_type": "Platform identity and legal manufacturer",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-6F15A8C9B5",
+    "source_id": "SRC094",
+    "source_location": "AccessGUDID Primary DI 03664977030032",
+    "claim_type": "Exact device identity, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-6F32150552",
     "source_id": "SRC020",
     "source_location": "Catheter Aspiration Set page",
@@ -8560,6 +9008,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-73A1532E08",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-73A1532E08",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-73A1532E08",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-73BBBA8747",
     "source_id": "SRC003",
     "source_location": "p. 3",
@@ -8733,6 +9205,22 @@
     "source_location": "PDF p. 3",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75D987903F",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 3, Narwhal ordering and specification panels",
+    "claim_type": "Exact sales/package code, contents, dimensions, and applications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-75D987903F",
+    "source_id": "SRC097",
+    "source_location": "K261068, device description and model table",
+    "claim_type": "Legal manufacturer, base models, physical configuration, and intended use",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9096,6 +9584,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-7B8C092373",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-7B8E07DF5F",
     "source_id": "SRC087",
     "source_location": "Document p. 53 (PDF page 61)",
@@ -9294,6 +9790,14 @@
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified exact catalog entry - non-U.S. source",
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
+  },
+  {
+    "product_id": "PRD-7DFA867CB6",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
   },
   {
     "product_id": "PRD-7E05B194BE",
@@ -9517,6 +10021,30 @@
     "source_location": "device.txt, PrimaryDI B634MBR0000150",
     "claim_type": "Device identity, model number, and distribution status",
     "verification_status": "GUDID \"In Commercial Distribution\" as of 2026-07-23",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-81878EEA9B",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-81878EEA9B",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-81878EEA9B",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -9749,6 +10277,30 @@
     "source_location": "Document p. 12 (PDF page 7)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-85B355AE93",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-85B355AE93",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-85B355AE93",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -10448,6 +11000,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-908A9B501B",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-908A9B501B",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-908A9B501B",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-90A0B83AA5",
     "source_id": "SRC030",
     "source_location": "p. 87",
@@ -10493,6 +11069,14 @@
     "source_location": "p. 74",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - U.S. manufacturer brochure; current orderability pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-9163FB693E",
+    "source_id": "SRC090",
+    "source_location": "Ordering information, CFNs 1899200 and 1899076",
+    "claim_type": "Exact ordering identity and component type",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -10832,6 +11416,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-961C4B6422",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-961C4B6422",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-961C4B6422",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-961C4B6422",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546177",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-963930CE88",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
@@ -10877,6 +11493,30 @@
     "source_location": "Document p. 71 (PDF page 79)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-973D3F9656",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-973D3F9656",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-973D3F9656",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -11632,6 +12272,38 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A3852DB56A",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A3852DB56A",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A3852DB56A",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-A3852DB56A",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546184",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A3EBA86219",
     "source_id": "SRC021",
     "source_location": "pp. 15-17",
@@ -12128,6 +12800,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AAECD27F75",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, system-accessory ordering list",
+    "claim_type": "Exact accessory reference and component name",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AAECD27F75",
+    "source_id": "SRC092",
+    "source_location": "Broncoflex system component information",
+    "claim_type": "Manufacturer-specific system relationship",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AAFEA61B28",
     "source_id": "SRC016",
     "source_location": "Specifications table, brochure p. 2",
@@ -12181,6 +12869,30 @@
     "source_location": "p. 88",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AC45D3E510",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 2, EndoCore ordering table",
+    "claim_type": "Exact order number, package GTIN, gauge, channel minimum, and Olympus configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AC45D3E510",
+    "source_id": "SRC095",
+    "source_location": "EndoCore product and ordering information",
+    "claim_type": "Manufacturer identity, exact needle geometry, and compatibility",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AC45D3E510",
+    "source_id": "SRC096",
+    "source_location": "AccessGUDID Primary DI 00850081350040",
+    "claim_type": "Exact model, primary DI, package DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -12416,6 +13128,22 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AED3720BF6",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 3, Narwhal ordering and specification panels",
+    "claim_type": "Exact sales/package code, contents, dimensions, and applications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AED3720BF6",
+    "source_id": "SRC097",
+    "source_location": "K261068, device description and model table",
+    "claim_type": "Legal manufacturer, base models, physical configuration, and intended use",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-AEEAFB2957",
     "source_id": "SRC006",
     "source_location": "Product list 2025!thoracent",
@@ -12504,11 +13232,75 @@
     "notes": null
   },
   {
+    "product_id": "PRD-AFF9BDD685",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AFF9BDD685",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AFF9BDD685",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-AFF9BDD685",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546108",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-B027947191",
     "source_id": "SRC074",
     "source_location": "Document p. 16/66 (PDF page 16)",
     "claim_type": "Product identity and catalog/model number",
     "verification_status": "Verified against the supplied authoritative manufacturer document",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B02CF0A059",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B02CF0A059",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B02CF0A059",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-B02CF0A059",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546160",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -13192,6 +13984,30 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BA71A30B4A",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+    "claim_type": "Exact order code, balloon diameter, and balloon length",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BA71A30B4A",
+    "source_id": "SRC098",
+    "source_location": "Trachealator product page",
+    "claim_type": "Manufacturer, non-occlusive design, and airway-dilation application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BA71A30B4A",
+    "source_id": "SRC099",
+    "source_location": "K211894, device description",
+    "claim_type": "Manufacturer and model-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-BA7CBE6482",
     "source_id": "SRC021",
     "source_location": "pp. 49-51",
@@ -13381,6 +14197,30 @@
     "source_location": "p. 70",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BC2856A7CB",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 6, CLR irrigation-system component panel",
+    "claim_type": "Product-family scope and separately named components",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BC2856A7CB",
+    "source_id": "SRC103",
+    "source_location": "CLR product pages and component IFUs",
+    "claim_type": "Manufacturer, separate-component identity, and pleural drainage/irrigation function",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-BC2856A7CB",
+    "source_id": "SRC104",
+    "source_location": "AccessGUDID Primary DI 00850052377007",
+    "claim_type": "Exact catalog number, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15048,6 +15888,38 @@
     "notes": "Exact catalog/SKU evidence from a non-U.S. manufacturer catalog."
   },
   {
+    "product_id": "PRD-D55094A08A",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 1, Broncoflex ordering panel",
+    "claim_type": "Exact reference and physical configuration",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D55094A08A",
+    "source_id": "SRC092",
+    "source_location": "Broncoflex system and specification tables",
+    "claim_type": "System identity, legal manufacturer, and specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D55094A08A",
+    "source_id": "SRC094",
+    "source_location": "AccessGUDID Primary DI 03664977020033",
+    "claim_type": "Exact device identity, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D5621CD59E",
+    "source_id": "SRC090",
+    "source_location": "Ordering information, CFNs 1899200 and 1899076",
+    "claim_type": "Exact ordering identity and component type",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-D5706A45F2",
     "source_id": "SRC072",
     "source_location": "PDF p. 12",
@@ -15061,6 +15933,30 @@
     "source_location": "p. 12",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - manufacturer catalog; current U.S. status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D59133B2EE",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 6, CLR irrigation-system component panel",
+    "claim_type": "Product-family scope and separately named components",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D59133B2EE",
+    "source_id": "SRC103",
+    "source_location": "CLR product pages and component IFUs",
+    "claim_type": "Manufacturer, separate-component identity, and pleural drainage/irrigation function",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-D59133B2EE",
+    "source_id": "SRC104",
+    "source_location": "AccessGUDID Primary DI 00860003054994",
+    "claim_type": "Exact catalog number, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15389,6 +16285,38 @@
     "source_location": "p. 77",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DADEAB2B83",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 5, visually confirmed model/specification table",
+    "claim_type": "Exact model and physical configuration; BR-M50 visually confirmed against OCR",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DADEAB2B83",
+    "source_id": "SRC100",
+    "source_location": "Single-use bronchoscope model/specification tables",
+    "claim_type": "Exact model dimensions and working-channel specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DADEAB2B83",
+    "source_id": "SRC101",
+    "source_location": "K222910, applicant and device-description sections",
+    "claim_type": "Legal manufacturer and product-family identity",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-DADEAB2B83",
+    "source_id": "SRC102",
+    "source_location": "AccessGUDID Primary DI 06970462546115",
+    "claim_type": "Exact model, primary DI, and labeler",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -15965,6 +16893,14 @@
     "source_location": "Respiratory 14.17 (PDF p. 132)",
     "claim_type": "Catalog/SKU evidence",
     "verification_status": "Verified - manufacturer catalog",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-E23034FC46",
+    "source_id": "SRC091",
+    "source_location": "Airway Blades ordering information table",
+    "claim_type": "Exact CFN, dimensions, blade geometry, and airway application",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {
@@ -17557,6 +18493,22 @@
     "source_location": "p. 74",
     "claim_type": "Exact catalog entry",
     "verification_status": "Verified - legacy U.S. manufacturer catalog; current status pending",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F9BA60E9A6",
+    "source_id": "SRC089",
+    "source_location": "Rendered PDF page 3, Narwhal ordering and specification panels",
+    "claim_type": "Exact sales/package code, contents, dimensions, and applications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
+    "product_id": "PRD-F9BA60E9A6",
+    "source_id": "SRC097",
+    "source_location": "K261068, device description and model table",
+    "claim_type": "Legal manufacturer, base models, physical configuration, and intended use",
+    "verification_status": "Verified in the reviewed source-completeness intake",
     "notes": null
   },
   {

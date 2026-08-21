@@ -68,17 +68,17 @@ describe('deterministic hidden-product current-U.S.-status cohort', () => {
 
   it('partitions every hidden product without treating candidate or unknown rows as status-only', () => {
     expect(manifest.counts).toMatchObject({
-      catalog_products_total: 1929,
+      catalog_products_total: 1973,
       prototype_visible_products: 753,
-      hidden_products: 1176,
-      hidden_verified_source: 975,
+      hidden_products: 1220,
+      hidden_verified_source: 1019,
       hidden_candidate: 200,
       hidden_unknown: 1,
     })
-    expect(manifest.products).toHaveLength(1176)
+    expect(manifest.products).toHaveLength(1220)
     expect(
       manifest.products.filter((row) => row.cohort_partition === 'us_status_pending'),
-    ).toHaveLength(975)
+    ).toHaveLength(1019)
     expect(
       manifest.products.filter(
         (row) => row.cohort_partition === 'identity_or_specification_pending_candidate',
@@ -93,8 +93,8 @@ describe('deterministic hidden-product current-U.S.-status cohort', () => {
 
   it('uses exact deterministic identifier tiers and rejects the service placeholder', () => {
     expect(manifest.counts.identifier_completeness).toEqual({
-      exact_di: 0,
-      catalog_number: 1147,
+      exact_di: 19,
+      catalog_number: 1172,
       model_only: 0,
       insufficient: 29,
     })
@@ -106,7 +106,7 @@ describe('deterministic hidden-product current-U.S.-status cohort', () => {
 
   it('preserves the hidden/selectability boundary and exact authored-use counts', () => {
     expect(manifest.counts).toMatchObject({
-      mapped_role_rows: 1171,
+      mapped_role_rows: 1209,
       authored_slot_uses: 1098,
       selectable_slot_uses: 0,
       products_with_authored_slot_use: 692,
@@ -120,14 +120,14 @@ describe('deterministic hidden-product current-U.S.-status cohort', () => {
   it('derives authored and role-mapped procedures plus the three exemplar flags', () => {
     const pending = manifest.products.filter((row) => row.cohort_partition === 'us_status_pending')
     expect(pending.filter((row) => row.device_intelligence_exemplar_flags.CHEST_TUBE)).toHaveLength(
-      83,
+      88,
     )
     expect(pending.filter((row) => row.device_intelligence_exemplar_flags.EBUS_TBNA)).toHaveLength(
-      9,
+      13,
     )
     expect(
       pending.filter((row) => row.device_intelligence_exemplar_flags.THERAPEUTIC_BRONCH),
-    ).toHaveLength(190)
+    ).toHaveLength(203)
     for (const row of manifest.products) {
       expect(row.authored_procedure_codes).toEqual([...row.authored_procedure_codes].sort())
       expect(row.role_mapped_procedure_codes).toEqual([...row.role_mapped_procedure_codes].sort())
@@ -140,12 +140,12 @@ describe('deterministic hidden-product current-U.S.-status cohort', () => {
     expect(manifest.evidence_artifacts.gudid).toMatchObject({
       artifact_freshness: 'stale',
       artifact_catalog_product_count: 1474,
-      current_catalog_product_count: 1929,
+      current_catalog_product_count: 1973,
     })
     expect(manifest.evidence_artifacts.openfda).toMatchObject({
       artifact_freshness: 'stale',
       artifact_catalog_product_count: 1474,
-      current_catalog_product_count: 1929,
+      current_catalog_product_count: 1973,
       products_processed: 25,
     })
     expect(

@@ -81,7 +81,7 @@ export interface DeviceClassFacet {
  * Device-class facet counts over a store's product population (the atlas cohort store in
  * production; fixtures in tests). Computed from the store rather than the overlay counts
  * so the facet can never promise a product the store then withholds. Classes with zero
- * products are omitted — including the `other_needs_review` fallback while it is empty.
+ * products are omitted; the review fallback appears whenever the cohort actually contains one.
  */
 export function getDeviceClassFacets(store: CatalogStore): DeviceClassFacet[] {
   const counts = new Map<DeviceClassCode, number>()

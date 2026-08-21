@@ -4,12 +4,12 @@ Airway stenting,2,sizing_measuring,1
 Bronchoscopic lung volume reduction,2,catheter_sheath,3
 Bronchoscopic lung volume reduction,2,console_capital,2
 Bronchoscopy platform,3,accessory,1
-Bronchoscopy platform,3,bronchoscope,30
-Bronchoscopy platform,3,console_capital,7
+Bronchoscopy platform,3,bronchoscope,40
+Bronchoscopy platform,3,console_capital,9
 Endobronchial valve,3,implant_delivery,2
 Endobronchial valve,3,sizing_measuring,4
 Endobronchial valve,3,valve_occluder,9
-Endoscopy platform,9,accessory,9
+Endoscopy platform,9,accessory,13
 Endoscopy platform,9,console_capital,23
 Endoscopy platform,9,delivery_applicator,1
 Endoscopy platform,9,electrosurgical,4
@@ -37,6 +37,8 @@ Peripheral navigation,5,cytology_brush,1
 Peripheral navigation,5,forceps_instrument,1
 Peripheral navigation,5,navigation_system,14
 Peripheral navigation,5,needle,1
+Pleural procedures,2,other_needs_review,1
+Pleural procedures,2,pleural_drainage,305
 Retrieval,2,forceps_instrument,18
 Retrieval,2,retrieval_basket,3
 Rigid bronchoscopy,9,accessory,127
@@ -44,7 +46,7 @@ Rigid bronchoscopy,9,bronchoscope,90
 Rigid bronchoscopy,9,endoscopic_telescope,30
 Rigid bronchoscopy,9,forceps_instrument,126
 Rigid bronchoscopy,9,needle,3
-Rigid bronchoscopy,9,powered_shaver,8
+Rigid bronchoscopy,9,powered_shaver,17
 Rigid bronchoscopy,9,retrieval_basket,2
 Rigid bronchoscopy,9,specimen_collection,1
 Rigid bronchoscopy,9,suction_irrigation,10
@@ -52,6 +54,6 @@ Sampling,4,accessory,2
 Sampling,4,cytology_brush,12
 Sampling,4,forceps_instrument,30
 Sampling,4,needle,24
-Therapeutic bronchoscopy,3,cryotherapy,18
+Therapeutic bronchoscopy,3,cryotherapy,21
 Therapeutic bronchoscopy,3,electrosurgical,100
 Therapeutic bronchoscopy,3,other_needs_review,2

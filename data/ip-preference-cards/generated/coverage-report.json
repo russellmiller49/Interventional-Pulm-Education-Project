@@ -41,7 +41,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -151,7 +151,7 @@
           "roleCode": "CRYOPROBE_FLEX",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 4,
+          "catalogProductCount": 6,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -356,7 +356,7 @@
           "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 29,
+          "catalogProductCount": 34,
           "curatedDefaultOptionCount": 11,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -391,7 +391,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -431,7 +431,7 @@
           "roleCode": "EBUS_NEEDLE_FNA",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 25,
+          "catalogProductCount": 26,
           "curatedDefaultOptionCount": 21,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -441,7 +441,7 @@
           "roleCode": "EBUS_NEEDLE_FNB",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 8,
+          "catalogProductCount": 9,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -576,7 +576,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -701,7 +701,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -900,7 +900,7 @@
           "roleCode": "FLEX_SCOPE_SINGLE_USE",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 24,
+          "catalogProductCount": 34,
           "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -910,7 +910,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1158,7 +1158,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1369,7 +1369,7 @@
           "roleCode": "FLEX_SCOPE_SINGLE_USE",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 24,
+          "catalogProductCount": 34,
           "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1379,7 +1379,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1503,7 +1503,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1573,7 +1573,7 @@
           "roleCode": "CRYOPROBE_FLEX",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 4,
+          "catalogProductCount": 6,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1648,7 +1648,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1698,7 +1698,7 @@
           "roleCode": "CRYOPROBE_FLEX",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 4,
+          "catalogProductCount": 6,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1708,7 +1708,7 @@
           "roleCode": "AIRWAY_BALLOON_DILATOR",
           "requiredness": "optional",
           "allowCustom": true,
-          "catalogProductCount": 18,
+          "catalogProductCount": 27,
           "curatedDefaultOptionCount": 18,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1838,7 +1838,7 @@
           "roleCode": "RIGID_BRONCH_SHAVER",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 8,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -1957,7 +1957,7 @@
           "roleCode": "FLEX_SCOPE_SINGLE_USE",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 24,
+          "catalogProductCount": 34,
           "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -1967,7 +1967,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -2082,7 +2082,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -2112,7 +2112,7 @@
           "roleCode": "CRYOPROBE_FLEX",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 4,
+          "catalogProductCount": 6,
           "curatedDefaultOptionCount": 0,
           "hasCatalogProducts": true,
           "hasCuratedDefault": false
@@ -2142,7 +2142,7 @@
           "roleCode": "AIRWAY_BALLOON_DILATOR",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 18,
+          "catalogProductCount": 27,
           "curatedDefaultOptionCount": 18,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -2441,7 +2441,7 @@
           "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
           "requiredness": "conditional",
           "allowCustom": true,
-          "catalogProductCount": 29,
+          "catalogProductCount": 34,
           "curatedDefaultOptionCount": 11,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -2506,7 +2506,7 @@
           "roleCode": "FLEX_SCOPE_SINGLE_USE",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 24,
+          "catalogProductCount": 34,
           "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true
@@ -2516,7 +2516,7 @@
           "roleCode": "VIDEO_PROCESSOR",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 14,
+          "catalogProductCount": 16,
           "curatedDefaultOptionCount": 4,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true

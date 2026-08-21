@@ -35,6 +35,8 @@
     "ip-cards:import": "tsx scripts/ip-preference-cards/import-catalog.ts",
     "ip-cards:brochure-intake-review": "tsx scripts/ip-preference-cards/generate-brochure-intake-review.ts",
     "ip-cards:brochure-intake-review:check": "tsx scripts/ip-preference-cards/generate-brochure-intake-review.ts --check",
+    "ip-cards:source-completeness-review": "tsx scripts/ip-preference-cards/generate-source-completeness-review.ts",
+    "ip-cards:source-completeness-review:check": "tsx scripts/ip-preference-cards/generate-source-completeness-review.ts --check",
     "ip-cards:brochure-static-scan": "tsx scripts/ip-preference-cards/check-brochure-intake-static-exposure.ts",
     "ip-cards:validate-data": "tsx scripts/ip-preference-cards/validate-data.ts",
     "ip-cards:coverage": "tsx scripts/ip-preference-cards/coverage.ts",

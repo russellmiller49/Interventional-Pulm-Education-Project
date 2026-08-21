@@ -1,0 +1,2027 @@
+{
+  "format_version": "1.0",
+  "reviewed_on": "2026-08-20",
+  "baseline": {
+    "starting_commit": "b97ae9ed77cb47ce630d008bbe5729803c39d0b0",
+    "canonical_products": 1929,
+    "verified_source_products": 1728,
+    "manufacturers": 49,
+    "product_roles": 2000,
+    "canonical_slot_options": 2035,
+    "slot_option_proposals": 1485,
+    "published_products": 101,
+    "sources": 88,
+    "product_sources": 2248
+  },
+  "corpus_audit": {
+    "source_directory": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Research/product-brochure-intake-20260819",
+    "original_csv_sha256": "9ddcd7c85f32b116e4f19536937deeaf115b4406ff1c1c90f539416c445fda61",
+    "prior_manifest_sha256": "7cdc492ad5042197df294ed4787bbf70b2e5136a7b277ee8d75b38cd08abedba",
+    "prior_reconciliation_sha256": "7d2618eb59eba532d0cd795f7d3261225a767133a7089c605b13f2a66e3ebb99",
+    "current_total_files": 127,
+    "supported_source_files": 125,
+    "pdf_files": 115,
+    "html_files": 7,
+    "markdown_files": 3,
+    "other_supported_source_files": 0,
+    "total_pdf_pages": 2609,
+    "present_in_prior_manifest": 125,
+    "added_since_prior_manifest": 0,
+    "missing_since_prior_manifest": 0,
+    "hash_mismatches": 0,
+    "previously_unreferenced_files": [
+      "1-s2.0-S0846537114000175-main.pdf",
+      "WLL how we do it.pdf",
+      "WLLL technical details.pdf",
+      "download (1).html"
+    ],
+    "unreferenced_files_with_relevant_exact_products": 0,
+    "old_corpus_exact_products_absent_from_original_csv": 0,
+    "old_m5_family_source_filename": "ent-why-power-apexcut-blades-brochure.pdf",
+    "old_m5_family_source_sha256": "9bbd927dc7087227140a5e253af777ff00d1274eab42dfbf57d68b197066ac6a",
+    "old_m5_csv_input_row": 791,
+    "old_m5_pr118_disposition": "irrelevant_to_current_scope"
+  },
+  "manufacturers": [
+    {
+      "manufacturer_id": "MFR-4FD1B7935D",
+      "manufacturer": "Axess Vision Technology S.A.S.",
+      "default_distributor": "TSC Life US",
+      "website": "https://www.tsc-life.com/",
+      "notes": "Axess Vision Technology S.A.S. is the legal manufacturer; TSC Life is retained as the Broncoflex brand/distribution identity, not as a duplicate manufacturer."
+    },
+    {
+      "manufacturer_id": "MFR-DEFC2BB814",
+      "manufacturer": "Praxis Medical LLC",
+      "default_distributor": null,
+      "website": "https://praxismedicaldevices.com/",
+      "notes": "Praxis Medical LLC is the labeler/manufacturer for the EndoCore EBUS needles."
+    },
+    {
+      "manufacturer_id": "MFR-47A0410D40",
+      "manufacturer": "Serpex Medical",
+      "default_distributor": "Thoracent",
+      "website": "https://serpexmedical.com/",
+      "notes": "Serpex Medical is the FDA applicant/legal manufacturer for the Maverix Narwhal system; Thoracent is retained as distributor."
+    },
+    {
+      "manufacturer_id": "MFR-84EC81C22A",
+      "manufacturer": "DISA Medinotec",
+      "default_distributor": null,
+      "website": "https://www.disamedinotec.com/",
+      "notes": "DISA Medinotec is the reviewed legal manufacturer identity for Trachealator."
+    },
+    {
+      "manufacturer_id": "MFR-B0C7C296E6",
+      "manufacturer": "Shenzhen HugeMed Medical Technical Development Co., Ltd.",
+      "default_distributor": "EndoTherapeutics",
+      "website": "https://www.hugemed.net/",
+      "notes": "HugeMed is the FDA applicant and GUDID labeler; EndoTherapeutics is retained as distributor."
+    },
+    {
+      "manufacturer_id": "MFR-89E235AB41",
+      "manufacturer": "CLR Medical",
+      "default_distributor": null,
+      "website": "https://www.clrmedical.com/",
+      "notes": "CLR Medical is the manufacturer/labeler identity on the official IFUs and GUDID records."
+    }
+  ],
+  "sources": [
+    {
+      "sourceId": "SRC089",
+      "title": "Additional products — owner-supplied seven-page packet",
+      "filename": "Additional_products.pdf",
+      "sourceType": "Owner-supplied product-source packet",
+      "publisher": "Various manufacturers",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": null,
+      "reliabilityTier": "Tier 2 - owner supplied",
+      "usePolicy": "Use for the exact identifiers and specifications visibly printed on each page; resolve legal manufacturer and ambiguous identity against official manufacturer or FDA evidence.",
+      "notes": "Seven pages were rendered and visually inspected. The source is not committed to the repository."
+    },
+    {
+      "sourceId": "SRC090",
+      "title": "StraightShot M5 microdebrider",
+      "filename": null,
+      "sourceType": "Manufacturer product page",
+      "publisher": "Medtronic",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.medtronic.com/en-us/healthcare-professionals/products/ear-nose-throat/powered-surgical-equipment/microdebriders/straightshot-m5-microdebrider.html",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for current official ordering identity of the M5 handpiece and tray; confirm local orderability separately.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC091",
+      "title": "Airway blades",
+      "filename": null,
+      "sourceType": "Manufacturer product page",
+      "publisher": "Medtronic",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.medtronic.com/en-us/healthcare-professionals/products/ear-nose-throat/powered-surgical-equipment/blades/airway-blades.html",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for exact blade ordering information and explicitly stated airway applications; do not extrapolate airway scope to neighboring laryngeal-only products.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC092",
+      "title": "Broncoflex product brochure",
+      "filename": "P116-EN-02-052025-Broncoflex-Brochure-EU-EN.pdf",
+      "sourceType": "Manufacturer brochure",
+      "publisher": "TSC Life / Axess Vision Technology",
+      "revisionDate": "2025-05",
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.tsc-life.com/content/uploads/2025/08/P116-EN-02-052025-Broncoflex-Brochure-EU-EN.pdf",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for Broncoflex system identity and manufacturer-specific component references; U.S. orderability remains unverified.",
+      "notes": "European brochure; legal-manufacturer identity is corroborated separately."
+    },
+    {
+      "sourceId": "SRC093",
+      "title": "Screeni technical datasheet",
+      "filename": "P133-EN-02-022025-Cysto-Technical-Datasheet-EU-EN.pdf",
+      "sourceType": "Manufacturer technical datasheet",
+      "publisher": "TSC Life / Axess Vision Technology",
+      "revisionDate": "2025-02",
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.tsc-life.com/content/uploads/2025/03/P133-EN-02-022025-Cysto-Technical-Datasheet-EU-EN.pdf",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use only to corroborate Screeni platform identity and configuration naming; the owner packet supplies the bronchoscopy-system ordering references.",
+      "notes": "European technical datasheet."
+    },
+    {
+      "sourceId": "SRC094",
+      "title": "AccessGUDID device records — Axess Vision Technology",
+      "filename": null,
+      "sourceType": "FDA UDI database records",
+      "publisher": "U.S. National Library of Medicine / FDA",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://accessgudid.nlm.nih.gov/",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for exact primary DI and legal labeler identity; do not infer local orderability from the record alone.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC095",
+      "title": "EndoCore EBUS biopsy needles",
+      "filename": null,
+      "sourceType": "Manufacturer product page",
+      "publisher": "Praxis Medical",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://praxismedicaldevices.com/endocore/",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for exact EndoCore ordering identity, needle geometry, and scope compatibility; confirm local orderability separately.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC096",
+      "title": "AccessGUDID device records — Praxis Medical",
+      "filename": null,
+      "sourceType": "FDA UDI database records",
+      "publisher": "U.S. National Library of Medicine / FDA",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://accessgudid.nlm.nih.gov/",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for exact primary DI, model, package DI, and labeler identity; do not infer local orderability.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC097",
+      "title": "FDA 510(k) K261068 — Narwhal Cryobiopsy System",
+      "filename": "K261068.pdf",
+      "sourceType": "FDA 510(k) summary",
+      "publisher": "U.S. Food and Drug Administration",
+      "revisionDate": "2026-05-14",
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.accessdata.fda.gov/cdrh_docs/pdf26/K261068.pdf",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for legal manufacturer, base model identity, physical configuration, and stated cryobiopsy system use; owner packet supplies exact sales/package suffixes.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC098",
+      "title": "Trachealator non-occlusive balloon",
+      "filename": null,
+      "sourceType": "Manufacturer product page",
+      "publisher": "DISA Medinotec",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.disamedinotec.com/trachealator/",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for Trachealator family identity and airway-dilation application; exact size/order rows are visually confirmed from the owner packet.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC099",
+      "title": "FDA 510(k) K211894 — Trachealator",
+      "filename": "K211894.pdf",
+      "sourceType": "FDA 510(k) summary",
+      "publisher": "U.S. Food and Drug Administration",
+      "revisionDate": "2022-02-25",
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.accessdata.fda.gov/cdrh_docs/pdf21/K211894.pdf",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for manufacturer and Trachealator model-family identity; the owner packet supplies exact order-code dimensions.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC100",
+      "title": "HugeMed single-use bronchoscope catalog",
+      "filename": "ENG-EU-CATA-fBRS-suBR-INTENT-202306V1.0.pdf",
+      "sourceType": "Manufacturer catalog",
+      "publisher": "Shenzhen HugeMed Medical Technical Development Co., Ltd.",
+      "revisionDate": "2023-06",
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.hugemed.net/uploadfiles/2024/02/ENG-EU-CATA-fBRS-suBR-INTENT-202306V1.0.pdf",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for exact bronchoscope model dimensions and working-channel specifications; confirm U.S. orderability separately.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC101",
+      "title": "FDA 510(k) K222910 — HugeMed video endoscope system",
+      "filename": "K222910.pdf",
+      "sourceType": "FDA 510(k) summary",
+      "publisher": "U.S. Food and Drug Administration",
+      "revisionDate": "2023-01-19",
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.accessdata.fda.gov/cdrh_docs/pdf22/K222910.pdf",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for legal manufacturer and model-family identity; exact DIs are corroborated in AccessGUDID.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device records — HugeMed",
+      "filename": null,
+      "sourceType": "FDA UDI database records",
+      "publisher": "U.S. National Library of Medicine / FDA",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://accessgudid.nlm.nih.gov/",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for exact primary DI, model, and labeler identity; do not infer local orderability.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC103",
+      "title": "CLR Medical product pages and instructions for use",
+      "filename": null,
+      "sourceType": "Manufacturer product pages and IFUs",
+      "publisher": "CLR Medical",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://www.clrmedical.com/instructions/",
+      "reliabilityTier": "Tier 1 - manufacturer",
+      "usePolicy": "Use for exact CLR product function, separate-component identity, and manufacturer; exact catalog/DI identity is taken from AccessGUDID.",
+      "notes": null
+    },
+    {
+      "sourceId": "SRC104",
+      "title": "AccessGUDID device records — CLR Medical",
+      "filename": null,
+      "sourceType": "FDA UDI database records",
+      "publisher": "U.S. National Library of Medicine / FDA",
+      "revisionDate": null,
+      "asOfDate": "2026-08-20",
+      "officialUrl": "https://accessgudid.nlm.nih.gov/",
+      "reliabilityTier": "Tier 1 - FDA",
+      "usePolicy": "Use for exact primary DI, catalog number, and labeler identity; do not infer local orderability.",
+      "notes": null
+    }
+  ],
+  "evidence_manifest": [
+    {
+      "evidenceId": "EVID-SC-001",
+      "sourceId": "SRC089",
+      "title": "Additional products — owner-supplied seven-page packet",
+      "filename": "Additional_products.pdf",
+      "url": null,
+      "sourceOrganization": "Owner supplied / various manufacturers",
+      "sourceType": "Owner-supplied PDF",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "All page 1-7 reconciliation targets",
+      "retrievedOn": "2026-08-20",
+      "sha256": "c708c0c83d5ba4f2a6199bbbaf7918e49204e5dddcfd966e375784a815f0e2a3",
+      "pageCount": 7
+    },
+    {
+      "evidenceId": "EVID-SC-002",
+      "sourceId": "SRC090",
+      "title": "StraightShot M5 microdebrider",
+      "filename": null,
+      "url": "https://www.medtronic.com/en-us/healthcare-professionals/products/ear-nose-throat/powered-surgical-equipment/microdebriders/straightshot-m5-microdebrider.html",
+      "sourceOrganization": "Medtronic",
+      "sourceType": "Official manufacturer HTML",
+      "scope": "exact_product",
+      "identifierMatched": "1899200; 1899076",
+      "retrievedOn": "2026-08-20",
+      "sha256": "f8a254e171e504a87ceed7ade851778f836f519295c1c8057a5864bc9e6cc726",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-003",
+      "sourceId": "SRC091",
+      "title": "Airway blades",
+      "filename": null,
+      "url": "https://www.medtronic.com/en-us/healthcare-professionals/products/ear-nose-throat/powered-surgical-equipment/blades/airway-blades.html",
+      "sourceOrganization": "Medtronic",
+      "sourceType": "Official manufacturer HTML",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "20 CFNs in the official airway ordering table",
+      "retrievedOn": "2026-08-20",
+      "sha256": "54cc28fc64a065018c274c4f8725ec4696e704ca759437a3c2f05762e5d430c7",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-004",
+      "sourceId": "SRC092",
+      "title": "Broncoflex product brochure",
+      "filename": "P116-EN-02-052025-Broncoflex-Brochure-EU-EN.pdf",
+      "url": "https://www.tsc-life.com/content/uploads/2025/08/P116-EN-02-052025-Broncoflex-Brochure-EU-EN.pdf",
+      "sourceOrganization": "TSC Life / Axess Vision Technology",
+      "sourceType": "Official manufacturer PDF",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "Broncoflex XFlo, Agile, Screeni, and system components",
+      "retrievedOn": "2026-08-20",
+      "sha256": "6f48af71e5fdc5aae89cdc9691eb607d2d499c4952f059e1fc516e310ab3b342",
+      "pageCount": 20
+    },
+    {
+      "evidenceId": "EVID-SC-005",
+      "sourceId": "SRC093",
+      "title": "Screeni technical datasheet",
+      "filename": "P133-EN-02-022025-Cysto-Technical-Datasheet-EU-EN.pdf",
+      "url": "https://www.tsc-life.com/content/uploads/2025/03/P133-EN-02-022025-Cysto-Technical-Datasheet-EU-EN.pdf",
+      "sourceOrganization": "TSC Life / Axess Vision Technology",
+      "sourceType": "Official manufacturer PDF",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "Screeni platform",
+      "retrievedOn": "2026-08-20",
+      "sha256": "825f475be67abf857f05569068512d09c8649a8b78ffaeb18247458604966c28",
+      "pageCount": 2
+    },
+    {
+      "evidenceId": "EVID-SC-006",
+      "sourceId": "SRC095",
+      "title": "EndoCore EBUS biopsy needles",
+      "filename": null,
+      "url": "https://praxismedicaldevices.com/endocore/",
+      "sourceOrganization": "Praxis Medical",
+      "sourceType": "Official manufacturer HTML",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "ENDO-BV-22G-Kit-O; ENDO-FR-22G-Kit-O",
+      "retrievedOn": "2026-08-20",
+      "sha256": "8f7261dafb20fe31e57d360dc398f6e43d439f26340c0f7ea485c4055f16b3fd",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-007",
+      "sourceId": "SRC097",
+      "title": "FDA K261068 — Narwhal Cryobiopsy System",
+      "filename": "K261068.pdf",
+      "url": "https://www.accessdata.fda.gov/cdrh_docs/pdf26/K261068.pdf",
+      "sourceOrganization": "U.S. Food and Drug Administration",
+      "sourceType": "Official FDA PDF",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "MCB-1000; CC-1000",
+      "retrievedOn": "2026-08-20",
+      "sha256": "ebf338a4c5a9954f00f5b4729e6e5565661d055d6a6b17292dcf3f74a82cc150",
+      "pageCount": 12
+    },
+    {
+      "evidenceId": "EVID-SC-008",
+      "sourceId": "SRC098",
+      "title": "Trachealator non-occlusive balloon",
+      "filename": null,
+      "url": "https://www.disamedinotec.com/trachealator/",
+      "sourceOrganization": "DISA Medinotec",
+      "sourceType": "Official manufacturer HTML",
+      "scope": "family_level",
+      "identifierMatched": "Trachealator family",
+      "retrievedOn": "2026-08-20",
+      "sha256": "b0076995b92392ef3e4f6996e31774aecc8cc60641433872fc09f7048f562040",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-009",
+      "sourceId": "SRC099",
+      "title": "FDA K211894 — Trachealator",
+      "filename": "K211894.pdf",
+      "url": "https://www.accessdata.fda.gov/cdrh_docs/pdf21/K211894.pdf",
+      "sourceOrganization": "U.S. Food and Drug Administration",
+      "sourceType": "Official FDA PDF",
+      "scope": "family_level",
+      "identifierMatched": "Trachealator family",
+      "retrievedOn": "2026-08-20",
+      "sha256": "9bb30a7ea0284534c0e762b8689d86c4c28c20b6a95e8b8c7e9b5424d32dfa77",
+      "pageCount": 7
+    },
+    {
+      "evidenceId": "EVID-SC-010",
+      "sourceId": "SRC100",
+      "title": "HugeMed single-use bronchoscope catalog",
+      "filename": "ENG-EU-CATA-fBRS-suBR-INTENT-202306V1.0.pdf",
+      "url": "https://www.hugemed.net/uploadfiles/2024/02/ENG-EU-CATA-fBRS-suBR-INTENT-202306V1.0.pdf",
+      "sourceOrganization": "HugeMed",
+      "sourceType": "Official manufacturer PDF",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "BR-M22; BR-M32; BR-M40; BR-M50; BR-M58; BR-M40H; BR-M52H; BR-M58H",
+      "retrievedOn": "2026-08-20",
+      "sha256": "ba5543bf08957caf54285f19b2c27f9d11fa43a95d05c04c133dd58ff7c39c5c",
+      "pageCount": 12
+    },
+    {
+      "evidenceId": "EVID-SC-011",
+      "sourceId": "SRC101",
+      "title": "FDA K222910 — HugeMed video endoscope system",
+      "filename": "K222910.pdf",
+      "url": "https://www.accessdata.fda.gov/cdrh_docs/pdf22/K222910.pdf",
+      "sourceOrganization": "U.S. Food and Drug Administration",
+      "sourceType": "Official FDA PDF",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "HugeMed single-use flexible bronchoscopes",
+      "retrievedOn": "2026-08-20",
+      "sha256": "c61e92d3540b0060d3df427b8e1d4a0027d78aa84430d2c69a064b3101cfbc7f",
+      "pageCount": 8
+    },
+    {
+      "evidenceId": "EVID-SC-012",
+      "sourceId": "SRC103",
+      "title": "CLR Port IFU",
+      "filename": null,
+      "url": "https://www.clrmedical.com/lbl-s012-01-211-d_port_ifu-artwork/",
+      "sourceOrganization": "CLR Medical",
+      "sourceType": "Official manufacturer IFU page",
+      "scope": "family_and_exact_product",
+      "identifierMatched": "CLR Port; Access Cap",
+      "retrievedOn": "2026-08-20",
+      "sha256": "2dc73b6191ecd8fb5471c63a73aeba56a5c4f965867a9a659cba4170b1bb935b",
+      "pageCount": 3
+    },
+    {
+      "evidenceId": "EVID-SC-013",
+      "sourceId": "SRC103",
+      "title": "CLR Irrigator IFU",
+      "filename": null,
+      "url": "https://www.clrmedical.com/lbl-s012-01-203-d-clr-irrigator-ifu-artwork/",
+      "sourceOrganization": "CLR Medical",
+      "sourceType": "Official manufacturer IFU page",
+      "scope": "exact_product",
+      "identifierMatched": "CLR Irrigator",
+      "retrievedOn": "2026-08-20",
+      "sha256": "02a94cfcb3718b87f2d9a25c3ef72cb2d5f0e47479c7201f917ec955aa617bc0",
+      "pageCount": 3
+    },
+    {
+      "evidenceId": "EVID-SC-014",
+      "sourceId": "SRC103",
+      "title": "CLR Port Injector IFU",
+      "filename": null,
+      "url": "https://www.clrmedical.com/lbl-s012-01-232-b_port_injector_ifu-artwork/",
+      "sourceOrganization": "CLR Medical",
+      "sourceType": "Official manufacturer IFU page",
+      "scope": "exact_product",
+      "identifierMatched": "CLR Port Injector",
+      "retrievedOn": "2026-08-20",
+      "sha256": "0426b473076de406486d77c74f5d88d9e75ba4269e81291297a7d8f3f48d079f",
+      "pageCount": 3
+    },
+    {
+      "evidenceId": "EVID-SC-015",
+      "sourceId": "SRC094",
+      "title": "AccessGUDID device 03664977000103",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/03664977000103",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "10040001 / 03664977000103",
+      "retrievedOn": "2026-08-20",
+      "sha256": "059ff42971c847b766172edf5ab6a76a2aadfb5af63b77e67bd9c86f814e298a",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-016",
+      "sourceId": "SRC094",
+      "title": "AccessGUDID device 03664977020033",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/03664977020033",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "20030001 / 03664977020033",
+      "retrievedOn": "2026-08-20",
+      "sha256": "3cc27eb8492e6b3212196056cc864daac20623df5d77bf262314621299035de8",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-017",
+      "sourceId": "SRC094",
+      "title": "AccessGUDID device 03664977030032",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/03664977030032",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "30030001 / 03664977030032",
+      "retrievedOn": "2026-08-20",
+      "sha256": "38b07808a0ade18d928e94fe309a78abc940adfe8dab5e48e02f4f7ffeabff55",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-018",
+      "sourceId": "SRC094",
+      "title": "AccessGUDID device 03664977000042",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/03664977000042",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "41010000 / 03664977000042",
+      "retrievedOn": "2026-08-20",
+      "sha256": "5de6c67af8c6705c368033a3228974d5bf039cec799c1fde4e7d146fb341f362",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-019",
+      "sourceId": "SRC096",
+      "title": "AccessGUDID device 00850081350033",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00850081350033",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "ENDO-BV-22G-O / ENDO-BV-22G-Kit-O / 10850081350030",
+      "retrievedOn": "2026-08-20",
+      "sha256": "aefaf81322b50cdb87b905a8515aa9be44aa1f000a48c40ed20f6512b99a1658",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-020",
+      "sourceId": "SRC096",
+      "title": "AccessGUDID device 00850081350040",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00850081350040",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "ENDO-FR-22G-O / ENDO-FR-22G-Kit-O / 10850081350047",
+      "retrievedOn": "2026-08-20",
+      "sha256": "a017c76b325210f10094cc591b24da078bcdda48ca1c9ca68ced40c25366ed24",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-021",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546115",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546115",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M22 / 06970462546115",
+      "retrievedOn": "2026-08-20",
+      "sha256": "285a971a546958e770fdd006303c86f65a28111d7ef28019fe8814d53c41ff77",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-022",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546108",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546108",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M32 / 06970462546108",
+      "retrievedOn": "2026-08-20",
+      "sha256": "87a52e0622c82c9707b2a2e5f40d252d2039c93e50c1e0b12287424a9d5c7d91",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-023",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546092",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546092",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M40 / 06970462546092",
+      "retrievedOn": "2026-08-20",
+      "sha256": "4b626b5e927ab5258a99130cc679d2c32a90d223d2a1fe92286504744a889cbd",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-024",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546085",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546085",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M50 / 06970462546085",
+      "retrievedOn": "2026-08-20",
+      "sha256": "3e39f914d345634fd273d65734928b19af702f0ac37a854c17ac2ff7031b5440",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-025",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546061",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546061",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M58 / 06970462546061",
+      "retrievedOn": "2026-08-20",
+      "sha256": "4ebefcdef995369c89c78e6c68dfafcc23b308d64b1994915ba7d366ba94313e",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-026",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546184",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546184",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M40H / 06970462546184",
+      "retrievedOn": "2026-08-20",
+      "sha256": "1fefb258c05d7c682b9c6ff239ef3d1ce7aec28492427252d03803783b3c68ff",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-027",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546177",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546177",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M52H / 06970462546177",
+      "retrievedOn": "2026-08-20",
+      "sha256": "71d2b0accc68c9e8a5a0d66a7cfaac00c674b210adad7106f570596cab252dd7",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-028",
+      "sourceId": "SRC102",
+      "title": "AccessGUDID device 06970462546160",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/06970462546160",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "BR-M58H / 06970462546160",
+      "retrievedOn": "2026-08-20",
+      "sha256": "c2b2631dc8427dd4a06d86892f443aa40ace8aa735e1bb4ba8379479cf8cfbfb",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-029",
+      "sourceId": "SRC104",
+      "title": "AccessGUDID device 00860003054949",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00860003054949",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "S012-01-200 / 00860003054949",
+      "retrievedOn": "2026-08-20",
+      "sha256": "2b0bc5d0528be1d6ff76d94a5e0b9a505e0319ffd2c37195df3b73511a84533e",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-030",
+      "sourceId": "SRC104",
+      "title": "AccessGUDID device 00860003054918",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00860003054918",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "S012-01-100 / 00860003054918",
+      "retrievedOn": "2026-08-20",
+      "sha256": "ddc1401aba7bccb465dfdbcd3fa9302c9809f3998a6a6fc42c403c81e69661be",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-031",
+      "sourceId": "SRC104",
+      "title": "AccessGUDID device 00860003054901",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00860003054901",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "S012-01-019 / 00860003054901",
+      "retrievedOn": "2026-08-20",
+      "sha256": "b2177a5aadc4e2af5ccb726626f51f931c30accf3ad297838af3046153d15ee5",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-032",
+      "sourceId": "SRC104",
+      "title": "AccessGUDID device 00850052377007",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00850052377007",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "S012-01-016 / 00850052377007",
+      "retrievedOn": "2026-08-20",
+      "sha256": "dd84ccc82a7d14242f2de4c502e748aeadad986b8f6ada6dff2c0e424047f069",
+      "pageCount": null
+    },
+    {
+      "evidenceId": "EVID-SC-033",
+      "sourceId": "SRC104",
+      "title": "AccessGUDID device 00860003054994",
+      "filename": null,
+      "url": "https://accessgudid.nlm.nih.gov/devices/00860003054994",
+      "sourceOrganization": "U.S. National Library of Medicine / FDA",
+      "sourceType": "AccessGUDID exact-device HTML",
+      "scope": "exact_product",
+      "identifierMatched": "S012-01-015 / 00860003054994",
+      "retrievedOn": "2026-08-20",
+      "sha256": "905b62195bec33e9dbd47a31f0c0d6e5c0edecf5a8779266b4754816faa31e34",
+      "pageCount": null
+    }
+  ],
+  "product_groups": [
+    {
+      "groupId": "SC-MED-M5",
+      "origin": "official_web_follow_up",
+      "manufacturerId": "MFR-68565E2FD2",
+      "manufacturer": "Medtronic",
+      "distributor": null,
+      "brandFamily": "StraightShot M5",
+      "primaryCategory": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscopic shaver handpiece",
+      "productKind": "Reusable handpiece",
+      "description": "StraightShot M5 powered microdebrider component used with application-specific airway blades.",
+      "roleCode": "RIGID_BRONCH_SHAVER",
+      "roleNotes": "Powered handpiece used with the exact airway blade cohort reviewed in this pass.",
+      "evidence": [
+        {
+          "sourceId": "SRC090",
+          "sourceLocation": "Ordering information, CFNs 1899200 and 1899076",
+          "claimType": "Exact ordering identity and component type"
+        }
+      ],
+      "taxonomyClass": "powered_shaver",
+      "taxonomySubtype": "shaver_handpiece",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Reusable",
+      "packageUom": "Each",
+      "notes": "Current U.S. manufacturer evidence establishes exact identity. Airway relevance is established by use with the reviewed Medtronic airway-blade cohort; local orderability was not researched.",
+      "variants": [
+        {
+          "catalogNumber": "1899200",
+          "productName": "StraightShot M5 Microdebrider Handpiece"
+        },
+        {
+          "catalogNumber": "1899076",
+          "productName": "StraightShot M5 Instrument Tray",
+          "subcategory": "Rigid bronchoscopic shaver accessory",
+          "productKind": "Reusable accessory",
+          "description": "Instrument tray identified by Medtronic for the StraightShot M5 microdebrider.",
+          "roleCode": null,
+          "taxonomyClass": "powered_shaver",
+          "taxonomySubtype": "shaver_accessory",
+          "taxonomyConfidence": "high"
+        }
+      ]
+    },
+    {
+      "groupId": "SC-MED-AIRWAY-BLADES",
+      "origin": "official_web_follow_up",
+      "manufacturerId": "MFR-68565E2FD2",
+      "manufacturer": "Medtronic",
+      "distributor": null,
+      "brandFamily": "StraightShot Airway Blades",
+      "primaryCategory": "Rigid bronchoscopy",
+      "subcategory": "Rigid bronchoscopic shaver instrument",
+      "productKind": "Single-use instrument",
+      "description": "Powered airway blade with exact dimensions and tip geometry listed in Medtronic's current airway ordering table.",
+      "roleCode": "RIGID_BRONCH_SHAVER",
+      "roleNotes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal.",
+      "evidence": [
+        {
+          "sourceId": "SRC091",
+          "sourceLocation": "Airway Blades ordering information table",
+          "claimType": "Exact CFN, dimensions, blade geometry, and airway application"
+        }
+      ],
+      "taxonomyClass": "powered_shaver",
+      "taxonomySubtype": "shaver_instrument",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "packageUom": "Each",
+      "notes": "The surrounding official table was clinically constrained; laryngeal-only products were not imported.",
+      "variants": [
+        {
+          "catalogNumber": "1884035HRE",
+          "productName": "Tricut 4.0 mm Angle-Tip Bronchial Blade, 45 cm",
+          "diameterMm": 4,
+          "lengthMm": 450,
+          "sizeDisplay": "4.0 mm x 45.0 cm; 15-degree curved; rotatable angle-tip",
+          "specJson": {
+            "tip_geometry": "15-degree curved rotatable angle-tip",
+            "quantity": "1 each with irrigation tubing",
+            "airway_application": "Bronchial lesions through a rigid bronchoscope"
+          }
+        },
+        {
+          "catalogNumber": "1884033HRE",
+          "productName": "Tricut 4.0 mm Angle-Tip Tracheal Blade, 37 cm",
+          "diameterMm": 4,
+          "lengthMm": 370,
+          "sizeDisplay": "4.0 mm x 37.0 cm; 15-degree curved; rotatable angle-tip",
+          "specJson": {
+            "tip_geometry": "15-degree curved rotatable angle-tip",
+            "quantity": "1 each with irrigation tubing",
+            "airway_application": "Tracheal papilloma and lesion debulking"
+          }
+        },
+        {
+          "catalogNumber": "1884033",
+          "productName": "Serrated 4.0 mm Angle-Tip Tracheal Blade, 37 cm",
+          "diameterMm": 4,
+          "lengthMm": 370,
+          "sizeDisplay": "4.0 mm x 37.0 cm; 15-degree curved; angle-tip tracheal",
+          "specJson": {
+            "tip_geometry": "15-degree curved angle-tip tracheal",
+            "quantity": "1 each with irrigation tubing"
+          }
+        },
+        {
+          "catalogNumber": "1884032",
+          "productName": "Airway 4.0 mm Straight Tracheal Blade, 37 cm",
+          "diameterMm": 4,
+          "lengthMm": 370,
+          "sizeDisplay": "4.0 mm x 37.0 cm; straight",
+          "specJson": {
+            "tip_geometry": "Straight tracheal blade",
+            "quantity": "1 each with irrigation tubing",
+            "airway_application": "Distal recurrent respiratory papilloma and tracheal lesion debulking"
+          }
+        },
+        {
+          "catalogNumber": "1884031HRE",
+          "productName": "Tricut 4.0 mm Angle-Tip Subglottic Blade, 27 cm",
+          "diameterMm": 4,
+          "lengthMm": 270,
+          "sizeDisplay": "4.0 mm x 27.0 cm; 15-degree curved; rotatable angle-tip",
+          "specJson": {
+            "tip_geometry": "15-degree curved rotatable angle-tip",
+            "quantity": "1 each with irrigation tubing",
+            "airway_application": "Tumor debulking, granulation tissue removal, and tracheal stenosis"
+          }
+        },
+        {
+          "catalogNumber": "1882937E",
+          "productName": "Serrated 2.9 mm Angle-Tip Tracheal Blade, 18 cm",
+          "diameterMm": 2.9,
+          "lengthMm": 180,
+          "sizeDisplay": "2.9 mm x 18.0 cm; 15-degree curved; angle-tip tracheal",
+          "specJson": {
+            "tip_geometry": "15-degree curved angle-tip tracheal",
+            "quantity": "1 each with irrigation tubing"
+          }
+        },
+        {
+          "catalogNumber": "1882936E",
+          "productName": "Serrated 2.9 mm Angle-Tip Tracheal Blade, 22 cm",
+          "diameterMm": 2.9,
+          "lengthMm": 220,
+          "sizeDisplay": "2.9 mm x 22.0 cm; 15-degree curved; angle-tip tracheal",
+          "specJson": {
+            "tip_geometry": "15-degree curved angle-tip tracheal",
+            "quantity": "1 each with irrigation tubing"
+          }
+        }
+      ]
+    },
+    {
+      "groupId": "SC-AXESS-BRONCOFLEX",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-4FD1B7935D",
+      "manufacturer": "Axess Vision Technology S.A.S.",
+      "distributor": "TSC Life US",
+      "brandFamily": "Broncoflex",
+      "primaryCategory": "Bronchoscopy platform",
+      "subcategory": "Single-use flexible bronchoscope",
+      "productKind": "Single-use endoscope",
+      "description": "Single-use Broncoflex video bronchoscope with the exact insertion-tube and working-channel dimensions shown in the reviewed sources.",
+      "roleCode": "FLEX_SCOPE_SINGLE_USE",
+      "roleNotes": "Single-use flexible bronchoscope.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 1, Broncoflex ordering panel",
+          "claimType": "Exact reference and physical configuration"
+        },
+        {
+          "sourceId": "SRC092",
+          "sourceLocation": "Broncoflex system and specification tables",
+          "claimType": "System identity, legal manufacturer, and specifications"
+        }
+      ],
+      "taxonomyClass": "bronchoscope",
+      "taxonomySubtype": "single_use_video_bronchoscope",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "packageUom": "Each",
+      "notes": "Axess Vision Technology S.A.S. is canonical manufacturer; TSC Life is recorded as distributor/brand context.",
+      "variants": [
+        {
+          "catalogNumber": "10040001",
+          "productName": "Broncoflex XFlo 5.6/3.0 Single-Use Bronchoscope",
+          "gtin": "03664977000103",
+          "diameterMm": 5.6,
+          "sizeDisplay": "5.6 mm insertion tube; 3.0 mm working channel",
+          "specJson": {
+            "working_channel_mm": 3,
+            "gudid_primary_di": "03664977000103"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC094",
+              "sourceLocation": "AccessGUDID Primary DI 03664977000103",
+              "claimType": "Exact device identity, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "20030001",
+          "productName": "Broncoflex Agile 3.9/1.4 Single-Use Bronchoscope",
+          "gtin": "03664977020033",
+          "diameterMm": 3.9,
+          "sizeDisplay": "3.9 mm insertion tube; 1.4 mm working channel",
+          "specJson": {
+            "working_channel_mm": 1.4,
+            "gudid_primary_di": "03664977020033"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC094",
+              "sourceLocation": "AccessGUDID Primary DI 03664977020033",
+              "claimType": "Exact device identity, primary DI, and labeler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "SC-AXESS-SCREENI",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-4FD1B7935D",
+      "manufacturer": "Axess Vision Technology S.A.S.",
+      "distributor": "TSC Life US",
+      "brandFamily": "Screeni",
+      "primaryCategory": "Bronchoscopy platform",
+      "subcategory": "Video processor",
+      "productKind": "Reusable capital equipment",
+      "description": "Screeni video processor exact ordering configuration for the Broncoflex system.",
+      "roleCode": "VIDEO_PROCESSOR",
+      "roleNotes": "Video processor for the Broncoflex single-use endoscope system.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 1, Screeni references 30030000 / 30030001",
+          "claimType": "Two separately listed exact ordering configurations"
+        },
+        {
+          "sourceId": "SRC093",
+          "sourceLocation": "Screeni technical datasheet",
+          "claimType": "Platform identity and legal manufacturer"
+        }
+      ],
+      "taxonomyClass": "console_capital",
+      "taxonomySubtype": "video_processor",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Reusable",
+      "packageUom": "Each",
+      "notes": "30030000 is the package with accessories; 30030001 is the processor without accessories. The primary DI belongs only to 30030001 and is not duplicated onto the package record.",
+      "variants": [
+        {
+          "catalogNumber": "30030000",
+          "productName": "Screeni Video Processor with Accessories",
+          "gtin": null,
+          "specJson": {
+            "configuration": "With accessories",
+            "related_base_catalog_number": "30030001"
+          }
+        },
+        {
+          "catalogNumber": "30030001",
+          "productName": "Screeni Video Processor without Accessories",
+          "gtin": "03664977030032",
+          "specJson": {
+            "configuration": "Without accessories",
+            "gudid_primary_di": "03664977030032"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC094",
+              "sourceLocation": "AccessGUDID Primary DI 03664977030032",
+              "claimType": "Exact device identity, primary DI, and labeler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "SC-AXESS-ACCESSORIES",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-4FD1B7935D",
+      "manufacturer": "Axess Vision Technology S.A.S.",
+      "distributor": "TSC Life US",
+      "brandFamily": "Broncoflex / Screeni",
+      "primaryCategory": "Endoscopy platform",
+      "subcategory": "Platform accessory",
+      "productKind": "Accessory",
+      "description": "Exact manufacturer-specific component of the Broncoflex/Screeni system.",
+      "roleCode": null,
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 1, system-accessory ordering list",
+          "claimType": "Exact accessory reference and component name"
+        },
+        {
+          "sourceId": "SRC092",
+          "sourceLocation": "Broncoflex system component information",
+          "claimType": "Manufacturer-specific system relationship"
+        }
+      ],
+      "taxonomyClass": "accessory",
+      "taxonomySubtype": "platform_accessory",
+      "taxonomyConfidence": "moderate",
+      "packageUom": "Each",
+      "notes": "Only manufacturer-specific components were accepted. The commodity HDMI/DVI cable remains in owner review.",
+      "variants": [
+        {
+          "catalogNumber": "41010000",
+          "productName": "Easy BAL Clip",
+          "gtin": "03664977000042",
+          "specJson": {
+            "gudid_primary_di": "03664977000042"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC094",
+              "sourceLocation": "AccessGUDID Primary DI 03664977000042",
+              "claimType": "Exact device identity, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "30030303",
+          "productName": "Screeni Knurled Screw",
+          "roleCode": null,
+          "roleNotes": "Intentionally roleless at intake; the existing mount-accessory role is introduced later in the import overlay and is not available to the catalog-additions gate."
+        },
+        {
+          "catalogNumber": "30030010",
+          "productName": "Screeni Quick Mounting Bracket",
+          "roleCode": null,
+          "roleNotes": "Intentionally roleless at intake; the existing mount-accessory role is introduced later in the import overlay and is not available to the catalog-additions gate."
+        },
+        {
+          "catalogNumber": "31010008",
+          "productName": "Screeni Medical-Grade Power Supply",
+          "roleCode": null
+        }
+      ]
+    },
+    {
+      "groupId": "SC-PRAXIS-ENDOCORE",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-DEFC2BB814",
+      "manufacturer": "Praxis Medical LLC",
+      "distributor": null,
+      "brandFamily": "EndoCore",
+      "primaryCategory": "EBUS sampling",
+      "subcategory": "EBUS ultrasound needle",
+      "productKind": "Single-use needle",
+      "description": "22 gauge EndoCore EBUS tissue-acquisition needle in the exact Olympus-compatible five-unit ordering configuration.",
+      "roleCode": "EBUS_NEEDLE_FNA",
+      "roleNotes": "Exact EBUS tissue-acquisition needle; tip geometry controls FNA versus FNB role assignment.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 2, EndoCore ordering table",
+          "claimType": "Exact order number, package GTIN, gauge, channel minimum, and Olympus configuration"
+        },
+        {
+          "sourceId": "SRC095",
+          "sourceLocation": "EndoCore product and ordering information",
+          "claimType": "Manufacturer identity, exact needle geometry, and compatibility"
+        }
+      ],
+      "taxonomyClass": "needle",
+      "taxonomySubtype": "ebus_tbna_needle",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "gauge": 22,
+      "minWorkingChannelMm": 2,
+      "packageUom": "Box of 5",
+      "compatibilityText": "Exact ordering configuration identified for Olympus EBUS scopes; no Fuji ordering SKU is inferred.",
+      "notes": "The AccessGUDID primary DI/model and owner-supplied package GTIN are preserved as separate identifiers.",
+      "variants": [
+        {
+          "catalogNumber": "ENDO-BV-22G-Kit-O",
+          "productName": "EndoCore 22G Bevel Tip EBUS Needle, Olympus Configuration",
+          "alternateIds": "ENDO-BV-22G-O; Primary DI 00850081350033",
+          "gtin": "10850081350030",
+          "roleCode": "EBUS_NEEDLE_FNA",
+          "specJson": {
+            "tip_geometry": "Bevel",
+            "gudid_primary_di": "00850081350033",
+            "package_di": "10850081350030"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC096",
+              "sourceLocation": "AccessGUDID Primary DI 00850081350033",
+              "claimType": "Exact model, primary DI, package DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "ENDO-FR-22G-Kit-O",
+          "productName": "EndoCore 22G Franseen EBUS Needle, Olympus Configuration",
+          "alternateIds": "ENDO-FR-22G-O; Primary DI 00850081350040",
+          "gtin": "10850081350047",
+          "roleCode": "EBUS_NEEDLE_FNB",
+          "specJson": {
+            "tip_geometry": "Franseen",
+            "gudid_primary_di": "00850081350040",
+            "package_di": "10850081350047"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC096",
+              "sourceLocation": "AccessGUDID Primary DI 00850081350040",
+              "claimType": "Exact model, primary DI, package DI, and labeler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "SC-SERPEX-NARWHAL",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-47A0410D40",
+      "manufacturer": "Serpex Medical",
+      "distributor": "Thoracent",
+      "brandFamily": "Maverix Narwhal Cryo System",
+      "primaryCategory": "Therapeutic bronchoscopy",
+      "subcategory": "Flexible cryoprobe",
+      "productKind": "Single-use instrument",
+      "description": "Narwhal flexible cryobiopsy system component with a 1.3 mm probe shaft, 115 cm working length, and selectable 3-6 mm sampling tip where applicable.",
+      "roleCode": "CRYOPROBE_FLEX",
+      "roleNotes": "Flexible cryoprobe or probe-containing kit for bronchoscopic cryobiopsy and cryoadhesion/tissue removal.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 3, Narwhal ordering and specification panels",
+          "claimType": "Exact sales/package code, contents, dimensions, and applications"
+        },
+        {
+          "sourceId": "SRC097",
+          "sourceLocation": "K261068, device description and model table",
+          "claimType": "Legal manufacturer, base models, physical configuration, and intended use"
+        }
+      ],
+      "taxonomyClass": "cryotherapy",
+      "taxonomySubtype": "flexible_cryoprobe",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "packageUom": "Each",
+      "notes": "Serpex Medical is canonical manufacturer; Maverix is the system brand and Thoracent is recorded as distributor.",
+      "variants": [
+        {
+          "catalogNumber": "MCB-1000-Kit",
+          "productName": "Narwhal Cryobiopsy Probe and Cartridge Kit",
+          "alternateIds": "MCB-1000",
+          "diameterMm": 1.3,
+          "workingLengthCm": 115,
+          "minWorkingChannelMm": 2,
+          "sizeDisplay": "1.3 mm shaft; 115 cm working length; 3-6 mm selectable tip",
+          "specJson": {
+            "contents": "1 cryobiopsy probe and 1 cryo cartridge",
+            "selectable_sampling_tip_mm": "3-6",
+            "fda_base_model": "MCB-1000"
+          }
+        },
+        {
+          "catalogNumber": "MCB-1000-4",
+          "productName": "Narwhal Cryobiopsy Probe",
+          "alternateIds": "MCB-1000",
+          "diameterMm": 1.3,
+          "workingLengthCm": 115,
+          "minWorkingChannelMm": 2,
+          "sizeDisplay": "1.3 mm shaft; 115 cm working length; 3-6 mm selectable tip",
+          "specJson": {
+            "selectable_sampling_tip_mm": "3-6",
+            "fda_base_model": "MCB-1000"
+          }
+        },
+        {
+          "catalogNumber": "CC-1000-4",
+          "productName": "Narwhal Cryo Cartridge Pack",
+          "alternateIds": "CC-1000",
+          "subcategory": "Cryotherapy consumable",
+          "productKind": "Single-use accessory",
+          "description": "Four-cartridge nitrous-oxide pack for the Narwhal Cryo System.",
+          "roleCode": null,
+          "taxonomyClass": "cryotherapy",
+          "taxonomySubtype": "cryotherapy_accessory",
+          "taxonomyConfidence": "high",
+          "packageUom": "Pack of 4",
+          "specJson": {
+            "contents": "4 nitrous oxide cartridges",
+            "fda_base_model": "CC-1000"
+          }
+        }
+      ]
+    },
+    {
+      "groupId": "SC-DISA-TRACHEALATOR",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-84EC81C22A",
+      "manufacturer": "DISA Medinotec",
+      "distributor": null,
+      "brandFamily": "Trachealator",
+      "primaryCategory": "Airway dilation",
+      "subcategory": "Balloon dilator",
+      "productKind": "Disposable catheter",
+      "description": "Non-occlusive airway dilation balloon with the exact nominal diameter and balloon length shown in the rendered ordering table.",
+      "roleCode": "AIRWAY_BALLOON_DILATOR",
+      "roleNotes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 4, visually confirmed Trachealator ordering table",
+          "claimType": "Exact order code, balloon diameter, and balloon length"
+        },
+        {
+          "sourceId": "SRC098",
+          "sourceLocation": "Trachealator product page",
+          "claimType": "Manufacturer, non-occlusive design, and airway-dilation application"
+        },
+        {
+          "sourceId": "SRC099",
+          "sourceLocation": "K211894, device description",
+          "claimType": "Manufacturer and model-family identity"
+        }
+      ],
+      "taxonomyClass": "balloon_dilation",
+      "taxonomySubtype": "airway_balloon_dilator",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "packageUom": "Each",
+      "notes": "Dimensions were transcribed from direct visual inspection of the owner packet, not from damaged OCR.",
+      "variants": [
+        {
+          "catalogNumber": "TRD1-06030",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 6 x 30 mm",
+          "diameterMm": 6,
+          "lengthMm": 30,
+          "sizeDisplay": "6 mm x 30 mm"
+        },
+        {
+          "catalogNumber": "TRD1-07030",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 7 x 30 mm",
+          "diameterMm": 7,
+          "lengthMm": 30,
+          "sizeDisplay": "7 mm x 30 mm"
+        },
+        {
+          "catalogNumber": "TRD1-08030",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 8 x 30 mm",
+          "diameterMm": 8,
+          "lengthMm": 30,
+          "sizeDisplay": "8 mm x 30 mm"
+        },
+        {
+          "catalogNumber": "TRD1-09030",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 9 x 30 mm",
+          "diameterMm": 9,
+          "lengthMm": 30,
+          "sizeDisplay": "9 mm x 30 mm"
+        },
+        {
+          "catalogNumber": "TRD1-10030",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 10 x 30 mm",
+          "diameterMm": 10,
+          "lengthMm": 30,
+          "sizeDisplay": "10 mm x 30 mm"
+        },
+        {
+          "catalogNumber": "TRD1-12040",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 12 x 40 mm",
+          "diameterMm": 12,
+          "lengthMm": 40,
+          "sizeDisplay": "12 mm x 40 mm"
+        },
+        {
+          "catalogNumber": "TRD1-14540",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 14.5 x 40 mm",
+          "diameterMm": 14.5,
+          "lengthMm": 40,
+          "sizeDisplay": "14.5 mm x 40 mm"
+        },
+        {
+          "catalogNumber": "TRD1-16040",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 16 x 40 mm",
+          "diameterMm": 16,
+          "lengthMm": 40,
+          "sizeDisplay": "16 mm x 40 mm"
+        },
+        {
+          "catalogNumber": "TRD1-18040",
+          "productName": "Trachealator Non-Occlusive Airway Balloon, 18 x 40 mm",
+          "diameterMm": 18,
+          "lengthMm": 40,
+          "sizeDisplay": "18 mm x 40 mm"
+        }
+      ]
+    },
+    {
+      "groupId": "SC-HUGEMED-BRONCHOSCOPES",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-B0C7C296E6",
+      "manufacturer": "Shenzhen HugeMed Medical Technical Development Co., Ltd.",
+      "distributor": "EndoTherapeutics",
+      "brandFamily": "HugeMed Single-Use Flexible Bronchoscope",
+      "primaryCategory": "Bronchoscopy platform",
+      "subcategory": "Single-use flexible bronchoscope",
+      "productKind": "Single-use endoscope",
+      "description": "Single-use flexible video bronchoscope with the exact outer diameter and working channel shown in the reviewed sources.",
+      "roleCode": "FLEX_SCOPE_SINGLE_USE",
+      "roleNotes": "Single-use flexible bronchoscope.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 5, visually confirmed model/specification table",
+          "claimType": "Exact model and physical configuration; BR-M50 visually confirmed against OCR"
+        },
+        {
+          "sourceId": "SRC100",
+          "sourceLocation": "Single-use bronchoscope model/specification tables",
+          "claimType": "Exact model dimensions and working-channel specifications"
+        },
+        {
+          "sourceId": "SRC101",
+          "sourceLocation": "K222910, applicant and device-description sections",
+          "claimType": "Legal manufacturer and product-family identity"
+        }
+      ],
+      "taxonomyClass": "bronchoscope",
+      "taxonomySubtype": "single_use_video_bronchoscope",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "packageUom": "Each",
+      "notes": "HugeMed is canonical manufacturer; EndoTherapeutics is recorded as distributor. BR-M50 is taken from visual inspection, not the OCR error BR-MSO.",
+      "variants": [
+        {
+          "catalogNumber": "BR-M22",
+          "productName": "BR-M22 Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546115",
+          "diameterMm": 2.2,
+          "sizeDisplay": "2.2 mm; no working channel",
+          "specJson": {
+            "working_channel_mm": null,
+            "gudid_primary_di": "06970462546115"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546115",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M32",
+          "productName": "BR-M32 Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546108",
+          "diameterMm": 3.1,
+          "sizeDisplay": "3.1 mm; 1.2 mm working channel",
+          "specJson": {
+            "working_channel_mm": 1.2,
+            "gudid_primary_di": "06970462546108"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546108",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M40",
+          "productName": "BR-M40 Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546092",
+          "diameterMm": 4,
+          "sizeDisplay": "4.0 mm; 2.0 mm working channel",
+          "specJson": {
+            "working_channel_mm": 2,
+            "gudid_primary_di": "06970462546092"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546092",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M50",
+          "productName": "BR-M50 Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546085",
+          "diameterMm": 5,
+          "sizeDisplay": "5.0 mm; 2.8 mm working channel",
+          "specJson": {
+            "working_channel_mm": 2.8,
+            "gudid_primary_di": "06970462546085",
+            "visual_ocr_correction": "BR-M50, not BR-MSO"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546085",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M58",
+          "productName": "BR-M58 Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546061",
+          "diameterMm": 5.8,
+          "sizeDisplay": "5.8 mm; 3.4 mm working channel",
+          "specJson": {
+            "working_channel_mm": 3.4,
+            "gudid_primary_di": "06970462546061"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546061",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M40H",
+          "productName": "BR-M40H HD Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546184",
+          "diameterMm": 4,
+          "sizeDisplay": "4.0 mm; 1.2 mm working channel; HD",
+          "specJson": {
+            "working_channel_mm": 1.2,
+            "imaging": "HD",
+            "gudid_primary_di": "06970462546184"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546184",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M52H",
+          "productName": "BR-M52H HD Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546177",
+          "diameterMm": 5,
+          "sizeDisplay": "5.0 mm; 2.2 mm working channel; HD",
+          "specJson": {
+            "working_channel_mm": 2.2,
+            "imaging": "HD",
+            "gudid_primary_di": "06970462546177"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546177",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "BR-M58H",
+          "productName": "BR-M58H HD Single-Use Flexible Bronchoscope",
+          "gtin": "06970462546160",
+          "diameterMm": 6,
+          "sizeDisplay": "6.0 mm; 2.8 mm working channel; HD",
+          "specJson": {
+            "working_channel_mm": 2.8,
+            "imaging": "HD",
+            "gudid_primary_di": "06970462546160"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC102",
+              "sourceLocation": "AccessGUDID Primary DI 06970462546160",
+              "claimType": "Exact model, primary DI, and labeler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "SC-CLR-ACCESSORIES",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-89E235AB41",
+      "manufacturer": "CLR Medical",
+      "distributor": null,
+      "brandFamily": "CLR Irrigation System",
+      "primaryCategory": "Pleural procedures",
+      "subcategory": "Pleural drainage accessory",
+      "productKind": "Disposable accessory",
+      "description": "Exact single-use component of the CLR pleural irrigation and drainage-access system.",
+      "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
+      "roleNotes": "Pleural drainage/irrigation circuit accessory used with indwelling chest tubes or pigtail catheters.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 6, CLR irrigation-system component panel",
+          "claimType": "Product-family scope and separately named components"
+        },
+        {
+          "sourceId": "SRC103",
+          "sourceLocation": "CLR product pages and component IFUs",
+          "claimType": "Manufacturer, separate-component identity, and pleural drainage/irrigation function"
+        }
+      ],
+      "taxonomyClass": "pleural_drainage",
+      "taxonomySubtype": "pleural_drainage_accessory",
+      "taxonomyConfidence": "high",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "packageUom": "Each",
+      "notes": "The owner page was family-level for identifiers; exact catalog numbers and primary DIs were resolved from AccessGUDID rather than invented.",
+      "variants": [
+        {
+          "catalogNumber": "S012-01-200",
+          "productName": "CLR Irrigation and Drainage Kit",
+          "gtin": "00860003054949",
+          "specJson": {
+            "gudid_primary_di": "00860003054949"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC104",
+              "sourceLocation": "AccessGUDID Primary DI 00860003054949",
+              "claimType": "Exact catalog number, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "S012-01-100",
+          "productName": "CLR Port",
+          "gtin": "00860003054918",
+          "specJson": {
+            "gudid_primary_di": "00860003054918"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC104",
+              "sourceLocation": "AccessGUDID Primary DI 00860003054918",
+              "claimType": "Exact catalog number, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "S012-01-016",
+          "productName": "CLR Port Injector",
+          "gtin": "00850052377007",
+          "specJson": {
+            "gudid_primary_di": "00850052377007"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC104",
+              "sourceLocation": "AccessGUDID Primary DI 00850052377007",
+              "claimType": "Exact catalog number, primary DI, and labeler"
+            }
+          ]
+        },
+        {
+          "catalogNumber": "S012-01-015",
+          "productName": "CLR Access Cap",
+          "gtin": "00860003054994",
+          "specJson": {
+            "gudid_primary_di": "00860003054994"
+          },
+          "evidence": [
+            {
+              "sourceId": "SRC104",
+              "sourceLocation": "AccessGUDID Primary DI 00860003054994",
+              "claimType": "Exact catalog number, primary DI, and labeler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "SC-CLR-IRRIGATOR",
+      "origin": "owner_pdf",
+      "manufacturerId": "MFR-89E235AB41",
+      "manufacturer": "CLR Medical",
+      "distributor": null,
+      "brandFamily": "CLR Irrigation System",
+      "primaryCategory": "Pleural procedures",
+      "subcategory": "Pleural irrigation instrument",
+      "productKind": "Disposable instrument",
+      "description": "Single-use CLR handpiece with separate suction and irrigation controls for thoracic collections.",
+      "roleCode": "PLEURAL_DRAINAGE_ACCESSORY",
+      "roleNotes": "Pleural irrigation/suction instrument used with indwelling chest tubes or pigtail catheters.",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 6, CLR Irrigator panel",
+          "claimType": "Clinical-scope and family identity"
+        },
+        {
+          "sourceId": "SRC103",
+          "sourceLocation": "CLR Irrigator IFU LBL S012-01-203 Rev D",
+          "claimType": "Exact product function and thoracic indication"
+        },
+        {
+          "sourceId": "SRC104",
+          "sourceLocation": "AccessGUDID Primary DI 00860003054901",
+          "claimType": "Exact catalog number, primary DI, and labeler"
+        }
+      ],
+      "taxonomyClass": "other_needs_review",
+      "taxonomySubtype": "unclassified_device",
+      "taxonomyConfidence": "needs_review",
+      "reuseStatus": "Single use",
+      "sterileStatus": "Sterile",
+      "packageUom": "Each",
+      "notes": "The current physical taxonomy has no exact pleural suction/irrigation instrument subtype. This exact product intentionally falls through to other_needs_review; no broad D2C change is made.",
+      "variants": [
+        {
+          "catalogNumber": "S012-01-019",
+          "productName": "CLR Irrigator",
+          "gtin": "00860003054901",
+          "specJson": {
+            "gudid_primary_di": "00860003054901",
+            "taxonomy_review_question": "Should the controlled vocabulary add a pleural suction/irrigation instrument subtype?"
+          }
+        }
+      ]
+    }
+  ],
+  "existing_matches": [
+    {
+      "origin": "owner_pdf",
+      "catalogNumber": "G34281",
+      "alternateId": "ECHO-HD-22-EBUS-O-C",
+      "productName": "EchoTip Endobronchial HD Ultrasound Needle, 22G Olympus",
+      "manufacturer": "Cook Medical",
+      "manufacturerId": "MFR-2760A3270C",
+      "productId": "PRD-5CC8131FDE",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 7, 22G Olympus row",
+          "claimType": "Cook order number, reference part number, gauge, and scope configuration"
+        }
+      ],
+      "roleCode": "EBUS_NEEDLE_FNA",
+      "taxonomyClass": "needle",
+      "taxonomySubtype": "ebus_tbna_needle",
+      "matchBasis": "Existing exact Cook order number G34281 already carries alternate identifier ECHO-HD-22-EBUS-O-C."
+    },
+    {
+      "origin": "owner_pdf",
+      "catalogNumber": "G34279",
+      "alternateId": "ECHO-HD-22-EBUS-P-C",
+      "productName": "EchoTip Endobronchial HD Ultrasound Needle, 22G Pentax",
+      "manufacturer": "Cook Medical",
+      "manufacturerId": "MFR-2760A3270C",
+      "productId": "PRD-2D0C9B936A",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 7, 22G Pentax row",
+          "claimType": "Cook order number, reference part number, gauge, and scope configuration"
+        }
+      ],
+      "roleCode": "EBUS_NEEDLE_FNA",
+      "taxonomyClass": "needle",
+      "taxonomySubtype": "ebus_tbna_needle",
+      "matchBasis": "Existing exact Cook order number G34279 already carries alternate identifier ECHO-HD-22-EBUS-P-C."
+    },
+    {
+      "origin": "owner_pdf",
+      "catalogNumber": "G34282",
+      "alternateId": "ECHO-HD-25-EBUS-O-C",
+      "productName": "EchoTip Endobronchial HD Ultrasound Needle, 25G Olympus",
+      "manufacturer": "Cook Medical",
+      "manufacturerId": "MFR-2760A3270C",
+      "productId": "PRD-2DA93F54B9",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 7, 25G Olympus row",
+          "claimType": "Cook order number, reference part number, gauge, and scope configuration"
+        }
+      ],
+      "roleCode": "EBUS_NEEDLE_FNA",
+      "taxonomyClass": "needle",
+      "taxonomySubtype": "ebus_tbna_needle",
+      "matchBasis": "Existing exact Cook order number G34282 already carries alternate identifier ECHO-HD-25-EBUS-O-C."
+    },
+    {
+      "origin": "owner_pdf",
+      "catalogNumber": "G34280",
+      "alternateId": "ECHO-HD-25-EBUS-P-C",
+      "productName": "EchoTip Endobronchial HD Ultrasound Needle, 25G Pentax",
+      "manufacturer": "Cook Medical",
+      "manufacturerId": "MFR-2760A3270C",
+      "productId": "PRD-3F51C7D66F",
+      "evidence": [
+        {
+          "sourceId": "SRC089",
+          "sourceLocation": "Rendered PDF page 7, 25G Pentax row",
+          "claimType": "Cook order number, reference part number, gauge, and scope configuration"
+        }
+      ],
+      "roleCode": "EBUS_NEEDLE_FNA",
+      "taxonomyClass": "needle",
+      "taxonomySubtype": "ebus_tbna_needle",
+      "matchBasis": "Existing exact Cook order number G34280 already carries alternate identifier ECHO-HD-25-EBUS-P-C."
+    }
+  ],
+  "non_addition_candidates": [
+    {
+      "origin": "old_corpus",
+      "catalogNumber": null,
+      "productName": "StraightShot M5 family",
+      "manufacturer": "Medtronic",
+      "sourceId": null,
+      "sourceLocation": "ent-why-power-apexcut-blades-brochure.pdf; prior CSV input row 791",
+      "sourceScope": "family_level",
+      "previousCsvStatus": "represented_family_row",
+      "canonicalBeforeStatus": "family_present",
+      "identifierConfidence": "insufficient",
+      "clinicalScopeDisposition": "relevant_family_context",
+      "disposition": "previously_accounted_csv",
+      "ownerReviewRequired": false,
+      "rationale": "The old brochure contained M5 family context and did produce CSV row 791, so it is not an exact source-to-CSV omission. PR #118 classified that row as ENT-only; exact M5 ordering identities were resolved in this pass from the current Medtronic page."
+    },
+    {
+      "origin": "owner_pdf",
+      "catalogNumber": "00020019",
+      "productName": "HDMI/DVI Cable",
+      "manufacturer": "Axess Vision Technology S.A.S.",
+      "sourceId": "SRC089",
+      "sourceLocation": "Rendered PDF page 1, accessory ordering list",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "not_applicable_new_source",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "commodity_accessory_relevance_uncertain",
+      "disposition": "needs_owner_review",
+      "ownerReviewRequired": true,
+      "rationale": "The exact code is supported, but the item is a generic HDMI/DVI cable and the bounded scope includes only directly required manufacturer-specific capital accessories. Owner confirmation is needed that this cable has material device-specific identity."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1882924HRE",
+      "productName": "Skimmer 2.9 mm Angle-Tip Blade, 27 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "airway_relevance_ambiguous",
+      "disposition": "needs_owner_review",
+      "ownerReviewRequired": true,
+      "rationale": "The page groups it under airway blades, but the only SKU-specific application is trans-sphenoidal hypophysectomy and does not establish interventional-pulmonology airway use."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1883524",
+      "productName": "Skimmer 3.5 mm Angle-Tip Subglottic Blade, 27.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "airway_relevance_ambiguous",
+      "disposition": "needs_owner_review",
+      "ownerReviewRequired": true,
+      "rationale": "Subglottic labeling is adjacent to scope, but the page's stated applications do not clearly establish bronchoscopy use for this exact SKU."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1884024",
+      "productName": "Skimmer 4.0 mm Angle-Tip Subglottic Blade, 27.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "airway_relevance_ambiguous",
+      "disposition": "needs_owner_review",
+      "ownerReviewRequired": true,
+      "rationale": "Subglottic labeling is adjacent to scope, but the table calls the type laryngeal and the page does not clearly establish bronchoscopy use for this exact SKU."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1884031",
+      "productName": "Tricut 4.0 mm Angle-Tip Subglottic Blade, 27.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "airway_relevance_ambiguous",
+      "disposition": "needs_owner_review",
+      "ownerReviewRequired": true,
+      "rationale": "The rotatable 1884031HRE is explicitly tied to tracheal stenosis, but this distinct three-pack SKU is typed laryngeal and is not independently tied to that application."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1882979HRE",
+      "productName": "Skimmer 2.9 mm Angle-Tip Blade, 13 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "The short pediatric/laryngeal application evidence does not establish bronchoscopy or tracheobronchial use."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1882925",
+      "productName": "Skimmer 2.9 mm Angle-Tip Blade, 18 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "Official evidence does not establish tracheal, bronchial, or bronchoscopy use for this non-rotatable SKU."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1882925HRE",
+      "productName": "Skimmer 2.9 mm Rotatable Angle-Tip Blade, 18 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "Official evidence does not establish tracheal, bronchial, or bronchoscopy use for this exact SKU."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1882923HRE",
+      "productName": "Skimmer 2.9 mm Rotatable Angle-Tip Blade, 22 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "The SKU-specific application is trans-sphenoidal hypophysectomy rather than an in-scope airway indication."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1882923",
+      "productName": "Skimmer 2.9 mm Angle-Tip Blade, 22.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "Official evidence does not establish tracheal, bronchial, or bronchoscopy use for this exact SKU."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1884023",
+      "productName": "Skimmer 4.0 mm Angle-Tip Laryngeal Blade, 22.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "The exact product is laryngeal and lacks direct tracheobronchial or bronchoscopy evidence."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1884030HRE",
+      "productName": "Tricut 4.0 mm Rotatable Angle-Tip Laryngeal Blade, 22 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "The exact product is laryngeal and lacks direct tracheobronchial or bronchoscopy evidence."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1884030",
+      "productName": "Tricut 4.0 mm Angle-Tip Laryngeal Blade, 22.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "The exact product is laryngeal and lacks direct tracheobronchial or bronchoscopy evidence."
+    },
+    {
+      "origin": "official_web_follow_up",
+      "catalogNumber": "1884020",
+      "productName": "Tricut 4.0 mm Straight-Tip Laryngeal Blade, 22.5 cm",
+      "manufacturer": "Medtronic",
+      "sourceId": "SRC091",
+      "sourceLocation": "Official airway ordering table",
+      "sourceScope": "exact_product",
+      "previousCsvStatus": "absent",
+      "canonicalBeforeStatus": "absent",
+      "identifierConfidence": "high",
+      "clinicalScopeDisposition": "laryngeal_or_ent_only",
+      "disposition": "irrelevant_to_current_scope",
+      "ownerReviewRequired": false,
+      "rationale": "The exact product is laryngeal and lacks direct tracheobronchial or bronchoscopy evidence."
+    }
+  ]
+}

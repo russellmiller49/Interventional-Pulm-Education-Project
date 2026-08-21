@@ -11,6 +11,7 @@ import {
 } from './catalog-addition-records'
 import { buildTaxonomyV2Additions } from './catalog-additions-taxonomy-v2'
 import { buildBrochureIntakeAdditions } from './catalog-additions-brochure-intake'
+import { buildSourceCompletenessAdditions } from './catalog-additions-source-completeness'
 import { formatJson } from './format-json'
 
 /**
@@ -1901,11 +1902,62 @@ async function main() {
   productSources.push(...brochureIntake.productSources)
   for (const warning of brochureIntake.warnings) console.warn(warning)
 
+  const sourceCompleteness = buildSourceCompletenessAdditions({
+    existingProducts: (
+      JSON.parse(
+        await readFile(path.join(GENERATED_DIRECTORY, 'catalog-products.json'), 'utf8'),
+      ) as {
+        product_id: string
+        manufacturer_id: string | null
+        manufacturer: string | null
+        catalog_number: string | null
+        alternate_ids: string | null
+        gtin: string | null
+      }[]
+    ).concat(
+      products.map((product) => ({
+        product_id: String(product.product_id),
+        manufacturer_id:
+          typeof product.manufacturer_id === 'string' ? product.manufacturer_id : null,
+        manufacturer: typeof product.manufacturer === 'string' ? product.manufacturer : null,
+        catalog_number: typeof product.catalog_number === 'string' ? product.catalog_number : null,
+        alternate_ids: typeof product.alternate_ids === 'string' ? product.alternate_ids : null,
+        gtin: typeof product.gtin === 'string' ? product.gtin : null,
+      })),
+    ),
+    existingManufacturers: existingManufacturers
+      .map((manufacturer) => ({
+        manufacturer_id: manufacturer.manufacturer_id,
+        manufacturer: manufacturer.manufacturer,
+      }))
+      .concat(
+        [...taxonomyV2.manufacturers, ...brochureIntake.manufacturers].map((manufacturer) => ({
+          manufacturer_id: String(manufacturer.manufacturer_id),
+          manufacturer: String(manufacturer.manufacturer),
+        })),
+      ),
+    existingSources: (
+      JSON.parse(await readFile(path.join(GENERATED_DIRECTORY, 'sources.json'), 'utf8')) as {
+        source_id: string
+        title: string
+      }[]
+    ).concat(
+      [...taxonomyV2.sources, ...brochureIntake.sources].map((source) => ({
+        source_id: String(source.source_id),
+        title: String(source.title),
+      })),
+    ),
+  })
+  products.push(...sourceCompleteness.products)
+  productRoles.push(...sourceCompleteness.productRoles)
+  productSources.push(...sourceCompleteness.productSources)
+  for (const warning of sourceCompleteness.warnings) console.warn(warning)
+
   const additions = {
     format_version: '1.0',
     generated_by: 'scripts/ip-preference-cards/build-catalog-additions.ts',
     notes:
-      'Curated catalog additions merged by the importer. GUDID-backed rows keep their dated FDA identity and distribution evidence; brochure-intake rows use exact manufacturer-document identities, remain hidden, and make no current U.S. distribution or orderability claim.',
+      'Curated catalog additions merged by the importer. GUDID-backed rows keep their dated FDA identity and distribution evidence; brochure-intake and source-completeness rows use exact reviewed identities, remain hidden, and make no current U.S. distribution or orderability claim.',
     manufacturers: [
       {
         manufacturer_id: manufacturerId,
@@ -1958,6 +2010,7 @@ async function main() {
       },
       ...taxonomyV2.manufacturers,
       ...brochureIntake.manufacturers,
+      ...sourceCompleteness.manufacturers,
     ],
     sources: [
       {
@@ -2046,6 +2099,7 @@ async function main() {
       },
       ...taxonomyV2.sources,
       ...brochureIntake.sources,
+      ...sourceCompleteness.sources,
     ],
     products,
     product_roles: productRoles,

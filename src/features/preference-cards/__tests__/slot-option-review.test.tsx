@@ -15,13 +15,13 @@ describe('exact-slot proposal review data', () => {
 
     // Brochure products remain nonselectable; supported role mappings only expand review rows.
     expect(summary).toMatchObject({
-      totalProposals: 1485,
-      affectedProducts: 773,
-      affectedSlots: 124,
-      requiredProposals: 772,
+      totalProposals: 1595,
+      affectedProducts: 811,
+      affectedSlots: 135,
+      requiredProposals: 837,
       notInDistribution: 32,
       conflictingDistribution: 7,
-      unknownDistribution: 885,
+      unknownDistribution: 995,
     })
     expect(new Set(rows.map((row) => `${row.slot_id}\u0000${row.product_id}`)).size).toBe(
       rows.length,

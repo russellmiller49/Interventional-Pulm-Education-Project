@@ -34,8 +34,8 @@ describe('D2B atlas cohort inclusion', () => {
     const expected = full.products.filter(isAtlasCohortProduct).map((p) => p.product_id)
     const atlas = getAtlasCatalogStore()
     expect(atlas.products.map((p) => p.product_id).sort()).toEqual([...expected].sort())
-    // 753 prototype-visible + 975 hidden verified-source products.
-    expect(atlas.products.length).toBe(1728)
+    // 753 prototype-visible + 1,019 hidden verified-source products.
+    expect(atlas.products.length).toBe(1772)
     for (const product of atlas.products) {
       expect(product.verification_grade).toBe('verified_source')
     }
@@ -44,7 +44,7 @@ describe('D2B atlas cohort inclusion', () => {
     const newlyIncluded = atlas.products.filter(
       (product) => product.visibility_state !== 'prototype_visible',
     )
-    expect(newlyIncluded.length).toBe(975)
+    expect(newlyIncluded.length).toBe(1019)
     for (const product of newlyIncluded) expect(product.visibility_state).toBe('hidden')
   })
 
@@ -93,20 +93,20 @@ describe('D2B atlas cohort inclusion', () => {
       }
       page += 1
     } while (page <= pageCount)
-    expect(seen.size).toBe(1728)
-    expect(searchAtlas(query).total).toBe(1728)
+    expect(seen.size).toBe(1772)
+    expect(searchAtlas(query).total).toBe(1772)
   })
 
   it('counts facets over the expanded cohort', () => {
     const facets = getAtlasFacets()
     const total = facets.manufacturers.reduce((sum, entry) => sum + entry.productCount, 0)
-    expect(total).toBe(1728)
+    expect(total).toBe(1772)
     expect(getAtlasOverview()).toEqual({
-      productCount: 1728,
+      productCount: 1772,
       manufacturerCount: facets.manufacturers.length,
       roleCount: 135,
       procedureCount: 15,
-      verifiedCount: 1728,
+      verifiedCount: 1772,
     })
   })
 
@@ -190,7 +190,7 @@ describe('D2B atlas cohort inclusion', () => {
     }
     // Exact brochure identities without a defensible canonical role remain visible but
     // unassigned rather than receiving an inferred clinical use.
-    expect(productsWithoutRole).toBe(19)
+    expect(productsWithoutRole).toBe(25)
   })
 
   it('is the ONLY path that opts into Primary-fit representatives (C-06)', () => {
@@ -269,9 +269,9 @@ describe('D2B atlas cohort inclusion', () => {
     }
   })
 
-  it('leaves the full catalog store untouched for the preserved surfaces', () => {
+  it('keeps the complete effective catalog available to preserved surfaces', () => {
     const full = getCatalogStore()
-    expect(full.products.length).toBe(1929)
+    expect(full.products.length).toBe(1973)
     // The two stores answer fuzzy search independently (regression for the Fuse cache fix).
     const atlasHits = searchAtlas(catalogSearchSchema.parse({ q: 'aScope' })).total
     const fullHits = searchCatalog(catalogSearchSchema.parse({ q: 'aScope' })).total

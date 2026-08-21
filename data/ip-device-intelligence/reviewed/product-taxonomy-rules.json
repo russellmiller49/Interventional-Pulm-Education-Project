@@ -1621,6 +1621,14 @@
     },
     {
       "primary_category": "Therapeutic bronchoscopy",
+      "subcategory": "Cryotherapy consumable",
+      "device_class_code": "cryotherapy",
+      "device_subtype_code": "cryotherapy_accessory",
+      "confidence": "high",
+      "note": "Source Completeness V2 narrow rule: exact cryogen-cartridge consumables remain distinct from flexible cryoprobes."
+    },
+    {
+      "primary_category": "Therapeutic bronchoscopy",
       "subcategory": "Flexible cryoprobe",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "flexible_cryoprobe",

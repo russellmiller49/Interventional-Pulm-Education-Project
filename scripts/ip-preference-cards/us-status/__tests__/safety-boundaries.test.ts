@@ -21,17 +21,17 @@ const SAFETY_TEST_PATH = path.normalize(
   'scripts/ip-preference-cards/us-status/__tests__/safety-boundaries.test.ts',
 )
 
-// This work package is proposal-only. Updating one of these hashes requires a separately
-// authorized canonical-data or governed-release change, never a research-output refresh.
+// This work package is proposal-only. These canonical catalog hashes move only with a separately
+// authorized governed intake such as Source Completeness V2, never a research-output refresh.
 const PROHIBITED_CANONICAL_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    '8d2f0f210f24d971ac09d8d67a850afbfefc9b4f521303b685cab3abfc9884f0',
+    'a5e548a1e36370bb13f7eea17d93dca698a965cbfae418931bd70bffa852f7cc',
   'data/ip-preference-cards/generated/roles.json':
     '8ec7c66cf5db225532c8195258f341af5644559689dd0b69cea7a56e2fd0b571',
   'data/ip-preference-cards/generated/product-roles.json':
-    '6852e1adedd1c4a1d9d057758a7a62ac4f9ece3ecc45c765e019d9f1538db49d',
+    '1b650a977d519976643b3cf4724329e00db13720388249175db0cf899848652d',
   'data/ip-preference-cards/generated/procedure-slots.json':
     'c11720c8d209b22c56813265ea53f70a348a0fd3af7b4cef9c6ca1a6b43a3ea7',
   'data/ip-preference-cards/generated/slot-product-options.json':
@@ -65,7 +65,7 @@ const PROHIBITED_CANONICAL_HASHES = {
   'data/ip-preference-cards/generated/release-impact-report.json':
     '272d8cec228d9e4d95d8796661984e726c3d298f97783201877caddad400df60',
   'data/ip-preference-cards/seed/catalog-additions.json':
-    '55a5755c0485c861c52e7ae0ab67ecb24a80aa4f636c71c596af91237b4ed7bc',
+    'ed34efe86e5e87499d3c76558fa7f2ccacca60aa9bbe4da102b7d18d96b0be0e',
   'data/ip-preference-cards/seed/release-bundles.json':
     '892780cb38695b71b8c6d258ca4915ae5bf74062e8e976dff050aa0ced9cdde2',
 } as const
@@ -295,7 +295,7 @@ describe('current U.S. status research safety boundaries', () => {
     const hiddenProducts = catalog.filter((product) => product.visibility_state === 'hidden')
     const hiddenIds = new Set(hiddenProducts.map((product) => product.product_id))
 
-    expect(hiddenProducts).toHaveLength(1176)
+    expect(hiddenProducts).toHaveLength(1220)
     expect(
       hiddenProducts.filter((product) => !product.live_dropdown_status.startsWith('Hidden')),
     ).toEqual([])

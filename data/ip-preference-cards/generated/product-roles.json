@@ -1,5 +1,11 @@
 [
   {
+    "product_id": "PRD-003C4641E6",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Pleural irrigation/suction instrument used with indwelling chest tubes or pigtail catheters."
+  },
+  {
     "product_id": "PRD-00C13A59AA",
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
@@ -1206,6 +1212,12 @@
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
+    "product_id": "PRD-181DE98372",
+    "role_code": "VIDEO_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Video processor for the Broncoflex single-use endoscope system."
+  },
+  {
     "product_id": "PRD-1840ABC86D",
     "role_code": "ENDOSCOPIC_SUCTION_PUMP",
     "role_fit": "Compatible",
@@ -1546,6 +1558,12 @@
     "role_code": "AIRWAY_BALLOON_DILATOR",
     "role_fit": "Exact",
     "notes": "Pulmonary balloon dilator"
+  },
+  {
+    "product_id": "PRD-1ED27ADA45",
+    "role_code": "EBUS_NEEDLE_FNA",
+    "role_fit": "Primary",
+    "notes": "Exact EBUS tissue-acquisition needle; tip geometry controls FNA versus FNB role assignment."
   },
   {
     "product_id": "PRD-1EEDD71C53",
@@ -1920,6 +1938,12 @@
     "notes": "Endoscope cleaning accessory"
   },
   {
+    "product_id": "PRD-2632FFBF07",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-26349CF364",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -2238,6 +2262,12 @@
     "notes": "3.2 mm instrument channel."
   },
   {
+    "product_id": "PRD-2C1F1ABA62",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
+  },
+  {
     "product_id": "PRD-2C1F40E815",
     "role_code": "TRACH_TUBE_CUFFLESS",
     "role_fit": "Primary",
@@ -2284,6 +2314,12 @@
     "role_code": "AIRWAY_STENT_SEMS_UNCOVERED",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2CD37C1E67",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Pleural drainage/irrigation circuit accessory used with indwelling chest tubes or pigtail catheters."
   },
   {
     "product_id": "PRD-2CE58D8A14",
@@ -2476,6 +2512,12 @@
     "role_code": "BRONCH_REPROCESSING_KIT",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-2FA3F3A0DD",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Pleural drainage/irrigation circuit accessory used with indwelling chest tubes or pigtail catheters."
   },
   {
     "product_id": "PRD-2FACCCFC02",
@@ -2832,6 +2874,12 @@
     "notes": "Thoracoscopy trocar"
   },
   {
+    "product_id": "PRD-378597DD7A",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
+  },
+  {
     "product_id": "PRD-386D5501C9",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -2890,6 +2938,12 @@
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-39C1BDB306",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
   },
   {
     "product_id": "PRD-39EB1A695C",
@@ -3028,6 +3082,12 @@
     "role_code": "THORACOSCOPE_RIGID",
     "role_fit": "Primary",
     "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-3E1556EBE5",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
   },
   {
     "product_id": "PRD-3EB4013643",
@@ -3510,6 +3570,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-48F43B9C6A",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-49256F1DC6",
     "role_code": "CHEST_TUBE_LARGE_BORE",
     "role_fit": "Primary",
@@ -3762,6 +3828,12 @@
     "notes": "Endoscope cleaning accessory"
   },
   {
+    "product_id": "PRD-4E7880DB69",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-4E9069C30F",
     "role_code": "FOREIGN_BODY_BASKET",
     "role_fit": "Primary",
@@ -3802,6 +3874,12 @@
     "role_code": "NAV_PLATFORM_ACCESSORY",
     "role_fit": "Primary",
     "notes": "Connector between the Galaxy bronchoscope and the platform."
+  },
+  {
+    "product_id": "PRD-4F290FD9D3",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
   },
   {
     "product_id": "PRD-4F4AA966A9",
@@ -4098,6 +4176,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5592532651",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
+  },
+  {
     "product_id": "PRD-559ABA4333",
     "role_code": "IPC_MANAGEMENT_ACCESSORY",
     "role_fit": "Primary",
@@ -4392,6 +4476,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-5AC73F2FA3",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
+  },
+  {
     "product_id": "PRD-5ACC570E45",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -4522,6 +4612,12 @@
     "role_code": "ENDOSCOPY_CART",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-5CF4F1857F",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
   },
   {
     "product_id": "PRD-5D09EFABDD",
@@ -5412,6 +5508,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-6F15A8C9B5",
+    "role_code": "VIDEO_PROCESSOR",
+    "role_fit": "Primary",
+    "notes": "Video processor for the Broncoflex single-use endoscope system."
+  },
+  {
     "product_id": "PRD-6F32150552",
     "role_code": "PNEUMOTHORAX_KIT",
     "role_fit": "Primary",
@@ -5650,6 +5752,12 @@
     "role_code": "ROBOTIC_BIOPSY_NEEDLE",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-73A1532E08",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
   },
   {
     "product_id": "PRD-73BBBA8747",
@@ -6036,6 +6144,12 @@
     "notes": "Rigid bronchoscope/tracheoscope tube"
   },
   {
+    "product_id": "PRD-7B8C092373",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
+  },
+  {
     "product_id": "PRD-7BA7CA85BF",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Primary",
@@ -6166,6 +6280,12 @@
     "role_code": "CRYOPROBE_FLEX",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-7DFA867CB6",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
   },
   {
     "product_id": "PRD-7E05B194BE",
@@ -6322,6 +6442,12 @@
     "role_code": "CYTOLOGY_BRUSH",
     "role_fit": "Primary",
     "notes": "Cytology brush for the Monarch bronchoscope."
+  },
+  {
+    "product_id": "PRD-81878EEA9B",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
   },
   {
     "product_id": "PRD-81D1E660C8",
@@ -6496,6 +6622,12 @@
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Primary",
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-85B355AE93",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
   },
   {
     "product_id": "PRD-85E1F8359A",
@@ -6954,6 +7086,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-908A9B501B",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
+  },
+  {
     "product_id": "PRD-90A0B83AA5",
     "role_code": "RIGID_FORCEPS",
     "role_fit": "Exact",
@@ -7000,6 +7138,12 @@
     "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
     "role_fit": "Compatible",
     "notes": "May be used as a cavity/pleural drainage option only when consistent with the current IFU and institutional policy."
+  },
+  {
+    "product_id": "PRD-9163FB693E",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Powered handpiece used with the exact airway blade cohort reviewed in this pass."
   },
   {
     "product_id": "PRD-9188987BF8",
@@ -7206,6 +7350,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-961C4B6422",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-963930CE88",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",
@@ -7240,6 +7390,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Primary",
     "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-973D3F9656",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
   },
   {
     "product_id": "PRD-978B2478DC",
@@ -7758,6 +7914,12 @@
     "notes": "Manufacturer-catalog identity and intended use support this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
+    "product_id": "PRD-A3852DB56A",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-A3EBA86219",
     "role_code": "RIGID_BRONCHOSCOPE_ACCESSORY",
     "role_fit": "Exact",
@@ -8124,6 +8286,12 @@
     "notes": "Rigid bronchoscopy forceps/scissors"
   },
   {
+    "product_id": "PRD-AC45D3E510",
+    "role_code": "EBUS_NEEDLE_FNB",
+    "role_fit": "Primary",
+    "notes": "Exact EBUS tissue-acquisition needle; tip geometry controls FNA versus FNB role assignment."
+  },
+  {
     "product_id": "PRD-AC566D2949",
     "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
     "role_fit": "Primary",
@@ -8256,6 +8424,12 @@
     "notes": "Rigid bronchoscope accessory"
   },
   {
+    "product_id": "PRD-AED3720BF6",
+    "role_code": "CRYOPROBE_FLEX",
+    "role_fit": "Primary",
+    "notes": "Flexible cryoprobe or probe-containing kit for bronchoscopic cryobiopsy and cryoadhesion/tissue removal."
+  },
+  {
     "product_id": "PRD-AEEAFB2957",
     "role_code": "EBUS_NEEDLE_FNB",
     "role_fit": "Primary",
@@ -8304,10 +8478,22 @@
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
   },
   {
+    "product_id": "PRD-AFF9BDD685",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-B027947191",
     "role_code": "PERC_TRACH_KIT",
     "role_fit": "Primary",
     "notes": "Manufacturer-document intended use supports this discovery role; no compatibility, substitution, or slot eligibility is implied."
+  },
+  {
+    "product_id": "PRD-B02CF0A059",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
   },
   {
     "product_id": "PRD-B05D337994",
@@ -8778,6 +8964,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-BA71A30B4A",
+    "role_code": "AIRWAY_BALLOON_DILATOR",
+    "role_fit": "Primary",
+    "notes": "Non-occlusive airway balloon dilator; the reviewed source states that its length permits insertion through a rigid bronchoscope."
+  },
+  {
     "product_id": "PRD-BA7CBE6482",
     "role_code": "THORACOSCOPY_TROCAR",
     "role_fit": "Exact",
@@ -8896,6 +9088,12 @@
     "role_code": "RIGID_BRONCHOSCOPE_BARREL",
     "role_fit": "Exact",
     "notes": "Rigid tracheoscope"
+  },
+  {
+    "product_id": "PRD-BC2856A7CB",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Pleural drainage/irrigation circuit accessory used with indwelling chest tubes or pigtail catheters."
   },
   {
     "product_id": "PRD-BC2FB31EE2",
@@ -9978,6 +10176,12 @@
     "notes": null
   },
   {
+    "product_id": "PRD-D55094A08A",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
+  },
+  {
     "product_id": "PRD-D5706A45F2",
     "role_code": "THORACENTESIS_KIT",
     "role_fit": "Primary",
@@ -9988,6 +10192,12 @@
     "role_code": "RIGID_BRONCH_SHAVER",
     "role_fit": "Exact",
     "notes": "Rigid bronchoscopic shaver instrument"
+  },
+  {
+    "product_id": "PRD-D59133B2EE",
+    "role_code": "PLEURAL_DRAINAGE_ACCESSORY",
+    "role_fit": "Primary",
+    "notes": "Pleural drainage/irrigation circuit accessory used with indwelling chest tubes or pigtail catheters."
   },
   {
     "product_id": "PRD-D5A436E755",
@@ -10240,6 +10450,12 @@
     "role_code": "STENT_APPLICATOR",
     "role_fit": "Exact",
     "notes": "Silicone stent applicator"
+  },
+  {
+    "product_id": "PRD-DADEAB2B83",
+    "role_code": "FLEX_SCOPE_SINGLE_USE",
+    "role_fit": "Primary",
+    "notes": "Single-use flexible bronchoscope."
   },
   {
     "product_id": "PRD-DB022C1FE8",
@@ -10624,6 +10840,12 @@
     "role_code": "ENDOSCOPE_CLEANING_BRUSH",
     "role_fit": "Primary",
     "notes": null
+  },
+  {
+    "product_id": "PRD-E23034FC46",
+    "role_code": "RIGID_BRONCH_SHAVER",
+    "role_fit": "Primary",
+    "notes": "Exact airway blade supported for tracheal, bronchial, or other explicitly stated airway tissue removal."
   },
   {
     "product_id": "PRD-E27A6FA17A",
@@ -11692,6 +11914,12 @@
     "role_code": "BIOPSY_FORCEPS_FLEX",
     "role_fit": "Exact",
     "notes": "Steerable rigid bronchoscopy instrument"
+  },
+  {
+    "product_id": "PRD-F9BA60E9A6",
+    "role_code": "CRYOPROBE_FLEX",
+    "role_fit": "Primary",
+    "notes": "Flexible cryoprobe or probe-containing kit for bronchoscopic cryobiopsy and cryoadhesion/tissue removal."
   },
   {
     "product_id": "PRD-F9C809D277",
