@@ -56,15 +56,37 @@ export function CircuitFlowPathPanel({
           <ChannelValue label="ΔP" readout={circuit.readouts.deltaP} unit="mmHg" />
         </div>
 
-        <TextEquivalent>
-          The blood path runs drainage → pump → pre-oxygenator → membrane lung → post-oxygenator →{' '}
-          {state.supportMode === 'va' ? 'arterial' : 'venous'} return. pVen is reported on the
-          drainage limb, pInt between pump and membrane, pArt after the membrane on the return limb,
-          and ΔP is the difference between pInt and pArt across the membrane. The venous measuring
-          cell that produces the displayed SvO₂ sits on the venous inlet of the oxygenator pump
-          unit. The sweep gas runs on the other side of the membrane and is not part of the blood
-          path.
-        </TextEquivalent>
+        {/*
+          Two text equivalents, one per disclosure depth, both truthful and complete for what is on
+          screen at that depth.
+
+          The committed sentence places every pressure channel — including "pInt between pump and
+          membrane", which is this section's keyed prediction verbatim. It used to render
+          unconditionally, so the accessible description of the schematic answered the question the
+          pane next door had not yet asked; that was the independent review's finding A. Before the
+          commitment, the paragraph describes the same picture without placing any pressure
+          channel, and says when the locations arrive rather than leaving a hole.
+        */}
+        {navigation.pastPrediction ? (
+          <TextEquivalent>
+            The blood path runs drainage → pump → pre-oxygenator → membrane lung → post-oxygenator →{' '}
+            {state.supportMode === 'va' ? 'arterial' : 'venous'} return. pVen is reported on the
+            drainage limb, pInt between pump and membrane, pArt after the membrane on the return
+            limb, and ΔP is the difference between pInt and pArt across the membrane. The venous
+            measuring cell that produces the displayed SvO₂ sits on the venous inlet of the
+            oxygenator pump unit. The sweep gas runs on the other side of the membrane and is not
+            part of the blood path.
+          </TextEquivalent>
+        ) : (
+          <TextEquivalent>
+            The blood path runs drainage → pump → pre-oxygenator → membrane lung → post-oxygenator →{' '}
+            {state.supportMode === 'va' ? 'arterial' : 'venous'} return. Four pressure channels —
+            pVen, pInt, pArt, and ΔP — are reported along it, and placing them is exactly what this
+            section asks you to do, so where each one is taken is named once you have committed your
+            prediction. The sweep gas runs on the other side of the membrane and is not part of the
+            blood path.
+          </TextEquivalent>
+        )}
 
         <ModelBoundary>
           The schematic is a teaching diagram of order and location, not a scale drawing of tubing
@@ -74,6 +96,11 @@ export function CircuitFlowPathPanel({
         {/*
           Stated at first use, beside the channels themselves. These three names are this
           manufacturer's, and one of them reads like a patient measurement it is not.
+
+          The safety claim — pArt is not the patient's arterial blood pressure — renders at both
+          disclosure depths, because the live pArt number is on screen at both. What waits for the
+          commitment is only the placement clause: naming the post-oxygenator, return-side location
+          before the prediction would place one of the item's own distractors.
         */}
         <ModelBoundary>
           <span data-channel-vocabulary>
@@ -81,13 +108,16 @@ export function CircuitFlowPathPanel({
             vocabulary — another console may name the same measurements differently, or not report
             them at all. All three are pressures inside the circuit. In particular{' '}
             <strong>pArt is not the patient&rsquo;s arterial blood pressure</strong>: it is a
-            pressure measurement in the post-oxygenator, return-side circuit tubing, and the
-            patient&rsquo;s blood pressure comes from the independent monitor. In VV ECMO the return
-            cannula enters the venous circulation even though the returned blood is oxygenated.
-            Circuit blood flow is different in kind: the quantity is general ECMO vocabulary, and
-            what belongs to this device is where the sensor sits, what the console displays, and
-            when the value is available. This simulation asserts no expected value for any of them —
-            your unit will have local reference values. Ask for them.
+            pressure measurement{' '}
+            {navigation.pastPrediction
+              ? 'in the post-oxygenator, return-side circuit tubing'
+              : 'inside the circuit tubing'}
+            , and the patient&rsquo;s blood pressure comes from the independent monitor. In VV ECMO
+            the return cannula enters the venous circulation even though the returned blood is
+            oxygenated. Circuit blood flow is different in kind: the quantity is general ECMO
+            vocabulary, and what belongs to this device is where the sensor sits, what the console
+            displays, and when the value is available. This simulation asserts no expected value for
+            any of them — your unit will have local reference values. Ask for them.
           </span>
         </ModelBoundary>
       </section>
@@ -97,21 +127,35 @@ export function CircuitFlowPathPanel({
         value={circuit.bloodFlow}
         headingLevel={3}
       />
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.pVen}
-        value={circuit.readouts.pVen.displayed}
-        headingLevel={3}
-      />
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.pInt}
-        value={circuit.readouts.pInt.displayed}
-        headingLevel={3}
-      />
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.pArt}
-        value={circuit.readouts.pArt.displayed}
-        headingLevel={3}
-      />
+      {/*
+        The three pressure guides wait for the commitment, together.
+
+        Each one opens by placing its channel on the blood path — the pInt guide is titled
+        "pre-membrane" and reads "after the pump and before the membrane lung", which is the keyed
+        answer to this section's prediction word for word. The other two place the item's
+        distractor locations, and withholding only the keyed one would make its absence the
+        pointer. The live values stay on screen above throughout; it is the placements that arrive
+        with the commitment, because placing them is the question.
+      */}
+      {navigation.pastPrediction ? (
+        <>
+          <GuidedValue
+            guide={ecmoDerivedValueGuides.pVen}
+            value={circuit.readouts.pVen.displayed}
+            headingLevel={3}
+          />
+          <GuidedValue
+            guide={ecmoDerivedValueGuides.pInt}
+            value={circuit.readouts.pInt.displayed}
+            headingLevel={3}
+          />
+          <GuidedValue
+            guide={ecmoDerivedValueGuides.pArt}
+            value={circuit.readouts.pArt.displayed}
+            headingLevel={3}
+          />
+        </>
+      ) : null}
       <GuidedValue
         guide={ecmoDerivedValueGuides.venousLineSaturation}
         value={circuit.readouts.venousLineSaturation.displayed}

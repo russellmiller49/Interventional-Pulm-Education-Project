@@ -31,10 +31,11 @@ export interface EcmoWalkPanelProps {
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
   readonly activeComparisonId?: string | null
   /**
-   * Whether the learner has moved past the phase in which the section takes its prediction.
+   * Whether the learner has committed the section's prediction.
    *
    * Defaults to true, because most callers — a test reading finished copy, the offline harness —
-   * are not asking a learner to predict anything. The activity passes the real predicate.
+   * are not asking a learner to predict anything. The activity passes the real commitment; the
+   * harness passes both values explicitly so each disclosure depth is rendered and asserted.
    */
   readonly pastPrediction?: boolean
 }

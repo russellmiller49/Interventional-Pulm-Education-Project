@@ -63,6 +63,13 @@ export type EcmoCircuitPresentation =
       readonly stopId: string
       readonly segmentIds: readonly EcmoCircuitSegmentId[]
       readonly sensorSiteIds: readonly EcmoSensorSiteId[]
+      /**
+       * True when the stop reports readings but the walk is withholding their names until the
+       * learner commits the prediction. Without this the map's text equivalent said "no reading is
+       * taken at this place" about a place that does take readings — a false sentence produced by
+       * a true gate. The map draws the same either way; only the prose differs.
+       */
+      readonly readingsWithheld?: boolean
     }
 
 export type EcmoCircuitPresentationContext =
@@ -90,6 +97,8 @@ export type EcmoCircuitPresentationContext =
       readonly stopId: string
       readonly segmentIds: readonly EcmoCircuitSegmentId[]
       readonly sensorSiteIds: readonly EcmoSensorSiteId[]
+      /** See the presentation field of the same name. */
+      readonly readingsWithheld?: boolean
     }
 
 export function deriveEcmoCircuitPresentation(
@@ -107,6 +116,7 @@ export function deriveEcmoCircuitPresentation(
         stopId: context.stopId,
         segmentIds: context.segmentIds,
         sensorSiteIds: context.sensorSiteIds,
+        readingsWithheld: context.readingsWithheld,
       }
     case 'drill-reveal':
       return state.scenario.prediction.committed
@@ -261,11 +271,15 @@ export function ecmoCircuitMapTextEquivalent(
   const sentences = [
     `A schematic of this circuit. The blood path is drawn as a solid line and runs ${bloodOrder}.`,
     `The sweep-gas path is drawn dashed and runs ${gasOrder}, leaving as exhaust. It never joins the blood path, and no pressure channel sits in it.`,
-    // A walk stop can flag nothing at all — the pump reports no channel of its own — and saying so
-    // is better than a sentence that trails off after a colon.
+    // A walk stop can flag nothing for two different reasons, and they get different sentences: a
+    // place that reports no channel of its own (the pump), or readings the walk is withholding
+    // until the prediction is committed. The first version said "no reading is taken at this
+    // place" for both, which was false at every reporting stop before the commitment.
     sites.length > 0
       ? `Flagged on the map: ${sites}.`
-      : 'Nothing on the map is flagged at this stop: no reading is taken at this place.',
+      : presentation.kind === 'walk-stop' && presentation.readingsWithheld
+        ? 'Nothing on the map is flagged yet: the readings taken here are named once you have committed your prediction.'
+        : 'Nothing on the map is flagged at this stop: no reading is taken at this place.',
   ]
 
   const walkCaption = ecmoMapWalkStopCaption(presentation, supportMode)

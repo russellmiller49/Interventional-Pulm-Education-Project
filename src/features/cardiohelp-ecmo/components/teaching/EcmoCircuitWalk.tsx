@@ -66,7 +66,7 @@ export interface EcmoCircuitWalkProps {
    */
   readonly walkLength: number
   /**
-   * Whether the learner has moved past the phase in which this section takes its prediction.
+   * Whether the learner has committed this section's prediction.
    *
    * One predicate, several consequences, because they all answer the same question: may this card
    * say a thing the pane next door is about to ask for? Before it, the card withholds the names of
@@ -74,8 +74,9 @@ export interface EcmoCircuitWalkProps {
    * any takeaway a stop declares as an answer. After it, the card is teaching rather than testing
    * and says everything.
    *
-   * The flow-path section's own `act` instruction is to find these channels on the map, which is
-   * exactly where this turns true.
+   * Derived from the actual commitment, never from the phase: the activity's later phases are
+   * unreachable without committing, but the phase is where the learner stands, not what they have
+   * done, and this card gates on what they have done.
    */
   readonly pastPrediction: boolean
   readonly onRunComparison?: (beat: EcmoWalkComparisonBeat) => void
@@ -184,6 +185,9 @@ export function EcmoCircuitWalk({
           // prediction asks a learner to place is a sharper pointer than the seven this map used to
           // flag in every phase, so narrowing without gating would have made it worse, not better.
           sensorSiteIds: pastPrediction ? stop.sensorSiteIds : [],
+          // Withheld is not the same fact as absent: the map's text equivalent says which one it
+          // is, so the pump's genuine "no reading here" sentence is never spent on a gated stop.
+          readingsWithheld: !pastPrediction && stop.sensorSiteIds.length > 0,
         })}
       />
 

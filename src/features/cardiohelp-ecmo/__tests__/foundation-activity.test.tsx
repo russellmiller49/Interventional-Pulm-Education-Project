@@ -101,6 +101,25 @@ function goToPhase(phase: string) {
   fireEvent.click(screen.getByRole('button', { name: phase }))
 }
 
+/**
+ * Commit the section's prediction, staying in the predict phase.
+ *
+ * Commitment — not phase — is the authority for every answer-bearing surface, so tests that need
+ * a later phase have to commit the way a learner does. Nothing else unlocks those phases.
+ */
+function commitPredictionChoice() {
+  goToPhase('predict')
+  const choice = document.querySelector<HTMLElement>('#prediction-heading + div button')
+  if (!choice) throw new Error('no prediction choice rendered')
+  fireEvent.click(choice)
+}
+
+/** Commit, then follow the explicit Continue into the act phase. */
+function commitAndContinue() {
+  commitPredictionChoice()
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+}
+
 function runModeledSeconds(seconds: number) {
   act(() => {
     jest.advanceTimersByTime(seconds * 1000)
@@ -153,7 +172,7 @@ describe('the lesson clock belongs to the loaded state, not to the component', (
     runModeledSeconds(1)
     expect(liveFinding('gas-source-status')).toContain('interrupted')
 
-    goToPhase('act')
+    commitAndContinue()
     fireEvent.click(guidedAction('restore-case-before-change'))
 
     // Holding is a property of the variant, so it is re-applied by the restore rather than being
@@ -265,7 +284,7 @@ describe('the VA lessons load the states they are authored over', () => {
 
   it('loads each parallel mechanism cleanly, without compounding them', () => {
     mount('va-parallel-physiology', 'va')
-    goToPhase('act')
+    commitAndContinue()
 
     fireEvent.click(guidedAction('load-differential-hypoxemia-preview'))
     expect(loadedVariantId()).toBe('differential-hypoxemia-preview')
@@ -289,6 +308,7 @@ describe('the VA lessons load the states they are authored over', () => {
 
   it('holds the clock on the one VA preview that sits before an authored change', () => {
     mount('va-integration-capstone', 'va')
+    commitAndContinue()
     goToPhase('explain')
 
     fireEvent.click(guidedAction('preview-va-gas-source-before-change'))
@@ -304,6 +324,7 @@ describe('the VA lessons load the states they are authored over', () => {
 
   it('lets the learner start that clock and watch the gas change arrive', () => {
     mount('va-integration-capstone', 'va')
+    commitAndContinue()
     goToPhase('explain')
     fireEvent.click(guidedAction('preview-va-gas-source-before-change'))
 
@@ -315,6 +336,7 @@ describe('the VA lessons load the states they are authored over', () => {
 
   it('keeps every VA capstone action reachable in the transfer phase', () => {
     mount('va-integration-capstone', 'va')
+    commitAndContinue()
     goToPhase('transfer')
 
     for (const guided of ecmoFoundationLessonRuntime('va-integration-capstone').guidedActions) {
@@ -324,7 +346,7 @@ describe('the VA lessons load the states they are authored over', () => {
 
   it('captures and advances on the VA normal state', () => {
     mount('va-normal-state', 'va')
-    goToPhase('act')
+    commitAndContinue()
 
     fireEvent.click(guidedAction('capture-reference-snapshot'))
     fireEvent.click(guidedAction('run-twenty-modeled-seconds'))
@@ -360,6 +382,7 @@ describe('a shared section keeps both tracks', () => {
 describe('bounded actions', () => {
   it('lands a restore-and-apply directly on the settled state', () => {
     mount('vv-integration-capstone')
+    commitAndContinue()
     goToPhase('observe')
 
     fireEvent.click(guidedAction('reveal-evolved-state'))
@@ -376,6 +399,7 @@ describe('bounded actions', () => {
 
   it('never compounds one preview onto another', () => {
     mount('vv-integration-capstone')
+    commitAndContinue()
     goToPhase('explain')
 
     fireEvent.click(guidedAction('preview-recirculation-mechanism'))
@@ -391,6 +415,7 @@ describe('bounded actions', () => {
 
   it('keeps every bounded action reachable in the transfer phase', () => {
     mount('vv-integration-capstone')
+    commitAndContinue()
     goToPhase('transfer')
 
     for (const guided of ecmoFoundationLessonRuntime('vv-integration-capstone').guidedActions) {
@@ -404,19 +429,25 @@ describe('bounded actions', () => {
     ).toBeInTheDocument()
   })
 
-  it('offers no state-loading action before a prediction has been asked for', () => {
+  it('offers no state-loading action before the prediction has been committed', () => {
     mount('vv-integration-capstone')
 
     expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
     goToPhase('predict')
     expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    // Clicking `act` uncommitted is a no-op: the button is disabled and the transition itself
+    // consults the commitment. This was the reproduced bypass — a phase click used to unlock it.
     goToPhase('act')
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'act' })).toBeDisabled()
+
+    commitAndContinue()
     expect(document.querySelectorAll('[data-guided-action]').length).toBeGreaterThan(0)
   })
 
   it('records what was looked at, and clears it when the state is reloaded', () => {
     mount('vv-integration-capstone')
-    goToPhase('act')
+    commitAndContinue()
 
     fireEvent.click(guidedAction('inspect-gas-source-connection'))
     fireEvent.click(guidedAction('review-pressure-zones'))
@@ -436,7 +467,7 @@ describe('bounded actions', () => {
 
   it('advances the clock by the authored number of seconds without changing anything else', () => {
     mount('vv-normal-state')
-    goToPhase('act')
+    commitAndContinue()
 
     fireEvent.click(guidedAction('capture-reference-snapshot'))
     fireEvent.click(guidedAction('run-twenty-modeled-seconds'))
@@ -492,7 +523,7 @@ describe('the phase carried by the URL', () => {
     expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
   })
 
-  it('opens directly at a supplied phase', () => {
+  it('fails closed on a direct URL into a commitment-gated phase', () => {
     render(
       <EcmoFoundationLessonActivity
         sectionId="vv-integration-capstone"
@@ -501,12 +532,21 @@ describe('the phase carried by the URL', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'explain' })).toHaveAttribute('aria-current', 'step')
-    // The phase's own bounded actions are available immediately, without walking the nav.
+    // The mount is clamped to predict: no commitment exists in this session and none is
+    // reconstructed from the URL, so the phase the URL asked for stays locked until one is made.
+    expect(screen.getByRole('button', { name: 'predict' })).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByRole('button', { name: 'explain' })).toBeDisabled()
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    // And the note says what happened rather than pretending the URL was honoured.
+    expect(document.querySelector('[data-phase-clamped="explain"]')).not.toBeNull()
+
+    // Committing unlocks exactly what the learner asked for.
+    commitPredictionChoice()
+    goToPhase('explain')
     expect(guidedAction('preview-recirculation-mechanism')).toBeInTheDocument()
   })
 
-  it('opens the transfer phase with its item and its actions already on screen', () => {
+  it('fails closed on a direct URL into the transfer phase', () => {
     render(
       <EcmoFoundationLessonActivity
         sectionId="vv-integration-capstone"
@@ -515,8 +555,19 @@ describe('the phase carried by the URL', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'transfer' })).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByRole('button', { name: 'predict' })).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByRole('button', { name: 'transfer' })).toBeDisabled()
+    expect(document.querySelectorAll('[data-guided-action]')).toHaveLength(0)
+    expect(document.querySelector('[data-phase-clamped="transfer"]')).not.toBeNull()
+
+    commitPredictionChoice()
+    goToPhase('transfer')
     expect(guidedAction('preview-recirculation-mechanism')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: ecmoFoundationLessonRuntime('vv-integration-capstone').phases.transfer.objective,
+      }),
+    ).toBeInTheDocument()
   })
 
   it('still opens on the authored state, held, when resumed mid-lesson', () => {
@@ -528,8 +579,9 @@ describe('the phase carried by the URL', () => {
       />,
     )
 
-    // Resuming restores a clean state source for that phase rather than a state carried over from
-    // wherever the learner had got to, so the held case is held again.
+    // Resuming restores a clean state source rather than a state carried over from wherever the
+    // learner had got to, so the held case is held again — at the predict phase the gated URL was
+    // clamped to, which for this lesson resolves the same opening state.
     expect(loadedVariantId()).toBe('gas-source-before-change')
     expect(clockIsRunning()).toBe(false)
     runModeledSeconds(5)
@@ -543,6 +595,7 @@ describe('the phase carried by the URL', () => {
       '/en/cardiohelp-ecmo/learn?lesson=vv-integration-capstone&track=vv',
     )
     mount('vv-integration-capstone')
+    commitAndContinue()
 
     goToPhase('observe')
     expect(new URL(window.location.href).searchParams.get('phase')).toBe('observe')
@@ -576,6 +629,7 @@ describe('the phase carried by the URL', () => {
       />,
     )
 
+    commitAndContinue()
     goToPhase('observe')
     fireEvent.click(guidedAction('reveal-evolved-state'))
     expect(loadedVariantId()).toBe('gas-source-after-change')
@@ -590,10 +644,12 @@ describe('the phase carried by the URL', () => {
 
     // Arriving at a different phase remounts, exactly as a section or track change does, so the
     // state behind the new phase is the lesson's own opening state and not whatever the previous
-    // phase happened to leave loaded.
+    // phase happened to leave loaded. The remount also discards the earlier commitment — nothing
+    // persists it — so the gated URL clamps to predict and the learner commits again.
     expect(loadedVariantId()).toBe('gas-source-before-change')
     expect(clockIsRunning()).toBe(false)
-    expect(screen.getByRole('button', { name: 'explain' })).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByRole('button', { name: 'predict' })).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByRole('button', { name: 'explain' })).toBeDisabled()
   })
 
   it('adds no history entry per phase, so leaving the lesson takes one step back', () => {
@@ -601,7 +657,7 @@ describe('the phase carried by the URL', () => {
     mount('vv-normal-state')
     const before = window.history.length
 
-    goToPhase('act')
+    commitAndContinue()
     goToPhase('observe')
     goToPhase('explain')
 
@@ -731,10 +787,10 @@ describe('the circuit walk, driven the way a learner drives it', () => {
    * The gate that keeps the walk from answering the question next door.
    *
    * `circuit-flow-path` asks the learner to place a named channel, and its own `act` instruction is
-   * to find the channels on the map. So the stop does not name what it reports until then — which
-   * is the same predicate the bounded-actions block already uses for its button labels.
+   * to find the channels on the map. So the stop does not name what it reports until the learner
+   * has committed — the one authority every answer-bearing surface reads.
    */
-  it('withholds the reading names until the phase whose instruction is to find them', () => {
+  it('withholds the reading names until the prediction is committed', () => {
     mount('circuit-flow-path')
     // Asserted on the card's whole text, not on the two blocks that carry the names.
     // The first version of this checked `[data-walk-reported-here]` and `[data-walk-live-signals]`
@@ -747,14 +803,32 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     // The map does not label them either: ringing exactly the channel the prediction asks a learner
     // to place would be a sharper pointer than the seven this map flagged before the walk existed.
     expect(walkCard().querySelectorAll('[data-map-sensor-site]')).toHaveLength(0)
+
+    // Clicking `act` uncommitted is the bypass the independent review reproduced; it reveals
+    // nothing now, because the phase is not the authority and the button will not move.
+    goToPhase('act')
+    expect(walkCard().textContent).not.toMatch(/Reported here/i)
+    expect(walkCard().querySelectorAll('[data-map-sensor-site]')).toHaveLength(0)
     cleanup()
 
     mount('circuit-flow-path')
-    fireEvent.click(screen.getByRole('button', { name: 'act' }))
+    commitAndContinue()
     expect(walkCard().querySelector('[data-walk-reported-here]')?.textContent).toMatch(
       /drainage pressure \(pVen\)/,
     )
     expect(walkCard().querySelectorAll('[data-map-sensor-site]').length).toBeGreaterThan(0)
+  })
+
+  it('keeps the walk open when a committed learner navigates back', () => {
+    mount('circuit-flow-path')
+    commitAndContinue()
+    expect(walkCard().querySelector('[data-walk-reported-here]')).not.toBeNull()
+
+    // Returning to recognize is re-reading, not un-committing: the commitment is preserved for
+    // the session, so the teaching stays open and the later phases stay reachable.
+    goToPhase('recognize')
+    expect(walkCard().querySelector('[data-walk-reported-here]')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'observe' })).toBeEnabled()
   })
 
   /*
@@ -777,7 +851,8 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     expect(walkCard().textContent).not.toMatch(/more negative/i)
     expect(walkCard().textContent).not.toMatch(/pulls harder|pulling harder/i)
 
-    fireEvent.click(screen.getByRole('button', { name: 'act' }))
+    // The conclusion arrives with the commitment itself, not with a phase click.
+    commitPredictionChoice()
     expect(walkCard().querySelector('[data-walk-takeaway]')?.textContent).toMatch(
       /bought with suction/i,
     )
@@ -805,7 +880,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
 
   it('runs a comparison beat through the action the section already declares', () => {
     mount('pump-and-pressure-zones')
-    fireEvent.click(screen.getByRole('button', { name: 'act' }))
+    commitAndContinue()
     press('[data-walk-next]')
     expect(stopId()).toBe('walk-downstream-load')
 
