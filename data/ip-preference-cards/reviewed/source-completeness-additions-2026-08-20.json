@@ -14,15 +14,15 @@
     "product_sources": 2248
   },
   "count_contract": {
-    "discovery_rows": 248,
-    "new_exact_products": 228,
+    "discovery_rows": 249,
+    "new_exact_products": 229,
     "owner_pdf_products": 35,
     "official_web_products": 9,
-    "old_corpus_products": 184,
+    "old_corpus_products": 185,
     "existing_matches": 4,
     "non_addition_candidates": 16,
-    "product_roles": 222,
-    "product_source_relationships": 321,
+    "product_roles": 223,
+    "product_source_relationships": 322,
     "new_pdf_evidence_files": 7,
     "new_pdf_evidence_pages": 45,
     "aggregate_pdf_pages": 2654,
@@ -30,36 +30,36 @@
     "shiley_products_added": 13,
     "shiley_controlled_conflicts": 1,
     "additional_xlt_products_added": 8,
-    "canonical_products_after": 2157,
-    "verified_source_products_after": 1956,
+    "canonical_products_after": 2158,
+    "verified_source_products_after": 1957,
     "manufacturers_after": 55,
-    "sources_after": 106,
-    "product_source_relationships_after": 2569,
-    "product_role_relationships_after": 2222,
-    "taxonomy_rows_after": 1956,
+    "sources_after": 107,
+    "product_source_relationships_after": 2570,
+    "product_role_relationships_after": 2223,
+    "taxonomy_rows_after": 1957,
     "taxonomy_needs_review_after": 22,
     "canonical_slot_options_after": 2035,
-    "unreviewed_slot_proposals_after": 1793,
+    "unreviewed_slot_proposals_after": 1794,
     "published_products_after": 101,
     "prototype_visible_products_after": 753,
-    "hidden_products_after": 1404,
-    "hidden_verified_source_products_after": 1203,
-    "catalog_additions_after_workbook": 936,
+    "hidden_products_after": 1405,
+    "hidden_verified_source_products_after": 1204,
+    "catalog_additions_after_workbook": 937,
     "workbook_backlog_products": 1221,
-    "products_without_strong_identity_candidate": 1439,
+    "products_without_strong_identity_candidate": 1440,
     "status_researched_products": 578,
-    "status_unresearched_atlas_products": 1378,
-    "status_gate_review_required": 1412,
-    "hidden_catalog_identifier_catalog_number": 1356,
-    "hidden_mapped_role_rows": 1393,
-    "proposal_affected_products": 984,
-    "proposal_required": 878,
-    "proposal_unknown_distribution": 1193,
-    "corpus_scan_candidates": 5767,
+    "status_unresearched_atlas_products": 1379,
+    "status_gate_review_required": 1413,
+    "hidden_catalog_identifier_catalog_number": 1357,
+    "hidden_mapped_role_rows": 1394,
+    "proposal_affected_products": 985,
+    "proposal_required": 879,
+    "proposal_unknown_distribution": 1194,
+    "corpus_scan_candidates": 5783,
     "corpus_scan_high_risk_documents": 57
   },
   "corpus_audit": {
-    "source_directory": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Research/product-brochure-intake-20260819",
+    "source_directory_env": "BROCHURE_INTAKE_ROOT",
     "original_csv_sha256": "9ddcd7c85f32b116e4f19536937deeaf115b4406ff1c1c90f539416c445fda61",
     "prior_manifest_sha256": "7cdc492ad5042197df294ed4787bbf70b2e5136a7b277ee8d75b38cd08abedba",
     "prior_reconciliation_sha256": "7d2618eb59eba532d0cd795f7d3261225a767133a7089c605b13f2a66e3ebb99",
@@ -81,7 +81,7 @@
       "download (1).html"
     ],
     "unreferenced_files_with_relevant_exact_products": 0,
-    "old_corpus_exact_products_absent_from_original_csv": 184,
+    "old_corpus_exact_products_absent_from_original_csv": 185,
     "table_page_review_method": "Deterministic layout-aware extraction of every page of all 115 corpus PDFs, followed by rendered manual inspection of the reconciled ordering/matrix sections listed in table_page_coverage and exact-identity reconciliation of accepted candidates against manufacturer and FDA evidence.",
     "table_page_coverage": [
       {
@@ -434,6 +434,19 @@
       "reliabilityTier": "Manufacturer official",
       "usePolicy": "Reference for exact catalog references and dimensions",
       "notes": "Frozen old-corpus Novatech silicone airway-stent catalog; the straight-stent diameter-by-length matrix spans PDF pages 12-13 and the Y/OKI/ST/DST tables span pages 14-15. The Spanish edition (novatech__stents_pulmonares__catalogo.pdf) carries the identical reference set and is reconciled as a duplicate occurrence."
+    },
+    {
+      "sourceId": "SRC107",
+      "title": "Search - Rigid bronchoscopy | KARL STORZ Endoskope | United States (e-catalog capture)",
+      "filename": "Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf",
+      "sourceType": "Manufacturer e-catalog web capture (PDF)",
+      "publisher": "KARL STORZ",
+      "revisionDate": null,
+      "asOfDate": "2026-07-30",
+      "officialUrl": "https://www.karlstorz.com/us/en/search.htm?cat=1000130286",
+      "reliabilityTier": "Manufacturer official",
+      "usePolicy": "Reference for exact item numbers, product names, and card specifications",
+      "notes": "Frozen old-corpus capture of the KARL STORZ US e-catalog rigid-bronchoscopy search (138 capture pages); each product card pairs an explicit \"Item no:\" ordering label with the exact product name, with card specifications continuing on the following capture page."
     }
   ],
   "evidence_manifest": [
@@ -2785,6 +2798,46 @@
           "sizeDisplay": "Loading dilators 7.5, 8.5, 9.0 mm"
         }
       ]
+    },
+    {
+      "groupId": "storz_rigid_optical_forceps_correction",
+      "origin": "old_corpus",
+      "manufacturerId": "MFR-12BAB1E48C",
+      "manufacturer": "Karl Storz",
+      "distributor": null,
+      "brandFamily": null,
+      "primaryCategory": "Rigid bronchoscopy",
+      "subcategory": "Optical rigid bronchoscopy forceps",
+      "productKind": "Reusable instrument",
+      "description": "Optical forceps for rigid bronchoscopy from the frozen KARL STORZ US e-catalog rigid-bronchoscopy search capture; each product card pairs an explicit \"Item no:\" ordering label with the exact product name.",
+      "roleCode": "RIGID_FORCEPS",
+      "roleFit": "Exact",
+      "roleNotes": "Optical rigid bronchoscopy forceps",
+      "evidence": [],
+      "taxonomyClass": "forceps_instrument",
+      "taxonomySubtype": "optical_rigid_forceps",
+      "taxonomyConfidence": "high",
+      "reuseStatus": null,
+      "sterileStatus": null,
+      "implantable": false,
+      "variants": [
+        {
+          "catalogNumber": "10350F",
+          "productName": "Optical Forceps, large jaws, blunt",
+          "alternateIds": null,
+          "gtin": null,
+          "evidence": [
+            {
+              "sourceId": "SRC107",
+              "sourceLocation": "PDF page 49, product card \"Item no: 10350F / Optical Forceps, large jaws, blunt\" (card specifications continue on capture page 50)",
+              "claimType": "Exact item number, product name, and jaw/working-length card specifications"
+            }
+          ],
+          "description": "Optical Forceps, large jaws, blunt; fenestrated jaw shape, blunt grooved jaw surface, double action jaws, 47 cm working length.",
+          "workingLengthCm": 47,
+          "specJson": null
+        }
+      ]
     }
   ],
   "existing_matches": [
@@ -3139,6 +3192,10 @@
       {
         "relativePathIncludes": "NOV-MR-PCA-SST_DUMON-GSS_CA001_EN.pdf",
         "sourceId": "SRC106"
+      },
+      {
+        "relativePathIncludes": "Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf",
+        "sourceId": "SRC107"
       }
     ],
     "candidate_overrides": [

@@ -125,6 +125,9 @@ function productRationale(product: ExpandedSourceCompletenessProduct): string {
     if (product.groupId === 'cook_pleural_drainage_accessories_correction') {
       return 'Corpus-wide layout-aware extraction found this exact order/reference accessory row in the Cook chest-drainage ordering brochure outside the original CSV and baseline catalog.'
     }
+    if (product.groupId === 'storz_rigid_optical_forceps_correction') {
+      return 'The explicit ordering-label scanner correction surfaced this exact "Item no:" identifier in the KARL STORZ rigid-bronchoscopy e-catalog capture; the rendered product card shows an exact in-scope optical forceps absent from the original CSV and baseline catalog.'
+    }
     return 'A deterministic page-by-page table extraction found the exact R-series row outside the original CSV; rendered manufacturer tables and exact FDA evidence support this in-scope identity.'
   }
   return 'Absent from the old CSV and baseline catalog; owner source plus manufacturer/FDA evidence supports an exact in-scope identity.'
@@ -296,9 +299,31 @@ interface CorpusLedger {
  * is the authoritative candidate source: the reviewed configuration may only disposition
  * candidates the scanner produced, and any unhandled candidate fails the build.
  */
+/**
+ * The frozen corpus root is machine-local operational state, not governed review data: the
+ * reviewed package pins the corpus by manifest and hash and only names the environment
+ * variable that carries the root (the same variable the brochure-intake generator uses), so
+ * no machine-specific absolute path is ever committed.
+ */
+function resolveCorpusRoot(): string {
+  const envName = String(SOURCE_COMPLETENESS_REVIEW.corpus_audit.source_directory_env ?? '')
+  if (!/^[A-Z][A-Z0-9_]*$/.test(envName)) {
+    throw new Error(
+      'corpus_audit.source_directory_env must name the corpus-root environment variable.',
+    )
+  }
+  const value = process.env[envName]
+  if (!value) {
+    throw new Error(
+      `${envName} is required and must contain preference_card_products.csv and brochures/.`,
+    )
+  }
+  return path.resolve(value)
+}
+
 function buildCorpusLedger(products: ExpandedSourceCompletenessProduct[]): CorpusLedger {
   const audit = SOURCE_COMPLETENESS_REVIEW.corpus_audit
-  const sourceDirectory = String(audit.source_directory)
+  const sourceDirectory = resolveCorpusRoot()
 
   const csvPath = path.join(sourceDirectory, 'preference_card_products.csv')
   const csvBytes = readFileSync(csvPath)
@@ -610,6 +635,7 @@ The prior 125 supported source documents were checked against the frozen PR #118
 - **Cook Thal-Quick**: the one-product-per-page capture pairs one order number with one reference part number per page. All 20 rows (10 trays, 10 sets) were reconciled; the four tray configurations absent from both the original CSV and the baseline catalog (G06885/C-TQTSY-1000, G05464/C-TQTSY-1200, G07090/C-TQTSY-1400, G04220/C-TQTSY-2400) were added with the reference part number as an alternate identifier. The Cook omnibus chest-drainage brochure (SRC076) was reconciled row-by-row; it added the two vinyl connecting tubes (G02327, G02791) and the Cook Chest Drain Valve (G36370), while its pericardiocentesis rows are held in owner review.
 - **Novatech DUMON/GSS stents**: the straight-stent diameter-by-length matrix (pages 12-13) and the Y/OKI/ST/DST special-shape tables (pages 14-15) carry 148 exact references. All 148 were reconciled from scanner output; a compact reviewed matrix expands them deterministically, seven were already canonical, and the remaining 141 were added with header-inherited dimensions. The Spanish-edition catalog carries the identical reference set and is accounted as duplicate occurrences.
 - **Blue Rhino G2-Multi**: all 21 one-product-per-page ordering rows were reconciled, reconstructing the hyphen-wrapped reference part numbers; the 15 sets/trays absent from both the original CSV and the baseline catalog were added, and the six existing rows received their in-row reference pairings.
+- **KARL STORZ rigid-bronchoscopy explicit item numbers**: an explicit ordering label ("Item no:", "Catalog number", "Ref. no:") now routes the token it labels through a context-aware path before the generic unit/ordinal suffix filter, so digit-leading identifiers ending in unit-like letters (10350F, 10318D, 10350ST) survive. All 94 explicit \`Item no:\` values in the US e-catalog rigid-bronchoscopy capture are now scanner candidates; the 16 previously missed values reconcile as 14 exact baseline catalog numbers, one CSV-represented identifier (10318L), and one exact new in-scope product (10350F, Optical Forceps, large jaws, blunt — rendered capture page 49).
 
 ## Owner packet by manufacturer
 

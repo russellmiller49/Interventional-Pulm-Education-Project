@@ -228,6 +228,49 @@ describe('fail-closed corpus disposition assignment', () => {
     })
   })
 
+  test('routes every explicit-label-surfaced candidate to exactly one controlled disposition', () => {
+    // Mirrors the KARL STORZ reconciliation: newly surfaced item numbers resolve to exact
+    // baseline catalog numbers, a CSV-represented identifier, and an accepted addition,
+    // while a synthetic candidate with no reviewed coverage must stay unhandled.
+    const baseline = ['10318D', '10318F', '10318G', '10318S', '10338S', '10350L']
+    const rows = [
+      ...baseline.map((id) => candidate({ normalizedIdentifier: id, rawIdentifier: id })),
+      candidate({ normalizedIdentifier: '10318L', rawIdentifier: '10318L' }),
+      candidate({ normalizedIdentifier: '10350F', rawIdentifier: '10350F' }),
+      candidate({ normalizedIdentifier: '99999F', rawIdentifier: '99999F' }),
+    ]
+    const result = assignCorpusDispositions(rows, {
+      overrides: [],
+      documentRules: [],
+      identities: identities({
+        baselineExact: new Map(baseline.map((id) => [id, `PRD-${id}`])),
+        csvIdentifiers: new Set(['10318L']),
+        additionExact: new Map([['10350F', 'PRD-10350F']]),
+        additionEvidenceDocuments: new Map([['PRD-10350F', new Set(['fixture.pdf'])]]),
+      }),
+    })
+    const byId = new Map(
+      [...result.assignments.entries()].map(([row, assignment]) => [
+        row.normalizedIdentifier,
+        assignment,
+      ]),
+    )
+    for (const id of baseline) {
+      expect(byId.get(id)).toMatchObject({
+        disposition: 'existing_exact',
+        canonicalProductId: `PRD-${id}`,
+      })
+    }
+    expect(byId.get('10318L')?.disposition).toBe('previously_accounted_csv')
+    expect(byId.get('10350F')).toMatchObject({
+      disposition: 'new_exact_product_candidate',
+      canonicalProductId: 'PRD-10350F',
+    })
+    // A newly surfaced candidate no reviewed input covers fails closed as unhandled.
+    expect(result.unhandled.map((row) => row.normalizedIdentifier)).toEqual(['99999F'])
+    expect(result.assignments.size).toBe(rows.length - 1)
+  })
+
   test('document rules scope by pages and identifier pattern in reviewed order', () => {
     const rows = [
       candidate({ normalizedIdentifier: 'GI000123', pages: [10] }),

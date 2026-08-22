@@ -7,7 +7,7 @@
   },
   "summary": {
     "authored_canonical_options": 2035,
-    "generated_unreviewed_proposals": 1793,
+    "generated_unreviewed_proposals": 1794,
     "excluded_proposal_pairs": 0,
     "required_slots_with_catalog_coverage": 82,
     "required_slots_with_curated_defaults": 44,
@@ -36931,6 +36931,35 @@
         "product_role_key": "PRD-BC55573969:RIGID_FORCEPS",
         "primary_source_id": "SRC087",
         "primary_source_location": "Document p. 76 (PDF page 84)"
+      }
+    },
+    {
+      "slot_id": "SLOT-BC936B7BD8",
+      "procedure_code": "RIGID_BRONCH",
+      "slot_display_order": 6,
+      "slot_label": "Rigid forceps/shaft/head set",
+      "requiredness": "required",
+      "role_code": "RIGID_FORCEPS",
+      "product_id": "PRD-A0655BF464",
+      "manufacturer_id": "MFR-12BAB1E48C",
+      "manufacturer": "Karl Storz",
+      "product_name": "Optical Forceps, large jaws, blunt",
+      "catalog_number": "10350F",
+      "role_fit": "Exact",
+      "product_verification_grade": "verified_source",
+      "product_visibility_state": "hidden",
+      "current_distribution_status": null,
+      "proposal_origin": "product_role_join",
+      "proposal_status": "unreviewed",
+      "selectable": false,
+      "visible_by_default": false,
+      "reason_code": "missing_authored_slot_product_option",
+      "reason": "Product_Roles maps this product to RIGID_FORCEPS, but no authored Slot_Product_Options row exists for \"Rigid forceps/shaft/head set\". Review exact-slot eligibility; this proposal does not assert compatibility, local approval, or clinical suitability.",
+      "source_identifiers": {
+        "procedure_slot_id": "SLOT-BC936B7BD8",
+        "product_role_key": "PRD-A0655BF464:RIGID_FORCEPS",
+        "primary_source_id": "SRC107",
+        "primary_source_location": "PDF page 49, product card \"Item no: 10350F / Optical Forceps, large jaws, blunt\" (card specifications continue on capture page 50)"
       }
     },
     {

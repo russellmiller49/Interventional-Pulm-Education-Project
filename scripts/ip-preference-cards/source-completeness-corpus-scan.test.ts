@@ -134,6 +134,93 @@ describe('layout-aware corpus scanner', () => {
   })
 })
 
+describe('explicit ordering-label identifier context', () => {
+  const PREVIOUSLY_MISSED_STORZ_ITEM_NUMBERS = [
+    '10318D',
+    '10318F',
+    '10318G',
+    '10318L',
+    '10318S',
+    '10338S',
+    '10350F',
+    '10350L',
+    '10350ST',
+    '10352H',
+    '10352L',
+    '10370H',
+    '10370L',
+    '10372H',
+    '10380D',
+    '10383D',
+  ]
+
+  test('an explicit "Item no:" label precedes the generic unit-suffix rejection', () => {
+    expect(extractIdentifierTokens('Item no: 10350F').map((token) => token.raw)).toEqual(['10350F'])
+  })
+
+  test('every previously missed explicit STORZ item number is extracted', () => {
+    for (const itemNumber of PREVIOUSLY_MISSED_STORZ_ITEM_NUMBERS) {
+      expect(extractIdentifierTokens(`         Item no: ${itemNumber}`).map((t) => t.raw)).toEqual([
+        itemNumber,
+      ])
+    }
+  })
+
+  test('labeled identifiers surface as scanner candidates through the fixture document', () => {
+    // The fixture META is not a KARL STORZ document, so extraction cannot depend on the
+    // corpus filename or manufacturer.
+    const page = PREVIOUSLY_MISSED_STORZ_ITEM_NUMBERS.map(
+      (itemNumber) => `Item no: ${itemNumber}`,
+    ).join('\n\n')
+    expect(identifiers(page).sort()).toEqual([...PREVIOUSLY_MISSED_STORZ_ITEM_NUMBERS].sort())
+  })
+
+  test('supports the conservative label vocabulary independent of manufacturer', () => {
+    const labeled = [
+      'Item no: 20735F',
+      'Item number: 20735G',
+      'Catalog no: 20735L',
+      'Catalog number: 20735S',
+      'Order no: 20735H',
+      'Order number: 20735D',
+      'Reference no: 20736F',
+      'Reference number: 20736G',
+      'Ref. no: 20736L',
+      'Ref. no. 20736S',
+    ]
+    for (const line of labeled) {
+      const expected = line.split(/[\s:.]+/).at(-1)
+      expect(extractIdentifierTokens(line).map((token) => token.raw)).toEqual([expected])
+    }
+  })
+
+  test('rescues only the token the label immediately precedes', () => {
+    const tokens = extractIdentifierTokens('Item no: 10350F supplied with 1250F handle')
+    expect(tokens.map((token) => token.raw)).toEqual(['10350F'])
+  })
+
+  test('unlabeled measurements, units, and ordinals stay rejected', () => {
+    expect(identifiers('The set includes 10 Fr and 5 mm dilators plus a 12 L reservoir.')).toEqual(
+      [],
+    )
+    expect(extractIdentifierTokens('Dilate to 10.5mm over 120s at 40psi')).toEqual([])
+    expect(extractIdentifierTokens('a 1064nm laser and 2900ml canister')).toEqual([])
+    expect(extractIdentifierTokens('ranked 1250th overall')).toEqual([])
+  })
+
+  test('dates, citations, and revision codes stay rejected even when a label precedes them', () => {
+    expect(extractIdentifierTokens('Item no: 8/3/26')).toEqual([])
+    expect(extractIdentifierTokens('Order no: 2026')).toEqual([])
+    expect(identifiers('Revision REV2 of ISO 13485 published 12/1/25.')).toEqual([])
+  })
+
+  test('prose mentioning a label elsewhere on the line gains no identifier context', () => {
+    // The label must immediately precede the token; a label earlier in the sentence does not
+    // rescue a later measurement.
+    expect(extractIdentifierTokens('Order number pending; ships in a 400L crate')).toEqual([])
+  })
+})
+
 describe('reviewed Novatech matrix expansion', () => {
   const matrix = SOURCE_COMPLETENESS_REVIEW.novatech_stent_matrix
   const refs = expandNovatechMatrixRefs(matrix)

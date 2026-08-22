@@ -948,6 +948,18 @@
       "reliability_tier": "Manufacturer official",
       "use_policy": "Reference for exact catalog references and dimensions",
       "notes": "Frozen old-corpus Novatech silicone airway-stent catalog; the straight-stent diameter-by-length matrix spans PDF pages 12-13 and the Y/OKI/ST/DST tables span pages 14-15. The Spanish edition (novatech__stents_pulmonares__catalogo.pdf) carries the identical reference set and is reconciled as a duplicate occurrence. Official URL: https://www.novatech.fr"
+    },
+    {
+      "source_id": "SRC107",
+      "title": "Search - Rigid bronchoscopy | KARL STORZ Endoskope | United States (e-catalog capture)",
+      "filename": "Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf",
+      "source_type": "Manufacturer e-catalog web capture (PDF)",
+      "publisher": "KARL STORZ",
+      "revision_date": null,
+      "as_of_date": "2026-07-30",
+      "reliability_tier": "Manufacturer official",
+      "use_policy": "Reference for exact item numbers, product names, and card specifications",
+      "notes": "Frozen old-corpus capture of the KARL STORZ US e-catalog rigid-bronchoscopy search (138 capture pages); each product card pairs an explicit \"Item no:\" ordering label with the exact product name, with card specifications continuing on the following capture page. Official URL: https://www.karlstorz.com/us/en/search.htm?cat=1000130286"
     }
   ],
   "products": [
@@ -40446,6 +40458,53 @@
       "verification_grade": "verified_source"
     },
     {
+      "product_id": "PRD-A0655BF464",
+      "manufacturer_id": "MFR-12BAB1E48C",
+      "manufacturer": "Karl Storz",
+      "distributor": null,
+      "brand_family": null,
+      "product_name": "Optical Forceps, large jaws, blunt",
+      "catalog_number": "10350F",
+      "alternate_ids": null,
+      "gtin": null,
+      "primary_category": "Rigid bronchoscopy",
+      "subcategory": "Optical rigid bronchoscopy forceps",
+      "product_kind": "Reusable instrument",
+      "reuse_status": null,
+      "sterile_status": null,
+      "implantable": false,
+      "material": null,
+      "coverage": null,
+      "laser_type": null,
+      "placement_method": null,
+      "size_display": null,
+      "diameter_mm": null,
+      "length_mm": null,
+      "french_size": null,
+      "gauge": null,
+      "working_length_cm": 47,
+      "min_working_channel_mm": null,
+      "delivery_system_od_mm": null,
+      "package_uom": null,
+      "adult_peds": null,
+      "description": "Optical Forceps, large jaws, blunt; fenestrated jaw shape, blunt grooved jaw surface, double action jaws, 47 cm working length.",
+      "compatibility_text": null,
+      "verification_status": "Verified - exact identity reconciled from reviewed manufacturer/FDA evidence; current U.S. orderability unverified",
+      "live_dropdown_status": "Hidden - current U.S. status and local orderability unverified",
+      "primary_source_id": "SRC107",
+      "primary_source_location": "PDF page 49, product card \"Item no: 10350F / Optical Forceps, large jaws, blunt\" (card specifications continue on capture page 50)",
+      "source_as_of": "2026-08-20",
+      "availability_note": "Current U.S. distribution and local orderability were not established in this bounded intake; confirm with the manufacturer and local supply chain.",
+      "notes": null,
+      "spec_json": null,
+      "global_part_number": null,
+      "reference_part_number": null,
+      "gtin_raw": null,
+      "spec_json_raw": null,
+      "visibility_state": "hidden",
+      "verification_grade": "verified_source"
+    },
+    {
       "product_id": "PRD-D13A7A8211",
       "manufacturer_id": "MFR-6208838930",
       "manufacturer": "Novatech",
@@ -51947,6 +52006,12 @@
       "notes": null
     },
     {
+      "product_id": "PRD-A0655BF464",
+      "role_code": "RIGID_FORCEPS",
+      "role_fit": "Exact",
+      "notes": "Optical rigid bronchoscopy forceps"
+    },
+    {
       "product_id": "PRD-D13A7A8211",
       "role_code": "AIRWAY_STENT_SILICONE_STRAIGHT",
       "role_fit": "Primary",
@@ -61255,6 +61320,14 @@
       "source_id": "SRC074",
       "source_location": "PDF page 44 of 66, \"Trays without pharmaceuticals, with tracheostomy tube\" ordering row (order number G57723, reference part number C-PTISYJ-100-HC-G-NA-EVAC8.5)",
       "claim_type": "Cook order number, reference part number, loading dilators, and tube configuration",
+      "verification_status": "Verified in the reviewed source-completeness intake",
+      "notes": null
+    },
+    {
+      "product_id": "PRD-A0655BF464",
+      "source_id": "SRC107",
+      "source_location": "PDF page 49, product card \"Item no: 10350F / Optical Forceps, large jaws, blunt\" (card specifications continue on capture page 50)",
+      "claim_type": "Exact item number, product name, and jaw/working-length card specifications",
       "verification_status": "Verified in the reviewed source-completeness intake",
       "notes": null
     },

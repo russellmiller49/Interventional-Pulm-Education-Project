@@ -1668,7 +1668,7 @@
           "roleCode": "RIGID_FORCEPS",
           "requiredness": "required",
           "allowCustom": true,
-          "catalogProductCount": 122,
+          "catalogProductCount": 123,
           "curatedDefaultOptionCount": 14,
           "hasCatalogProducts": true,
           "hasCuratedDefault": true

@@ -28,24 +28,24 @@
     "noEquivalenceClaims": "This audit reports data readiness only; it never claims products are clinically equivalent or substitutable."
   },
   "global": {
-    "products": 2157,
+    "products": 2158,
     "roles": 135,
     "procedures": 15,
     "procedureSlots": 232,
     "authoredSlotOptions": 2035,
-    "slotOptionProposals": 1793,
+    "slotOptionProposals": 1794,
     "proposalStatusSplit": {
-      "unreviewed": 1793
+      "unreviewed": 1794
     },
-    "productRoleLinks": 2222,
+    "productRoleLinks": 2223,
     "selectableAndVisibleSlotOptions": 909,
     "productVerificationGradeSplit": {
       "candidate": 200,
       "unknown": 1,
-      "verified_source": 1956
+      "verified_source": 1957
     },
     "productVisibilityStateSplit": {
-      "hidden": 1404,
+      "hidden": 1405,
       "prototype_visible": 753
     }
   },

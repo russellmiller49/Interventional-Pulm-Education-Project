@@ -8,7 +8,7 @@
   },
   "row_scope": "atlas_cohort_verified_source_minus_owner_exclusions",
   "counts": {
-    "rows": 1956,
+    "rows": 1957,
     "device_class": {
       "accessory": 157,
       "airway_stent": 374,
@@ -21,7 +21,7 @@
       "delivery_applicator": 1,
       "electrosurgical": 108,
       "endoscopic_telescope": 53,
-      "forceps_instrument": 197,
+      "forceps_instrument": 198,
       "guidewire": 6,
       "implant_delivery": 10,
       "laser_system": 6,
@@ -42,14 +42,14 @@
       "valve_occluder": 17
     },
     "taxonomy_confidence": {
-      "high": 1802,
+      "high": 1803,
       "moderate": 132,
       "needs_review": 22
     },
     "needs_review": 22,
     "classification_basis": {
       "name_rule": 72,
-      "pair_rule": 1883,
+      "pair_rule": 1884,
       "unmatched_fallback": 1
     }
   },
@@ -10050,6 +10050,14 @@
       "product_id": "PRD-A04C2075B1",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A0655BF464",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"

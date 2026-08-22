@@ -113,6 +113,22 @@ const DATE_TOKEN = /^\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}$/
 const LABEL_TOKEN =
   /^(?:ISO|EN|IEC|ASTM|UL|CE|REF|LOT|UDI|GTIN|DI|PN|SN|NO|QTY|VOL|REV|VER|P|PG|PAGE|FIG|TAB)\d*$/i
 const ORDINAL_TOKEN = /^\d+(?:ST|ND|RD|TH)$/i
+/**
+ * An explicit product-ordering label immediately before a token ("Item no: 10350F",
+ * "Catalog number 10318D", "Ref. no: 10370H") is decisive identifier context: the token it
+ * labels is evaluated through a context-aware path before the generic unit/ordinal suffix
+ * rejection. The vocabulary is deliberately conservative and manufacturer-independent —
+ * item/catalog/order/reference/ref followed by no/number — so ordinary prose, measurements,
+ * dates, citations, and revision codes never gain this context.
+ */
+const EXPLICIT_ORDERING_LABEL_PREFIX =
+  /\b(?:item|catalog(?:ue)?|order|reference|ref\.?)[ \t]*(?:no\.?|number)[ \t]*[:：]?[ \t]*$/i
+/**
+ * The only shape the explicit-label path admits past the unit/ordinal filters: a digit-leading
+ * stem with a short uppercase suffix (10350F, 10350ST). Labeled measurements ("Item no: 10.5mm")
+ * and anything letter-leading still go through the generic filters.
+ */
+const LABELED_ORDERING_IDENTIFIER = /^\d+[A-Z]{1,4}$/
 const TOKEN = /[A-Za-z0-9][A-Za-z0-9./_-]{2,30}[A-Za-z0-9]/g
 const ORDERING_CONTEXT =
   /\b(?:REF|ORDER(?:ING)?\s+(?:NO|NUMBER|INFORMATION)|CAT\.?\s*NO|ITEM\s*(?:NO|NUMBER)|ARTICLE\s*(?:NO|NUMBER)?|PART\s*(?:NO|NUMBER)|BESTELL|ARTIKEL|REFERENCE\s+PART|MODEL\s*(?:NO|NUMBER)?)\b/i
@@ -124,11 +140,13 @@ interface RawToken {
   kind: 'mixed' | 'numeric' | 'decimal'
 }
 
-function classifyToken(raw: string): RawToken['kind'] | null {
+function classifyToken(raw: string, explicitOrderingLabel = false): RawToken['kind'] | null {
   const value = raw.replace(/^[.,;:]+|[.,;:*†‡]+$/g, '')
   if (value.length < 4 || value.length > 32) return null
   if (!/\d/.test(value)) return null
   if (DATE_TOKEN.test(value)) return null
+  // Explicit ordering-label context precedes the generic unit/ordinal suffix rejection.
+  if (explicitOrderingLabel && LABELED_ORDERING_IDENTIFIER.test(value)) return 'mixed'
   if (UNIT_TOKEN.test(value)) return null
   if (LABEL_TOKEN.test(value)) return null
   if (ORDINAL_TOKEN.test(value)) return null
@@ -153,9 +171,10 @@ function classifyToken(raw: string): RawToken['kind'] | null {
 export function extractIdentifierTokens(line: string): RawToken[] {
   const tokens: RawToken[] = []
   for (const match of line.matchAll(TOKEN)) {
-    const kind = classifyToken(match[0])
-    if (!kind) continue
     const column = match.index ?? 0
+    const explicitlyLabeled = EXPLICIT_ORDERING_LABEL_PREFIX.test(line.slice(0, column))
+    const kind = classifyToken(match[0], explicitlyLabeled)
+    if (!kind) continue
     tokens.push({ raw: match[0], column, end: column + match[0].length, kind })
   }
   return tokens

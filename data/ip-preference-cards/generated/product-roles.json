@@ -8472,6 +8472,12 @@
     "notes": "Adult silicone tracheostomy tube, 8 mm I.D."
   },
   {
+    "product_id": "PRD-A0655BF464",
+    "role_code": "RIGID_FORCEPS",
+    "role_fit": "Exact",
+    "notes": "Optical rigid bronchoscopy forceps"
+  },
+  {
     "product_id": "PRD-A0DF0074DB",
     "role_code": "AIRWAY_STENT_SEMS_COVERED",
     "role_fit": "Primary",

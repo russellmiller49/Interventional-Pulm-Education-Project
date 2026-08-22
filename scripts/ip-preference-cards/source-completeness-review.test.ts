@@ -193,6 +193,172 @@ describe('source-completeness review package', () => {
     expect(byKey.get(`${blueRhino} CPTISY100HCGNA`)?.disposition).toBe('previously_accounted_csv')
   })
 
+  test('represents all 94 explicit STORZ item numbers in live scanner output', () => {
+    // Regression oracle for the explicit ordering-label correction: the reviewer-derived
+    // 94-value explicit `Item no:` set from the rigid-bronchoscopy capture. The candidate
+    // source remains the live scanner (the check-mode generator re-runs it); this set only
+    // asserts that the scanner output artifact represents every explicit value.
+    const STORZ_EXPLICIT_ITEM_NUMBERS = [
+      '10005AA',
+      '10005BA',
+      '10005CA',
+      '10020BA',
+      '10023ABA',
+      '10101FA',
+      '10101HA',
+      '10314BM',
+      '10314BN',
+      '10314P',
+      '10315M',
+      '10315N',
+      '10315P',
+      '10315RV',
+      '10316LR',
+      '10318B',
+      '10318BK',
+      '10318BP',
+      '10318BPT',
+      '10318C',
+      '10318CK',
+      '10318CP',
+      '10318CPT',
+      '10318D',
+      '10318DK',
+      '10318DP',
+      '10318DPT',
+      '10318ER',
+      '10318F',
+      '10318FL',
+      '10318G',
+      '10318GL',
+      '10318GR',
+      '10318K',
+      '10318L',
+      '10318S',
+      '10320AA',
+      '10320BA',
+      '10320DA',
+      '10320SP',
+      '10324AA',
+      '10324BA',
+      '10328AA',
+      '10328BA',
+      '10328SP',
+      '10338K',
+      '10338LCI',
+      '10338M',
+      '10338N',
+      '10338P',
+      '10338S',
+      '10350F',
+      '10350HF',
+      '10350KF',
+      '10350L',
+      '10350M',
+      '10350ST',
+      '10350U',
+      '10352H',
+      '10352KF',
+      '10352L',
+      '10352U',
+      '10370H',
+      '10370J',
+      '10370K',
+      '10370L',
+      '10370P',
+      '10370U',
+      '10371KL',
+      '10371LL',
+      '10371UL',
+      '10372H',
+      '10372HL',
+      '10380A',
+      '10380AK',
+      '10380B',
+      '10380C',
+      '10380CB',
+      '10380D',
+      '10383A',
+      '10383C',
+      '10383CC',
+      '10383D',
+      '10383DD',
+      '10383E',
+      '10384A',
+      '10386A',
+      '10386AE',
+      '10386B',
+      '10386BE',
+      '10387A',
+      '10390AN',
+      '10390BN',
+      '10924E',
+    ]
+    expect(STORZ_EXPLICIT_ITEM_NUMBERS).toHaveLength(94)
+    const rigid = 'Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf'
+    const scanned = new Set(
+      csvRows('old-corpus-candidate-extraction.csv')
+        .filter((row) => row.source_filename === rigid)
+        .map((row) => row.normalized_identifier),
+    )
+    for (const itemNumber of STORZ_EXPLICIT_ITEM_NUMBERS) {
+      expect(scanned.has(itemNumber)).toBe(true)
+    }
+
+    const dispositions = new Map(
+      csvRows('old-corpus-candidate-dispositions.csv')
+        .filter((row) => row.source_filename === rigid)
+        .map((row) => [row.normalized_identifier, row]),
+    )
+    // The 16 previously missed unit-suffix identifiers reconcile as 14 exact baseline
+    // catalog numbers, one CSV-represented identifier, and one accepted new product.
+    const previouslyMissedExisting = [
+      '10318D',
+      '10318F',
+      '10318G',
+      '10318S',
+      '10338S',
+      '10350L',
+      '10350ST',
+      '10352H',
+      '10352L',
+      '10370H',
+      '10370L',
+      '10372H',
+      '10380D',
+      '10383D',
+    ]
+    expect(previouslyMissedExisting).toHaveLength(14)
+    for (const id of previouslyMissedExisting) {
+      expect(dispositions.get(id)?.disposition).toBe('existing_exact')
+    }
+    expect(dispositions.get('10318L')?.disposition).toBe('previously_accounted_csv')
+    expect(dispositions.get('10350F')).toMatchObject({
+      disposition: 'new_exact_product_candidate',
+      first_page: '49',
+    })
+    expect(dispositions.get('10350F')?.canonical_product_id).toMatch(/^PRD-/u)
+  })
+
+  test('commits no machine-local absolute path in the reviewed source-completeness package', () => {
+    const packageFiles = [
+      'data/ip-preference-cards/reviewed/source-completeness-additions-2026-08-20.json',
+      ...readdirSync(REVIEW_DIRECTORY).map((filename) => path.join(REVIEW_DIRECTORY, filename)),
+    ]
+    // Official HTTP/HTTPS URLs are not local paths; strip them before scanning. A Windows
+    // drive root is a single drive letter, so an alphanumeric character before it (or a
+    // JSON-escaped quote after it) is not a path.
+    const localAbsolutePath =
+      /(?:\/Users\/|\/home\/|(?<![A-Za-z0-9])[A-Za-z]:\\\\?[A-Za-z0-9_.$-]|(?<![A-Za-z0-9])[A-Za-z]:\/(?:Users|home)\b)/u
+    for (const filename of packageFiles) {
+      const contents = readFileSync(filename, 'utf8').replace(/https?:\/\/[^\s"']+/gu, '')
+      expect(`${filename}: ${localAbsolutePath.exec(contents)?.[0] ?? ''}`).toBe(`${filename}: `)
+    }
+    const audit = SOURCE_COMPLETENESS_REVIEW.corpus_audit
+    expect(audit.source_directory).toBeUndefined()
+    expect(audit.source_directory_env).toBe('BROCHURE_INTAKE_ROOT')
+  })
+
   test('reconciles every product-level discovery row into exactly one controlled disposition', () => {
     const discovery = csvRows('source-product-discovery.csv')
     expect(discovery).toHaveLength(sourceCompletenessCount('discovery_rows'))
@@ -213,7 +379,7 @@ describe('source-completeness review package', () => {
   })
 
   test('pins all review-subset counts and distinguishes CSV absence from acceptance', () => {
-    expect(csvRows('missing-from-original-csv.csv')).toHaveLength(243)
+    expect(csvRows('missing-from-original-csv.csv')).toHaveLength(244)
     expect(csvRows('owner-supplied-products.csv')).toHaveLength(40)
     expect(csvRows('new-product-additions.csv')).toHaveLength(
       sourceCompletenessCount('new_exact_products'),
@@ -221,8 +387,8 @@ describe('source-completeness review package', () => {
     expect(csvRows('existing-product-matches.csv')).toHaveLength(4)
     expect(csvRows('unresolved-relevant-products.csv')).toHaveLength(22)
     expect(csvRows('irrelevant-products.csv')).toHaveLength(9)
-    expect(csvRows('duplicate-analysis.csv')).toHaveLength(232)
-    expect(csvRows('manufacturer-summary.csv')).toHaveLength(11)
+    expect(csvRows('duplicate-analysis.csv')).toHaveLength(233)
+    expect(csvRows('manufacturer-summary.csv')).toHaveLength(12)
     expect(csvRows('old-corpus-table-page-coverage.csv')).toHaveLength(6)
   })
 
@@ -265,7 +431,7 @@ describe('source-completeness review package', () => {
       new_evidence_count: 33,
       new_owner_pdf_count: 1,
       new_official_web_evidence_count: 32,
-      runtime_governed_source_count: 18,
+      runtime_governed_source_count: 19,
       pdf_count: 122,
       html_count: 33,
       markdown_count: 3,
@@ -316,6 +482,15 @@ describe('source-completeness review package', () => {
     expect(blueRhino?.canonical_additions_supported?.map((row) => row.catalog_number)).toEqual(
       expect.arrayContaining(['G57682', 'G57694', 'G57709', 'G57719', 'G57723']),
     )
+    const storzRigid = manifest.sources.find((source) =>
+      (source.relative_path ?? '').endsWith(
+        'Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf',
+      ),
+    )
+    expect(storzRigid?.governed_source_ids).toContain('SRC107')
+    expect(storzRigid?.canonical_additions_supported?.map((row) => row.catalog_number)).toEqual([
+      '10350F',
+    ])
 
     const hugeMedExact = manifest.sources.find((source) => source.evidence_id === 'EVID-SC-021')
     const clrExact = manifest.sources.find((source) => source.evidence_id === 'EVID-SC-033')

@@ -28,11 +28,11 @@ const PROHIBITED_CANONICAL_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    '57cd32ee001e2627878593cdf905366221ce7e508588115bedd0f6484c83f5e6',
+    '16779325490bcdfc848742c2242553df742f9f4dab8d20d86e6032f9bfcdee5a',
   'data/ip-preference-cards/generated/roles.json':
     '8ec7c66cf5db225532c8195258f341af5644559689dd0b69cea7a56e2fd0b571',
   'data/ip-preference-cards/generated/product-roles.json':
-    'af8bf59fa18e16b2de9f6d74157b857efcda40cca80c09c115bdbffc917a9e4c',
+    '58a53bdebdf5c82f568da4a7478466cdebcca1e35f471609f15c1e4ed544dc5e',
   'data/ip-preference-cards/generated/procedure-slots.json':
     'c11720c8d209b22c56813265ea53f70a348a0fd3af7b4cef9c6ca1a6b43a3ea7',
   'data/ip-preference-cards/generated/slot-product-options.json':
@@ -66,7 +66,7 @@ const PROHIBITED_CANONICAL_HASHES = {
   'data/ip-preference-cards/generated/release-impact-report.json':
     '272d8cec228d9e4d95d8796661984e726c3d298f97783201877caddad400df60',
   'data/ip-preference-cards/seed/catalog-additions.json':
-    'd85b59cfb2b9f9c30cf0ab494e6e4c53523b57a15c98272202a68f3a0140ccd6',
+    'e46d8e4e262ec4eab8a4a175ef576506b7bb0423cf6f390b4f5eac847ab5da7b',
   'data/ip-preference-cards/seed/release-bundles.json':
     '892780cb38695b71b8c6d258ca4915ae5bf74062e8e976dff050aa0ced9cdde2',
 } as const

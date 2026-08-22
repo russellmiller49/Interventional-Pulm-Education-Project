@@ -1270,5 +1270,17 @@
     "reliability_tier": "Manufacturer official",
     "use_policy": "Reference for exact catalog references and dimensions",
     "notes": "Frozen old-corpus Novatech silicone airway-stent catalog; the straight-stent diameter-by-length matrix spans PDF pages 12-13 and the Y/OKI/ST/DST tables span pages 14-15. The Spanish edition (novatech__stents_pulmonares__catalogo.pdf) carries the identical reference set and is reconciled as a duplicate occurrence. Official URL: https://www.novatech.fr"
+  },
+  {
+    "source_id": "SRC107",
+    "title": "Search - Rigid bronchoscopy | KARL STORZ Endoskope | United States (e-catalog capture)",
+    "filename": "Search - Rigid bronchoscopy _ KARL STORZ Endoskope _ United States.pdf",
+    "source_type": "Manufacturer e-catalog web capture (PDF)",
+    "publisher": "KARL STORZ",
+    "revision_date": null,
+    "as_of_date": "2026-07-30",
+    "reliability_tier": "Manufacturer official",
+    "use_policy": "Reference for exact item numbers, product names, and card specifications",
+    "notes": "Frozen old-corpus capture of the KARL STORZ US e-catalog rigid-bronchoscopy search (138 capture pages); each product card pairs an explicit \"Item no:\" ordering label with the exact product name, with card specifications continuing on the following capture page. Official URL: https://www.karlstorz.com/us/en/search.htm?cat=1000130286"
   }
 ]

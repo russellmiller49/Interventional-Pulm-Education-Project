@@ -23,7 +23,7 @@ describe('source-completeness catalog additions', () => {
   test('emits the reviewed exact cohort, new manufacturers, sources, roles, and provenance', () => {
     expect(additions.warnings).toEqual([])
     expect(additions.manufacturers).toHaveLength(6)
-    expect(additions.sources).toHaveLength(18)
+    expect(additions.sources).toHaveLength(19)
     expect(additions.products).toHaveLength(sourceCompletenessCount('new_exact_products'))
     expect(additions.productRoles).toHaveLength(sourceCompletenessCount('product_roles'))
     expect(additions.productSources).toHaveLength(

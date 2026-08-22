@@ -7,7 +7,7 @@
   "new_evidence_count": 33,
   "new_owner_pdf_count": 1,
   "new_official_web_evidence_count": 32,
-  "runtime_governed_source_count": 18,
+  "runtime_governed_source_count": 19,
   "current_directory_total_files": 127,
   "pdf_count": 122,
   "html_count": 33,
@@ -2519,10 +2519,15 @@
       "manufacturer": "KARL STORZ",
       "publisher": null,
       "official_url": null,
-      "governed_source_ids": [],
+      "governed_source_ids": ["SRC107"],
       "matched_csv_row_count": 1,
       "matched_input_row_numbers": [1404],
-      "canonical_additions_supported": []
+      "canonical_additions_supported": [
+        {
+          "product_id": "PRD-A0655BF464",
+          "catalog_number": "10350F"
+        }
+      ]
     },
     {
       "provenance_origin": "old_corpus",

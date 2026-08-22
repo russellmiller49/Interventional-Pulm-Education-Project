@@ -13104,6 +13104,14 @@
     "notes": null
   },
   {
+    "product_id": "PRD-A0655BF464",
+    "source_id": "SRC107",
+    "source_location": "PDF page 49, product card \"Item no: 10350F / Optical Forceps, large jaws, blunt\" (card specifications continue on capture page 50)",
+    "claim_type": "Exact item number, product name, and jaw/working-length card specifications",
+    "verification_status": "Verified in the reviewed source-completeness intake",
+    "notes": null
+  },
+  {
     "product_id": "PRD-A0DF0074DB",
     "source_id": "SRC006",
     "source_location": "Product list 2025!bonastent",
