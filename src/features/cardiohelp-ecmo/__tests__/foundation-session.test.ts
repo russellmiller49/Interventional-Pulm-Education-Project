@@ -248,7 +248,7 @@ describe('RESTORE_SOURCE_AND_APPLY', () => {
     })
     const next = ecmoFoundationSessionReducer(disturbed, action)
 
-    expect(next.simulation.device.rpmSetpoint).toBe(3600)
+    expect(next.simulation.device.rpmSetpoint).toBe(3500)
     expect(next.simulation.simulationTime).toBe(guided.settleSeconds)
     expect(next.simulation.circuit.bloodFlow).toBeGreaterThan(base.simulation.circuit.bloodFlow)
   })
@@ -321,7 +321,7 @@ describe('the four sequences the package has to support', () => {
   it('restores the VV reference and raises the pump speed', () => {
     const state = apply(pumpRuntime, 'increase-rpm')
     expect(state.scenario.scenarioId).toBe('vv-reference')
-    expect(state.device.rpmSetpoint).toBe(3600)
+    expect(state.device.rpmSetpoint).toBe(3500)
   })
 
   it('restores the VV reference and raises the sweep', () => {

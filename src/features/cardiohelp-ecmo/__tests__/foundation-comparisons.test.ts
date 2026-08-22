@@ -111,17 +111,18 @@ describe('the bounded speed change shows the learner what they committed to', ()
   })
 
   /*
-   * Why the magnitude is what it is.
+   * The complete displayed-readout sweep, in place of one number's story.
    *
-   * This is the regression pin, and it is written as a comparison rather than as a constant so that
-   * shrinking the authored step back toward the invisible band fails here with a sentence that says
-   * what went wrong. A future package is free to raise the step further; it is not free to lower it
-   * past the point where this console can show the change.
+   * The previous test here pinned a single account — that 200 was invisible and the authored step
+   * was the smallest visible one — and that account was false: the rounding to whole millimetres
+   * is not symmetric about the reference, so the smallest visible decrease (−100) is smaller than
+   * the smallest visible increase (+300). The independent review reproduced the asymmetry; this
+   * sweep derives all three facts from the engine's displayed readouts every run, so the authored
+   * step is compared with what the console can actually show rather than with a remembered claim.
    */
-  it('uses the smallest step this console can actually show a drainage change at', () => {
-    const reference = settledReference('vv')
+  describe.each(TRACKS)('%s: what the console can visibly show around the reference', (mode) => {
+    const reference = settledReference(mode)
     const baselinePVen = reference.circuit.readouts.pVen.displayed
-    expect(baselinePVen).not.toBeNull()
 
     function pVenAfter(delta: number): number {
       let state = ecmoSimulationReducer(reference, {
@@ -136,18 +137,39 @@ describe('the bounded speed change shows the learner what they committed to', ()
       return value
     }
 
-    // The band the lesson used to sit in: the model moves, the console does not.
-    expect(pVenAfter(200)).toBe(baselinePVen)
+    const increments = [100, 200, 300, 400] as const
+    const smallest = (predicate: (delta: number) => boolean): number | null =>
+      increments.find(predicate) ?? null
 
-    const authored = guidedAction('increase-rpm').resolve?.(reference) ?? []
-    const authoredRpm = authored.find((action) => action.type === 'SET_RPM')
-    expect(authoredRpm).toBeDefined()
-    if (!authoredRpm || authoredRpm.type !== 'SET_RPM') return
-    const authoredDelta = authoredRpm.rpm - reference.device.rpmSetpoint
+    it('finds the smallest visible positive step, the smallest visible negative step, and the smallest symmetric one', () => {
+      expect(baselinePVen).not.toBeNull()
+      const visiblyDeeper = (delta: number) => pVenAfter(delta) < baselinePVen!
+      const visiblyShallower = (delta: number) => pVenAfter(-delta) > baselinePVen!
 
-    expect(
-      `authored delta ${authoredDelta}: pVen ${pVenAfter(authoredDelta)} vs baseline ${baselinePVen}`,
-    ).not.toBe(`authored delta ${authoredDelta}: pVen ${baselinePVen} vs baseline ${baselinePVen}`)
+      const smallestVisibleIncrease = smallest(visiblyDeeper)
+      const smallestVisibleDecrease = smallest(visiblyShallower)
+      const smallestSymmetric = smallest((delta) => visiblyDeeper(delta) && visiblyShallower(delta))
+
+      // The three quantities the authored step has to be read against. They are not the same
+      // number, which is exactly what the previous account got wrong.
+      expect(smallestVisibleIncrease).toBe(300)
+      expect(smallestVisibleDecrease).toBe(100)
+      expect(smallestSymmetric).toBe(300)
+    })
+
+    it('authors the smallest symmetric magnitude, and both directions show on the console', () => {
+      const resolved = guidedAction('increase-rpm').resolve?.(reference) ?? []
+      const setRpm = resolved.find((action) => action.type === 'SET_RPM')
+      expect(setRpm).toBeDefined()
+      if (!setRpm || setRpm.type !== 'SET_RPM') return
+      const authoredDelta = setRpm.rpm - reference.device.rpmSetpoint
+
+      // Paired actions need one magnitude that is visible both ways; the sweep says 300 is the
+      // smallest such magnitude, and the authored step is exactly it.
+      expect(authoredDelta).toBe(300)
+      expect(pVenAfter(authoredDelta)).toBeLessThan(baselinePVen!)
+      expect(pVenAfter(-authoredDelta)).toBeGreaterThan(baselinePVen!)
+    })
   })
 
   it('says in its own label how far it moves the speed', () => {

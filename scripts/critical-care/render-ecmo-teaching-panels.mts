@@ -114,11 +114,12 @@ function sharedVariants(profileId: EcmoReferenceProfileId): readonly Variant[] {
   return [
     { label: `${profileId} · reference`, state: reference },
     {
-      // Matches the bounded action the pump lesson actually offers. At the two hundred it used to
-      // render, the drainage pressure was identical to the reference column and the page gave no
-      // sign that the comparison the lesson asks for was invisible on the console.
-      label: `${profileId} · after +400 rpm`,
-      state: settled(profileId, { type: 'SET_RPM', rpm: reference.device.rpmSetpoint + 400 }),
+      // Matches the bounded action the pump lesson actually offers: ±300 is the smallest
+      // magnitude the console shows in both directions. At the two hundred this used to render,
+      // the drainage pressure was identical to the reference column and the page gave no sign
+      // that the comparison the lesson asks for was invisible on the console.
+      label: `${profileId} · after +300 rpm`,
+      state: settled(profileId, { type: 'SET_RPM', rpm: reference.device.rpmSetpoint + 300 }),
     },
     {
       label: `${profileId} · after +1 L/min sweep`,

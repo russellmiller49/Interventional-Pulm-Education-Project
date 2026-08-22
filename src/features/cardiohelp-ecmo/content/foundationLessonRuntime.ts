@@ -660,41 +660,46 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     },
     guidedActions: [
       /*
-       * Four hundred, not two.
+       * Three hundred: the smallest symmetric step the console shows in both directions.
        *
        * The lesson asks the learner to commit to a pairing — flow rises, and the drainage side is
-       * pulled harder to produce it — and then to run this action and watch. At two hundred rpm the
-       * second half of that pairing is invisible: the model moves pVen from −34.72 to −35.32, and
-       * `calculatePressures` rounds pressures to whole millimetres, so the console reads −35 before
-       * and −35 after. A learner who watched carefully saw the distractor that says the drainage
-       * side stays where it is, and the rationale under the keyed answer told them it does not.
+       * pulled harder to produce it — and then to run this action and watch. `calculatePressures`
+       * rounds pressures to whole millimetres, so the visibility of the drainage half depends on
+       * where the model lands relative to a rounding boundary, and the two directions are not
+       * symmetric. Swept against the settled reference (pVen −35 displayed, both tracks):
        *
-       * Four hundred moves the displayed value in both directions — −35 → −36 raising, −35 → −33
-       * backing off — with no fault injected, no alarm, and no critical error charged, because a
-       * reference circuit carries no drainage capacity to exceed. The magnitude is the smallest one
-       * this console can show, which is the only reason it was chosen.
+       *   +100 → −35, +200 → −35, +300 → −36, +400 → −36
+       *   −100 → −34, −200 → −34, −300 → −34, −400 → −33
        *
-       * `foundation-comparisons.test.ts` pins both directions against the engine.
+       * So the smallest visible *increase* in suction is +300; the smallest visible *decrease* is
+       * already −100; and ±300 is the smallest magnitude that shows on the console in both
+       * directions, which is what a paired increase/decrease action needs. An earlier account here
+       * called 400 the smallest visible step, which the sweep disproves — the independent review
+       * caught it, and `foundation-comparisons.test.ts` now runs the displayed-readout sweep
+       * rather than pinning one number's story.
+       *
+       * No fault, alarm, drainage chatter, or critical error appears anywhere in ±400, because a
+       * reference circuit carries no drainage capacity to exceed.
        */
       {
         id: 'increase-rpm',
-        label: 'Increase pump speed by 400 rpm',
+        label: 'Increase pump speed by 300 rpm',
         description: 'A bounded increase from the reference speed, using the existing pump model.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
-          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 400 } as const,
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 300 } as const,
         ],
         settleSeconds: 6,
       },
       {
         id: 'decrease-rpm',
-        label: 'Decrease pump speed by 400 rpm',
+        label: 'Decrease pump speed by 300 rpm',
         description: 'A bounded decrease from the reference speed.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
-          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint - 400 } as const,
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint - 300 } as const,
         ],
         settleSeconds: 6,
       },

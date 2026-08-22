@@ -1,13 +1,19 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import * as THREE from 'three'
+import { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import {
   BLENDER_PLACEMENT,
+  CAMERA_POSITION,
   CAMERA_TARGET,
   CONSOLE_PLACEMENT,
   PATIENT_POSITION,
 } from '../components/ecmo-circuit/constants'
 import { buildCircuitLayout } from '../components/ecmo-circuit/layout'
 import {
+  applyBedsidePanFrameRules,
   clampPanTarget,
   DEFAULT_CAMERA_DISTANCE,
   DEFAULT_TARGET,
@@ -156,5 +162,148 @@ describe('return to the canonical framing', () => {
     expect(shift).not.toBeNull()
     expect(shift!.equals(pan.clone().negate())).toBe(true)
     expect(target.equals(DEFAULT_TARGET)).toBe(true)
+  })
+})
+
+/* ------------------------------------------------------------------ *
+ * Integration: real controls, real pointer events, one owner
+ * ------------------------------------------------------------------ */
+
+/**
+ * The independent review asked for a regression above the helper level: the scene used to pass
+ * `enablePan={false}` in JSX while the frame loop mutated the instance — two authorities over one
+ * field. The pure helpers above cannot see who wins, so this block drives a real three-stdlib
+ * OrbitControls connected to a real DOM element, applies the extracted frame rule the scene's
+ * `useFrame` runs, and dispatches actual right-button pointer events. The pan either moves the
+ * target or it does not; a stale declarative `false` winning shows up here as a dead drag.
+ */
+describe('the frame rule owns enablePan on a live OrbitControls', () => {
+  function createRig() {
+    const element = document.createElement('div')
+    // OrbitControls divides drag deltas by clientHeight when panning a perspective camera; jsdom
+    // has no layout, so the canvas height is stubbed the way the workspace suites stub geometry.
+    Object.defineProperty(element, 'clientHeight', { value: 608 })
+    Object.defineProperty(element, 'clientWidth', { value: 552 })
+    // jsdom's pointer-capture stubs throw for synthetic pointer ids; the browser path releases a
+    // real capture. Neither is what this test is about.
+    element.setPointerCapture = () => {}
+    element.releasePointerCapture = () => {}
+    document.body.appendChild(element)
+
+    const camera = new THREE.PerspectiveCamera(50, 552 / 608, 0.1, 100)
+    camera.position.set(...CAMERA_POSITION)
+    const controls = new OrbitControlsImpl(camera, element)
+    controls.target.copy(DEFAULT_TARGET)
+    // The scene's ref callback locks the instance before the first frame.
+    controls.enablePan = false
+    controls.update()
+    return { element, camera, controls }
+  }
+
+  function pointer(type: string, options: PointerEventInit & { button?: number }): Event {
+    // jsdom has no PointerEvent constructor; OrbitControls only reads MouseEvent fields plus
+    // pointerType/pointerId, so a MouseEvent with those defined drives it exactly.
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, ...options })
+    Object.defineProperty(event, 'pointerType', { value: 'mouse' })
+    Object.defineProperty(event, 'pointerId', { value: 7 })
+    return event
+  }
+
+  function rightDrag(element: HTMLElement, dx: number, dy: number) {
+    element.dispatchEvent(
+      pointer('pointerdown', { button: 2, buttons: 2, clientX: 276, clientY: 304 }),
+    )
+    for (let step = 1; step <= 4; step += 1) {
+      element.ownerDocument.dispatchEvent(
+        pointer('pointermove', {
+          buttons: 2,
+          clientX: 276 + (dx * step) / 4,
+          clientY: 304 + (dy * step) / 4,
+        }),
+      )
+    }
+    element.ownerDocument.dispatchEvent(
+      pointer('pointerup', { button: 2, buttons: 0, clientX: 276 + dx, clientY: 304 + dy }),
+    )
+  }
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('keeps a right-drag dead at the default framing', () => {
+    const { element, controls } = createRig()
+    applyBedsidePanFrameRules(controls, 1 / 60, false, false)
+    expect(controls.enablePan).toBe(false)
+
+    const before = controls.target.clone()
+    rightDrag(element, 80, 40)
+    applyBedsidePanFrameRules(controls, 1 / 60, false, false)
+
+    expect(controls.target.equals(before)).toBe(true)
+    controls.dispose()
+  })
+
+  it('pans the rig on a right-drag once zoomed past the unlock distance', () => {
+    const { element, camera, controls } = createRig()
+    // Zoom in the way the wheel does: move the camera toward the target inside the allowed range.
+    const toTarget = controls.target.clone().sub(camera.position).normalize()
+    camera.position.copy(controls.target.clone().sub(toTarget.multiplyScalar(4.5)))
+    controls.update()
+
+    // One frame of the rule flips the single authority; nothing else is touched.
+    applyBedsidePanFrameRules(controls, 1 / 60, false, false)
+    expect(controls.enablePan).toBe(true)
+
+    const targetBefore = controls.target.clone()
+    const cameraBefore = camera.position.clone()
+    rightDrag(element, 80, 40)
+
+    // The drag panned the rig: target and camera moved together, distance preserved.
+    expect(controls.target.equals(targetBefore)).toBe(false)
+    expect(controls.target.distanceTo(targetBefore)).toBeGreaterThan(0.05)
+    expect(camera.position.distanceTo(controls.target)).toBeCloseTo(
+      cameraBefore.distanceTo(targetBefore),
+      3,
+    )
+    controls.dispose()
+  })
+
+  it('overrides a stale declarative write on the next frame, in both directions', () => {
+    const { camera, controls } = createRig()
+
+    // Something re-asserts the old constant (the way a re-applied JSX prop would): the next frame
+    // wins while zoomed in…
+    const toTarget = controls.target.clone().sub(camera.position).normalize()
+    camera.position.copy(controls.target.clone().sub(toTarget.multiplyScalar(4.5)))
+    controls.update()
+    controls.enablePan = false
+    applyBedsidePanFrameRules(controls, 1 / 60, false, false)
+    expect(controls.enablePan).toBe(true)
+
+    // …and re-locks at the default framing even if something forced it open.
+    camera.position.set(...CAMERA_POSITION)
+    controls.target.copy(DEFAULT_TARGET)
+    controls.update()
+    controls.enablePan = true
+    applyBedsidePanFrameRules(controls, 1 / 60, false, false)
+    expect(controls.enablePan).toBe(false)
+    controls.dispose()
+  })
+
+  it('leaves no second authority in the scene: the JSX passes no enablePan prop', () => {
+    // The ownership pin. The behaviour above proves the rule works on a live instance; this
+    // proves the component has exactly one writer — the ref lock plus the frame rule — so the
+    // conflict the review flagged cannot quietly return as a constant prop.
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/cardiohelp-ecmo/components/ecmo-circuit/BedsideScene.tsx'),
+      'utf8',
+    )
+    // Comments are stripped first: the file *explains* the retired prop by name, and a pin that
+    // fired on the explanation would be deleted rather than obeyed.
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+    expect(code).not.toMatch(/enablePan=\{/)
+    expect(code).toContain('instance.enablePan = false')
+    expect(code).toContain('applyBedsidePanFrameRules(instance, delta, reduceMotion,')
   })
 })
