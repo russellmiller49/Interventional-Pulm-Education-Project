@@ -120,6 +120,11 @@ export function ResizableTeachingWorkspace({
   className,
 }: ResizableTeachingWorkspaceProps) {
   const workspaceRef = useRef<HTMLElement>(null)
+  const tabRefs = useRef<Record<WorkspacePane, HTMLButtonElement | null>>({
+    primary: null,
+    secondary: null,
+    tertiary: null,
+  })
   const dragRef = useRef<{ boundary: ResizeBoundary; pointerId: number } | null>(null)
   const [widths, setWidths] = useState<PaneWidths | null>(null)
   const [availableWidth, setAvailableWidth] = useState(0)
@@ -252,6 +257,44 @@ export function ResizableTeachingWorkspace({
       : 0
   const compact = availableWidth > 0 && availableWidth < COMPACT_WORKSPACE_THRESHOLD_PX
   const visiblePane = activePane ?? compactPane
+
+  /**
+   * The WAI-ARIA tabs keyboard model for the compact pane switcher.
+   *
+   * The tablist shipped with roving tabIndex and no key handling, which is the worst half of the
+   * pattern on its own: Tab landed on the active tab, the other two sat at tabIndex −1, and no key
+   * moved focus — so a keyboard-only learner could never reach the Teaching or activity pane at a
+   * compact width at all. Selection follows focus (the panes are mounted throughout, so switching
+   * is cheap), arrows wrap in both directions, Home and End jump to the ends, and Up/Down mirror
+   * Left/Right. Pointer activation is untouched, and a parent that owns the switcher via
+   * `activePane` never renders this tablist in the first place.
+   */
+  function tablistKeyDown(pane: WorkspacePane, event: KeyboardEvent<HTMLButtonElement>) {
+    const order: readonly WorkspacePane[] = ['primary', 'secondary', 'tertiary']
+    const index = order.indexOf(pane)
+    let next: WorkspacePane
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = order[(index + 1) % order.length]
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = order[(index + order.length - 1) % order.length]
+        break
+      case 'Home':
+        next = order[0]
+        break
+      case 'End':
+        next = order[order.length - 1]
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    setCompactPane(next)
+    tabRefs.current[next]?.focus()
+  }
   const paneIdFor: Readonly<Record<WorkspacePane, string>> = {
     primary: primaryId,
     secondary: secondaryId,
@@ -279,10 +322,14 @@ export function ResizableTeachingWorkspace({
               key={pane}
               type="button"
               role="tab"
+              ref={(element) => {
+                tabRefs.current[pane] = element
+              }}
               aria-selected={visiblePane === pane}
               aria-controls={paneIdFor[pane]}
               tabIndex={visiblePane === pane ? 0 : -1}
               onClick={() => setCompactPane(pane)}
+              onKeyDown={(event) => tablistKeyDown(pane, event)}
             >
               {paneLabels[pane]}
             </button>
