@@ -17,6 +17,7 @@ import {
   clampPanTarget,
   DEFAULT_CAMERA_DISTANCE,
   DEFAULT_TARGET,
+  lockBedsidePanOnNewInstance,
   PAN_TARGET_BOUNDS,
   PAN_UNLOCK_DISTANCE,
   panEnabledAtDistance,
@@ -291,19 +292,53 @@ describe('the frame rule owns enablePan on a live OrbitControls', () => {
     controls.dispose()
   })
 
-  it('leaves no second authority in the scene: the JSX passes no enablePan prop', () => {
+  it('keeps the pan unlocked when the ref re-attaches the same instance mid-session', () => {
+    /*
+     * The first version of the ownership fix locked unconditionally in the ref callback — which
+     * re-runs on every commit whose identity changed, and this scene re-renders every simulation
+     * tick, so pan was re-locked between frames. Caught by re-running the production pan probe
+     * against the rebuilt page: zoomed in, right-drag entered no state. The lock is now keyed to
+     * the instance, and this is the regression for it.
+     */
+    const { camera, controls } = createRig()
+    const lastLocked: { current: typeof controls | null } = { current: null }
+
+    lockBedsidePanOnNewInstance(lastLocked, controls)
+    expect(controls.enablePan).toBe(false)
+
+    const toTarget = controls.target.clone().sub(camera.position).normalize()
+    camera.position.copy(controls.target.clone().sub(toTarget.multiplyScalar(4.5)))
+    controls.update()
+    applyBedsidePanFrameRules(controls, 1 / 60, false, false)
+    expect(controls.enablePan).toBe(true)
+
+    // A clock-tick re-render re-attaches the same instance: nothing may change.
+    lockBedsidePanOnNewInstance(lastLocked, controls)
+    expect(controls.enablePan).toBe(true)
+
+    // A genuinely new instance starts locked before its first frame.
+    const fresh = new OrbitControlsImpl(camera, document.createElement('div'))
+    lockBedsidePanOnNewInstance(lastLocked, fresh)
+    expect(fresh.enablePan).toBe(false)
+    fresh.dispose()
+    controls.dispose()
+  })
+
+  it('leaves no second authority in the scene: no enablePan prop, no inline write', () => {
     // The ownership pin. The behaviour above proves the rule works on a live instance; this
-    // proves the component has exactly one writer — the ref lock plus the frame rule — so the
-    // conflict the review flagged cannot quietly return as a constant prop.
+    // proves the component has exactly one writer — the instance-keyed lock plus the frame rule,
+    // both in panning.ts — so the conflict the review flagged cannot quietly return as a constant
+    // prop or as a per-render write in the ref.
     const source = readFileSync(
       join(process.cwd(), 'src/features/cardiohelp-ecmo/components/ecmo-circuit/BedsideScene.tsx'),
       'utf8',
     )
-    // Comments are stripped first: the file *explains* the retired prop by name, and a pin that
-    // fired on the explanation would be deleted rather than obeyed.
+    // Comments are stripped first: the file *explains* the retired patterns by name, and a pin
+    // that fired on the explanation would be deleted rather than obeyed.
     const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
     expect(code).not.toMatch(/enablePan=\{/)
-    expect(code).toContain('instance.enablePan = false')
+    expect(code).not.toMatch(/\.enablePan\s*=/)
+    expect(code).toContain('lockBedsidePanOnNewInstance(lockedControls, instance)')
     expect(code).toContain('applyBedsidePanFrameRules(instance, delta, reduceMotion,')
   })
 })

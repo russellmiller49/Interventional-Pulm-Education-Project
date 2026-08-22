@@ -25,7 +25,7 @@ import {
   TUBE_RADII,
 } from './constants'
 import { drainageChatterActive } from './chatter'
-import { applyBedsidePanFrameRules } from './panning'
+import { applyBedsidePanFrameRules, lockBedsidePanOnNewInstance } from './panning'
 import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
@@ -142,12 +142,18 @@ export function BedsideScene({
     applyBedsidePanFrameRules(instance, delta, reduceMotion, interacting.current)
   })
 
-  // React Compiler memoizes this, so the ref survives re-renders without detaching.
+  /*
+   * Locked before the first frame runs — once per instance, in `lockBedsidePanOnNewInstance`.
+   *
+   * Not inline: a callback ref re-runs on every commit whose identity changed, and this scene
+   * re-renders with every simulation tick, so an unconditional `enablePan = false` here re-locked
+   * the pan between frames — the split-authority defect again, from the other side. The helper
+   * keys the lock to the instance, so the frame rule stays the only writer after mount.
+   */
+  const lockedControls = useRef<OrbitControlsImpl | null>(null)
   const attachControls = (instance: OrbitControlsImpl | null) => {
     controls.current = instance
-    // Locked before the first frame runs: the default framing must never pan, and the first
-    // `useFrame` tick may be a viewport-visibility change away.
-    if (instance) instance.enablePan = false
+    lockBedsidePanOnNewInstance(lockedControls, instance)
   }
   const patient = useGLTF(PATIENT_ASSET)
   const sensor = useGLTF(SENSOR_ASSET)
