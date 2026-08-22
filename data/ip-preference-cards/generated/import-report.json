@@ -164,11 +164,11 @@
   },
   "catalog_additions": {
     "applied": true,
-    "products_added": 708,
-    "product_roles_added": 731,
-    "product_sources_added": 882,
-    "manufacturers_added": 21,
-    "sources_added": 42,
+    "products_added": 937,
+    "product_roles_added": 954,
+    "product_sources_added": 1204,
+    "manufacturers_added": 27,
+    "sources_added": 61,
     "errors": []
   },
   "procedure_additions": {
@@ -571,7 +571,7 @@
   },
   "slot_option_proposals": {
     "authored_canonical_options": 2035,
-    "generated_unreviewed_proposals": 1485,
+    "generated_unreviewed_proposals": 1794,
     "excluded_proposal_pairs": 0,
     "required_slots_with_catalog_coverage": 82,
     "required_slots_with_curated_defaults": 44,

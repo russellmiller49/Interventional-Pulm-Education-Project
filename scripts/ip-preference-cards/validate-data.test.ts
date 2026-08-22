@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import { validateGeneratedCatalog } from './validate-data'
+import { sourceCompletenessCount } from './source-completeness-intake'
 
 const GENERATED_DIRECTORY = path.resolve('data/ip-preference-cards/generated')
 const REQUIRED_FILES = [
@@ -20,8 +21,8 @@ const REQUIRED_FILES = [
 describe('generated catalog integrity validation', () => {
   it('accepts the committed proposal artifact as a fresh deterministic regeneration', async () => {
     await expect(validateGeneratedCatalog()).resolves.toMatchObject({
-      authoredSlotOptions: 2035,
-      unreviewedSlotOptionProposals: 1485,
+      authoredSlotOptions: sourceCompletenessCount('canonical_slot_options_after'),
+      unreviewedSlotOptionProposals: sourceCompletenessCount('unreviewed_slot_proposals_after'),
       excludedSlotOptionProposals: 0,
       staleSlotOptionExceptions: 0,
     })

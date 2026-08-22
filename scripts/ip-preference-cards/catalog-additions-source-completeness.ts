@@ -1,0 +1,510 @@
+import { stableId } from './catalog-utils'
+import type { AdditionRecord } from './catalog-addition-records'
+import {
+  expandSourceCompletenessProducts,
+  SOURCE_COMPLETENESS_REVIEW,
+  sourceCompletenessCount,
+  type ExpandedSourceCompletenessProduct,
+  type ExistingSourceCompletenessMatch,
+} from './source-completeness-intake'
+
+export interface ExistingProductIdentity {
+  product_id: string
+  manufacturer_id: string | null
+  manufacturer?: string | null
+  catalog_number: string | null
+  alternate_ids?: string | null
+  gtin?: string | null
+}
+
+interface ExistingManufacturerIdentity {
+  manufacturer_id: string
+  manufacturer: string
+}
+
+interface ExistingSourceIdentity {
+  source_id: string
+  title: string
+}
+
+export interface SourceCompletenessAdditionsResult {
+  manufacturers: AdditionRecord[]
+  sources: AdditionRecord[]
+  products: AdditionRecord[]
+  productRoles: AdditionRecord[]
+  productSources: AdditionRecord[]
+  warnings: string[]
+}
+
+export function normalizeSourceCompletenessIdentifier(value: string | null | undefined): string {
+  return (value ?? '')
+    .normalize('NFKC')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+}
+
+function splitAlternateIds(value: string | null | undefined): string[] {
+  return (value ?? '')
+    .split(/[;,]/)
+    .map((part) => normalizeSourceCompletenessIdentifier(part.replace(/^PRIMARY DI\s*/i, '')))
+    .filter(Boolean)
+}
+
+function identityKey(manufacturerId: string, identifier: string): string {
+  return `${manufacturerId}\u0000${identifier}`
+}
+
+/**
+ * Fail closed on exact catalog, alternate-identifier, and GTIN collisions before emitting rows.
+ * Pre-indexing the entire reviewed cohort makes every check independent of definition order.
+ */
+export function validateSourceCompletenessIdentities(
+  definitions: Pick<
+    ExpandedSourceCompletenessProduct,
+    'manufacturer' | 'manufacturerId' | 'catalogNumber' | 'alternateIds' | 'gtin' | 'productId'
+  >[],
+  existingProducts: ExistingProductIdentity[],
+): void {
+  const reviewedProductIds = new Set(
+    definitions.map((definition) =>
+      productIdFor(definition.manufacturer, definition.catalogNumber),
+    ),
+  )
+  const existingExact = new Map<string, ExistingProductIdentity[]>()
+  const existingAliases = new Map<string, ExistingProductIdentity[]>()
+  const existingGtins = new Map<string, ExistingProductIdentity[]>()
+  for (const product of existingProducts) {
+    // Rows produced by an earlier deterministic generation of this same reviewed cohort are
+    // replaced by the current definitions. Baseline products outside this cohort remain guards.
+    if (reviewedProductIds.has(product.product_id)) continue
+    if (product.manufacturer_id) {
+      const exact = normalizeSourceCompletenessIdentifier(product.catalog_number)
+      if (exact) {
+        const key = identityKey(product.manufacturer_id, exact)
+        existingExact.set(key, [...(existingExact.get(key) ?? []), product])
+      }
+      for (const alias of splitAlternateIds(product.alternate_ids)) {
+        const key = identityKey(product.manufacturer_id, alias)
+        existingAliases.set(key, [...(existingAliases.get(key) ?? []), product])
+      }
+    }
+    const gtin = normalizeSourceCompletenessIdentifier(product.gtin)
+    if (gtin) existingGtins.set(gtin, [...(existingGtins.get(gtin) ?? []), product])
+  }
+
+  const newExact = new Map<string, string>()
+  const newAliases = new Map<string, string>()
+  const newGtins = new Map<string, string>()
+  for (const definition of definitions) {
+    const productId = productIdFor(definition.manufacturer, definition.catalogNumber)
+    const exact = normalizeSourceCompletenessIdentifier(definition.catalogNumber)
+    const exactKey = identityKey(definition.manufacturerId, exact)
+    const priorExact = newExact.get(exactKey)
+    if (priorExact && priorExact !== productId) {
+      throw new Error(
+        `Duplicate reviewed addition ${definition.manufacturer} ${definition.catalogNumber}.`,
+      )
+    }
+    newExact.set(exactKey, productId)
+
+    const aliases = splitAlternateIds(definition.alternateIds)
+    if (new Set(aliases).size !== aliases.length) {
+      throw new Error(
+        `Reviewed addition ${definition.catalogNumber} repeats an alternate identifier.`,
+      )
+    }
+    for (const alias of aliases) {
+      const aliasKey = identityKey(definition.manufacturerId, alias)
+      const priorAlias = newAliases.get(aliasKey)
+      if (priorAlias && priorAlias !== productId) {
+        throw new Error(
+          `Reviewed alternate identifier ${alias} is shared by ${priorAlias} and ${productId}.`,
+        )
+      }
+      newAliases.set(aliasKey, productId)
+    }
+
+    const gtin = normalizeSourceCompletenessIdentifier(definition.gtin)
+    if (gtin) {
+      const priorGtin = newGtins.get(gtin)
+      if (priorGtin && priorGtin !== productId) {
+        throw new Error(`Duplicate reviewed GTIN ${definition.gtin}.`)
+      }
+      newGtins.set(gtin, productId)
+    }
+  }
+
+  for (const definition of definitions) {
+    const productId = productIdFor(definition.manufacturer, definition.catalogNumber)
+    const exact = normalizeSourceCompletenessIdentifier(definition.catalogNumber)
+    const exactKey = identityKey(definition.manufacturerId, exact)
+    const conflictingExistingExact = (existingExact.get(exactKey) ?? []).find(
+      (product) => product.product_id !== productId,
+    )
+    if (conflictingExistingExact) {
+      throw new Error(
+        `Reviewed addition ${definition.manufacturer} ${definition.catalogNumber} collides with existing ${conflictingExistingExact.product_id}.`,
+      )
+    }
+    const conflictingExistingAlias = (existingAliases.get(exactKey) ?? []).find(
+      (product) => product.product_id !== productId,
+    )
+    if (conflictingExistingAlias) {
+      throw new Error(
+        `Reviewed catalog number ${definition.catalogNumber} is already an alias on ${conflictingExistingAlias.product_id}.`,
+      )
+    }
+    const conflictingNewAlias = newAliases.get(exactKey)
+    if (conflictingNewAlias && conflictingNewAlias !== productId) {
+      throw new Error(
+        `Reviewed catalog number ${definition.catalogNumber} collides with alternate identifier on ${conflictingNewAlias}.`,
+      )
+    }
+
+    for (const alias of splitAlternateIds(definition.alternateIds)) {
+      const aliasKey = identityKey(definition.manufacturerId, alias)
+      const conflictingNewExact = newExact.get(aliasKey)
+      if (conflictingNewExact && conflictingNewExact !== productId) {
+        throw new Error(
+          `Reviewed alternate identifier ${alias} collides with catalog number on ${conflictingNewExact}.`,
+        )
+      }
+      const conflictingExistingCatalog = (existingExact.get(aliasKey) ?? []).find(
+        (product) => product.product_id !== productId,
+      )
+      if (conflictingExistingCatalog) {
+        throw new Error(
+          `Reviewed alternate identifier ${alias} is an existing catalog number on ${conflictingExistingCatalog.product_id}.`,
+        )
+      }
+      const conflictingExistingAlias = (existingAliases.get(aliasKey) ?? []).find(
+        (product) => product.product_id !== productId,
+      )
+      if (conflictingExistingAlias) {
+        throw new Error(
+          `Reviewed alternate identifier ${alias} is already an alias on ${conflictingExistingAlias.product_id}.`,
+        )
+      }
+    }
+
+    const gtin = normalizeSourceCompletenessIdentifier(definition.gtin)
+    if (gtin) {
+      const conflictingExistingGtin = (existingGtins.get(gtin) ?? []).find(
+        (product) => product.product_id !== productId,
+      )
+      if (conflictingExistingGtin) {
+        throw new Error(
+          `Reviewed GTIN ${definition.gtin} already belongs to ${conflictingExistingGtin.product_id}.`,
+        )
+      }
+    }
+  }
+}
+
+function productIdFor(manufacturer: string, catalogNumber: string): string {
+  return stableId('PRD', `${manufacturer}|${catalogNumber}`)
+}
+
+function sourceRecord(): AdditionRecord[] {
+  return SOURCE_COMPLETENESS_REVIEW.sources.map((source) => ({
+    source_id: source.sourceId,
+    title: source.title,
+    filename: source.filename,
+    source_type: source.sourceType,
+    publisher: source.publisher,
+    revision_date: source.revisionDate,
+    as_of_date: source.asOfDate,
+    reliability_tier: source.reliabilityTier,
+    use_policy: source.usePolicy,
+    notes:
+      [source.notes, source.officialUrl ? `Official URL: ${source.officialUrl}` : null]
+        .filter(Boolean)
+        .join(' ') || null,
+  }))
+}
+
+function verifyExistingMatch(
+  match: ExistingSourceCompletenessMatch,
+  existingById: Map<string, ExistingProductIdentity>,
+): void {
+  const existing = existingById.get(match.productId)
+  if (!existing) {
+    throw new Error(
+      `Source-completeness existing match ${match.catalogNumber} is missing product ${match.productId}.`,
+    )
+  }
+  if (existing.manufacturer_id !== match.manufacturerId) {
+    throw new Error(
+      `Source-completeness existing match ${match.catalogNumber} changed manufacturer identity.`,
+    )
+  }
+  if (
+    normalizeSourceCompletenessIdentifier(existing.catalog_number) !==
+    normalizeSourceCompletenessIdentifier(match.catalogNumber)
+  ) {
+    throw new Error(
+      `Source-completeness existing match ${match.productId} no longer has catalog number ${match.catalogNumber}.`,
+    )
+  }
+  if (
+    !splitAlternateIds(existing.alternate_ids).includes(
+      normalizeSourceCompletenessIdentifier(match.alternateId),
+    )
+  ) {
+    throw new Error(
+      `Source-completeness existing match ${match.catalogNumber} no longer carries alternate identifier ${match.alternateId}.`,
+    )
+  }
+}
+
+/**
+ * Build the bounded source-first additions from the reviewed data file.
+ *
+ * The function fails closed on exact catalog, alias, GTIN, manufacturer, and deterministic-ID
+ * collisions. A row generated by an earlier run is the only accepted existing exact match.
+ */
+export function buildSourceCompletenessAdditions(options: {
+  existingProducts: ExistingProductIdentity[]
+  existingManufacturers: ExistingManufacturerIdentity[]
+  existingSources: ExistingSourceIdentity[]
+}): SourceCompletenessAdditionsResult {
+  const definitions = expandSourceCompletenessProducts()
+  const expectedProducts = sourceCompletenessCount('new_exact_products')
+  if (definitions.length !== expectedProducts) {
+    throw new Error(
+      `Expected exactly ${expectedProducts} reviewed source-completeness additions; found ${definitions.length}.`,
+    )
+  }
+  validateSourceCompletenessIdentities(definitions, options.existingProducts)
+
+  const warnings: string[] = []
+  const products: AdditionRecord[] = []
+  const productRoles: AdditionRecord[] = []
+  const productSources: AdditionRecord[] = []
+  const existingById = new Map(
+    options.existingProducts.map((product) => [product.product_id, product]),
+  )
+  const existingIdentity = new Map<string, ExistingProductIdentity>()
+  const existingAlias = new Map<string, ExistingProductIdentity[]>()
+  const existingGtin = new Map<string, ExistingProductIdentity>()
+
+  const indexProduct = (product: ExistingProductIdentity) => {
+    if (product.manufacturer_id) {
+      const catalog = normalizeSourceCompletenessIdentifier(product.catalog_number)
+      if (catalog) existingIdentity.set(`${product.manufacturer_id}\u0000${catalog}`, product)
+      for (const alias of splitAlternateIds(product.alternate_ids)) {
+        const key = `${product.manufacturer_id}\u0000${alias}`
+        existingAlias.set(key, [...(existingAlias.get(key) ?? []), product])
+      }
+    }
+    const gtin = normalizeSourceCompletenessIdentifier(product.gtin)
+    if (gtin) existingGtin.set(gtin, product)
+  }
+  options.existingProducts.forEach(indexProduct)
+
+  const manufacturerById = new Map(
+    options.existingManufacturers.map((manufacturer) => [
+      manufacturer.manufacturer_id,
+      manufacturer.manufacturer,
+    ]),
+  )
+  const manufacturerByName = new Map(
+    options.existingManufacturers.map((manufacturer) => [
+      manufacturer.manufacturer.trim().toLowerCase(),
+      manufacturer.manufacturer_id,
+    ]),
+  )
+  for (const manufacturer of SOURCE_COMPLETENESS_REVIEW.manufacturers) {
+    const id = String(manufacturer.manufacturer_id)
+    const name = String(manufacturer.manufacturer)
+    if (id !== stableId('MFR', name)) {
+      throw new Error(`Reviewed manufacturer ${name} pins non-deterministic id ${id}.`)
+    }
+    const existingName = manufacturerById.get(id)
+    if (existingName && existingName !== name) {
+      throw new Error(`Manufacturer id ${id} collides with existing manufacturer ${existingName}.`)
+    }
+    const existingId = manufacturerByName.get(name.trim().toLowerCase())
+    if (existingId && existingId !== id) {
+      throw new Error(`Manufacturer ${name} already exists under ${existingId}, not ${id}.`)
+    }
+  }
+
+  const sourceById = new Map(
+    options.existingSources.map((source) => [source.source_id, source.title]),
+  )
+  for (const source of SOURCE_COMPLETENESS_REVIEW.sources) {
+    const existingTitle = sourceById.get(source.sourceId)
+    if (existingTitle && existingTitle !== source.title) {
+      throw new Error(
+        `Source id ${source.sourceId} collides with existing source ${existingTitle}.`,
+      )
+    }
+  }
+
+  const emittedIds = new Set<string>()
+  const emittedIdentities = new Set<string>()
+  const emittedGtins = new Set<string>()
+  for (const definition of definitions) {
+    if (definition.evidence.length === 0) {
+      throw new Error(`Source-completeness addition ${definition.catalogNumber} has no evidence.`)
+    }
+    const productId = productIdFor(definition.manufacturer, definition.catalogNumber)
+    if (definition.productId && definition.productId !== productId) {
+      throw new Error(
+        `Source-completeness addition ${definition.catalogNumber} pins ${definition.productId}, but its deterministic id is ${productId}.`,
+      )
+    }
+    const catalog = normalizeSourceCompletenessIdentifier(definition.catalogNumber)
+    const identity = `${definition.manufacturerId}\u0000${catalog}`
+    if (emittedIds.has(productId) || emittedIdentities.has(identity)) {
+      throw new Error(
+        `Duplicate reviewed addition ${definition.manufacturer} ${definition.catalogNumber}.`,
+      )
+    }
+    emittedIds.add(productId)
+    emittedIdentities.add(identity)
+
+    const exact = existingIdentity.get(identity)
+    if (exact && exact.product_id !== productId) {
+      throw new Error(
+        `Reviewed addition ${definition.manufacturer} ${definition.catalogNumber} collides with existing ${exact.product_id}.`,
+      )
+    }
+    const aliasMatches = existingAlias.get(identity) ?? []
+    const foreignAliasMatch = aliasMatches.find((candidate) => candidate.product_id !== productId)
+    if (foreignAliasMatch) {
+      throw new Error(
+        `Reviewed catalog number ${definition.catalogNumber} is already an alias on ${foreignAliasMatch.product_id}.`,
+      )
+    }
+    const gtin = normalizeSourceCompletenessIdentifier(definition.gtin)
+    if (gtin) {
+      if (emittedGtins.has(gtin)) {
+        throw new Error(`Duplicate reviewed GTIN ${definition.gtin}.`)
+      }
+      emittedGtins.add(gtin)
+      const gtinMatch = existingGtin.get(gtin)
+      if (gtinMatch && gtinMatch.product_id !== productId) {
+        throw new Error(
+          `Reviewed GTIN ${definition.gtin} already belongs to ${gtinMatch.product_id}.`,
+        )
+      }
+    }
+
+    const primaryEvidence = definition.evidence[0]
+    products.push({
+      product_id: productId,
+      manufacturer_id: definition.manufacturerId,
+      manufacturer: definition.manufacturer,
+      distributor: definition.distributor,
+      brand_family: definition.brandFamily,
+      product_name: definition.productName,
+      catalog_number: definition.catalogNumber,
+      alternate_ids: definition.alternateIds ?? null,
+      gtin: definition.gtin ?? null,
+      primary_category: definition.primaryCategory,
+      subcategory: definition.subcategory,
+      product_kind: definition.productKind,
+      reuse_status: definition.reuseStatus ?? null,
+      sterile_status: definition.sterileStatus ?? null,
+      implantable: definition.implantable ?? false,
+      material: definition.material ?? null,
+      coverage: null,
+      laser_type: null,
+      placement_method: null,
+      size_display: definition.sizeDisplay ?? null,
+      diameter_mm: definition.diameterMm ?? null,
+      length_mm: definition.lengthMm ?? null,
+      french_size: null,
+      gauge: definition.gauge ?? null,
+      working_length_cm: definition.workingLengthCm ?? null,
+      min_working_channel_mm: definition.minWorkingChannelMm ?? null,
+      delivery_system_od_mm: null,
+      package_uom: definition.packageUom ?? null,
+      adult_peds: definition.adultPeds ?? null,
+      description: definition.description,
+      compatibility_text: definition.compatibilityText ?? null,
+      verification_status:
+        'Verified - exact identity reconciled from reviewed manufacturer/FDA evidence; current U.S. orderability unverified',
+      live_dropdown_status: 'Hidden - current U.S. status and local orderability unverified',
+      primary_source_id: primaryEvidence.sourceId,
+      primary_source_location: primaryEvidence.sourceLocation,
+      source_as_of: '2026-08-20',
+      availability_note:
+        'Current U.S. distribution and local orderability were not established in this bounded intake; confirm with the manufacturer and local supply chain.',
+      notes: definition.notes ?? null,
+      spec_json: definition.specJson ?? null,
+      global_part_number: definition.globalPartNumber ?? null,
+      reference_part_number: definition.referencePartNumber ?? null,
+      gtin_raw: definition.gtin ?? null,
+      spec_json_raw: null,
+      visibility_state: 'hidden',
+      verification_grade: 'verified_source',
+    })
+
+    if (definition.roleCode) {
+      productRoles.push({
+        product_id: productId,
+        role_code: definition.roleCode,
+        role_fit: definition.roleFit ?? 'Primary',
+        notes: definition.roleNotes ?? null,
+      })
+    }
+    for (const evidence of definition.evidence) {
+      productSources.push({
+        product_id: productId,
+        source_id: evidence.sourceId,
+        source_location: evidence.sourceLocation,
+        claim_type: evidence.claimType ?? 'Exact product identity',
+        verification_status: 'Verified in the reviewed source-completeness intake',
+        notes: evidence.notes ?? null,
+      })
+    }
+
+    indexProduct({
+      product_id: productId,
+      manufacturer_id: definition.manufacturerId,
+      manufacturer: definition.manufacturer,
+      catalog_number: definition.catalogNumber,
+      alternate_ids: definition.alternateIds ?? null,
+      gtin: definition.gtin ?? null,
+    })
+  }
+
+  for (const match of SOURCE_COMPLETENESS_REVIEW.existing_matches) {
+    verifyExistingMatch(match, existingById)
+    for (const evidence of match.evidence) {
+      productSources.push({
+        product_id: match.productId,
+        source_id: evidence.sourceId,
+        source_location: evidence.sourceLocation,
+        claim_type: evidence.claimType ?? 'Exact product identity and alternate identifier',
+        verification_status: 'Existing canonical product reconciled against owner-supplied source',
+        notes: match.matchBasis,
+      })
+    }
+  }
+
+  const expectedRoles = sourceCompletenessCount('product_roles')
+  if (productRoles.length !== expectedRoles) {
+    throw new Error(
+      `Expected ${expectedRoles} restrained role assignments; found ${productRoles.length}.`,
+    )
+  }
+  const expectedSourceRelationships = sourceCompletenessCount('product_source_relationships')
+  if (productSources.length !== expectedSourceRelationships) {
+    throw new Error(
+      `Expected ${expectedSourceRelationships} source relationships; found ${productSources.length}.`,
+    )
+  }
+
+  return {
+    manufacturers: SOURCE_COMPLETENESS_REVIEW.manufacturers,
+    sources: sourceRecord(),
+    products,
+    productRoles,
+    productSources,
+    warnings,
+  }
+}

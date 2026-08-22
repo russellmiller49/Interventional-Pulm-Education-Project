@@ -4,55 +4,72 @@
   "method_version": "d2c-taxonomy-v1",
   "source_rules": {
     "path": "data/ip-device-intelligence/reviewed/product-taxonomy-rules.json",
-    "sha256": "3512256bafe53a16f13679b463264069e37fb834f91c1c2327321a9c4de64680"
+    "sha256": "ac047174ca70cf4d363485f7870bc927a96697bc1bd69a10c9b40ed204df74e9"
   },
   "row_scope": "atlas_cohort_verified_source_minus_owner_exclusions",
   "counts": {
-    "rows": 1728,
+    "rows": 1957,
     "device_class": {
-      "accessory": 153,
-      "airway_stent": 233,
-      "balloon_dilation": 25,
-      "bronchoscope": 155,
+      "accessory": 157,
+      "airway_stent": 374,
+      "balloon_dilation": 34,
+      "bronchoscope": 165,
       "catheter_sheath": 9,
-      "console_capital": 32,
-      "cryotherapy": 18,
+      "console_capital": 34,
+      "cryotherapy": 21,
       "cytology_brush": 18,
       "delivery_applicator": 1,
       "electrosurgical": 108,
       "endoscopic_telescope": 53,
-      "forceps_instrument": 197,
+      "forceps_instrument": 198,
       "guidewire": 6,
       "implant_delivery": 10,
       "laser_system": 6,
       "navigation_system": 28,
-      "needle": 48,
-      "other_needs_review": 5,
-      "pleural_drainage": 302,
-      "powered_shaver": 8,
+      "needle": 50,
+      "other_needs_review": 21,
+      "pleural_drainage": 313,
+      "powered_shaver": 17,
       "reprocessing": 33,
       "retrieval_basket": 5,
       "sizing_measuring": 5,
       "specimen_collection": 7,
       "suction_irrigation": 47,
       "therapeutic_agent": 4,
-      "tracheostomy_tube": 136,
+      "tracheostomy_tube": 157,
       "trocar_access": 24,
       "ultrasound_device": 35,
       "valve_occluder": 17
     },
     "taxonomy_confidence": {
-      "high": 1594,
-      "moderate": 128,
-      "needs_review": 6
+      "high": 1803,
+      "moderate": 132,
+      "needs_review": 22
     },
-    "needs_review": 6,
+    "needs_review": 22,
     "classification_basis": {
       "name_rule": 72,
-      "pair_rule": 1656
+      "pair_rule": 1884,
+      "unmatched_fallback": 1
     }
   },
   "rows": [
+    {
+      "product_id": "PRD-003C4641E6",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "unmatched_fallback"
+    },
+    {
+      "product_id": "PRD-00910661BA",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
     {
       "product_id": "PRD-00C13A59AA",
       "device_class_code": "bronchoscope",
@@ -97,6 +114,14 @@
       "product_id": "PRD-019030A1C7",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-019F07860E",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -185,6 +210,14 @@
       "product_id": "PRD-02BE5F7D32",
       "device_class_code": "guidewire",
       "device_subtype_code": "pulmonary_guidewire",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-02DE06B9C9",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -326,6 +359,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-053D7E2071",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-05670F1B5F",
       "device_class_code": "cryotherapy",
       "device_subtype_code": "flexible_cryoprobe",
@@ -458,6 +499,14 @@
       "device_class_code": "catheter_sheath",
       "device_subtype_code": "guide_sheath_kit",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-07A1B4DA10",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -638,6 +687,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0A90C0B244",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0A93A5E8C4",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_generator",
@@ -659,6 +716,14 @@
       "device_subtype_code": "electrosurgical_cable",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0B0CC1045A",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -790,6 +855,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0D28E189BE",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0D2C2802C8",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -849,6 +922,14 @@
       "product_id": "PRD-0DE5F7D9EF",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-0E06448C6B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -974,6 +1055,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-0FD8BE79BA",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-0FDB2829E5",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
@@ -1092,6 +1181,14 @@
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-1177EAE01C",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-119A0435F9",
@@ -1230,6 +1327,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-131661EB7C",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1339050168",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -1249,6 +1354,14 @@
       "product_id": "PRD-13CE349B91",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_insertion_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-13D5B75D62",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1398,6 +1511,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-16087EF21E",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-16096E045B",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "single_use_video_bronchoscope",
@@ -1446,6 +1567,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1732BD35FF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-176442701B",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -1489,6 +1618,14 @@
       "product_id": "PRD-17F91285B0",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-181DE98372",
+      "device_class_code": "console_capital",
+      "device_subtype_code": "video_processor",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1550,9 +1687,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-18D0D3090E",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-18D62EB4E8",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-18DFC39794",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1686,6 +1839,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1A55FCEC7E",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1B17AB9452",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
@@ -1702,9 +1863,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1B6B236545",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1B787D066C",
       "device_class_code": "guidewire",
       "device_subtype_code": "pulmonary_guidewire",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1B7B4B9C6A",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1761,6 +1938,14 @@
       "product_id": "PRD-1C81CBF06E",
       "device_class_code": "powered_shaver",
       "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1C9FDC1255",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -1902,6 +2087,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1ED27ADA45",
+      "device_class_code": "needle",
+      "device_subtype_code": "ebus_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1EEDD71C53",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -1966,9 +2159,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-1FD99C1C80",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-1FE403B84C",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-1FF342CE0D",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2001,6 +2210,14 @@
       "product_id": "PRD-207F57235E",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "gas_supply_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2098582C05",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2078,9 +2295,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-21E82DCB13",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-21F6CB5BAC",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "flexible_apc_probe",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-22140843C5",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2158,6 +2391,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-232789C6C1",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-234CBAADF6",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -2177,6 +2418,14 @@
       "product_id": "PRD-237B24FE49",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_partially_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-23BB8EAB48",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2209,6 +2458,14 @@
       "product_id": "PRD-23EF6EF461",
       "device_class_code": "reprocessing",
       "device_subtype_code": "reprocessor_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2414844270",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2294,6 +2551,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-25412B4F20",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-25415AA480",
       "device_class_code": "needle",
       "device_subtype_code": "peripheral_tbna_needle",
@@ -2345,6 +2610,14 @@
       "product_id": "PRD-2616E505ED",
       "device_class_code": "reprocessing",
       "device_subtype_code": "cleaning_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2632FFBF07",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2438,6 +2711,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-276127E04A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-277D52B6BC",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "rigid_suction_catheter",
@@ -2473,6 +2754,14 @@
       "product_id": "PRD-27BF9F087E",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-27F927260E",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2638,9 +2927,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2AF0108F60",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2B0E9C0AA9",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2B4FD782FC",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2718,6 +3023,14 @@
       "classification_basis": "name_rule"
     },
     {
+      "product_id": "PRD-2C1F1ABA62",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2C1F40E815",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
@@ -2769,6 +3082,22 @@
       "product_id": "PRD-2CCE54EDFD",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_uncovered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2CD37C1E67",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2CED104B04",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2849,6 +3178,14 @@
       "product_id": "PRD-2DC22218B3",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-2DDE688499",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -2974,6 +3311,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-2FA3F3A0DD",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-2FACCCFC02",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
@@ -3078,6 +3423,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-30FF74237D",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3119D76B4D",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
@@ -3126,6 +3479,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-318DD7F80F",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-320FF77256",
       "device_class_code": "other_needs_review",
       "device_subtype_code": "unclassified_device",
@@ -3159,6 +3520,14 @@
     },
     {
       "product_id": "PRD-32BD35D821",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-32BF963169",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_hourglass_stent",
       "taxonomy_confidence": "high",
@@ -3241,6 +3610,22 @@
       "product_id": "PRD-345BB869C9",
       "device_class_code": "needle",
       "device_subtype_code": "peripheral_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3463CE8678",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-347CF3D4E6",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3342,9 +3727,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-364F11177A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-365451442E",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-366B39FF6B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3398,6 +3799,30 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-37749355A5",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-378597DD7A",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-38079F20BD",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-386D5501C9",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_bronchoscopy_accessory",
@@ -3438,7 +3863,23 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-39295A9759",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-394135E376",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-39573A2536",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
@@ -3449,6 +3890,14 @@
       "product_id": "PRD-39777E7C38",
       "device_class_code": "needle",
       "device_subtype_code": "peripheral_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3986FCB7FE",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3470,6 +3919,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-39C1BDB306",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-39EB1A695C",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -3481,6 +3938,14 @@
       "product_id": "PRD-3A10924AF9",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3A150854E1",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3526,6 +3991,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-3A88D5EB25",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3AA4C645B9",
       "device_class_code": "specimen_collection",
       "device_subtype_code": "specimen_container",
@@ -3545,6 +4018,14 @@
       "product_id": "PRD-3B31BB90C8",
       "device_class_code": "valve_occluder",
       "device_subtype_code": "endobronchial_spigot",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3B47B1AB00",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3622,6 +4103,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-3D5D1B81EF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-3D8AEACE11",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_partially_covered",
@@ -3641,6 +4130,30 @@
       "product_id": "PRD-3DCAE65A42",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3E1556EBE5",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3E26A24907",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-3E8090F385",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3710,6 +4223,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4055F48A03",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4073AAF637",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
@@ -3737,6 +4258,14 @@
       "product_id": "PRD-4098113030",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-40A16220EC",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -3801,6 +4330,14 @@
       "product_id": "PRD-41BE0FC18C",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-41C846CC8F",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4070,9 +4607,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-463BA2D412",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-46ADECAA71",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-46C823F8EC",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4206,6 +4759,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-48F43B9C6A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-49256F1DC6",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -4220,6 +4781,14 @@
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "name_rule"
+    },
+    {
+      "product_id": "PRD-499E95E8F0",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
     },
     {
       "product_id": "PRD-49C658BF52",
@@ -4398,6 +4967,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4C7DAEBAE7",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4CC32EE889",
       "device_class_code": "valve_occluder",
       "device_subtype_code": "valve_procedure_kit",
@@ -4470,6 +5047,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4E7880DB69",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4E9069C30F",
       "device_class_code": "retrieval_basket",
       "device_subtype_code": "foreign_body_retrieval_basket",
@@ -4481,6 +5066,14 @@
       "product_id": "PRD-4E9412A49F",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "flexible_apc_probe",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-4EB1471E00",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4526,6 +5119,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-4F290FD9D3",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-4F4AA966A9",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -4537,6 +5138,14 @@
       "product_id": "PRD-4F64240AD0",
       "device_class_code": "trocar_access",
       "device_subtype_code": "thoracoscopy_trocar",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-4F72B750FD",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4654,6 +5263,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-520C940CFE",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-523148A737",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_tracheoscope",
@@ -4665,6 +5282,14 @@
       "product_id": "PRD-526F08F11A",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "suction_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-529643988C",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4686,9 +5311,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-52D3317209",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-52E905C321",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-52F1053FEF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4838,6 +5479,30 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-557DD115A0",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5592532651",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5599EE7DDE",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-559ABA4333",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_accessory",
@@ -4857,6 +5522,14 @@
       "product_id": "PRD-55DAFF2A37",
       "device_class_code": "needle",
       "device_subtype_code": "peripheral_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-55E04E6B4A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -4906,6 +5579,14 @@
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-56C6C135B4",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -5025,6 +5706,22 @@
       "product_id": "PRD-5831011F6E",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5835D2C88F",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-58CCB8208E",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5206,6 +5903,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5AC73F2FA3",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5ACC570E45",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
@@ -5366,6 +6071,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5CF4F1857F",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5D09EFABDD",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_y_shaped",
@@ -5486,6 +6199,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-5F208B3FCD",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-5F801B5A8E",
       "device_class_code": "guidewire",
       "device_subtype_code": "super_stiff_guidewire",
@@ -5513,6 +6234,14 @@
       "product_id": "PRD-5FEA4F31EA",
       "device_class_code": "console_capital",
       "device_subtype_code": "collateral_ventilation_console",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-5FFC64ACE1",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -5590,11 +6319,27 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-61727E3C96",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-61915862CE",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "balloon_inflation_device",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-61930EA6FF",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -5649,6 +6394,14 @@
       "product_id": "PRD-629828B799",
       "device_class_code": "ultrasound_device",
       "device_subtype_code": "pocus_system",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-629D420930",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6022,6 +6775,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-69E6517714",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6A108CCC84",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -6174,6 +6935,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6B83734A5B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6BA107A313",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
@@ -6238,6 +7007,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6C3C818624",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6C99AA9B16",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
@@ -6294,6 +7071,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6D61D60C38",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6D6815FAE1",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -6321,6 +7106,14 @@
       "product_id": "PRD-6D7A0E9DA8",
       "device_class_code": "catheter_sheath",
       "device_subtype_code": "guide_sheath_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6D82EFD1D2",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6406,6 +7199,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-6F15A8C9B5",
+      "device_class_code": "console_capital",
+      "device_subtype_code": "video_processor",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-6F32150552",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
@@ -6425,6 +7226,14 @@
       "product_id": "PRD-6F64134373",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-6F78474D2A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6670,6 +7479,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-73A1532E08",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-73BBBA8747",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
@@ -6697,6 +7514,14 @@
       "product_id": "PRD-7435E842E8",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7445BA4E0F",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -6822,6 +7647,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-75D987903F",
+      "device_class_code": "cryotherapy",
+      "device_subtype_code": "cryotherapy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-75E555BC77",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
@@ -6918,6 +7751,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-774F5269E2",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7793F60F05",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-77C1FEFC4F",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "ipc_drainage_supply",
@@ -6953,6 +7802,14 @@
       "product_id": "PRD-781389ABFE",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-78176D6C9C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7054,6 +7911,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7ACB0B07FD",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7ACD240A5C",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7B30A285F1",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "modular_forceps_component",
@@ -7073,6 +7946,14 @@
       "product_id": "PRD-7B69AB81B4",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7B8C092373",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7166,6 +8047,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7C9F7DB2C9",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7CAB35AC24",
       "device_class_code": "accessory",
       "device_subtype_code": "vacuum_syringe",
@@ -7214,6 +8103,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7DA2AA3A9A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7DA7AF0CE9",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -7246,6 +8143,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-7DFA867CB6",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-7E05B194BE",
       "device_class_code": "console_capital",
       "device_subtype_code": "video_processor",
@@ -7257,6 +8162,14 @@
       "product_id": "PRD-7E17F5F17E",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7E4E2B9FDC",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7329,6 +8242,14 @@
       "product_id": "PRD-7FBD6FB1A3",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-7FEF1C2544",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7417,6 +8338,22 @@
       "product_id": "PRD-815DC29EF1",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-81640EACFF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-81878EEA9B",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7518,9 +8455,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-834C88FA6C",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-83A71310E6",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "robotic_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-83ABCBA52B",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7558,6 +8511,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-844FB6A5E1",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8474F25510",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -7577,6 +8538,14 @@
       "product_id": "PRD-848FD7C902",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "pneumothorax_aspiration_set",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-84E9A6010C",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -7630,10 +8599,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-85B355AE93",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-85E1F8359A",
       "device_class_code": "reprocessing",
       "device_subtype_code": "cleaning_adapter",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-85F4300C8B",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -7683,6 +8668,14 @@
       "device_subtype_code": "rigid_forceps",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-86B4C57E4C",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -7942,6 +8935,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8B7BA0C7A5",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8B87F7D42B",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
@@ -7961,6 +8962,22 @@
       "product_id": "PRD-8C032DCD3A",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8C0A788C05",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-8C43D4DD1B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8102,6 +9119,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-8EEB25CE00",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-8F25A1FB01",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -8142,9 +9167,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-90327D4D73",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-904D5B29E4",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_uncovered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-908A9B501B",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8177,6 +9218,22 @@
       "product_id": "PRD-9143E639BA",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "percutaneous_drainage_kit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9163FB693E",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_handpiece",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9167283C52",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8230,6 +9287,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-9227711C8C",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-924AFC41F8",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -8241,6 +9306,14 @@
       "product_id": "PRD-925F0C99C6",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "chest_drainage_unit",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-92A8739CF4",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8398,6 +9471,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-9529C72074",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-952A7B928E",
       "device_class_code": "suction_irrigation",
       "device_subtype_code": "flexible_suction_catheter",
@@ -8409,6 +9490,14 @@
       "product_id": "PRD-95ADE8F814",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-961C4B6422",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8441,6 +9530,14 @@
       "product_id": "PRD-973BDAB586",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-973D3F9656",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8502,6 +9599,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-9891102F8B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-98EB75029F",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -8537,6 +9642,14 @@
       "product_id": "PRD-99532BAC7D",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-999435B5F2",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8774,9 +9887,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-9E45614EB7",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-9E6034F109",
       "device_class_code": "balloon_dilation",
       "device_subtype_code": "airway_balloon_dilator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9E686BEC27",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8814,6 +9943,22 @@
       "classification_basis": "name_rule"
     },
     {
+      "product_id": "PRD-9ED4F80417",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9EE9380618",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-9EECE0EDB1",
       "device_class_code": "accessory",
       "device_subtype_code": "platform_accessory",
@@ -8833,6 +9978,22 @@
       "product_id": "PRD-9F5BAD2641",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9F6664E553",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-9F6EC5CD84",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8894,9 +10055,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-A0655BF464",
+      "device_class_code": "forceps_instrument",
+      "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-A108804498",
       "device_class_code": "laser_system",
       "device_subtype_code": "laser_console",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A11D1CECF1",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -8953,6 +10130,14 @@
       "product_id": "PRD-A201D9E5BE",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A2209933C6",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9041,6 +10226,14 @@
       "product_id": "PRD-A3461153FD",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-A3852DB56A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9374,6 +10567,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AA2895A2EB",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AA29300E40",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -9406,6 +10607,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AAB08BB8EE",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AACAFBB1E3",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
@@ -9418,6 +10627,14 @@
       "device_class_code": "console_capital",
       "device_subtype_code": "co2_insufflator",
       "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AAECD27F75",
+      "device_class_code": "accessory",
+      "device_subtype_code": "platform_accessory",
+      "taxonomy_confidence": "moderate",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -9454,6 +10671,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AB6FAE841E",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-ABB6EC1153",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
@@ -9465,6 +10690,14 @@
       "product_id": "PRD-AC1E0D8CCC",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AC45D3E510",
+      "device_class_code": "needle",
+      "device_subtype_code": "ebus_tbna_needle",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9535,6 +10768,14 @@
     },
     {
       "product_id": "PRD-ACF77D4FD4",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AD18CD2649",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
@@ -9614,6 +10855,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AE4F2E3EBE",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AE6E72214D",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "navigation_cytology_brush",
@@ -9626,6 +10875,14 @@
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AED3720BF6",
+      "device_class_code": "cryotherapy",
+      "device_subtype_code": "flexible_cryoprobe",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -9670,6 +10927,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AF93E14891",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-AF93E56FE5",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -9686,11 +10951,35 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-AFBD510BCF",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-AFF9BDD685",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B027947191",
       "device_class_code": "other_needs_review",
       "device_subtype_code": "unclassified_device",
       "taxonomy_confidence": "needs_review",
       "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B02CF0A059",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
       "classification_basis": "pair_rule"
     },
     {
@@ -9729,6 +11018,14 @@
       "product_id": "PRD-B091070F8D",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B0A5A793EA",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9782,9 +11079,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B2522D8768",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B258E8E859",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B29FAADB4A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -9817,6 +11130,14 @@
       "product_id": "PRD-B2DAC54DE1",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_bronchoscopy_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B2F1DA2473",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10030,6 +11351,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-B69245D8EF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-B6A919EF32",
       "device_class_code": "endoscopic_telescope",
       "device_subtype_code": "thoracoscopy_telescope",
@@ -10075,6 +11404,14 @@
       "device_subtype_code": "bronchofiberscope",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-B76AF3D731",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -10206,9 +11543,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-BA2729925D",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-BA677F5907",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BA71A30B4A",
+      "device_class_code": "balloon_dilation",
+      "device_subtype_code": "airway_balloon_dilator",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10265,6 +11618,14 @@
       "product_id": "PRD-BADEC639F4",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BB020047FF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10358,6 +11719,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-BC2856A7CB",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-BC55573969",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
@@ -10417,6 +11786,14 @@
       "product_id": "PRD-BD43B26C4B",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffless_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BD52DE1395",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -10502,6 +11879,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-BE7AE1B706",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BE8B4A277C",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-BEB189750B",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
@@ -10538,6 +11931,14 @@
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-BFBEBBCA02",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -10862,6 +12263,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-C5D7A147AD",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-C61336D16B",
       "device_class_code": "other_needs_review",
       "device_subtype_code": "unclassified_device",
@@ -11057,6 +12466,14 @@
       "product_id": "PRD-C919655C5F",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-C92DE7A290",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11262,6 +12679,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-CD3E9E65EF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-CD8F96B3C5",
       "device_class_code": "valve_occluder",
       "device_subtype_code": "endobronchial_valve",
@@ -11278,9 +12703,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-CDD970B82B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-CE081B3A72",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-CE0D740AA5",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11294,9 +12735,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-CE40BBC605",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-CE5DCA0D3A",
       "device_class_code": "console_capital",
       "device_subtype_code": "endoscopy_workstation",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-CE6BAAD222",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-CEF84007CF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11342,6 +12807,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D060A8BE6C",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "thoracic_catheter",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D063F090C6",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
@@ -11382,9 +12855,33 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D0F1748B0D",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D112B2C52A",
       "device_class_code": "valve_occluder",
       "device_subtype_code": "endobronchial_valve",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D13A7A8211",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D141CFA4EF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_hourglass_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11526,6 +13023,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D3FFC7F061",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D40CA802F4",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -11566,10 +13071,26 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D4CC0EF49E",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D4EABEA7CA",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D51CBB0DEE",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -11590,6 +13111,22 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D55094A08A",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D5621CD59E",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D5706A45F2",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -11601,6 +13138,14 @@
       "product_id": "PRD-D58A0A54AA",
       "device_class_code": "powered_shaver",
       "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D59133B2EE",
+      "device_class_code": "pleural_drainage",
+      "device_subtype_code": "pleural_drainage_accessory",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11718,6 +13263,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-D73935B1E8",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-D7472146DC",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
@@ -11745,6 +13298,14 @@
       "product_id": "PRD-D771E6D06A",
       "device_class_code": "reprocessing",
       "device_subtype_code": "cleaning_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D7858C62B6",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11793,6 +13354,14 @@
       "product_id": "PRD-D85D52F0CD",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-D8651BEFDB",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -11910,6 +13479,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DADEAB2B83",
+      "device_class_code": "bronchoscope",
+      "device_subtype_code": "single_use_video_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DB022C1FE8",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
@@ -11958,6 +13535,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DB9A48291E",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DBC74C33F6",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "subglottic_suction_tracheostomy_tube",
@@ -11967,6 +13552,22 @@
     },
     {
       "product_id": "PRD-DBCBF4AF27",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DBEAA70E14",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DBEEFE82FF",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
@@ -12038,6 +13639,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DCE2445A69",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DCEE87A7A4",
       "device_class_code": "tracheostomy_tube",
       "device_subtype_code": "subglottic_suction_tracheostomy_tube",
@@ -12054,9 +13663,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-DCF8F46465",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-DD1F7503DE",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DD508FDC2F",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -12201,6 +13826,14 @@
       "product_id": "PRD-DFBA1DB7E3",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "optical_rigid_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-DFCDE71429",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -12358,6 +13991,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-E23034FC46",
+      "device_class_code": "powered_shaver",
+      "device_subtype_code": "shaver_instrument",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-E27A6FA17A",
       "device_class_code": "electrosurgical",
       "device_subtype_code": "electrosurgical_cable",
@@ -12425,6 +14066,14 @@
       "product_id": "PRD-E393622AEC",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_tbna_needle",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-E3B4B4DAA7",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -12526,6 +14175,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-E5E73685E9",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_y_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-E60B906F69",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracic_catheter",
@@ -12569,6 +14226,14 @@
       "product_id": "PRD-E7724A6977",
       "device_class_code": "cytology_brush",
       "device_subtype_code": "pulmonary_cytology_brush",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-E7A617F05F",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -12678,6 +14343,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-E9E6ABA91B",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-E9EF90BF33",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "reusable_video_bronchoscope",
@@ -12782,6 +14455,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-EB403F5C97",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-EB513BCB63",
       "device_class_code": "needle",
       "device_subtype_code": "ebus_fnb_needle",
@@ -12833,6 +14514,14 @@
       "product_id": "PRD-EC36176EAA",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "flexible_biopsy_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-EC39DE72EA",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -12918,6 +14607,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-ED8351E635",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-ED98C24F0E",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "rigid_forceps",
@@ -12977,6 +14674,14 @@
       "product_id": "PRD-EF8D01CBAD",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "rigid_bronchoscope",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-EFCF0B85F5",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -13102,6 +14807,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F1B8B5D639",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F1BAA98154",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
@@ -13129,6 +14842,14 @@
       "product_id": "PRD-F227995333",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F22D94D3A5",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffed_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -13167,6 +14888,14 @@
     },
     {
       "product_id": "PRD-F2F9633FBF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F30F9B6B87",
       "device_class_code": "airway_stent",
       "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
@@ -13246,6 +14975,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F4AE2A74E6",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F4B03B6DFA",
       "device_class_code": "accessory",
       "device_subtype_code": "rigid_scope_component",
@@ -13318,6 +15055,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F56B9B1935",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F586C51621",
       "device_class_code": "bronchoscope",
       "device_subtype_code": "ebus_bronchoscope",
@@ -13361,6 +15106,14 @@
       "product_id": "PRD-F60DA91352",
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "foreign_body_grasping_forceps",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F6120153F0",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -13414,9 +15167,25 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F76492101A",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F765071278",
       "device_class_code": "implant_delivery",
       "device_subtype_code": "stent_applicator",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F77790BA96",
+      "device_class_code": "tracheostomy_tube",
+      "device_subtype_code": "cuffless_tracheostomy_tube",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -13518,6 +15287,14 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-F93B7FF984",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-F946AD81F2",
       "device_class_code": "catheter_sheath",
       "device_subtype_code": "collateral_ventilation_catheter",
@@ -13554,6 +15331,14 @@
       "device_class_code": "forceps_instrument",
       "device_subtype_code": "flexible_biopsy_forceps",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-F9BA60E9A6",
+      "device_class_code": "cryotherapy",
+      "device_subtype_code": "flexible_cryoprobe",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     },
@@ -13601,6 +15386,14 @@
       "product_id": "PRD-FA59BE320F",
       "device_class_code": "airway_stent",
       "device_subtype_code": "sems_fully_covered",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FA89A93009",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -13689,6 +15482,22 @@
       "product_id": "PRD-FC1DF08B67",
       "device_class_code": "navigation_system",
       "device_subtype_code": "navigation_accessory",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FC4E977BDF",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FC9576E2DA",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
       "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
@@ -13846,11 +15655,27 @@
       "classification_basis": "pair_rule"
     },
     {
+      "product_id": "PRD-FEBD25B6DC",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
       "product_id": "PRD-FEBFE797DD",
       "device_class_code": "pleural_drainage",
       "device_subtype_code": "thoracentesis_set",
       "taxonomy_confidence": "high",
       "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FF056E168C",
+      "device_class_code": "other_needs_review",
+      "device_subtype_code": "unclassified_device",
+      "taxonomy_confidence": "needs_review",
+      "needs_review": true,
       "classification_basis": "pair_rule"
     },
     {
@@ -13874,6 +15699,14 @@
       "device_class_code": "accessory",
       "device_subtype_code": "endoscope_seal_valve",
       "taxonomy_confidence": "moderate",
+      "needs_review": false,
+      "classification_basis": "pair_rule"
+    },
+    {
+      "product_id": "PRD-FFDCFF2DF6",
+      "device_class_code": "airway_stent",
+      "device_subtype_code": "silicone_straight_stent",
+      "taxonomy_confidence": "high",
       "needs_review": false,
       "classification_basis": "pair_rule"
     }

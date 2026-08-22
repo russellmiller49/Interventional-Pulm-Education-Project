@@ -2,12 +2,12 @@ device_class_code,source_category_count,source_primary_category,product_count
 accessory,8,Bronchoscopy accessory,2
 accessory,8,Bronchoscopy platform,1
 accessory,8,EBUS accessory,3
-accessory,8,Endoscopy platform,9
+accessory,8,Endoscopy platform,13
 accessory,8,Flexible bronchoscopy,3
 accessory,8,Rigid bronchoscopy,127
 accessory,8,Sampling,2
 accessory,8,Sampling accessory,6
-bronchoscope,5,Bronchoscopy platform,30
+bronchoscope,5,Bronchoscopy platform,40
 bronchoscope,5,EBUS platform,2
 bronchoscope,5,Flexible bronchoscopy,29
 bronchoscope,5,Peripheral navigation,4
@@ -15,7 +15,7 @@ bronchoscope,5,Rigid bronchoscopy,90
 catheter_sheath,2,Bronchoscopic lung volume reduction,3
 catheter_sheath,2,Peripheral bronchoscopy,6
 console_capital,3,Bronchoscopic lung volume reduction,2
-console_capital,3,Bronchoscopy platform,7
+console_capital,3,Bronchoscopy platform,9
 console_capital,3,Endoscopy platform,23
 cytology_brush,3,Peripheral bronchoscopy,5
 cytology_brush,3,Peripheral navigation,1
@@ -30,7 +30,7 @@ forceps_instrument,7,Medical thoracoscopy,18
 forceps_instrument,7,Peripheral bronchoscopy,3
 forceps_instrument,7,Peripheral navigation,1
 forceps_instrument,7,Retrieval,18
-forceps_instrument,7,Rigid bronchoscopy,126
+forceps_instrument,7,Rigid bronchoscopy,127
 forceps_instrument,7,Sampling,30
 guidewire,2,Airway stenting,2
 guidewire,2,Guidewire,4
@@ -39,16 +39,17 @@ implant_delivery,3,Endobronchial valve,2
 implant_delivery,3,Endoscopy platform,4
 navigation_system,2,Peripheral bronchoscopy,14
 navigation_system,2,Peripheral navigation,14
-needle,6,EBUS sampling,8
+needle,6,EBUS sampling,10
 needle,6,Medical thoracoscopy,2
 needle,6,Peripheral bronchoscopy,10
 needle,6,Peripheral navigation,1
 needle,6,Rigid bronchoscopy,3
 needle,6,Sampling,24
-other_needs_review,2,Percutaneous tracheostomy,3
-other_needs_review,2,Therapeutic bronchoscopy,2
+other_needs_review,3,Percutaneous tracheostomy,18
+other_needs_review,3,Pleural procedures,1
+other_needs_review,3,Therapeutic bronchoscopy,2
 pleural_drainage,2,Endoscopy platform,1
-pleural_drainage,2,Pleural procedures,301
+pleural_drainage,2,Pleural procedures,312
 reprocessing,2,Endoscopy platform,3
 reprocessing,2,Reprocessing,30
 retrieval_basket,2,Retrieval,3
@@ -63,7 +64,7 @@ suction_irrigation,4,Flexible bronchoscopy,4
 suction_irrigation,4,Medical thoracoscopy,1
 suction_irrigation,4,Rigid bronchoscopy,10
 tracheostomy_tube,2,Airway management,124
-tracheostomy_tube,2,Tracheostomy,12
+tracheostomy_tube,2,Tracheostomy,33
 ultrasound_device,2,Peripheral bronchoscopy,3
 ultrasound_device,2,Ultrasound platform,32
 valve_occluder,3,Airway isolation,4

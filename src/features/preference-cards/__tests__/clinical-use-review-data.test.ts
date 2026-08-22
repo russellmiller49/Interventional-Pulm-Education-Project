@@ -16,6 +16,7 @@ import {
   serializeClinicalUseReviewCsv,
   serializeClinicalUseReviewJson,
 } from '@/features/preference-cards/excel/clinical-use-review-serialization'
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 
 const MANIFEST_HASH = 'a'.repeat(64)
 
@@ -125,20 +126,26 @@ describe('full-catalog clinical-use review data', () => {
     })
 
     expect(data.counts).toEqual({
-      // The brochure intake adds 397 products and 378 evidence-supported role mappings.
-      catalogProducts: 1929,
-      productRoles: 2000,
+      // Source Completeness V2 counts are governed by the reviewed intake contract.
+      catalogProducts: sourceCompletenessCount('canonical_products_after'),
+      productRoles: sourceCompletenessCount('product_role_relationships_after'),
       // Owner-review corrections 2026-08-09 (F-06): 2073 -> 2035 — the four removed
       // CHEST_TUBE IPC rows carried 38 authored options (identical sets remain on the
       // IPC_PLACEMENT slots); the three new flex-core rows ship only unreviewed proposals.
-      currentSlots: 2035,
+      currentSlots: sourceCompletenessCount('canonical_slot_options_after'),
     })
     expect(getClinicalUseReviewCounts()).toEqual(data.counts)
     expect(data.roleOptions).toHaveLength(135) // taxonomy v2 roles 116 -> 134
     expect(data.slotOptions).toHaveLength(232) // owner-review corrections 2026-08-09: 233 - 4 IPC rows (F-06) + 3 flex-core rows (F-10)
-    expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(1929)
-    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(2000)
-    expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(2035)
+    expect(new Set(data.catalogProducts.map((row) => row.productId)).size).toBe(
+      sourceCompletenessCount('canonical_products_after'),
+    )
+    expect(new Set(data.productRoles.map((row) => row.reviewKey)).size).toBe(
+      sourceCompletenessCount('product_role_relationships_after'),
+    )
+    expect(new Set(data.currentSlots.map((row) => row.reviewKey)).size).toBe(
+      sourceCompletenessCount('canonical_slot_options_after'),
+    )
     expect(data.productRoles.every((row) => row.reviewKey.startsWith('product_role:'))).toBe(true)
     expect(data.currentSlots.every((row) => row.reviewKey.startsWith('slot_product:'))).toBe(true)
     expect(data.productRoles.every((row) => row.clinicalUseManifestHash === MANIFEST_HASH)).toBe(

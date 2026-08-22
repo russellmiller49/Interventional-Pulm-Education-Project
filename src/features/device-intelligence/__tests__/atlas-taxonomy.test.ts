@@ -1,4 +1,5 @@
 import { catalogSearchSchema } from '@/features/preference-cards/schemas/catalog-search'
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 import { searchCatalog } from '@/features/preference-cards/server/catalog'
 import { getAtlasCatalogStore } from '@/features/device-intelligence/server/atlas-store.server'
 import {
@@ -41,18 +42,20 @@ const allResults = (input: Record<string, unknown>) => {
 }
 
 describe('D2C device-class facet', () => {
-  it('reconciles facet counts with the cohort, summing to 1,728', () => {
+  it('reconciles facet counts with the contract-governed cohort', () => {
     const facets = getAtlasFacets()
     const total = facets.deviceClasses.reduce((sum, facet) => sum + facet.productCount, 0)
-    expect(total).toBe(1728)
+    expect(total).toBe(sourceCompletenessCount('verified_source_products_after'))
     for (const facet of facets.deviceClasses) {
       expect(facet.productCount).toBe(idsForClass(facet.code).length)
       expect(facet.productCount).toBeGreaterThan(0)
     }
-    // The reviewed intake intentionally holds five products in the owner-review class.
+    // The reviewed intake intentionally holds six owner-packet products in the owner-review
+    // class, and the fifteen Blue Rhino sets/trays share the percutaneous-tracheostomy pair
+    // rule whose physical taxonomy is pending like the PR #118 trays.
     expect(
       facets.deviceClasses.find((facet) => facet.code === 'other_needs_review')?.productCount,
-    ).toBe(5)
+    ).toBe(21)
     // Every class label resolves in every locale.
     for (const locale of ['en', 'es', 'zh-CN']) {
       const labels = getTaxonomyLabels(locale)
@@ -124,7 +127,7 @@ describe('D2C device-class facet', () => {
     const withLegacy = searchAtlas(parse({ category: 'Airway stenting' }))
     const without = searchAtlas(parse({}))
     expect(withLegacy.total).toBe(without.total)
-    expect(withLegacy.total).toBe(1728)
+    expect(withLegacy.total).toBe(sourceCompletenessCount('verified_source_products_after'))
     // The preserved preference-card catalog keeps exact category filtering.
     const catalogScoped = searchCatalog(parse({ category: 'Airway stenting' }), store)
     expect(catalogScoped.total).toBe(3)
@@ -132,11 +135,13 @@ describe('D2C device-class facet', () => {
 
   it('never applies the retired legacy subcategory filter on the atlas (D2C-REV-005)', () => {
     const withLegacy = searchAtlas(parse({ subcategory: 'Pulmonary guidewire' }))
-    expect(withLegacy.total).toBe(1728)
+    expect(withLegacy.total).toBe(sourceCompletenessCount('verified_source_products_after'))
     // The preserved preference-card catalog keeps exact subcategory filtering.
     const catalogScoped = searchCatalog(parse({ subcategory: 'Pulmonary guidewire' }), store)
     expect(catalogScoped.total).toBeGreaterThan(0)
-    expect(catalogScoped.total).toBeLessThan(1728)
+    expect(catalogScoped.total).toBeLessThan(
+      sourceCompletenessCount('verified_source_products_after'),
+    )
   })
 
   it('offers the corrected Retrieval basket class as a facet with its full basket cohort', () => {
@@ -208,7 +213,7 @@ describe('D2C taxonomy search', () => {
     expect(match.subtypeCodes.size).toBe(0)
     const results = allResults({ q: '支气管镜' })
     const bronchoscopes = idsForClass('bronchoscope')
-    expect(bronchoscopes.length).toBe(155)
+    expect(bronchoscopes.length).toBe(165)
     expect(results.slice().sort()).toEqual(bronchoscopes)
   })
 
@@ -270,7 +275,9 @@ describe('D2C taxonomy is never a gate', () => {
       const hits = searchAtlas(parse({ q: product.product_name.slice(0, 40) }))
       expect(hits.items.map((item) => item.productId)).toContain(product.product_id)
     }
-    // The unfiltered index still lists every cohort product — 1,728, no taxonomy wall.
-    expect(searchAtlas(parse({})).total).toBe(1728)
+    // The unfiltered index still lists every cohort product, with no taxonomy wall.
+    expect(searchAtlas(parse({})).total).toBe(
+      sourceCompletenessCount('verified_source_products_after'),
+    )
   })
 })

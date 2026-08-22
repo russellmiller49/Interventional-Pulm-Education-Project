@@ -4,6 +4,8 @@ import { TextDecoder as NodeTextDecoder } from 'node:util'
 
 import JSZip from 'jszip'
 
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
+
 import {
   getClinicalUseReviewArtifactManifest,
   type ClinicalUseReviewData,
@@ -391,17 +393,23 @@ describe('full-catalog clinical-use review workbook export', () => {
       },
     )
     expect(workbook.counts).toEqual({
-      // The brochure intake adds 397 products and 378 reviewed role mappings; authored slot
-      // options remain unchanged.
-      catalogProducts: 1_929,
-      productRoles: 2_000,
-      currentSlots: 2_035,
+      // Source Completeness V2 adds the contract-governed products and restrained role mappings after the
+      // brochure milestone; authored slot options remain unchanged.
+      catalogProducts: sourceCompletenessCount('canonical_products_after'),
+      productRoles: sourceCompletenessCount('product_role_relationships_after'),
+      currentSlots: sourceCompletenessCount('canonical_slot_options_after'),
     })
     const parsed = await parseOoxmlWorkbookBytes(workbook.bytes)
     // Each sheet is its record count plus the header row.
-    expect(parsed.sheets.get('Catalog Products')?.maxRow).toBe(1_930)
-    expect(parsed.sheets.get('Product Role Review')?.maxRow).toBe(2_001)
-    expect(parsed.sheets.get('Current Slot Review')?.maxRow).toBe(2_036)
+    expect(parsed.sheets.get('Catalog Products')?.maxRow).toBe(
+      sourceCompletenessCount('canonical_products_after') + 1,
+    )
+    expect(parsed.sheets.get('Product Role Review')?.maxRow).toBe(
+      sourceCompletenessCount('product_role_relationships_after') + 1,
+    )
+    expect(parsed.sheets.get('Current Slot Review')?.maxRow).toBe(
+      sourceCompletenessCount('canonical_slot_options_after') + 1,
+    )
     expect(workbook.metadata.clinical_use_manifest_sha256).toBe(manifest.clinicalUseManifestSha256)
     expect(await Promise.all(canonicalPaths.map((filename) => readFile(filename)))).toEqual(before)
   })

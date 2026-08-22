@@ -91,11 +91,25 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-47A0410D40",
+    "manufacturer": "Serpex Medical",
+    "default_distributor": "Thoracent",
+    "website": "https://serpexmedical.com/",
+    "notes": "Serpex Medical is the FDA applicant/legal manufacturer for the Maverix Narwhal system; Thoracent is retained as distributor."
+  },
+  {
     "manufacturer_id": "MFR-4D025EECF8",
     "manufacturer": "Laserscope",
     "default_distributor": null,
     "website": null,
     "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
+    "manufacturer_id": "MFR-4FD1B7935D",
+    "manufacturer": "Axess Vision Technology S.A.S.",
+    "default_distributor": "TSC Life US",
+    "website": "https://www.tsc-life.com/",
+    "notes": "Axess Vision Technology S.A.S. is the legal manufacturer; TSC Life is retained as the Broncoflex brand/distribution identity, not as a duplicate manufacturer."
   },
   {
     "manufacturer_id": "MFR-52C1D02F96",
@@ -224,6 +238,20 @@
     "notes": null
   },
   {
+    "manufacturer_id": "MFR-84EC81C22A",
+    "manufacturer": "DISA Medinotec",
+    "default_distributor": null,
+    "website": "https://www.disamedinotec.com/",
+    "notes": "DISA Medinotec is the reviewed legal manufacturer identity for Trachealator."
+  },
+  {
+    "manufacturer_id": "MFR-89E235AB41",
+    "manufacturer": "CLR Medical",
+    "default_distributor": null,
+    "website": "https://www.clrmedical.com/",
+    "notes": "CLR Medical is the manufacturer/labeler identity on the official IFUs and GUDID records."
+  },
+  {
     "manufacturer_id": "MFR-90D85DB52E",
     "manufacturer": "Cardinal Health",
     "default_distributor": null,
@@ -250,6 +278,13 @@
     "default_distributor": null,
     "website": "sonosite.com",
     "notes": "SonoSite LX/PX systems and transducer models are represented as source-backed model records; exact orderable configurations require verification."
+  },
+  {
+    "manufacturer_id": "MFR-B0C7C296E6",
+    "manufacturer": "Shenzhen HugeMed Medical Technical Development Co., Ltd.",
+    "default_distributor": "EndoTherapeutics",
+    "website": "https://www.hugemed.net/",
+    "notes": "HugeMed is the FDA applicant and GUDID labeler; EndoTherapeutics is retained as distributor."
   },
   {
     "manufacturer_id": "MFR-B70B2D18DF",
@@ -313,6 +348,13 @@
     "default_distributor": null,
     "website": null,
     "notes": "Added with the taxonomy-v2 energy, imaging, laser, photodynamic, and emerging-device cohorts."
+  },
+  {
+    "manufacturer_id": "MFR-DEFC2BB814",
+    "manufacturer": "Praxis Medical LLC",
+    "default_distributor": null,
+    "website": "https://praxismedicaldevices.com/",
+    "notes": "Praxis Medical LLC is the labeler/manufacturer for the EndoCore EBUS needles."
   },
   {
     "manufacturer_id": "MFR-DF7E28B2EB",

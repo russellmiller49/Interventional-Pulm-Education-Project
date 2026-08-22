@@ -31,8 +31,8 @@ import {
  *      matches and whose pattern tests true against `product_name` (file order),
  *   3. the reviewed pair rule for the exact (primary_category, subcategory) pair,
  *   4. the explicit `other_needs_review` fallback — the product STAYS in the overlay and
- *      stays visible; taxonomy must never become an atlas-visibility gate. Zero products
- *      take this branch today (asserted by tests).
+ *      stays visible; taxonomy must never become an atlas-visibility gate. The CLR Irrigator
+ *      intentionally takes this branch pending review of a precise pleural-irrigation subtype.
  *
  * Row scope is the D2B inclusion-first cohort (`verified_source` minus explicit owner
  * exclusions), evaluated against the canonical catalog at build time: candidate- and

@@ -7,20 +7,20 @@ import path from 'node:path'
 // byte-protected so a semantic migration cannot silently rewrite its evidence foundation.
 //
 // The product/provenance hashes move only with an explicitly reviewed catalog milestone. The
-// 2026-08-19 brochure intake adds exact brochure-backed identities and sources while preserving
-// all release artifacts. Paying that friction deliberately, once per milestone, is the point of
-// this guard.
+// The 2026-08-20 source-completeness intake extends the reviewed brochure milestone with exact
+// owner/manufacturer-backed identities and provenance while preserving all release artifacts.
+// Paying that friction deliberately, once per milestone, is the point of this guard.
 const PROTECTED_FILE_HASHES = {
   'Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx':
     'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
   'data/ip-preference-cards/generated/catalog-products.json':
-    '8d2f0f210f24d971ac09d8d67a850afbfefc9b4f521303b685cab3abfc9884f0',
+    '16779325490bcdfc848742c2242553df742f9f4dab8d20d86e6032f9bfcdee5a',
   'data/ip-preference-cards/generated/product-sources.json':
-    'eadc7e3df35b6a53fd227d583317e0608e079f879e995e81f47a54d4806d4714',
+    'f436fc50ec9a7928ae3c7cdfdd076bd7c1956815df7d91d4bd10b0baa8f8e3f0',
   'data/ip-preference-cards/generated/sources.json':
-    'e847a55932769064cc60d68cc845af7a4e093094435180c2e613e3e80cdc1b91',
+    '5c48ca21eb194b02a75590b421cf57c619067b35858f45a43b0a12334c7ba98e',
   'data/ip-preference-cards/generated/manufacturers.json':
-    'c2acde0c7fcde5cd78a1746076cdfe63df49b3edeffa9b46458bce685b9b1f6f',
+    'd2221705577c98a697105eb48410d924c04455d76b848730042f75f4e37574ff',
   'data/ip-preference-cards/generated/verification-backlog.json':
     '25ab658850a5df620986d4596d5043f40e46d17132493dd62d7adaffc36c1b38',
   'data/ip-preference-cards/generated/hospital-formulary-staging.json':

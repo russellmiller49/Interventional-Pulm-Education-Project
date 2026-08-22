@@ -11,6 +11,11 @@ import {
   serializeTaxonomyOverlay,
   validateProductOverrides,
 } from '../../../../scripts/ip-device-intelligence/build-taxonomy-overlay'
+import { stableId } from '../../../../scripts/ip-preference-cards/catalog-utils'
+import {
+  expandSourceCompletenessProducts,
+  sourceCompletenessCount,
+} from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 import { isAtlasCohortProduct } from '@/features/device-intelligence/domain/atlas-cohort'
 import {
   taxonomyOverlayArtifactSchema,
@@ -33,13 +38,13 @@ const REPO_ROOT = join(__dirname, '../../../..')
 describe('D2C taxonomy overlay coverage', () => {
   const artifact = taxonomyOverlayArtifactSchema.parse(taxonomyOverlayJson)
 
-  it('holds exactly one row for each of the 1,728 atlas-cohort products', () => {
+  it('holds exactly one row for each contract-governed atlas-cohort product', () => {
     const cohortIds = getAtlasCatalogStore()
       .products.map((product) => product.product_id)
       .sort()
-    expect(cohortIds.length).toBe(1728)
+    expect(cohortIds.length).toBe(sourceCompletenessCount('taxonomy_rows_after'))
     expect(artifact.rows.map((row) => row.product_id)).toEqual(cohortIds)
-    expect(artifact.counts.rows).toBe(1728)
+    expect(artifact.counts.rows).toBe(sourceCompletenessCount('taxonomy_rows_after'))
   })
 
   it('contains no candidate-grade or unknown-grade identity', () => {
@@ -70,13 +75,15 @@ describe('D2C taxonomy overlay coverage', () => {
     expect(artifact.counts.classification_basis).toEqual(basisCounts)
     expect(artifact.counts.needs_review).toBe(needsReview)
     const classTotal = Object.values(classCounts).reduce((sum, count) => sum + count, 0)
-    expect(classTotal).toBe(1728)
+    expect(classTotal).toBe(sourceCompletenessCount('taxonomy_rows_after'))
   })
 
-  it('classifies every product from a reviewed rule while preserving explicit review holds', () => {
-    expect(artifact.counts.classification_basis.unmatched_fallback ?? 0).toBe(0)
-    expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(5)
-    expect(artifact.counts.needs_review).toBe(6)
+  it('classifies every product while preserving the intentional CLR fallback and review holds', () => {
+    expect(artifact.counts.classification_basis.unmatched_fallback ?? 0).toBe(1)
+    expect(artifact.counts.device_class.other_needs_review ?? 0).toBe(21)
+    expect(artifact.counts.needs_review).toBe(
+      sourceCompletenessCount('taxonomy_needs_review_after'),
+    )
   })
 
   it('is byte-identical to a fresh generation from the reviewed rules (twice)', () => {
@@ -93,13 +100,13 @@ describe('D2C taxonomy overlay coverage', () => {
 
   it('pins the exact reviewed rules bytes it was generated from', () => {
     const provenance = getTaxonomyOverlayProvenance()
-    expect(provenance.rowCount).toBe(1728)
+    expect(provenance.rowCount).toBe(sourceCompletenessCount('taxonomy_rows_after'))
     expect(artifact.source_rules.sha256).toBe(provenance.sourceRulesSha256)
     const rulesBytes = readFileSync(join(REPO_ROOT, artifact.source_rules.path))
     expect(createHash('sha256').update(rulesBytes).digest('hex')).toBe(artifact.source_rules.sha256)
   })
 
-  it('resolves every cohort product and exposes only the five explicit other-class review holds', () => {
+  it('resolves every cohort product and exposes only the explicit other-class review holds', () => {
     const explicitReviewHolds: string[] = []
     for (const product of getAtlasCatalogStore().products) {
       const taxonomy = getProductTaxonomy(product.product_id)
@@ -108,7 +115,53 @@ describe('D2C taxonomy overlay coverage', () => {
         expect(taxonomy.needsReview).toBe(true)
       }
     }
-    expect(explicitReviewHolds).toHaveLength(5)
+    expect(explicitReviewHolds).toHaveLength(21)
+  })
+
+  it('applies the one narrow new pair rule only to the Narwhal cartridge and leaves CLR honest', () => {
+    const catalog = productsJson as {
+      product_id: string
+      catalog_number: string | null
+      primary_category: string | null
+      subcategory: string | null
+    }[]
+    const cryotherapyConsumables = catalog.filter(
+      (product) =>
+        product.primary_category === 'Therapeutic bronchoscopy' &&
+        product.subcategory === 'Cryotherapy consumable',
+    )
+    expect(cryotherapyConsumables.map((product) => product.catalog_number)).toEqual(['CC-1000-4'])
+    expect(getProductTaxonomy(cryotherapyConsumables[0].product_id)).toMatchObject({
+      deviceClassCode: 'cryotherapy',
+      deviceSubtypeCode: 'cryotherapy_accessory',
+      taxonomyConfidence: 'high',
+      needsReview: false,
+    })
+
+    const clrIrrigatorId = stableId('PRD', 'CLR Medical|S012-01-019')
+    expect(getProductTaxonomy(clrIrrigatorId)).toMatchObject({
+      deviceClassCode: 'other_needs_review',
+      deviceSubtypeCode: 'unclassified_device',
+      taxonomyConfidence: 'needs_review',
+      needsReview: true,
+    })
+    const additionIds = new Set(
+      expandSourceCompletenessProducts().map((product) =>
+        stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`),
+      ),
+    )
+    expect(artifact.rows.filter((row) => additionIds.has(row.product_id))).toHaveLength(
+      sourceCompletenessCount('new_exact_products'),
+    )
+    for (const product of expandSourceCompletenessProducts()) {
+      expect(
+        getProductTaxonomy(stableId('PRD', `${product.manufacturer}|${product.catalogNumber}`)),
+      ).toMatchObject({
+        deviceClassCode: product.taxonomyClass,
+        deviceSubtypeCode: product.taxonomySubtype,
+        taxonomyConfidence: product.taxonomyConfidence,
+      })
+    }
   })
 
   it('stays an honest total function for an id with no row', () => {

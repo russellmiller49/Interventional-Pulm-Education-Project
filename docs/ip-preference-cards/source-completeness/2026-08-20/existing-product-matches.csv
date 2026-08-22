@@ -1,0 +1,5 @@
+product_id,manufacturer,catalog_number,alternate_identifier,disposition,match_basis,new_source_evidence
+PRD-5CC8131FDE,Cook Medical,G34281,ECHO-HD-22-EBUS-O-C,existing_alias_or_format_variant,Existing exact Cook order number G34281 already carries alternate identifier ECHO-HD-22-EBUS-O-C.,"SRC089: Rendered PDF page 7, 22G Olympus row"
+PRD-2D0C9B936A,Cook Medical,G34279,ECHO-HD-22-EBUS-P-C,existing_alias_or_format_variant,Existing exact Cook order number G34279 already carries alternate identifier ECHO-HD-22-EBUS-P-C.,"SRC089: Rendered PDF page 7, 22G Pentax row"
+PRD-2DA93F54B9,Cook Medical,G34282,ECHO-HD-25-EBUS-O-C,existing_alias_or_format_variant,Existing exact Cook order number G34282 already carries alternate identifier ECHO-HD-25-EBUS-O-C.,"SRC089: Rendered PDF page 7, 25G Olympus row"
+PRD-3F51C7D66F,Cook Medical,G34280,ECHO-HD-25-EBUS-P-C,existing_alias_or_format_variant,Existing exact Cook order number G34280 already carries alternate identifier ECHO-HD-25-EBUS-P-C.,"SRC089: Rendered PDF page 7, 25G Pentax row"

@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
 
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
+
 import { SlotOptionReviewQueue } from '../components/SlotOptionReviewQueue'
 import {
   filterSlotOptionReviewRows,
@@ -15,13 +17,13 @@ describe('exact-slot proposal review data', () => {
 
     // Brochure products remain nonselectable; supported role mappings only expand review rows.
     expect(summary).toMatchObject({
-      totalProposals: 1485,
-      affectedProducts: 773,
-      affectedSlots: 124,
-      requiredProposals: 772,
+      totalProposals: sourceCompletenessCount('unreviewed_slot_proposals_after'),
+      affectedProducts: sourceCompletenessCount('proposal_affected_products'),
+      affectedSlots: 138,
+      requiredProposals: sourceCompletenessCount('proposal_required'),
       notInDistribution: 32,
       conflictingDistribution: 7,
-      unknownDistribution: 885,
+      unknownDistribution: sourceCompletenessCount('proposal_unknown_distribution'),
     })
     expect(new Set(rows.map((row) => `${row.slot_id}\u0000${row.product_id}`)).size).toBe(
       rows.length,

@@ -1,4 +1,5 @@
 import additionsJson from '../../data/ip-preference-cards/seed/catalog-additions.json'
+import catalogProductsJson from '../../data/ip-preference-cards/generated/catalog-products.json'
 import manufacturersJson from '../../data/ip-preference-cards/generated/manufacturers.json'
 import rolesJson from '../../data/ip-preference-cards/generated/roles.json'
 import sourcesJson from '../../data/ip-preference-cards/generated/sources.json'
@@ -17,8 +18,16 @@ function clone<T>(value: T): T {
 }
 
 function normalizedFixture() {
+  const addedProductIds = new Set(additionsJson.products.map((product) => product.product_id))
+  const referencedExistingProductIds = new Set(
+    additionsJson.product_sources
+      .map((relationship) => relationship.product_id)
+      .filter((productId) => !addedProductIds.has(productId)),
+  )
   return {
-    Products: [] as Record<string, unknown>[],
+    Products: clone(
+      catalogProductsJson.filter((product) => referencedExistingProductIds.has(product.product_id)),
+    ) as Record<string, unknown>[],
     Product_Roles: [] as Record<string, unknown>[],
     Product_Sources: [] as Record<string, unknown>[],
     Manufacturers: clone(manufacturersJson) as Record<string, unknown>[],
@@ -81,6 +90,7 @@ describe('reviewed catalog-addition validation', () => {
     const additions = cloneAdditions()
     const product = additions.products[0]
     const normalized = normalizedFixture()
+    const workbookProductIndex = normalized.Products.length
     normalized.Products.push({
       product_id: 'PRD-WORKBOOK',
       manufacturer_id: product.manufacturer_id,
@@ -91,7 +101,7 @@ describe('reviewed catalog-addition validation', () => {
       `Addition product ${String(product.product_id)} duplicates manufacturer-scoped catalog identity held by PRD-WORKBOOK.`,
     )
 
-    normalized.Products[0].manufacturer_id = 'MFR-DIFFERENT'
+    normalized.Products[workbookProductIndex].manufacturer_id = 'MFR-DIFFERENT'
     expect(validateCatalogAdditions(normalized, additions)).not.toEqual(
       expect.arrayContaining([expect.stringContaining('manufacturer-scoped catalog identity')]),
     )

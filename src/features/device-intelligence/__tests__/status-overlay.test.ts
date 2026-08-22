@@ -31,6 +31,7 @@ import {
   OVERLAY_RELATIVE_PATH,
   generateStatusOverlayFile,
 } from '../../../../scripts/ip-device-intelligence/build-status-overlay'
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 
 const REPO_ROOT = join(__dirname, '../../../..')
 const SOURCE_RELATIVE_PATH =
@@ -320,10 +321,11 @@ describe('D2B status overlay — runtime reader', () => {
       if (status.researched) researched += 1
       else expect(status).toEqual(UNRESEARCHED_PRODUCT_STATUS)
     }
-    // The original 578 hidden products are researched. The 753 prototype-visible products
-    // plus 397 brochure additions are labeled unresearched rather than presented as current.
-    expect(researched).toBe(578)
-    expect(atlas.products.length - researched).toBe(1150)
+    // Research remains frozen; new source-completeness identities stay explicitly unresearched.
+    expect(researched).toBe(sourceCompletenessCount('status_researched_products'))
+    expect(atlas.products.length - researched).toBe(
+      sourceCompletenessCount('status_unresearched_atlas_products'),
+    )
   })
 
   it('exposes the pinned provenance to the UI', () => {

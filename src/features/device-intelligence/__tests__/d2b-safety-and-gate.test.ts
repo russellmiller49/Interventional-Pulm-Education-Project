@@ -10,6 +10,7 @@ import {
   searchAtlas,
 } from '@/features/device-intelligence/server/atlas.server'
 import { getProductStatus } from '@/features/device-intelligence/server/product-status.server'
+import { sourceCompletenessCount } from '../../../../scripts/ip-preference-cards/source-completeness-intake'
 
 /**
  * The D2B safety contract: an active FDA safety action changes what a product's page SAYS
@@ -176,13 +177,12 @@ describe('D2B — the gate governs recommendation only', () => {
       expect(detail!.product.product_name).toBe(product.product_name)
       if (detail!.roles.length === 0) productsWithoutRole += 1
     }
-    expect(productsWithoutRole).toBe(19)
-    // 23 blocked and 34 review-required researched rows, plus 1,150 unresearched products
-    // whose safety status is honestly unverified.
+    expect(productsWithoutRole).toBe(25)
+    // Researched review holds plus all unresearched products remain honestly review-required.
     expect(Object.fromEntries([...gates.entries()].sort())).toEqual({
       blocked_active_safety_action: 23,
       clear: 521,
-      review_required: 1184,
+      review_required: sourceCompletenessCount('status_gate_review_required'),
     })
   })
 })
