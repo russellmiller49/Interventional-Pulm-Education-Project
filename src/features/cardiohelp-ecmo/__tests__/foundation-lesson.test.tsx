@@ -427,6 +427,40 @@ describe('foundation teaching panels', () => {
     expect(container.querySelector('[data-gas-path]')?.textContent).toMatch(/sweep/i)
   })
 
+  it('names the return-side objects, and no drainage object, at the return stop', () => {
+    /*
+     * The rendered outcome of the scene-anchor mapping, read off the walk card's visible
+     * "Highlighted in the bedside scene" line — the words a learner actually gets when the pane is
+     * too narrow for the 3D scene. The review's mutation pointed `post-membrane` at the HLS module
+     * and nothing rendered differently anywhere a test looked; this is where it now would.
+     */
+    const { container } = render(
+      <EcmoFoundationTeachingPanel
+        sectionId="circuit-flow-path"
+        state={settled('vv')}
+        walk={{ activeStopId: 'walk-return' }}
+      />,
+    )
+    const line = container.querySelector('[data-walk-scene-labels]')?.textContent ?? ''
+    expect(line).toContain('Flow / bubble sensor')
+    expect(line).toContain('Femoral vein — return')
+    expect(line).toContain('Return clamp')
+    expect(line).not.toMatch(/drainage/i)
+
+    const { container: va } = render(
+      <EcmoFoundationTeachingPanel
+        sectionId="circuit-flow-path"
+        state={settled('va')}
+        walk={{ activeStopId: 'walk-return' }}
+      />,
+    )
+    const vaLine = va.querySelector('[data-walk-scene-labels]')?.textContent ?? ''
+    expect(vaLine).toContain('Flow / bubble sensor')
+    expect(vaLine).toContain('Femoral artery — return')
+    expect(vaLine).toContain('Distal perfusion catheter')
+    expect(vaLine).not.toMatch(/drainage/i)
+  })
+
   it('circuit-flow-path draws the circuit, marked where the walk is standing', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,

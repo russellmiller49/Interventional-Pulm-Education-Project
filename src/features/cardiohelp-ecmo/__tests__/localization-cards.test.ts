@@ -156,6 +156,70 @@ describe('ECMO localization-card registry', () => {
     expect(ECMO_LOCALIZATION_FOOTER.text).toMatch(/own earlier value/i)
   })
 
+  /*
+   * The similar-flow qualification is a declared fact about the row, not a phrase in a sentence.
+   *
+   * The independent review's mutation deleted "read at similar blood flow" from the return-row
+   * signature and the whole suite stayed green — the qualification was load-bearing (the pump
+   * section now loads a resisted-return state whose gradient falls with the flow at an unchanged
+   * speed) but nothing owned it. Now the row declares the basis, the import-time validator holds
+   * the sentence and the declaration to each other both ways, and these cases prove the coupling
+   * kills the mutation in each direction while leaving rewordings that keep the rule alone.
+   */
+  it('declares every flow-conditioned gradient claim, and only those', () => {
+    // The return row's "changes little" and the membrane row's "widens" are the same clinical rule
+    // read from opposite sides: neither claim means anything unless the flows compared are
+    // similar. The drainage and gas rows make no gradient claim conditioned on flow.
+    expect(ecmoLocalizationRow('return-path-resistance').gradientComparisonBasis).toBe(
+      'at-similar-blood-flow',
+    )
+    expect(ecmoLocalizationRow('membrane-resistance').gradientComparisonBasis).toBe(
+      'at-similar-blood-flow',
+    )
+    for (const row of ecmoLocalizationRows) {
+      if (row.id !== 'return-path-resistance' && row.id !== 'membrane-resistance') {
+        expect(`${row.id}: ${row.gradientComparisonBasis}`).toBe(`${row.id}: undefined`)
+      }
+    }
+  })
+
+  it('fails validation when the signature loses the qualification the row declares', () => {
+    const mutated = ecmoLocalizationRows.map((row) =>
+      row.id === 'return-path-resistance'
+        ? {
+            ...row,
+            signature:
+              'Both post-pump pressures rise together; the gradient across the membrane changes little.',
+          }
+        : row,
+    )
+    const errors = validateEcmoLocalizationCardRegistry(mutated).join('\n')
+    expect(errors).toContain('return-path-resistance')
+    expect(errors).toContain('does not say so')
+  })
+
+  it('fails validation when the qualification is orphaned from its declaration', () => {
+    const mutated = ecmoLocalizationRows.map((row) =>
+      row.id === 'return-path-resistance' ? { ...row, gradientComparisonBasis: undefined } : row,
+    )
+    const errors = validateEcmoLocalizationCardRegistry(mutated).join('\n')
+    expect(errors).toContain('return-path-resistance')
+    expect(errors).toContain('without declaring gradientComparisonBasis')
+  })
+
+  it('accepts a rewording that keeps the clinical rule', () => {
+    const reworded = ecmoLocalizationRows.map((row) =>
+      row.id === 'return-path-resistance'
+        ? {
+            ...row,
+            signature:
+              'Both post-pump pressures rise together; compared at a matched flow, the gradient across the membrane changes little.',
+          }
+        : row,
+    )
+    expect(validateEcmoLocalizationCardRegistry(reworded)).toEqual([])
+  })
+
   it('carries no number anywhere a learner could read one as a target', () => {
     for (const value of [...learnerFacingStrings(), ECMO_LOCALIZATION_FOOTER.text]) {
       expect(value).not.toMatch(/\d/)

@@ -78,6 +78,21 @@ export interface EcmoLocalizationRow {
    * under it said "read in".
    */
   readonly zoneLead: 'read-in' | 'quiet'
+  /**
+   * The comparison under which the signature's gradient claim holds, where it needs one.
+   *
+   * The gradient is a resistance multiplied by a flow, so a row whose claim is "the gradient
+   * changes little" is only true when the flows being compared are similar — at an unchanged pump
+   * speed against a resisted return, this engine drops the flow by about a third and the gradient
+   * falls with it. That qualification used to live only inside the signature sentence, where a
+   * copy edit could delete it and every test stayed green (the independent review's mutation did
+   * exactly that). It is now a declared fact about the row, and the registry validator holds the
+   * sentence and the declaration to each other in both directions: a declared basis whose
+   * signature lost the qualifier fails at import, and a signature that says "at similar flow"
+   * without declaring the basis fails too. Copy may be reworded freely as long as the clinical
+   * rule survives.
+   */
+  readonly gradientComparisonBasis?: 'at-similar-blood-flow'
   /** The channels that carry the pattern. */
   readonly sensorSiteIds: readonly [EcmoSensorSiteId, ...EcmoSensorSiteId[]]
   /** What the minimap marks when this row is the explanation. */
@@ -175,6 +190,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
      */
     signature:
       'Both post-pump pressures rise together; read at similar blood flow, the gradient across the membrane changes little.',
+    gradientComparisonBasis: 'at-similar-blood-flow',
     problemLocation:
       'Downstream of the membrane — the return path from membrane outlet to the patient.',
     zoneIds: ['downstream-of-pump', 'across-membrane'],
@@ -222,6 +238,9 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
     label: 'Membrane resistance',
     signature:
       'The pre-membrane pressure separates from the return pressure; the gradient widens. Read that separation at similar blood flow, against this circuit’s own earlier gradient.',
+    // The same clinical rule as the return row, from the other side: a gradient that widened at a
+    // higher flow says nothing about the membrane, which this row's own cause list states.
+    gradientComparisonBasis: 'at-similar-blood-flow',
     problemLocation: 'The membrane lung itself.',
     zoneIds: ['across-membrane', 'downstream-of-pump'],
     zoneLead: 'read-in',
@@ -416,9 +435,21 @@ export function ecmoLocalizationScaffoldTextEquivalent(supportMode: SupportMode)
   return `Four patterns, and where each one lives. ${rows} ${ECMO_LOCALIZATION_FOOTER.text}`
 }
 
-export function validateEcmoLocalizationCardRegistry(): readonly string[] {
+/**
+ * The words a similar-flow qualification is allowed to wear.
+ *
+ * Semantic rather than a fixed sentence: "read at similar blood flow", "at a matched flow", and
+ * "at the same flow" all state the rule, and the point of the check is that the *rule* survives
+ * copy edits, not that one wording does.
+ */
+const SIMILAR_FLOW_QUALIFIER =
+  /\b(?:at|to)\s+(?:a\s+|the\s+)?(?:similar|matched|same)\s+(?:blood\s+)?flow\b/i
+
+export function validateEcmoLocalizationCardRegistry(
+  rows: readonly EcmoLocalizationRow[] = ecmoLocalizationRows,
+): readonly string[] {
   const errors: string[] = []
-  const declared = ecmoLocalizationRows.map((row) => row.id)
+  const declared = rows.map((row) => row.id)
 
   if (new Set(ecmoLocalizationRowIds).size !== ecmoLocalizationRowIds.length) {
     errors.push('duplicate row id in the tuple')
@@ -433,12 +464,12 @@ export function validateEcmoLocalizationCardRegistry(): readonly string[] {
     }
   }
 
-  const families = ecmoLocalizationRows.map((row) => row.drillFamily)
+  const families = rows.map((row) => row.drillFamily)
   if (new Set(families).size !== families.length) {
     errors.push('two rows claim the same drill family, so a family cannot select one row')
   }
 
-  for (const row of ecmoLocalizationRows) {
+  for (const row of rows) {
     for (const zoneId of row.zoneIds) {
       if (!ecmoPressureZoneById.has(zoneId))
         errors.push(`${row.id}: unknown pressure zone ${zoneId}`)
@@ -479,6 +510,31 @@ export function validateEcmoLocalizationCardRegistry(): readonly string[] {
     }
     if (!row.sourceSupport.some((support) => support.evidenceId === MODEL)) {
       errors.push(`${row.id}: authored simulation behaviour is not attributed to the bounded model`)
+    }
+
+    /*
+     * The declared comparison basis and the signature's wording, held to each other both ways.
+     *
+     * One way: a row that declares its gradient claim valid only at similar blood flow must say so
+     * in the sentence a learner actually reads — the pump section now loads a resisted-return
+     * state whose flow is a third down at the same speed, and an unqualified "the gradient changes
+     * little" is falsified three hundred pixels under a comparison line saying it fell. The other
+     * way: a signature that carries the qualifier without declaring the basis would let the next
+     * copy edit orphan it again. Any suite fails on either, because this runs at import.
+     */
+    for (const supportMode of ['vv', 'va'] as const) {
+      const signature = resolveEcmoModeText(row.signature, supportMode)
+      const qualified = SIMILAR_FLOW_QUALIFIER.test(signature)
+      if (row.gradientComparisonBasis === 'at-similar-blood-flow' && !qualified) {
+        errors.push(
+          `${row.id}: declares its gradient claim valid at similar blood flow, but the ${supportMode} signature does not say so`,
+        )
+      }
+      if (row.gradientComparisonBasis === undefined && qualified) {
+        errors.push(
+          `${row.id}: the ${supportMode} signature qualifies its claim by flow without declaring gradientComparisonBasis`,
+        )
+      }
     }
 
     /*

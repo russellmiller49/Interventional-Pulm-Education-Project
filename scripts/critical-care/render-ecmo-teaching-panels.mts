@@ -51,6 +51,7 @@ import {
   type EcmoVvOnlyFoundationSectionId,
 } from '../../src/features/cardiohelp-ecmo/content/foundationLessonRuntime.ts'
 import {
+  ecmoCircuitWalkStop,
   ecmoCircuitWalkStops,
   ecmoCircuitWalkStopsForSection,
   type EcmoCircuitWalkStopId,
@@ -107,6 +108,8 @@ interface Variant {
   readonly snapshot?: EcmoFoundationSnapshot | null
   /** Which walk stop the panel opens at, for the two sections that carry a walk. */
   readonly walkStopId?: EcmoCircuitWalkStopId
+  /** Whether the walk renders as if the section's prediction is committed. */
+  readonly walkCommitted?: boolean
 }
 
 function sharedVariants(profileId: EcmoReferenceProfileId): readonly Variant[] {
@@ -291,11 +294,20 @@ function walkVariants(
   const stops = ecmoCircuitWalkStopsForSection(sectionId)
   if (stops.length === 0) return base
   return base.flatMap((variant) =>
-    stops.map((stop) => ({
-      ...variant,
-      label: `${variant.label} · stop ${stop.ordinal} (${stop.id})`,
-      walkStopId: stop.id,
-    })),
+    stops.flatMap((stop) =>
+      // Both disclosure depths, per stop, per state. The first cut rendered one depth and believed
+      // it was the committed one because of a prop that did not exist; the hook's default made the
+      // page look right while asserting nothing. Now each depth is rendered on purpose and the
+      // render is asserted (see renderWalkCell), so the page cannot silently review only one.
+      [false, true].map((walkCommitted) => ({
+        ...variant,
+        label: `${variant.label} · stop ${stop.ordinal} (${stop.id}) · ${
+          walkCommitted ? 'committed' : 'before commitment'
+        }`,
+        walkStopId: stop.id,
+        walkCommitted,
+      })),
+    ),
   )
 }
 
@@ -490,6 +502,45 @@ const PANE_WIDTHS: readonly { readonly label: string; readonly px: number }[] = 
 let renderedCells = 0
 let renderedDrillCells = 0
 
+/**
+ * The walk-cell contract, enforced at render time so the page cannot go vacuous again.
+ *
+ * The previous harness passed a `sensorNamesVisible` prop no component declares; the committed
+ * content rendered anyway because the walk hook defaults to committed for hostless callers, so the
+ * page reviewed one depth by accident and would have kept exiting zero if that depth became
+ * unreachable. Every clause here throws: a requested stop that silently falls back to another, a
+ * prop rename that stops reaching the component (esbuild does not type-check this file), a
+ * committed render missing its reveal, a precommit render leaking one, or the two depths rendering
+ * identically.
+ */
+function assertWalkCell(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  stopId: EcmoCircuitWalkStopId,
+  committed: boolean,
+  markup: string,
+): void {
+  const where = `${sectionId} · ${stopId} · ${committed ? 'committed' : 'precommit'}`
+  if (!markup.includes(`data-walk-stop="${stopId}"`)) {
+    throw new Error(`${where}: the walk rendered a different stop than the one requested`)
+  }
+  const stop = ecmoCircuitWalkStop(stopId)
+  const reportsReadings = stop.sensorSiteIds.length > 0
+  const hasReportedHere = markup.includes('Reported here:')
+  if (!committed && hasReportedHere) {
+    throw new Error(`${where}: reveals "Reported here:" before the commitment`)
+  }
+  if (committed && reportsReadings && !hasReportedHere) {
+    throw new Error(`${where}: the committed reveal is unreachable — no "Reported here:" rendered`)
+  }
+  const hasBeats = markup.includes('data-walk-beat')
+  if (!committed && hasBeats) {
+    throw new Error(`${where}: comparison beats are reachable before the commitment`)
+  }
+  if (committed && stop.kind === 'comparative' && !hasBeats) {
+    throw new Error(`${where}: the comparative stop renders no beats when committed`)
+  }
+}
+
 const drills = ecmoDrillTeachingPanelScenarioIds
   .map((scenarioId) => {
     const columns = drillVariants(scenarioId)
@@ -509,6 +560,10 @@ const drills = ecmoDrillTeachingPanelScenarioIds
   })
   .join('\n')
 
+/** Rendered walk markup per section/state/stop, so the two depths can be proved different. */
+const walkMarkupByDepth = new Map<string, { precommit?: string; committed?: string }>()
+const renderedWalkStopIds = new Set<EcmoCircuitWalkStopId>()
+
 const sections = ecmoInteractiveFoundationSectionIds
   .map((sectionId) => {
     const columns = variantsFor(sectionId)
@@ -519,20 +574,53 @@ const sections = ecmoInteractiveFoundationSectionIds
             sectionId,
             state: variant.state,
             snapshot: variant.snapshot ?? null,
-            // Naming the stop is what makes every one of them reviewable; the sensor names are
-            // shown here because this page is for reading the finished copy, not for checking the
-            // phase gate, which `foundation-activity.test.tsx` drives instead.
+            // The real prop, both values, and a beat handler so the comparative stop's buttons
+            // exist to be reviewed. `sensorNamesVisible` — the prop the first cut passed — exists
+            // nowhere, and the page only looked committed because the hook defaults that way for
+            // hostless callers; the assertions below are what keep this honest now.
             ...(variant.walkStopId
-              ? { walk: { activeStopId: variant.walkStopId, sensorNamesVisible: true } }
+              ? {
+                  walk: {
+                    activeStopId: variant.walkStopId,
+                    pastPrediction: variant.walkCommitted === true,
+                    onRunComparison: () => {},
+                  },
+                }
               : {}),
           }),
         )
+        if (variant.walkStopId) {
+          assertWalkCell(sectionId, variant.walkStopId, variant.walkCommitted === true, markup)
+          renderedWalkStopIds.add(variant.walkStopId)
+          const pairKey = `${sectionId}|${variant.label.replace(/ · (committed|before commitment)$/, '')}`
+          const pair = walkMarkupByDepth.get(pairKey) ?? {}
+          pair[variant.walkCommitted ? 'committed' : 'precommit'] = markup
+          walkMarkupByDepth.set(pairKey, pair)
+        }
         return `<div class="cell"><p class="cell-label">${variant.label}</p>${markup}</div>`
       })
       .join('\n')
     return `<section><h2>${sectionId} <span class="scope">${scopeLabel(sectionId)}</span></h2><div class="matrix">${columns}</div></section>`
   })
   .join('\n')
+
+// The two depths must both be reachable and must not be the same page: identical output means the
+// gate went dead in one direction or the other.
+for (const [pairKey, pair] of walkMarkupByDepth) {
+  if (!pair.precommit || !pair.committed) {
+    throw new Error(`${pairKey}: only one commitment depth was rendered`)
+  }
+  if (pair.precommit === pair.committed) {
+    throw new Error(`${pairKey}: committed output is identical to precommit output`)
+  }
+}
+// Every stop of the whole walk was rendered — a stop dropped from a section would vanish quietly
+// from a page this size.
+for (const stop of ecmoCircuitWalkStops) {
+  if (!renderedWalkStopIds.has(stop.id)) {
+    throw new Error(`walk stop ${stop.id} was never rendered`)
+  }
+}
 
 const walkStopCount = ecmoCircuitWalkStops.length
 const drillCount = ecmoDrillTeachingPanelScenarioIds.length
@@ -675,7 +763,7 @@ writeFileSync(outputPath, html, 'utf8')
 console.log(`Wrote ${outputPath}`)
 console.log(
   `${foundationCount} foundation panels (${ecmoSharedFoundationSectionIds.length} shared × 2 profiles × 3 states, ${ecmoVvOnlyFoundationSectionIds.length} VV-only, ${ecmoVaOnlyFoundationSectionIds.length} VA-only) — ${renderedCells} rendered states`,
-  `${walkStopCount} circuit-walk stops, every one against every state its section is rendered on`,
+  `${walkStopCount} circuit-walk stops, every one against every state its section is rendered on, at both commitment depths, render-asserted`,
 )
 console.log(
   `${drillCount} drill panels — ${renderedDrillCells} rendered states, each at ${PANE_WIDTHS.map((width) => `${width.px}px`).join(' and ')}`,

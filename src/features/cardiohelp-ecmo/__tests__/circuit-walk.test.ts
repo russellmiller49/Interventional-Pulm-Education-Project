@@ -228,6 +228,85 @@ describe('the walk reaches the bedside scene through the R2 seam and nothing els
       /one integrated disposable/i,
     )
   })
+
+  /*
+   * The resolved emphasis of the return-side stops, as an outcome rather than a table entry.
+   *
+   * The independent review remapped `post-membrane` to `hls-module` — a valid scene label on the
+   * wrong object — and every test above stayed green, because they checked that anchors resolve
+   * and stay consistent with the table, never what the table ought to say. These cases pin the
+   * final resolved set each return-side stop hands the scene, so a wrong-but-valid mapping fails
+   * with the stop's name on it.
+   */
+  it.each(MODES)(
+    '%s: the return stop lights the flow sensor and the return path, and nothing upstream',
+    (mode) => {
+      const resolved = new Set(ecmoWalkStopSceneLabelIds(ecmoCircuitWalkStop('walk-return'), mode))
+      const expected = new Set(
+        mode === 'va'
+          ? ['sensor', 'return-site', 'return-clamp', 'dpc']
+          : ['sensor', 'return-site', 'return-clamp'],
+      )
+      expect(resolved).toEqual(expected)
+      // Spelled out even though the set equality implies it: the emphasized objects must never
+      // include the drainage side, which is the far end of the circuit from this stop.
+      expect(resolved.has('drainage-site')).toBe(false)
+      expect(resolved.has('drainage-clamp')).toBe(false)
+    },
+  )
+
+  it.each(MODES)(
+    '%s: the downstream-load stop lights everything the pattern spans, and nothing upstream',
+    (mode) => {
+      const resolved = new Set(
+        ecmoWalkStopSceneLabelIds(ecmoCircuitWalkStop('walk-downstream-load'), mode),
+      )
+      // Post-membrane (the sensor), the pre-membrane location and the membrane (the one integrated
+      // disposable), and the return path where the resistance actually lives.
+      const expected = new Set(
+        mode === 'va'
+          ? ['sensor', 'hls-module', 'return-site', 'return-clamp', 'dpc']
+          : ['sensor', 'hls-module', 'return-site', 'return-clamp'],
+      )
+      expect(resolved).toEqual(expected)
+      expect(resolved.has('drainage-site')).toBe(false)
+      expect(resolved.has('drainage-clamp')).toBe(false)
+    },
+  )
+
+  /*
+   * The mapping and the geometry agree: the object anchoring `post-membrane` sits on the
+   * post-membrane run.
+   *
+   * `layout.ts` places the flow/bubble sensor by construction on the return line, so the label
+   * the anchor table names for the post-membrane segment is the one scene object whose position
+   * lies on the tubing that segment describes. This is what makes `sensor` the right answer and
+   * `hls-module` — the review's mutation — a wrong one, in geometric terms rather than by fiat.
+   */
+  it.each(MODES)(
+    '%s: post-membrane anchors the object that sits on the post-membrane tubing',
+    (mode) => {
+      expect(ecmoSceneLabelIdsForSegment('post-membrane', mode)).toEqual(['sensor'])
+
+      // Lazy import so this file's content-purity checks stay about `content/`, which still holds
+      // no three.js; the test itself may read the scene's geometry.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { buildCircuitLayout } = require('../components/ecmo-circuit/layout') as {
+        buildCircuitLayout: (mode: SupportMode) => {
+          sensorPosition: { distanceTo: (other: unknown) => number }
+          returnLine: { getPoints: (count: number) => { distanceTo: (o: unknown) => number }[] }
+          drainageLine: { getPoints: (count: number) => { distanceTo: (o: unknown) => number }[] }
+        }
+      }
+      const layout = buildCircuitLayout(mode)
+      const nearest = (points: { distanceTo: (o: unknown) => number }[]) =>
+        Math.min(...points.map((point) => point.distanceTo(layout.sensorPosition)))
+      const toReturnLine = nearest(layout.returnLine.getPoints(200))
+      const toDrainageLine = nearest(layout.drainageLine.getPoints(200))
+      expect(toReturnLine).toBeLessThan(0.02)
+      expect(toDrainageLine).toBeGreaterThan(toReturnLine + 0.1)
+    },
+  )
 })
 
 describe('the walk is authored so both tracks read the same lesson', () => {
