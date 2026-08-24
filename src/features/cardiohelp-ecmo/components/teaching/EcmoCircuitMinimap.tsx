@@ -271,12 +271,25 @@ export interface EcmoCircuitMinimapProps {
    * tests name the layout they want to look at. Nothing in the app passes it.
    */
   readonly layout?: EcmoCircuitMinimapLayoutId
+  /**
+   * How the map is boxed.
+   *
+   * `card` is the standalone presentation R2 shipped: its own rounded border and padding, sized
+   * for sitting directly in a pane. `flush` is for a host that already provides the card — the
+   * circuit walk embeds this map inside its own bordered stop card, and the doubled chrome cost
+   * the drawing 34px of width. At the workspace's 280px pane floor that squeezed the compact
+   * geometry to a 212px drawing and its type to 11.4px, under the 12px floor the compact layout
+   * exists to hold; R2's floor guarantee was authored against the un-nested 246px. Flush restores
+   * exactly that content width, with the same geometry and the same type.
+   */
+  readonly frame?: 'card' | 'flush'
 }
 
 export function EcmoCircuitMinimap({
   supportMode,
   presentation,
   layout: forcedLayout,
+  frame = 'card',
 }: EcmoCircuitMinimapProps) {
   const headingId = useId()
   const titleId = useId()
@@ -487,9 +500,10 @@ export function EcmoCircuitMinimap({
   return (
     <section
       ref={sectionRef}
-      className={styles.section}
+      className={frame === 'flush' ? 'min-w-0' : styles.section}
       aria-labelledby={headingId}
       data-circuit-minimap
+      data-map-frame={frame}
       data-map-layout={layout}
       data-support-mode={supportMode}
       data-presentation={presentation.kind}

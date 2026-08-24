@@ -176,6 +176,9 @@ export function EcmoCircuitWalk({
 
       <EcmoCircuitMinimap
         supportMode={supportMode}
+        // Flush: this card already boxes its content, and the map's own card chrome inside it cost
+        // the drawing the width the compact type floor was authored against. See the prop's doc.
+        frame="flush"
         presentation={deriveEcmoCircuitPresentation(state, {
           kind: 'foundation-walk-stop',
           stopId: stop.id,

@@ -469,6 +469,9 @@ describe('foundation teaching panels', () => {
     expect(map).not.toBeNull()
     expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
     expect(map?.getAttribute('data-walk-stop')).toBe('walk-drainage')
+    // Embedded flush: the stop card already boxes it, and the doubled chrome cost the drawing the
+    // width the compact type floor was authored against (11.4px at the 280px pane floor).
+    expect(map?.getAttribute('data-map-frame')).toBe('flush')
     // Exactly one map in the pane: the walk's replaced the section's rather than joining it.
     expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
     // A foundation map teaches; it never marks a segment as the culprit.
