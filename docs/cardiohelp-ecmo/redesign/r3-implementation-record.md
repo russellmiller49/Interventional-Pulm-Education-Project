@@ -32,7 +32,9 @@ position), `foundationLessonRuntime.ts` (two states, two appended actions, a wid
 `foundationLearningItems.ts` (one number in one stem), `teaching/shared.tsx` (a comparison phrase),
 `localizationCards.ts` (one qualifier, §6b), and the render harness.
 
-Twenty-eight files in all.
+Twenty-nine files in all. (The first version of this record said twenty-eight; the independent
+review counted the diff and found twenty-nine — finding H of the BLOCKED verdict in §10. After the
+correction pass recorded there, the branch touches thirty-eight.)
 
 Untouched: the engine, every scenario, every route, `progress.ts`, the storage key, the progress
 envelope, scoring, mastery, Practice, Assess, publication status, `learningPathways.ts`,
@@ -47,9 +49,11 @@ the sentence without it.
 
 ## 2. Owner decisions, as taken
 
-- **R3-OD-1 (the bounded speed change)** — taken as recommended, option (a). The step widens from
-  two hundred rpm to four hundred and the stem's number follows it. §3 records why this was
-  blocking rather than cosmetic.
+- **R3-OD-1 (the bounded speed change)** — taken as recommended, option (a). The step widened from
+  two hundred rpm to four hundred and the stem's number followed it. §3 records why this was
+  blocking rather than cosmetic — and §10 records the correction: the account that four hundred was
+  the smallest visible step was false, and the step is now three hundred, the smallest magnitude
+  the console shows in both directions.
 - **R3-OD-2 (`?stop=` in the URL)** — declined, as recommended. The stop is local state; a reload
   returns to the section's first stop. `?phase=` earned its place by solving a clean-state problem
   that stops do not have.
@@ -76,15 +80,20 @@ pressure by six tenths of one, so the model moved and the display did not. What 
 the distractor `flow-up-drainage-unchanged`, whose own rationale tells them the drainage side does
 not stay unchanged.
 
-Four hundred is the smallest step this console can show the change at: −35 → −36 raising, −35 → −33
-backing off, with no fault injected, no alarm, and no critical error charged, because a reference
-circuit carries no drainage capacity to exceed. The item keeps its id, its four choices, its key,
-every rationale and its explanation.
+The step was widened to four hundred with the claim that it was the smallest the console could show
+the change at. **That claim was false**, and the independent review caught it (§10): the rounding
+to whole millimetres is not symmetric about the reference, so the smallest visible increase is
++300, the smallest visible decrease is already −100, and ±300 is the smallest magnitude visible in
+both directions. The step is now three hundred — the sweep is tabulated in §10 — with no fault, no
+alarm, and no critical error charged anywhere in ±400, because a reference circuit carries no
+drainage capacity to exceed. The item keeps its id, its four choices, its key, every rationale and
+its explanation; only the stem's number moved with the step.
 
 `foundation-comparisons.test.ts` asserts on `readouts.*.displayed` throughout — a suite written
 against the raw model values would have passed the whole time the lesson was contradicting itself —
-and pins the two-hundred band explicitly, so shrinking the step back into it fails with a sentence
-saying what went wrong.
+and now runs the full displayed-readout sweep on every run, deriving the smallest visible increase,
+the smallest visible decrease and the smallest symmetric magnitude from the engine rather than
+pinning one number's story, which is how the first pin preserved a false account.
 
 ## 4. Decisions taken during implementation
 
@@ -331,3 +340,143 @@ distinction is stated rather than papered over.
 - `pre-membrane`, `pump` and `membrane` still share one bedside-scene anchor (R3-OD-4).
 - The Three Knobs, the story problems, the Watershed Explorer, the Act-I copy trims, and everything
   else the plan listed as out of scope remain out of scope.
+
+## 10. The independent correction pass (BLOCKED → corrected)
+
+An independent review of PR #117 at `6bd7b5a6` returned **BLOCKED — CORRECTION REQUIRED**, with
+eight findings, every one reproduced on this branch before any edit was made. The six-stop
+architecture, the R2 registry reuse, the shared VV/VA behaviour, the downstream comparison and the
+3D emphasis design were accepted; nothing outside the findings was redesigned. Five commits carry
+the corrections: `b64fc6d0`, `8e83f6ba`, `e5464908`, `77980c9a`, and the docs commit carrying this
+section.
+
+**A — the composed teaching pane leaked the keyed answer.** Reproduced: in recognize and predict,
+uncommitted, `CircuitFlowPathPanel`'s text equivalent said "pInt between pump and membrane" — the
+keyed prediction verbatim — and the pInt value guide (titled "pre-membrane", reading "after the
+pump and before the membrane lung") said it again, both in the pane beside the question while the
+walk card above them withheld correctly. Corrected: both surfaces gate on the commitment; the
+precommit text equivalent describes the same schematic without placing any pressure channel and
+says when the placements arrive; the three pressure guides wait together so the keyed one's absence
+is not itself a pointer; the pArt safety boundary keeps its claim at both depths and defers only
+its placement clause. A composed-DOM leak test mounts the whole activity and scans visible, hidden
+and aria text sentence-by-sentence for semantic equivalents of the answer (not one wording), with
+no negation exception, and was verified by mutation to fail against the pre-fix panel.
+
+**B — phase clicks and phase URLs bypassed the commitment.** Reproduced: clicking `act`, or
+mounting at `?phase=act`, exposed `Reported here:` with nothing committed, because the reveal
+predicate was `phase !== 'recognize' && phase !== 'predict'`. Corrected: one authority,
+`predictionCommitted`, derived from the committed choice id and nothing else, consumed by every
+answer-bearing surface. Later phase buttons disable until commitment and the transition itself
+refuses gated phases; a URL into a gated phase clamps to `predict` at the mount boundary, with a
+note naming the phase that is waiting — no commitment is reconstructed from URL state or stored
+traversal. Back-navigation preserves the session's commitment; a remount starts uncommitted. The
+transfer→preview variant mappings remain authored and validated but are not honoured at an
+uncommitted mount; the learner reaches those states through the transfer phase's own instruction.
+
+**C — the compact workspace tabs were a keyboard trap.** Reproduced on the shared
+`ResizableTeachingWorkspace`: inactive tabs at `tabIndex="-1"`, and ArrowLeft/Right/Up/Down, Home
+and End all dead, so keyboard-only access to two of the three panes was impossible at compact
+widths in every consuming module. Corrected with the WAI-ARIA tabs pattern (selection follows
+focus, wrapping both ways, Home/End, Up/Down mirroring, one tab in the Tab order), pointer
+activation and mounted-while-hidden panes unchanged. Shared-component tests added; consumers
+characterized by running the mechanical-ventilation, mechanical-circulatory-support,
+learning-module and cardiohelp-ecmo suites against the change.
+
+**D — the RPM observability claim was false.** Reproduced, matching the review's numbers exactly.
+The displayed-readout sweep from the settled reference (both tracks identical; baseline 3200 rpm,
+flow 4.05, pVen −35; guided-action path: SET_RPM then six settle seconds):
+
+| Δrpm | flow | pVen | pInt | pArt | ΔP  | faults / alarms / critical |
+| ---- | ---- | ---- | ---- | ---- | --- | -------------------------- |
+| +100 | 4.18 | −35  | 245  | 213  | 32  | none                       |
+| +200 | 4.30 | −35  | 248  | 215  | 33  | none                       |
+| +300 | 4.43 | −36  | 251  | 217  | 34  | none                       |
+| +400 | 4.56 | −36  | 255  | 219  | 36  | none                       |
+| −100 | 3.92 | −34  | 239  | 209  | 30  | none                       |
+| −200 | 3.80 | −34  | 236  | 207  | 29  | none                       |
+| −300 | 3.67 | −34  | 233  | 205  | 28  | none                       |
+| −400 | 3.54 | −33  | 230  | 203  | 27  | none                       |
+
+Smallest visible increase +300; smallest visible decrease −100; smallest symmetric magnitude 300.
+Corrected: stem and both bounded actions use 300; +300 moves displayed pVen −35 → −36 and −300
+moves it −35 → −34; every channel stays valid and nothing is charged. The pinned "two-hundred band"
+test is replaced by the sweep, which distinguishes the three quantities on every run.
+
+**E — the pan.** The defect did not reproduce: in the production build, right-drag at the default
+framing enters no drag state, and past the unlock distance a right-drag pans the rig with the world
+labels moving with it (verified in the running production page). The review's suspected mechanism
+is disconfirmed — R3F v9 re-applies only props whose JSX value changed, so the constant
+`enablePan={false}` was applied once at construction and the per-frame mutation owned the field
+thereafter — and the code was byte-identical to the merge base, so the conflict was inherited, not
+introduced. What was real is the split ownership, now resolved: the JSX prop is gone, the instance
+locks in the ref callback before the first frame, and `applyBedsidePanFrameRules` in `panning.ts`
+is the single writer, driven unchanged by the scene's `useFrame`. An integration regression runs a
+real three-stdlib OrbitControls under real pointer events — dead drag at default framing, genuine
+rig pan when zoomed, stale writes overridden in both directions — plus a comment-stripped source
+pin that keeps a second authority from returning.
+
+**F — the render harness was vacuous.** Reproduced: it passed `sensorNamesVisible`, a prop no
+component declares; the committed content rendered only because the hook defaults to committed for
+hostless callers, and forcing the hook to uncommitted left the harness exiting zero with zero
+`Reported here:` cells on the page. Corrected: the harness passes the real `pastPrediction`
+contract with both values, renders all six stops of both sections at both depths (65 foundation
+states), hands the comparative stop a beat handler, and asserts every walk cell at render time —
+requested stop actually rendered, no precommit reveal, committed reveal present, beats gated, the
+two depths never identical. The same mutation now fails the harness with exit 1.
+
+**G — two semantic gaps, both reproduced as green-suite mutations, both now killed.** Removing the
+similar-flow qualifier from the `return-path-resistance` signature left all 49 suites green;
+`gradientComparisonBasis` now declares the rule on the row (the check surfaced that
+`membrane-resistance` states the same rule and now declares it too), and the import-time validator
+couples declaration and sentence both ways, so the mutation dies at import in both tracks while
+rewordings that keep the rule pass. Remapping `post-membrane` to the valid-but-wrong `hls-module`
+also left every suite green; the resolved emphasis sets of the return and downstream-load stops are
+now pinned in both tracks (DPC in VA only, never a drainage anchor), a geometric check ties the
+post-membrane anchor to the object sitting on the post-membrane tubing, and the rendered
+"Highlighted in the bedside scene" line is asserted — the same mutation now fails seven tests.
+
+**H — this record undercounted its own diff** (twenty-eight for twenty-nine); corrected in §1.
+
+**Two defects the correction pass's own verification found, both fixed.** First: the compact map's
+type measured **11.36px at the review's 280px teaching-pane floor** — under the 12px floor, and
+present since the walk shipped, because R3 nested the map's bordered card inside the walk's
+bordered stop card and squeezed the drawing from the 246px R2's guarantee was authored against to
+212px. The prior R3 pass never measured the floor (its panes were 320px and up). The map now takes
+a `frame` prop — standalone consumers keep R2's card, the walk embeds it flush — restoring the
+guaranteed width with the same geometry and type; re-measured at the exact floor in the rebuilt
+production page. Second: the first version of the pan-ownership fix locked `enablePan` in the ref
+callback unconditionally; callback refs re-run per commit and the scene re-renders every
+simulation tick, so pan was re-locked between frames — the split-authority defect again, from the
+other side, caught by re-running the production pan probe against the rebuilt page. The lock is
+now keyed to the controls instance (`lockBedsidePanOnNewInstance`), with the exact regression in
+the integration suite.
+
+Verification of the correction pass: the review's focused command
+(`npx jest src/features/cardiohelp-ecmo src/features/critical-care src/features/learning-module
+'src/app/\[locale\]/cardiohelp-ecmo' --runInBand`) — **85 suites, 1767 tests, green**; consumer
+characterization (mechanical-ventilation + mechanical-circulatory-support + learning-module) —
+1397 tests green; `npm run build:content`, `npm run type-check`, `npm run lint` (0 errors, the 19
+pre-existing warnings all in files this pass never touched), `npm run test:a11y` (16 green),
+`npm run render:ecmo-teaching` (assertions on, exit 0), `npm run build`, `git diff --check` —
+clean. Production-browser results are recorded in §10b.
+
+## 10b. Production-browser verification of the correction pass
+
+Run against the corrected build on the standalone production server, on the public-unlisted routes.
+Where the harness's hidden pane suspends `requestAnimationFrame`, interaction state was read
+synchronously off the OrbitControls event pipeline and label movement confirmed across forced
+paints; the method and its one artifact (synthetic pointer capture) are noted so the measurements
+can be re-taken.
+
+| Check                                                                              | Result                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Precommit answer leak (visible + accessible DOM, recognize and predict, VV and VA) | None — sentence-level scan of the composed page, prediction item excluded, zero hits                                                                                                                                                 |
+| Act click without commitment                                                       | No-op: button disabled, phase stays `recognize`, nothing revealed                                                                                                                                                                    |
+| Direct `?phase=act` deep link                                                      | Fails closed: opens at `predict`, clamped note names the waiting phase, no reveal, no bounded actions                                                                                                                                |
+| Commitment reveal                                                                  | "Reported here: drainage pressure (pVen)." appears on commit; committed text equivalent and pInt guide return; later phases enable; back-navigation preserves it                                                                     |
+| Compact tabs, keyboard only (1024×768 and 390×844)                                 | Fully operable: arrows walk and wrap both ways, Home/End jump, Up/Down mirror; selection, focus, roving tabIndex and the visible pane move together; Teaching genuinely reachable                                                    |
+| Map label floor                                                                    | 13.48px at 1280, 15.43px at 1024, 13.11px at 390; at the exact 280px pane floor, after the flush fix: 246px drawing, **13.18px segment and 12.45px site type** — above the 12px floor                                                |
+| Pan                                                                                | Locked at default framing (right-drag enters no state); past the unlock distance a right-drag pans the rig and both world labels move with the drag (depth-dependent magnitudes)                                                     |
+| Six 3D emphasis states                                                             | Stop 1 drainage site + clamp · 2 HLS · 3 HLS · 4 sensor + return site + return clamp · 5 HLS + drainage site + clamp · 6 sensor + HLS + return site + return clamp **+ DPC under VA**; never a drainage anchor at a return-side stop |
+| Layout                                                                             | No horizontal document scroll at 1600×900, 1440×900, 1280×720/800, 1024×768, 390×844, or the 280px floor; exactly three `data-scroll-pane` scrollers; Back and Next visible throughout                                               |
+| WebGL fallback                                                                     | Unchanged code path; covered by the existing jsdom fallback tests — not re-triggered in the browser                                                                                                                                  |
