@@ -575,6 +575,10 @@ function EcmoFoundationLessonWorkspace({
           dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
           controlsEnabled={false}
           emphasisSceneLabelIds={emphasisSceneLabelIds}
+          // The diagnostic map's channel placements are the flow-path section's keyed answer, and
+          // its SVG description used to walk them unconditionally — the re-review's remaining
+          // leak. Same single authority as every other answer-bearing surface, nothing phase-derived.
+          locationDisclosure={predictionCommitted ? 'full' : 'withheld'}
         />
       </div>
       <p

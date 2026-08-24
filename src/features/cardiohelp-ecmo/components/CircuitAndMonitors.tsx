@@ -29,12 +29,31 @@ import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
 
+/**
+ * Whether the diagnostic map may say where the pressure channels are taken.
+ *
+ * `full` is every existing consumer: the drills teach patterns, the console tour teaches locations
+ * on purpose, and both already have their own reveal gates for what they withhold. `withheld` is
+ * for a host whose *prediction is the locations* — the flow-path foundation section asks "where in
+ * the blood path does the circuit report pInt?", and this map answered it three ways at once: a
+ * visible pInt flag on the pump-outflow path, the Δp bracket naming pInt − pArt across the
+ * membrane, and an SVG description that walks every channel along the path ("Pump outflow passes
+ * pInt, a pre-oxygenator access point…") — all mounted in the DOM before commitment and one tab
+ * click from the screen. Under `withheld` the drawing keeps its topology (limbs, pump, membrane,
+ * access point, arrows, chatter) and the readout grid keeps its names and live values; what waits
+ * for the commitment is exactly the channel *placements*, in the drawing and in its description
+ * alike. The host derives the value from its one commitment authority and nothing else.
+ */
+export type CircuitLocationDisclosure = 'full' | 'withheld'
+
 interface SimulationPanelProps {
   state: EcmoSimulationState
   dispatch: (action: SimulationAction) => void
   controlsEnabled: boolean
   guidedTarget?: GuidedTarget | null
   guidedControlId?: GuidedControlId | null
+  /** See {@link CircuitLocationDisclosure}. Defaults to `full`. */
+  locationDisclosure?: CircuitLocationDisclosure
   /**
    * The circuit surface the active guided step is read on, tagged with that step's id.
    *
@@ -86,7 +105,9 @@ function CircuitSchematic({
   circuitViewPreference,
   emphasisSceneLabelIds,
   onSaveForLater,
+  locationDisclosure = 'full',
 }: SimulationPanelProps) {
+  const locationsDisclosed = locationDisclosure === 'full'
   const diagramScrollRef = useRef<HTMLDivElement>(null)
   const [circuitView, setCircuitView] = useState<CircuitViewPreference>(
     () => circuitViewPreference?.view ?? 'bedside',
@@ -142,7 +163,29 @@ function CircuitSchematic({
   const returnLimbPath = `M825 385 H1000 Q1042 385 1042 427 V512 Q1042 540 1014 540 H${
     returnPortX + 28
   } Q${returnPortX} 540 ${returnPortX} 512 V455`
-  const circuitDescription = `${supportModeLabel} ECMO blood drains through a femoral venous cannula and the pVen pressure zone into a centrifugal pump. Pump outflow passes pInt, a pre-oxygenator access point, and the membrane oxygenator. Oxygenated blood then passes pArt and the flow and bubble sensor before returning through the ${returnVesselLabel} toward the ${returnDestinationLabel}.${
+  /*
+   * Two descriptions, one per disclosure depth, both complete for what the drawing shows at that
+   * depth.
+   *
+   * The full sentence walks every pressure channel along the blood path — including "Pump outflow
+   * passes pInt, a pre-oxygenator access point", which is the flow-path section's keyed prediction
+   * in the diagnostic map's own words. It used to render unconditionally, mounted in the DOM even
+   * with the bedside tab selected, so the accessible description of a hidden drawing answered the
+   * question the pane beside it had not yet asked; the independent re-review reproduced it. The
+   * withheld version describes the same topology without placing any channel, and says when the
+   * placements arrive — matching the drawing, which withholds its sensor flags at the same depth.
+   */
+  const channelWalkSentences =
+    'ECMO blood drains through a femoral venous cannula and the pVen pressure zone into a centrifugal pump. Pump outflow passes pInt, a pre-oxygenator access point, and the membrane oxygenator. Oxygenated blood then passes pArt and the flow and bubble sensor before returning'
+  const withheldWalkSentences =
+    'ECMO blood drains through a femoral venous cannula into a centrifugal pump, passes a pre-oxygenator access point and the membrane oxygenator, and returns'
+  const circuitDescription = `${supportModeLabel} ${
+    locationsDisclosed ? channelWalkSentences : withheldWalkSentences
+  } through the ${returnVesselLabel} toward the ${returnDestinationLabel}.${
+    locationsDisclosed
+      ? ''
+      : ' Where each pressure channel is taken on this path is what this lesson asks you to place, so the sensor locations are drawn and described once you have committed your prediction.'
+  }${
     isVa
       ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
       : ' Both cannulas remain in the venous circulation and systemic flow still depends on the native heart.'
@@ -173,6 +216,7 @@ function CircuitSchematic({
       aria-labelledby="circuit-heading"
       data-guided-focus={guidedTarget === 'circuit'}
       data-guided-help={guidedControlId === 'cardiohelp-circuit-panel'}
+      data-location-disclosure={locationDisclosure}
       tabIndex={-1}
     >
       {guidedTarget === 'circuit' ? (
@@ -571,46 +615,74 @@ function CircuitSchematic({
               SWEEP GAS IN
             </text>
 
-            <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
-            <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
-              Δp TREND = pInt − pArt ·{' '}
-              {
-                formatChannelReadout('Δp trend', state.circuit.readouts.deltaP, 'mmHg', 0)
-                  .displayText
-              }
-            </text>
+            {/*
+              The channel placements — the four sensor flags and the Δp bracket that names
+              pInt − pArt across the membrane — wait for the commitment together with the SVG
+              description above. Everything they point at (limbs, pump, membrane, access point)
+              stays: the topology is the teaching, the placements are the answer.
+            */}
+            {locationsDisclosed ? (
+              <>
+                <g data-delta-bracket>
+                  <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
+                  <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
+                    Δp TREND = pInt − pArt ·{' '}
+                    {
+                      formatChannelReadout('Δp trend', state.circuit.readouts.deltaP, 'mmHg', 0)
+                        .displayText
+                    }
+                  </text>
+                </g>
 
-            <g transform="translate(340 321)" className={styles.sensorFlag}>
-              <rect x="-34" y="-20" width="68" height="40" rx="10" />
-              <text y="5" textAnchor="middle">
-                pVen
-              </text>
-              <path d="M0 20 V57" className={styles.sensorLeader} />
-            </g>
-            <g transform="translate(584 295)" className={styles.sensorFlag}>
-              <rect x="-34" y="-20" width="68" height="40" rx="10" />
-              <text y="5" textAnchor="middle">
-                pInt
-              </text>
-              <path d="M0 20 V83" className={styles.sensorLeader} />
-            </g>
-            <g transform="translate(884 295)" className={styles.sensorFlag}>
-              <rect x="-34" y="-20" width="68" height="40" rx="10" />
-              <text y="5" textAnchor="middle">
-                pArt
-              </text>
-              <path d="M0 20 V83" className={styles.sensorLeader} />
-            </g>
-            <g transform="translate(963 314)" className={styles.sensorFlag}>
-              <rect x="-52" y="-24" width="104" height="48" rx="11" />
-              <text y="-2" textAnchor="middle">
-                FLOW +
-              </text>
-              <text y="13" textAnchor="middle">
-                BUBBLE SENSOR
-              </text>
-              <path d="M0 24 V64" className={styles.sensorLeader} />
-            </g>
+                <g
+                  transform="translate(340 321)"
+                  className={styles.sensorFlag}
+                  data-sensor-flag="pVen"
+                >
+                  <rect x="-34" y="-20" width="68" height="40" rx="10" />
+                  <text y="5" textAnchor="middle">
+                    pVen
+                  </text>
+                  <path d="M0 20 V57" className={styles.sensorLeader} />
+                </g>
+                <g
+                  transform="translate(584 295)"
+                  className={styles.sensorFlag}
+                  data-sensor-flag="pInt"
+                >
+                  <rect x="-34" y="-20" width="68" height="40" rx="10" />
+                  <text y="5" textAnchor="middle">
+                    pInt
+                  </text>
+                  <path d="M0 20 V83" className={styles.sensorLeader} />
+                </g>
+                <g
+                  transform="translate(884 295)"
+                  className={styles.sensorFlag}
+                  data-sensor-flag="pArt"
+                >
+                  <rect x="-34" y="-20" width="68" height="40" rx="10" />
+                  <text y="5" textAnchor="middle">
+                    pArt
+                  </text>
+                  <path d="M0 20 V83" className={styles.sensorLeader} />
+                </g>
+                <g
+                  transform="translate(963 314)"
+                  className={styles.sensorFlag}
+                  data-sensor-flag="flow-bubble"
+                >
+                  <rect x="-52" y="-24" width="104" height="48" rx="11" />
+                  <text y="-2" textAnchor="middle">
+                    FLOW +
+                  </text>
+                  <text y="13" textAnchor="middle">
+                    BUBBLE SENSOR
+                  </text>
+                  <path d="M0 24 V64" className={styles.sensorLeader} />
+                </g>
+              </>
+            ) : null}
             <circle cx="650" cy="385" r="10" className={styles.accessPoint} />
             <path d="M650 375 V333" className={styles.accessLeader} />
             <text x="650" y="320" textAnchor="middle" className={styles.accessLabel}>
@@ -644,6 +716,12 @@ function CircuitSchematic({
             />
           </svg>
         </div>
+        {locationsDisclosed ? null : (
+          <p className={styles.circuitPanHint} data-location-withheld-note>
+            Where each pressure channel is taken is what this lesson asks you to place, so the
+            sensor markers appear on this map once you have committed your prediction.
+          </p>
+        )}
         <p className={styles.circuitPanHint}>
           On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
           the full circuit.
@@ -674,10 +752,13 @@ function CircuitSchematic({
             <i data-kind="gas" aria-hidden="true" />
             <span>Sweep-gas path through simplified hollow fibers</span>
           </li>
-          <li>
-            <i data-kind="sensor" aria-hidden="true" />
-            <span>Pressure or flow sensor</span>
-          </li>
+          {/* Describes the flag glyphs, which are withheld with the placements they mark. */}
+          {locationsDisclosed ? (
+            <li>
+              <i data-kind="sensor" aria-hidden="true" />
+              <span>Pressure or flow sensor</span>
+            </li>
+          ) : null}
         </ul>
       </div>
 
