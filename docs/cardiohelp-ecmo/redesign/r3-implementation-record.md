@@ -34,7 +34,7 @@ position), `foundationLessonRuntime.ts` (two states, two appended actions, a wid
 
 Twenty-nine files in all. (The first version of this record said twenty-eight; the independent
 review counted the diff and found twenty-nine — finding H of the BLOCKED verdict in §10. After the
-correction pass recorded there, the branch touches thirty-eight.)
+correction pass recorded there, the branch touches thirty-seven after the re-review pass — see §10c.)
 
 Untouched: the engine, every scenario, every route, `progress.ts`, the storage key, the progress
 envelope, scoring, mastery, Practice, Assess, publication status, `learningPathways.ts`,
@@ -480,3 +480,54 @@ can be re-taken.
 | Six 3D emphasis states                                                             | Stop 1 drainage site + clamp · 2 HLS · 3 HLS · 4 sensor + return site + return clamp · 5 HLS + drainage site + clamp · 6 sensor + HLS + return site + return clamp **+ DPC under VA**; never a drainage anchor at a return-side stop |
 | Layout                                                                             | No horizontal document scroll at 1600×900, 1440×900, 1280×720/800, 1024×768, 390×844, or the 280px floor; exactly three `data-scroll-pane` scrollers; Back and Next visible throughout                                               |
 | WebGL fallback                                                                     | Unchanged code path; covered by the existing jsdom fallback tests — not re-triggered in the browser                                                                                                                                  |
+
+## 10c. The correction re-review: one remaining P1, corrected
+
+The independent re-review accepted every corrected area and returned **BLOCKED** on one remaining
+finding: the composed leak had a third instance, in the one component the correction pass's own
+leak test had mocked away. `CircuitAndMonitors` — the primary pane's real circuit surface — placed
+the keyed answer on its diagnostic pressure-zone map three ways at once: a visible `pInt` sensor
+flag on the pump-outflow path between the pump and the membrane, the Δp bracket naming
+`pInt − pArt` across the membrane, and an SVG `<desc>` that walks every channel along the blood
+path ("Pump outflow passes pInt, a pre-oxygenator access point, and the membrane oxygenator").
+All of it was mounted in the DOM before commitment — the tabpanel is `hidden`, not absent — and
+one click on the Pressure-zone map tab put it on screen.
+
+Reproduced failing-first at the re-reviewed head by rewriting the leak suite to mock only
+`EcmoCircuit3D` (the WebGL leaf jsdom cannot render) and scanning the real composed activity: ten
+of thirteen cases caught the `<desc>` sentence verbatim, in recognize, predict, the `?phase=act`
+deep link, and after the tab click, in both tracks.
+
+Corrected with an explicit disclosure contract on the component:
+`CircuitLocationDisclosure = 'full' | 'withheld'`. Withheld keeps the drawing's topology — limbs,
+pump, membrane, access point, arrows, the chatter cues — and the readout grid's channel names and
+live values, and holds back exactly the placements: the four sensor flags, the Δp bracket, the
+sensor legend row, and the description's channel walk, replaced by a truthful account (in the
+`<desc>` and in a visible note) of when the placements arrive. The foundation activity derives the
+value from `predictionCommitted`, the same single authority as every other answer-bearing surface;
+every other consumer defaults to `full`, so the drills and the console tour — whose teaching the
+locations are — render exactly as before. The scan itself now works per text node and per prose
+sentence (SVG labels are period-less, and whole-page concatenation would let unrelated labels form
+false adjacencies), covers SVG `<title>`/`<desc>`, hidden tabpanels, sr-only text and aria-labels,
+and carries the re-review's added semantic patterns (pInt near pre-oxygenator, pump outflow, or
+access point; pInt before the membrane or oxygenator). The gate was mutation-checked by forcing it
+open — eight cases fail.
+
+The temporary `claude-ecmo-prod` entry this pass had added to `.claude/launch.json` for
+production-browser verification is removed again after the re-verification below; the branch
+leaves the file as `main` has it.
+
+Re-review verification: the leak suite reproduced failing-first (10 of 13), then 13/13 after the
+fix, with the gate mutation-checked (forced open → 8 fail). Review's focused command — **85
+suites, 1772 tests, green**; full `cardiohelp-ecmo` 1415 green; `build:content`, `type-check`,
+`lint` (0 errors, the same 19 pre-existing warnings), `test:a11y` 16 green,
+`render:ecmo-teaching` exit 0, `npm run build`, `git diff --check` — clean. Production browser,
+corrected build: precommit the diagnostic panel reports `data-location-disclosure="withheld"`,
+zero sensor flags, no Δp bracket, a `<desc>` free of every channel name that says when the
+placements arrive, and the visible withheld note — identical after selecting the Pressure-zone
+map tab; on commitment the panel flips to `full` with all four flags, the bracket, and the full
+channel-walking description; a Practice-lane drill (`preload-drainage-collapse`) renders `full`
+with all placements untouched. A pixel capture of the withheld map was again defeated by the
+module's two-scroll-region screenshot limitation (§7c states the same for the 3D gate); the
+layered DOM reads above are the evidence. With the launcher entry removed, the branch touches
+**thirty-seven files**; §1's count note is superseded to that figure.
