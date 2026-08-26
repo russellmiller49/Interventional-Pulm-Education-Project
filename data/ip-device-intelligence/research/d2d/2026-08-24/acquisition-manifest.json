@@ -1,0 +1,554 @@
+{
+  "format_version": 1,
+  "artifact_kind": "d2d_acquisition_manifest",
+  "method_version": "d2d-evidence-acquisition-v1",
+  "snapshot_date": "2026-08-24",
+  "source_organization": "U.S. Food and Drug Administration / NLM",
+  "pilot_cohort": {
+    "path": "data/ip-device-intelligence/reviewed/d2d-pilot-cohort.json",
+    "sha256": "42ff900ac64cc10d8b966aafafde6cac68627c6536b3c1664d2f6254d4825592"
+  },
+  "results": [
+    {
+      "query_id": "D2D-Q-AXESS-XFLO-UDI-03664977000103",
+      "product_id": "PRD-2632FFBF07",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "identifiers.id:\"03664977000103\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": "2026-08-03",
+      "retrieved_at": ["2026-08-24T17:17:56.636Z"],
+      "response_sha256s": ["9f104c0006e6f5b10d18884e5c857adf04543b6a8019713df559a6709d289fc6"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/0697b151a2c0c3b1589c745c83e4bdcd484012a42657388129465247a93bcb88.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=identifiers.id%3A%2203664977000103%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:17:56.636Z",
+          "http_status": 200,
+          "response_sha256": "9f104c0006e6f5b10d18884e5c857adf04543b6a8019713df559a6709d289fc6",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/0697b151a2c0c3b1589c745c83e4bdcd484012a42657388129465247a93bcb88.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": "1182b967-23e2-4170-a8e9-47d05bc32290",
+          "primary_di": "03664977000103",
+          "package_dis": [],
+          "company_name": "AXESS VISION TECHNOLOGY",
+          "brand_name": "Broncoflex XFlo",
+          "catalog_number": null,
+          "model_number": "10040001",
+          "device_name": "Broncoflex XFlo 5.6/3.0",
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2025-07-18"
+        }
+      ]
+    },
+    {
+      "query_id": "D2D-Q-CLR-UDI-00860003054901",
+      "product_id": "PRD-003C4641E6",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "identifiers.id:\"00860003054901\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": "2026-08-03",
+      "retrieved_at": ["2026-08-24T17:17:50.900Z"],
+      "response_sha256s": ["e7d7f0a0dcc87265f0068e5d5fdee09ac1c8b7b2a55c6ef350d63534f49371bb"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/2d896b21efca455c66ee5b172c816493d49299df3121eccf057349b54c9f4cb2.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=identifiers.id%3A%2200860003054901%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:17:50.900Z",
+          "http_status": 200,
+          "response_sha256": "e7d7f0a0dcc87265f0068e5d5fdee09ac1c8b7b2a55c6ef350d63534f49371bb",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/2d896b21efca455c66ee5b172c816493d49299df3121eccf057349b54c9f4cb2.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": "0e0fea1d-e853-4e90-acc9-0224abc217d0",
+          "primary_di": "00860003054901",
+          "package_dis": ["00860003054987"],
+          "company_name": "CLR Medical",
+          "brand_name": "CLR Irrigator",
+          "catalog_number": null,
+          "model_number": "S012-01-019",
+          "device_name": null,
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2024-05-29"
+        }
+      ]
+    },
+    {
+      "query_id": "D2D-Q-COOK-UDI-G57682",
+      "product_id": "PRD-B76AF3D731",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "catalog_number:\"G57682\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": null,
+      "retrieved_at": ["2026-08-24T17:18:13.894Z"],
+      "response_sha256s": ["5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/de874fe8b037283d1b5881655468d2307fe9c425cab575b45c016789c31cd112.json"
+      ],
+      "result_total": null,
+      "result_count": 0,
+      "complete": true,
+      "http_statuses": [404],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=catalog_number%3A%22G57682%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:13.894Z",
+          "http_status": 404,
+          "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/de874fe8b037283d1b5881655468d2307fe9c425cab575b45c016789c31cd112.json"
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "query_id": "D2D-Q-ERBE-UDI-20402-411",
+      "product_id": "PRD-05670F1B5F",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "catalog_number:\"20402-411\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": "2026-08-03",
+      "retrieved_at": ["2026-08-24T17:17:52.644Z"],
+      "response_sha256s": ["e7c06f0a09e078d1d450fcdc1eba8e552aa3b70150a028a70a4d75893b3cb74b"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/a1e6945a2b783d3fc084f46ef1c9c910607817de894976ba46e7e46e53d82953.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=catalog_number%3A%2220402-411%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:17:52.644Z",
+          "http_status": 200,
+          "response_sha256": "e7c06f0a09e078d1d450fcdc1eba8e552aa3b70150a028a70a4d75893b3cb74b",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/a1e6945a2b783d3fc084f46ef1c9c910607817de894976ba46e7e46e53d82953.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": "75fbe42c-49fb-4380-adb3-173ac6824728",
+          "primary_di": "04050147021839",
+          "package_dis": ["04050147021846"],
+          "company_name": "Erbe Elektromedizin GmbH",
+          "brand_name": "ERBE",
+          "catalog_number": "20402-411",
+          "model_number": "20402-411",
+          "device_name": null,
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2020-02-07"
+        }
+      ]
+    },
+    {
+      "query_id": "D2D-Q-MEDTRONIC-UDI-1884035HRE",
+      "product_id": "PRD-3E1556EBE5",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "catalog_number:\"1884035HRE\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": null,
+      "retrieved_at": ["2026-08-24T17:17:58.612Z"],
+      "response_sha256s": ["5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/1845af050b88d42b75e5970dc915233c1e6741dca1db6ed45039d2fa51ec5ef1.json"
+      ],
+      "result_total": null,
+      "result_count": 0,
+      "complete": true,
+      "http_statuses": [404],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=catalog_number%3A%221884035HRE%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:17:58.612Z",
+          "http_status": 404,
+          "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/1845af050b88d42b75e5970dc915233c1e6741dca1db6ed45039d2fa51ec5ef1.json"
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "query_id": "D2D-Q-NOVATECH-UDI-01TD1120",
+      "product_id": "PRD-F4AE2A74E6",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "catalog_number:\"01TD1120\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": null,
+      "retrieved_at": ["2026-08-24T17:18:15.786Z"],
+      "response_sha256s": ["5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/e9e3d40f8bf3d632bcc5441bf027fe2f503a948d188642ef43d841f22f7a8b30.json"
+      ],
+      "result_total": null,
+      "result_count": 0,
+      "complete": true,
+      "http_statuses": [404],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=catalog_number%3A%2201TD1120%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:15.786Z",
+          "http_status": 404,
+          "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/e9e3d40f8bf3d632bcc5441bf027fe2f503a948d188642ef43d841f22f7a8b30.json"
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "query_id": "D2D-Q-PRAXIS-UDI-00850081350033",
+      "product_id": "PRD-1ED27ADA45",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "identifiers.id:\"00850081350033\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": "2026-08-03",
+      "retrieved_at": ["2026-08-24T17:17:54.627Z"],
+      "response_sha256s": ["c333f91cdc6d7c523f3feed941fc44bc8605bd06e94ac71fca2901f7d48a524f"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/dfa64c4ce46af84a9e72f85a5d5702d2d8301247e1bb8ae9074cad1b03f2fe20.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=identifiers.id%3A%2200850081350033%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:17:54.627Z",
+          "http_status": 200,
+          "response_sha256": "c333f91cdc6d7c523f3feed941fc44bc8605bd06e94ac71fca2901f7d48a524f",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/dfa64c4ce46af84a9e72f85a5d5702d2d8301247e1bb8ae9074cad1b03f2fe20.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": "1d704797-7111-41dc-b62a-142f4fec4d55",
+          "primary_di": "00850081350033",
+          "package_dis": ["10850081350030"],
+          "company_name": "PRAXIS MEDICAL LLC",
+          "brand_name": "Olympus Pouch BV",
+          "catalog_number": null,
+          "model_number": "ENDO-BV-22G-O",
+          "device_name": null,
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2025-11-06"
+        }
+      ]
+    },
+    {
+      "query_id": "D2D-Q-SCREENI-UDI-03664977030032",
+      "product_id": "PRD-6F15A8C9B5",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "identifiers.id:\"03664977030032\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": "2026-08-03",
+      "retrieved_at": ["2026-08-24T17:18:00.629Z"],
+      "response_sha256s": ["e738fe2e309316e32b8920b05eed25f757f20be399e0117a7f58becaf955c178"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/cd53f4030b2f63a3c2a7d83fddde1540141abba6ea0e79aaf16ddbb4afb2b024.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=identifiers.id%3A%2203664977030032%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:00.629Z",
+          "http_status": 200,
+          "response_sha256": "e738fe2e309316e32b8920b05eed25f757f20be399e0117a7f58becaf955c178",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/cd53f4030b2f63a3c2a7d83fddde1540141abba6ea0e79aaf16ddbb4afb2b024.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": "229c29d9-33fa-46b4-a272-3d21c8199552",
+          "primary_di": "03664977030032",
+          "package_dis": [],
+          "company_name": "AXESS VISION TECHNOLOGY",
+          "brand_name": "Screeni",
+          "catalog_number": "30030001",
+          "model_number": "30030001",
+          "device_name": "Screeni is a non-sterile reusable medical device. It is a video processor with integrated touch interface designed to display live imaging data captured by sterile disposable endoscopes (Broncoflex Agile or Vortex).",
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2020-12-10"
+        }
+      ]
+    },
+    {
+      "query_id": "D2D-Q-SERPEX-510K-K261068",
+      "product_id": "PRD-AED3720BF6",
+      "dataset": "510k",
+      "endpoint": "https://api.fda.gov/device/510k.json",
+      "api_schema_version": "device-510k-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "k_number:\"K261068\"",
+      "purpose": "premarket",
+      "expected_scope": "family",
+      "dataset_last_updated": "2026-08-10",
+      "retrieved_at": ["2026-08-24T17:18:11.314Z"],
+      "response_sha256s": ["28908f8f56fa89362e3131134444e091c8045806b44607f5082f992b3c9f0505"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/510k/e2681594b9480dd3e7f79551d2e6315767369a0c18920949e9c4c80483b55025.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/510k.json?search=k_number%3A%22K261068%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:11.314Z",
+          "http_status": 200,
+          "response_sha256": "28908f8f56fa89362e3131134444e091c8045806b44607f5082f992b3c9f0505",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/510k/e2681594b9480dd3e7f79551d2e6315767369a0c18920949e9c4c80483b55025.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": null,
+          "primary_di": null,
+          "package_dis": [],
+          "company_name": "Serpex Medical",
+          "brand_name": null,
+          "catalog_number": null,
+          "model_number": null,
+          "device_name": "Maverix Cryo Biopsy Probe (MCB1000);Maverix Cryo Cartridge (CC1000)",
+          "k_number": "K261068",
+          "pma_number": null,
+          "decision_code": "SESE",
+          "decision_date": "2026-06-30",
+          "product_code": "GEH",
+          "regulation_number": "878.4350",
+          "commercial_distribution_status": null,
+          "publish_date": null
+        }
+      ]
+    },
+    {
+      "query_id": "D2D-Q-SERPEX-LISTING-K261068",
+      "product_id": "PRD-AED3720BF6",
+      "dataset": "registrationlisting",
+      "endpoint": "https://api.fda.gov/device/registrationlisting.json",
+      "api_schema_version": "device-registrationlisting-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "k_number:\"K261068\"",
+      "purpose": "registration_listing",
+      "expected_scope": "family",
+      "dataset_last_updated": null,
+      "retrieved_at": ["2026-08-24T17:18:11.652Z"],
+      "response_sha256s": ["5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/registrationlisting/119fc4f3ff1adfe60fbfc3bf86a056ec80eba5599bc0690b1edc2fca8981c662.json"
+      ],
+      "result_total": null,
+      "result_count": 0,
+      "complete": true,
+      "http_statuses": [404],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/registrationlisting.json?search=k_number%3A%22K261068%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:11.652Z",
+          "http_status": 404,
+          "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/registrationlisting/119fc4f3ff1adfe60fbfc3bf86a056ec80eba5599bc0690b1edc2fca8981c662.json"
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "query_id": "D2D-Q-SERPEX-UDI-MCB-1000-4",
+      "product_id": "PRD-AED3720BF6",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "catalog_number:\"MCB-1000-4\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": null,
+      "retrieved_at": ["2026-08-24T17:18:11.843Z"],
+      "response_sha256s": ["5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/47f8edb92750c54c19ca6d2791512eed2f1c96c1bafc0eef37fa1d911f34aa2b.json"
+      ],
+      "result_total": null,
+      "result_count": 0,
+      "complete": true,
+      "http_statuses": [404],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=catalog_number%3A%22MCB-1000-4%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:11.843Z",
+          "http_status": 404,
+          "response_sha256": "5021e624e752b001ce3e3846e8f158ed4aeb93a4c9a72fdb35a0c5b14a0eea84",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/47f8edb92750c54c19ca6d2791512eed2f1c96c1bafc0eef37fa1d911f34aa2b.json"
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "query_id": "D2D-Q-STORZ-UDI-10350F",
+      "product_id": "PRD-A0655BF464",
+      "dataset": "udi",
+      "endpoint": "https://api.fda.gov/device/udi.json",
+      "api_schema_version": "device-udi-d2d-v1",
+      "normalization_method_version": "d2d-acquisition-candidate-normalization-v1",
+      "response_content_type": "application/json",
+      "query": "catalog_number:\"10350F\"",
+      "purpose": "exact_identity",
+      "expected_scope": "exact",
+      "dataset_last_updated": "2026-08-03",
+      "retrieved_at": ["2026-08-24T17:18:10.811Z"],
+      "response_sha256s": ["2d87767ba7c0906831f9b0b822b8835861372cfcc755bde8762dc1b57f341d64"],
+      "raw_cache_references": [
+        "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/7b9ecef024648eb848c3296f73b9150628dfbef6a69e2e618be971071a207869.json"
+      ],
+      "result_total": 1,
+      "result_count": 1,
+      "complete": true,
+      "http_statuses": [200],
+      "pages": [
+        {
+          "request_url": "https://api.fda.gov/device/udi.json?search=catalog_number%3A%2210350F%22&limit=100",
+          "request_limit": 100,
+          "request_skip": 0,
+          "retrieved_at": "2026-08-24T17:18:10.811Z",
+          "http_status": 200,
+          "response_sha256": "2d87767ba7c0906831f9b0b822b8835861372cfcc755bde8762dc1b57f341d64",
+          "raw_cache_reference": "local-data/ip-device-intelligence/d2d/2026-08-24/openfda/udi/7b9ecef024648eb848c3296f73b9150628dfbef6a69e2e618be971071a207869.json"
+        }
+      ],
+      "candidates": [
+        {
+          "record_key": "256172b4-7a3e-4d49-8e5e-4125c8065ad2",
+          "primary_di": "04048551046692",
+          "package_dis": [],
+          "company_name": "Karl Storz GmbH & Co. KG",
+          "brand_name": "n.a.",
+          "catalog_number": "10350F",
+          "model_number": "10350F",
+          "device_name": "Optical Forceps, large jaws, blunt",
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2016-09-23"
+        }
+      ]
+    }
+  ]
+}

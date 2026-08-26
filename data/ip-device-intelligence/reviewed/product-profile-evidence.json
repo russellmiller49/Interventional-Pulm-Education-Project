@@ -1,0 +1,549 @@
+{
+  "format_version": 1,
+  "artifact_kind": "d2d_product_profile_evidence",
+  "method_version": "d2d-product-profile-evidence-v1",
+  "source_artifacts": {
+    "pilot_cohort": {
+      "path": "data/ip-device-intelligence/reviewed/d2d-pilot-cohort.json",
+      "sha256": "42ff900ac64cc10d8b966aafafde6cac68627c6536b3c1664d2f6254d4825592"
+    },
+    "catalog": {
+      "path": "data/ip-preference-cards/generated/catalog-products.json",
+      "sha256": "16779325490bcdfc848742c2242553df742f9f4dab8d20d86e6032f9bfcdee5a"
+    },
+    "evidence_sources": {
+      "path": "data/ip-device-intelligence/reviewed/d2d-evidence-sources.json",
+      "sha256": "02e3ae027a220c7395b7e91ce4d90f8d42d68e9b9710bbe5383e4d006211915e"
+    }
+  },
+  "profile_groups": [
+    {
+      "description_profile_group_id": "DPG-COOK-BLUE-RHINO-G2-MULTI",
+      "label": "Cook Blue Rhino G2-Multi set configurations",
+      "member_product_ids": ["PRD-B76AF3D731"],
+      "proposed_family_narrative": "Blue Rhino G2-Multi products are percutaneous tracheostomy introducer set configurations documented in the manufacturer ordering matrix.",
+      "proposed_variant_template": "Catalog {catalog_number} corresponds to reference {reference_part_number} with loading-dilator and tube configuration values taken from its exact ordering row.",
+      "allowed_variant_fields": [
+        "catalog_number",
+        "loading_dilator_sizes",
+        "reference_part_number",
+        "tube_configuration"
+      ],
+      "review_state": "pending_owner_review"
+    },
+    {
+      "description_profile_group_id": "DPG-NOVATECH-GSS-TD",
+      "label": "Novatech GSS TD straight tracheal stent configurations",
+      "member_product_ids": ["PRD-F4AE2A74E6"],
+      "proposed_family_narrative": "GSS TD products are straight tracheal silicone stent configurations presented in a manufacturer diameter-by-length ordering matrix.",
+      "proposed_variant_template": "Catalog {catalog_number} is the matrix configuration with {outer_diameter_mm} mm outer diameter and {length_mm} mm length.",
+      "allowed_variant_fields": ["catalog_number", "length_mm", "outer_diameter_mm"],
+      "review_state": "pending_owner_review"
+    }
+  ],
+  "rows": [
+    {
+      "product_id": "PRD-003C4641E6",
+      "canonical_identity": {
+        "product_id": "PRD-003C4641E6",
+        "manufacturer_id": "MFR-89E235AB41",
+        "manufacturer": "CLR Medical",
+        "product_name": "CLR Irrigator",
+        "catalog_number": "S012-01-019",
+        "brand_family": "CLR Irrigation System",
+        "gtin": "00860003054901",
+        "product_kind": "Disposable instrument",
+        "catalog_description": "Single-use CLR handpiece with separate suction and irrigation controls for thoracic collections."
+      },
+      "canonical_identity_sha256": "e13cc9237b4658fc0433de1de0e769f274ba3155651c5eb23632bc8c06557a03",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 6, CLR Irrigator panel",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity"]
+        },
+        {
+          "source_id": "D2D-SRC-103-013",
+          "locator": "CLR Irrigator IFU LBL S012-01-203 Rev D",
+          "evidence_scope": "family",
+          "supports": ["function"]
+        },
+        {
+          "source_id": "D2D-SRC-104-031",
+          "locator": "AccessGUDID Primary DI 00860003054901",
+          "evidence_scope": "exact",
+          "supports": ["identity", "regulatory"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "CLR Irrigation System",
+        "catalog_number": "S012-01-019",
+        "diameter_mm": null,
+        "gauge": null,
+        "gtin": "00860003054901",
+        "gudid_primary_di": "00860003054901",
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": null,
+        "product_kind": "Disposable instrument",
+        "reference_part_number": null,
+        "reuse_status": "Single use",
+        "size_display": null,
+        "sterile_status": "Sterile",
+        "taxonomy_review_question": "Should the controlled vocabulary add a pleural suction/irrigation instrument subtype?",
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-05670F1B5F",
+      "canonical_identity": {
+        "product_id": "PRD-05670F1B5F",
+        "manufacturer_id": "MFR-5ED32955F4",
+        "manufacturer": "ERBE",
+        "product_name": "Flexible Cryoprobe 2.4 mm",
+        "catalog_number": "20402-411",
+        "brand_family": "ERBECRYO 2",
+        "gtin": null,
+        "product_kind": "Disposable",
+        "catalog_description": "Single-use flexible cryoprobe listed for the ERBECRYO 2 system."
+      },
+      "canonical_identity_sha256": "3adaf5f94c1c9ca824f06fe79376821b2caff72250b4565a62dd5e554ef1b0a8",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-018-BASE",
+          "locator": "Cryoprobes for ERBECRYO 2, catalog page 5",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity", "specification"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "ERBECRYO 2",
+        "catalog_number": "20402-411",
+        "catalog_quantity": 5,
+        "diameter_mm": 2.4,
+        "gauge": null,
+        "gtin": null,
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": null,
+        "oversheath_length_mm": null,
+        "oversheath_od_mm": null,
+        "probe_length_mm": 1150,
+        "probe_od_mm": 2.4,
+        "product_kind": "Disposable",
+        "reference_part_number": null,
+        "reuse_status": "Single-use",
+        "size_display": "2.4 mm x 115 cm",
+        "sterile_status": "Sterile EO",
+        "working_length_cm": 115
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-1ED27ADA45",
+      "canonical_identity": {
+        "product_id": "PRD-1ED27ADA45",
+        "manufacturer_id": "MFR-DEFC2BB814",
+        "manufacturer": "Praxis Medical LLC",
+        "product_name": "EndoCore 22G Bevel Tip EBUS Needle, Olympus Configuration",
+        "catalog_number": "ENDO-BV-22G-Kit-O",
+        "brand_family": "EndoCore",
+        "gtin": "10850081350030",
+        "product_kind": "Single-use needle",
+        "catalog_description": "22 gauge EndoCore EBUS tissue-acquisition needle in the exact Olympus-compatible five-unit ordering configuration."
+      },
+      "canonical_identity_sha256": "54bf14150824a24015bd6981b5a3dcf9f0418bd12605279a1e19bd692a1debe9",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 2, EndoCore ordering table",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity", "specification"]
+        },
+        {
+          "source_id": "D2D-SRC-095-006",
+          "locator": "EndoCore product and ordering information",
+          "evidence_scope": "family",
+          "supports": ["function"]
+        },
+        {
+          "source_id": "D2D-SRC-096-019",
+          "locator": "AccessGUDID Primary DI 00850081350033",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity", "regulatory"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "EndoCore",
+        "catalog_number": "ENDO-BV-22G-Kit-O",
+        "diameter_mm": null,
+        "gauge": 22,
+        "gtin": "10850081350030",
+        "gudid_primary_di": "00850081350033",
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": 2,
+        "package_di": "10850081350030",
+        "product_kind": "Single-use needle",
+        "reference_part_number": null,
+        "reuse_status": "Single use",
+        "size_display": null,
+        "sterile_status": "Sterile",
+        "tip_geometry": "Bevel",
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-2632FFBF07",
+      "canonical_identity": {
+        "product_id": "PRD-2632FFBF07",
+        "manufacturer_id": "MFR-4FD1B7935D",
+        "manufacturer": "Axess Vision Technology S.A.S.",
+        "product_name": "Broncoflex XFlo 5.6/3.0 Single-Use Bronchoscope",
+        "catalog_number": "10040001",
+        "brand_family": "Broncoflex",
+        "gtin": "03664977000103",
+        "product_kind": "Single-use endoscope",
+        "catalog_description": "Single-use Broncoflex video bronchoscope with the exact insertion-tube and working-channel dimensions shown in the reviewed sources."
+      },
+      "canonical_identity_sha256": "a1befe65bba1392d10537bc0b869a68dcb195f6bd0d8e8466b9761899a520042",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 1, Broncoflex ordering panel",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity"]
+        },
+        {
+          "source_id": "D2D-SRC-092-004",
+          "locator": "Broncoflex XFlo specification table",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "function", "identity", "specification"]
+        },
+        {
+          "source_id": "D2D-SRC-094-015",
+          "locator": "AccessGUDID Primary DI 03664977000103",
+          "evidence_scope": "exact",
+          "supports": ["identity", "regulatory"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "Broncoflex",
+        "catalog_number": "10040001",
+        "diameter_mm": 5.6,
+        "gauge": null,
+        "gtin": "03664977000103",
+        "gudid_primary_di": "03664977000103",
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": null,
+        "product_kind": "Single-use endoscope",
+        "reference_part_number": null,
+        "reuse_status": "Single use",
+        "size_display": "5.6 mm insertion tube; 3.0 mm working channel",
+        "sterile_status": "Sterile",
+        "working_channel_mm": 3,
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-3E1556EBE5",
+      "canonical_identity": {
+        "product_id": "PRD-3E1556EBE5",
+        "manufacturer_id": "MFR-68565E2FD2",
+        "manufacturer": "Medtronic",
+        "product_name": "Tricut 4.0 mm Angle-Tip Bronchial Blade, 45 cm",
+        "catalog_number": "1884035HRE",
+        "brand_family": "StraightShot Airway Blades",
+        "gtin": null,
+        "product_kind": "Single-use instrument",
+        "catalog_description": "Powered airway blade with exact dimensions and tip geometry listed in Medtronic's current airway ordering table."
+      },
+      "canonical_identity_sha256": "a34baa147bfb32d7b049f47ccdd4c4b917d09dc5e0f66c146333452c51586ca9",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-091-003",
+          "locator": "Airway Blades ordering information table, CFN 1884035HRE",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "function", "identity", "specification"]
+        }
+      ],
+      "configuration_values": {
+        "airway_application": "Bronchial lesions through a rigid bronchoscope",
+        "brand_family": "StraightShot Airway Blades",
+        "catalog_number": "1884035HRE",
+        "diameter_mm": 4,
+        "gauge": null,
+        "gtin": null,
+        "length_mm": 450,
+        "material": null,
+        "min_working_channel_mm": null,
+        "product_kind": "Single-use instrument",
+        "quantity": "1 each with irrigation tubing",
+        "reference_part_number": null,
+        "reuse_status": "Single use",
+        "size_display": "4.0 mm x 45.0 cm; 15-degree curved; rotatable angle-tip",
+        "sterile_status": null,
+        "tip_geometry": "15-degree curved rotatable angle-tip",
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-6F15A8C9B5",
+      "canonical_identity": {
+        "product_id": "PRD-6F15A8C9B5",
+        "manufacturer_id": "MFR-4FD1B7935D",
+        "manufacturer": "Axess Vision Technology S.A.S.",
+        "product_name": "Screeni Video Processor without Accessories",
+        "catalog_number": "30030001",
+        "brand_family": "Screeni",
+        "gtin": "03664977030032",
+        "product_kind": "Reusable capital equipment",
+        "catalog_description": "Screeni video processor exact ordering configuration for the Broncoflex system."
+      },
+      "canonical_identity_sha256": "f86f118b5e3435cac89e4040b43db9ff55b5fb7961bcf4a0db2f9c963fe3fc6d",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 1, Screeni reference 30030001",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity"]
+        },
+        {
+          "source_id": "D2D-SRC-093-005",
+          "locator": "Screeni technical datasheet",
+          "evidence_scope": "family",
+          "supports": ["function"]
+        },
+        {
+          "source_id": "D2D-SRC-094-017",
+          "locator": "AccessGUDID Primary DI 03664977030032",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity", "regulatory"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "Screeni",
+        "catalog_number": "30030001",
+        "configuration": "Without accessories",
+        "diameter_mm": null,
+        "gauge": null,
+        "gtin": "03664977030032",
+        "gudid_primary_di": "03664977030032",
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": null,
+        "product_kind": "Reusable capital equipment",
+        "reference_part_number": null,
+        "reuse_status": "Reusable",
+        "size_display": null,
+        "sterile_status": null,
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-A0655BF464",
+      "canonical_identity": {
+        "product_id": "PRD-A0655BF464",
+        "manufacturer_id": "MFR-12BAB1E48C",
+        "manufacturer": "Karl Storz",
+        "product_name": "Optical Forceps, large jaws, blunt",
+        "catalog_number": "10350F",
+        "brand_family": null,
+        "gtin": null,
+        "product_kind": "Reusable instrument",
+        "catalog_description": "Optical Forceps, large jaws, blunt; fenestrated jaw shape, blunt grooved jaw surface, double action jaws, 47 cm working length."
+      },
+      "canonical_identity_sha256": "fb36352ebfc33da5ac369900aba194b12b29f3446d16ccea805432f98b78c689",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "exact_product",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-107-BASE",
+          "locator": "PDF pages 49-50, item 10350F product card",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity", "specification"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": null,
+        "catalog_number": "10350F",
+        "diameter_mm": null,
+        "gauge": null,
+        "gtin": null,
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": null,
+        "product_kind": "Reusable instrument",
+        "reference_part_number": null,
+        "reuse_status": null,
+        "size_display": null,
+        "sterile_status": null,
+        "working_length_cm": 47
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-AED3720BF6",
+      "canonical_identity": {
+        "product_id": "PRD-AED3720BF6",
+        "manufacturer_id": "MFR-47A0410D40",
+        "manufacturer": "Serpex Medical",
+        "product_name": "Narwhal Cryobiopsy Probe",
+        "catalog_number": "MCB-1000-4",
+        "brand_family": "Maverix Narwhal Cryo System",
+        "gtin": null,
+        "product_kind": "Single-use instrument",
+        "catalog_description": "Narwhal flexible cryobiopsy system component with a 1.3 mm probe shaft, 115 cm working length, and selectable 3-6 mm sampling tip where applicable."
+      },
+      "canonical_identity_sha256": "1e76d3bd726b16d07a89ff1571678a34db3771ad6961876c371a97dd441cef02",
+      "description_profile_group_id": null,
+      "proposed_description_scope": "configuration_variant",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 3, Narwhal ordering and specification panels",
+          "evidence_scope": "exact",
+          "supports": ["configuration", "identity", "specification"]
+        },
+        {
+          "source_id": "D2D-SRC-097-007",
+          "locator": "K261068, device description and base-model table",
+          "evidence_scope": "family",
+          "supports": ["function", "identity", "regulatory"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "Maverix Narwhal Cryo System",
+        "catalog_number": "MCB-1000-4",
+        "diameter_mm": 1.3,
+        "fda_base_model": "MCB-1000",
+        "gauge": null,
+        "gtin": null,
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": 2,
+        "product_kind": "Single-use instrument",
+        "reference_part_number": null,
+        "reuse_status": "Single use",
+        "selectable_sampling_tip_mm": "3-6",
+        "size_display": "1.3 mm shaft; 115 cm working length; 3-6 mm selectable tip",
+        "sterile_status": "Sterile",
+        "working_length_cm": 115
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-B76AF3D731",
+      "canonical_identity": {
+        "product_id": "PRD-B76AF3D731",
+        "manufacturer_id": "MFR-2760A3270C",
+        "manufacturer": "Cook Medical",
+        "product_name": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set",
+        "catalog_number": "G57682",
+        "brand_family": "Blue Rhino G2-Multi",
+        "gtin": null,
+        "product_kind": "Kit",
+        "catalog_description": "Blue Rhino G2-Multi Percutaneous Tracheostomy Set; loading dilator(s) 7.5, 8.5, 9.0 mm; order number G57682 with reference part number C-PTIS-100-HC-G-NA."
+      },
+      "canonical_identity_sha256": "3c05838164e435bece5b12a6aee0c8320630504bf5301958dd368ae7cb9380ce",
+      "description_profile_group_id": "DPG-COOK-BLUE-RHINO-G2-MULTI",
+      "proposed_description_scope": "configuration_variant",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-074-BASE",
+          "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA",
+          "evidence_scope": "configuration",
+          "supports": ["configuration", "identity", "specification"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "Blue Rhino G2-Multi",
+        "catalog_number": "G57682",
+        "diameter_mm": null,
+        "gauge": null,
+        "gtin": null,
+        "length_mm": null,
+        "material": null,
+        "min_working_channel_mm": null,
+        "product_kind": "Kit",
+        "reference_part_number": null,
+        "reuse_status": "Single use",
+        "size_display": "Loading dilators 7.5, 8.5, 9.0 mm",
+        "sterile_status": "Sterile",
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-F4AE2A74E6",
+      "canonical_identity": {
+        "product_id": "PRD-F4AE2A74E6",
+        "manufacturer_id": "MFR-6208838930",
+        "manufacturer": "Novatech",
+        "product_name": "GSS TD Tracheal Stent",
+        "catalog_number": "01TD1120",
+        "brand_family": "DUMON / GSS",
+        "gtin": null,
+        "product_kind": "Implant",
+        "catalog_description": "GSS TD straight tracheal silicone stent configuration from the NOVATECH DUMON/GSS silicone-stent catalog straight-stent diameter-by-length ordering matrix; dimensions are inherited from the matrix row (outer diameter) and column (length) headers."
+      },
+      "canonical_identity_sha256": "f5e790157ac54068ef43246c592a12184bf3f969c93180145f553b58f30ce60e",
+      "description_profile_group_id": "DPG-NOVATECH-GSS-TD",
+      "proposed_description_scope": "configuration_variant",
+      "source_bindings": [
+        {
+          "source_id": "D2D-SRC-106-BASE",
+          "locator": "PDF page 12, GSS TD matrix reference 01TD1120",
+          "evidence_scope": "configuration",
+          "supports": ["configuration", "identity", "specification"]
+        }
+      ],
+      "configuration_values": {
+        "brand_family": "DUMON / GSS",
+        "catalog_number": "01TD1120",
+        "diameter_mm": null,
+        "gauge": null,
+        "gtin": null,
+        "length_mm": null,
+        "material": "Silicone",
+        "min_working_channel_mm": null,
+        "product_kind": "Implant",
+        "reference_part_number": null,
+        "reuse_status": null,
+        "size_display": "11 OD x 20 L",
+        "sterile_status": null,
+        "working_length_cm": null
+      },
+      "evidence_snapshot_date": "2026-08-24",
+      "evidence_review_state": "pending_owner_review"
+    }
+  ]
+}

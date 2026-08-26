@@ -1,0 +1,508 @@
+{
+  "format_version": 1,
+  "artifact_kind": "d2d_evidence_proposals",
+  "method_version": "d2d-evidence-proposal-v1",
+  "source_artifacts": {
+    "pilot_cohort": {
+      "path": "data/ip-device-intelligence/reviewed/d2d-pilot-cohort.json",
+      "sha256": "42ff900ac64cc10d8b966aafafde6cac68627c6536b3c1664d2f6254d4825592"
+    },
+    "profile_evidence": {
+      "path": "data/ip-device-intelligence/reviewed/product-profile-evidence.json",
+      "sha256": "ef1218d88663fc71c8d3d069c1b3bdc63796dd9dc185090e65bb2757e13d4093"
+    },
+    "acquisition_manifest": {
+      "path": "data/ip-device-intelligence/research/d2d/2026-08-24/acquisition-manifest.json",
+      "sha256": "00d6cafa99cccdf62ba0b69c9e4778fed5e5b916073c14424c2395f43b9ea05e"
+    }
+  },
+  "rows": [
+    {
+      "product_id": "PRD-003C4641E6",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-003C4641E6",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-003C4641E6",
+      "regulatory_match": {
+        "match_level": "exact_udi_catalog_match",
+        "confidence": "high",
+        "conflict_state": "none",
+        "reason_codes": ["exact_catalog_or_model", "exact_di", "manufacturer_not_conflicted"],
+        "query_ids": ["D2D-Q-CLR-UDI-00860003054901"],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": "0e0fea1d-e853-4e90-acc9-0224abc217d0",
+          "primary_di": "00860003054901",
+          "package_dis": ["00860003054987"],
+          "company_name": "CLR Medical",
+          "brand_name": "CLR Irrigator",
+          "catalog_number": null,
+          "model_number": "S012-01-019",
+          "device_name": null,
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2024-05-29",
+          "query_id": "D2D-Q-CLR-UDI-00860003054901",
+          "dataset": "udi",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-UDI-60FC657A72ED",
+              "locator": "D2D-Q-CLR-UDI-00860003054901; request skip 0; record keys 0e0fea1d-e853-4e90-acc9-0224abc217d0"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 6, CLR Irrigator panel"
+        },
+        {
+          "source_id": "D2D-SRC-103-013",
+          "locator": "CLR Irrigator IFU LBL S012-01-203 Rev D"
+        },
+        {
+          "source_id": "D2D-SRC-104-031",
+          "locator": "AccessGUDID Primary DI 00860003054901"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-60FC657A72ED",
+          "locator": "D2D-Q-CLR-UDI-00860003054901; request skip 0; record keys 0e0fea1d-e853-4e90-acc9-0224abc217d0"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-05670F1B5F",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-05670F1B5F",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-05670F1B5F",
+      "regulatory_match": {
+        "match_level": "exact_model_manufacturer_match",
+        "confidence": "high",
+        "conflict_state": "none",
+        "reason_codes": ["exact_catalog_or_model", "governed_manufacturer_alias_match"],
+        "query_ids": ["D2D-Q-ERBE-UDI-20402-411"],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": "75fbe42c-49fb-4380-adb3-173ac6824728",
+          "primary_di": "04050147021839",
+          "package_dis": ["04050147021846"],
+          "company_name": "Erbe Elektromedizin GmbH",
+          "brand_name": "ERBE",
+          "catalog_number": "20402-411",
+          "model_number": "20402-411",
+          "device_name": null,
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2020-02-07",
+          "query_id": "D2D-Q-ERBE-UDI-20402-411",
+          "dataset": "udi",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-UDI-59B18E998C2C",
+              "locator": "D2D-Q-ERBE-UDI-20402-411; request skip 0; record keys 75fbe42c-49fb-4380-adb3-173ac6824728"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-018-BASE",
+          "locator": "Cryoprobes for ERBECRYO 2, catalog page 5"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-59B18E998C2C",
+          "locator": "D2D-Q-ERBE-UDI-20402-411; request skip 0; record keys 75fbe42c-49fb-4380-adb3-173ac6824728"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-1ED27ADA45",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-1ED27ADA45",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-1ED27ADA45",
+      "regulatory_match": {
+        "match_level": "strong_exact_identity_match",
+        "confidence": "moderate",
+        "conflict_state": "none",
+        "reason_codes": ["catalog_not_confirmed", "exact_di", "governed_manufacturer_alias_match"],
+        "query_ids": ["D2D-Q-PRAXIS-UDI-00850081350033"],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": "1d704797-7111-41dc-b62a-142f4fec4d55",
+          "primary_di": "00850081350033",
+          "package_dis": ["10850081350030"],
+          "company_name": "PRAXIS MEDICAL LLC",
+          "brand_name": "Olympus Pouch BV",
+          "catalog_number": null,
+          "model_number": "ENDO-BV-22G-O",
+          "device_name": null,
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2025-11-06",
+          "query_id": "D2D-Q-PRAXIS-UDI-00850081350033",
+          "dataset": "udi",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-UDI-739E3496CD3E",
+              "locator": "D2D-Q-PRAXIS-UDI-00850081350033; request skip 0; record keys 1d704797-7111-41dc-b62a-142f4fec4d55"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 2, EndoCore ordering table"
+        },
+        {
+          "source_id": "D2D-SRC-095-006",
+          "locator": "EndoCore product and ordering information"
+        },
+        {
+          "source_id": "D2D-SRC-096-019",
+          "locator": "AccessGUDID Primary DI 00850081350033"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-739E3496CD3E",
+          "locator": "D2D-Q-PRAXIS-UDI-00850081350033; request skip 0; record keys 1d704797-7111-41dc-b62a-142f4fec4d55"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-2632FFBF07",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-2632FFBF07",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-2632FFBF07",
+      "regulatory_match": {
+        "match_level": "exact_udi_catalog_match",
+        "confidence": "high",
+        "conflict_state": "none",
+        "reason_codes": ["exact_catalog_or_model", "exact_di", "manufacturer_not_conflicted"],
+        "query_ids": ["D2D-Q-AXESS-XFLO-UDI-03664977000103"],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": "1182b967-23e2-4170-a8e9-47d05bc32290",
+          "primary_di": "03664977000103",
+          "package_dis": [],
+          "company_name": "AXESS VISION TECHNOLOGY",
+          "brand_name": "Broncoflex XFlo",
+          "catalog_number": null,
+          "model_number": "10040001",
+          "device_name": "Broncoflex XFlo 5.6/3.0",
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2025-07-18",
+          "query_id": "D2D-Q-AXESS-XFLO-UDI-03664977000103",
+          "dataset": "udi",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-UDI-C8AD11B2D249",
+              "locator": "D2D-Q-AXESS-XFLO-UDI-03664977000103; request skip 0; record keys 1182b967-23e2-4170-a8e9-47d05bc32290"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 1, Broncoflex ordering panel"
+        },
+        {
+          "source_id": "D2D-SRC-092-004",
+          "locator": "Broncoflex XFlo specification table"
+        },
+        {
+          "source_id": "D2D-SRC-094-015",
+          "locator": "AccessGUDID Primary DI 03664977000103"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-C8AD11B2D249",
+          "locator": "D2D-Q-AXESS-XFLO-UDI-03664977000103; request skip 0; record keys 1182b967-23e2-4170-a8e9-47d05bc32290"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-3E1556EBE5",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-3E1556EBE5",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-3E1556EBE5",
+      "regulatory_match": {
+        "match_level": "ambiguous",
+        "confidence": "unresolved",
+        "conflict_state": "insufficient_identifiers",
+        "reason_codes": ["documented_search_incomplete_for_negative_conclusion"],
+        "query_ids": ["D2D-Q-MEDTRONIC-UDI-1884035HRE"],
+        "candidate_count": 0
+      },
+      "regulatory_evidence_candidates": [],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-091-003",
+          "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-04C615D462F9",
+          "locator": "D2D-Q-MEDTRONIC-UDI-1884035HRE; request skip 0; no result record returned"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-6F15A8C9B5",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-6F15A8C9B5",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-6F15A8C9B5",
+      "regulatory_match": {
+        "match_level": "exact_udi_catalog_match",
+        "confidence": "high",
+        "conflict_state": "none",
+        "reason_codes": ["exact_catalog_or_model", "exact_di", "manufacturer_not_conflicted"],
+        "query_ids": ["D2D-Q-SCREENI-UDI-03664977030032"],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": "229c29d9-33fa-46b4-a272-3d21c8199552",
+          "primary_di": "03664977030032",
+          "package_dis": [],
+          "company_name": "AXESS VISION TECHNOLOGY",
+          "brand_name": "Screeni",
+          "catalog_number": "30030001",
+          "model_number": "30030001",
+          "device_name": "Screeni is a non-sterile reusable medical device. It is a video processor with integrated touch interface designed to display live imaging data captured by sterile disposable endoscopes (Broncoflex Agile or Vortex).",
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2020-12-10",
+          "query_id": "D2D-Q-SCREENI-UDI-03664977030032",
+          "dataset": "udi",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-UDI-18AD1BE46FCA",
+              "locator": "D2D-Q-SCREENI-UDI-03664977030032; request skip 0; record keys 229c29d9-33fa-46b4-a272-3d21c8199552"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 1, Screeni reference 30030001"
+        },
+        {
+          "source_id": "D2D-SRC-093-005",
+          "locator": "Screeni technical datasheet"
+        },
+        {
+          "source_id": "D2D-SRC-094-017",
+          "locator": "AccessGUDID Primary DI 03664977030032"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-18AD1BE46FCA",
+          "locator": "D2D-Q-SCREENI-UDI-03664977030032; request skip 0; record keys 229c29d9-33fa-46b4-a272-3d21c8199552"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-A0655BF464",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-A0655BF464",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-A0655BF464",
+      "regulatory_match": {
+        "match_level": "exact_model_manufacturer_match",
+        "confidence": "high",
+        "conflict_state": "none",
+        "reason_codes": ["exact_catalog_or_model", "governed_manufacturer_alias_match"],
+        "query_ids": ["D2D-Q-STORZ-UDI-10350F"],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": "256172b4-7a3e-4d49-8e5e-4125c8065ad2",
+          "primary_di": "04048551046692",
+          "package_dis": [],
+          "company_name": "Karl Storz GmbH & Co. KG",
+          "brand_name": "n.a.",
+          "catalog_number": "10350F",
+          "model_number": "10350F",
+          "device_name": "Optical Forceps, large jaws, blunt",
+          "k_number": null,
+          "pma_number": null,
+          "decision_code": null,
+          "decision_date": null,
+          "product_code": null,
+          "regulation_number": null,
+          "commercial_distribution_status": "In Commercial Distribution",
+          "publish_date": "2016-09-23",
+          "query_id": "D2D-Q-STORZ-UDI-10350F",
+          "dataset": "udi",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-UDI-CDCD8F0A0F43",
+              "locator": "D2D-Q-STORZ-UDI-10350F; request skip 0; record keys 256172b4-7a3e-4d49-8e5e-4125c8065ad2"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-107-BASE",
+          "locator": "PDF pages 49-50, item 10350F product card"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-CDCD8F0A0F43",
+          "locator": "D2D-Q-STORZ-UDI-10350F; request skip 0; record keys 256172b4-7a3e-4d49-8e5e-4125c8065ad2"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-AED3720BF6",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-AED3720BF6",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-AED3720BF6",
+      "regulatory_match": {
+        "match_level": "family_level_match",
+        "confidence": "moderate",
+        "conflict_state": "none",
+        "reason_codes": ["exact_catalog_not_established", "premarket_family_candidate"],
+        "query_ids": [
+          "D2D-Q-SERPEX-510K-K261068",
+          "D2D-Q-SERPEX-LISTING-K261068",
+          "D2D-Q-SERPEX-UDI-MCB-1000-4"
+        ],
+        "candidate_count": 1
+      },
+      "regulatory_evidence_candidates": [
+        {
+          "record_key": null,
+          "primary_di": null,
+          "package_dis": [],
+          "company_name": "Serpex Medical",
+          "brand_name": null,
+          "catalog_number": null,
+          "model_number": null,
+          "device_name": "Maverix Cryo Biopsy Probe (MCB1000);Maverix Cryo Cartridge (CC1000)",
+          "k_number": "K261068",
+          "pma_number": null,
+          "decision_code": "SESE",
+          "decision_date": "2026-06-30",
+          "product_code": "GEH",
+          "regulation_number": "878.4350",
+          "commercial_distribution_status": null,
+          "publish_date": null,
+          "query_id": "D2D-Q-SERPEX-510K-K261068",
+          "dataset": "510k",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-FDA-510K-9D8612D0889F",
+              "locator": "D2D-Q-SERPEX-510K-K261068; request skip 0; record keys K261068"
+            }
+          ]
+        }
+      ],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-089-001",
+          "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+        },
+        {
+          "source_id": "D2D-SRC-097-007",
+          "locator": "K261068, device description and base-model table"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-510K-9D8612D0889F",
+          "locator": "D2D-Q-SERPEX-510K-K261068; request skip 0; record keys K261068"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-REGISTRATIONLISTING-E6B9A9B73F6A",
+          "locator": "D2D-Q-SERPEX-LISTING-K261068; request skip 0; no result record returned"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-4760F1CEE4E5",
+          "locator": "D2D-Q-SERPEX-UDI-MCB-1000-4; request skip 0; no result record returned"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-B76AF3D731",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-B76AF3D731",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-B76AF3D731",
+      "regulatory_match": {
+        "match_level": "ambiguous",
+        "confidence": "unresolved",
+        "conflict_state": "insufficient_identifiers",
+        "reason_codes": ["documented_search_incomplete_for_negative_conclusion"],
+        "query_ids": ["D2D-Q-COOK-UDI-G57682"],
+        "candidate_count": 0
+      },
+      "regulatory_evidence_candidates": [],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-074-BASE",
+          "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-9C87E69FF6AC",
+          "locator": "D2D-Q-COOK-UDI-G57682; request skip 0; no result record returned"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    },
+    {
+      "product_id": "PRD-F4AE2A74E6",
+      "profile_draft_id": "D2D-PROFILE-DRAFT-F4AE2A74E6",
+      "regulatory_proposal_id": "D2D-REG-PROPOSAL-F4AE2A74E6",
+      "regulatory_match": {
+        "match_level": "ambiguous",
+        "confidence": "unresolved",
+        "conflict_state": "insufficient_identifiers",
+        "reason_codes": ["documented_search_incomplete_for_negative_conclusion"],
+        "query_ids": ["D2D-Q-NOVATECH-UDI-01TD1120"],
+        "candidate_count": 0
+      },
+      "regulatory_evidence_candidates": [],
+      "source_refs": [
+        {
+          "source_id": "D2D-SRC-106-BASE",
+          "locator": "PDF page 12, GSS TD matrix reference 01TD1120"
+        },
+        {
+          "source_id": "D2D-SRC-FDA-UDI-8DCCC9F9E79D",
+          "locator": "D2D-Q-NOVATECH-UDI-01TD1120; request skip 0; no result record returned"
+        }
+      ],
+      "proposal_state": "pending_owner_review"
+    }
+  ]
+}

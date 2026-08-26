@@ -1,0 +1,421 @@
+{
+  "format_version": 1,
+  "artifact_kind": "d2d_pilot_cohort",
+  "method_version": "d2d-pilot-v1",
+  "snapshot_date": "2026-08-24",
+  "owner_defaults": {
+    "pilot": "accepted_as_planned",
+    "reviewer_policy": "one_accountable_physician_owner",
+    "ai_draft_product_ids": ["PRD-2632FFBF07", "PRD-F4AE2A74E6"]
+  },
+  "manufacturer_aliases": [
+    {
+      "manufacturer_id": "MFR-12BAB1E48C",
+      "canonical_name": "Karl Storz",
+      "aliases": ["KARL STORZ", "KARL STORZ Endoskope", "KARL STORZ SE & Co. KG"]
+    },
+    {
+      "manufacturer_id": "MFR-2760A3270C",
+      "canonical_name": "Cook Medical",
+      "aliases": ["Cook Incorporated", "Cook Medical LLC"]
+    },
+    {
+      "manufacturer_id": "MFR-47A0410D40",
+      "canonical_name": "Serpex Medical",
+      "aliases": ["Serpex Medical, Inc."]
+    },
+    {
+      "manufacturer_id": "MFR-4FD1B7935D",
+      "canonical_name": "Axess Vision Technology S.A.S.",
+      "aliases": ["Axess Vision Technology", "AXESS VISION TECHNOLOGY S.A.S.", "TSC Life"]
+    },
+    {
+      "manufacturer_id": "MFR-5ED32955F4",
+      "canonical_name": "ERBE",
+      "aliases": ["Erbe Elektromedizin", "ERBE USA, Inc."]
+    },
+    {
+      "manufacturer_id": "MFR-6208838930",
+      "canonical_name": "Novatech",
+      "aliases": ["Novatech SA"]
+    },
+    {
+      "manufacturer_id": "MFR-68565E2FD2",
+      "canonical_name": "Medtronic",
+      "aliases": ["Medtronic Xomed, Inc.", "Medtronic Xomed LLC"]
+    },
+    {
+      "manufacturer_id": "MFR-89E235AB41",
+      "canonical_name": "CLR Medical",
+      "aliases": ["CLR Medical LLC"]
+    },
+    {
+      "manufacturer_id": "MFR-DEFC2BB814",
+      "canonical_name": "Praxis Medical LLC",
+      "aliases": ["Praxis Medical", "Praxis Medical Devices"]
+    }
+  ],
+  "profile_groups": [
+    {
+      "description_profile_group_id": "DPG-COOK-BLUE-RHINO-G2-MULTI",
+      "label": "Cook Blue Rhino G2-Multi set configurations",
+      "member_product_ids": ["PRD-B76AF3D731"],
+      "proposed_family_narrative": "Blue Rhino G2-Multi products are percutaneous tracheostomy introducer set configurations documented in the manufacturer ordering matrix.",
+      "proposed_variant_template": "Catalog {catalog_number} corresponds to reference {reference_part_number} with loading-dilator and tube configuration values taken from its exact ordering row.",
+      "allowed_variant_fields": [
+        "catalog_number",
+        "loading_dilator_sizes",
+        "reference_part_number",
+        "tube_configuration"
+      ],
+      "review_state": "pending_owner_review"
+    },
+    {
+      "description_profile_group_id": "DPG-NOVATECH-GSS-TD",
+      "label": "Novatech GSS TD straight tracheal stent configurations",
+      "member_product_ids": ["PRD-F4AE2A74E6"],
+      "proposed_family_narrative": "GSS TD products are straight tracheal silicone stent configurations presented in a manufacturer diameter-by-length ordering matrix.",
+      "proposed_variant_template": "Catalog {catalog_number} is the matrix configuration with {outer_diameter_mm} mm outer diameter and {length_mm} mm length.",
+      "allowed_variant_fields": ["catalog_number", "length_mm", "outer_diameter_mm"],
+      "review_state": "pending_owner_review"
+    }
+  ],
+  "products": [
+    {
+      "product_id": "PRD-003C4641E6",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC089",
+          "manifest_evidence_id": "EVID-SC-001",
+          "source_kind": "governed_catalog",
+          "evidence_scope": "exact",
+          "locator": "Rendered PDF page 6, CLR Irrigator panel",
+          "supports": ["identity", "configuration"]
+        },
+        {
+          "governed_source_id": "SRC103",
+          "manifest_evidence_id": "EVID-SC-013",
+          "source_kind": "manufacturer_labeling",
+          "evidence_scope": "family",
+          "locator": "CLR Irrigator IFU LBL S012-01-203 Rev D",
+          "supports": ["function"]
+        },
+        {
+          "governed_source_id": "SRC104",
+          "manifest_evidence_id": "EVID-SC-031",
+          "source_kind": "gudid",
+          "evidence_scope": "exact",
+          "locator": "AccessGUDID Primary DI 00860003054901",
+          "supports": ["identity", "regulatory"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-CLR-UDI-00860003054901",
+          "dataset": "udi",
+          "search": "identifiers.id:\"00860003054901\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-05670F1B5F",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC018",
+          "manifest_evidence_id": null,
+          "source_kind": "manufacturer_catalog",
+          "evidence_scope": "exact",
+          "locator": "Cryoprobes for ERBECRYO 2, catalog page 5",
+          "supports": ["identity", "configuration", "specification"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-ERBE-UDI-20402-411",
+          "dataset": "udi",
+          "search": "catalog_number:\"20402-411\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-1ED27ADA45",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC089",
+          "manifest_evidence_id": "EVID-SC-001",
+          "source_kind": "governed_catalog",
+          "evidence_scope": "exact",
+          "locator": "Rendered PDF page 2, EndoCore ordering table",
+          "supports": ["identity", "configuration", "specification"]
+        },
+        {
+          "governed_source_id": "SRC095",
+          "manifest_evidence_id": "EVID-SC-006",
+          "source_kind": "manufacturer_product_page",
+          "evidence_scope": "family",
+          "locator": "EndoCore product and ordering information",
+          "supports": ["function"]
+        },
+        {
+          "governed_source_id": "SRC096",
+          "manifest_evidence_id": "EVID-SC-019",
+          "source_kind": "gudid",
+          "evidence_scope": "exact",
+          "locator": "AccessGUDID Primary DI 00850081350033",
+          "supports": ["identity", "configuration", "regulatory"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-PRAXIS-UDI-00850081350033",
+          "dataset": "udi",
+          "search": "identifiers.id:\"00850081350033\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-2632FFBF07",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": true,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC089",
+          "manifest_evidence_id": "EVID-SC-001",
+          "source_kind": "governed_catalog",
+          "evidence_scope": "exact",
+          "locator": "Rendered PDF page 1, Broncoflex ordering panel",
+          "supports": ["identity", "configuration"]
+        },
+        {
+          "governed_source_id": "SRC092",
+          "manifest_evidence_id": "EVID-SC-004",
+          "source_kind": "manufacturer_catalog",
+          "evidence_scope": "exact",
+          "locator": "Broncoflex XFlo specification table",
+          "supports": ["identity", "configuration", "function", "specification"]
+        },
+        {
+          "governed_source_id": "SRC094",
+          "manifest_evidence_id": "EVID-SC-015",
+          "source_kind": "gudid",
+          "evidence_scope": "exact",
+          "locator": "AccessGUDID Primary DI 03664977000103",
+          "supports": ["identity", "regulatory"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-AXESS-XFLO-UDI-03664977000103",
+          "dataset": "udi",
+          "search": "identifiers.id:\"03664977000103\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-3E1556EBE5",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC091",
+          "manifest_evidence_id": "EVID-SC-003",
+          "source_kind": "manufacturer_product_page",
+          "evidence_scope": "exact",
+          "locator": "Airway Blades ordering information table, CFN 1884035HRE",
+          "supports": ["identity", "configuration", "function", "specification"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-MEDTRONIC-UDI-1884035HRE",
+          "dataset": "udi",
+          "search": "catalog_number:\"1884035HRE\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-6F15A8C9B5",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC089",
+          "manifest_evidence_id": "EVID-SC-001",
+          "source_kind": "governed_catalog",
+          "evidence_scope": "exact",
+          "locator": "Rendered PDF page 1, Screeni reference 30030001",
+          "supports": ["identity", "configuration"]
+        },
+        {
+          "governed_source_id": "SRC093",
+          "manifest_evidence_id": "EVID-SC-005",
+          "source_kind": "manufacturer_catalog",
+          "evidence_scope": "family",
+          "locator": "Screeni technical datasheet",
+          "supports": ["function"]
+        },
+        {
+          "governed_source_id": "SRC094",
+          "manifest_evidence_id": "EVID-SC-017",
+          "source_kind": "gudid",
+          "evidence_scope": "exact",
+          "locator": "AccessGUDID Primary DI 03664977030032",
+          "supports": ["identity", "configuration", "regulatory"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-SCREENI-UDI-03664977030032",
+          "dataset": "udi",
+          "search": "identifiers.id:\"03664977030032\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-A0655BF464",
+      "proposed_description_scope": "exact_product",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC107",
+          "manifest_evidence_id": null,
+          "source_kind": "manufacturer_catalog",
+          "evidence_scope": "exact",
+          "locator": "PDF pages 49-50, item 10350F product card",
+          "supports": ["identity", "configuration", "specification"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-STORZ-UDI-10350F",
+          "dataset": "udi",
+          "search": "catalog_number:\"10350F\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-AED3720BF6",
+      "proposed_description_scope": "configuration_variant",
+      "description_profile_group_id": null,
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC089",
+          "manifest_evidence_id": "EVID-SC-001",
+          "source_kind": "governed_catalog",
+          "evidence_scope": "exact",
+          "locator": "Rendered PDF page 3, Narwhal ordering and specification panels",
+          "supports": ["identity", "configuration", "specification"]
+        },
+        {
+          "governed_source_id": "SRC097",
+          "manifest_evidence_id": "EVID-SC-007",
+          "source_kind": "fda_premarket",
+          "evidence_scope": "family",
+          "locator": "K261068, device description and base-model table",
+          "supports": ["identity", "function", "regulatory"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-SERPEX-510K-K261068",
+          "dataset": "510k",
+          "search": "k_number:\"K261068\"",
+          "purpose": "premarket",
+          "expected_scope": "family"
+        },
+        {
+          "query_id": "D2D-Q-SERPEX-LISTING-K261068",
+          "dataset": "registrationlisting",
+          "search": "k_number:\"K261068\"",
+          "purpose": "registration_listing",
+          "expected_scope": "family"
+        },
+        {
+          "query_id": "D2D-Q-SERPEX-UDI-MCB-1000-4",
+          "dataset": "udi",
+          "search": "catalog_number:\"MCB-1000-4\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-B76AF3D731",
+      "proposed_description_scope": "configuration_variant",
+      "description_profile_group_id": "DPG-COOK-BLUE-RHINO-G2-MULTI",
+      "ai_draft": false,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC074",
+          "manifest_evidence_id": null,
+          "source_kind": "manufacturer_catalog",
+          "evidence_scope": "configuration",
+          "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA",
+          "supports": ["identity", "configuration", "specification"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-COOK-UDI-G57682",
+          "dataset": "udi",
+          "search": "catalog_number:\"G57682\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    },
+    {
+      "product_id": "PRD-F4AE2A74E6",
+      "proposed_description_scope": "configuration_variant",
+      "description_profile_group_id": "DPG-NOVATECH-GSS-TD",
+      "ai_draft": true,
+      "source_bindings": [
+        {
+          "governed_source_id": "SRC106",
+          "manifest_evidence_id": null,
+          "source_kind": "manufacturer_catalog",
+          "evidence_scope": "configuration",
+          "locator": "PDF page 12, GSS TD matrix reference 01TD1120",
+          "supports": ["identity", "configuration", "specification"]
+        }
+      ],
+      "acquisition_queries": [
+        {
+          "query_id": "D2D-Q-NOVATECH-UDI-01TD1120",
+          "dataset": "udi",
+          "search": "catalog_number:\"01TD1120\"",
+          "purpose": "exact_identity",
+          "expected_scope": "exact"
+        }
+      ]
+    }
+  ]
+}

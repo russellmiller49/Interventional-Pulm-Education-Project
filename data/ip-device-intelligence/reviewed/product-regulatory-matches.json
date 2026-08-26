@@ -1,0 +1,515 @@
+{
+  "format_version": 1,
+  "artifact_kind": "d2d_product_regulatory_matches",
+  "method_version": "d2d-regulatory-review-v1",
+  "source_proposals": {
+    "path": "data/ip-device-intelligence/research/d2d/2026-08-24/evidence-proposals.json",
+    "sha256": "75095347e7515d13e6202cc6b896c43f96f42439428610ca49530ac08cccf3ff"
+  },
+  "review_policy": "one_accountable_physician_owner",
+  "correction_pass_limit": 1,
+  "rows": [
+    {
+      "review_id": "D2D-REG-REVIEW-003C4641E6",
+      "product_id": "PRD-003C4641E6",
+      "proposal_id": "D2D-REG-PROPOSAL-003C4641E6",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "An exact FDA UDI identity record was matched to model S012-01-019. No product-specific premarket clearance or approval conclusion was established in this snapshot. “In Commercial Distribution” is an as-of GUDID field, not proof of present orderability.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-003C4641E6",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "exact_udi_catalog_match",
+        "confidence": "high",
+        "canonical_manufacturer": "CLR Medical",
+        "evidence_legal_manufacturer": "CLR Medical",
+        "canonical_catalog_number": "S012-01-019",
+        "evidence_model_catalog_number": "S012-01-019",
+        "conflict_state": "none",
+        "udi_identities": [
+          {
+            "primary_di": "00860003054901",
+            "package_dis": ["00860003054987"],
+            "issuing_agency": null,
+            "legal_manufacturer": "CLR Medical",
+            "brand_name": null,
+            "model_catalog_number": "S012-01-019",
+            "publish_date": "2024-05-29",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-60FC657A72ED",
+                "locator": "D2D-Q-CLR-UDI-00860003054901; request skip 0; record keys 0e0fea1d-e853-4e90-acc9-0224abc217d0"
+              }
+            ]
+          }
+        ],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [
+          {
+            "status": "in_distribution",
+            "as_of_date": "2026-08-24",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-60FC657A72ED",
+                "locator": "D2D-Q-CLR-UDI-00860003054901; request skip 0; record keys 0e0fea1d-e853-4e90-acc9-0224abc217d0"
+              }
+            ]
+          }
+        ],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-003C4641E6"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-05670F1B5F",
+      "product_id": "PRD-05670F1B5F",
+      "proposal_id": "D2D-REG-PROPOSAL-05670F1B5F",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "An exact FDA UDI identity record was matched to ERBE catalog/model 20402-411. No product-specific premarket clearance or approval conclusion was established in this snapshot. Existing D2B active safety action Z-1568-2026 remains independent and unchanged.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-05670F1B5F",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "exact_model_manufacturer_match",
+        "confidence": "high",
+        "canonical_manufacturer": "ERBE",
+        "evidence_legal_manufacturer": "Erbe Elektromedizin GmbH",
+        "canonical_catalog_number": "20402-411",
+        "evidence_model_catalog_number": "20402-411",
+        "conflict_state": "none",
+        "udi_identities": [
+          {
+            "primary_di": "04050147021839",
+            "package_dis": ["04050147021846"],
+            "issuing_agency": null,
+            "legal_manufacturer": "Erbe Elektromedizin GmbH",
+            "brand_name": null,
+            "model_catalog_number": "20402-411",
+            "publish_date": "2020-02-07",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-59B18E998C2C",
+                "locator": "D2D-Q-ERBE-UDI-20402-411; request skip 0; record keys 75fbe42c-49fb-4380-adb3-173ac6824728"
+              }
+            ]
+          }
+        ],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [
+          {
+            "status": "in_distribution",
+            "as_of_date": "2026-08-24",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-59B18E998C2C",
+                "locator": "D2D-Q-ERBE-UDI-20402-411; request skip 0; record keys 75fbe42c-49fb-4380-adb3-173ac6824728"
+              }
+            ]
+          }
+        ],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-05670F1B5F"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-1ED27ADA45",
+      "product_id": "PRD-1ED27ADA45",
+      "proposal_id": "D2D-REG-PROPOSAL-1ED27ADA45",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "FDA UDI evidence supports the underlying 22-gauge Olympus bevel-tip configuration and its five-unit package. The GUDID model string does not exactly reproduce catalog ENDO-BV-22G-Kit-O, so the match remains strong exact identity rather than an exact catalog-string match.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-1ED27ADA45",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "strong_exact_identity_match",
+        "confidence": "moderate",
+        "canonical_manufacturer": "Praxis Medical LLC",
+        "evidence_legal_manufacturer": "Praxis Medical LLC",
+        "canonical_catalog_number": "ENDO-BV-22G-Kit-O",
+        "evidence_model_catalog_number": "ENDO-BV-22G-O",
+        "conflict_state": "none",
+        "udi_identities": [
+          {
+            "primary_di": "00850081350033",
+            "package_dis": ["10850081350030"],
+            "issuing_agency": null,
+            "legal_manufacturer": "Praxis Medical LLC",
+            "brand_name": null,
+            "model_catalog_number": "ENDO-BV-22G-O",
+            "publish_date": "2025-11-06",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-739E3496CD3E",
+                "locator": "D2D-Q-PRAXIS-UDI-00850081350033; request skip 0; record keys 1d704797-7111-41dc-b62a-142f4fec4d55"
+              }
+            ]
+          }
+        ],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [
+          {
+            "status": "in_distribution",
+            "as_of_date": "2026-08-24",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-739E3496CD3E",
+                "locator": "D2D-Q-PRAXIS-UDI-00850081350033; request skip 0; record keys 1d704797-7111-41dc-b62a-142f4fec4d55"
+              }
+            ]
+          }
+        ],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-1ED27ADA45"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-2632FFBF07",
+      "product_id": "PRD-2632FFBF07",
+      "proposal_id": "D2D-REG-PROPOSAL-2632FFBF07",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "An exact FDA UDI identity record was matched to Broncoflex XFlo model 10040001. No product-specific premarket clearance or approval conclusion was established in this snapshot.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-2632FFBF07",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "exact_udi_catalog_match",
+        "confidence": "high",
+        "canonical_manufacturer": "Axess Vision Technology S.A.S.",
+        "evidence_legal_manufacturer": "Axess Vision Technology",
+        "canonical_catalog_number": "10040001",
+        "evidence_model_catalog_number": "10040001",
+        "conflict_state": "none",
+        "udi_identities": [
+          {
+            "primary_di": "03664977000103",
+            "package_dis": [],
+            "issuing_agency": null,
+            "legal_manufacturer": "Axess Vision Technology",
+            "brand_name": "Broncoflex XFlo",
+            "model_catalog_number": "10040001",
+            "publish_date": "2025-07-18",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-C8AD11B2D249",
+                "locator": "D2D-Q-AXESS-XFLO-UDI-03664977000103; request skip 0; record keys 1182b967-23e2-4170-a8e9-47d05bc32290"
+              }
+            ]
+          }
+        ],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [
+          {
+            "status": "in_distribution",
+            "as_of_date": "2026-08-24",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-C8AD11B2D249",
+                "locator": "D2D-Q-AXESS-XFLO-UDI-03664977000103; request skip 0; record keys 1182b967-23e2-4170-a8e9-47d05bc32290"
+              }
+            ]
+          }
+        ],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-2632FFBF07"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-3E1556EBE5",
+      "product_id": "PRD-3E1556EBE5",
+      "proposal_id": "D2D-REG-PROPOSAL-3E1556EBE5",
+      "decision": "unresolved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "The bounded 2026-08-24 openFDA UDI query returned no exact record for catalog 1884035HRE. This does not establish that the product is unlisted, uncleared, unapproved, or unavailable.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-3E1556EBE5",
+        "research_state": "unresolved",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "ambiguous",
+        "confidence": "unresolved",
+        "canonical_manufacturer": "Medtronic",
+        "evidence_legal_manufacturer": null,
+        "canonical_catalog_number": "1884035HRE",
+        "evidence_model_catalog_number": null,
+        "conflict_state": "insufficient_identifiers",
+        "udi_identities": [],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [],
+        "conclusion_codes": ["exact_identity_unresolved"],
+        "review_id": "D2D-REG-REVIEW-3E1556EBE5"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-6F15A8C9B5",
+      "product_id": "PRD-6F15A8C9B5",
+      "proposal_id": "D2D-REG-PROPOSAL-6F15A8C9B5",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "An exact FDA UDI identity record was matched to Screeni catalog/model 30030001. No product-specific premarket clearance or approval conclusion was established in this snapshot.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-6F15A8C9B5",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "exact_udi_catalog_match",
+        "confidence": "high",
+        "canonical_manufacturer": "Axess Vision Technology S.A.S.",
+        "evidence_legal_manufacturer": "Axess Vision Technology",
+        "canonical_catalog_number": "30030001",
+        "evidence_model_catalog_number": "30030001",
+        "conflict_state": "none",
+        "udi_identities": [
+          {
+            "primary_di": "03664977030032",
+            "package_dis": [],
+            "issuing_agency": null,
+            "legal_manufacturer": "Axess Vision Technology",
+            "brand_name": "Screeni",
+            "model_catalog_number": "30030001",
+            "publish_date": "2020-12-10",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-18AD1BE46FCA",
+                "locator": "D2D-Q-SCREENI-UDI-03664977030032; request skip 0; record keys 229c29d9-33fa-46b4-a272-3d21c8199552"
+              }
+            ]
+          }
+        ],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [
+          {
+            "status": "in_distribution",
+            "as_of_date": "2026-08-24",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-18AD1BE46FCA",
+                "locator": "D2D-Q-SCREENI-UDI-03664977030032; request skip 0; record keys 229c29d9-33fa-46b4-a272-3d21c8199552"
+              }
+            ]
+          }
+        ],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-6F15A8C9B5"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-A0655BF464",
+      "product_id": "PRD-A0655BF464",
+      "proposal_id": "D2D-REG-PROPOSAL-A0655BF464",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "An exact FDA UDI identity record was matched to KARL STORZ catalog/model 10350F. No product-specific premarket clearance or approval conclusion was established in this snapshot.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-A0655BF464",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "exact_model_manufacturer_match",
+        "confidence": "high",
+        "canonical_manufacturer": "Karl Storz",
+        "evidence_legal_manufacturer": "Karl Storz GmbH & Co. KG",
+        "canonical_catalog_number": "10350F",
+        "evidence_model_catalog_number": "10350F",
+        "conflict_state": "none",
+        "udi_identities": [
+          {
+            "primary_di": "04048551046692",
+            "package_dis": [],
+            "issuing_agency": null,
+            "legal_manufacturer": "Karl Storz GmbH & Co. KG",
+            "brand_name": null,
+            "model_catalog_number": "10350F",
+            "publish_date": "2016-09-23",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-CDCD8F0A0F43",
+                "locator": "D2D-Q-STORZ-UDI-10350F; request skip 0; record keys 256172b4-7a3e-4d49-8e5e-4125c8065ad2"
+              }
+            ]
+          }
+        ],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [
+          {
+            "status": "in_distribution",
+            "as_of_date": "2026-08-24",
+            "evidence_scope": "exact",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-UDI-CDCD8F0A0F43",
+                "locator": "D2D-Q-STORZ-UDI-10350F; request skip 0; record keys 256172b4-7a3e-4d49-8e5e-4125c8065ad2"
+              }
+            ]
+          }
+        ],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-A0655BF464"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-AED3720BF6",
+      "product_id": "PRD-AED3720BF6",
+      "proposal_id": "D2D-REG-PROPOSAL-AED3720BF6",
+      "decision": "approved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "FDA 510(k) K261068 was cleared as substantially equivalent for the Maverix Cryo Biopsy Probe (MCB1000) and Maverix Cryo Cartridge (CC1000) family. Exact linkage of catalog MCB-1000-4 to that submission was not established in this snapshot. MCB-1000-4 itself must not be rendered as exactly 510(k)-cleared.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-AED3720BF6",
+        "research_state": "reviewed",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "family_level_match",
+        "confidence": "moderate",
+        "canonical_manufacturer": "Serpex Medical",
+        "evidence_legal_manufacturer": "Serpex Medical",
+        "canonical_catalog_number": "MCB-1000-4",
+        "evidence_model_catalog_number": null,
+        "conflict_state": "none",
+        "udi_identities": [],
+        "classifications": [
+          {
+            "product_code": "GEH",
+            "device_class": "unknown",
+            "regulation_number": "878.4350",
+            "classification_name": null,
+            "evidence_scope": "family",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-510K-9D8612D0889F",
+                "locator": "D2D-Q-SERPEX-510K-K261068; request skip 0; record keys K261068"
+              }
+            ]
+          }
+        ],
+        "pathways": [
+          {
+            "pathway": "510k",
+            "submission_number": "K261068",
+            "decision": "substantially_equivalent",
+            "decision_date": "2026-06-30",
+            "evidence_scope": "family",
+            "source_refs": [
+              {
+                "source_id": "D2D-SRC-FDA-510K-9D8612D0889F",
+                "locator": "D2D-Q-SERPEX-510K-K261068; request skip 0; record keys K261068"
+              }
+            ]
+          }
+        ],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [],
+        "conclusion_codes": [],
+        "review_id": "D2D-REG-REVIEW-AED3720BF6"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-B76AF3D731",
+      "product_id": "PRD-B76AF3D731",
+      "proposal_id": "D2D-REG-PROPOSAL-B76AF3D731",
+      "decision": "unresolved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "The bounded 2026-08-24 openFDA UDI query returned no exact record for order G57682. This does not establish that the product is unlisted, uncleared, unapproved, or unavailable.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-B76AF3D731",
+        "research_state": "unresolved",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "ambiguous",
+        "confidence": "unresolved",
+        "canonical_manufacturer": "Cook Medical",
+        "evidence_legal_manufacturer": null,
+        "canonical_catalog_number": "G57682",
+        "evidence_model_catalog_number": null,
+        "conflict_state": "insufficient_identifiers",
+        "udi_identities": [],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [],
+        "conclusion_codes": ["exact_identity_unresolved"],
+        "review_id": "D2D-REG-REVIEW-B76AF3D731"
+      }
+    },
+    {
+      "review_id": "D2D-REG-REVIEW-F4AE2A74E6",
+      "product_id": "PRD-F4AE2A74E6",
+      "proposal_id": "D2D-REG-PROPOSAL-F4AE2A74E6",
+      "decision": "unresolved",
+      "reviewer_id": "russell-miller",
+      "reviewer_role": "physician_owner",
+      "reviewed_at": "2026-08-24T00:00:00.000Z",
+      "rationale": "The bounded 2026-08-24 openFDA UDI query returned no exact record for catalog 01TD1120. This does not establish that the product is unlisted, uncleared, unapproved, or unavailable.",
+      "supersedes_review_id": null,
+      "final_regulatory_record": {
+        "product_id": "PRD-F4AE2A74E6",
+        "research_state": "unresolved",
+        "research_as_of_date": "2026-08-24",
+        "match_level": "ambiguous",
+        "confidence": "unresolved",
+        "canonical_manufacturer": "Novatech",
+        "evidence_legal_manufacturer": null,
+        "canonical_catalog_number": "01TD1120",
+        "evidence_model_catalog_number": null,
+        "conflict_state": "insufficient_identifiers",
+        "udi_identities": [],
+        "classifications": [],
+        "pathways": [],
+        "registration_listing_evidence": [],
+        "commercial_distribution_evidence": [],
+        "conclusion_codes": ["exact_identity_unresolved"],
+        "review_id": "D2D-REG-REVIEW-F4AE2A74E6"
+      }
+    }
+  ]
+}
