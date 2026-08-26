@@ -5,11 +5,11 @@
   "source_artifacts": {
     "profile_evidence": {
       "path": "data/ip-device-intelligence/reviewed/product-profile-evidence.json",
-      "sha256": "ef1218d88663fc71c8d3d069c1b3bdc63796dd9dc185090e65bb2757e13d4093"
+      "sha256": "c4ed744ad720277ecd7591f6c4aaebacdf935a5556dc14d1ebbf5215a5f06f94"
     },
     "evidence_sources": {
       "path": "data/ip-device-intelligence/reviewed/d2d-evidence-sources.json",
-      "sha256": "02e3ae027a220c7395b7e91ce4d90f8d42d68e9b9710bbe5383e4d006211915e"
+      "sha256": "bdd7342a4bdc7206608fc2f71a1adaaeebaa8ffc5d2df398ac39eaa436eacaee"
     }
   },
   "drafts": [

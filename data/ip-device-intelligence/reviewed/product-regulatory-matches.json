@@ -4,7 +4,7 @@
   "method_version": "d2d-regulatory-review-v1",
   "source_proposals": {
     "path": "data/ip-device-intelligence/research/d2d/2026-08-24/evidence-proposals.json",
-    "sha256": "75095347e7515d13e6202cc6b896c43f96f42439428610ca49530ac08cccf3ff"
+    "sha256": "40590f5395edd6fec4853db9974e5d39bc64cffae166b0b014b84768672d67a0"
   },
   "review_policy": "one_accountable_physician_owner",
   "correction_pass_limit": 1,

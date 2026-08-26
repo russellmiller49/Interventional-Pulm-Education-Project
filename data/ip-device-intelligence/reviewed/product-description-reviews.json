@@ -4,7 +4,7 @@
   "method_version": "d2d-description-review-v1",
   "source_proposals": {
     "path": "data/ip-device-intelligence/research/d2d/2026-08-24/product-profile-drafts.json",
-    "sha256": "845d3235f05ad8e79d624a059cf3048d3aa96387017b718b195337e11233f4ab"
+    "sha256": "6236d7ebee28599918e7e967c2ff645fd8b8e03995156c3d54a9b7f2eb52a082"
   },
   "review_policy": "one_accountable_physician_owner",
   "correction_pass_limit": 1,

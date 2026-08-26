@@ -3,7 +3,7 @@
   "artifact_kind": "d2d_owner_review_source_manifest",
   "source_artifact": {
     "path": "data/ip-device-intelligence/reviewed/d2d-evidence-sources.json",
-    "sha256": "02e3ae027a220c7395b7e91ce4d90f8d42d68e9b9710bbe5383e4d006211915e"
+    "sha256": "bdd7342a4bdc7206608fc2f71a1adaaeebaa8ffc5d2df398ac39eaa436eacaee"
   },
   "sources": [
     {

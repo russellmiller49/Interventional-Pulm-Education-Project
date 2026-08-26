@@ -10,10 +10,12 @@ import { generateD2DProposalFiles } from '../d2d/build-proposals'
 import { generateReviewFiles } from '../d2d/build-review-artifacts'
 import { D2D_PATHS } from '../d2d/paths'
 import {
+  acquisitionManifestSchema,
   descriptionReviewArtifactSchema,
   evidenceProposalArtifactSchema,
   evidenceSourceArtifactSchema,
   pilotCohortArtifactSchema,
+  productProfileEvidenceArtifactSchema,
   profileDraftArtifactSchema,
   regulatoryReviewArtifactSchema,
 } from '../d2d/schemas'
@@ -42,14 +44,59 @@ describe('D2D-A deterministic generation', () => {
     expect(generateD2DOverlayFiles(REPO_ROOT)).toEqual(generateD2DOverlayFiles(REPO_ROOT))
   })
 
-  it('pins every generator input by its committed SHA-256', () => {
+  it('pins every path-backed generator input by its committed SHA-256', () => {
+    const acquisition = acquisitionManifestSchema.parse(json(D2D_PATHS.acquisitionManifest))
+    const evidenceSources = evidenceSourceArtifactSchema.parse(json(D2D_PATHS.evidenceSources))
+    const profileEvidence = productProfileEvidenceArtifactSchema.parse(
+      json(D2D_PATHS.profileEvidence),
+    )
+    const drafts = profileDraftArtifactSchema.parse(json(D2D_PATHS.profileDrafts))
+    const proposals = evidenceProposalArtifactSchema.parse(json(D2D_PATHS.evidenceProposals))
+    const descriptions = descriptionReviewArtifactSchema.parse(json(D2D_PATHS.descriptionReviews))
+    const regulatoryReviews = regulatoryReviewArtifactSchema.parse(
+      json(D2D_PATHS.regulatoryReviews),
+    )
+    const reviewSourceManifest = json(`${D2D_PATHS.reviewDirectory}/source-manifest.json`) as {
+      source_artifact: { path: string; sha256: string }
+    }
     const profile = profileOverlayArtifactSchema.parse(json(D2D_PATHS.profileOverlay))
     const regulatory = regulatoryOverlayArtifactSchema.parse(json(D2D_PATHS.regulatoryOverlay))
     for (const pinned of [
+      acquisition.pilot_cohort,
+      ...Object.values(evidenceSources.source_artifacts),
+      ...Object.values(profileEvidence.source_artifacts),
+      ...Object.values(drafts.source_artifacts),
+      ...Object.values(proposals.source_artifacts),
+      descriptions.source_proposals,
+      regulatoryReviews.source_proposals,
+      reviewSourceManifest.source_artifact,
       ...Object.values(profile.source_artifacts),
       ...Object.values(regulatory.source_artifacts),
     ]) {
       expect(pinned.sha256).toBe(sha256(readFileSync(join(REPO_ROOT, pinned.path))))
+    }
+
+    const sourceHashById = new Map(
+      evidenceSources.sources.map((source) => [source.source_id, source.content_sha256]),
+    )
+    for (const row of profileEvidence.rows) {
+      expect(row.canonical_identity_sha256).toBe(sha256(JSON.stringify(row.canonical_identity)))
+    }
+    for (const draft of drafts.drafts) {
+      for (const source of draft.generation.ordered_sources) {
+        expect(source.sha256).toBe(sourceHashById.get(source.source_id))
+      }
+      const content = {
+        product_id: draft.product_id,
+        proposed_description_scope: draft.proposed_description_scope,
+        summary_claims: draft.summary_claims,
+        physical_device_type: draft.physical_device_type,
+        intended_function: draft.intended_function,
+        exact_configuration_summary: draft.exact_configuration_summary,
+        key_specifications: draft.key_specifications,
+        confidence: draft.confidence,
+      }
+      expect(draft.generation.draft_sha256).toBe(sha256(JSON.stringify(content)))
     }
   })
 
@@ -83,6 +130,16 @@ describe('D2D-A deterministic generation', () => {
     expect(regulatory).toMatchObject({
       counts: { pilot_products: 10, rows: 10, reviewed: 7, unresolved: 3 },
     })
+    expect(profile.rows).toEqual(
+      descriptions.rows
+        .map((row) => row.final_profile)
+        .sort((left, right) => left!.product_id.localeCompare(right!.product_id)),
+    )
+    expect(regulatory.rows).toEqual(
+      regulatoryReviews.rows
+        .map((row) => row.final_regulatory_record)
+        .sort((left, right) => left!.product_id.localeCompare(right!.product_id)),
+    )
 
     expect(
       regulatory.rows

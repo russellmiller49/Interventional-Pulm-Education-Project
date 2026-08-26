@@ -5,7 +5,7 @@
   "source_artifacts": {
     "pilot_cohort": {
       "path": "data/ip-device-intelligence/reviewed/d2d-pilot-cohort.json",
-      "sha256": "42ff900ac64cc10d8b966aafafde6cac68627c6536b3c1664d2f6254d4825592"
+      "sha256": "5ef32a36494dfaeb0a33619d9a655ef5714dbe0d5834be297fece99bb41f7e39"
     },
     "catalog": {
       "path": "data/ip-preference-cards/generated/catalog-products.json",
@@ -13,14 +13,16 @@
     },
     "evidence_sources": {
       "path": "data/ip-device-intelligence/reviewed/d2d-evidence-sources.json",
-      "sha256": "02e3ae027a220c7395b7e91ce4d90f8d42d68e9b9710bbe5383e4d006211915e"
+      "sha256": "bdd7342a4bdc7206608fc2f71a1adaaeebaa8ffc5d2df398ac39eaa436eacaee"
     }
   },
   "profile_groups": [
     {
       "description_profile_group_id": "DPG-COOK-BLUE-RHINO-G2-MULTI",
       "label": "Cook Blue Rhino G2-Multi set configurations",
-      "member_product_ids": ["PRD-B76AF3D731"],
+      "member_product_ids": [
+        "PRD-B76AF3D731"
+      ],
       "proposed_family_narrative": "Blue Rhino G2-Multi products are percutaneous tracheostomy introducer set configurations documented in the manufacturer ordering matrix.",
       "proposed_variant_template": "Catalog {catalog_number} corresponds to reference {reference_part_number} with loading-dilator and tube configuration values taken from its exact ordering row.",
       "allowed_variant_fields": [
@@ -34,10 +36,16 @@
     {
       "description_profile_group_id": "DPG-NOVATECH-GSS-TD",
       "label": "Novatech GSS TD straight tracheal stent configurations",
-      "member_product_ids": ["PRD-F4AE2A74E6"],
+      "member_product_ids": [
+        "PRD-F4AE2A74E6"
+      ],
       "proposed_family_narrative": "GSS TD products are straight tracheal silicone stent configurations presented in a manufacturer diameter-by-length ordering matrix.",
       "proposed_variant_template": "Catalog {catalog_number} is the matrix configuration with {outer_diameter_mm} mm outer diameter and {length_mm} mm length.",
-      "allowed_variant_fields": ["catalog_number", "length_mm", "outer_diameter_mm"],
+      "allowed_variant_fields": [
+        "catalog_number",
+        "length_mm",
+        "outer_diameter_mm"
+      ],
       "review_state": "pending_owner_review"
     }
   ],
@@ -63,19 +71,27 @@
           "source_id": "D2D-SRC-089-001",
           "locator": "Rendered PDF page 6, CLR Irrigator panel",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity"]
+          "supports": [
+            "configuration",
+            "identity"
+          ]
         },
         {
           "source_id": "D2D-SRC-103-013",
           "locator": "CLR Irrigator IFU LBL S012-01-203 Rev D",
           "evidence_scope": "family",
-          "supports": ["function"]
+          "supports": [
+            "function"
+          ]
         },
         {
           "source_id": "D2D-SRC-104-031",
           "locator": "AccessGUDID Primary DI 00860003054901",
           "evidence_scope": "exact",
-          "supports": ["identity", "regulatory"]
+          "supports": [
+            "identity",
+            "regulatory"
+          ]
         }
       ],
       "configuration_values": {
@@ -120,7 +136,11 @@
           "source_id": "D2D-SRC-018-BASE",
           "locator": "Cryoprobes for ERBECRYO 2, catalog page 5",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "identity",
+            "specification"
+          ]
         }
       ],
       "configuration_values": {
@@ -168,19 +188,29 @@
           "source_id": "D2D-SRC-089-001",
           "locator": "Rendered PDF page 2, EndoCore ordering table",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "identity",
+            "specification"
+          ]
         },
         {
           "source_id": "D2D-SRC-095-006",
           "locator": "EndoCore product and ordering information",
           "evidence_scope": "family",
-          "supports": ["function"]
+          "supports": [
+            "function"
+          ]
         },
         {
           "source_id": "D2D-SRC-096-019",
           "locator": "AccessGUDID Primary DI 00850081350033",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity", "regulatory"]
+          "supports": [
+            "configuration",
+            "identity",
+            "regulatory"
+          ]
         }
       ],
       "configuration_values": {
@@ -226,19 +256,30 @@
           "source_id": "D2D-SRC-089-001",
           "locator": "Rendered PDF page 1, Broncoflex ordering panel",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity"]
+          "supports": [
+            "configuration",
+            "identity"
+          ]
         },
         {
           "source_id": "D2D-SRC-092-004",
           "locator": "Broncoflex XFlo specification table",
           "evidence_scope": "exact",
-          "supports": ["configuration", "function", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "function",
+            "identity",
+            "specification"
+          ]
         },
         {
           "source_id": "D2D-SRC-094-015",
           "locator": "AccessGUDID Primary DI 03664977000103",
           "evidence_scope": "exact",
-          "supports": ["identity", "regulatory"]
+          "supports": [
+            "identity",
+            "regulatory"
+          ]
         }
       ],
       "configuration_values": {
@@ -283,7 +324,12 @@
           "source_id": "D2D-SRC-091-003",
           "locator": "Airway Blades ordering information table, CFN 1884035HRE",
           "evidence_scope": "exact",
-          "supports": ["configuration", "function", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "function",
+            "identity",
+            "specification"
+          ]
         }
       ],
       "configuration_values": {
@@ -329,19 +375,28 @@
           "source_id": "D2D-SRC-089-001",
           "locator": "Rendered PDF page 1, Screeni reference 30030001",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity"]
+          "supports": [
+            "configuration",
+            "identity"
+          ]
         },
         {
           "source_id": "D2D-SRC-093-005",
           "locator": "Screeni technical datasheet",
           "evidence_scope": "family",
-          "supports": ["function"]
+          "supports": [
+            "function"
+          ]
         },
         {
           "source_id": "D2D-SRC-094-017",
           "locator": "AccessGUDID Primary DI 03664977030032",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity", "regulatory"]
+          "supports": [
+            "configuration",
+            "identity",
+            "regulatory"
+          ]
         }
       ],
       "configuration_values": {
@@ -386,7 +441,11 @@
           "source_id": "D2D-SRC-107-BASE",
           "locator": "PDF pages 49-50, item 10350F product card",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "identity",
+            "specification"
+          ]
         }
       ],
       "configuration_values": {
@@ -429,13 +488,21 @@
           "source_id": "D2D-SRC-089-001",
           "locator": "Rendered PDF page 3, Narwhal ordering and specification panels",
           "evidence_scope": "exact",
-          "supports": ["configuration", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "identity",
+            "specification"
+          ]
         },
         {
           "source_id": "D2D-SRC-097-007",
           "locator": "K261068, device description and base-model table",
           "evidence_scope": "family",
-          "supports": ["function", "identity", "regulatory"]
+          "supports": [
+            "function",
+            "identity",
+            "regulatory"
+          ]
         }
       ],
       "configuration_values": {
@@ -480,7 +547,11 @@
           "source_id": "D2D-SRC-074-BASE",
           "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA",
           "evidence_scope": "configuration",
-          "supports": ["configuration", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "identity",
+            "specification"
+          ]
         }
       ],
       "configuration_values": {
@@ -523,7 +594,11 @@
           "source_id": "D2D-SRC-106-BASE",
           "locator": "PDF page 12, GSS TD matrix reference 01TD1120",
           "evidence_scope": "configuration",
-          "supports": ["configuration", "identity", "specification"]
+          "supports": [
+            "configuration",
+            "identity",
+            "specification"
+          ]
         }
       ],
       "configuration_values": {

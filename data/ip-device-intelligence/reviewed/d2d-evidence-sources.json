@@ -13,11 +13,11 @@
     },
     "pilot_cohort": {
       "path": "data/ip-device-intelligence/reviewed/d2d-pilot-cohort.json",
-      "sha256": "42ff900ac64cc10d8b966aafafde6cac68627c6536b3c1664d2f6254d4825592"
+      "sha256": "5ef32a36494dfaeb0a33619d9a655ef5714dbe0d5834be297fece99bb41f7e39"
     },
     "acquisition_manifest": {
       "path": "data/ip-device-intelligence/research/d2d/2026-08-24/acquisition-manifest.json",
-      "sha256": "00d6cafa99cccdf62ba0b69c9e4778fed5e5b916073c14424c2395f43b9ea05e"
+      "sha256": "24fbc8f36b126813aa790ece89d34d4ac7c23b73729eac99d9f8f6c03038ba2a"
     }
   },
   "sources": [
