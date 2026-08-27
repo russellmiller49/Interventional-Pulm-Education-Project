@@ -3,6 +3,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
 import type { SupportMode } from '../engine/types'
+import { answerLeakMatch, ANSWER_LEAK_MATCHERS } from '../test-support/answerLeakMatchers'
 
 /**
  * The composed-DOM answer-leak contract for the flow-path section.
@@ -46,34 +47,13 @@ jest.mock('../components/EcmoCircuit3D', () => ({
 
 const TRACKS: readonly SupportMode[] = ['vv', 'va']
 
-/**
- * Semantic equivalents of the keyed answer, each applied to one scanned unit at a time.
- *
- * The first five are the original teaching-pane forms; the rest are the diagnostic-map forms the
- * re-review reproduced — pInt tied to the pre-oxygenator access point, to pump outflow, or placed
- * before the membrane/oxygenator in any wording.
+/*
+ * The semantic equivalents themselves live in `test-support/answerLeakMatchers`, and the contract
+ * that each one is still individually detected lives in `foundation-answer-leak-matchers.test.ts`.
+ * This scan asks only whether the rendered activity leaks; it fires on the first matcher that
+ * matches, so it can never tell a missing form from a redundant one, which is why that second
+ * question is asked somewhere else.
  */
-const LEAK_PATTERNS: readonly { readonly name: string; readonly pattern: RegExp }[] = [
-  { name: 'between … pump … membrane', pattern: /\bbetween\b.*\bpump\b.*\bmembrane\b/i },
-  {
-    name: 'after … pump … before … membrane',
-    pattern: /\bafter\b.*\bpump\b.*\bbefore\b.*\bmembrane\b/i,
-  },
-  { name: 'pInt … after the pump', pattern: /\bpInt\b.*after the pump|after the pump.*\bpInt\b/i },
-  { name: 'pre-membrane … pInt', pattern: /pre-?membrane.*\bpInt\b|\bpInt\b.*pre-?membrane/i },
-  { name: 'pInt … pump outlet … membrane', pattern: /\bpInt\b.*pump outlet.*\bmembrane\b/i },
-  {
-    name: 'pInt … pre-oxygenator',
-    pattern: /\bpInt\b.*pre-?oxygenator|pre-?oxygenator.*\bpInt\b/i,
-  },
-  { name: 'pump outflow … pInt', pattern: /pump outflow.*\bpInt\b|\bpInt\b.*pump outflow/i },
-  { name: 'pInt … access point', pattern: /\bpInt\b.*access point|access point.*\bpInt\b/i },
-  {
-    name: 'pInt before the membrane/oxygenator',
-    pattern:
-      /\bpInt\b[^.!?]*before the (?:membrane|oxygenator)|passes \bpInt\b[^.!?]*(?:membrane|oxygenator)/i,
-  },
-]
 
 /**
  * Every unit of the disclosure surface, hidden DOM included: each text node on its own (SVG
@@ -107,10 +87,9 @@ function disclosureUnits(): readonly string[] {
 
 function expectNoLeak() {
   for (const unit of disclosureUnits()) {
-    for (const { name, pattern } of LEAK_PATTERNS) {
-      if (pattern.test(unit)) {
-        throw new Error(`leak (${name}) in: "${unit.trim().slice(0, 160)}"`)
-      }
+    const matched = answerLeakMatch(unit)
+    if (matched) {
+      throw new Error(`leak (${matched.name}) in: "${unit.trim().slice(0, 160)}"`)
     }
   }
 }
@@ -244,7 +223,7 @@ describe('after commitment, the full location teaching returns', () => {
       'pVen is reported on the drainage limb, pInt between pump and membrane, pArt after the membrane on the return limb.'
     const committedDesc =
       'Pump outflow passes pInt, a pre-oxygenator access point, and the membrane oxygenator.'
-    expect(LEAK_PATTERNS.some(({ pattern }) => pattern.test(committedPane))).toBe(true)
-    expect(LEAK_PATTERNS.some(({ pattern }) => pattern.test(committedDesc))).toBe(true)
+    expect(ANSWER_LEAK_MATCHERS.some(({ pattern }) => pattern.test(committedPane))).toBe(true)
+    expect(ANSWER_LEAK_MATCHERS.some(({ pattern }) => pattern.test(committedDesc))).toBe(true)
   })
 })

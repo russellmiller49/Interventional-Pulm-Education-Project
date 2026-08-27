@@ -50,7 +50,7 @@ import {
 import { persistFoundationSectionCompleted } from '../engine/progress'
 import type { SupportMode } from '../engine/types'
 import { CardiohelpConsole } from './CardiohelpConsole'
-import { CircuitAndMonitors } from './CircuitAndMonitors'
+import { CircuitAndMonitors, type CircuitLocationDisclosure } from './CircuitAndMonitors'
 import { FitWidthSurface, type FitWidthMode } from './FitWidthSurface'
 import { EcmoFoundationTeachingPanel } from './teaching/EcmoFoundationTeachingPanel'
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
@@ -121,6 +121,27 @@ const DEVICE_BOUNDARY_SHORT =
 
 const DEVICE_BOUNDARY_FULL =
   'The simulated console follows the U.S. CARDIOHELP System Instructions for Use, Revision 2.3, January 2025. The VV and VA clinical teaching reflects contemporary ECMO practice and is not limited to the U.S. labeled indication or duration. This independent educational module does not replace current manufacturer instructions, local protocol, or supervised competency validation.'
+
+/**
+ * The one foundation section whose keyed prediction *is* the channel placements.
+ *
+ * `circuit-flow-path` asks "where in the blood path does the circuit report pInt?", so the
+ * diagnostic map beside that question must not answer it — see {@link CircuitLocationDisclosure}.
+ * No other section keys on a placement, and nine of them teach *from* the placements: the section
+ * named `pump-and-pressure-zones` cannot teach a pressure zone whose sensor is not drawn.
+ *
+ * Named here rather than written inline because the call site used to read
+ * `predictionCommitted ? 'full' : 'withheld'`, which is a true statement about the flow-path
+ * section applied to all ten. That withheld the sensor flags, the Δp bracket, the legend row and
+ * the channel-walking description from every foundation lesson in both tracks until the learner
+ * committed a prediction that, in nine of them, has nothing to do with where the sensors are.
+ */
+export function foundationCircuitLocationDisclosure(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  predictionCommitted: boolean,
+): CircuitLocationDisclosure {
+  return sectionId === 'circuit-flow-path' && !predictionCommitted ? 'withheld' : 'full'
+}
 
 /** The three panes of the shared workspace, as this activity refers to them. */
 type FoundationPane = 'primary' | 'secondary' | 'tertiary'
@@ -577,8 +598,9 @@ function EcmoFoundationLessonWorkspace({
           emphasisSceneLabelIds={emphasisSceneLabelIds}
           // The diagnostic map's channel placements are the flow-path section's keyed answer, and
           // its SVG description used to walk them unconditionally — the re-review's remaining
-          // leak. Same single authority as every other answer-bearing surface, nothing phase-derived.
-          locationDisclosure={predictionCommitted ? 'full' : 'withheld'}
+          // leak. Scoped to that one section, off the same single commitment authority every other
+          // answer-bearing surface reads; nothing phase-derived.
+          locationDisclosure={foundationCircuitLocationDisclosure(sectionId, predictionCommitted)}
         />
       </div>
       <p

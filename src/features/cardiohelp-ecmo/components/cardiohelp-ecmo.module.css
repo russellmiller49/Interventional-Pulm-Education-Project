@@ -3644,6 +3644,29 @@
   line-height: 1.4;
 }
 
+/*
+ * Why the sensor markers are missing from this map.
+ *
+ * It used to be written as a `.circuitPanHint`, which is the narrow-screen swipe affordance and is
+ * `display: none` above 1000px — so at every desktop and tablet width the flow-path lesson removed
+ * the four sensor flags, the Δp bracket and the legend row from its diagnostic map and said nothing
+ * on screen about why, while the explanation sat in the SVG description where only a screen reader
+ * would reach it. A learner reading the map at 1280px saw an unlabelled circuit and no reason for
+ * it. This note is not an affordance for a layout; it is the lesson telling the learner what it is
+ * holding back and what will release it, so it is visible wherever the map is.
+ */
+.circuitWithheldNote {
+  display: block;
+  margin: 0.55rem 0 0;
+  padding: 0.6rem 0.75rem;
+  color: #cfe9ea;
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 10px 10px 0;
+  background: rgba(54, 195, 202, 0.1);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
 .circuitLegend {
   display: flex;
   flex-wrap: wrap;

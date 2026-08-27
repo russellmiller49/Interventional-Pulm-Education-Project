@@ -42,7 +42,14 @@ import { EcmoCircuit3D } from './EcmoCircuit3D'
  * click from the screen. Under `withheld` the drawing keeps its topology (limbs, pump, membrane,
  * access point, arrows, chatter) and the readout grid keeps its names and live values; what waits
  * for the commitment is exactly the channel *placements*, in the drawing and in its description
- * alike. The host derives the value from its one commitment authority and nothing else.
+ * alike.
+ *
+ * `withheld` is therefore a claim about one *question*, not about one host. A host that renders
+ * several sections has to say which of them keys on the placements before it consults its
+ * commitment authority: the foundation activity does that in
+ * `foundationCircuitLocationDisclosure`, and passing `withheld` for a section that does not ask
+ * the question strips the sensor flags, the Δp bracket, the legend row and the channel walk out of
+ * a lesson that teaches from them.
  */
 export type CircuitLocationDisclosure = 'full' | 'withheld'
 
@@ -716,8 +723,14 @@ function CircuitSchematic({
             />
           </svg>
         </div>
+        {/*
+          Its own class, not the pan hint's: `.circuitPanHint` is `display: none` above 1000px, so
+          reusing it hid this explanation at every desktop and tablet width — the map dropped its
+          sensor flags, its Δp bracket and its legend row and gave no on-screen reason. See
+          `.circuitWithheldNote`.
+        */}
         {locationsDisclosed ? null : (
-          <p className={styles.circuitPanHint} data-location-withheld-note>
+          <p className={styles.circuitWithheldNote} data-location-withheld-note>
             Where each pressure channel is taken is what this lesson asks you to place, so the
             sensor markers appear on this map once you have committed your prediction.
           </p>
