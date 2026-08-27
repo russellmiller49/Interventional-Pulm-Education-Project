@@ -676,3 +676,119 @@ Four files are added — three suites and one test-support registry. Four code f
 storage key, progress envelope, scoring, mastery, evidence or publication identifier changed, and
 no learner-facing copy changed. The branch now touches **forty-one files**; the figure in §10c is
 superseded.
+
+## 10e. The final targeted review: one missing test contract
+
+The final targeted review **passed the learner-facing UI**. It found no leak on the page, no defect
+in the disclosure gate, its scope, its visibility, or anything else in §10d, and returned
+**BLOCKED** on one thing the test architecture was not holding. This correction touches no product
+code: test-support, tests and this record only.
+
+### The form nine matchers do not cover
+
+Every one of the nine declared matchers locates pInt by _position_ — between the pump and the
+membrane, after the pump, at the access point, on pump outflow. None of them holds the relationship
+that gives the same position away without using a positional word at all. ΔP is pInt minus pArt, and
+that subtraction is read across the membrane, so a sentence tying both channels to a transmembrane
+gradient has told the learner where pInt is taken.
+
+Reproduced before any edit, against the nine-matcher registry, using the review's three probes
+verbatim:
+
+| Probe                                                        | `answerLeakMatch` |
+| ------------------------------------------------------------ | ----------------- |
+| `ΔP trend = pInt − pArt across the membrane oxygenator`      | **no match**      |
+| `Transmembrane gradient compares pInt with pArt`             | **no match**      |
+| `pInt and pArt define the pressure drop across the membrane` | **no match**      |
+
+The composed scan of the precommit activity was green before this change and is green after it, so
+nothing on the page says any of this today. That is the point: the contract is against a future
+regression, not a repair of a current leak. The one place the module _does_ state the relationship —
+the Δp bracket's `Δp TREND = pInt − pArt` — renders only under `full` disclosure, which on
+`circuit-flow-path` means after the commitment and therefore after the scan has stopped caring.
+
+### One matcher, four required concepts
+
+Added as `ΔP relationship … pInt … pArt … membrane`, a stable name so a deletion or a narrowing says
+which disclosure stopped being detected rather than only that a list changed length. It requires all
+four of these within the one unit being scanned, in any order:
+
+1. `pInt`;
+2. `pArt`;
+3. a gradient or difference concept — `ΔP`, `delta P`, `transmembrane gradient`, `transmembrane
+pressure gradient`, `pressure drop`, `pressure gradient`, or `difference`;
+4. membrane vocabulary — `membrane`, `oxygenator`, or `transmembrane`.
+
+Written as anchored lookaheads, which is what makes it order-free: either channel first, the
+gradient phrase before or after the pair, and `−`, `-`, `minus`, `with`, `compares` or plain prose
+between them. `[\s\S]*` rather than `[^.!?]*` inside each lookahead, because `disclosureUnits()`
+already splits every text node and prose container into sentences — so a whole-unit conjunction _is_
+a same-sentence conjunction, and a decimal inside a sentence cannot silently truncate the search.
+
+Two deliberate refusals. The matcher does not fire on pInt, pArt and the membrane merely appearing
+together: the gradient concept is a required conjunct, which is what keeps it off a readout grid
+that names both channels beside a membrane drawing. And the gradient concepts are enumerated rather
+than collapsed into a bare `gradient`, because a bare word would swallow `transmembrane gradient`
+and `pressure gradient` as sub-cases — after which removing either one would leave the matcher
+passing its own contract while no longer detecting the form it was added for. The mutation results
+below only mean something because of that choice.
+
+The nine existing patterns are unchanged.
+
+### Fixtures, still stated from outside the registry
+
+`AnswerLeakMatcher` remains name and pattern only. The contract interface in
+`foundation-answer-leak-matchers.test.ts` widens from one `detects`/`leaves` string to arrays, which
+is what lets the new matcher name more than one required form:
+
+**Must detect** — the three review probes, plus a reversed-order form (`pArt subtracted from pInt is
+the transmembrane pressure gradient.`) and a spelled-out, hyphenated one whose only membrane word is
+inside `transmembrane`.
+
+**Must leave alone** — `pInt and pArt are displayed beside the membrane diagram.` and `pInt and pArt
+changed while the oxygenator continued to run.` (both channels and the membrane, no relationship);
+`ΔP is displayed on the console.` (a gradient, neither channel); `The membrane pressure drop is
+reviewed after pInt is recorded.` (a gradient across the membrane, only one channel).
+
+A source contract was added alongside them: the composed suite must import this registry and must
+declare no `pattern:` of its own. Both files could otherwise be green while the scan ran against a
+copy neither contract had ever seen.
+
+### Mutations
+
+Each applied to the real files and restored byte-for-byte, verified by sha256 before and after.
+
+| Mutation                                    | Outcome                                                                                                                    |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Delete only the ΔP matcher                  | `the registry declares exactly the required forms, in order` fails, and eleven tests naming the ΔP contract fail           |
+| Widen it to any `pInt` + `pArt` sentence    | the benign negative `pInt and pArt are displayed beside the membrane diagram.` fails, as does `requires all four concepts` |
+| Remove `transmembrane gradient` support     | `detects the review probe: Transmembrane gradient compares pInt with pArt` fails                                           |
+| Remove `pressure drop` support              | `detects the review probe: pInt and pArt define the pressure drop across the membrane` fails                               |
+| Reverse `pInt`/`pArt` in a positive fixture | still matches — suite green, which is the required outcome                                                                 |
+
+### Verified
+
+- Focused pair first — `foundation-answer-leak-matchers.test.ts` and `foundation-answer-leak.test.tsx`,
+  `--runInBand`: **2 suites, 45 tests green**. The composed scan is green with the new matcher
+  active, which is the evidence that the precommit page does not carry this form.
+- `npx jest src/features/cardiohelp-ecmo src/features/critical-care src/features/learning-module
+'src/app/[locale]/cardiohelp-ecmo' --runInBand` — **88 suites, 1848 tests green** (1836 before;
+  the twelve added are this contract).
+- Full `npx jest` — **683 suites passed of 685** (2 skipped), **10,519 tests passing** of 10,522
+  (3 skipped), none failing.
+- `build:content`, `type-check`, `lint` (0 errors; the same 19 pre-existing warnings, none in a file
+  this pass touched), `test:a11y` 16 green, `render:ecmo-teaching` exit 0, `npm run build`,
+  `git diff --check` — clean.
+- **No production-browser matrix was run, and none is required**: `git diff` for this correction
+  covers exactly two files, `test-support/answerLeakMatchers.ts` and
+  `__tests__/foundation-answer-leak-matchers.test.ts`, plus this record. No component, stylesheet,
+  content, engine, scenario, route or progress file is touched, so the verified product behaviour
+  recorded in §10d still stands unchanged.
+
+The branch count is unchanged at **forty-one files** — both files this correction edits were already
+part of the diff.
+
+The two incidental findings noted during §10d — the VA model-boundary chip that borrows
+`.circuitPanHint` and is therefore hidden above 1000px, and `color: var(--muted)` resolving against
+the app-wide HSL triple inside the Learn workspace — remain out of scope here and stay separate
+follow-ups.
