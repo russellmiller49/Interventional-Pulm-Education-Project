@@ -8,6 +8,12 @@
  * diagnostic map's SVG description ("Pump outflow passes pInt, a pre-oxygenator access point"), so
  * the set carries both vocabularies and the forms deliberately overlap.
  *
+ * Nine of the forms place pInt directly. The tenth protects the relationship that gives the
+ * placement away without naming a position at all: ΔP is pInt minus pArt, and that difference is
+ * read across the membrane — so a sentence tying both channels to a transmembrane gradient has
+ * said where pInt is taken, whatever else it does or does not say. Nothing on the precommit page
+ * says it today; the matcher exists so nothing can start.
+ *
  * Names and patterns only. The registry does not say what any matcher must detect, because the two
  * questions worth asking are independent and keeping them in one file let one answer cover for the
  * other. `foundation-answer-leak.test.tsx` asks whether the rendered activity leaks;
@@ -42,6 +48,29 @@ export const ANSWER_LEAK_MATCHERS: readonly AnswerLeakMatcher[] = [
     name: 'pInt before the membrane/oxygenator',
     pattern:
       /\bpInt\b[^.!?]*before the (?:membrane|oxygenator)|passes \bpInt\b[^.!?]*(?:membrane|oxygenator)/i,
+  },
+  /*
+   * Four concepts, all four required, order-free, within the one unit being scanned: `pInt`,
+   * `pArt`, a gradient or difference word, and membrane vocabulary. Written as anchored lookaheads
+   * because the relationship is what leaks, not any arrangement of it — "ΔP trend = pInt − pArt
+   * across the membrane oxygenator", "Transmembrane gradient compares pInt with pArt" and "pInt and
+   * pArt define the pressure drop across the membrane" are the same disclosure three ways, and none
+   * of the nine positional matchers above catches any of them.
+   *
+   * Scanning is per unit and `disclosureUnits()` already splits every text node and prose container
+   * into sentences, so a whole-unit conjunction *is* a same-sentence conjunction — and `[\s\S]*`
+   * rather than `[^.!?]*` so a decimal inside a sentence cannot silently truncate the search.
+   *
+   * The gradient concepts are enumerated rather than reduced to a bare `gradient`. A bare word
+   * would swallow `transmembrane gradient` and `pressure gradient` as sub-cases, and then removing
+   * either one would leave the matcher passing its own contract while no longer detecting the form
+   * it was added for. Requiring the gradient concept at all is what keeps the matcher off copy that
+   * merely mentions the two channels near the membrane without relating them.
+   */
+  {
+    name: 'ΔP relationship … pInt … pArt … membrane',
+    pattern:
+      /^(?=[\s\S]*\bpInt\b)(?=[\s\S]*\bpArt\b)(?=[\s\S]*(?:[Δ\u2206]\s*p|\bdelta[\s-]*p\b|transmembrane(?:\s+pressure)?\s+gradient|pressure\s+(?:drop|gradient)|\bdifference\b))(?=[\s\S]*(?:transmembrane|membrane|oxygenator))/i,
   },
 ]
 
