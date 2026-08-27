@@ -531,3 +531,148 @@ with all placements untouched. A pixel capture of the withheld map was again def
 module's two-scroll-region screenshot limitation (§7c states the same for the 3D gate); the
 layered DOM reads above are the evidence. With the launcher entry removed, the branch touches
 **thirty-seven files**; §1's count note is superseded to that figure.
+
+## 10d. The final review: three narrow corrections
+
+The final independent review accepted the six-stop walk, current-session commitment as the reveal
+authority, the fail-closed phase and deep-link behaviour, the `CircuitAndMonitors` full/withheld
+content contract, the compact workspace's keyboard tabs, ±300 RPM observability, pan ownership, the
+non-vacuous render harness, matched-flow semantics, scene-anchor semantics, the 280px map type
+floor, progress and traversal behaviour, the 3D emphasis, and the launcher removal — and returned
+**BLOCKED** on three findings. None of them is in the disclosure gate itself. Two are in its scope
+and its visibility, and one is in the test architecture that was supposed to be holding it.
+
+All three were reproduced on the branch at `2c223e21` before any edit, and every disposable
+mutation was restored before implementation began.
+
+### A — the gate was applied to nine sections that do not ask the question
+
+`EcmoFoundationLessonActivity` passed `predictionCommitted ? 'full' : 'withheld'` to
+`CircuitAndMonitors`. That is a true statement about `circuit-flow-path`, whose keyed prediction
+_is_ "where in the blood path does the circuit report pInt?" — and the activity renders ten
+sections. So the gate ran on all ten.
+
+Reproduced as a composed matrix over every interactive foundation section, each in a clean
+uncommitted session, against the real `CircuitAndMonitors` (only `EcmoCircuit3D`, the WebGL leaf
+jsdom cannot render, is mocked), in each section's actually supported track — both for the four
+shared sections, the fixed track for the three VV-only and three VA-only ones. Fourteen cases.
+Twelve failed the expected-`full` assertion: every section except `circuit-flow-path`, in every
+track it runs in. The same sweep against the production build agreed exactly — all fourteen served
+`data-location-disclosure="withheld"` with zero sensor flags.
+
+The product failure the matrix names is `pump-and-pressure-zones`. In the production build it
+opened with disclosure `withheld`, zero sensor flags, no Δp bracket, no legend row for the flag
+glyphs, and an SVG description that named no channel at all. A section called _pump and pressure
+zones_ could not show a learner where a pressure zone is taken, and the reason was a gate borrowed
+from the lesson before it.
+
+Corrected by naming the scope instead of implying it:
+
+```ts
+export function foundationCircuitLocationDisclosure(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  predictionCommitted: boolean,
+): CircuitLocationDisclosure {
+  return sectionId === 'circuit-flow-path' && !predictionCommitted ? 'withheld' : 'full'
+}
+```
+
+Nothing about the gate's mechanism changed: the same single commitment authority, nothing derived
+from phase, URL, walk stop or stored traversal. What changed is that the section is consulted
+first. `foundation-disclosure-scope.test.tsx` holds it twice — the helper directly over the whole
+declared section list, including a `withholds from exactly one of the ten sections` assertion so a
+second id cannot be added quietly, and the composed activity mounted for real across the same
+fourteen-case matrix, so a call site that stops using the helper fails too.
+
+§10c is corrected on one point by this section: where it says "the foundation activity derives the
+value from `predictionCommitted`", the commitment is one of two inputs and the section id is the
+other.
+
+### B — the withholding explanation was invisible above 1000px
+
+The note beside the map is the only thing that tells a sighted learner why four sensor flags, a
+bracket and a legend row are missing. It was written as a `.circuitPanHint` — the narrow-screen
+swipe affordance, whose entire top-level rule is `display: none`, revealed only under
+`@media (max-width: 1000px)` and `@media (max-width: 760px)`.
+
+Measured in the production build before the edit, on `circuit-flow-path`, with the Pressure-zone
+map tabpanel open in every case so the tab could not be mistaken for the cause:
+
+| Viewport   | `display` before | `display` after | Rendered box after |
+| ---------- | ---------------- | --------------- | ------------------ |
+| 1600 × 900 | `none`           | `block`         | 533 × 55           |
+| 1280 × 720 | `none`           | `block`         | 535 × 55           |
+| 1024 × 768 | `none`           | `block`         | 387 × 72           |
+| 390 × 844  | `block`          | `block`         | 284 × 90           |
+
+Every DOM assertion in the leak suite had passed throughout, because `textContent` reads hidden
+text and the SVG `<desc>` carried the explanation the whole time. A screen reader was told; a
+sighted learner at 1280px was not.
+
+Corrected with `.circuitWithheldNote`, its own rule, `display: block` at every width and inside no
+breakpoint. `circuit-withheld-note-visibility.test.tsx` holds both sides of a seam jest cannot
+cross: a rendered assertion that the note carries that class and not the hint's, and source
+contracts on the stylesheet — because jest stubs CSS modules and no rendered assertion in this repo
+resolves a media query. Three mutations were checked and all three fail: reverting the class,
+setting the new rule to `display: none`, and moving its reveal back under a `max-width` block.
+
+§10c is corrected on a second point: its phrase "a truthful account (in the `<desc>` and in a
+visible note)", and §10c's verification line "the visible withheld note", were true of the markup
+and false of the rendering at every width above 1000px. The note is visible now; it was not then.
+
+### C — a matcher could be deleted without a single failing assertion
+
+The composed leak scan fires if _any_ declared pattern matches a scanned unit, and the patterns
+overlap deliberately, so it cannot distinguish a matcher that has been removed from one that is
+merely redundant against today's copy. The review named the case: delete the `pInt` +
+`pre-oxygenator` matcher and the suite stays green. Reproduced — 13 of 13 passing with it gone —
+and then swept: **eight of the nine matchers could each be deleted individually with the suite
+fully green.** Only `between … pump … membrane` failed, and only because it is the single matcher
+covering the committed teaching-pane sentence in a `.some(…)` sanity check.
+
+The overlap is not the defect and has not been reduced. The composed scan earns its keep by
+catching wording nobody enumerated, and a narrower set would catch less. What was missing was a
+second question, asked somewhere else.
+
+The registry moved to `test-support/answerLeakMatchers.ts` as names and patterns only.
+`foundation-answer-leak-matchers.test.ts` states, from outside that file, which forms must remain
+individually detected, and supplies its own fixtures for each: a sentence the matcher must catch,
+and a sentence about the same circuit components that it must leave alone. Deleting a matcher fails
+the ordered-name assertion and that matcher's own lookup; widening one until it matches everything
+fails its negative fixture. The composed suite now consumes the same registry and is otherwise
+unchanged.
+
+Swept again after the split: **all nine individual deletions are killed by the contract suite**,
+including the one the review named. The composed suite's own behaviour is unchanged — eight
+deletions still leave it green, which is the point, and is now harmless.
+
+### Verified
+
+- Reproduced first, in this order: the fourteen-case matrix failing twelve; the production sweep of
+  all ten sections; `pump-and-pressure-zones` in the production browser with zero placements; the
+  four-viewport `display` measurement; the single-matcher deletion and the eight-of-nine sweep.
+  Every mutation restored, tree clean, before the first edit.
+- `npx jest src/features/cardiohelp-ecmo src/features/critical-care src/features/learning-module
+'src/app/[locale]/cardiohelp-ecmo' --runInBand` — **88 suites, 1836 tests, green**.
+- Full `npx jest` — **683 suites passed of 685** (2 skipped), **10,507 tests passing** of 10,510
+  (3 skipped), none failing.
+- `npm run type-check`, `npm run lint` (0 errors; the same 19 pre-existing warnings, none in a file
+  this pass touched), `npm run test:a11y` 16 green, `npm run render:ecmo-teaching` exit 0,
+  `npm run build`, `git diff --check` — clean.
+- Production browser, corrected build. All ten sections swept: `circuit-flow-path` in both tracks
+  serves `withheld` with zero flags, no bracket and the withholding note; the other nine, in every
+  track they run in, serve `full` with all four flags and the bracket and no note.
+  `pump-and-pressure-zones` opens with `pVen`, `pInt`, `pArt` and the flow/bubble sensor placed, the
+  legend row back, and the bracket reading a live `Δp TREND = pInt − pArt · 31 mmHg`. On
+  `circuit-flow-path` the leak is still closed precommit — a nine-pattern scan of the whole composed
+  page, hidden tabpanels and aria text included, returns zero hits — and committing the prediction
+  flips the panel to `full` with all four flags, the bracket, the channel-walking description and
+  the note gone. Pixel capture was defeated again by the module's two-scroll-region screenshot
+  limitation, as in §7c and §10c; the layered DOM reads are the evidence.
+
+Four files are added — three suites and one test-support registry. Four code files are edited
+(`CircuitAndMonitors.tsx`, `EcmoFoundationLessonActivity.tsx`, `cardiohelp-ecmo.module.css`,
+`foundation-answer-leak.test.tsx`), plus this record. No section, scenario, activity, route,
+storage key, progress envelope, scoring, mastery, evidence or publication identifier changed, and
+no learner-facing copy changed. The branch now touches **forty-one files**; the figure in §10c is
+superseded.
