@@ -36,6 +36,11 @@ import {
   type AtlasCompatibilityStatement,
   type TypedRuleCondition,
 } from './compatibility.server'
+import {
+  getD2dProductEvidence,
+  type ReviewedProductProfile,
+  type ReviewedProductRegulatoryEvidence,
+} from './d2d-evidence.server'
 
 /**
  * Read-only atlas queries: the existing catalog query layer evaluated over the D2B cohort
@@ -142,6 +147,16 @@ export interface AtlasProductDetail extends ProductDetail {
    * canonical category fields stay on `product` untouched, as provenance.
    */
   taxonomy: ProductTaxonomyView
+  /**
+   * D2D reviewed profile evidence, attached beside the canonical product record. Null for
+   * products outside the frozen ten-product pilot; no runtime profile is synthesized.
+   */
+  profile: ReviewedProductProfile | null
+  /**
+   * D2D reviewed regulatory evidence, kept independent from D2B market/safety status and
+   * from canonical identity. Null for products outside the frozen ten-product pilot.
+   */
+  regulatoryEvidence: ReviewedProductRegulatoryEvidence | null
 }
 
 /**
@@ -201,6 +216,7 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
   const compatibilityTextWithheld = textReferencesNonCohortIdentity(
     detail.product.compatibility_text,
   )
+  const d2dEvidence = getD2dProductEvidence(productId)
 
   return {
     ...detail,
@@ -215,6 +231,8 @@ export function getAtlasProductDetail(productId: string): AtlasProductDetail | n
     primaryRole,
     status: getProductStatus(productId),
     taxonomy: getProductTaxonomy(productId),
+    profile: d2dEvidence?.profile ?? null,
+    regulatoryEvidence: d2dEvidence?.regulatoryEvidence ?? null,
   }
 }
 

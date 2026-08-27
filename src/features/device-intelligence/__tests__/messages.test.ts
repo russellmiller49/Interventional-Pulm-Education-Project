@@ -151,6 +151,48 @@ describe('deviceIntelligence message call sites', () => {
   })
 })
 
+describe('D2D localized regulatory wording', () => {
+  it('pins every required English conclusion label without calling 510(k) clearance approval', () => {
+    expect(enMessages.deviceIntelligence.d2d.regulatory.conclusion).toEqual({
+      cleared_510k: '510(k) cleared',
+      approved_pma: 'PMA approved',
+      granted_de_novo: 'De Novo granted',
+      approved_hde: 'HDE approved',
+      premarket_exempt_classification: 'Premarket-exempt classification',
+      fda_listed_device: 'FDA-listed device',
+      exact_identity_unresolved: 'Exact regulatory identity unresolved',
+      not_yet_researched: 'Exact regulatory profile not yet researched',
+    })
+    expect(enMessages.deviceIntelligence.d2d.regulatory.conclusion.cleared_510k).not.toMatch(
+      /approv/i,
+    )
+  })
+
+  it('uses genuine Spanish and Simplified Chinese chrome and preserves clearance/approval distinctions', () => {
+    const english = enMessages.deviceIntelligence.d2d
+    const spanish = esMessages.deviceIntelligence.d2d
+    const chinese = zhCnMessages.deviceIntelligence.d2d
+
+    for (const localized of [spanish, chinese]) {
+      expect(localized.profile.heading).not.toBe(english.profile.heading)
+      expect(localized.regulatory.heading).not.toBe(english.regulatory.heading)
+      expect(localized.profile.contentLanguageNotice).not.toBe(
+        english.profile.contentLanguageNotice,
+      )
+      expect(localized.regulatory.commercialDistributionDisclaimer).not.toBe(
+        english.regulatory.commercialDistributionDisclaimer,
+      )
+      expect(localized.fallback.profileUnavailable).not.toBe(english.fallback.profileUnavailable)
+    }
+
+    expect(spanish.regulatory.conclusion.cleared_510k).toContain('autorización')
+    expect(spanish.regulatory.conclusion.cleared_510k).not.toContain('aprobado')
+    expect(spanish.regulatory.conclusion.approved_pma).toContain('aprobado')
+    expect(chinese.regulatory.conclusion.cleared_510k).toContain('许可')
+    expect(chinese.regulatory.conclusion.approved_pma).toContain('批准')
+  })
+})
+
 describe('deviceIntelligence copy safety', () => {
   const BANNED = [
     /equivalen/i,
@@ -175,14 +217,36 @@ describe('deviceIntelligence copy safety', () => {
     'readiness.noProcurementNote',
   ])
 
+  /**
+   * FDA's 510(k) decision vocabulary is a regulatory determination, not a claim that two Atlas
+   * products are clinically equivalent or substitutable. Keep the exception closed to these two
+   * pathway-decision labels; profile prose and every other UI string still pass the stricter wall.
+   */
+  const REGULATORY_DETERMINATION_KEYS = new Set([
+    'd2d.regulatory.pathwayDecision.substantially_equivalent',
+    'd2d.regulatory.pathwayDecision.not_substantially_equivalent',
+  ])
+
   it('asserts no equivalence or substitution claim outside the explicit disclaimers', () => {
     for (const [, messages] of locales) {
       for (const [key, message] of flatten(namespaceOf(messages))) {
         const hits = BANNED.filter((pattern) => pattern.test(message))
         if (hits.length === 0) continue
+        if (REGULATORY_DETERMINATION_KEYS.has(key)) continue
         expect({ key, allowed: DISCLAIMER_KEYS.has(key) }).toEqual({ key, allowed: true })
         // A disclaimer must deny the relationship, never assert it.
         expect(/\bnot\b|\bnever\b|\bno\b/i.test(message)).toBe(true)
+      }
+    }
+  })
+
+  it('confines substantially-equivalent wording to the closed 510(k) decision vocabulary', () => {
+    for (const [, messages] of locales) {
+      const keys = flatten(namespaceOf(messages))
+        .filter(([, message]) => /equivalen/i.test(message))
+        .map(([key]) => key)
+      for (const key of keys) {
+        expect(DISCLAIMER_KEYS.has(key) || REGULATORY_DETERMINATION_KEYS.has(key)).toBe(true)
       }
     }
   })

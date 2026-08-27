@@ -117,6 +117,15 @@ describe('D2D-A governance and invariance boundaries', () => {
     )
   })
 
+  it('leaves both reviewed D2D-A runtime overlays byte-identical', () => {
+    expect(hash('data/ip-device-intelligence/generated/product-profile-overlay.json')).toBe(
+      '6dff82598371e9a701cd1f9dceabe5200dc73cac860ada9873b064afae323454',
+    )
+    expect(hash('data/ip-device-intelligence/generated/product-regulatory-overlay.json')).toBe(
+      'eddbb29d3e3e7dcfeb619767793e9262a2c5faa563a0729cb7379491605a68a9',
+    )
+  })
+
   it('keeps research, reviewed inputs, raw cache, and AI drafts outside runtime imports', () => {
     const offenders: string[] = []
     for (const absolutePath of sourceFiles('src')) {
@@ -128,13 +137,34 @@ describe('D2D-A governance and invariance boundaries', () => {
           source,
         ) ||
         /local-data\/ip-device-intelligence\/d2d/.test(source) ||
-        /product-profile-drafts\.json|evidence-proposals\.json/.test(source) ||
-        /product-(?:profile|regulatory)-overlay\.json/.test(source)
+        /product-profile-drafts\.json|evidence-proposals\.json/.test(source)
       ) {
         offenders.push(relative(REPO_ROOT, absolutePath))
       }
     }
     expect(offenders).toEqual([])
+  })
+
+  it('admits the compact D2D overlays through exactly one server-only runtime reader', () => {
+    const sources = sourceFiles('src').map((absolutePath) => ({
+      path: relative(REPO_ROOT, absolutePath),
+      text: readFileSync(absolutePath, 'utf8'),
+    }))
+    const importers = sources.filter((source) =>
+      /product-(?:profile|regulatory)-overlay\.json/.test(source.text),
+    )
+    expect(importers.map((source) => source.path)).toEqual([
+      'src/features/device-intelligence/server/d2d-evidence.server.ts',
+    ])
+    expect(importers[0].text).toContain("import 'server-only'")
+    expect(importers[0].text).not.toMatch(/^['"]use client['"]/m)
+
+    const clientImporters = sources.filter(
+      (source) =>
+        /^['"]use client['"]/m.test(source.text) &&
+        /d2d-evidence\.server|product-(?:profile|regulatory)-overlay\.json/.test(source.text),
+    )
+    expect(clientImporters.map((source) => source.path)).toEqual([])
   })
 
   it('does not introduce equivalence, compatibility, formulary, or procurement semantics', () => {

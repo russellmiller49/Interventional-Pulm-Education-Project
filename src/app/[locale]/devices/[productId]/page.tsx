@@ -10,12 +10,18 @@ import { Card, CardContent } from '@/components/ui/card'
 import { VerificationBadge } from '@/features/preference-cards/components/VerificationBadge'
 import { EvidenceBadge, FactRow } from '@/features/device-intelligence/components/EvidenceBadge'
 import {
+  D2dEnrichmentStatusCard,
+  ProductProfilePanel,
+  RegulatoryEvidencePanel,
+} from '@/features/device-intelligence/components/D2dEvidencePanels'
+import {
   MarketSafetyPanel,
   ProductStatusBadges,
 } from '@/features/device-intelligence/components/ProductStatus'
 import { PRODUCT_ID_PATTERN } from '@/features/device-intelligence/domain/atlas-cohort'
 import { isExemplarProcedureCode } from '@/features/device-intelligence/domain/exemplars'
 import { getAtlasProductDetail } from '@/features/device-intelligence/server/atlas.server'
+import { getD2dEvidenceLabels } from '@/features/device-intelligence/server/d2d-labels.server'
 import { getTaxonomyLabels } from '@/features/device-intelligence/server/product-taxonomy.server'
 import { getProductStatusLabels } from '@/features/device-intelligence/server/status-labels.server'
 
@@ -49,6 +55,7 @@ export default async function DeviceDetailPage({ params }: PageProps) {
   const detail = getAtlasProductDetail(productId)
   if (!detail) notFound()
   const { product } = detail
+  const d2dLabels = await getD2dEvidenceLabels(locale)
   const statusLabels = await getProductStatusLabels(locale)
   const taxonomyLabels = getTaxonomyLabels(locale)
   const deviceClassLabel = taxonomyLabels.classes[detail.taxonomy.deviceClassCode]
@@ -161,6 +168,16 @@ export default async function DeviceDetailPage({ params }: PageProps) {
         ) : null}
       </header>
 
+      {detail.profile ? (
+        <ProductProfilePanel
+          profile={detail.profile}
+          labels={d2dLabels}
+          showEnglishContentNotice={locale !== 'en'}
+        />
+      ) : !detail.regulatoryEvidence ? (
+        <D2dEnrichmentStatusCard labels={d2dLabels} />
+      ) : null}
+
       {/* Owner-review F-16: present facts render as rows; absent fields collapse into one
           honest sentence per card that still names every unrecorded field. */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -211,6 +228,10 @@ export default async function DeviceDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {detail.regulatoryEvidence ? (
+        <RegulatoryEvidencePanel evidence={detail.regulatoryEvidence} labels={d2dLabels} />
+      ) : null}
 
       <MarketSafetyPanel status={detail.status} labels={statusLabels} />
 

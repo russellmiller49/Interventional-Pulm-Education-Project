@@ -8396,6 +8396,174 @@
     }
   },
   "deviceIntelligence": {
+    "d2d": {
+      "shared": {
+        "confidenceLabel": "Confidence",
+        "asOfDateLabel": "As-of date",
+        "evidenceScopeLabel": "Evidence scope",
+        "confidence": {
+          "high": "High",
+          "moderate": "Moderate",
+          "low": "Low",
+          "unresolved": "Unresolved"
+        },
+        "evidenceScope": {
+          "exact": "Exact product",
+          "family": "Product family",
+          "configuration": "Configuration",
+          "product_code": "Product code"
+        }
+      },
+      "profile": {
+        "heading": "Reviewed product profile",
+        "summaryHeading": "Reviewed summary",
+        "scopeLabel": "Profile scope",
+        "scope": {
+          "exact_product": "Exact product",
+          "configuration_variant": "Configuration variant",
+          "family_inherited": "Family-inherited",
+          "minimal_identity": "Minimal identity",
+          "insufficient_evidence": "Insufficient evidence"
+        },
+        "scopeNotice": {
+          "configuration_variant": "Configuration-level evidence. Some evidence applies to this configuration or variant rather than proving an exact catalog-SKU claim.",
+          "family_inherited": "Family-level evidence. Some evidence applies to the product family rather than proving an exact catalog-SKU claim."
+        },
+        "contentLanguageNotice": "The reviewed, source-derived profile content is currently available in English.",
+        "physicalDeviceTypeLabel": "Physical device type",
+        "intendedFunctionLabel": "Intended function",
+        "exactConfigurationLabel": "Exact configuration",
+        "keySpecificationsHeading": "Key specifications"
+      },
+      "regulatory": {
+        "heading": "Regulatory evidence",
+        "researchStateLabel": "Research state",
+        "matchLevelLabel": "Match level",
+        "researchAsOfDateLabel": "Research as-of date",
+        "researchState": {
+          "reviewed": "Reviewed",
+          "unresolved": "Unresolved"
+        },
+        "matchLevel": {
+          "exact_udi_catalog_match": "Exact UDI and catalog match",
+          "exact_model_manufacturer_match": "Exact model and manufacturer match",
+          "exact_premarket_submission_match": "Exact premarket-submission match",
+          "strong_exact_identity_match": "Strong exact-identity match",
+          "family_level_match": "Family-level match",
+          "product_code_only": "Product-code evidence only",
+          "ambiguous": "Ambiguous identity",
+          "no_exact_record_found": "Exact identity unresolved after research",
+          "not_searched": "Not yet researched"
+        },
+        "conclusionsHeading": "Controlled conclusions",
+        "conclusion": {
+          "cleared_510k": "510(k) cleared",
+          "approved_pma": "PMA approved",
+          "granted_de_novo": "De Novo granted",
+          "approved_hde": "HDE approved",
+          "premarket_exempt_classification": "Premarket-exempt classification",
+          "fda_listed_device": "FDA-listed device",
+          "exact_identity_unresolved": "Exact regulatory identity unresolved",
+          "not_yet_researched": "Exact regulatory profile not yet researched"
+        },
+        "udiHeading": "UDI/DI identity records",
+        "udiRecordLabel": "UDI/DI identity record",
+        "classificationsHeading": "Device classification",
+        "classificationRecordLabel": "Device-classification record",
+        "pathwaysHeading": "Premarket pathway records",
+        "pathwayRecordLabel": "Premarket-pathway record",
+        "registrationListingHeading": "Registration and listing evidence",
+        "registrationListingRecordLabel": "Registration/listing record",
+        "commercialDistributionHeading": "Commercial-distribution evidence",
+        "commercialDistributionRecordLabel": "Commercial-distribution record",
+        "familyLevelNotice": "Family-level regulatory evidence. Exact catalog-SKU linkage remains unresolved.",
+        "commercialDistributionDisclaimer": "Commercial-distribution evidence is not proof of current local availability, current orderability, formulary status, or procurement status.",
+        "deviceClass": {
+          "I": "Class I",
+          "II": "Class II",
+          "III": "Class III",
+          "unclassified": "Unclassified",
+          "unknown": "Unknown"
+        },
+        "pathway": {
+          "510k": "510(k)",
+          "pma": "PMA",
+          "de_novo": "De Novo",
+          "hde": "HDE",
+          "premarket_exempt": "Premarket exempt"
+        },
+        "pathwayDecision": {
+          "substantially_equivalent": "Substantially equivalent determination",
+          "not_substantially_equivalent": "Not substantially equivalent determination",
+          "withdrawn": "Withdrawn",
+          "unknown": "Unknown",
+          "approved": "Approved",
+          "denied": "Denied",
+          "granted": "Granted",
+          "declined": "Declined",
+          "exempt": "Exempt"
+        },
+        "registrationListingStatus": {
+          "listed": "Listing record found",
+          "not_found": "No exact listing record found",
+          "unknown": "Listing status unresolved"
+        },
+        "commercialDistribution": {
+          "in_distribution": "Reported in commercial distribution",
+          "not_in_distribution": "Reported not in commercial distribution",
+          "conflicted": "Conflicting distribution evidence",
+          "not_reported": "Distribution not reported"
+        },
+        "fields": {
+          "primaryDi": "Primary DI",
+          "packageDis": "Package DIs",
+          "issuingAgency": "Issuing agency",
+          "legalManufacturer": "Legal manufacturer",
+          "brandName": "Brand name",
+          "modelCatalogNumber": "Model or catalog number",
+          "publishDate": "Publish date",
+          "productCode": "Product code",
+          "deviceClass": "Device class",
+          "regulationNumber": "Regulation number",
+          "classificationName": "Classification name",
+          "pathway": "Pathway",
+          "submissionNumber": "Submission number",
+          "decision": "Decision",
+          "decisionDate": "Decision date",
+          "establishmentRegistrationNumber": "Establishment registration number",
+          "listingNumber": "Listing number",
+          "proprietaryName": "Proprietary name",
+          "status": "Status",
+          "recordAsOfDate": "Record as-of date"
+        }
+      },
+      "citations": {
+        "heading": "Sources",
+        "referenceLabel": "Reference",
+        "sourceKindLabel": "Source kind",
+        "sourceKind": {
+          "manufacturer_labeling": "Manufacturer labeling",
+          "manufacturer_catalog": "Manufacturer catalog",
+          "manufacturer_product_page": "Manufacturer product page",
+          "gudid": "GUDID",
+          "fda_premarket": "FDA premarket record",
+          "fda_classification": "FDA classification record",
+          "fda_registration_listing": "FDA registration/listing record",
+          "governed_catalog": "Governed catalog"
+        },
+        "organizationLabel": "Organization",
+        "snapshotDateLabel": "Snapshot date",
+        "locatorsLabel": "Exact locators",
+        "sourceIdLabel": "Source ID",
+        "openOfficialSource": "Open official source",
+        "externalSiteLabel": "opens an external site"
+      },
+      "fallback": {
+        "heading": "Extended evidence status",
+        "profileUnavailable": "Reviewed extended product profile not yet available.",
+        "regulatoryNotResearched": "Exact regulatory profile not yet researched."
+      }
+    },
     "common": {
       "notRecorded": "not recorded",
       "unlistedNote": "Phase D1 preview — this page is public-unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
