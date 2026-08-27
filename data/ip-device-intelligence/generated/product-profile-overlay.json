@@ -1,0 +1,934 @@
+{
+  "format_version": 1,
+  "artifact_kind": "device_intelligence_product_profile_overlay",
+  "method_version": "d2d-product-profile-overlay-v1",
+  "row_scope": "reviewed_d2d_pilot_only",
+  "source_artifacts": {
+    "evidence_sources": {
+      "path": "data/ip-device-intelligence/reviewed/d2d-evidence-sources.json",
+      "sha256": "bdd7342a4bdc7206608fc2f71a1adaaeebaa8ffc5d2df398ac39eaa436eacaee"
+    },
+    "description_reviews": {
+      "path": "data/ip-device-intelligence/reviewed/product-description-reviews.json",
+      "sha256": "77f6c2265489b4707f27783a9ddf069c9761b994c175850f24aa47f3f245ce18"
+    }
+  },
+  "counts": {
+    "pilot_products": 10,
+    "rows": 10,
+    "reviewed": 10,
+    "insufficient_evidence": 0
+  },
+  "sources": [
+    {
+      "source_id": "D2D-SRC-018-BASE",
+      "governed_source_id": "SRC018",
+      "source_kind": "manufacturer_catalog",
+      "title": "ERBE Instruments and Accessories for Cryosurgery",
+      "organization": "Erbe Elektromedizin",
+      "official_url": null,
+      "snapshot_date": "2023-10-01",
+      "content_sha256": "ee9ca65df8bbc59ed0b39b9f2e07f38f0d63fc53cc367cec7a983687fc6fb819"
+    },
+    {
+      "source_id": "D2D-SRC-074-BASE",
+      "governed_source_id": "SRC074",
+      "source_kind": "manufacturer_catalog",
+      "title": "Blue Rhino® G2-Multi Percutaneous Tracheostomy Introducer Sets and Trays   Cook Medical",
+      "organization": "Cook Medical",
+      "official_url": null,
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "deaf57f7f6cfbe6ccba8d135ad770258ee5b2ac75e238d220a4b1c99528b0ff7"
+    },
+    {
+      "source_id": "D2D-SRC-089-001",
+      "governed_source_id": "SRC089",
+      "source_kind": "governed_catalog",
+      "title": "Additional products — owner-supplied seven-page packet",
+      "organization": "Owner supplied / various manufacturers",
+      "official_url": null,
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "c708c0c83d5ba4f2a6199bbbaf7918e49204e5dddcfd966e375784a815f0e2a3"
+    },
+    {
+      "source_id": "D2D-SRC-091-003",
+      "governed_source_id": "SRC091",
+      "source_kind": "manufacturer_product_page",
+      "title": "Airway blades",
+      "organization": "Medtronic",
+      "official_url": "https://www.medtronic.com/en-us/healthcare-professionals/products/ear-nose-throat/powered-surgical-equipment/blades/airway-blades.html",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "54cc28fc64a065018c274c4f8725ec4696e704ca759437a3c2f05762e5d430c7"
+    },
+    {
+      "source_id": "D2D-SRC-092-004",
+      "governed_source_id": "SRC092",
+      "source_kind": "manufacturer_catalog",
+      "title": "Broncoflex product brochure",
+      "organization": "TSC Life / Axess Vision Technology",
+      "official_url": "https://www.tsc-life.com/content/uploads/2025/08/P116-EN-02-052025-Broncoflex-Brochure-EU-EN.pdf",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "6f48af71e5fdc5aae89cdc9691eb607d2d499c4952f059e1fc516e310ab3b342"
+    },
+    {
+      "source_id": "D2D-SRC-093-005",
+      "governed_source_id": "SRC093",
+      "source_kind": "manufacturer_catalog",
+      "title": "Screeni technical datasheet",
+      "organization": "TSC Life / Axess Vision Technology",
+      "official_url": "https://www.tsc-life.com/content/uploads/2025/03/P133-EN-02-022025-Cysto-Technical-Datasheet-EU-EN.pdf",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "825f475be67abf857f05569068512d09c8649a8b78ffaeb18247458604966c28"
+    },
+    {
+      "source_id": "D2D-SRC-094-015",
+      "governed_source_id": "SRC094",
+      "source_kind": "gudid",
+      "title": "AccessGUDID device records — Axess Vision Technology",
+      "organization": "U.S. National Library of Medicine / FDA",
+      "official_url": "https://accessgudid.nlm.nih.gov/devices/03664977000103",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "059ff42971c847b766172edf5ab6a76a2aadfb5af63b77e67bd9c86f814e298a"
+    },
+    {
+      "source_id": "D2D-SRC-094-017",
+      "governed_source_id": "SRC094",
+      "source_kind": "gudid",
+      "title": "AccessGUDID device records — Axess Vision Technology",
+      "organization": "U.S. National Library of Medicine / FDA",
+      "official_url": "https://accessgudid.nlm.nih.gov/devices/03664977030032",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "38b07808a0ade18d928e94fe309a78abc940adfe8dab5e48e02f4f7ffeabff55"
+    },
+    {
+      "source_id": "D2D-SRC-096-019",
+      "governed_source_id": "SRC096",
+      "source_kind": "gudid",
+      "title": "AccessGUDID device records — Praxis Medical",
+      "organization": "U.S. National Library of Medicine / FDA",
+      "official_url": "https://accessgudid.nlm.nih.gov/devices/00850081350033",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "aefaf81322b50cdb87b905a8515aa9be44aa1f000a48c40ed20f6512b99a1658"
+    },
+    {
+      "source_id": "D2D-SRC-103-013",
+      "governed_source_id": "SRC103",
+      "source_kind": "manufacturer_labeling",
+      "title": "CLR Medical product pages and instructions for use",
+      "organization": "CLR Medical",
+      "official_url": "https://www.clrmedical.com/lbl-s012-01-203-d-clr-irrigator-ifu-artwork/",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "02a94cfcb3718b87f2d9a25c3ef72cb2d5f0e47479c7201f917ec955aa617bc0"
+    },
+    {
+      "source_id": "D2D-SRC-106-BASE",
+      "governed_source_id": "SRC106",
+      "source_kind": "manufacturer_catalog",
+      "title": "NOVATECH DUMON & GSS Silicone Stents Catalog (EN, CA001 Rev. 7)",
+      "organization": "Novatech",
+      "official_url": "https://www.novatech.fr",
+      "snapshot_date": "2026-08-20",
+      "content_sha256": "221993773bfbb7cc04cd06af935f7d55dfb1f2b17f3b97e56191665cf38b87f5"
+    },
+    {
+      "source_id": "D2D-SRC-107-BASE",
+      "governed_source_id": "SRC107",
+      "source_kind": "manufacturer_catalog",
+      "title": "Search - Rigid bronchoscopy | KARL STORZ Endoskope | United States (e-catalog capture)",
+      "organization": "KARL STORZ",
+      "official_url": "https://www.karlstorz.com/us/en/search.htm?cat=1000130286",
+      "snapshot_date": "2026-07-30",
+      "content_sha256": "d12ff6c7de3c4cffad4ad5cd9ffc25cf865f3cd2ac4125327729a15e84215628"
+    }
+  ],
+  "rows": [
+    {
+      "product_id": "PRD-003C4641E6",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "CLR Irrigator S012-01-019 is a disposable irrigation handpiece used with the CLR Port to deliver irrigation through a chest tube or pigtail catheter while maintaining the drainage circuit.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 6, CLR Irrigator panel"
+            },
+            {
+              "source_id": "D2D-SRC-103-013",
+              "locator": "CLR Irrigator IFU LBL S012-01-203 Rev D"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Disposable irrigation handpiece.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 6, CLR Irrigator panel"
+          }
+        ]
+      },
+      "intended_function": {
+        "text": "Connects to the CLR Port to deliver irrigation through chest tubes or pigtail catheters without breaking the drainage circuit.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 6, CLR Irrigator panel"
+          },
+          {
+            "source_id": "D2D-SRC-103-013",
+            "locator": "CLR Irrigator IFU LBL S012-01-203 Rev D"
+          }
+        ]
+      },
+      "exact_configuration_summary": {
+        "text": "Catalog S012-01-019.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 6, CLR Irrigator panel"
+          }
+        ]
+      },
+      "key_specifications": [],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-003C4641E6"
+    },
+    {
+      "product_id": "PRD-05670F1B5F",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "ERBE 20402-411 is a single-use flexible cryoprobe for the ERBECRYO 2 system, with a 2.4 mm outer diameter and 115 cm working length.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-018-BASE",
+              "locator": "Cryoprobes for ERBECRYO 2, catalog page 5"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Single-use flexible cryoprobe.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-018-BASE",
+            "locator": "Cryoprobes for ERBECRYO 2, catalog page 5"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog 20402-411; 2.4 mm outer diameter; 115 cm working length.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-018-BASE",
+            "locator": "Cryoprobes for ERBECRYO 2, catalog page 5"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "outer_diameter_mm",
+          "label": "Outer diameter",
+          "value": 2.4,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-018-BASE",
+              "locator": "Cryoprobes for ERBECRYO 2, catalog page 5"
+            }
+          ]
+        },
+        {
+          "key": "working_length_cm",
+          "label": "Working length",
+          "value": 115,
+          "unit": "cm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-018-BASE",
+              "locator": "Cryoprobes for ERBECRYO 2, catalog page 5"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-05670F1B5F"
+    },
+    {
+      "product_id": "PRD-1ED27ADA45",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "ENDO-BV-22G-Kit-O is a single-use 22-gauge bevel-tip EBUS needle for the Olympus-compatible configuration, supplied in a box of five and requiring a minimum 2.0 mm working channel.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 2, EndoCore ordering table"
+            },
+            {
+              "source_id": "D2D-SRC-096-019",
+              "locator": "AccessGUDID Primary DI 00850081350033"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Single-use EBUS tissue-acquisition needle.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 2, EndoCore ordering table"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog ENDO-BV-22G-Kit-O; 22 gauge; bevel tip; minimum 2.0 mm working channel; box of five.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 2, EndoCore ordering table"
+          },
+          {
+            "source_id": "D2D-SRC-096-019",
+            "locator": "AccessGUDID Primary DI 00850081350033"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "gauge",
+          "label": "Gauge",
+          "value": 22,
+          "unit": null,
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 2, EndoCore ordering table"
+            }
+          ]
+        },
+        {
+          "key": "tip_geometry",
+          "label": "Tip geometry",
+          "value": "Bevel tip",
+          "unit": null,
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 2, EndoCore ordering table"
+            }
+          ]
+        },
+        {
+          "key": "minimum_working_channel_mm",
+          "label": "Minimum working channel",
+          "value": 2,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 2, EndoCore ordering table"
+            }
+          ]
+        },
+        {
+          "key": "package_quantity",
+          "label": "Package quantity",
+          "value": 5,
+          "unit": "devices",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 2, EndoCore ordering table"
+            },
+            {
+              "source_id": "D2D-SRC-096-019",
+              "locator": "AccessGUDID Primary DI 00850081350033"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-1ED27ADA45"
+    },
+    {
+      "product_id": "PRD-2632FFBF07",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "Broncoflex XFlo 5.6/3.0, catalog 10040001, is a single-use video bronchoscope with a 5.6 mm insertion diameter and 3.0 mm working channel.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-092-004",
+              "locator": "Broncoflex XFlo specification table"
+            },
+            {
+              "source_id": "D2D-SRC-094-015",
+              "locator": "AccessGUDID Primary DI 03664977000103"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Single-use video bronchoscope.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-092-004",
+            "locator": "Broncoflex XFlo specification table"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog 10040001; primary DI 03664977000103; 5.6 mm insertion diameter; 3.0 mm working channel.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-092-004",
+            "locator": "Broncoflex XFlo specification table"
+          },
+          {
+            "source_id": "D2D-SRC-094-015",
+            "locator": "AccessGUDID Primary DI 03664977000103"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "insertion_diameter_mm",
+          "label": "Insertion diameter",
+          "value": 5.6,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-092-004",
+              "locator": "Broncoflex XFlo specification table"
+            }
+          ]
+        },
+        {
+          "key": "working_channel_mm",
+          "label": "Working channel",
+          "value": 3,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-092-004",
+              "locator": "Broncoflex XFlo specification table"
+            }
+          ]
+        },
+        {
+          "key": "primary_di",
+          "label": "Primary DI",
+          "value": "03664977000103",
+          "unit": null,
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-094-015",
+              "locator": "AccessGUDID Primary DI 03664977000103"
+            }
+          ]
+        }
+      ],
+      "confidence": "moderate",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-2632FFBF07"
+    },
+    {
+      "product_id": "PRD-3E1556EBE5",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "Medtronic 1884035HRE is a single-use 4.0 mm Tricut angle-tip bronchial blade, 45 cm long, 15° curved, with a rotatable tip.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-091-003",
+              "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+            }
+          ]
+        },
+        {
+          "text": "Manufacturer labeling describes access to bronchial lesions through a rigid bronchoscope.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-091-003",
+              "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Single-use powered airway blade.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-091-003",
+            "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog 1884035HRE; 4.0 mm diameter; 45 cm length; 15° curved rotatable angle tip.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-091-003",
+            "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "diameter_mm",
+          "label": "Diameter",
+          "value": 4,
+          "unit": "mm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-091-003",
+              "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+            }
+          ]
+        },
+        {
+          "key": "length_cm",
+          "label": "Length",
+          "value": 45,
+          "unit": "cm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-091-003",
+              "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+            }
+          ]
+        },
+        {
+          "key": "tip_geometry",
+          "label": "Tip geometry",
+          "value": "15° curved rotatable angle tip",
+          "unit": null,
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-091-003",
+              "locator": "Airway Blades ordering information table, CFN 1884035HRE"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-3E1556EBE5"
+    },
+    {
+      "product_id": "PRD-6F15A8C9B5",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "Screeni 30030001 is a reusable video processor with an integrated touch interface, supplied in the configuration without accessories, for displaying live images from designated single-use endoscopes in the Screeni platform.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 1, Screeni reference 30030001"
+            },
+            {
+              "source_id": "D2D-SRC-093-005",
+              "locator": "Screeni technical datasheet"
+            },
+            {
+              "source_id": "D2D-SRC-094-017",
+              "locator": "AccessGUDID Primary DI 03664977030032"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Reusable video processor.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 1, Screeni reference 30030001"
+          },
+          {
+            "source_id": "D2D-SRC-093-005",
+            "locator": "Screeni technical datasheet"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog/model 30030001; configuration without accessories; primary DI 03664977030032.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 1, Screeni reference 30030001"
+          },
+          {
+            "source_id": "D2D-SRC-094-017",
+            "locator": "AccessGUDID Primary DI 03664977030032"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "configuration",
+          "label": "Configuration",
+          "value": "Without accessories",
+          "unit": null,
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 1, Screeni reference 30030001"
+            }
+          ]
+        },
+        {
+          "key": "primary_di",
+          "label": "Primary DI",
+          "value": "03664977030032",
+          "unit": null,
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-094-017",
+              "locator": "AccessGUDID Primary DI 03664977030032"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-6F15A8C9B5"
+    },
+    {
+      "product_id": "PRD-A0655BF464",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "exact_product",
+      "summary_claims": [
+        {
+          "text": "KARL STORZ 10350F is a reusable optical forceps with large blunt fenestrated jaws, a grooved jaw surface, double-action jaws, and a 47 cm working length.",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-107-BASE",
+              "locator": "PDF pages 49-50, item 10350F product card"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Reusable optical rigid forceps.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-107-BASE",
+            "locator": "PDF pages 49-50, item 10350F product card"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog 10350F; 47 cm working length.",
+        "evidence_scope": "exact",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-107-BASE",
+            "locator": "PDF pages 49-50, item 10350F product card"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "working_length_cm",
+          "label": "Working length",
+          "value": 47,
+          "unit": "cm",
+          "evidence_scope": "exact",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-107-BASE",
+              "locator": "PDF pages 49-50, item 10350F product card"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-A0655BF464"
+    },
+    {
+      "product_id": "PRD-AED3720BF6",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "configuration_variant",
+      "summary_claims": [
+        {
+          "text": "MCB-1000-4 is a single-use flexible Narwhal cryobiopsy probe with a 1.3 mm shaft, 115 cm working length, selectable 3–6 mm sampling tip, and a minimum 2.0 mm working-channel requirement.",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Single-use flexible cryobiopsy probe.",
+        "evidence_scope": "configuration",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog MCB-1000-4; 1.3 mm shaft; 115 cm working length; selectable 3–6 mm sampling tip; minimum 2.0 mm working channel.",
+        "evidence_scope": "configuration",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-089-001",
+            "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "shaft_diameter_mm",
+          "label": "Shaft diameter",
+          "value": 1.3,
+          "unit": "mm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+            }
+          ]
+        },
+        {
+          "key": "working_length_cm",
+          "label": "Working length",
+          "value": 115,
+          "unit": "cm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+            }
+          ]
+        },
+        {
+          "key": "selectable_sampling_tip_mm",
+          "label": "Selectable sampling tip",
+          "value": "3–6",
+          "unit": "mm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+            }
+          ]
+        },
+        {
+          "key": "minimum_working_channel_mm",
+          "label": "Minimum working channel",
+          "value": 2,
+          "unit": "mm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-089-001",
+              "locator": "Rendered PDF page 3, Narwhal ordering and specification panels"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-AED3720BF6"
+    },
+    {
+      "product_id": "PRD-B76AF3D731",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "configuration_variant",
+      "summary_claims": [
+        {
+          "text": "G57682 is a Blue Rhino G2-Multi percutaneous tracheostomy introducer set, reference C-PTIS-100-HC-G-NA, configured with 7.5, 8.5, and 9.0 mm loading dilators.",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-074-BASE",
+              "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Percutaneous tracheostomy introducer set.",
+        "evidence_scope": "configuration",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-074-BASE",
+            "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Order G57682; reference C-PTIS-100-HC-G-NA; loading dilators 7.5, 8.5, and 9.0 mm.",
+        "evidence_scope": "configuration",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-074-BASE",
+            "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "loading_dilator_diameters_mm",
+          "label": "Loading dilator diameters",
+          "value": "7.5, 8.5, and 9.0",
+          "unit": "mm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-074-BASE",
+              "locator": "PDF page 47, order G57682 / reference C-PTIS-100-HC-G-NA"
+            }
+          ]
+        }
+      ],
+      "confidence": "low",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-B76AF3D731"
+    },
+    {
+      "product_id": "PRD-F4AE2A74E6",
+      "content_locale": "en",
+      "runtime_state": "reviewed",
+      "description_scope": "configuration_variant",
+      "summary_claims": [
+        {
+          "text": "Novatech 01TD1120 is a straight GSS TD tracheal silicone stent configuration with an 11 mm outer diameter and 20 mm length.",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-106-BASE",
+              "locator": "PDF page 12, GSS TD matrix reference 01TD1120"
+            }
+          ]
+        }
+      ],
+      "physical_device_type": {
+        "text": "Silicone airway stent implant.",
+        "evidence_scope": "configuration",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-106-BASE",
+            "locator": "PDF page 12, GSS TD matrix reference 01TD1120"
+          }
+        ]
+      },
+      "intended_function": null,
+      "exact_configuration_summary": {
+        "text": "Catalog 01TD1120; 11 mm outer diameter; 20 mm length.",
+        "evidence_scope": "configuration",
+        "source_refs": [
+          {
+            "source_id": "D2D-SRC-106-BASE",
+            "locator": "PDF page 12, GSS TD matrix reference 01TD1120"
+          }
+        ]
+      },
+      "key_specifications": [
+        {
+          "key": "outer_diameter_mm",
+          "label": "Outer diameter",
+          "value": 11,
+          "unit": "mm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-106-BASE",
+              "locator": "PDF page 12, GSS TD matrix reference 01TD1120"
+            }
+          ]
+        },
+        {
+          "key": "length_mm",
+          "label": "Length",
+          "value": 20,
+          "unit": "mm",
+          "evidence_scope": "configuration",
+          "source_refs": [
+            {
+              "source_id": "D2D-SRC-106-BASE",
+              "locator": "PDF page 12, GSS TD matrix reference 01TD1120"
+            }
+          ]
+        }
+      ],
+      "confidence": "moderate",
+      "as_of_date": "2026-08-24",
+      "review_id": "D2D-PROFILE-REVIEW-F4AE2A74E6"
+    }
+  ]
+}

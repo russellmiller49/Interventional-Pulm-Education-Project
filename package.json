@@ -145,7 +145,11 @@
     "ip-intel:status-overlay": "tsx scripts/ip-device-intelligence/build-status-overlay.ts",
     "ip-intel:d2b-review": "tsx scripts/ip-device-intelligence/build-d2b-inclusion-review.ts",
     "ip-intel:taxonomy-overlay": "tsx scripts/ip-device-intelligence/build-taxonomy-overlay.ts",
-    "ip-intel:d2c-review": "tsx scripts/ip-device-intelligence/build-d2c-taxonomy-review.ts"
+    "ip-intel:d2c-review": "tsx scripts/ip-device-intelligence/build-d2c-taxonomy-review.ts",
+    "ip-intel:d2d-acquire": "tsx scripts/ip-device-intelligence/d2d/acquire-evidence.ts",
+    "ip-intel:d2d-proposals": "tsx scripts/ip-device-intelligence/d2d/build-proposals.ts",
+    "ip-intel:d2d-review": "tsx scripts/ip-device-intelligence/d2d/build-review-artifacts.ts",
+    "ip-intel:d2d-overlays": "tsx scripts/ip-device-intelligence/d2d/build-overlays.ts"
   },
   "engines": {
     "node": ">=20.19.0"
