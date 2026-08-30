@@ -8396,6 +8396,174 @@
     }
   },
   "deviceIntelligence": {
+    "d2d": {
+      "shared": {
+        "confidenceLabel": "置信度",
+        "asOfDateLabel": "截至日期",
+        "evidenceScopeLabel": "证据范围",
+        "confidence": {
+          "high": "高",
+          "moderate": "中等",
+          "low": "低",
+          "unresolved": "未确定"
+        },
+        "evidenceScope": {
+          "exact": "确切产品",
+          "family": "产品系列",
+          "configuration": "配置",
+          "product_code": "产品代码"
+        }
+      },
+      "profile": {
+        "heading": "经审核的产品资料",
+        "summaryHeading": "经审核的摘要",
+        "scopeLabel": "资料范围",
+        "scope": {
+          "exact_product": "确切产品",
+          "configuration_variant": "配置变体",
+          "family_inherited": "继承自产品系列",
+          "minimal_identity": "最低限度身份信息",
+          "insufficient_evidence": "证据不足"
+        },
+        "scopeNotice": {
+          "configuration_variant": "配置层级证据。部分证据适用于此配置或变体，不能单独证明针对确切目录 SKU 的主张。",
+          "family_inherited": "系列层级证据。部分证据适用于产品系列，不能单独证明针对确切目录 SKU 的主张。"
+        },
+        "contentLanguageNotice": "经审核并源自资料来源的产品内容目前仅提供英文版本。",
+        "physicalDeviceTypeLabel": "器械物理类型",
+        "intendedFunctionLabel": "预期功能",
+        "exactConfigurationLabel": "确切配置",
+        "keySpecificationsHeading": "关键规格"
+      },
+      "regulatory": {
+        "heading": "监管证据",
+        "researchStateLabel": "研究状态",
+        "matchLevelLabel": "匹配层级",
+        "researchAsOfDateLabel": "研究截至日期",
+        "researchState": {
+          "reviewed": "已审核",
+          "unresolved": "未确定"
+        },
+        "matchLevel": {
+          "exact_udi_catalog_match": "UDI 与目录号精确匹配",
+          "exact_model_manufacturer_match": "型号与制造商精确匹配",
+          "exact_premarket_submission_match": "上市前申报精确匹配",
+          "strong_exact_identity_match": "强确切身份匹配",
+          "family_level_match": "产品系列层级匹配",
+          "product_code_only": "仅有产品代码证据",
+          "ambiguous": "身份存在歧义",
+          "no_exact_record_found": "研究后确切身份仍未确定",
+          "not_searched": "尚未研究"
+        },
+        "conclusionsHeading": "受控结论",
+        "conclusion": {
+          "cleared_510k": "已获 510(k) 许可",
+          "approved_pma": "已获 PMA 批准",
+          "granted_de_novo": "已获 De Novo 授予",
+          "approved_hde": "已获 HDE 批准",
+          "premarket_exempt_classification": "免于上市前审查的分类",
+          "fda_listed_device": "FDA 列名器械",
+          "exact_identity_unresolved": "确切监管身份未确定",
+          "not_yet_researched": "尚未研究确切监管资料"
+        },
+        "udiHeading": "UDI/DI 身份记录",
+        "udiRecordLabel": "UDI/DI 身份记录",
+        "classificationsHeading": "器械分类",
+        "classificationRecordLabel": "器械分类记录",
+        "pathwaysHeading": "上市前途径记录",
+        "pathwayRecordLabel": "上市前途径记录",
+        "registrationListingHeading": "注册与列名证据",
+        "registrationListingRecordLabel": "注册/列名记录",
+        "commercialDistributionHeading": "商业分销证据",
+        "commercialDistributionRecordLabel": "商业分销记录",
+        "familyLevelNotice": "产品系列层级监管证据。与确切目录 SKU 的关联仍未确定。",
+        "commercialDistributionDisclaimer": "商业分销证据不能证明当前本地可用性、当前可订购性、处方集状态或采购状态。",
+        "deviceClass": {
+          "I": "I 类",
+          "II": "II 类",
+          "III": "III 类",
+          "unclassified": "未分类",
+          "unknown": "未知"
+        },
+        "pathway": {
+          "510k": "510(k)",
+          "pma": "PMA",
+          "de_novo": "De Novo",
+          "hde": "HDE",
+          "premarket_exempt": "免于上市前审查"
+        },
+        "pathwayDecision": {
+          "substantially_equivalent": "实质等同认定",
+          "not_substantially_equivalent": "非实质等同认定",
+          "withdrawn": "已撤回",
+          "unknown": "未知",
+          "approved": "已批准",
+          "denied": "已拒绝",
+          "granted": "已授予",
+          "declined": "未授予",
+          "exempt": "豁免"
+        },
+        "registrationListingStatus": {
+          "listed": "已找到列名记录",
+          "not_found": "未找到确切列名记录",
+          "unknown": "列名状态未确定"
+        },
+        "commercialDistribution": {
+          "in_distribution": "报告为正在商业分销",
+          "not_in_distribution": "报告为未在商业分销",
+          "conflicted": "分销证据相互矛盾",
+          "not_reported": "未报告分销状态"
+        },
+        "fields": {
+          "primaryDi": "主要 DI",
+          "packageDis": "包装 DI",
+          "issuingAgency": "签发机构",
+          "legalManufacturer": "法定制造商",
+          "brandName": "品牌名称",
+          "modelCatalogNumber": "型号或目录号",
+          "publishDate": "发布日期",
+          "productCode": "产品代码",
+          "deviceClass": "器械类别",
+          "regulationNumber": "法规编号",
+          "classificationName": "分类名称",
+          "pathway": "途径",
+          "submissionNumber": "申报编号",
+          "decision": "决定",
+          "decisionDate": "决定日期",
+          "establishmentRegistrationNumber": "机构注册号",
+          "listingNumber": "列名编号",
+          "proprietaryName": "专有名称",
+          "status": "状态",
+          "recordAsOfDate": "记录截至日期"
+        }
+      },
+      "citations": {
+        "heading": "来源",
+        "referenceLabel": "参考文献",
+        "sourceKindLabel": "来源类型",
+        "sourceKind": {
+          "manufacturer_labeling": "制造商标签资料",
+          "manufacturer_catalog": "制造商目录",
+          "manufacturer_product_page": "制造商产品页面",
+          "gudid": "GUDID",
+          "fda_premarket": "FDA 上市前记录",
+          "fda_classification": "FDA 分类记录",
+          "fda_registration_listing": "FDA 注册/列名记录",
+          "governed_catalog": "受治理目录"
+        },
+        "organizationLabel": "机构",
+        "snapshotDateLabel": "快照日期",
+        "locatorsLabel": "确切定位信息",
+        "sourceIdLabel": "来源 ID",
+        "openOfficialSource": "打开官方来源",
+        "externalSiteLabel": "将打开外部网站"
+      },
+      "fallback": {
+        "heading": "扩展证据状态",
+        "profileUnavailable": "经审核的扩展产品资料尚不可用。",
+        "regulatoryNotResearched": "尚未研究确切监管资料。"
+      }
+    },
     "common": {
       "notRecorded": "not recorded",
       "unlistedNote": "Phase D1 preview — this page is public-unlisted and excluded from search indexing. Reference information only; it is not clinical advice and no product recommendation is made.",
