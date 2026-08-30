@@ -178,7 +178,7 @@ function SourceMarkers({
 
   if (references.length === 0) return null
   return (
-    <sup className="ml-1 inline-flex flex-wrap gap-x-1 align-super text-[10px] font-semibold leading-none text-primary">
+    <sup className="ml-1 inline-flex flex-wrap gap-x-1 align-super text-[10px] font-semibold leading-none text-sky-700 dark:text-sky-300">
       {references.map((reference) => (
         <a
           key={reference.number}
@@ -209,7 +209,7 @@ function D2dCitationList({
       <h3 id={`${idPrefix}-sources-heading`} className="text-base font-bold tracking-tight">
         {labels.heading}
       </h3>
-      <ol className="list-decimal space-y-3 pl-5 marker:text-xs marker:font-semibold marker:text-muted-foreground">
+      <ol className="list-decimal space-y-3 pl-5 marker:text-xs marker:font-semibold marker:text-slate-600 dark:marker:text-slate-300">
         {sources.map((source, index) => (
           <li
             key={source.source_id}
@@ -257,11 +257,11 @@ function D2dCitationList({
                 href={source.official_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex max-w-full items-center gap-1.5 break-words text-xs font-semibold text-primary underline-offset-2 [overflow-wrap:anywhere] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mt-3 inline-flex max-w-full items-center gap-1.5 break-words text-xs font-semibold text-sky-700 underline-offset-2 [overflow-wrap:anywhere] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-sky-300"
               >
                 <span>
                   {labels.openOfficialSource}{' '}
-                  <span className="font-normal text-muted-foreground">
+                  <span className="font-normal text-slate-600 dark:text-slate-300">
                     ({labels.externalSiteLabel})
                   </span>
                 </span>
@@ -653,7 +653,12 @@ export function RegulatoryEvidencePanel({
                   data-regulatory-match-level={evidence.match_level}
                   variant={evidence.research_state === 'unresolved' ? 'warning' : 'outline'}
                   size="sm"
-                  className="max-w-full whitespace-normal break-words text-left normal-case tracking-normal [overflow-wrap:anywhere]"
+                  className={cn(
+                    'max-w-full whitespace-normal break-words text-left normal-case tracking-normal [overflow-wrap:anywhere]',
+                    evidence.research_state === 'unresolved'
+                      ? 'border-amber-600/50 text-amber-800 dark:border-amber-400/50 dark:text-amber-200'
+                      : undefined,
+                  )}
                 >
                   {labels.regulatory.matchLevel[evidence.match_level]}
                 </Badge>
@@ -700,7 +705,12 @@ export function RegulatoryEvidencePanel({
                     <Badge
                       data-regulatory-conclusion={conclusion}
                       variant={conclusion === 'exact_identity_unresolved' ? 'warning' : 'info'}
-                      className="max-w-full whitespace-normal break-words text-left normal-case tracking-normal [overflow-wrap:anywhere]"
+                      className={cn(
+                        'max-w-full whitespace-normal break-words text-left normal-case tracking-normal [overflow-wrap:anywhere]',
+                        conclusion === 'exact_identity_unresolved'
+                          ? 'border-amber-600/50 text-amber-800 dark:border-amber-400/50 dark:text-amber-200'
+                          : undefined,
+                      )}
                     >
                       {labels.regulatory.conclusion[conclusion]}
                     </Badge>
@@ -929,12 +939,12 @@ export function D2dEnrichmentStatusCard({ labels }: { labels: D2dEvidenceLabels 
     >
       <h2
         id="d2d-enrichment-status-heading"
-        className="text-lg font-semibold tracking-tight text-muted-foreground"
+        className="text-lg font-semibold tracking-tight text-slate-600 dark:text-slate-300"
       >
         {labels.fallback.heading}
       </h2>
       <Card className="min-w-0 border-border/60 bg-muted/20 shadow-none hover:shadow-none">
-        <CardContent className="min-w-0 gap-2 p-4 text-sm leading-6 text-muted-foreground">
+        <CardContent className="min-w-0 gap-2 p-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
           <p className="break-words [overflow-wrap:anywhere]">
             {labels.fallback.profileUnavailable}
           </p>

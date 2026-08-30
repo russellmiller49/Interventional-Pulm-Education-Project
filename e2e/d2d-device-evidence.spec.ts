@@ -1,3 +1,5 @@
+import { resolve } from 'node:path'
+
 import { expect, test, type Page } from '@playwright/test'
 
 test.setTimeout(180_000)
@@ -9,6 +11,52 @@ const PRODUCTS = {
   erbe: 'PRD-05670F1B5F',
   nonpilot: 'PRD-2E043ED827',
 } as const
+
+const AXE_SCRIPT_PATH = resolve(process.cwd(), 'node_modules/axe-core/axe.min.js')
+const D2D_REGION_SELECTORS = [
+  '[data-d2d-profile-scope]',
+  '[data-d2d-regulatory-match]',
+  '[data-d2d-enrichment-fallback]',
+]
+
+interface AxeCheckResult {
+  data?: unknown
+}
+
+interface AxeNodeResult {
+  all: AxeCheckResult[]
+  any: AxeCheckResult[]
+  failureSummary?: string
+  html: string
+  none: AxeCheckResult[]
+  target: string[]
+}
+
+interface AxeViolation {
+  help: string
+  id: string
+  impact?: string | null
+  nodes: AxeNodeResult[]
+}
+
+interface AxeBrowser {
+  run(
+    context: Document | { include: string[] },
+    options?: { runOnly: { type: 'rule'; values: string[] } },
+  ): Promise<{ violations: AxeViolation[] }>
+}
+
+interface AxeViolationSummary {
+  help: string
+  id: string
+  impact?: string | null
+  nodes: Array<{
+    contrastData: unknown[]
+    failureSummary?: string
+    html: string
+    target: string[]
+  }>
+}
 
 async function openProduct(page: Page, productId: string): Promise<void> {
   await page.goto(`/en/devices/${productId}`, { waitUntil: 'networkidle', timeout: 120_000 })
@@ -23,6 +71,59 @@ async function expectNoPageOverflow(page: Page): Promise<void> {
   }))
   expect(geometry.rootScrollWidth).toBe(geometry.clientWidth)
   expect(geometry.bodyScrollWidth).toBeLessThanOrEqual(geometry.clientWidth)
+}
+
+async function getLiveAxeViolations(page: Page): Promise<{
+  d2dRegion: AxeViolationSummary[]
+  pageColorContrast: AxeViolationSummary[]
+}> {
+  await page.addScriptTag({ path: AXE_SCRIPT_PATH })
+
+  return page.evaluate(async (regionSelectors) => {
+    const axe = (window as typeof window & { axe: AxeBrowser }).axe
+    const d2dRegionSelector = regionSelectors.join(', ')
+    const summarize = (
+      violations: AxeViolation[],
+      withinD2dRegionOnly = false,
+    ): AxeViolationSummary[] =>
+      violations.flatMap((violation) => {
+        const nodes = withinD2dRegionOnly
+          ? violation.nodes.filter((node) =>
+              node.target.some((target) =>
+                document.querySelector(target)?.closest(d2dRegionSelector),
+              ),
+            )
+          : violation.nodes
+
+        return nodes.length > 0
+          ? [
+              {
+                help: violation.help,
+                id: violation.id,
+                impact: violation.impact,
+                nodes: nodes.map((node) => ({
+                  contrastData: [...node.any, ...node.all, ...node.none]
+                    .map((check) => check.data)
+                    .filter((data) => data !== undefined),
+                  failureSummary: node.failureSummary,
+                  html: node.html,
+                  target: node.target,
+                })),
+              },
+            ]
+          : []
+      })
+
+    const pageColorContrast = await axe.run(document, {
+      runOnly: { type: 'rule', values: ['color-contrast'] },
+    })
+    const d2dRegion = await axe.run({ include: regionSelectors })
+
+    return {
+      d2dRegion: summarize(d2dRegion.violations),
+      pageColorContrast: summarize(pageColorContrast.violations, true),
+    }
+  }, D2D_REGION_SELECTORS)
 }
 
 test('renders an exact reviewed profile with exact regulatory identity and safe citations', async ({
@@ -98,6 +199,17 @@ test('renders the compact honest enrichment fallback for a verified-source nonpi
 })
 
 for (const [state, productId] of Object.entries(PRODUCTS)) {
+  test(`${state} D2D detail state passes live Chromium axe`, async ({ page }) => {
+    await openProduct(page, productId)
+
+    const violations = await getLiveAxeViolations(page)
+    expect(
+      violations.pageColorContrast,
+      'D2D color-contrast violations found by the page-wide scan',
+    ).toEqual([])
+    expect(violations.d2dRegion, 'D2D-region accessibility violations').toEqual([])
+  })
+
   test(`${state} D2D detail state has no page-level overflow at 390 px`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await openProduct(page, productId)
