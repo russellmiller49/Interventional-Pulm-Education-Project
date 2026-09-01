@@ -74,6 +74,8 @@ export type LiteratureRuntimeOperation =
   | 'review_queue_read'
   /** Read-only access to the physician-reviewed overlay columns. */
   | 'reviewed_overlay_read'
+  /** Read-only access to isolated AI/ML shadow tables. Proposal schema; hosted access withheld. */
+  | 'shadow_read'
   /** `curate_literature_article_v1`. Exists in the foundation; withheld by this build. */
   | 'article_curation'
   /** Every gold-set read. Its migrations are deferred, so the objects do not exist. */
@@ -118,9 +120,22 @@ export type LiteratureWithheldOperation = Exclude<
 const WITHHELD_OPERATIONS: Readonly<
   Record<
     LiteratureWithheldOperation,
-    { state: 'gold_workflow_unavailable' | 'write_capability_withheld'; detail: string }
+    {
+      state:
+        | 'gold_workflow_unavailable'
+        | 'shadow_workflow_unavailable'
+        | 'write_capability_withheld'
+      detail: string
+    }
   >
 > = {
+  shadow_read: {
+    state: 'shadow_workflow_unavailable',
+    detail:
+      'The AI/ML shadow schema is a rehearsal-only proposal and is not installed or activated on ' +
+      'the dedicated hosted Literature project. Canonical and physician-reviewed fields remain ' +
+      'unchanged.',
+  },
   article_curation: {
     state: 'write_capability_withheld',
     detail:

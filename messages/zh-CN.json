@@ -2314,6 +2314,7 @@
         "foundation_ready_empty": "基础架构已就绪，目前没有任何记录。下方的零是实际测量值。",
         "foundation_ready_populated": "基础架构已就绪，并包含记录。",
         "gold_workflow_unavailable": "此项目未安装金标准集审阅流程。其迁移是有意推迟的。",
+        "shadow_workflow_unavailable": "此项目尚未安装或启用隔离的 AI/ML 影子架构。规范数据和医师审阅数据均未更改。",
         "write_capability_withheld": "此版本不包含任何文献写入路径。策展与金标准集修改按设计不可用。",
         "temporarily_unavailable": "专用文献项目没有响应。计数无法获取，而不是零。",
         "not_observed": "请求在到达数据库之前已被拒绝，因此未进行任何测量。",
@@ -2523,6 +2524,7 @@
       "eyebrow": "网站管理员",
       "heading": "全部文献",
       "description": "检查完整的已导入语料库、检索来源及现有的仅追加审计历史。",
+      "openShadow": "打开 AI/ML 影子",
       "openPreview": "打开搜索预览",
       "invalidFilters": "审核筛选条件无效。",
       "stats": {

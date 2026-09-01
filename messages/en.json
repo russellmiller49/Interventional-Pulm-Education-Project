@@ -2314,6 +2314,7 @@
         "foundation_ready_empty": "The foundation schema is present and holds no records yet. The zeros below are measurements.",
         "foundation_ready_populated": "The foundation schema is present and holds records.",
         "gold_workflow_unavailable": "The gold-set review workflow is not installed in this project. Its migrations are deliberately deferred.",
+        "shadow_workflow_unavailable": "The isolated AI/ML shadow schema is not installed or activated in this project. Canonical and physician-reviewed literature data are unchanged.",
         "write_capability_withheld": "This build carries no Literature write path. Curation and gold-set changes are unavailable by design.",
         "temporarily_unavailable": "The dedicated Literature project did not answer. Counts are unavailable rather than zero.",
         "not_observed": "The request was rejected before it reached the database, so nothing was measured.",
@@ -2523,6 +2524,7 @@
       "eyebrow": "Site administrator",
       "heading": "All Literature",
       "description": "Inspect the full imported corpus, its retrieval provenance, and its existing append-only audit history.",
+      "openShadow": "Open AI/ML shadow",
       "openPreview": "Open search preview",
       "invalidFilters": "The review filters are invalid.",
       "stats": {

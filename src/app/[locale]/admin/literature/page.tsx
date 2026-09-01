@@ -213,6 +213,9 @@ export default async function LiteratureAdminPage({
           <p className="text-base leading-7 text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/literature/shadow">{t('openShadow')}</Link>
+          </Button>
           {goldWorkflowAvailable ? (
             <Button asChild>
               <Link href="/admin/literature/gold-set">Open gold-set review</Link>

@@ -2314,6 +2314,7 @@
         "foundation_ready_empty": "El esquema base existe y aún no contiene registros. Los ceros que aparecen abajo son mediciones reales.",
         "foundation_ready_populated": "El esquema base existe y contiene registros.",
         "gold_workflow_unavailable": "El flujo de revisión del conjunto de referencia no está instalado en este proyecto. Sus migraciones se aplazaron deliberadamente.",
+        "shadow_workflow_unavailable": "El esquema aislado de IA/ML no está instalado ni activado en este proyecto. Los datos canónicos y revisados por médicos no cambian.",
         "write_capability_withheld": "Esta versión no incluye ninguna ruta de escritura de literatura. Los cambios de curación y de conjunto de referencia no están disponibles por diseño.",
         "temporarily_unavailable": "El proyecto de literatura dedicado no respondió. Los recuentos no están disponibles; no son cero.",
         "not_observed": "La solicitud se rechazó antes de llegar a la base de datos, por lo que no se midió nada.",
@@ -2523,6 +2524,7 @@
       "eyebrow": "Administrador del sitio",
       "heading": "Toda la literatura",
       "description": "Inspecciona el corpus importado completo, su procedencia de recuperación y su historial de auditoría de solo anexado.",
+      "openShadow": "Abrir sombra de IA/ML",
       "openPreview": "Abrir vista previa de búsqueda",
       "invalidFilters": "Los filtros de revisión no son válidos.",
       "stats": {
