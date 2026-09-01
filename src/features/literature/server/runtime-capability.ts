@@ -45,6 +45,8 @@ export const LITERATURE_CAPABILITY_STATES = [
   'foundation_ready_filtered',
   /** The gold-set review workflow's deferred schema and RPCs are absent from this project. */
   'gold_workflow_unavailable',
+  /** The isolated AI/ML shadow proposal is not installed or activated on this project. */
+  'shadow_workflow_unavailable',
   /**
    * The operation is withheld by this build rather than by the target's schema.
    *
@@ -193,7 +195,10 @@ const FAILURE_MESSAGES: Record<LiteratureFailureKind, string> = {
  */
 export function capabilityFromFailure(
   failure: LiteratureQueryFailure | null | undefined,
-  options: { projectRef: string | null; surface: 'foundation' | 'gold_workflow' },
+  options: {
+    projectRef: string | null
+    surface: 'foundation' | 'gold_workflow' | 'shadow_workflow'
+  },
 ): LiteratureCapability {
   const kind = classifyLiteratureQueryFailure(failure)
   const missing = kind === 'missing_relation' || kind === 'missing_function'
@@ -206,6 +211,18 @@ export function capabilityFromFailure(
         'The gold-set review workflow is not installed in the dedicated Literature project. Its ' +
         'migrations are deliberately deferred; this is the expected state during the foundation ' +
         'bring-up, not a fault.',
+      projectRef: options.projectRef,
+    }
+  }
+
+  if (missing && options.surface === 'shadow_workflow') {
+    return {
+      state: 'shadow_workflow_unavailable',
+      reason: kind,
+      message:
+        'The isolated AI/ML shadow tables are not installed in the dedicated Literature project. ' +
+        'Their schema remains a rehearsal-only proposal; canonical and physician-reviewed data ' +
+        'are unaffected.',
       projectRef: options.projectRef,
     }
   }
@@ -303,7 +320,7 @@ export function capabilityForWithheldOperation(
   projectRef: string | null,
   state: Extract<
     LiteratureCapabilityState,
-    'gold_workflow_unavailable' | 'write_capability_withheld'
+    'gold_workflow_unavailable' | 'shadow_workflow_unavailable' | 'write_capability_withheld'
   >,
   detail: string,
 ): LiteratureCapability {

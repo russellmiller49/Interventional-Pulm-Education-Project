@@ -117,6 +117,15 @@ describe('capability resolution', () => {
     expect(capability.message).toMatch(/deliberately deferred/iu)
   })
 
+  it('reports a missing shadow relation as an isolated, unapplied proposal', () => {
+    const capability = capabilityFromFailure(
+      { code: 'PGRST205' },
+      { projectRef: APPROVED_REF, surface: 'shadow_workflow' },
+    )
+    expect(capability.state).toBe('shadow_workflow_unavailable')
+    expect(capability.message).toMatch(/rehearsal-only proposal/iu)
+  })
+
   it('reports an unclassified failure as temporarily unavailable, never as empty', () => {
     const capability = capabilityFromFailure(
       { code: 'ECONNRESET' },
@@ -166,6 +175,9 @@ describe('capability resolution', () => {
     expect(
       capabilityForWithheldOperation(APPROVED_REF, 'gold_workflow_unavailable', 'x').state,
     ).toBe('gold_workflow_unavailable')
+    expect(
+      capabilityForWithheldOperation(APPROVED_REF, 'shadow_workflow_unavailable', 'x').state,
+    ).toBe('shadow_workflow_unavailable')
   })
 
   it('marks a request that never reached the database as unobserved', () => {

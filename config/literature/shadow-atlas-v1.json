@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "literature-shadow-atlas-source/1.0.0",
+  "repository": "https://github.com/russellmiller49/interventional-pulm-literature-atlas",
+  "repositoryCommit": "c9172a01dbc39824eb8a9042b2d777f09ef6cc1c",
+  "releaseTag": "literature-atlas-v1-20260901",
+  "assets": {
+    "atlasRuntime": {
+      "name": "atlas-runtime-v1.tar.zst",
+      "bytes": 253317682,
+      "sha256": "5f4a53fc1151a02b21c2e02d2838950602ac9220c1bfa0936198268d7ad5a191"
+    },
+    "atlasRebuildInputs": {
+      "name": "atlas-rebuild-inputs-v1.tar.zst",
+      "bytes": 154146766,
+      "sha256": "d1bf0e1e611607c84591059adf456874962a2329c92cfc78abc7d3e3cff5c25f"
+    },
+    "screeningMl": {
+      "name": "screening-ml-v2.tar.zst",
+      "bytes": 330406122,
+      "sha256": "4f51853c05434adcb700f2823e1e909826e6760642cdc53c1fc5e2d9753dfb3b"
+    }
+  },
+  "conferenceProjection": {
+    "runKey": "luna-conference-v1-2064f0aed39ff23f8367",
+    "projectionId": "conference-v1-2064f0aed39ff23f8367",
+    "sqliteSha256": "80b00daa1a566ade58b7bdcdf98dfd18ea29069600deac55dab2dae81da7f2c1",
+    "predictionsSha256": "ab3427e714dd73baeead864d4134f693dc3728f393181ed5087d5bde75325516",
+    "articleCount": 132350,
+    "enhancementCount": 45536,
+    "termCount": 989896,
+    "classCounts": {
+      "include_core": 23274,
+      "include_adjacent": 22262,
+      "exclude": 86814
+    }
+  },
+  "screeningModel": {
+    "runKey": "screening-ml-v2-tfidf-wordchar-lr",
+    "winner": "tfidf_wordchar_lr",
+    "trainingRows": 57208,
+    "developmentRows": 46337,
+    "testRows": 10871,
+    "rocAuc": 0.9883380863951655,
+    "averagePrecision": 0.9912538630064246,
+    "brier": 0.03375938957069075,
+    "lowThreshold": 0.3604060913705584,
+    "highThreshold": 0.6413440073893832,
+    "testZones": {
+      "autoExclude": 3667,
+      "review": 205,
+      "autoInclude": 6999,
+      "retainedRecall": 0.9924800943674432,
+      "autoIncludePrecision": 0.9524217745392198
+    },
+    "artifacts": {
+      "deployBinarySha256": "d810b19aaf2d1bd3a15c2f32814c62bfbc6f8fa89488267aecc0c84cd99ca1ca",
+      "deployBasisHeadSha256": "4fb2110a4174d83a723a8a77feaf65826b5fc812d2f8ae2eab94964c2a327be4",
+      "deployExclusionHeadSha256": "91d9a98d218e4338f7066db9b58f9a1a80a263f23ee5851897219c0cf242f701",
+      "thresholdsSha256": "5137a0cd17360e0cd047974a50c1ecbc1ddc498f4be22b8fb86e1d81a2592160"
+    }
+  }
+}

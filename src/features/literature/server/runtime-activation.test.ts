@@ -309,6 +309,7 @@ describe('the activation contract withholds writes and the gold-set workflow', (
   })
 
   it.each([
+    ['shadow_read', 'shadow_workflow_unavailable'],
     ['article_curation', 'write_capability_withheld'],
     ['gold_set_read', 'gold_workflow_unavailable'],
     ['gold_set_mutation', 'gold_workflow_unavailable'],
@@ -355,6 +356,7 @@ describe('the activation contract withholds writes and the gold-set workflow', (
       'admin_stats',
       'review_queue_read',
       'reviewed_overlay_read',
+      'shadow_read',
       'article_curation',
       'gold_set_read',
       'gold_set_mutation',
@@ -368,6 +370,7 @@ describe('the activation contract withholds writes and the gold-set workflow', (
   it('withholds the deferred operations for an unconfigured deployment', () => {
     // No binding at all must not read as "local", which would be the same widening by another route.
     expect(literatureOperationActivated('gold_set_read', {})).toBe(false)
+    expect(literatureOperationActivated('shadow_read', {})).toBe(false)
     expect(literatureOperationActivated('article_curation', {})).toBe(false)
   })
 

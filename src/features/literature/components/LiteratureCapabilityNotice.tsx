@@ -22,6 +22,7 @@ const TONE_BY_STATE: Record<LiteratureCapabilityState, Tone> = {
   foundation_ready_empty: 'ok',
   foundation_ready_filtered: 'ok',
   gold_workflow_unavailable: 'info',
+  shadow_workflow_unavailable: 'info',
   write_capability_withheld: 'info',
   not_observed: 'info',
   not_configured: 'warn',
