@@ -82,10 +82,10 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'ROTARY_DELTA', delta: 1 })
   })
 
-  it('renders the Learn workbench with section navigation and no Practice scoring', async () => {
+  it('renders the Learn stage with one progression, one Now card, and no Practice scoring', async () => {
     const { container } = render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(container.querySelector('[data-now-card]')).toBeInTheDocument()
     })
 
     const nav = screen.getByRole('navigation', { name: /ECMO Management module sections/i })
@@ -96,26 +96,29 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(within(nav).getByRole('link', { name: /Overview/i })).not.toHaveAttribute('aria-current')
     expect(screen.getByText(/Guided focus: circuit and sensors/i)).toBeInTheDocument()
     expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
-    const sharedPhases = screen.getByRole('group', { name: 'ECMO shared activity phases' })
-    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
-      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
-    }
+    // One progression: the lesson's own step list, and no shared six-phase bar above it.
+    expect(screen.queryByRole('group', { name: 'ECMO shared activity phases' })).toBeNull()
+    expect(container.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-now-card]')).toHaveLength(1)
     for (const legacyLabel of ['Orient', 'Interpret', 'Respond', 'Reassess']) {
       expect(screen.queryByText(legacyLabel, { selector: 'strong' })).not.toBeInTheDocument()
     }
 
-    const currentTask = screen.getByRole('complementary', { name: 'Current task' })
-    expect(within(currentTask).getByText('Start with four information domains')).toBeInTheDocument()
+    const nowCard = container.querySelector('[data-now-card]') as HTMLElement
+    expect(within(nowCard).getByText('Start with four information domains')).toBeInTheDocument()
+    // A read step's one action is also what moves the lesson on.
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
-    // A3.3: the first console step is now a stopped-pump recognition activity, and the tour
-    // proper runs after the circuit has been ramped up.
+    const nextCard = container.querySelector('[data-now-card]') as HTMLElement
     expect(
-      within(currentTask).getByText('The pump is stopped: which channels still mean anything?'),
+      within(nextCard).getByText('The pump is stopped: which channels still mean anything?'),
     ).toBeInTheDocument()
     expect(
-      within(currentTask).getByText(/show the unavailable indication rather than a number/i),
+      within(nextCard).getByText(/show the unavailable indication rather than a number/i),
     ).toBeInTheDocument()
+    expect(container.querySelector('[data-stage]')).toHaveAttribute(
+      'data-stage',
+      'startup-screen-parameters',
+    )
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
   })
 

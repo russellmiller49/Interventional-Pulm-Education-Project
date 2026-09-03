@@ -26,6 +26,7 @@ import {
   type SupportMode,
 } from '../engine'
 import { useEcmoSessionCore, type EcmoSessionLoadReason } from '../session/useEcmoSessionCore'
+import { EcmoLessonStage } from './stage/EcmoLessonStage'
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { formatChannelGroup } from './channelReadout'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
@@ -49,7 +50,7 @@ interface CardiohelpWorkbenchProps {
  * which control is spotlighted, which stage or step is active, and whether help is open. The
  * session tells this component when a scenario has been loaded so those can be reset.
  */
-export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbenchProps) {
+function PracticeWorkbench({ section, locale = 'en' }: CardiohelpWorkbenchProps) {
   const router = useRouter()
   const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>(
     section === 'learn' ? 'circuit' : null,
@@ -562,4 +563,13 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
       />
     </CardiohelpModuleFrame>
   )
+}
+
+/**
+ * Learn renders the lesson stage; Practice and Challenge render the case workbench. The split is a
+ * plain branch above any hook so each surface owns exactly one simulation session.
+ */
+export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbenchProps) {
+  if (section === 'learn') return <EcmoLessonStage locale={locale} />
+  return <PracticeWorkbench section={section} locale={locale} />
 }

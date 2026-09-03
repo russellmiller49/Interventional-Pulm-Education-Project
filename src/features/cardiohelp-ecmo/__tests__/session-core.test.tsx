@@ -261,6 +261,7 @@ describe('ECMO session core', () => {
     expect(onPracticeCaseLoaded).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'clinical-vv-tension-pneumothorax' }),
       'hydrate',
+      { requestedPhase: null },
     )
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
   })
@@ -291,6 +292,7 @@ describe('ECMO session core', () => {
     expect(onPracticeCaseLoaded).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: 'clinical-vv-occult-hemorrhage' }),
       'navigate',
+      { requestedPhase: null },
     )
   })
 
@@ -342,6 +344,7 @@ describe('ECMO session core', () => {
     expect(onLearnLessonLoaded).toHaveBeenCalledWith(
       expect.objectContaining({ scenarioId: 'preload-drainage-collapse' }),
       'hydrate',
+      { requestedPhase: null },
     )
     expect(window.location.search).toBe('?lesson=preload-drainage-collapse&track=vv')
   })

@@ -53,7 +53,7 @@ import { EcmoCircuit3D } from './EcmoCircuit3D'
  */
 export type CircuitLocationDisclosure = 'full' | 'withheld'
 
-interface SimulationPanelProps {
+export interface SimulationPanelProps {
   state: EcmoSimulationState
   dispatch: (action: SimulationAction) => void
   controlsEnabled: boolean
@@ -103,7 +103,7 @@ function CircuitChannelReadout({
   )
 }
 
-function CircuitSchematic({
+export function CircuitSchematic({
   state,
   dispatch,
   controlsEnabled,
@@ -875,7 +875,7 @@ function CircuitSchematic({
   )
 }
 
-function GasBlenderPanel({
+export function GasBlenderPanel({
   state,
   dispatch,
   controlsEnabled,
@@ -1067,7 +1067,7 @@ function GasBlenderPanel({
   )
 }
 
-function PatientMonitor({
+export function PatientMonitor({
   state,
   guidedTarget,
   guidedControlId,
@@ -1242,7 +1242,7 @@ const trendMeta: Record<TrendParameter, { label: string; unit: string; color: st
   lactate: { label: 'Lactate', unit: 'mmol/L', color: '#ff9b7a' },
 }
 
-function TrendPanel({
+export function TrendPanel({
   state,
   guidedTarget,
   guidedControlId,

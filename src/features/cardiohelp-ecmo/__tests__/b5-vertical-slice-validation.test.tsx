@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -135,7 +135,7 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
   it('wraps the guided-drill console in a fit-to-width surface', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-now-card]')).not.toBeNull()
     })
 
     const console_ = document.getElementById('cardiohelp-console')
@@ -174,7 +174,7 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
   it('still renders exactly one console and one circuit panel on the Learn route', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-now-card]')).not.toBeNull()
     })
     // Guided help resolves controls with getElementById, so a second copy would silently retarget it.
     expect(document.querySelectorAll('#cardiohelp-console')).toHaveLength(1)
@@ -184,7 +184,7 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
   it('keeps every guided control id unique across the whole Learn document', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-now-card]')).not.toBeNull()
     })
     const ids = [...document.querySelectorAll('[id^="cardiohelp-"]')].map((node) => node.id)
     expect(ids.length).toBeGreaterThan(0)

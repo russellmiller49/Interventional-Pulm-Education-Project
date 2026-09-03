@@ -12,7 +12,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 import { recordSiteModuleEvent } from '@/lib/analytics'
 
-import { resolveGuidedLesson } from '../components/LearnLessonPlayer'
+import { resolveGuidedLesson } from '../components/stage/adapters/drillStageAdapter'
 import { resolveScenarioDefinition } from '../components/PracticeCasePlayer'
 import {
   capstoneScenarioIdForMode,
@@ -75,17 +75,24 @@ import {
 export type EcmoActivityMode = 'guided' | 'practice' | 'challenge'
 export type EcmoSessionLoadReason = 'hydrate' | 'navigate'
 
+/** What the URL asked for at hydration, read before the canonical query is written back. */
+export interface EcmoSessionLoadContext {
+  readonly requestedPhase: string | null
+}
+
 export interface EcmoSessionCoreOptions {
   readonly section: ModuleSection
   /** Fired after a guided lesson is loaded, on hydration and on navigation. */
   readonly onLearnLessonLoaded?: (
     lesson: GuidedLessonDefinition,
     reason: EcmoSessionLoadReason,
+    context: EcmoSessionLoadContext,
   ) => void
   /** Fired after a Practice case or a Challenge capstone is loaded, on hydration and on navigation. */
   readonly onPracticeCaseLoaded?: (
     definition: ScenarioDefinition,
     reason: EcmoSessionLoadReason,
+    context: EcmoSessionLoadContext,
   ) => void
 }
 
@@ -198,7 +205,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
       )
       syncUrl({ lesson: lesson.scenarioId, track: lesson.supportMode })
       recordSiteModuleEvent(guidedLessonLoadedEvent(lesson))
-      optionsRef.current.onLearnLessonLoaded?.(lesson, 'navigate')
+      optionsRef.current.onLearnLessonLoaded?.(lesson, 'navigate', { requestedPhase: null })
     },
     [persistProgress, syncUrl],
   )
@@ -238,7 +245,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
         syncUrl({ case: definition.id, track: definition.supportMode })
       }
       recordSiteModuleEvent(practiceScenarioLoadedEvent(definition, resolvedMode))
-      optionsRef.current.onPracticeCaseLoaded?.(definition, 'navigate')
+      optionsRef.current.onPracticeCaseLoaded?.(definition, 'navigate', { requestedPhase: null })
     },
     [attemptInProgress, currentSimulationMode, persistProgress, section, syncUrl],
   )
@@ -290,6 +297,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
     setProgress(stored)
     const params = new URLSearchParams(window.location.search)
     const trackParam = parseTrack(params.get('track'))
+    const context: EcmoSessionLoadContext = { requestedPhase: params.get('phase') }
 
     if (section === 'learn') {
       const lessonParam = params.get('lesson')
@@ -313,7 +321,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
       const lesson = cardiohelpLearnLessonByScenarioId.get(initialLesson)
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: initialLesson, mode: 'guided' })
       syncUrl({ lesson: initialLesson, track })
-      if (lesson) optionsRef.current.onLearnLessonLoaded?.(lesson, 'hydrate')
+      if (lesson) optionsRef.current.onLearnLessonLoaded?.(lesson, 'hydrate', context)
     } else if (section === 'practice') {
       const caseParam = params.get('case')
       const paramTrack =
@@ -332,14 +340,22 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
       setResumedFromStorage(caseFromUrl === null && caseFromStorage !== null)
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: initialCase, mode: 'guided' })
       syncUrl({ case: initialCase, track })
-      optionsRef.current.onPracticeCaseLoaded?.(resolveScenarioDefinition(initialCase), 'hydrate')
+      optionsRef.current.onPracticeCaseLoaded?.(
+        resolveScenarioDefinition(initialCase),
+        'hydrate',
+        context,
+      )
     } else {
       const track = trackParam ?? stored.lastVisited?.supportMode ?? 'vv'
       const capstoneId = capstoneScenarioIdForMode(track)
       setAssessTrack(track)
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: capstoneId, mode: 'challenge' })
       syncUrl({ track })
-      optionsRef.current.onPracticeCaseLoaded?.(resolveScenarioDefinition(capstoneId), 'hydrate')
+      optionsRef.current.onPracticeCaseLoaded?.(
+        resolveScenarioDefinition(capstoneId),
+        'hydrate',
+        context,
+      )
     }
     setHydrated(true)
     // The hydration pass intentionally runs once per section mount.
