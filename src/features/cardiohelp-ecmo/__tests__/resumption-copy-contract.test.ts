@@ -43,6 +43,11 @@ const COPY_SOURCES: readonly string[] = [
   // later package adding an air-event row to it cannot quietly teach a clamp order here instead.
   'src/features/cardiohelp-ecmo/content/circuitSegments.ts',
   'src/features/cardiohelp-ecmo/content/localizationCards.ts',
+  // The per-drill debrief shapes. The two air drills' knob strips are the one place outside the
+  // lessons where a sentence about clamps, the stopped pump and resuming support is written, so
+  // they are scanned here rather than trusted to stay clear of a resumption order.
+  'src/features/cardiohelp-ecmo/content/drillSpecs.ts',
+  'src/features/cardiohelp-ecmo/content/controlPanel.ts',
   'src/features/cardiohelp-ecmo/content/circuitPresentation.ts',
   'src/features/cardiohelp-ecmo/components/teaching/EcmoLocalizationCard.tsx',
   'src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx',

@@ -7,7 +7,9 @@ import {
   ecmoSensorSiteById,
   resolveEcmoModeText,
 } from '../content/circuitSegments'
+import { ecmoDrillFamilyForScenario, ecmoDrillSpecs } from '../content/drillSpecs'
 import { evidenceById } from '../content/evidence'
+import { cardiohelpScenarioById } from '../content/scenarios'
 import {
   ECMO_LOCALIZATION_FOOTER,
   ecmoLocalizationRow,
@@ -78,6 +80,36 @@ describe('ECMO localization-card registry', () => {
       'preload',
       'return-obstruction',
     ])
+  })
+
+  /*
+   * The other end of that mapping, now that something selects by it.
+   *
+   * The case above proves a family selects exactly one row. This one proves the drills select the
+   * right one: a spec that named `membrane-resistance` for a drainage drill would satisfy every
+   * assertion here about rows and every assertion there about specs, and only the two registries
+   * read together catch it. Cheap to state, and the failure it prevents is a learner meeting the
+   * wrong mechanism at the end of a drill they answered correctly.
+   */
+  it('is selected by each drill spec through the family of its own scenario', () => {
+    for (const [scenarioId, definition] of Object.entries(ecmoDrillSpecs)) {
+      const scenario = cardiohelpScenarioById.get(scenarioId)
+      if (!scenario) throw new Error(`No scenario ${scenarioId}`)
+      const family = ecmoDrillFamilyForScenario(scenario)
+      if (family === null) {
+        // No row exists for this family, so the spec must not claim one.
+        expect(`${scenarioId}: ${definition.localizationRowId}`).toBe(`${scenarioId}: undefined`)
+        continue
+      }
+      const rowId = definition.localizationRowId
+      expect(`${scenarioId}: ${rowId === undefined ? 'no row' : 'a row'}`).toBe(
+        `${scenarioId}: a row`,
+      )
+      if (!rowId) continue
+      expect(`${scenarioId}: ${ecmoLocalizationRow(rowId).drillFamily}`).toBe(
+        `${scenarioId}: ${family}`,
+      )
+    }
   })
 
   it('points every row at real places on the canonical circuit', () => {
