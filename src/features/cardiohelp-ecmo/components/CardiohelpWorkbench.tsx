@@ -1,23 +1,10 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from 'react'
+import { useCallback, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { HeartPulse, Wind } from 'lucide-react'
 
-import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { Link, useRouter } from '@/i18n/navigation'
-import { recordSiteModuleEvent } from '@/lib/analytics'
-import {
-  useCriticalCareActivityAnalytics,
-  type CriticalCareActivityPhase,
-} from '@/features/learning-module/activity'
+import { type CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
 import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
@@ -27,84 +14,43 @@ import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
-import {
-  capstoneScenarioIdForMode,
-  isTrackCapstoneUnlocked,
-  orderedCaseScenarioIds,
-  orderedLessonScenarioIds,
-} from '../content/curriculum'
 import { cardiohelpEvidence } from '../content/evidence'
-import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
-import { clinicalPracticeScenarios } from '../content/clinicalCases'
 import {
-  createDefaultProgress,
-  createInitialSimulationState,
-  ecmoSimulationReducer,
-  readProgress,
-  recordLearnLessonCompleted,
-  recordScenarioResult,
-  selectScenarioOutcome,
-  setLastCaseForMode,
-  setLastLessonForMode,
-  setLastStation,
-  setLastVisited,
-  withMastery,
-  writeProgress,
   type CircuitViewPreference,
-  type EcmoSimulationState,
   type GuidedControlId,
+  type GuidedLessonDefinition,
   type GuidedTarget,
   type GuidedWalkthroughStep,
   type ModuleSection,
-  type ProgressV2,
+  type ScenarioDefinition,
   type SupportMode,
 } from '../engine'
+import { useEcmoSessionCore, type EcmoSessionLoadReason } from '../session/useEcmoSessionCore'
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { formatChannelGroup } from './channelReadout'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
 import { EcmoLearnWorkspace } from './EcmoLearnWorkspace'
 import { FitWidthSurface } from './FitWidthSurface'
-import { resolveGuidedLesson } from './LearnLessonPlayer'
-import {
-  PracticeCasePlayer,
-  resolveScenarioDefinition,
-  type EcmoPracticeStage,
-} from './PracticeCasePlayer'
+import { PracticeCasePlayer, type EcmoPracticeStage } from './PracticeCasePlayer'
 import { CardiohelpModuleFrame } from './CardiohelpModuleFrame'
+import { useAlarmAudio } from './useAlarmAudio'
 import styles from './cardiohelp-ecmo.module.css'
-
-const MODULE_ID = 'cardiohelp-ecmo'
-const REQUIRED_SCENARIO_IDS_BY_MODE: Readonly<Record<SupportMode, readonly string[]>> = {
-  vv: orderedCaseScenarioIds('vv'),
-  va: orderedCaseScenarioIds('va'),
-}
-
-function hasModeMastery(progress: ProgressV2, supportMode: SupportMode): boolean {
-  return REQUIRED_SCENARIO_IDS_BY_MODE[supportMode].every(
-    (id) =>
-      progress.completedLabs.includes(id) &&
-      (progress.bestScores[id] ?? 0) >= 80 &&
-      progress.criticalErrorStatus[id] !== true,
-  )
-}
-
-function parseTrack(value: string | null): SupportMode | null {
-  return value === 'vv' || value === 'va' ? value : null
-}
 
 interface CardiohelpWorkbenchProps {
   section: ModuleSection
   locale?: string
 }
 
+/**
+ * The activity surface for Learn drills, Practice cases and the Challenge capstones.
+ *
+ * Everything about the simulation session — reducer, progress, hydration, clock, analytics,
+ * loaders — lives in `useEcmoSessionCore`. What stays here is view state: which panel is guided,
+ * which control is spotlighted, which stage or step is active, and whether help is open. The
+ * session tells this component when a scenario has been loaded so those can be reset.
+ */
 export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbenchProps) {
   const router = useRouter()
-  const [state, dispatch] = useReducer(ecmoSimulationReducer, undefined, () =>
-    createInitialSimulationState(),
-  )
-  const [progress, setProgress] = useState<ProgressV2>(createDefaultProgress)
-  const [learnScenarioId, setLearnScenarioId] = useState(() => orderedLessonScenarioIds('vv')[0])
-  const [assessTrack, setAssessTrack] = useState<SupportMode>('vv')
   const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>(
     section === 'learn' ? 'circuit' : null,
   )
@@ -113,55 +59,64 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     readonly view: CircuitViewPreference
     readonly stepId: string
   } | null>(null)
-  const [activeLearnStep, setActiveLearnStep] = useState<GuidedWalkthroughStep>(
-    () => resolveGuidedLesson(orderedLessonScenarioIds('vv')[0]).steps[0],
-  )
+  const [activeLearnStep, setActiveLearnStep] = useState<GuidedWalkthroughStep | null>(null)
   const [activePracticeStage, setActivePracticeStage] = useState<EcmoPracticeStage>('brief')
   const [phaseRequest, setPhaseRequest] = useState<{
     readonly stage: EcmoPracticeStage
     readonly requestId: number
   } | null>(null)
-  const [semanticPhase, setSemanticPhase] = useState<CriticalCareActivityPhase>('recognize')
   const [helpVisible, setHelpVisible] = useState(false)
-  const [hydrated, setHydrated] = useState(false)
-  const lastAudibleAlarmId = useRef<string | null>(null)
-  const recordedHintEvents = useRef({ activityId: '', ids: new Set<string>() })
-  const recordedSafetyEvents = useRef({ activityId: '', ids: new Set<string>() })
 
-  const scenario = useMemo(
-    () => resolveScenarioDefinition(state.scenario.scenarioId),
-    [state.scenario.scenarioId],
+  const onLearnLessonLoaded = useCallback(
+    (lesson: GuidedLessonDefinition, reason: EcmoSessionLoadReason) => {
+      setHelpVisible(false)
+      setGuidedTarget(lesson.steps[0]?.target ?? (reason === 'hydrate' ? 'circuit' : 'console'))
+      setGuidedControlId(null)
+      if (lesson.steps[0]) setActiveLearnStep(lesson.steps[0])
+    },
+    [],
   )
-  const learnLesson = useMemo(() => resolveGuidedLesson(learnScenarioId), [learnScenarioId])
-  const outcome = useMemo(() => selectScenarioOutcome(state), [state])
-  const latestPracticeHint = useMemo(
-    () =>
-      [...(scenario.hints ?? [])]
-        .reverse()
-        .find((hint) => state.scenario.usedHintIds.includes(hint.id)),
-    [scenario.hints, state.scenario.usedHintIds],
-  )
-  const supportMode: SupportMode = section === 'assess' ? assessTrack : state.supportMode
+  const onPracticeCaseLoaded = useCallback((definition: ScenarioDefinition) => {
+    setHelpVisible(false)
+    setGuidedControlId(null)
+    setActivePracticeStage(definition.clinicalCase ? 'brief' : 'plan')
+  }, [])
+
+  const core = useEcmoSessionCore({ section, onLearnLessonLoaded, onPracticeCaseLoaded })
+  const {
+    state,
+    dispatch,
+    scenario,
+    outcome,
+    supportMode,
+    activityMode,
+    hydrated,
+    progress,
+    learnLesson,
+    loadLearnScenario,
+    loadPracticeScenario,
+    selectTrack,
+    completeLearnLesson,
+    revealDebrief,
+    saveAndExit,
+    resetActivity,
+    semanticPhase,
+    setSemanticPhase,
+    lifecycleAnalytics,
+    lifecycleActivityId,
+    catalogActivity,
+  } = core
+
+  useAlarmAudio(state)
+
+  const currentLearnStep = activeLearnStep ?? learnLesson.steps[0]
+  const latestPracticeHint = [...(scenario.hints ?? [])]
+    .reverse()
+    .find((hint) => state.scenario.usedHintIds.includes(hint.id))
   const activeGuidedTarget =
     section === 'learn' ? guidedTarget : (latestPracticeHint?.target ?? null)
   const activeGuidedControlId =
     section === 'learn' ? guidedControlId : (latestPracticeHint?.controlId ?? null)
-  const activityMode =
-    section === 'learn'
-      ? ('guided' as const)
-      : section === 'assess' || state.simulationMode === 'challenge'
-        ? ('challenge' as const)
-        : ('practice' as const)
-  const lifecycleActivityId =
-    section === 'learn' ? `ecmo:learn:${learnLesson.scenarioId}` : `ecmo:${section}:${scenario.id}`
-  const lifecycleAnalytics = useCriticalCareActivityAnalytics({
-    moduleId: 'cardiohelp-ecmo',
-    activityId: lifecycleActivityId,
-    mode: activityMode,
-    phase: semanticPhase,
-    enabled: hydrated,
-  })
-  const catalogActivity = criticalCareActivityById.get(lifecycleActivityId)
 
   const handleGuidedTargetChange = useCallback((target: GuidedTarget | null) => {
     setGuidedTarget(target)
@@ -182,419 +137,8 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     setActivePracticeStage(stage)
   }, [])
 
-  const syncUrl = useCallback((query: Record<string, string>) => {
-    if (typeof window === 'undefined') return
-    const url = new URL(window.location.href)
-    url.search = new URLSearchParams(query).toString()
-    window.history.replaceState(null, '', url)
-  }, [])
-
-  const persistProgress = useCallback((update: (current: ProgressV2) => ProgressV2) => {
-    setProgress((current) => {
-      const next = update(current)
-      writeProgress(next)
-      return next
-    })
-  }, [])
-
-  const loadLearnScenario = useCallback(
-    (scenarioId: string) => {
-      const lesson = cardiohelpLearnLessonByScenarioId.get(scenarioId)
-      if (!lesson) return
-      setLearnScenarioId(lesson.scenarioId)
-      setHelpVisible(false)
-      setGuidedTarget(lesson.steps[0]?.target ?? 'console')
-      setGuidedControlId(null)
-      if (lesson.steps[0]) setActiveLearnStep(lesson.steps[0])
-      dispatch({ type: 'LOAD_SCENARIO', scenarioId: lesson.scenarioId, mode: 'guided' })
-      persistProgress((current) =>
-        setLastVisited(setLastLessonForMode(current, lesson.supportMode, lesson.scenarioId), {
-          section: 'learn',
-          scenarioId: lesson.scenarioId,
-          supportMode: lesson.supportMode,
-        }),
-      )
-      syncUrl({ lesson: lesson.scenarioId, track: lesson.supportMode })
-      recordSiteModuleEvent({
-        eventType: 'module_interaction',
-        moduleId: MODULE_ID,
-        section: 'learn',
-        eventPayload: {
-          interaction: 'guided_lesson_loaded',
-          scenarioId: lesson.scenarioId,
-          supportMode: lesson.supportMode,
-          experience: 'learn',
-        },
-      })
-    },
-    [persistProgress, syncUrl],
-  )
-
-  const attemptInProgress =
-    state.scenario.prediction.committed && state.scenario.phase !== 'complete'
-
-  const currentSimulationMode = state.simulationMode
-  const loadPracticeScenario = useCallback(
-    (scenarioId: string, mode?: EcmoSimulationState['simulationMode']) => {
-      const resolvedMode = mode ?? currentSimulationMode
-      if (
-        section !== 'learn' &&
-        attemptInProgress &&
-        !window.confirm('This will discard your current case attempt. Start over?')
-      ) {
-        return
-      }
-      const definition = resolveScenarioDefinition(scenarioId)
-      setHelpVisible(false)
-      setGuidedControlId(null)
-      setActivePracticeStage(definition.clinicalCase ? 'brief' : 'plan')
-      dispatch({ type: 'LOAD_SCENARIO', scenarioId: definition.id, mode: resolvedMode })
-      const isCapstone = section === 'assess'
-      persistProgress((current) => {
-        const withStation = setLastStation(current, definition.stationId)
-        const withCase = isCapstone
-          ? withStation
-          : setLastCaseForMode(withStation, definition.supportMode, definition.id)
-        return setLastVisited(withCase, {
-          section: isCapstone ? 'assess' : 'practice',
-          scenarioId: definition.id,
-          supportMode: definition.supportMode,
-        })
-      })
-      if (isCapstone) {
-        syncUrl({ track: definition.supportMode })
-      } else {
-        syncUrl({ case: definition.id, track: definition.supportMode })
-      }
-      recordSiteModuleEvent({
-        eventType: 'module_interaction',
-        moduleId: MODULE_ID,
-        section: definition.stationId,
-        eventPayload: {
-          interaction: 'practice_scenario_loaded',
-          scenarioId: definition.id,
-          supportMode: definition.supportMode,
-          experience: 'practice',
-          simulationMode: resolvedMode,
-        },
-      })
-    },
-    [attemptInProgress, currentSimulationMode, persistProgress, section, syncUrl],
-  )
-
-  const completeLearnLesson = useCallback(
-    (scenarioId: string) => {
-      const lessonSupportMode = resolveScenarioDefinition(scenarioId).supportMode
-      const wasUnlocked = isTrackCapstoneUnlocked(progress, lessonSupportMode)
-      const nowUnlocked = isTrackCapstoneUnlocked(
-        recordLearnLessonCompleted(progress, scenarioId),
-        lessonSupportMode,
-      )
-      persistProgress((current) => recordLearnLessonCompleted(current, scenarioId))
-      if (!wasUnlocked && nowUnlocked) {
-        recordSiteModuleEvent({
-          eventType: 'section_completed',
-          moduleId: MODULE_ID,
-          section: `${lessonSupportMode}:capstone-unlocked`,
-          eventPayload: {
-            completionId: `cardiohelp-ecmo-${lessonSupportMode}-capstone-unlocked-v1`,
-            supportMode: lessonSupportMode,
-            experience: 'learn',
-          },
-        })
-      }
-      recordSiteModuleEvent({
-        eventType: 'module_interaction',
-        moduleId: MODULE_ID,
-        section: 'learn',
-        eventPayload: {
-          interaction: 'guided_walkthrough_completed',
-          scenarioId,
-          supportMode: lessonSupportMode,
-          experience: 'learn',
-        },
-      })
-      lifecycleAnalytics.recordGoalMet()
-      lifecycleAnalytics.recordActivityCompleted()
-    },
-    [lifecycleAnalytics, persistProgress, progress],
-  )
-
-  const selectTrack = useCallback(
-    (nextMode: SupportMode) => {
-      if (nextMode === supportMode) return
-      if (section === 'learn') {
-        const validLessons = orderedLessonScenarioIds(nextMode)
-        const stored = progress.lastLessonScenarioIdByMode[nextMode]
-        loadLearnScenario(stored && validLessons.includes(stored) ? stored : validLessons[0])
-      } else if (section === 'practice') {
-        const validCases = orderedCaseScenarioIds(nextMode)
-        const stored = progress.lastCaseScenarioIdByMode[nextMode]
-        loadPracticeScenario(
-          stored && validCases.includes(stored) ? stored : validCases[0],
-          'guided',
-        )
-      } else {
-        setAssessTrack(nextMode)
-        loadPracticeScenario(capstoneScenarioIdForMode(nextMode), 'challenge')
-      }
-      recordSiteModuleEvent({
-        eventType: 'module_interaction',
-        moduleId: MODULE_ID,
-        section: `${nextMode}:${section}`,
-        eventPayload: {
-          interaction: 'support_mode_selected',
-          supportMode: nextMode,
-          experience: section,
-        },
-      })
-    },
-    [loadLearnScenario, loadPracticeScenario, progress, section, supportMode, syncUrl],
-  )
-
-  useEffect(() => {
-    const stored = readProgress()
-    setProgress(stored)
-    const params = new URLSearchParams(window.location.search)
-    const trackParam = parseTrack(params.get('track'))
-
-    if (section === 'learn') {
-      const lessonParam = params.get('lesson')
-      const paramTrack =
-        trackParam ??
-        (lessonParam && orderedLessonScenarioIds('va').includes(lessonParam)
-          ? 'va'
-          : lessonParam && orderedLessonScenarioIds('vv').includes(lessonParam)
-            ? 'vv'
-            : null)
-      const track = paramTrack ?? stored.lastVisited?.supportMode ?? 'vv'
-      const validLessons = orderedLessonScenarioIds(track)
-      const storedLesson = stored.lastLessonScenarioIdByMode[track]
-      const initialLesson =
-        lessonParam && validLessons.includes(lessonParam)
-          ? lessonParam
-          : storedLesson && validLessons.includes(storedLesson)
-            ? storedLesson
-            : validLessons[0]
-      setLearnScenarioId(initialLesson)
-      const lesson = cardiohelpLearnLessonByScenarioId.get(initialLesson)
-      setGuidedTarget(lesson?.steps[0]?.target ?? 'circuit')
-      if (lesson?.steps[0]) setActiveLearnStep(lesson.steps[0])
-      dispatch({ type: 'LOAD_SCENARIO', scenarioId: initialLesson, mode: 'guided' })
-      syncUrl({ lesson: initialLesson, track })
-    } else if (section === 'practice') {
-      const caseParam = params.get('case')
-      const paramTrack =
-        trackParam ??
-        (caseParam && orderedCaseScenarioIds('va').includes(caseParam)
-          ? 'va'
-          : caseParam && orderedCaseScenarioIds('vv').includes(caseParam)
-            ? 'vv'
-            : null)
-      const track = paramTrack ?? stored.lastVisited?.supportMode ?? 'vv'
-      const validCases = orderedCaseScenarioIds(track)
-      const storedCase = stored.lastCaseScenarioIdByMode[track]
-      const initialCase =
-        caseParam && validCases.includes(caseParam)
-          ? caseParam
-          : storedCase && validCases.includes(storedCase)
-            ? storedCase
-            : validCases[0]
-      dispatch({ type: 'LOAD_SCENARIO', scenarioId: initialCase, mode: 'guided' })
-      setActivePracticeStage(resolveScenarioDefinition(initialCase).clinicalCase ? 'brief' : 'plan')
-      syncUrl({ case: initialCase, track })
-    } else {
-      const track = trackParam ?? stored.lastVisited?.supportMode ?? 'vv'
-      setAssessTrack(track)
-      dispatch({
-        type: 'LOAD_SCENARIO',
-        scenarioId: capstoneScenarioIdForMode(track),
-        mode: 'challenge',
-      })
-      setActivePracticeStage('plan')
-      syncUrl({ track })
-    }
-    setHydrated(true)
-    // The hydration pass intentionally runs once per section mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [section])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => dispatch({ type: 'TICK' }), 1000)
-    return () => window.clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    if (!state.scenario.prediction.committed) return
-    lifecycleAnalytics.recordPredictionSubmitted()
-  }, [lifecycleAnalytics, state.scenario.prediction.committed])
-
-  useEffect(() => {
-    if (recordedHintEvents.current.activityId !== lifecycleActivityId) {
-      recordedHintEvents.current = { activityId: lifecycleActivityId, ids: new Set() }
-    }
-    for (const hintId of state.scenario.usedHintIds) {
-      if (recordedHintEvents.current.ids.has(hintId)) continue
-      recordedHintEvents.current.ids.add(hintId)
-      lifecycleAnalytics.recordHintUsed()
-    }
-  }, [lifecycleActivityId, lifecycleAnalytics, state.scenario.usedHintIds])
-
-  useEffect(() => {
-    if (recordedSafetyEvents.current.activityId !== lifecycleActivityId) {
-      recordedSafetyEvents.current = { activityId: lifecycleActivityId, ids: new Set() }
-    }
-    for (const error of state.scenario.criticalErrors) {
-      if (recordedSafetyEvents.current.ids.has(error)) continue
-      recordedSafetyEvents.current.ids.add(error)
-      lifecycleAnalytics.recordSafetyEvent()
-    }
-  }, [lifecycleActivityId, lifecycleAnalytics, state.scenario.criticalErrors])
-
-  useEffect(() => {
-    const alarm =
-      state.alarms.find((candidate) => candidate.acknowledgedAt === undefined) ?? state.alarms[0]
-    const acknowledgedPauseActive =
-      alarm?.acknowledgedAt !== undefined &&
-      (state.device.alarmPausedUntil ?? 0) > state.simulationTime
-    if (acknowledgedPauseActive) {
-      lastAudibleAlarmId.current = null
-      return
-    }
-    if (!state.device.alarmAudioEnabled || !alarm || alarm.id === lastAudibleAlarmId.current) {
-      return
-    }
-    lastAudibleAlarmId.current = alarm.id
-    try {
-      const AudioContextClass = window.AudioContext
-      const context = new AudioContextClass()
-      const oscillator = context.createOscillator()
-      const gain = context.createGain()
-      oscillator.frequency.value =
-        alarm.priority === 'high' ? 880 : alarm.priority === 'medium' ? 660 : 520
-      gain.gain.setValueAtTime(0.0001, context.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.16)
-      oscillator.connect(gain)
-      gain.connect(context.destination)
-      oscillator.start()
-      oscillator.stop(context.currentTime + 0.18)
-      oscillator.addEventListener('ended', () => void context.close(), { once: true })
-    } catch {
-      // Audio is optional; visual and text alarm communication remains complete.
-    }
-  }, [
-    state.alarms,
-    state.device.alarmAudioEnabled,
-    state.device.alarmPausedUntil,
-    state.simulationTime,
-  ])
-
-  function revealDebrief() {
-    if (section === 'learn' || state.scenario.phase === 'complete') return
-    lifecycleAnalytics.recordDebriefViewed()
-    if (outcome.mastery) lifecycleAnalytics.recordGoalMet()
-    lifecycleAnalytics.recordActivityCompleted(outcome.mastery)
-    dispatch({ type: 'REVEAL_DEBRIEF' })
-    setProgress((current) => {
-      const withResult = recordScenarioResult(current, {
-        scenarioId: scenario.id,
-        score: outcome.score,
-        criticalError: outcome.criticalErrors.length > 0,
-        completed: true,
-      })
-      // The stored mastery boolean retains its original VV meaning; VA mastery is derived by ID.
-      const next = withMastery(withResult, REQUIRED_SCENARIO_IDS_BY_MODE.vv)
-      writeProgress(next)
-      const modeScenarios = REQUIRED_SCENARIO_IDS_BY_MODE[scenario.supportMode]
-      const modeCompletedCount = modeScenarios.filter((id) =>
-        next.completedLabs.includes(id),
-      ).length
-      const modePercentComplete = Math.round((modeCompletedCount / modeScenarios.length) * 100)
-      const modeWasMastered = hasModeMastery(current, scenario.supportMode)
-      const modeIsMastered = hasModeMastery(next, scenario.supportMode)
-      const moduleWasMastered = hasModeMastery(current, 'vv') && hasModeMastery(current, 'va')
-      const moduleIsMastered = hasModeMastery(next, 'vv') && hasModeMastery(next, 'va')
-      const aggregateCompletedCount = clinicalPracticeScenarios.filter((item) =>
-        next.completedLabs.includes(item.id),
-      ).length
-      const rawAggregatePercent = Math.round(
-        (aggregateCompletedCount / clinicalPracticeScenarios.length) * 100,
-      )
-      const aggregatePercentComplete = moduleIsMastered ? 100 : Math.min(rawAggregatePercent, 99)
-
-      recordSiteModuleEvent({
-        eventType: 'quiz_submitted',
-        moduleId: MODULE_ID,
-        section: `${scenario.supportMode}:${scenario.stationId}`,
-        percentComplete: aggregatePercentComplete,
-        eventPayload: {
-          scenarioId: scenario.id,
-          supportMode: scenario.supportMode,
-          experience: 'practice',
-          score: outcome.score,
-          criticalErrorCount: outcome.criticalErrors.length,
-          roundMastery: outcome.mastery,
-          modeMastery: modeIsMastered,
-          modePercentComplete,
-          aggregatePercentComplete,
-        },
-      })
-
-      const stationScenarioIds = clinicalPracticeScenarios
-        .filter(
-          (item) =>
-            item.stationId === scenario.stationId && item.supportMode === scenario.supportMode,
-        )
-        .map((item) => item.id)
-      const stationWasComplete = stationScenarioIds.every((id) =>
-        current.completedLabs.includes(id),
-      )
-      const stationIsComplete = stationScenarioIds.every((id) => next.completedLabs.includes(id))
-      if (!stationWasComplete && stationIsComplete) {
-        recordSiteModuleEvent({
-          eventType: 'section_completed',
-          moduleId: MODULE_ID,
-          section: `${scenario.supportMode}:${scenario.stationId}`,
-          eventPayload: {
-            completionId: `${scenario.supportMode}-${scenario.stationId}-complete`,
-            supportMode: scenario.supportMode,
-            experience: 'practice',
-          },
-        })
-      }
-      if (!modeWasMastered && modeIsMastered) {
-        recordSiteModuleEvent({
-          eventType: 'section_completed',
-          moduleId: MODULE_ID,
-          section: `${scenario.supportMode}:mastery`,
-          eventPayload: {
-            completionId: `cardiohelp-ecmo-${scenario.supportMode}-mastery-v1`,
-            supportMode: scenario.supportMode,
-            experience: 'practice',
-            modePercentComplete: 100,
-          },
-        })
-      }
-      if (!moduleWasMastered && moduleIsMastered) {
-        recordSiteModuleEvent({
-          eventType: 'module_completed',
-          moduleId: MODULE_ID,
-          percentComplete: 100,
-          eventPayload: {
-            completionId: 'cardiohelp-ecmo-vv-va-mastery-v1',
-            supportMode: scenario.supportMode,
-            experience: 'practice',
-            masteredSupportModes: ['vv', 'va'],
-          },
-        })
-      }
-      return next
-    })
-  }
-
   const handleTrackKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    const nextMode =
+    const nextMode: SupportMode | null =
       event.key === 'Home'
         ? 'vv'
         : event.key === 'End'
@@ -683,16 +227,16 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
       requiredAction: 'Review the safety events, causal debrief, and recommended next case.',
     }
   })()
-  const currentObjective = section === 'learn' ? activeLearnStep.title : practiceTask.objective
+  const currentObjective = section === 'learn' ? currentLearnStep.title : practiceTask.objective
   const currentTargets =
-    section === 'learn' ? [activeLearnStep.actionLabel] : [practiceTask.requiredAction]
+    section === 'learn' ? [currentLearnStep.actionLabel] : [practiceTask.requiredAction]
   const currentRequiredAction =
-    section === 'learn' ? activeLearnStep.instruction : practiceTask.requiredAction
+    section === 'learn' ? currentLearnStep.instruction : practiceTask.requiredAction
   const currentHint =
     activityMode === 'challenge'
       ? undefined
       : section === 'learn'
-        ? activeLearnStep.rationale
+        ? currentLearnStep.rationale
         : (latestPracticeHint?.text ?? scenario.hints?.[0]?.text)
   const visibleEvidenceIds = scenario.evidenceIds
   const evidenceEntries = cardiohelpEvidence
@@ -706,16 +250,6 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
   const progressLabel = `${supportMode.toUpperCase()} ${
     section === 'assess' ? 'challenge' : section
   } · personal history stays local`
-
-  function saveAndExit() {
-    writeProgress(progress)
-    router.push(cardiohelpEcmoNavBase)
-  }
-
-  function resetActivity() {
-    if (section === 'learn') loadLearnScenario(learnLesson.scenarioId)
-    else loadPracticeScenario(scenario.id, state.simulationMode)
-  }
 
   function focusRestoredActivity() {
     document.getElementById('ecmo-activity-viewport')?.focus({ preventScroll: true })
