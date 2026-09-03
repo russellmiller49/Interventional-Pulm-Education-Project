@@ -667,6 +667,8 @@ export interface EvidenceReference {
   citation: string
   pages?: string
   url?: string
+  /** Digital Object Identifier without a resolver prefix. Preferred over `url` for the open link. */
+  doi?: string
   supports: readonly string[]
   limitations: string
 }

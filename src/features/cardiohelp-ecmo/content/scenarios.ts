@@ -199,7 +199,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       safetyNotes: ['Reject a failed self-test and follow local replacement/escalation policy.'],
     },
-    evidenceIds: ['ifu-console-workflow', 'ifu-us-2025-scope', 'ecmo-book-ch9'],
+    evidenceIds: [
+      'ifu-console-workflow',
+      'ifu-us-2025-scope',
+      'ecmo-book-ch9',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'preload-drainage-collapse',
@@ -504,7 +509,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
       ],
     },
-    evidenceIds: ['ifu-console-workflow', 'ifu-anomaly-boundary', 'elso-circuit-2022'],
+    evidenceIds: [
+      'ifu-console-workflow',
+      'ifu-anomaly-boundary',
+      'elso-circuit-2022',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'transport-power-loss',
@@ -539,7 +549,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'This screen exercise teaches recognition and readiness, not hands-on emergency-drive competency.',
       ],
     },
-    evidenceIds: ['ifu-console-workflow', 'ecmo-book-ch9', 'elso-circuit-2022'],
+    evidenceIds: [
+      'ifu-console-workflow',
+      'ecmo-book-ch9',
+      'elso-circuit-2022',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'vv-off-sweep-capstone',
@@ -932,7 +947,13 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Ongoing VA blood flow does not prove that the arterial return blood is adequately oxygenated.',
       ],
     },
-    evidenceIds: ['ecmo-book-ch9', 'ecmo-book-ch18', 'elso-circuit-2022', 'elso-adult-va-2021'],
+    evidenceIds: [
+      'ecmo-book-ch9',
+      'ecmo-book-ch18',
+      'elso-circuit-2022',
+      'elso-adult-va-2021',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'va-arterial-bubble-stop',
@@ -980,6 +1001,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       'ifu-anomaly-boundary',
       'elso-circuit-2022',
       'elso-adult-va-2021',
+      'bounded-educational-model',
     ],
   }),
   scenario({
@@ -1021,6 +1043,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       'ecmo-book-ch9',
       'elso-circuit-2022',
       'elso-adult-va-2021',
+      'bounded-educational-model',
     ],
   }),
   scenario({

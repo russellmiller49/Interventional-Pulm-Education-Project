@@ -18,6 +18,7 @@ import {
   type EcmoWalkComparisonBeat,
 } from '../../content/circuitWalk'
 import type { EcmoSimulationState } from '../../engine/types'
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
 import { ChannelValue, ModelBoundary, TextEquivalent, styles } from './shared'
 
@@ -286,9 +287,9 @@ export function EcmoCircuitWalk({
 
       <ModelBoundary>{resolveEcmoModeText(stop.modelBoundary, supportMode)}</ModelBoundary>
 
-      <p className="mt-3 text-xs leading-5 text-muted-foreground" data-walk-sources>
-        Sources: {stop.sourceIds.join(', ')}
-      </p>
+      <div className="mt-3" data-walk-sources>
+        <EcmoSourceList compact evidenceIds={stop.sourceIds} />
+      </div>
 
       <nav className="mt-4 flex flex-wrap items-center gap-2" aria-label="Circuit walk">
         <button

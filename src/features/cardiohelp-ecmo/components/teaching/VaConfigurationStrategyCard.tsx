@@ -1,3 +1,4 @@
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { ModelBoundary, styles, VA_MODELED_CONFIGURATION } from './shared'
 
 /**
@@ -290,9 +291,9 @@ export function VaConfigurationStrategyCard({
           parallel-physiology section of this track.
         </ModelBoundary>
 
-        <p className="mt-2 text-xs leading-5 text-muted-foreground" data-configuration-card-sources>
-          Sources: {CARD_SOURCES.join(', ')}
-        </p>
+        <div className="mt-3" data-configuration-card-sources>
+          <EcmoSourceList compact evidenceIds={CARD_SOURCES} />
+        </div>
       </section>
     )
   }
@@ -374,9 +375,9 @@ export function VaConfigurationStrategyCard({
         you can load and check.
       </ModelBoundary>
 
-      <p className="mt-2 text-xs leading-5 text-muted-foreground" data-configuration-card-sources>
-        Sources: {CARD_SOURCES.join(', ')}
-      </p>
+      <div className="mt-3" data-configuration-card-sources>
+        <EcmoSourceList compact evidenceIds={CARD_SOURCES} />
+      </div>
     </section>
   )
 }

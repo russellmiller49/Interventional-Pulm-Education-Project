@@ -106,6 +106,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation:
       'Tonna JE, et al. Management of Adult Patients Supported with Venovenous Extracorporeal Membrane Oxygenation. ASAIO J. 2021.',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8315725/',
+    doi: '10.1097/MAT.0000000000001432',
     supports: [
       'Adult VV ECMO monitoring and multidisciplinary management context',
       'Use of independent patient assessment alongside circuit data',
@@ -120,6 +121,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation:
       'Lorusso R, et al. ELSO Interim Guidelines for Venoarterial Extracorporeal Membrane Oxygenation in Adult Cardiac Patients. ASAIO J. 2021;67:827-844.',
     url: 'https://pubmed.ncbi.nlm.nih.gov/34339398/',
+    doi: '10.1097/MAT.0000000000001510',
     supports: [
       'Adult peripheral VA monitoring and multidisciplinary management context',
       'Recognition of LV loading, native ejection, differential oxygenation, and the need for independent patient assessment',
@@ -142,6 +144,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation:
       'Badulak J, Abrams D, Luks AM, et al. Position paper on the physiology and nomenclature of dual circulation during venoarterial extracorporeal membrane oxygenation in adults. Intensive Care Med. 2024. DOI: 10.1007/s00134-024-07645-8. Published correction DOI: 10.1007/s00134-025-07809-0.',
     url: 'https://doi.org/10.1007/s00134-024-07645-8',
+    doi: '10.1007/s00134-024-07645-8',
     supports: [
       'Dual circulation as the physiology of venoarterial support, with a mixing zone whose position depends on native ejection relative to circuit flow',
       'Configuration changes the topology of support rather than only its amount: V-AV, upper-body arterial return, and central arterial return each move blood along a different path',
@@ -157,6 +160,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation:
       'Broman LM, Taccone FS, Lorusso R, et al. The ELSO Maastricht Treaty for ECLS Nomenclature. Crit Care. 2019. DOI: 10.1186/s13054-019-2334-8.',
     url: 'https://doi.org/10.1186/s13054-019-2334-8',
+    doi: '10.1186/s13054-019-2334-8',
     supports: [
       'Hyphenated configuration abbreviations naming drainage and return, so V-A, V-AV, and V-V read as flow topologies rather than as labels',
       'A configuration name states where blood is drained from and where it is returned to, which is what fixes the flow path',
@@ -171,6 +175,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation:
       'Cho S-M, et al. Neurological Monitoring and Management for Adult Extracorporeal Membrane Oxygenation Patients: ELSO Consensus Guidelines. Crit Care. 2024.',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11380208/',
+    doi: '10.1186/s13054-024-05082-z',
     supports: [
       'Right-radial arterial monitoring for cerebral and upper-body oxygenation during peripheral VA ECMO',
       'Recognition of differential oxygenation when cardiac recovery precedes lung recovery',
@@ -185,6 +190,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation:
       'Gajkowski EF, et al. ELSO Guidelines for Adult and Pediatric Extracorporeal Membrane Oxygenation Circuits. ASAIO J. 2022.',
     url: 'https://pubmed.ncbi.nlm.nih.gov/35089258/',
+    doi: '10.1097/MAT.0000000000001630',
     supports: ['Circuit components, monitoring, emergency planning, and safety context'],
     limitations:
       'Consult the current ELSO guideline library and local protocol for operational decisions.',

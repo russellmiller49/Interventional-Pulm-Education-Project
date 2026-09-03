@@ -51,6 +51,7 @@ import { persistFoundationSectionCompleted } from '../engine/progress'
 import type { SupportMode } from '../engine/types'
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { CircuitAndMonitors, type CircuitLocationDisclosure } from './CircuitAndMonitors'
+import { EcmoSourceList } from './evidence/EcmoSourceList'
 import { FitWidthSurface, type FitWidthMode } from './FitWidthSurface'
 import { EcmoFoundationTeachingPanel } from './teaching/EcmoFoundationTeachingPanel'
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
@@ -653,9 +654,9 @@ function EcmoFoundationLessonWorkspace({
           </ul>
         ) : null}
         <p className="mt-3 text-xs leading-5 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          Sources: {section.sourceIds.join(', ')}
-        </p>
+        <div className="mt-3" data-lesson-sources>
+          <EcmoSourceList compact evidenceIds={section.sourceIds} />
+        </div>
       </section>
 
       {conflict ? <HeldDisagreement conflict={conflict} headingLevel={3} /> : null}

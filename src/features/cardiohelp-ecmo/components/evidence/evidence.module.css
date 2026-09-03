@@ -1,0 +1,231 @@
+/*
+ * One citation surface, styled once.
+ *
+ * Two kinds of host. The module shell paints the hub in the dark device palette that
+ * `cardiohelp-ecmo.module.css` declares as literal colours (`--ink`, `--muted`, `--line`). The Learn
+ * workspaces re-declare the Tailwind/shadcn tokens for their own surfaces — light for the foundation
+ * workspace, dark for the drill workspace — and there `--muted` is an HSL triple, not a colour. So
+ * this file reads neither host's tokens directly: each host is mapped once onto the four
+ * `--evidence-*` tokens below and every rule reads those. Fallbacks are the light root values, so
+ * the list stays readable anywhere neither host is present.
+ *
+ * Type floor: 0.875rem for anything a learner reads; 0.75rem only for the class badge.
+ */
+
+.list {
+  --evidence-muted: hsl(var(--muted-foreground, 215 16% 47%));
+  --evidence-line: hsl(var(--border, 214 32% 91%));
+  --evidence-accent: hsl(var(--primary, 187 72% 24%));
+  --evidence-surface: transparent;
+
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.shell {
+  --evidence-muted: var(--muted, #9fb4b7);
+  --evidence-line: var(--line, rgba(163, 206, 209, 0.22));
+  --evidence-accent: var(--cyan-bright, #71e1e5);
+  --evidence-surface: rgba(4, 24, 28, 0.58);
+}
+
+.listLabel {
+  color: var(--evidence-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.listTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.items {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shell .items {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 0.75rem;
+}
+
+.item {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--evidence-line);
+  border-radius: 0.875rem;
+  background: var(--evidence-surface);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.compactItem {
+  gap: 0.25rem;
+  padding: 0.55rem 0.75rem;
+}
+
+/* The class is carried by the label; the hue is decoration that repeats the hub's card accents. */
+.badge {
+  --evidence-hue: var(--evidence-line);
+
+  justify-self: start;
+  padding: 0.1rem 0.55rem 0.1rem 0.45rem;
+  border: 1px solid var(--evidence-line);
+  border-left: 0.25rem solid var(--evidence-hue);
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.badge[data-source-class='manufacturer'] {
+  --evidence-hue: #7dd8dd;
+}
+
+.badge[data-source-class='clinical-guidance'] {
+  --evidence-hue: #8dde9e;
+}
+
+.badge[data-source-class='textbook'] {
+  --evidence-hue: #ffbd63;
+}
+
+.badge[data-source-class='educational-model'] {
+  --evidence-hue: #ca9dff;
+}
+
+.badge[data-source-class='unregistered'] {
+  --evidence-hue: #ff6b73;
+}
+
+.title {
+  display: block;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.compactItem .title {
+  font-size: 0.9375rem;
+}
+
+.citation,
+.supports,
+.limit {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.citation {
+  color: var(--evidence-muted);
+}
+
+.key {
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  align-items: center;
+  margin-top: 0.15rem;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  color: var(--evidence-accent);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.link::after {
+  content: ' ↗';
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--evidence-line);
+  border-radius: 0.625rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.copy:hover {
+  border-color: var(--evidence-accent);
+}
+
+.link:focus-visible,
+.copy:focus-visible,
+.fallback:focus-visible {
+  outline: 2px solid var(--evidence-accent);
+  outline-offset: 2px;
+}
+
+/* Present while empty, so its first message is announced rather than arriving with the region. */
+.status {
+  color: var(--evidence-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.fallback {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--evidence-line);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+/* Grouped rendering on the hub's sources panel: one section per source class. */
+.group {
+  min-width: 0;
+  margin-top: 1rem;
+}
+
+.groupHeading {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.groupHeading svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--evidence-accent);
+}
+
+.checklistSummary {
+  cursor: pointer;
+}

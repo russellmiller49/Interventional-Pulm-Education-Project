@@ -1,5 +1,6 @@
 import { cardiohelpEvidence, validateEvidenceIds } from '../content/evidence'
 import { cardiohelpLearnLessons, validateGuidedLessonRegistry } from '../content/learnLessons'
+import { ecmoLearnPredictionFor } from '../content/learnPredictionItems'
 import {
   cardiohelpCapstonePrerequisiteIds,
   cardiohelpCapstonePrerequisiteIdsBySupportMode,
@@ -82,6 +83,23 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     expect(new Set(cardiohelpEvidence.map((item) => item.sourceClass))).toEqual(
       new Set(['manufacturer', 'clinical-guidance', 'textbook', 'educational-model']),
     )
+  })
+
+  it('cites the bounded model on every scenario whose Learn prediction attributes behaviour to it', () => {
+    // The prediction item and the scenario are read side by side in one lesson, so a scenario's
+    // evidence must be a superset of what its item attributes to the simulated response. Scoped to
+    // the model record rather than to every id: the items also cite management sources that the
+    // scenario debriefs deliberately do not.
+    const model = 'bounded-educational-model'
+    let attributed = 0
+    for (const scenario of cardiohelpScenarios) {
+      const prediction = ecmoLearnPredictionFor(scenario.id)
+      if (!prediction) continue
+      const modelCitations = prediction.item.evidenceIds.filter((id) => id === model)
+      attributed += modelCitations.length
+      expect(scenario.evidenceIds).toEqual(expect.arrayContaining(modelCitations))
+    }
+    expect(attributed).toBeGreaterThan(0)
   })
 
   it('does not encode disputed bubble thresholds or delta-p alarm priority', () => {
