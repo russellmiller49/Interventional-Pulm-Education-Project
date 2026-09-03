@@ -69,6 +69,36 @@ describe('circuit minimap layout selection', () => {
     )
   })
 
+  it('keeps its own card standalone and sheds it when a host already provides one', () => {
+    /*
+     * The type floor is a width budget. R2's guarantee — compact type at or above 12px down to the
+     * 280px pane floor — was authored against the drawing getting the pane minus ONE card's chrome
+     * (34px). The walk then embedded this map inside its own bordered card, and the doubled chrome
+     * squeezed the drawing to 212px and the type to 11.4px, measured in the production browser at
+     * the floor. `flush` is how an embedding host hands the width back; standalone captions keep
+     * the card they always had.
+     */
+    const { container: standalone } = render(
+      <EcmoCircuitMinimap supportMode="vv" presentation={{ kind: 'neutral' }} />,
+    )
+    const card = standalone.querySelector('[data-circuit-minimap]')
+    expect(card?.getAttribute('data-map-frame')).toBe('card')
+    expect(card?.className).toContain('border')
+
+    const { container: embedded } = render(
+      <EcmoCircuitMinimap supportMode="vv" presentation={{ kind: 'neutral' }} frame="flush" />,
+    )
+    const flush = embedded.querySelector('[data-circuit-minimap]')
+    expect(flush?.getAttribute('data-map-frame')).toBe('flush')
+    expect(flush?.className).not.toContain('border')
+    expect(flush?.className).not.toContain('p-4')
+    // The drawing and its words are identical either way; only the box differs. React's useId
+    // values differ per mount, so they are normalised out before comparing.
+    const normalised = (element: Element | null | undefined) =>
+      element?.querySelector('svg')?.innerHTML.replace(/_r_[^_"]+_/g, '_id_')
+    expect(normalised(flush)).toBe(normalised(card))
+  })
+
   it.each(LAYOUTS)('renders %s when the layout is named', (layout) => {
     const { container } = render(
       <EcmoCircuitMinimap supportMode="vv" presentation={{ kind: 'neutral' }} layout={layout} />,

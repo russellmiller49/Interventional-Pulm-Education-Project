@@ -16,6 +16,12 @@ import {
   ecmoSensorSites,
   resolveEcmoModeText,
 } from '../content/circuitSegments'
+import {
+  ecmoCircuitWalkStop,
+  ecmoCircuitWalkStops,
+  ecmoWalkStopSegmentIds,
+  type EcmoCircuitWalkStop,
+} from '../content/circuitWalk'
 import { ecmoLocalizationRow, ecmoLocalizationRowIds } from '../content/localizationCards'
 import { requireEcmoLearnPrediction } from '../content/learnPredictionItems'
 import { ecmoSimulationReducer } from '../engine/reducer'
@@ -399,5 +405,117 @@ describe('ECMO circuit presentation, derived from the engine', () => {
         emphasis: 'path-order',
       }),
     ).toEqual({ kind: 'scaffold', emphasis: 'path-order' })
+  })
+})
+
+describe('the map shows where the walk is standing', () => {
+  const LAYOUTS = ['regular', 'compact'] as const
+
+  function walkPresentation(stop: EcmoCircuitWalkStop): EcmoCircuitPresentation {
+    return deriveEcmoCircuitPresentation(settled('preload-drainage-collapse'), {
+      kind: 'foundation-walk-stop',
+      stopId: stop.id,
+      segmentIds: ecmoWalkStopSegmentIds(stop),
+      sensorSiteIds: stop.sensorSiteIds,
+    })
+  }
+
+  it.each(LAYOUTS)('%s: marks exactly the segments the stop stands at', (layout) => {
+    for (const stop of ecmoCircuitWalkStops) {
+      const { container, unmount } = render(
+        <EcmoCircuitMinimap
+          supportMode="vv"
+          presentation={walkPresentation(stop)}
+          layout={layout}
+        />,
+      )
+      const marked = [...container.querySelectorAll('[data-walk-stop-segment="true"]')].map(
+        (node) => node.getAttribute('data-map-segment'),
+      )
+      expect(`${stop.id} ${layout}: ${marked.slice().sort().join()}`).toBe(
+        `${stop.id} ${layout}: ${ecmoWalkStopSegmentIds(stop).slice().sort().join()}`,
+      )
+      unmount()
+    }
+  })
+
+  /*
+   * The vocabularies stay disjoint.
+   *
+   * The drills' leak test asserts that no foundation map sets `data-circuit-implicated`. A walk
+   * stop marks segments too, so if it had reused that attribute the assertion would have started
+   * failing for a reason that has nothing to do with leaking an answer.
+   */
+  it('never sets the implicated attribute, and a drill map never sets the walk one', () => {
+    for (const stop of ecmoCircuitWalkStops) {
+      const { container, unmount } = render(
+        <EcmoCircuitMinimap supportMode="vv" presentation={walkPresentation(stop)} />,
+      )
+      expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
+      expect(container.querySelector('[data-implicated-marker]')).toBeNull()
+      unmount()
+    }
+
+    const revealed = deriveEcmoCircuitPresentation(
+      afterCommitment(settled('preload-drainage-collapse')),
+      { kind: 'drill-reveal', rowId: 'drainage-limitation' },
+    )
+    const { container } = render(<EcmoCircuitMinimap supportMode="vv" presentation={revealed} />)
+    expect(container.querySelector('[data-circuit-implicated]')).not.toBeNull()
+    expect(container.querySelector('[data-walk-stop-segment]')).toBeNull()
+    expect(container.querySelector('[data-walk-stop-marker]')).toBeNull()
+  })
+
+  it('names the stop it is drawing, and says where you are in words', () => {
+    const stop = ecmoCircuitWalkStop('walk-membrane')
+    const { container } = render(
+      <EcmoCircuitMinimap supportMode="vv" presentation={walkPresentation(stop)} />,
+    )
+    const map = container.querySelector('[data-circuit-minimap]')
+    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
+    expect(map?.getAttribute('data-walk-stop')).toBe('walk-membrane')
+
+    // Not colour, not weight: a sentence.
+    const caption = container.querySelector('[data-walk-stop-caption]')
+    expect(caption?.textContent).toMatch(/^You are here:/)
+    expect(caption?.textContent).toContain(
+      resolveEcmoModeText(ecmoCircuitSegment('membrane').label, 'vv'),
+    )
+  })
+
+  it.each(MODES)('%s: flags only the readings the stop is about', (mode) => {
+    for (const stop of ecmoCircuitWalkStops) {
+      const { container, unmount } = render(
+        <EcmoCircuitMinimap supportMode={mode} presentation={walkPresentation(stop)} />,
+      )
+      const flagged = [...container.querySelectorAll('[data-map-sensor-site]')].map((node) =>
+        node.getAttribute('data-map-sensor-site'),
+      )
+      expect(`${stop.id} ${mode}: ${flagged.slice().sort().join()}`).toBe(
+        `${stop.id} ${mode}: ${[...stop.sensorSiteIds].sort().join()}`,
+      )
+      unmount()
+    }
+  })
+
+  it('says plainly when a stop has no reading of its own', () => {
+    const pump = ecmoCircuitWalkStop('walk-pump')
+    const { container } = render(
+      <EcmoCircuitMinimap supportMode="vv" presentation={walkPresentation(pump)} />,
+    )
+    expect(container.querySelectorAll('[data-map-sensor-site]')).toHaveLength(0)
+    expect(container.textContent).toMatch(/Nothing on the map is flagged at this stop/i)
+  })
+
+  it('marks without colour: weight, a ring, and a caption', () => {
+    const stop = ecmoCircuitWalkStop('walk-drainage')
+    const { container } = render(
+      <EcmoCircuitMinimap supportMode="vv" presentation={walkPresentation(stop)} />,
+    )
+    const marked = container.querySelector('[data-walk-stop-segment="true"]')
+    expect(marked).not.toBeNull()
+    expect(marked?.querySelector('[data-walk-stop-marker]')).not.toBeNull()
+    // Every stroke in this drawing is currentColor; nothing may introduce a hue of its own.
+    expect(container.querySelector('svg')?.innerHTML).not.toMatch(/#[0-9a-f]{3,6}/i)
   })
 })

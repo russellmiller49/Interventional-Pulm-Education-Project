@@ -22,6 +22,13 @@ import {
   pathwaySectionIndex,
 } from '@/features/learning-module/curriculum/types'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
+
+import {
+  ecmoCircuitWalkStopsForSection,
+  ecmoWalkStopSceneLabelIds,
+  type EcmoCircuitWalkStop,
+  type EcmoWalkComparisonBeat,
+} from '../content/circuitWalk'
 import { Link } from '@/i18n/navigation'
 
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
@@ -43,7 +50,7 @@ import {
 import { persistFoundationSectionCompleted } from '../engine/progress'
 import type { SupportMode } from '../engine/types'
 import { CardiohelpConsole } from './CardiohelpConsole'
-import { CircuitAndMonitors } from './CircuitAndMonitors'
+import { CircuitAndMonitors, type CircuitLocationDisclosure } from './CircuitAndMonitors'
 import { FitWidthSurface, type FitWidthMode } from './FitWidthSurface'
 import { EcmoFoundationTeachingPanel } from './teaching/EcmoFoundationTeachingPanel'
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
@@ -78,6 +85,26 @@ const PHASES: readonly CriticalCareActivityPhase[] = [
 ]
 
 /**
+ * The phases a learner may not reach until this section's prediction has been committed.
+ *
+ * Everything after `predict`, because every one of them shows answer-bearing content: the walk names
+ * its readings and takeaways, the bounded actions load states, and the phase copy discusses what the
+ * committed learner is now allowed to read. The independent review reproduced the bypass this
+ * closes — clicking `act`, or arriving by `?phase=act`, used to unlock all of it with nothing
+ * committed.
+ */
+const COMMITMENT_GATED_PHASES: readonly CriticalCareActivityPhase[] = [
+  'act',
+  'observe',
+  'explain',
+  'transfer',
+]
+
+function isCommitmentGatedPhase(phase: CriticalCareActivityPhase): boolean {
+  return COMMITMENT_GATED_PHASES.includes(phase)
+}
+
+/**
  * What the fixed-pathway indicator says, per track.
  *
  * Both track-fixed groups exist for the same reason and neither may borrow the other's sentence: a
@@ -94,6 +121,27 @@ const DEVICE_BOUNDARY_SHORT =
 
 const DEVICE_BOUNDARY_FULL =
   'The simulated console follows the U.S. CARDIOHELP System Instructions for Use, Revision 2.3, January 2025. The VV and VA clinical teaching reflects contemporary ECMO practice and is not limited to the U.S. labeled indication or duration. This independent educational module does not replace current manufacturer instructions, local protocol, or supervised competency validation.'
+
+/**
+ * The one foundation section whose keyed prediction *is* the channel placements.
+ *
+ * `circuit-flow-path` asks "where in the blood path does the circuit report pInt?", so the
+ * diagnostic map beside that question must not answer it — see {@link CircuitLocationDisclosure}.
+ * No other section keys on a placement, and nine of them teach *from* the placements: the section
+ * named `pump-and-pressure-zones` cannot teach a pressure zone whose sensor is not drawn.
+ *
+ * Named here rather than written inline because the call site used to read
+ * `predictionCommitted ? 'full' : 'withheld'`, which is a true statement about the flow-path
+ * section applied to all ten. That withheld the sensor flags, the Δp bracket, the legend row and
+ * the channel-walking description from every foundation lesson in both tracks until the learner
+ * committed a prediction that, in nine of them, has nothing to do with where the sensors are.
+ */
+export function foundationCircuitLocationDisclosure(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  predictionCommitted: boolean,
+): CircuitLocationDisclosure {
+  return sectionId === 'circuit-flow-path' && !predictionCommitted ? 'withheld' : 'full'
+}
 
 /** The three panes of the shared workspace, as this activity refers to them. */
 type FoundationPane = 'primary' | 'secondary' | 'tertiary'
@@ -142,12 +190,24 @@ export function EcmoFoundationLessonActivity({
   // A VV-only section ignores the requested track outright: its teaching is series physiology, and
   // a VA reference circuit behind it would contradict the text beside it.
   const resolvedMode = runtime.supportMode ?? supportMode
+  /*
+   * A URL into a commitment-gated phase fails closed, at the mount boundary.
+   *
+   * The commitment lives in this component's state and nothing persists it — no storage key, DTO,
+   * or URL parameter — so a fresh mount cannot know whether a prediction was ever committed, and it
+   * must not reconstruct one from where the URL says the learner was. Opening at `predict` is the
+   * closed failure: the learner is put at the gate, and the phase they asked for unlocks the moment
+   * they commit. The clamp happens before the workspace key and before the initial state variant is
+   * resolved, so a clamped mount also opens on the state the predict phase is written against.
+   */
+  const mountPhase = isCommitmentGatedPhase(initialPhase) ? 'predict' : initialPhase
   return (
     <EcmoFoundationLessonWorkspace
-      key={`${sectionId}:${resolvedMode}:${initialPhase}`}
+      key={`${sectionId}:${resolvedMode}:${mountPhase}`}
       sectionId={sectionId}
       supportMode={resolvedMode}
-      initialPhase={initialPhase}
+      initialPhase={mountPhase}
+      requestedPhase={initialPhase}
     />
   )
 }
@@ -156,10 +216,13 @@ function EcmoFoundationLessonWorkspace({
   sectionId,
   supportMode,
   initialPhase,
+  requestedPhase,
 }: {
   readonly sectionId: EcmoInteractiveFoundationSectionId
   readonly supportMode: SupportMode
   readonly initialPhase: CriticalCareActivityPhase
+  /** The phase the URL asked for, which may be later than the one the mount was clamped to. */
+  readonly requestedPhase: CriticalCareActivityPhase
 }) {
   const section = ecmoFoundationSectionById.get(sectionId)
   const runtime = ecmoFoundationLessonRuntime(sectionId)
@@ -192,6 +255,22 @@ function EcmoFoundationLessonWorkspace({
   const [committedPredictionId, setCommittedPredictionId] = useState<string | null>(null)
   const [committedTransferId, setCommittedTransferId] = useState<string | null>(null)
 
+  /*
+   * The one commitment authority every answer-bearing surface reads.
+   *
+   * Derived from the actual prediction commitment and from nothing else — not from the phase, not
+   * from the route query, not from the active walk stop, and not from stored traversal progress.
+   * The previous predicate was `phase !== 'recognize' && phase !== 'predict'`, which treated
+   * *being in* a later phase as proof the prediction had been taken; the independent review walked
+   * straight through it by clicking `act`. The phase decides which task is on screen; whether the
+   * teaching may say the answer is decided only by this.
+   *
+   * Back-navigation deliberately preserves it: a learner who committed and returns to `recognize`
+   * or `predict` is re-reading, not un-committing, so the walk stays open behind them. A new mount
+   * (reload, deep link, section or track change) starts uncommitted, because nothing persists this.
+   */
+  const predictionCommitted = committedPredictionId !== null
+
   /**
    * Which pane, if any, currently has the whole workspace.
    *
@@ -202,6 +281,24 @@ function EcmoFoundationLessonWorkspace({
    */
   const [focusedPane, setFocusedPane] = useState<FoundationPane | null>(null)
   const [consoleFitMode, setConsoleFitMode] = useState<FitWidthMode>('fit')
+
+  /*
+   * Where the circuit walk is standing, for the two sections that carry one.
+   *
+   * Local, and deliberately not persisted: a stop is a place the learner is reading, not progress.
+   * Visiting one is not completion, credit, or mastery, and the only thing this activity ever writes
+   * is the section-traversal marker the transfer commitment already carries. It lives up here rather
+   * than in the panel because the bedside scene has to follow it, and the panel cannot reach the
+   * scene.
+   *
+   * Nothing resets it explicitly on a track change either — the workspace remounts on
+   * `sectionId:mode:phase`, so a new track arrives with a new component and the first stop.
+   */
+  const walkStops = ecmoCircuitWalkStopsForSection(sectionId)
+  const [activeWalkStop, setActiveWalkStop] = useState<EcmoCircuitWalkStop | null>(
+    walkStops[0] ?? null,
+  )
+  const [activeComparisonId, setActiveComparisonId] = useState<string | null>(null)
 
   const frameRef = useRef<HTMLDivElement>(null)
   const [workspaceOffset, setWorkspaceOffset] = useState<number | null>(null)
@@ -341,6 +438,9 @@ function EcmoFoundationLessonWorkspace({
    * lesson so that leaving it took six presses of the back button.
    */
   function goToPhase(next: CriticalCareActivityPhase) {
+    // The transition consults the commitment authority too, so a disabled button is not the only
+    // thing standing between an uncommitted learner and an answer-bearing phase.
+    if (!predictionCommitted && isCommitmentGatedPhase(next)) return
     setPhase(next)
     if (typeof window === 'undefined') return
     const url = new URL(window.location.href)
@@ -387,6 +487,31 @@ function EcmoFoundationLessonWorkspace({
         : { type: 'RECORD_INTERACTION', id: guided.id },
     )
   }
+
+  /**
+   * A comparison beat is a guided action the section already declares, run by name.
+   *
+   * The walk does not get its own way of loading a state: it points at what the lesson runtime
+   * already offers, so a beat cannot load something the runtime has not validated, and the atomic
+   * restore keeps a comparison from ever being the sum of two interventions.
+   */
+  function runComparisonBeat(beat: EcmoWalkComparisonBeat) {
+    const guided = runtime.guidedActions.find((action) => action.id === beat.guidedActionId)
+    if (!guided) return
+    setActiveComparisonId(beat.id)
+    runGuidedAction(guided)
+  }
+
+  /*
+   * What the bedside scene lights, as label ids and nothing else.
+   *
+   * Resolved through R2's string table, so this component hands the scene a list of names rather
+   * than anything that knows where those names are in space. Null outside the walk sections, which
+   * is what leaves every other lesson's scene exactly as it was.
+   */
+  const emphasisSceneLabelIds = activeWalkStop
+    ? ecmoWalkStopSceneLabelIds(activeWalkStop, supportMode)
+    : null
 
   const pathway = criticalCareLearningPathway('cardiohelp-ecmo', supportMode)
   const sectionIndex = pathwaySectionIndex(pathway, sectionId)
@@ -470,6 +595,12 @@ function EcmoFoundationLessonWorkspace({
           state={session.simulation}
           dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
           controlsEnabled={false}
+          emphasisSceneLabelIds={emphasisSceneLabelIds}
+          // The diagnostic map's channel placements are the flow-path section's keyed answer, and
+          // its SVG description used to walk them unconditionally — the re-review's remaining
+          // leak. Scoped to that one section, off the same single commitment authority every other
+          // answer-bearing surface reads; nothing phase-derived.
+          locationDisclosure={foundationCircuitLocationDisclosure(sectionId, predictionCommitted)}
         />
       </div>
       <p
@@ -491,6 +622,13 @@ function EcmoFoundationLessonWorkspace({
         sectionId={sectionId}
         state={session.simulation}
         snapshot={session.snapshot}
+        walk={{
+          activeStopId: activeWalkStop?.id,
+          onStopChange: setActiveWalkStop,
+          onRunComparison: runComparisonBeat,
+          activeComparisonId,
+          pastPrediction: predictionCommitted,
+        }}
       />
 
       <section className="rounded-2xl border p-4" aria-labelledby="lesson-narrative-heading">
@@ -579,8 +717,13 @@ function EcmoFoundationLessonWorkspace({
         Every phase after the commitment can load a state. Transfer needs it too: the VV capstone's
         transfer step is "load the re-drainage preview and read it", which cannot happen if the
         actions disappear when the transfer item appears.
+
+        `predictionCommitted` is read alongside the phase even though the gated phases are
+        unreachable without it: the phase says whether this task belongs on screen, and the
+        commitment says whether state-loading may be offered at all. If either gate is later
+        loosened, the other still holds.
       */}
-      {phase !== 'recognize' && phase !== 'predict' ? (
+      {predictionCommitted && phase !== 'recognize' && phase !== 'predict' ? (
         <section className="rounded-2xl border p-4" aria-labelledby="actions-heading">
           <h3 id="actions-heading" className="text-sm font-semibold">
             Bounded actions
@@ -668,18 +811,28 @@ function EcmoFoundationLessonWorkspace({
           </button>
         </div>
         <nav className="mt-3 flex flex-wrap gap-2" aria-label="Lesson phases">
-          {PHASES.map((candidate) => (
-            <button
-              key={candidate}
-              type="button"
-              className="rounded-lg border px-2 py-1 text-xs"
-              aria-current={candidate === phase ? 'step' : undefined}
-              onClick={() => goToPhase(candidate)}
-            >
-              {candidate}
-            </button>
-          ))}
+          {PHASES.map((candidate) => {
+            const locked = !predictionCommitted && isCommitmentGatedPhase(candidate)
+            return (
+              <button
+                key={candidate}
+                type="button"
+                className="rounded-lg border px-2 py-1 text-xs disabled:opacity-50"
+                aria-current={candidate === phase ? 'step' : undefined}
+                disabled={locked}
+                data-phase-locked={locked || undefined}
+                onClick={() => goToPhase(candidate)}
+              >
+                {candidate}
+              </button>
+            )
+          })}
         </nav>
+        {predictionCommitted ? null : (
+          <p className="mt-2 text-xs leading-5 text-muted-foreground" data-phase-lock-note>
+            The later phases unlock when you commit your prediction.
+          </p>
+        )}
       </section>
     </div>
   )
@@ -706,8 +859,22 @@ function EcmoFoundationLessonWorkspace({
         anything that implied one — "resumed", "your progress", "where you left off" — would be a
         claim about state this module deliberately never keeps. Shown only while the learner is still
         on the phase they arrived at, because once they move on it is describing a phase they left.
+
+        A URL into a commitment-gated phase was clamped to `predict` at the mount boundary, and the
+        note says so rather than pretending the URL was honoured: the phase the learner asked for is
+        named, together with what unlocks it. No earlier commitment is reconstructed from the URL.
       */}
-      {initialPhase !== 'recognize' && phase === initialPhase ? (
+      {requestedPhase !== initialPhase && phase === initialPhase ? (
+        <p
+          className="mt-2 max-w-3xl rounded-xl border border-dashed px-3 py-2 text-sm leading-6"
+          data-phase-restoration-note={requestedPhase}
+          data-phase-clamped={requestedPhase}
+        >
+          This lesson takes a prediction before its later phases, so it opened at the predict phase
+          with a clean teaching state. The {requestedPhase} phase unlocks when you commit. Earlier
+          choices, snapshots, and actions were not restored.
+        </p>
+      ) : initialPhase !== 'recognize' && phase === initialPhase ? (
         <p
           className="mt-2 max-w-3xl rounded-xl border border-dashed px-3 py-2 text-sm leading-6"
           data-phase-restoration-note={initialPhase}

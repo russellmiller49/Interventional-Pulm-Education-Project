@@ -36,6 +36,8 @@ interface EcmoCircuit3DProps {
   dispatch: (action: SimulationAction) => void
   controlsEnabled: boolean
   guidedControlId?: GuidedControlId | null
+  /** Scene label ids the current teaching step is standing at. Strings in, nothing else. */
+  emphasisSceneLabelIds?: readonly string[] | null
 }
 
 // three-stdlib ships RoomEnvironment untyped as a constructor in this version.
@@ -127,6 +129,7 @@ export function EcmoCircuit3D({
   dispatch,
   controlsEnabled,
   guidedControlId = null,
+  emphasisSceneLabelIds = null,
 }: EcmoCircuit3DProps) {
   const webglReady = useSyncExternalStore(subscribeNever, detectWebGL, () => false)
   const reduceMotion = useSyncExternalStore(
@@ -215,6 +218,7 @@ export function EcmoCircuit3D({
                   controlsEnabled={clampControlsEnabled}
                   reduceMotion={reduceMotion}
                   labelsVisible={!compactViewport && labelsOn}
+                  emphasisSceneLabelIds={emphasisSceneLabelIds}
                 />
               </Suspense>
             </Canvas>

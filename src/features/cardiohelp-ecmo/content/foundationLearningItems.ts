@@ -211,7 +211,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         phase: 'predict',
         itemType: 'response-prediction',
         contextRequirement: 'context-independent',
-        stem: 'From the stable reference circuit, the pump speed is about to be raised by 200 rpm. What should happen to circuit blood flow and to the drainage pressure?',
+        stem: 'From the stable reference circuit, the pump speed is about to be raised by 300 rpm. What should happen to circuit blood flow and to the drainage pressure?',
         choices: [
           {
             id: 'flow-up-drainage-more-negative',

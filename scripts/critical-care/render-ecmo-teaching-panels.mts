@@ -2,8 +2,11 @@
  * Offline visual harness for every ECMO teaching panel — the ten foundation panels and the six
  * live drill panels of the B4 pilot slice.
  *
- * Same reason as the mechanical-ventilation harness: the Learn workspace sits behind login and
- * behind a viewport gate, so the panels cannot be screenshotted in the running app. This renders
+ * Same reason as the mechanical-ventilation harness: this renders one panel at a time without
+ * booting the app, which is faster than driving a route and shows every state side by side. (The
+ * ECMO routes are public-unlisted rather than behind login, so the running application can also be
+ * driven directly — see `src/lib/site-auth/access.ts`. Use both: the page for breadth, the route
+ * for anything that depends on real layout or real interaction.) This renders
  * every panel against the states its own lesson can actually produce — the reference circuits, the
  * post-action states, and the engine-backed teaching previews — so clipping, missing units,
  * duplicated content, overflowing tables and unreadable text are all visible in one page.
@@ -35,6 +38,7 @@ import { EcmoFoundationTeachingPanel } from '../../src/features/cardiohelp-ecmo/
 import {
   ecmoFoundationLessonRuntime,
   ecmoFoundationVariant,
+  ecmoFoundationVariants,
   ecmoInteractiveFoundationSectionIds,
   ecmoSharedFoundationSectionIds,
   ecmoVaOnlyFoundationSectionIds,
@@ -46,6 +50,12 @@ import {
   type EcmoVaOnlyFoundationSectionId,
   type EcmoVvOnlyFoundationSectionId,
 } from '../../src/features/cardiohelp-ecmo/content/foundationLessonRuntime.ts'
+import {
+  ecmoCircuitWalkStop,
+  ecmoCircuitWalkStops,
+  ecmoCircuitWalkStopsForSection,
+  type EcmoCircuitWalkStopId,
+} from '../../src/features/cardiohelp-ecmo/content/circuitWalk.ts'
 import type { EcmoReferenceProfileId } from '../../src/features/cardiohelp-ecmo/content/referenceProfiles.ts'
 import {
   createEcmoFoundationSessionState,
@@ -96,6 +106,10 @@ interface Variant {
   readonly label: string
   readonly state: EcmoSimulationState
   readonly snapshot?: EcmoFoundationSnapshot | null
+  /** Which walk stop the panel opens at, for the two sections that carry a walk. */
+  readonly walkStopId?: EcmoCircuitWalkStopId
+  /** Whether the walk renders as if the section's prediction is committed. */
+  readonly walkCommitted?: boolean
 }
 
 function sharedVariants(profileId: EcmoReferenceProfileId): readonly Variant[] {
@@ -103,8 +117,12 @@ function sharedVariants(profileId: EcmoReferenceProfileId): readonly Variant[] {
   return [
     { label: `${profileId} · reference`, state: reference },
     {
-      label: `${profileId} · after +200 rpm`,
-      state: settled(profileId, { type: 'SET_RPM', rpm: reference.device.rpmSetpoint + 200 }),
+      // Matches the bounded action the pump lesson actually offers: ±300 is the smallest
+      // magnitude the console shows in both directions. At the two hundred this used to render,
+      // the drainage pressure was identical to the reference column and the page gave no sign
+      // that the comparison the lesson asks for was invisible on the console.
+      label: `${profileId} · after +300 rpm`,
+      state: settled(profileId, { type: 'SET_RPM', rpm: reference.device.rpmSetpoint + 300 }),
     },
     {
       label: `${profileId} · after +1 L/min sweep`,
@@ -261,8 +279,63 @@ const profiles: readonly EcmoReferenceProfileId[] = ['vv-reference', 'va-referen
  * three guards means an unclassified section is a loud failure naming itself rather than a puzzling
  * missing-variant error, and the compiler rejects a section that belongs to no scope.
  */
+/**
+ * Every stop of a walk, against every state the section is rendered on.
+ *
+ * The walk shows one place at a time, so a page that rendered only the stop it happens to open at
+ * would review a sixth of it. This is the matrix that makes the whole walk visible at once: each
+ * stop is a column, each state a row, and both tracks appear because a stop's copy and its map
+ * labels resolve per track.
+ */
+function walkVariants(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  base: readonly Variant[],
+): readonly Variant[] {
+  const stops = ecmoCircuitWalkStopsForSection(sectionId)
+  if (stops.length === 0) return base
+  return base.flatMap((variant) =>
+    stops.flatMap((stop) =>
+      // Both disclosure depths, per stop, per state. The first cut rendered one depth and believed
+      // it was the committed one because of a prop that did not exist; the hook's default made the
+      // page look right while asserting nothing. Now each depth is rendered on purpose and the
+      // render is asserted (see renderWalkCell), so the page cannot silently review only one.
+      [false, true].map((walkCommitted) => ({
+        ...variant,
+        label: `${variant.label} · stop ${stop.ordinal} (${stop.id}) · ${
+          walkCommitted ? 'committed' : 'before commitment'
+        }`,
+        walkStopId: stop.id,
+        walkCommitted,
+      })),
+    ),
+  )
+}
+
+/**
+ * Every state a walk section itself declares, per track.
+ *
+ * `sharedVariants` builds three hand-written profile states, which is right for the sections that
+ * only ever show a reference circuit — and wrong for a section that authors its own. The first cut
+ * of the walk matrix multiplied stops across those three, so the return-resistance state this
+ * package added had no cell anywhere: the comparative stop was reviewed only against circuits with
+ * nothing wrong with them, which is the one thing it is not about. Reading the runtime means a
+ * variant added to a lesson gets cells without this file being edited a second time.
+ */
+function authoredVariants(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
+  const runtime = ecmoFoundationLessonRuntime(sectionId)
+  return (['vv', 'va'] as const).flatMap((mode) =>
+    ecmoFoundationVariants(runtime, mode).map((variant) => ({
+      label: `${mode} · ${variant.label}`,
+      state: createEcmoFoundationSessionState(variant).simulation,
+    })),
+  )
+}
+
 function variantsFor(sectionId: EcmoInteractiveFoundationSectionId): readonly Variant[] {
   if (isEcmoSharedFoundationSectionId(sectionId)) {
+    if (ecmoCircuitWalkStopsForSection(sectionId).length > 0) {
+      return walkVariants(sectionId, authoredVariants(sectionId))
+    }
     return profiles.flatMap((profileId) => sharedVariants(profileId))
   }
   if (isEcmoVvOnlyFoundationSectionId(sectionId)) return vvOnlyVariants(sectionId)
@@ -429,6 +502,45 @@ const PANE_WIDTHS: readonly { readonly label: string; readonly px: number }[] = 
 let renderedCells = 0
 let renderedDrillCells = 0
 
+/**
+ * The walk-cell contract, enforced at render time so the page cannot go vacuous again.
+ *
+ * The previous harness passed a `sensorNamesVisible` prop no component declares; the committed
+ * content rendered anyway because the walk hook defaults to committed for hostless callers, so the
+ * page reviewed one depth by accident and would have kept exiting zero if that depth became
+ * unreachable. Every clause here throws: a requested stop that silently falls back to another, a
+ * prop rename that stops reaching the component (esbuild does not type-check this file), a
+ * committed render missing its reveal, a precommit render leaking one, or the two depths rendering
+ * identically.
+ */
+function assertWalkCell(
+  sectionId: EcmoInteractiveFoundationSectionId,
+  stopId: EcmoCircuitWalkStopId,
+  committed: boolean,
+  markup: string,
+): void {
+  const where = `${sectionId} · ${stopId} · ${committed ? 'committed' : 'precommit'}`
+  if (!markup.includes(`data-walk-stop="${stopId}"`)) {
+    throw new Error(`${where}: the walk rendered a different stop than the one requested`)
+  }
+  const stop = ecmoCircuitWalkStop(stopId)
+  const reportsReadings = stop.sensorSiteIds.length > 0
+  const hasReportedHere = markup.includes('Reported here:')
+  if (!committed && hasReportedHere) {
+    throw new Error(`${where}: reveals "Reported here:" before the commitment`)
+  }
+  if (committed && reportsReadings && !hasReportedHere) {
+    throw new Error(`${where}: the committed reveal is unreachable — no "Reported here:" rendered`)
+  }
+  const hasBeats = markup.includes('data-walk-beat')
+  if (!committed && hasBeats) {
+    throw new Error(`${where}: comparison beats are reachable before the commitment`)
+  }
+  if (committed && stop.kind === 'comparative' && !hasBeats) {
+    throw new Error(`${where}: the comparative stop renders no beats when committed`)
+  }
+}
+
 const drills = ecmoDrillTeachingPanelScenarioIds
   .map((scenarioId) => {
     const columns = drillVariants(scenarioId)
@@ -448,6 +560,10 @@ const drills = ecmoDrillTeachingPanelScenarioIds
   })
   .join('\n')
 
+/** Rendered walk markup per section/state/stop, so the two depths can be proved different. */
+const walkMarkupByDepth = new Map<string, { precommit?: string; committed?: string }>()
+const renderedWalkStopIds = new Set<EcmoCircuitWalkStopId>()
+
 const sections = ecmoInteractiveFoundationSectionIds
   .map((sectionId) => {
     const columns = variantsFor(sectionId)
@@ -458,8 +574,29 @@ const sections = ecmoInteractiveFoundationSectionIds
             sectionId,
             state: variant.state,
             snapshot: variant.snapshot ?? null,
+            // The real prop, both values, and a beat handler so the comparative stop's buttons
+            // exist to be reviewed. `sensorNamesVisible` — the prop the first cut passed — exists
+            // nowhere, and the page only looked committed because the hook defaults that way for
+            // hostless callers; the assertions below are what keep this honest now.
+            ...(variant.walkStopId
+              ? {
+                  walk: {
+                    activeStopId: variant.walkStopId,
+                    pastPrediction: variant.walkCommitted === true,
+                    onRunComparison: () => {},
+                  },
+                }
+              : {}),
           }),
         )
+        if (variant.walkStopId) {
+          assertWalkCell(sectionId, variant.walkStopId, variant.walkCommitted === true, markup)
+          renderedWalkStopIds.add(variant.walkStopId)
+          const pairKey = `${sectionId}|${variant.label.replace(/ · (committed|before commitment)$/, '')}`
+          const pair = walkMarkupByDepth.get(pairKey) ?? {}
+          pair[variant.walkCommitted ? 'committed' : 'precommit'] = markup
+          walkMarkupByDepth.set(pairKey, pair)
+        }
         return `<div class="cell"><p class="cell-label">${variant.label}</p>${markup}</div>`
       })
       .join('\n')
@@ -467,6 +604,25 @@ const sections = ecmoInteractiveFoundationSectionIds
   })
   .join('\n')
 
+// The two depths must both be reachable and must not be the same page: identical output means the
+// gate went dead in one direction or the other.
+for (const [pairKey, pair] of walkMarkupByDepth) {
+  if (!pair.precommit || !pair.committed) {
+    throw new Error(`${pairKey}: only one commitment depth was rendered`)
+  }
+  if (pair.precommit === pair.committed) {
+    throw new Error(`${pairKey}: committed output is identical to precommit output`)
+  }
+}
+// Every stop of the whole walk was rendered — a stop dropped from a section would vanish quietly
+// from a page this size.
+for (const stop of ecmoCircuitWalkStops) {
+  if (!renderedWalkStopIds.has(stop.id)) {
+    throw new Error(`walk stop ${stop.id} was never rendered`)
+  }
+}
+
+const walkStopCount = ecmoCircuitWalkStops.length
 const drillCount = ecmoDrillTeachingPanelScenarioIds.length
 const foundationCount = ecmoInteractiveFoundationSectionIds.length
 
@@ -607,6 +763,7 @@ writeFileSync(outputPath, html, 'utf8')
 console.log(`Wrote ${outputPath}`)
 console.log(
   `${foundationCount} foundation panels (${ecmoSharedFoundationSectionIds.length} shared × 2 profiles × 3 states, ${ecmoVvOnlyFoundationSectionIds.length} VV-only, ${ecmoVaOnlyFoundationSectionIds.length} VA-only) — ${renderedCells} rendered states`,
+  `${walkStopCount} circuit-walk stops, every one against every state its section is rendered on, at both commitment depths, render-asserted`,
 )
 console.log(
   `${drillCount} drill panels — ${renderedDrillCells} rendered states, each at ${PANE_WIDTHS.map((width) => `${width.px}px`).join(' and ')}`,

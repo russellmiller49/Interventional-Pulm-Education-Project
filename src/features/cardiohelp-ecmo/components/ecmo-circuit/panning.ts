@@ -85,3 +85,72 @@ export function retargetTowardDefault(
 export const DEFAULT_CAMERA_DISTANCE = new THREE.Vector3(...CAMERA_POSITION).distanceTo(
   DEFAULT_TARGET,
 )
+
+/** The slice of an OrbitControls instance the pan rules read and write. */
+export interface BedsidePanControls {
+  enablePan: boolean
+  readonly target: THREE.Vector3
+  readonly object: { readonly position: THREE.Vector3 }
+  update(): void
+}
+
+/**
+ * Start a controls instance pan-locked — once per instance, never per render.
+ *
+ * The ref callback that calls this runs on every commit whose callback identity changed, and this
+ * component re-renders every modeled second with the simulation clock. The first correction locked
+ * unconditionally in the ref, which re-asserted `enablePan = false` on every clock tick — the very
+ * split-authority defect the refactor existed to remove, reintroduced one seam over, and caught by
+ * re-running the production pan probe against the rebuilt page. Tracking the last-locked instance
+ * makes the lock a fact about the instance's lifetime: a new controls object starts locked before
+ * its first frame, and a re-attachment of the same object changes nothing, so the frame rule stays
+ * the only writer after mount.
+ */
+export function lockBedsidePanOnNewInstance(
+  lastLocked: { current: BedsidePanControls | null },
+  instance: BedsidePanControls | null,
+): void {
+  if (instance && lastLocked.current !== instance) {
+    lastLocked.current = instance
+    instance.enablePan = false
+  }
+}
+
+/**
+ * The whole of the bedside pan behaviour, applied to the live controls once per frame.
+ *
+ * This function is the single owner of `enablePan`. The scene passes no `enablePan` prop at all —
+ * a declarative prop and an imperative per-frame write were two authorities over one field, and
+ * whichever one you read the code from looked like it was losing. The instance starts locked when
+ * it attaches (see the scene's ref callback) and this rule decides everything after: pan unlocks
+ * with zoom, the target stays fenced to the scene as a rig correction, and a panned rig glides
+ * home (snaps under reduced motion) once the camera is back out past the unlock distance.
+ *
+ * Extracted so the integration test drives the very code the frame runs, with a real
+ * three-stdlib OrbitControls under real pointer events, rather than re-deriving the rules.
+ */
+export function applyBedsidePanFrameRules(
+  controls: BedsidePanControls,
+  delta: number,
+  reduceMotion: boolean,
+  interacting: boolean,
+): void {
+  const distance = controls.object.position.distanceTo(controls.target)
+  controls.enablePan = panEnabledAtDistance(distance)
+  const fenceShift = clampPanTarget(controls.target)
+  if (fenceShift) {
+    // The fence is a rig correction: camera moves with the target, exactly as during a pan and
+    // the glide-home. Target-only clamping let drags against the boundary change the zoom and
+    // walk the camera off-scene.
+    controls.object.position.add(fenceShift)
+    controls.update()
+  }
+  if (!controls.enablePan && !interacting) {
+    const shift = retargetTowardDefault(controls.target, delta, reduceMotion)
+    if (shift) {
+      // Camera moves with the target — undoing a pan is a rig translation.
+      controls.object.position.add(shift)
+      controls.update()
+    }
+  }
+}

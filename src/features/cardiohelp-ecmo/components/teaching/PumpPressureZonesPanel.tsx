@@ -1,18 +1,20 @@
-import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
+'use client'
+
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { ecmoReferenceProfileForMode } from '../../content/referenceProfiles'
 import type { EcmoSimulationState } from '../../engine/types'
-import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
+import { EcmoCircuitWalk } from './EcmoCircuitWalk'
 import { EcmoLocalizationCard } from './EcmoLocalizationCard'
 import {
   ChannelValue,
   GuidedValue,
   ModelBoundary,
   TextEquivalent,
+  comparisonPhrase,
   direction,
-  directionWord,
   styles,
 } from './shared'
+import { useEcmoCircuitWalkNavigation, type EcmoWalkPanelProps } from './useEcmoCircuitWalk'
 
 /**
  * Speed is selected; flow is what the circuit returns under its current loading.
@@ -32,8 +34,15 @@ import {
  * circuit with nothing wrong with it and has not been asked to diagnose anything yet.
  */
 
-export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulationState }) {
+export function PumpPressureZonesPanel({
+  state,
+  walk,
+}: {
+  readonly state: EcmoSimulationState
+  readonly walk?: EcmoWalkPanelProps
+}) {
   const { circuit, device } = state
+  const navigation = useEcmoCircuitWalkNavigation('pump-and-pressure-zones', walk)
   const profile = ecmoReferenceProfileForMode(state.supportMode)
   const referenceFlow = (profile.expected.bloodFlow.low + profile.expected.bloodFlow.high) / 2
   const referenceDeltaP = (profile.expected.deltaP.low + profile.expected.deltaP.high) / 2
@@ -50,6 +59,8 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
 
   return (
     <div className={styles.panel} data-teaching-panel="pump-and-pressure-zones">
+      <EcmoCircuitWalk {...navigation} state={state} />
+
       <section className={styles.section} aria-labelledby="pump-heading">
         <h3 id="pump-heading" className={styles.heading}>
           Setting, result, and the zones that report them
@@ -68,8 +79,13 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
           <div className="rounded-xl border p-3" data-resulting-flow>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Resulting flow</p>
             <p className="text-2xl font-semibold">{circuit.bloodFlow.toFixed(2)} L/min</p>
+            {/*
+              Explicit separators. A bare space between an expression and the text after it is
+              dropped by the JSX transform here, which is why this line read "lower thanthis
+              circuit's reference state" on screen while looking correct in the source.
+            */}
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {directionWord[flowShift]} than this circuit&rsquo;s reference state
+              {comparisonPhrase[flowShift]} <span>this circuit&rsquo;s reference state</span>
               {flowShift === 'flat' ? '' : ` (${referenceFlow.toFixed(2)} L/min)`}.
             </p>
           </div>
@@ -84,18 +100,18 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
           {deltaPShift === null
             ? `The gradient is not being reported, so it cannot be compared with this circuit’s reference state. ${deltaPReadout.reason}`
-            : `The gradient is ${directionWord[deltaPShift]} than this circuit’s reference state.`}{' '}
+            : `The gradient is ${comparisonPhrase[deltaPShift]} this circuit’s reference state.`}{' '}
           Read the four together: one zone moving alone means something different from two moving
           together.
         </p>
 
         <TextEquivalent>
           The pump is set to {device.rpmSetpoint} rpm and the circuit is returning{' '}
-          {circuit.bloodFlow.toFixed(2)} L/min, {directionWord[flowShift]} than this circuit&rsquo;s
-          reference flow of {referenceFlow.toFixed(2)} L/min.{' '}
+          {circuit.bloodFlow.toFixed(2)} L/min, {comparisonPhrase[flowShift]}{' '}
+          <span>this circuit&rsquo;s reference flow of {referenceFlow.toFixed(2)} L/min.</span>{' '}
           {deltaPShift === null
             ? `The gradient across the membrane is not available, ${deltaPReadout.reason}`
-            : `The gradient across the membrane is ${directionWord[deltaPShift]} than its reference value of ${referenceDeltaP.toFixed(0)} mmHg.`}{' '}
+            : `The gradient across the membrane is ${comparisonPhrase[deltaPShift]} its reference value of ${referenceDeltaP.toFixed(0)} mmHg.`}{' '}
           Speed is a setting; flow is the result of that speed under the loading the circuit
           currently has.
         </TextEquivalent>
@@ -105,14 +121,6 @@ export function PumpPressureZonesPanel({ state }: { readonly state: EcmoSimulati
           a normal range for ECMO. The reference values are teaching anchors for this simulation.
         </ModelBoundary>
       </section>
-
-      <EcmoCircuitMinimap
-        supportMode={state.supportMode}
-        presentation={deriveEcmoCircuitPresentation(state, {
-          kind: 'foundation-scaffold',
-          emphasis: 'pressure-zones',
-        })}
-      />
 
       <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />
 

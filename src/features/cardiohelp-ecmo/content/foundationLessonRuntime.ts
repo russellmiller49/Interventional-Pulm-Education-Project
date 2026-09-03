@@ -284,6 +284,12 @@ const PREVIEW_SECONDS = Object.freeze({
   gasSourceBeforeChange: 4,
   gasSourceAfterChange: 28,
   oxygenatorResistanceSettled: 12,
+  /**
+   * The return-resistance case carries flow and every pressure from its first frame; only the
+   * patient side moves, and it is flat by the eighth modeled second. Eight matches the settle the
+   * reference circuit already uses, so the two states in the comparison are read at the same age.
+   */
+  returnResistanceSettled: 8,
 })
 
 const recirculationPreviewVariant: EcmoFoundationStateVariant = {
@@ -325,6 +331,59 @@ const oxygenatorResistancePreviewVariant: EcmoFoundationStateVariant = {
     'A mechanism preview from the existing membrane-resistance drill. In this simulation the membrane resistance also constrains circuit flow, so displayed flow does fall here — read the gradient, not the flow, as the discriminating signal.',
 }
 
+export const RETURN_RESISTANCE_VARIANT_ID = 'return-resistance-preview'
+
+/**
+ * The speed a reference circuit has to be slowed to before its flow matches the resisted one's.
+ *
+ * Read off the engine, not derived. Deriving it would mean writing the drill's flow multiplier into
+ * this file, which is a physics constant the content layer has no business holding; and the exact
+ * value does not matter to the teaching, only that the two flows land close enough to be read as
+ * the same. `foundation-comparisons.test.ts` asserts the match rather than the number, so a change
+ * in the engine fails there with a sentence about flows rather than silently drifting apart.
+ *
+ * This is the safe half of the comparison, and the choice is deliberate: the obvious way to match
+ * flow is to drive the resisted circuit harder, which is the reflex the module names as the one to
+ * avoid — and this model would show it working. Slowing the healthy circuit reaches the same
+ * reading with nothing to unlearn.
+ */
+const MATCHED_FLOW_RPM = 2240
+
+/**
+ * The return-resistance case, loaded beside the reference so the pattern can be read rather than
+ * asserted.
+ *
+ * The pump section has always said that a centrifugal pump is afterload sensitive and that the two
+ * post-pump zones move together when the resistance sits beyond the membrane. Until now the only
+ * thing behind that sentence was a table of words: this section authored one variant, the reference
+ * circuit, so the half of its own subject that is about load had no state to show. This is the
+ * existing drill, loaded the way `vv-series-physiology` already loads recirculation and the
+ * capstones already load the gas case — the same engine, nothing recorded, nothing scored.
+ *
+ * Settle times are read off the engine rather than guessed. Both cases carry their circuit signals
+ * from the first frame; what lags is the patient side, and the VA case takes appreciably longer
+ * because its native cardiac output has to drift to the value the case authors. Twenty seconds is
+ * the figure its VA sibling already uses for the same reason.
+ */
+const returnResistancePreviewVariant = (supportMode: SupportMode): EcmoFoundationStateVariant => ({
+  id: RETURN_RESISTANCE_VARIANT_ID,
+  source: {
+    kind: 'scenario',
+    scenarioId:
+      supportMode === 'va'
+        ? 'va-afterload-arterial-return-obstruction'
+        : 'afterload-return-obstruction',
+  },
+  setupActions: advanceSeconds(
+    supportMode === 'va'
+      ? VA_PREVIEW_SECONDS.returnResistanceSettled
+      : PREVIEW_SECONDS.returnResistanceSettled,
+  ),
+  label: 'Return-side resistance — mechanism preview',
+  modelBoundary:
+    'The existing return-obstruction drill loaded as a preview to read, with nothing recorded and nothing scored. This simulation authors the resistance so the pressure pattern can be read; it does not model what is causing it, or how such a cause would develop over time.',
+})
+
 // ---- VA track variants. ----
 
 const vaReferenceVariant: EcmoFoundationStateVariant = {
@@ -359,6 +418,12 @@ const VA_PREVIEW_SECONDS = Object.freeze({
   oxygenatorResistanceSettled: 20,
   gasSourceBeforeChange: 4,
   gasSourceAfterChange: 40,
+  /**
+   * Twenty for the same reason its membrane sibling takes twenty: the circuit signals are fixed
+   * from the first frame, but the VA patient side has to drift to what the case authors, and a
+   * state read mid-drift invites a learner to treat a still-moving number as the finding.
+   */
+  returnResistanceSettled: 20,
 })
 
 const differentialHypoxemiaPreviewVariant: EcmoFoundationStateVariant = {
@@ -548,7 +613,13 @@ export const ecmoFoundationLessonRuntimes: Readonly<
 
   'pump-and-pressure-zones': {
     sectionId: 'pump-and-pressure-zones',
-    variants: referenceVariants,
+    // Two states, because this section's subject is two-sided. The reference is what a pump does
+    // with drainage to spare; the return-resistance case is what it does against a load. Selected
+    // by track the same way the reference is, so `?track=va` never gets the VV case.
+    variants: (supportMode) => [
+      ...referenceVariants(supportMode),
+      returnResistancePreviewVariant(supportMode),
+    ],
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
@@ -588,29 +659,74 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
     },
     guidedActions: [
+      /*
+       * Three hundred: the smallest symmetric step the console shows in both directions.
+       *
+       * The lesson asks the learner to commit to a pairing — flow rises, and the drainage side is
+       * pulled harder to produce it — and then to run this action and watch. `calculatePressures`
+       * rounds pressures to whole millimetres, so the visibility of the drainage half depends on
+       * where the model lands relative to a rounding boundary, and the two directions are not
+       * symmetric. Swept against the settled reference (pVen −35 displayed, both tracks):
+       *
+       *   +100 → −35, +200 → −35, +300 → −36, +400 → −36
+       *   −100 → −34, −200 → −34, −300 → −34, −400 → −33
+       *
+       * So the smallest visible *increase* in suction is +300; the smallest visible *decrease* is
+       * already −100; and ±300 is the smallest magnitude that shows on the console in both
+       * directions, which is what a paired increase/decrease action needs. An earlier account here
+       * called 400 the smallest visible step, which the sweep disproves — the independent review
+       * caught it, and `foundation-comparisons.test.ts` now runs the displayed-readout sweep
+       * rather than pinning one number's story.
+       *
+       * No fault, alarm, drainage chatter, or critical error appears anywhere in ±400, because a
+       * reference circuit carries no drainage capacity to exceed.
+       */
       {
         id: 'increase-rpm',
-        label: 'Increase pump speed by 200 rpm',
+        label: 'Increase pump speed by 300 rpm',
         description: 'A bounded increase from the reference speed, using the existing pump model.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
-          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 200 } as const,
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 300 } as const,
         ],
         settleSeconds: 6,
       },
       {
         id: 'decrease-rpm',
-        label: 'Decrease pump speed by 200 rpm',
+        label: 'Decrease pump speed by 300 rpm',
         description: 'A bounded decrease from the reference speed.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
-          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint - 200 } as const,
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint - 300 } as const,
         ],
         settleSeconds: 6,
       },
       RESTORE,
+      /*
+       * Appended, never prepended. `foundation-session.test.ts` reads this list's first entry
+       * positionally, so inserting at the front would silently change what that test is about.
+       */
+      {
+        id: 'load-return-resistance',
+        label: 'Read the same speed against a resisted return',
+        description:
+          'Loads the existing return-obstruction case as a preview. Nothing is recorded and nothing is scored.',
+        kind: 'restore-and-apply',
+        variantId: RETURN_RESISTANCE_VARIANT_ID,
+        settleSeconds: 0,
+      },
+      {
+        id: 'reference-at-matched-flow',
+        label: 'Bring the reference circuit down to that flow',
+        description:
+          'Slows a circuit with nothing wrong with it until it is moving what the resisted circuit manages, so the gradient can be read like for like.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        resolve: () => [{ type: 'SET_RPM', rpm: MATCHED_FLOW_RPM } as const],
+        settleSeconds: 6,
+      },
     ],
     evidenceIds: [...coreSources, 'ecmo-book-ch16', 'ecmo-book-ch17'],
   },

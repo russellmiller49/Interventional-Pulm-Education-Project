@@ -24,6 +24,7 @@ import {
 import { createFoundationVariantState } from '../session/foundationSession'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoBloodPathSegmentIds } from '../content/circuitSegments'
+import { ecmoCircuitWalkStopsForSection, ecmoWalkStopSegmentIds } from '../content/circuitWalk'
 import { ecmoLocalizationRowIds, ecmoLocalizationRows } from '../content/localizationCards'
 import { ecmoReferenceProfileForMode } from '../content/referenceProfiles'
 import '../content/ecmoValueGuides'
@@ -388,40 +389,91 @@ describe('foundation teaching panels', () => {
     expect(container.textContent).toMatch(/Configured setting/i)
   })
 
-  it('circuit-flow-path places each pressure at its own location and separates the gas path', () => {
-    const { container } = render(
-      <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
-    )
-    const order = [...container.querySelectorAll('[data-circuit-segment]')].map((node) =>
-      node.getAttribute('data-circuit-segment'),
-    )
-    expect(order).toEqual([
+  it('circuit-flow-path walks the blood path one place at a time, and keeps the gas path apart', () => {
+    /*
+     * The list this used to assert is now the walk.
+     *
+     * It read six `data-circuit-segment` nodes in blood-path order out of a panel that printed all
+     * six at once — which is exactly what the lesson's own recognize phase told the learner to step
+     * through, and exactly what nothing stepped. The same claim survives, made against the walk:
+     * the four stops of this section stand at the whole blood path, in order, one at a time. The
+     * registry validator makes the same assertion from the other side, so a stop cannot be
+     * reordered here and left alone there.
+     */
+    const stops = ecmoCircuitWalkStopsForSection('circuit-flow-path')
+    expect(stops.flatMap((stop) => ecmoWalkStopSegmentIds(stop))).toEqual([
       'drainage',
       'pump',
-      'pre-membrane',
       'membrane',
+      'pre-membrane',
       'post-membrane',
       'return',
     ])
-    expect(container.querySelector('[data-gas-path]')?.textContent).toMatch(/sweep/i)
-    expect(container.querySelector('[data-blood-path]')).toBeInTheDocument()
+    expect(
+      stops
+        .flatMap((stop) => ecmoWalkStopSegmentIds(stop))
+        .filter((id) => (ecmoBloodPathSegmentIds as readonly string[]).includes(id))
+        .slice()
+        .sort(),
+    ).toEqual([...ecmoBloodPathSegmentIds].sort())
 
-    /*
-     * The stop list now reads from the canonical segment registry, and this assertion is the proof
-     * that the promotion changed nothing a learner sees: the same six ids, in the same order, from
-     * a literal array that the registry does not get a vote on.
-     */
-    expect(order).toEqual([...ecmoBloodPathSegmentIds])
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
+    )
+    // One stop on screen, not a list of six.
+    expect(container.querySelector('[data-circuit-walk]')?.getAttribute('data-walk-stop')).toBe(
+      'walk-drainage',
+    )
+    expect(container.querySelector('[data-gas-path]')?.textContent).toMatch(/sweep/i)
   })
 
-  it('circuit-flow-path draws the circuit it is describing', () => {
+  it('names the return-side objects, and no drainage object, at the return stop', () => {
+    /*
+     * The rendered outcome of the scene-anchor mapping, read off the walk card's visible
+     * "Highlighted in the bedside scene" line — the words a learner actually gets when the pane is
+     * too narrow for the 3D scene. The review's mutation pointed `post-membrane` at the HLS module
+     * and nothing rendered differently anywhere a test looked; this is where it now would.
+     */
+    const { container } = render(
+      <EcmoFoundationTeachingPanel
+        sectionId="circuit-flow-path"
+        state={settled('vv')}
+        walk={{ activeStopId: 'walk-return' }}
+      />,
+    )
+    const line = container.querySelector('[data-walk-scene-labels]')?.textContent ?? ''
+    expect(line).toContain('Flow / bubble sensor')
+    expect(line).toContain('Femoral vein — return')
+    expect(line).toContain('Return clamp')
+    expect(line).not.toMatch(/drainage/i)
+
+    const { container: va } = render(
+      <EcmoFoundationTeachingPanel
+        sectionId="circuit-flow-path"
+        state={settled('va')}
+        walk={{ activeStopId: 'walk-return' }}
+      />,
+    )
+    const vaLine = va.querySelector('[data-walk-scene-labels]')?.textContent ?? ''
+    expect(vaLine).toContain('Flow / bubble sensor')
+    expect(vaLine).toContain('Femoral artery — return')
+    expect(vaLine).toContain('Distal perfusion catheter')
+    expect(vaLine).not.toMatch(/drainage/i)
+  })
+
+  it('circuit-flow-path draws the circuit, marked where the walk is standing', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
     )
     const map = container.querySelector('[data-circuit-minimap]')
     expect(map).not.toBeNull()
-    expect(map?.getAttribute('data-presentation')).toBe('scaffold')
-    expect(map?.getAttribute('data-scaffold-emphasis')).toBe('path-order')
+    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
+    expect(map?.getAttribute('data-walk-stop')).toBe('walk-drainage')
+    // Embedded flush: the stop card already boxes it, and the doubled chrome cost the drawing the
+    // width the compact type floor was authored against (11.4px at the 280px pane floor).
+    expect(map?.getAttribute('data-map-frame')).toBe('flush')
+    // Exactly one map in the pane: the walk's replaced the section's rather than joining it.
+    expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
     // A foundation map teaches; it never marks a segment as the culprit.
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
   })
@@ -442,6 +494,43 @@ describe('foundation teaching panels', () => {
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('va')} />,
     )
     expect(container.textContent).toMatch(/Arterial return to the patient/i)
+  })
+
+  /*
+   * A render-level pin for the sentence, not just for the phrase map.
+   *
+   * The comparison read "about the samethan this circuit's reference state" on main, for two
+   * reasons at once — a preposition that did not match the flat case, and a JSX transform that drops
+   * the leading space of a text node following an expression. Both were fixed, and both were fixed
+   * invisibly to the suite: reverting either left every test green, because the only new assertions
+   * were on the constants. A whitespace defect can only be caught by looking at rendered text.
+   */
+  it('pump-and-pressure-zones states the comparison as a sentence, at rest and after a change', () => {
+    const { container } = render(
+      <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,
+    )
+    expect(container.querySelector('[data-resulting-flow]')?.textContent).toMatch(
+      /about the same as this circuit/,
+    )
+    expect(container.textContent).toMatch(/The gradient is about the same as this circuit/)
+    expect(container.textContent).not.toMatch(/same than|higher as|lower as/)
+    // The run-together the JSX transform produced, in every form it could take here.
+    expect(container.textContent).not.toMatch(/(same|higher|lower)(as|than)this/)
+
+    let faster = settled('vv')
+    faster = ecmoSimulationReducer(faster, {
+      type: 'SET_RPM',
+      rpm: faster.device.rpmSetpoint + 400,
+    })
+    for (let tick = 0; tick < 8; tick += 1) {
+      faster = ecmoSimulationReducer(faster, { type: 'STEP' })
+    }
+    const { container: raised } = render(
+      <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={faster} />,
+    )
+    expect(raised.querySelector('[data-resulting-flow]')?.textContent).toMatch(
+      /higher than this circuit/,
+    )
   })
 
   it('pump-and-pressure-zones compares with the authored reference, not a normal range', () => {
@@ -483,7 +572,9 @@ describe('foundation teaching panels', () => {
       <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,
     )
     const map = container.querySelector('[data-circuit-minimap]')
-    expect(map?.getAttribute('data-scaffold-emphasis')).toBe('pressure-zones')
+    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
+    expect(map?.getAttribute('data-walk-stop')).toBe('walk-pump-under-load')
+    expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
 
     // The scaffold is pattern and location. The shortlist, the response and the reflex belong to

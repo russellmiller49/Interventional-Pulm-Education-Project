@@ -25,7 +25,7 @@ import {
   TUBE_RADII,
 } from './constants'
 import { drainageChatterActive } from './chatter'
-import { clampPanTarget, panEnabledAtDistance, retargetTowardDefault } from './panning'
+import { applyBedsidePanFrameRules, lockBedsidePanOnNewInstance } from './panning'
 import { groundAsset, type AssetPlacement, type ModelBounds } from './grounding'
 import { buildCircuitLayout } from './layout'
 import { FlowTube } from './FlowTube'
@@ -108,6 +108,8 @@ export interface BedsideSceneProps {
   controlsEnabled: boolean
   reduceMotion: boolean
   labelsVisible: boolean
+  /** Scene label ids the current teaching step is standing at. */
+  emphasisSceneLabelIds?: readonly string[] | null
 }
 
 export function BedsideScene({
@@ -116,6 +118,7 @@ export function BedsideScene({
   controlsEnabled,
   reduceMotion,
   labelsVisible,
+  emphasisSceneLabelIds = null,
 }: BedsideSceneProps) {
   const layout = useMemo(() => buildCircuitLayout(state.supportMode), [state.supportMode])
   const [orbiting, setOrbiting] = useState(false)
@@ -125,35 +128,33 @@ export function BedsideScene({
   /*
    * Pan unlocks with zoom, and the target stays fenced to the scene.
    *
-   * Mutated directly on the controls instance rather than through state: the
-   * distance changes every zoom frame, and a React round-trip per frame would
-   * buy nothing. Once the user zooms back out past the unlock distance the
-   * target glides home (snaps under reduced motion), so the default framing
-   * every guided lesson references is restored instead of staying wherever
-   * the last pan ended.
+   * `applyBedsidePanFrameRules` is the single owner of `enablePan`. It is mutated directly on the
+   * controls instance rather than through state or a prop: the distance changes every zoom frame,
+   * a React round-trip per frame would buy nothing, and the JSX passing `enablePan={false}` beside
+   * this write was a second authority over the same field — R3F v9 only re-applies props whose JSX
+   * value changed, so the constant never actually fought the frame rule, but nothing said so where
+   * the conflict sat. The prop is gone; the instance starts locked in `attachControls` and the
+   * frame rule decides everything after.
    */
   useFrame((_, delta) => {
     const instance = controls.current
     if (!instance) return
-    const distance = instance.object.position.distanceTo(instance.target)
-    instance.enablePan = panEnabledAtDistance(distance)
-    const fenceShift = clampPanTarget(instance.target)
-    if (fenceShift) {
-      // The fence is a rig correction: camera moves with the target, exactly
-      // as during a pan and the glide-home. Target-only clamping let drags
-      // against the boundary change the zoom and walk the camera off-scene.
-      instance.object.position.add(fenceShift)
-      instance.update()
-    }
-    if (!instance.enablePan && !interacting.current) {
-      const shift = retargetTowardDefault(instance.target, delta, reduceMotion)
-      if (shift) {
-        // Camera moves with the target — undoing a pan is a rig translation.
-        instance.object.position.add(shift)
-        instance.update()
-      }
-    }
+    applyBedsidePanFrameRules(instance, delta, reduceMotion, interacting.current)
   })
+
+  /*
+   * Locked before the first frame runs — once per instance, in `lockBedsidePanOnNewInstance`.
+   *
+   * Not inline: a callback ref re-runs on every commit whose identity changed, and this scene
+   * re-renders with every simulation tick, so an unconditional `enablePan = false` here re-locked
+   * the pan between frames — the split-authority defect again, from the other side. The helper
+   * keys the lock to the instance, so the frame rule stays the only writer after mount.
+   */
+  const lockedControls = useRef<OrbitControlsImpl | null>(null)
+  const attachControls = (instance: OrbitControlsImpl | null) => {
+    controls.current = instance
+    lockBedsidePanOnNewInstance(lockedControls, instance)
+  }
   const patient = useGLTF(PATIENT_ASSET)
   const sensor = useGLTF(SENSOR_ASSET)
   const sensorAlignment = useMemo(
@@ -326,7 +327,12 @@ export function BedsideScene({
         onToggle={() => dispatch({ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return' })}
       />
 
-      <SceneLabels layout={layout} visible={labelsVisible} dimmed={orbiting} />
+      <SceneLabels
+        emphasisIds={emphasisSceneLabelIds}
+        layout={layout}
+        visible={labelsVisible}
+        dimmed={orbiting}
+      />
 
       {/* Floor + soft contact shadows */}
       <mesh position={[0, FLOOR_Y, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
@@ -352,10 +358,9 @@ export function BedsideScene({
       />
 
       <OrbitControls
-        ref={controls}
+        ref={attachControls}
         makeDefault
         target={CAMERA_TARGET}
-        enablePan={false}
         minDistance={4.1}
         maxDistance={7.2}
         minPolarAngle={0.65}

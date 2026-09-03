@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 
+import { ecmoSceneLabelName } from '../../content/circuitSceneAnchors'
 import type { SupportMode } from '../../engine/types'
 import {
   BLENDER_MODEL_BOUNDS,
@@ -200,32 +201,36 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
   // sites toward the feet-left / head-right, clamps split head/feet side,
   // module and sensor vertically separated — while staying adjacent to its
   // object after modest orbiting.
+  /*
+   * The words come from `content/circuitSceneAnchors.ts`, which is the same table the circuit walk
+   * reads to tell a learner in words which object it has just lit. This file still owns every
+   * position; it no longer owns any prose, so the two cannot drift.
+   */
+  const labelText = (id: string) => ecmoSceneLabelName(id, supportMode)
+
   const labels: CircuitLabel[] = [
     {
       id: 'drainage-site',
-      text: 'Femoral vein — drainage',
+      text: labelText('drainage-site'),
       position: drainageInsertion.clone().add(vec(-0.42, -0.06, 0.52)),
     },
     {
       id: 'return-site',
-      text:
-        supportMode === 'va'
-          ? 'Femoral artery — return'
-          : 'Femoral vein — return · tip toward right atrium',
+      text: labelText('return-site'),
       position: returnInsertion.clone().add(vec(0.16, -0.26, -0.72)),
     },
     ...(supportMode === 'va'
       ? [
           {
             id: 'dpc',
-            text: 'Distal perfusion catheter',
+            text: labelText('dpc'),
             position: DPC_ENTRY.clone().add(vec(0.24, 0.0, 0.42)),
           },
         ]
       : []),
     {
       id: 'drainage-clamp',
-      text: 'Drainage clamp',
+      text: labelText('drainage-clamp'),
       position: drainageLine
         .getPointAt(DRAINAGE_CLAMP_U)
         .clone()
@@ -233,7 +238,7 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     },
     {
       id: 'return-clamp',
-      text: 'Return clamp',
+      text: labelText('return-clamp'),
       position: returnLine
         .getPointAt(RETURN_CLAMP_U)
         .clone()
@@ -241,12 +246,12 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
     },
     {
       id: 'hls-module',
-      text: 'HLS module — pump + oxygenator',
+      text: labelText('hls-module'),
       position: HLS_MODULE.clone().add(vec(-0.1, 0.72, 0.05)),
     },
     {
       id: 'sensor',
-      text: 'Flow / bubble sensor',
+      text: labelText('sensor'),
       position: sensorPosition.clone().add(vec(-0.85, -0.42, -0.7)),
     },
     {
@@ -254,14 +259,14 @@ export function buildCircuitLayout(supportMode: SupportMode): CircuitLayout {
       // just above the outlet, which keeps it beside both the mixer box and
       // the start of the sweep line.
       id: 'sweep',
-      text: 'Air\u2013O\u2082 blender \u2014 sweep-gas source',
+      text: labelText('sweep'),
       position: blenderOutlet.clone().add(vec(-0.12, 0.08, -0.04)),
     },
     {
       // Sits just above the transformed console box, so it stays on the console when the placement
       // changes. It was a fixed 0.62 m, which floated 0.70 m clear of the model it names.
       id: 'console',
-      text: 'CARDIOHELP console',
+      text: labelText('console'),
       position: vec(
         // Offset outboard of the HLS module so the pill reads as the console's, not the pump's.
         consolePlacement.origin.x + 0.26,
