@@ -397,3 +397,36 @@
 .footerLine {
   margin: 0;
 }
+
+/* ------------------------------------------------------------------ *
+ * Scoped teaching blocks
+ * ------------------------------------------------------------------ */
+
+/* A folded block's summary is its heading; the section's own heading inside stays for its label. */
+.teachingColumn details[data-stage-collapsed] {
+  min-width: 0;
+}
+
+.teachingColumn details[data-stage-collapsed] > summary {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teachingColumn details[data-stage-collapsed][open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.teachingColumn details[data-stage-collapsed] > section > h3:first-child,
+.teachingColumn details[data-stage-collapsed] > div > section > h3:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

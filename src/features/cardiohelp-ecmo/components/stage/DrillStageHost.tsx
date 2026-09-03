@@ -9,7 +9,9 @@ import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
+import { orderChoices } from '../../content/choiceOrder'
 import { isEcmoFoundationSectionId } from '../../content/foundationLessons'
+import { ecmoSectionSpecById } from '../../content/sectionSpecs'
 import type { GuidedControlId, GuidedLessonDefinition } from '../../engine/types'
 import {
   useEcmoSessionCore,
@@ -19,6 +21,7 @@ import {
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { FitWidthSurface } from '../FitWidthSurface'
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContextStrip'
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
@@ -154,6 +157,7 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
   )
   const pathway = criticalCareLearningPathway('cardiohelp-ecmo', supportMode)
   const nextSection = nextPathwaySection(pathway, lesson.sectionId)
+  const sectionSpec = ecmoSectionSpecById.get(lesson.sectionId)
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
@@ -477,19 +481,29 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
       const { item } = activeStep.interaction
       if (stepPerformed && selectedChoiceId) {
         return (
-          <AnswerVerdict
-            item={item}
-            choiceId={selectedChoiceId}
-            timing="immediate-after-commit"
-            theme="dark"
-            onContinue={isLastStep ? undefined : advance}
-          />
+          <>
+            <AnswerVerdict
+              item={item}
+              choiceId={selectedChoiceId}
+              timing="immediate-after-commit"
+              theme="dark"
+              onContinue={isLastStep ? undefined : advance}
+            />
+            <div data-verdict-evidence>
+              <EcmoSourceList
+                compact
+                surface="shell"
+                evidenceIds={item.evidenceIds}
+                title="Sources"
+              />
+            </div>
+          </>
         )
       }
       return (
         <fieldset className={styles.choiceList} disabled={stepPerformed} data-prediction-choices>
           <legend>{item.stem}</legend>
-          {item.choices.map((choice) => (
+          {orderChoices(item.id, item.choices).map((choice) => (
             <label
               key={choice.id}
               className={styles.choice}
@@ -579,14 +593,13 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
       <div ref={nowHeadingRef} tabIndex={-1} data-now-focus>
         <EcmoNowCard model={nowModel}>{nowBody}</EcmoNowCard>
       </div>
-      {activeIndex === 0 && lesson.objectives.length > 0 ? (
+      {activeIndex === 0 && sectionSpec ? (
         <details className={styles.objectives} data-stage-objectives>
           <summary>What this section is for</summary>
-          <ul>
-            {lesson.objectives.map((objective) => (
-              <li key={objective}>{objective}</li>
-            ))}
-          </ul>
+          <p>{sectionSpec.objective}</p>
+          <p>
+            <strong>One new idea:</strong> {sectionSpec.newConcept}
+          </p>
         </details>
       ) : null}
       <StepList

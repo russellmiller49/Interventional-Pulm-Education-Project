@@ -4,7 +4,6 @@ import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types
 import { ecmoFoundationLearningItemsFor } from '../../../content/foundationLearningItems'
 import { ecmoFoundationSectionById } from '../../../content/foundationLessons'
 import {
-  ecmoFoundationInitialVariantId,
   ecmoFoundationLessonRuntime,
   type EcmoInteractiveFoundationSectionId,
 } from '../../../content/foundationLessonRuntime'
@@ -83,7 +82,8 @@ export function buildFoundationStageLesson(
       gate: (phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction') as
         | 'open'
         | 'after-prediction',
-      entryVariantId: ecmoFoundationInitialVariantId(runtime, phase),
+      // Only an authored mapping loads a state on entry; unmapped phases keep the learner's state.
+      entryVariantId: runtime.initialVariantIdByPhase?.[phase],
     }
     switch (phase) {
       case 'predict':

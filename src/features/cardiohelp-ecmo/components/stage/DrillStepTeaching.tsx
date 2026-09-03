@@ -1,8 +1,74 @@
 'use client'
 
+import { ECMO_CONTROL_PANEL } from '../../content/controlPanel'
+import { ecmoDrillSpecs, type EcmoKnobState, type EcmoKnobStrip } from '../../content/drillSpecs'
 import type { ScenarioDefinition } from '../../engine/types'
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
+import { EcmoLocalizationCard } from '../teaching/EcmoLocalizationCard'
 import { styles as teachingStyles } from '../teaching/shared'
 import type { StageStep } from './stageModel'
+
+const KNOB_STATE_LABEL: Readonly<Record<EcmoKnobState, string>> = {
+  'this-knob': 'this is the knob',
+  'not-this-knob': 'not this knob',
+  'harmful-reflex': 'the reflex that does harm here',
+  'not-a-control': 'not a control in this state',
+}
+
+/**
+ * The small control panel, reused at every drill's Explain: which of the three knobs — if any —
+ * the pattern lived on, in the same order the foundations introduced them.
+ */
+function KnobStrip({ strip }: { readonly strip: EcmoKnobStrip }) {
+  const states: readonly { readonly id: string; readonly name: string; readonly state: string }[] =
+    [
+      {
+        id: 'pump-speed',
+        name: ECMO_CONTROL_PANEL.knobs[0].plainName,
+        state: KNOB_STATE_LABEL[strip.pumpSpeed],
+      },
+      {
+        id: 'sweep',
+        name: ECMO_CONTROL_PANEL.knobs[1].plainName,
+        state: KNOB_STATE_LABEL[strip.sweep],
+      },
+      {
+        id: 'oxygen-fraction',
+        name: ECMO_CONTROL_PANEL.knobs[2].plainName,
+        state: KNOB_STATE_LABEL[strip.oxygenFraction],
+      },
+      {
+        id: 'clamps',
+        name: ECMO_CONTROL_PANEL.emergencyOnly[0].plainName,
+        state: strip.clamps === 'this-emergency' ? 'this emergency' : 'emergency only',
+      },
+    ]
+  return (
+    <section
+      className={teachingStyles.section}
+      aria-labelledby="drill-knob-strip-heading"
+      data-knob-strip={strip.verdict}
+    >
+      <h3 id="drill-knob-strip-heading" className={teachingStyles.heading}>
+        The control panel, for this pattern
+      </h3>
+      <p className="mt-2">{strip.sentence}</p>
+      <dl className="mt-3 grid gap-1">
+        {states.map((knob) => (
+          <div
+            key={knob.id}
+            className="flex flex-wrap gap-1"
+            data-knob={knob.id}
+            data-knob-state={knob.state}
+          >
+            <dt className="font-semibold">{knob.name}:</dt>
+            <dd className="text-muted-foreground">{knob.state}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
 
 /**
  * Explain, from data, for every drill.
@@ -46,7 +112,18 @@ export function DrillStepTeaching({
     )
   }
 
-  if (hasAuthoredPanel) return null
+  const spec = ecmoDrillSpecs[scenario.id]
+  const knobStrip = spec ? <KnobStrip strip={spec.controlPanel} /> : null
+
+  if (hasAuthoredPanel) {
+    // The authored panel carries the mechanism, the fitting response and its own grammar row; the
+    // knob strip is the one thing every drill's Explain adds beside it.
+    return knobStrip ? (
+      <div className="grid gap-4" data-drill-explain={scenario.id}>
+        {knobStrip}
+      </div>
+    ) : null
+  }
 
   return (
     <div className="grid gap-4" data-drill-explain={scenario.id}>
@@ -83,6 +160,34 @@ export function DrillStepTeaching({
           </ul>
         </section>
       ) : null}
+      {spec?.localizationRowId ? (
+        <EcmoLocalizationCard
+          mode="revealed-row"
+          rowId={spec.localizationRowId}
+          supportMode={scenario.supportMode}
+        />
+      ) : null}
+      {knobStrip}
+      {step.phase === 'transfer' && spec ? (
+        <section className={teachingStyles.section} aria-labelledby="drill-transfer-heading">
+          <h3 id="drill-transfer-heading" className={teachingStyles.heading}>
+            What carries forward
+          </h3>
+          <p className="mt-2">{spec.transferPrinciple}</p>
+        </section>
+      ) : null}
+      <section className={teachingStyles.section} aria-labelledby="drill-sources-heading">
+        <h3 id="drill-sources-heading" className={teachingStyles.heading}>
+          Sources for this pattern
+        </h3>
+        <div className="mt-2" data-drill-sources>
+          <EcmoSourceList
+            compact
+            evidenceIds={scenario.evidenceIds}
+            labelledBy="drill-sources-heading"
+          />
+        </div>
+      </section>
     </div>
   )
 }

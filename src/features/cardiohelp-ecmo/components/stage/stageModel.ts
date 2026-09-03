@@ -121,7 +121,7 @@ export interface StageStep {
   readonly gate: 'open' | 'after-prediction'
   /** Shown in the collapsed row once the step has been performed. */
   readonly expectedResponse?: readonly string[]
-  /** A foundation variant to restore when the step is entered. */
+  /** A foundation variant authored for this phase; restored when the step is entered. */
   readonly entryVariantId?: string
 }
 
