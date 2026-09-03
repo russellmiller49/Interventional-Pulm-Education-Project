@@ -46,7 +46,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'vv-init-circuit-console-only',
-            'The displayed RPM alone confirms that the entire circuit is functioning.',
+            'The displayed RPM alone confirms that the entire circuit is functioning, because a pump that is turning must be moving blood.',
           ),
         ],
         correctOptionId: 'vv-init-circuit-correct',
@@ -119,7 +119,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'hem-circuit-worse',
-            'pVen becomes more negative and chatter persists despite higher RPM.',
+            'pVen becomes more negative and chatter persists despite higher RPM — the expected cost of holding flow while circulating volume is still low.',
           ),
           option(
             'hem-circuit-pressure-only',
@@ -137,7 +137,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'hem-patient-pressor-only',
-            'MAP rises briefly with vasopressor alone while hemoglobin and lactate worsen.',
+            'MAP rises briefly with vasopressor alone while hemoglobin and lactate worsen, a sign that perfusion pressure has been secured.',
           ),
           option(
             'hem-patient-volume-only',
@@ -271,7 +271,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'recirc-circuit-bright',
-            'Drainage blood becomes brighter and pre-oxygenator saturation rises further.',
+            'Drainage blood becomes brighter and pre-oxygenator saturation rises further, showing the circuit now draws better-oxygenated blood.',
           ),
           option(
             'recirc-circuit-post',
@@ -290,7 +290,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option('recirc-patient-worse', 'SpO₂ falls as RPM and recaptured return flow increase.'),
           option(
             'recirc-patient-none',
-            'No patient reassessment is needed if post-oxygenator blood remains saturated.',
+            'No patient reassessment is needed if post-oxygenator blood remains saturated, since the circuit is delivering fully oxygenated blood.',
           ),
         ],
         correctOptionId: 'recirc-patient-correct',
@@ -329,7 +329,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option('gas-device-rpm', 'A large RPM increase is what restores CO₂ clearance.'),
           option(
             'gas-device-flow-loss',
-            'Blood flow must fall to zero whenever sweep gas is disconnected.',
+            'Blood flow must fall to zero whenever sweep gas is disconnected, because the pump cannot run without gas at the membrane.',
           ),
         ],
         correctOptionId: 'gas-device-correct',
@@ -347,7 +347,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'gas-circuit-ack',
-            'Acknowledging the alarm confirms that the gas pathway is restored.',
+            'Acknowledging the alarm confirms that the gas pathway is restored, since the console would alarm again if gas were still absent.',
           ),
         ],
         correctOptionId: 'gas-circuit-correct',
@@ -403,7 +403,10 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
             'vv-oxy-device-correct',
             'Required flow is maintained without escalating RPM against a resistant oxygenator.',
           ),
-          option('vv-oxy-device-rpm', 'RPM is increased until pInt rises further.'),
+          option(
+            'vv-oxy-device-rpm',
+            'RPM is increased until pInt rises further, since more drive pressure is what pushes blood through a resistant membrane.',
+          ),
           option(
             'vv-oxy-device-delta',
             'The console Δp number alone proves thrombus location and severity.',
@@ -422,7 +425,10 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
             'vv-oxy-circuit-worse',
             'pInt and Δp continue rising with declining post-oxygenator saturation.',
           ),
-          option('vv-oxy-circuit-part', 'A normal pArt alone excludes oxygenator dysfunction.'),
+          option(
+            'vv-oxy-circuit-part',
+            'A normal pArt alone excludes oxygenator dysfunction, because blood leaving the membrane at normal pressure has crossed it freely.',
+          ),
         ],
         correctOptionId: 'vv-oxy-circuit-correct',
       },
@@ -499,7 +505,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'va-init-circuit-flow-only',
-            'A displayed flow number makes arterial-return and limb checks unnecessary.',
+            'A displayed flow number makes arterial-return and limb checks unnecessary, since blood that is flowing must be reaching the patient and the leg.',
           ),
         ],
         correctOptionId: 'va-init-circuit-correct',
@@ -513,7 +519,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'va-init-patient-map-only',
-            'MAP rises, so LV loading and upper-body oxygenation no longer require assessment.',
+            'MAP rises, so LV loading and upper-body oxygenation no longer require assessment, because a restored pressure means both circulations are being served.',
           ),
           option(
             'va-init-patient-spo2-only',
@@ -557,7 +563,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'diff-device-rpm',
-            'Higher RPM alone guarantees oxygenated blood reaches the upper body.',
+            'Higher RPM alone guarantees oxygenated blood reaches the upper body, since more retrograde flow pushes the mixing point up the aorta.',
           ),
           option('diff-device-flow-only', 'Normal displayed flow excludes differential hypoxemia.'),
         ],
@@ -576,7 +582,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'diff-circuit-femoral',
-            'A normal femoral sample proves right-arm oxygenation is adequate.',
+            'A normal femoral sample proves right-arm oxygenation is adequate, because every arterial site sees the same returned blood.',
           ),
         ],
         correctOptionId: 'diff-circuit-correct',
@@ -594,7 +600,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'diff-patient-pulse',
-            'Pulse pressure disappears, which confirms successful upper-body oxygenation.',
+            'Pulse pressure disappears, which confirms successful upper-body oxygenation because the circuit now supplies the whole aorta unopposed.',
           ),
         ],
         correctOptionId: 'diff-patient-correct',
@@ -632,7 +638,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'tamponade-device-rpm',
-            'Higher RPM overcomes tamponade and is definitive treatment.',
+            'Higher RPM overcomes tamponade and is definitive treatment, since the pump can draw blood past a compressed heart.',
           ),
           option('tamponade-device-ack', 'Acknowledging low-flow alarms restores cardiac filling.'),
         ],
@@ -648,7 +654,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option('tamponade-circuit-worse', 'Drainage collapse persists despite decompression.'),
           option(
             'tamponade-circuit-oxygenator',
-            'A rising oxygenator Δp confirms tamponade relief.',
+            'A rising oxygenator Δp confirms tamponade relief, because more venous return is now crossing the membrane.',
           ),
         ],
         correctOptionId: 'tamponade-circuit-correct',
@@ -736,7 +742,10 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
             'vaso-patient-flow',
             'Only total circuit flow rises; MAP and lactate remain abnormal.',
           ),
-          option('vaso-patient-warm', 'Warm extremities alone prove adequate organ perfusion.'),
+          option(
+            'vaso-patient-warm',
+            'Warm extremities alone prove adequate organ perfusion, since a vasodilated patient is by definition well perfused.',
+          ),
         ],
         correctOptionId: 'vaso-patient-correct',
       },
@@ -792,7 +801,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'limb-circuit-oxygenator',
-            'Post-oxygenator saturation alone confirms distal-limb perfusion.',
+            'Post-oxygenator saturation alone confirms distal-limb perfusion, since oxygenated return blood is what the cannulated leg receives.',
           ),
         ],
         correctOptionId: 'limb-circuit-correct',
@@ -843,7 +852,10 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
             'va-oxy-device-correct',
             'Required VA flow is maintained without escalating RPM across a resistant oxygenator.',
           ),
-          option('va-oxy-device-rpm', 'RPM is increased until the high pInt alarm resolves.'),
+          option(
+            'va-oxy-device-rpm',
+            'RPM is increased until the high pInt alarm resolves, since the alarm limit is what defines a safe oxygenator.',
+          ),
           option(
             'va-oxy-device-delta',
             'The console Δp value alone determines the exchange decision.',
@@ -862,7 +874,10 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
             'va-oxy-circuit-worse',
             'pInt and Δp rise further while post-oxygenator oxygenation worsens.',
           ),
-          option('va-oxy-circuit-part', 'A normal pArt alone excludes oxygenator thrombosis.'),
+          option(
+            'va-oxy-circuit-part',
+            'A normal pArt alone excludes oxygenator thrombosis, because a membrane that lets blood out at its usual pressure cannot be clotted.',
+          ),
         ],
         correctOptionId: 'va-oxy-circuit-correct',
       },
@@ -953,7 +968,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'vv-air-patient-flow-only',
-            'Displayed circuit flow alone confirms the patient is safe.',
+            'Displayed circuit flow alone confirms the patient is safe, since any air that mattered would have stopped the pump again.',
           ),
           option(
             'vv-air-patient-ignore',
@@ -997,7 +1012,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'va-air-device-early-restart',
-            'The pump is restarted immediately to shorten the interruption, before de-airing.',
+            'The pump is restarted immediately to shorten the interruption, before de-airing, since on VA support the lost circulation is the greater danger.',
           ),
           option(
             'va-air-device-alarm-only',
@@ -1019,7 +1034,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'va-air-circuit-reverse',
-            'The drainage limb alone was clamped; arterial-limb air is tolerated on VA support.',
+            'The drainage limb alone was clamped; arterial-limb air is tolerated on VA support because the stopped pump already holds it in place.',
           ),
         ],
         correctOptionId: 'va-air-circuit-correct',
@@ -1033,7 +1048,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           ),
           option(
             'va-air-patient-map-only',
-            'A single MAP value confirms full recovery without further reassessment.',
+            'A single MAP value confirms full recovery without further reassessment, since pressure is the first thing an embolus would change.',
           ),
           option(
             'va-air-patient-ignore',
