@@ -737,9 +737,12 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
-        objective: 'Identify the blood control and the gas control.',
-        requiredAction: 'Locate pump speed and sweep, and the paths each one acts on.',
-        teachingPoint: 'Two controls, two paths, two principal effects.',
+        objective:
+          'Find the three things you can change on this circuit, and what is not a control.',
+        requiredAction:
+          'Find the three controls on the console and the blender, and the things beside them that are not controls.',
+        teachingPoint:
+          'Three controls, two axes: pump speed on the blood path; sweep and the oxygen fraction on the gas path. Everything else is monitoring.',
       },
       predict: {
         objective: 'Choose the control that principally moves CO₂ in this model.',
@@ -789,6 +792,28 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
           { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 200 } as const,
+        ],
+        settleSeconds: 12,
+      },
+      // The two story problems (`content/storyProblems.ts`): the colleague's change, reproduced
+      // from the same clean reference so the learner reads the axis it moved and the one it did not.
+      {
+        id: 'double-sweep',
+        label: 'Double the sweep',
+        description: 'The story problem’s gas-side move, from the reference state.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        resolve: (restored) => [{ type: 'SET_SWEEP', sweep: restored.gas.sweepLpm * 2 } as const],
+        settleSeconds: 12,
+      },
+      {
+        id: 'increase-rpm-by-400',
+        label: 'Raise pump speed by 400 rpm',
+        description: 'The story problem’s blood-side move, from the reference state.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        resolve: (restored) => [
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 400 } as const,
         ],
         settleSeconds: 12,
       },

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
@@ -201,12 +201,22 @@ describe('the hub counts what the registry actually holds', () => {
     )
   })
 
-  it('offers a browse affordance carrying the derived total', () => {
-    render(<CardiohelpHub />)
-    const browse = screen.getByRole('link', {
+  it('offers a browse affordance carrying the derived total, which opens the map in place', () => {
+    const { container } = render(<CardiohelpHub />)
+    const browse = screen.getByRole('button', {
       name: `Browse all ${ecmoPathwayComposition('vv').total} sections`,
     })
-    expect(browse).toHaveAttribute('href', '/cardiohelp-ecmo/learn?track=vv')
+    // One door: browsing expands the pathway here rather than sending the learner to a second
+    // surface. The pathway page stays reachable through a tertiary link.
+    expect(browse).toHaveAttribute('aria-expanded', 'false')
+    expect(container.querySelector('[data-pathway-accordion]')).toBeNull()
+    fireEvent.click(browse)
+    expect(browse).toHaveAttribute('aria-expanded', 'true')
+    expect(container.querySelector('[data-pathway-accordion]')).not.toBeNull()
+    expect(screen.getByRole('link', { name: /Open the pathway page/ })).toHaveAttribute(
+      'href',
+      '/cardiohelp-ecmo/learn?track=vv',
+    )
   })
 
   it('keeps both entry actions on the same track when the learner switches track', () => {
@@ -214,14 +224,17 @@ describe('the hub counts what the registry actually holds', () => {
     // choosing VA and then browsing showed the VV pathway — one screen disagreeing with itself
     // about which pathway the learner had just entered.
     const { container } = render(<CardiohelpHub />)
-    const browseHref = () =>
-      screen.getByRole('link', { name: /^Browse all \d+ sections$/ }).getAttribute('href')
+    fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))
+    const pathwayPageHref = () =>
+      screen.getByRole('link', { name: /Open the pathway page/ }).getAttribute('href')
 
-    expect(browseHref()).toContain('track=vv')
+    expect(pathwayPageHref()).toContain('track=vv')
+    expect(container.querySelector('[data-pathway-accordion]')).toHaveAttribute('data-track', 'vv')
 
     fireEvent.click(screen.getByRole('radio', { name: /Peripheral VA ECMO/ }))
 
-    expect(browseHref()).toContain('track=va')
+    expect(pathwayPageHref()).toContain('track=va')
+    expect(container.querySelector('[data-pathway-accordion]')).toHaveAttribute('data-track', 'va')
     // And the primary action agrees with it.
     const primaryHref = primaryCta(container).getAttribute('href')
     expect(primaryHref).toContain('track=va')
@@ -233,11 +246,14 @@ describe('the grouped view presents the whole pathway', () => {
     // The physiology sections were absent from this list entirely, which is how a learner could
     // read the hub and never learn they existed.
     const { container } = render(<CardiohelpHub />)
+    fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))
     const grouped = container.querySelector('ol[class*="hubUnitList"]')
     expect(grouped).not.toBeNull()
 
-    const sectionLinks = Array.from(within(grouped as HTMLElement).getAllByRole('link')).filter(
-      (link) => link.getAttribute('data-kind') === 'section',
+    // Queried in the DOM rather than by role: six of the seven units are closed `<details>`, and
+    // their chips are still the pathway, just not yet disclosed.
+    const sectionLinks = Array.from(
+      (grouped as HTMLElement).querySelectorAll<HTMLElement>('a[data-kind="section"]'),
     )
 
     expect(sectionLinks.map((link) => targetOf(link))).toEqual(
@@ -250,6 +266,7 @@ describe('the grouped view presents the whole pathway', () => {
     seedProgress([vv[0]!.id, vv[1]!.id])
 
     const { container } = render(<CardiohelpHub />)
+    fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))
     const flagged = container.querySelectorAll('[data-recommended="true"]')
 
     expect(flagged).toHaveLength(1)
@@ -263,6 +280,7 @@ describe('the grouped view presents the whole pathway', () => {
     seedProgress([vv[0]!.id])
 
     const { container } = render(<CardiohelpHub />)
+    fireEvent.click(screen.getByRole('button', { name: /^Browse all \d+ sections$/ }))
     const worked = container.querySelector('[data-kind="section"][data-complete="true"]')
 
     expect(worked).not.toBeNull()

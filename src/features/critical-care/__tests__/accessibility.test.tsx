@@ -370,12 +370,15 @@ describe('critical-care accessibility surfaces', () => {
     expect(view.container.querySelectorAll('[data-ecmo-continue]')).toHaveLength(1)
 
     const primary = screen.getByRole('link', { name: /^Continue —/ })
-    const browse = screen.getByRole('link', { name: /^Browse all \d+ sections$/ })
-    // Real links, so they are in the tab order and operable by keyboard without a handler.
-    for (const control of [primary, browse]) {
-      expect(control.tagName).toBe('A')
-      expect(control).toHaveAttribute('href')
-    }
+    // A real link, so it is in the tab order and operable by keyboard without a handler.
+    expect(primary.tagName).toBe('A')
+    expect(primary).toHaveAttribute('href')
+    // Browsing opens the map in place (one door, one map): a real button that names the region it
+    // controls, so it is keyboard-operable and its state is announced.
+    const browse = screen.getByRole('button', { name: /^Browse all \d+ sections$/ })
+    expect(browse).toHaveAttribute('aria-expanded', 'false')
+    expect(browse).toHaveAttribute('aria-controls')
+    expect(document.getElementById(browse.getAttribute('aria-controls') ?? '')).not.toBeNull()
 
     // The track chooser is a real radio group — not just the markup of one. Exactly one option is
     // in the tab sequence and the arrow keys move within the group, which is the half that was

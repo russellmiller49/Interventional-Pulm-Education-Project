@@ -30,6 +30,7 @@ import {
   type EcmoInteractiveFoundationSectionId,
 } from '../../content/foundationLessonRuntime'
 import { ecmoSectionSpecById } from '../../content/sectionSpecs'
+import { ecmoStoryProblemsFor } from '../../content/storyProblems'
 import { persistFoundationSectionCompleted } from '../../engine/progress'
 import type { SupportMode } from '../../engine/types'
 import {
@@ -54,6 +55,7 @@ import {
   buildFoundationStageLesson,
   foundationCircuitLocationDisclosure,
 } from './adapters/foundationStageAdapter'
+import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
 import { StageTeachingScope } from './StageTeachingScope'
@@ -667,12 +669,26 @@ function FoundationStageSession({
     </div>
   )
 
+  const storyProblems = ecmoStoryProblemsFor(sectionId)
   const task = (
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <EcmoNowCard model={nowModel}>{nowBody}</EcmoNowCard>
       </div>
       {boundedActions}
+      {predictionCommitted &&
+      (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
+      storyProblems.length > 0 ? (
+        <FoundationStoryProblems
+          stories={storyProblems}
+          state={session.simulation}
+          ranActionIds={session.interactionsSinceRestore}
+          onRun={(guidedActionId) => {
+            const guided = runtime.guidedActions.find((action) => action.id === guidedActionId)
+            if (guided) runGuidedAction(guided)
+          }}
+        />
+      ) : null}
       {activeIndex === 0 && sectionSpec ? (
         <details className={styles.objectives} data-stage-objectives>
           <summary>What this section is for</summary>

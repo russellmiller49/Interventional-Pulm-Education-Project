@@ -1,4 +1,6 @@
+import { ECMO_CONTROL_PANEL } from '../../content/controlPanel'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import type { EcmoSimulationState } from '../../engine/types'
 import { GuidedValue, ModelBoundary, TextEquivalent, styles } from './shared'
 
@@ -59,6 +61,55 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
 
   return (
     <div className={styles.panel} data-teaching-panel="blood-flow-versus-sweep">
+      {/*
+        The small control panel (skill principle 4), stated once before any troubleshooting: the
+        three things a learner can change, the one thing that is for emergencies, and the fact that
+        everything else on the console is monitoring. Reused as a knob strip in every drill's
+        Explain step, so the wording here is the registry's, not this panel's.
+      */}
+      <section
+        className={styles.section}
+        aria-labelledby="control-panel-heading"
+        data-control-panel
+      >
+        <h3 id="control-panel-heading" className={styles.heading}>
+          The control panel: three things you can change
+        </h3>
+        <p className="mt-2 text-sm leading-6">{ECMO_CONTROL_PANEL.sentence}</p>
+        <ol className="mt-3 grid gap-2 lg:grid-cols-3">
+          {ECMO_CONTROL_PANEL.knobs.map((knob) => (
+            <li key={knob.id} className="rounded-xl border p-3" data-control-knob={knob.id}>
+              <p className="text-sm font-semibold">{knob.plainName}</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                {knob.consoleLabel} · {knob.axis}
+              </p>
+              <p className="mt-2 text-sm leading-5">
+                <span className="font-semibold">Moves:</span> {knob.principallyMoves}
+              </p>
+              <p className="text-sm leading-5 text-muted-foreground">
+                <span className="font-semibold">Does not move:</span> {knob.doesNotMove}
+              </p>
+            </li>
+          ))}
+        </ol>
+        {ECMO_CONTROL_PANEL.emergencyOnly.map((control) => (
+          <p
+            key={control.id}
+            className="mt-3 text-sm leading-6 text-muted-foreground"
+            data-control-emergency={control.id}
+          >
+            <span className="font-semibold">{control.plainName}.</span> {control.sentence}{' '}
+            Everything else on the console is monitoring.
+          </p>
+        ))}
+        <EcmoSourceList
+          compact
+          evidenceIds={ECMO_CONTROL_PANEL.sourceIds}
+          title="Sources"
+          headingLevel={4}
+        />
+      </section>
+
       <section className={styles.section} aria-labelledby="paths-heading">
         <h3 id="paths-heading" className={styles.heading}>
           The blood path and the gas path

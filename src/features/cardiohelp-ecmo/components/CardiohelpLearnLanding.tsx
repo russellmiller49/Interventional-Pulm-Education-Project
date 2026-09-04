@@ -1,38 +1,32 @@
 import type { Route } from 'next'
 
-import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
-import { PathwayLanding } from '@/features/learning-module/curriculum'
 import { Link } from '@/i18n/navigation'
 
 import { ecmoPathwayComposition } from '../content/pathwayResolver'
+import { ecmoTrackIncrement } from '../content/trackIncrements'
 import type { SupportMode } from '../engine/types'
 import { EcmoContinueCta } from './EcmoContinueCta'
+import { EcmoStoredPathwayAccordion } from './EcmoPathwayAccordion'
 
+/**
+ * The Learn landing: the same door and the same map as the hub.
+ *
+ * It used to render the shared `PathwayLanding` — seventeen cards in a grid under a long intro,
+ * with its own copy of the counts. Now it is two sentences, the one Continue call to action the
+ * hub also resolves, and the pathway accordion the hub also shows. CRRT keeps the shared landing.
+ */
 const trackLabel: Readonly<Record<SupportMode, string>> = {
-  vv: 'VV · for failing lungs · gas exchange in series',
-  va: 'VA · for a failing heart · flow in parallel',
+  vv: 'VV · for failing lungs',
+  va: 'VA · for a failing heart or circulation',
 }
 
 export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: SupportMode }) {
-  const other: SupportMode = supportMode === 'vv' ? 'va' : 'vv'
-  const { foundations, consoleOrientation, drills, capstone } = ecmoPathwayComposition(supportMode)
-  // Counted from the registry, like every other count on this surface, so the note cannot drift
-  // into describing a shape the pathway no longer has.
-  const compositionLine = [
-    `${foundations} foundations`,
-    consoleOrientation === 1
-      ? 'console orientation seventh'
-      : `${consoleOrientation} console orientation sections`,
-    `${drills} drills`,
-    capstone === 1 ? 'integration capstone' : `${capstone} integration capstones`,
-  ].join(' · ')
+  const { total } = ecmoPathwayComposition(supportMode)
+  const increment = ecmoTrackIncrement(supportMode)
 
   return (
-    <>
-      <nav
-        className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 pt-8 sm:px-6 lg:px-8"
-        aria-label="Choose support mode track"
-      >
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      <nav className="flex flex-wrap gap-2" aria-label="Choose support mode track">
         {(['vv', 'va'] as const).map((mode) => (
           <Link
             key={mode}
@@ -44,31 +38,42 @@ export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: 
           </Link>
         ))}
       </nav>
-      <PathwayLanding
-        pathway={criticalCareLearningPathway('cardiohelp-ecmo', supportMode)}
-        sectionHref={(sectionId) =>
-          `/cardiohelp-ecmo/learn?lesson=${sectionId}&track=${supportMode}`
-        }
-        eyebrow={`${supportMode.toUpperCase()} track · one continuous pathway`}
-        intro="The first four sections are shared by both tracks: what extracorporeal support substitutes for, the circuit as a flow path, what a centrifugal pump does to the pressures around it, and why blood flow and sweep are not interchangeable. The track then adds its own physiology and its normal state before the console appears, and only then works the failure patterns. Move in order or open any section directly."
-        startCta={<EcmoContinueCta supportMode={supportMode} />}
-        sectionsNote={`${compositionLine} · Working the first four covers them for the other track (${other.toUpperCase()}) too.`}
-        notice={
-          <aside
-            role="note"
-            className="flex max-w-3xl gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm leading-6"
-          >
-            <div>
-              <p className="font-semibold">Educational model · draft</p>
-              <p className="text-muted-foreground">
-                Circuit responses are bounded teaching approximations. Where the source set
-                disagrees — including adult anticoagulation targets — both positions are shown
-                rather than reconciled, and neither is presented as a bedside threshold.
-              </p>
-            </div>
-          </aside>
-        }
-      />
-    </>
+      <header className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {supportMode.toUpperCase()} track · one continuous pathway · {total} sections
+        </p>
+        <h1 className="text-2xl font-semibold">Learn</h1>
+        <p className="max-w-3xl text-base leading-7">
+          Every section is read on the same simulated circuit: first what the support stands in for
+          and where each reading is taken, then one failure at a time, then the whole track in one
+          case. Move in order, or open any section from the map below.
+        </p>
+        {increment ? (
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground" data-track-increment>
+            {increment.sentence}
+          </p>
+        ) : null}
+        <EcmoContinueCta supportMode={supportMode} />
+      </header>
+      <section aria-labelledby="learn-landing-map-heading">
+        <h2 id="learn-landing-map-heading" className="text-lg font-semibold">
+          {supportMode.toUpperCase()} pathway
+        </h2>
+        <EcmoStoredPathwayAccordion track={supportMode} id="learn-landing-pathway" />
+      </section>
+      <aside
+        role="note"
+        className="flex max-w-3xl gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm leading-6"
+      >
+        <div>
+          <p className="font-semibold">Educational model · draft</p>
+          <p className="text-muted-foreground">
+            Circuit responses are bounded teaching approximations. Where the source set disagrees,
+            both positions are shown rather than reconciled, and neither is presented as a bedside
+            threshold.
+          </p>
+        </div>
+      </aside>
+    </div>
   )
 }
