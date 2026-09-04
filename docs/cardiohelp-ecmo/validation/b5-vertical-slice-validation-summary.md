@@ -220,3 +220,10 @@ rather than an access failure — the same reason U1 and U4 were deferred.
 ## 6. Verification run
 
 Recorded in the pull request for this package, with actual counts.
+
+## 7. Superseded as a testing baseline
+
+R4 (branch `claude/ecmo-9-3`) rebuilt the Learn, Practice and Challenge surfaces and corrected the
+engine defects this summary's register admitted. The next human round uses the baseline declared in
+[`r4-human-testing-baseline.md`](./r4-human-testing-baseline.md) under decision D-5; the
+observations above remain the record of what was found at `2f26cb76`.
