@@ -312,7 +312,7 @@ describe('the drawing, marked', () => {
       expect(svg?.getAttribute('viewBox')).toBe(CIRCUIT_MAP_FRAME_VIEWBOX.whole)
       expect(svg?.getAttribute('class')).toMatch(/circuitSvgFit/)
       // Fitted, there is nothing to scroll sideways: no tab stop, no swipe hint, no promise of one.
-      const scroller = svg?.parentElement
+      const scroller = svg?.closest('[class*="circuitDiagramScroll"]')
       expect(scroller?.getAttribute('tabindex')).toBeNull()
       expect(scroller?.getAttribute('aria-label')).not.toMatch(/horizontally scrollable/)
       expect(container.textContent).not.toMatch(/swipe the diagram/)
@@ -322,7 +322,7 @@ describe('the drawing, marked', () => {
     const poster = renderMap(state, { circuitPresentation: implicated })
     const svg = poster.container.querySelector('svg[data-map-frame]')
     expect(svg?.getAttribute('class')).not.toMatch(/circuitSvgFit/)
-    expect(svg?.parentElement?.getAttribute('tabindex')).toBe('0')
+    expect(svg?.closest('[class*="circuitDiagramScroll"]')?.getAttribute('tabindex')).toBe('0')
     expect(poster.container.textContent).toMatch(/swipe the diagram/)
     poster.unmount()
     // A host may still ask for the circuit panel alone.

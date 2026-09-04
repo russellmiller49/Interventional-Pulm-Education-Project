@@ -13,6 +13,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
 import { orderChoices } from '../../content/choiceOrder'
+import { ecmoMapAnswerTargets } from '../../content/mapAnswerTargets'
 import { ecmoFoundationStageSources } from '../../content/stageSources'
 import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import {
@@ -42,6 +43,7 @@ import {
   ecmoFoundationRestoreAction,
   ecmoFoundationSessionReducer,
 } from '../../session/foundationSession'
+import type { CircuitMapAnswerProps } from '../circuit-map/CircuitMapAnswerFieldset'
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
@@ -556,6 +558,39 @@ function FoundationStageSession({
     }
   })()
 
+  /*
+   * The prediction, when it is a question about a place.
+   *
+   * `content/mapAnswerTargets` says which items are answered on the circuit: every choice has to be
+   * somewhere on the drawing, or the item keeps its list. When one qualifies the radio group moves
+   * out of this pane and onto the map as numbered pins, and the pane keeps the question and the
+   * button that commits it.
+   */
+  const mapAnswerItem =
+    activeStep.interaction.kind === 'prediction' || activeStep.interaction.kind === 'transfer-item'
+      ? activeStep.interaction.item
+      : null
+  const mapAnswerTargets = mapAnswerItem ? ecmoMapAnswerTargets(mapAnswerItem.id) : null
+  const mapAnswer: CircuitMapAnswerProps | null =
+    mapAnswerItem && mapAnswerTargets
+      ? {
+          item: mapAnswerItem,
+          targets: mapAnswerTargets,
+          selectedChoiceId: selectedChoiceId ?? null,
+          committedChoiceId:
+            activeStep.interaction.kind === 'prediction'
+              ? progression.committedPredictionId
+              : progression.committedTransferId,
+          correctChoiceIds: mapAnswerItem.correctChoiceIds,
+          name: `ecmo-foundation-${activeStep.id}`,
+          onSelect: (choiceId) =>
+            setProgression((current) => ({
+              ...current,
+              choiceByStepId: { ...current.choiceByStepId, [activeStep.id]: choiceId },
+            })),
+        }
+      : null
+
   function choiceFieldset(
     item: {
       readonly id: string
@@ -685,9 +720,27 @@ function FoundationStageSession({
       const committedChoice = item.choices.find((choice) => choice.id === committedId)
       return (
         <>
-          {choiceFieldset(
-            item,
-            interaction.kind === 'prediction' ? 'prediction-heading' : 'transfer-heading',
+          {mapAnswer ? (
+            <div className={styles.mapAnswerPrompt} data-map-answer-prompt>
+              <p id="prediction-heading" className={styles.mapAnswerStem}>
+                {item.stem}
+              </p>
+              <p>
+                Choose the place on the circuit map. The four candidates are pinned on the drawing
+                and named under it.
+              </p>
+              {selectedChoiceId ? (
+                <p data-map-answer-chosen>
+                  <strong>You have chosen:</strong>{' '}
+                  {item.choices.find((choice) => choice.id === selectedChoiceId)?.label}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            choiceFieldset(
+              item,
+              interaction.kind === 'prediction' ? 'prediction-heading' : 'transfer-heading',
+            )
           )}
           {committedChoice ? (
             <div className="grid gap-3" data-verdict>
@@ -829,6 +882,7 @@ function FoundationStageSession({
         controlsEnabled={false}
         emphasisSceneLabelIds={emphasisSceneLabelIds}
         circuitPresentation={circuitPresentation}
+        mapAnswer={mapAnswer}
         // No frame override: the map's window follows the stop, and pans between stops.
         circuitFit="pane"
         circuitViewPreference={circuitViewPreference}

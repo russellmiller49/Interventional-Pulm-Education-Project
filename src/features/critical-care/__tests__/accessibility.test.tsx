@@ -13,6 +13,8 @@ import {
   ecmoCircuitWalkStopsForSection,
   ecmoWalkStopSegmentIds,
 } from '@/features/cardiohelp-ecmo/content/circuitWalk'
+import { ecmoFoundationLearningItems } from '@/features/cardiohelp-ecmo/content/foundationLearningItems'
+import { ecmoMapAnswerTargets } from '@/features/cardiohelp-ecmo/content/mapAnswerTargets'
 import { EcmoContinueCta } from '@/features/cardiohelp-ecmo/components/EcmoContinueCta'
 import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/CardiohelpWorkbench'
 import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
@@ -368,6 +370,56 @@ describe('critical-care accessibility surfaces', () => {
     ).toBeInTheDocument()
     expect(view.container.querySelector('[data-map-emphasis]')).not.toBeNull()
     expect(await axe(view.container)).toHaveNoViolations()
+  })
+
+  it('keeps the circuit’s own answer control free of automated violations', async () => {
+    /*
+     * The prediction about a place is answered by pointing at the place: numbered pins over the
+     * drawing, each one a label for a hidden radio. A control laid over a picture is exactly where
+     * a name or a role goes missing, so it gets its own axe pass, before and after the commitment.
+     */
+    let state = createEcmoReferenceState('vv-reference')
+    for (let tick = 0; tick < 8; tick += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+    const item = ecmoFoundationLearningItems['circuit-flow-path'].prediction
+    const targets = ecmoMapAnswerTargets(item.id) ?? []
+    const answer = {
+      item,
+      targets,
+      correctChoiceIds: item.correctChoiceIds,
+      name: 'axe-map-answer',
+      onSelect: jest.fn(),
+    }
+    const pending = render(
+      <CircuitSchematic
+        state={state}
+        dispatch={jest.fn()}
+        controlsEnabled={false}
+        circuitFit="pane"
+        mapAnswer={{ ...answer, selectedChoiceId: null, committedChoiceId: null }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    expect(screen.getAllByRole('radio')).toHaveLength(item.choices.length)
+    expect(await axe(pending.container)).toHaveNoViolations()
+    pending.unmount()
+
+    const committed = render(
+      <CircuitSchematic
+        state={state}
+        dispatch={jest.fn()}
+        controlsEnabled={false}
+        circuitFit="pane"
+        mapAnswer={{
+          ...answer,
+          selectedChoiceId: targets[0]?.choiceId ?? null,
+          committedChoiceId: targets[0]?.choiceId ?? null,
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    expect(await axe(committed.container)).toHaveNoViolations()
   })
 
   it('labels every pane of the ECMO lesson stage and keeps its chrome accessible', async () => {

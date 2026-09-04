@@ -21,6 +21,10 @@ import {
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoLocalizationRow } from '../content/localizationCards'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
+import {
+  CircuitMapAnswerFieldset,
+  type CircuitMapAnswerProps,
+} from '../components/circuit-map/CircuitMapAnswerFieldset'
 
 /**
  * One citation surface.
@@ -53,7 +57,16 @@ jest.mock('../components/CardiohelpConsole', () => ({
 }))
 // The stage renders the four monitor surfaces by name, so all four named exports are stubbed.
 jest.mock('../components/CircuitAndMonitors', () => ({
-  CircuitSchematic: () => <div data-testid="circuit-schematic" />,
+  /*
+   * The drawing is mocked; the answer control it now carries is not. A prediction about a place is
+   * answered by pointing at the circuit (`content/mapAnswerTargets`), so the real fieldset renders
+   * here — it is plain HTML over the drawing, with nothing this suite needs to stub.
+   */
+  CircuitSchematic: (props: { mapAnswer?: CircuitMapAnswerProps | null }) => (
+    <div data-testid="circuit-schematic">
+      {props.mapAnswer ? <CircuitMapAnswerFieldset {...props.mapAnswer} /> : null}
+    </div>
+  ),
   GasBlenderPanel: () => <div data-testid="gas-blender-panel" />,
   PatientMonitor: () => <div data-testid="patient-monitor" />,
   TrendPanel: () => <div data-testid="trend-panel" />,

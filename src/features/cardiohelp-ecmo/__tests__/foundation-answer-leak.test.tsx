@@ -70,10 +70,17 @@ const TRACKS: readonly SupportMode[] = ['vv', 'va']
  * `<title>`, `<desc>`, `<text>` labels, sr-only spans), each sentence of each prose container, and
  * every aria-label — from the entire composed document minus the prediction item itself, whose four
  * choices necessarily print every candidate location without identifying the keyed one.
+ *
+ * The item is found by `data-prediction-choices`, the marker its fieldset carries wherever it is
+ * rendered. It used to be found by the `aria-labelledby` hook it had while it was always a list in
+ * the task pane; this item is now answered by pointing at the circuit, so the fieldset is the pins
+ * on the drawing and its label is the legend it prints there.
  */
 function disclosureUnits(): readonly string[] {
   const root = document.body.cloneNode(true) as HTMLElement
-  root.querySelector('[aria-labelledby="prediction-heading"]')?.remove()
+  for (const choices of Array.from(root.querySelectorAll('[data-prediction-choices]'))) {
+    choices.remove()
+  }
 
   const units: string[] = []
   const push = (text: string | null | undefined) => {

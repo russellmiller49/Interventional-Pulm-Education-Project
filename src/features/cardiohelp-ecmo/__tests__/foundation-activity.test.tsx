@@ -16,6 +16,10 @@ import {
   type EcmoInteractiveFoundationSectionId,
 } from '../content/foundationLessonRuntime'
 import type { SupportMode } from '../engine/types'
+import {
+  CircuitMapAnswerFieldset,
+  type CircuitMapAnswerProps,
+} from '../components/circuit-map/CircuitMapAnswerFieldset'
 
 /**
  * Mount tests for the foundation Learn activity, now rendered on the lesson stage.
@@ -64,13 +68,21 @@ jest.mock('../components/CircuitAndMonitors', () => ({
   CircuitSchematic: (props: {
     locationDisclosure?: string
     circuitPresentation?: { kind: string; sensorSiteIds?: readonly string[] } | null
+    mapAnswer?: CircuitMapAnswerProps | null
   }) => (
     <div
       data-testid="circuit-schematic"
       data-location-disclosure={props.locationDisclosure ?? 'full'}
       data-presentation-kind={props.circuitPresentation?.kind ?? 'none'}
       data-presentation-sites={(props.circuitPresentation?.sensorSiteIds ?? []).join(' ')}
-    />
+    >
+      {/*
+        The drawing is mocked; the answer control it now carries is not. A prediction about a place
+        is answered by pointing at the circuit (`content/mapAnswerTargets`), so the real fieldset
+        renders here — plain HTML over the drawing, with nothing this suite needs to stub.
+      */}
+      {props.mapAnswer ? <CircuitMapAnswerFieldset {...props.mapAnswer} /> : null}
+    </div>
   ),
   GasBlenderPanel: () => <div data-testid="gas-blender-panel" />,
   PatientMonitor: () => <div data-testid="patient-monitor" />,

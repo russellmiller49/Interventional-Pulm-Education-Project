@@ -218,3 +218,17 @@ drill is asking about — see [`r4-owner-review-record.md`](./r4-owner-review-re
 Unchanged, deliberately: the hub's sources panel, the Practice debrief's "Sources for this case",
 and every panel rendered outside the stage keep their full card lists. Those surfaces are _about_
 provenance, or stand alone with nothing to defer to.
+
+## R4-OD-12 — A question about a place is answered on the circuit
+
+Quoted: "It would be cool if user had to drag something to the correct answer place in the animation
+or click the location from a set of choices in the animation instead of answering in the right panel
+to make it more interactive."
+
+Taken 2026-09-04, as click rather than drag. The flow-path prediction is now answered by picking one
+of four numbered pins on the pressure-zone map; the radio group moved onto the drawing and stayed a
+radio group. See [`r4-owner-review-record.md`](./r4-owner-review-record.md) §8.
+
+The rule for which items follow: every choice must be a place on the circuit. The two transfer items
+that ask where a pattern localises each offer "there is not enough information to say" — a real
+answer, and nowhere on a drawing — so they keep their lists rather than lose that choice.

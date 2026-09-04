@@ -103,3 +103,50 @@ export function circuitMapGeometry(supportMode: SupportMode): CircuitMapGeometry
     accessPoint: { cx: 650, cy: 385 },
   }
 }
+
+/**
+ * Where a learner points, when a question is about a place.
+ *
+ * One box per segment, in the drawing's own units, sized to be hit with a thumb rather than to
+ * trace the limb: a pin at the centre of the drainage box lands on the drainage limb, and nothing
+ * in the box belongs to another segment that a mapped item also offers. Authored rather than
+ * derived from the limb paths, because the clickable area of a curve is a design decision — the
+ * halo follows the tubing, the target has to be a place you can aim at.
+ */
+export const CIRCUIT_MAP_HOTSPOTS: Readonly<Record<string, CircuitMapRect>> = Object.freeze({
+  // The drainage limb between the femoral cannula and the pump inlet, under its own label.
+  drainage: { x: 176, y: 372, width: 216, height: 104 },
+  // The pump-outflow run, from the pump body to the membrane inlet.
+  'pre-membrane': { x: 516, y: 322, width: 182, height: 96 },
+  // The run past pArt and the flow-and-bubble sensor, before the limb turns for the patient.
+  'post-membrane': { x: 832, y: 336, width: 178, height: 98 },
+  // The sweep inlet at the foot of the membrane and the label that names it.
+  'gas-supply': { x: 736, y: 436, width: 196, height: 74 },
+  // The membrane body itself.
+  membrane: { x: 700, y: 292, width: 125, height: 186 },
+  // The pump body.
+  pump: { x: 402, y: 332, width: 106, height: 106 },
+  // The return limb where it runs back along the bottom of the circuit panel.
+  return: { x: 560, y: 500, width: 300, height: 78 },
+})
+
+export function circuitMapHotspot(segmentId: string): CircuitMapRect | undefined {
+  return CIRCUIT_MAP_HOTSPOTS[segmentId]
+}
+
+/** A hotspot as percentages of the drawing, for an overlay laid over the rendered SVG. */
+export function circuitMapHotspotPercent(rect: CircuitMapRect): {
+  readonly left: string
+  readonly top: string
+  readonly width: string
+  readonly height: string
+} {
+  const whole = CIRCUIT_MAP_FRAME_RECT.whole
+  const percent = (value: number, of: number) => `${((value / of) * 100).toFixed(3)}%`
+  return {
+    left: percent(rect.x, whole.width),
+    top: percent(rect.y, whole.height),
+    width: percent(rect.width, whole.width),
+    height: percent(rect.height, whole.height),
+  }
+}

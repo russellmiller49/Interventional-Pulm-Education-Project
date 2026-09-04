@@ -241,3 +241,47 @@ answers and the button that commits them.
 and every drill panel with their own lists rendering and fails if any id on their markup is missing
 from the set collected for that lesson. The panels are the authority on what they cite; the
 derivation only has to keep up.
+
+## 8. Answering on the circuit (R4-OD-12)
+
+The owner, on the flow-path prediction: "It would be cool if user had to drag something to the
+correct answer place in the animation or click the location from a set of choices in the animation
+instead of answering in the right panel to make it more interactive."
+
+Taken as clicking rather than dragging — a drag needs a keyboard equivalent that a click already is,
+and the interaction quality is the same. It is also the better question: naming a location from a
+list tests the words, pointing at it on the circuit tests the thing.
+
+- **Which items.** `content/mapAnswerTargets.ts` maps an item's choices to circuit segments, and a
+  mapping must be **total** over the choices. That rule is what decides, and it disqualifies most
+  items for a good reason: both "where does that pattern localise" transfer items offer "there is
+  not enough information to say", which is a real answer and is nowhere on a circuit. Forcing them
+  onto the map would mean deleting the choice that teaches restraint, so they keep their lists. One
+  item qualifies today — the flow-path prediction, the one the owner was looking at.
+- **It is a real radio group.** Each pin is a `<label>` for a visually-hidden
+  `<input type="radio">`, so the browser supplies every behaviour an answer control must have and
+  none of it is reimplemented: one tab stop for the group, arrow keys between options, "radio group,
+  2 of 4" from a screen reader, label-click selection, and the disabled fieldset that locks the
+  answer on commitment. The pin shows its number and the accessible name carries the number and the
+  place, so what is seen is part of what is announced. A legend under the drawing names each number,
+  because a pin has room for a numeral and not for "between the pump outlet and the membrane lung".
+- **Pins are numbered along the blood path**, not in the authored choice order. The per-item
+  rotation in `content/choiceOrder` exists so the keyed answer is not always in the same list
+  position; on a drawing that is pointless, and numbering by position means 1–4 reads along the
+  circuit instead of jumping about it.
+- **Nothing is said until the commitment**, and then it is said in words: the chosen pin reads "Your
+  answer", the keyed one "Correct", both together "Your answer · correct". No state attribute and no
+  flag exists before the commit.
+- **Nobody is stranded.** The pins live on the pressure-zone map, so the bedside tab shows a line
+  saying where the question is with a button back to it, rather than a disabled tab or a step with
+  no visible way to answer.
+
+The task pane keeps the question and the button that commits it, and echoes the chosen place. The
+`foundation-answer-leak` scan now excludes the item by `data-prediction-choices` — the marker its
+fieldset carries wherever it renders — instead of the `aria-labelledby` hook it had while it was
+always a list in that pane.
+
+`map-answer.test.tsx` holds the registry rule, the hotspot geometry (inside the drawing, big enough
+to aim at, no two overlapping for one item), the radio-group semantics, the pre-commit silence, the
+committed marking, and the wrong-tab route back. The three suites that mock the drawing now render
+the real fieldset inside their mock, because mocking the picture should not mock the answer control.

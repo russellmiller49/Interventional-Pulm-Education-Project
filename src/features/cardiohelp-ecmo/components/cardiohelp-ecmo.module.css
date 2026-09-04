@@ -6151,3 +6151,218 @@ details[open] > .hubUnitSummary::after {
   font-size: 0.9375rem;
   line-height: 1.55;
 }
+
+/* ---------------------------------------------------------------------------
+ * Answering on the circuit
+ *
+ * A numbered pin per candidate location, laid over the drawing at percentages of its own viewBox,
+ * plus a legend under it that says what each number is. The pins are labels for a real radio
+ * group; everything below is appearance only.
+ * ------------------------------------------------------------------------ */
+
+.mapAnswer {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+/*
+ * The overlay is the drawing's box, not the block's.
+ *
+ * `inset: 0` would have stretched it over the legend underneath as well, and every pin's vertical
+ * percentage would have been read against a taller box than the one it was measured in. Anchoring
+ * the top three edges and taking the height from the drawing's own aspect ratio makes the overlay
+ * exactly the SVG's box however tall the legend grows.
+ */
+.mapAnswerPins {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  aspect-ratio: 1120 / 590;
+  /* The drawing underneath stays readable: only the pins take the pointer. */
+  pointer-events: none;
+}
+
+.mapAnswerPin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  background: rgba(4, 24, 28, 0.35);
+  box-shadow: inset 0 0 0 2px rgba(125, 216, 221, 0.5);
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mapAnswerPin:hover {
+  background: rgba(113, 225, 229, 0.16);
+  box-shadow: inset 0 0 0 2px #71e1e5;
+}
+
+.mapAnswerPinBody {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #71e1e5;
+  border-radius: 999px;
+  background: #04181c;
+  color: #eaf9fa;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus lands on the hidden input, so the pin it labels is what has to show the ring. */
+.mapAnswerPin:focus-within {
+  background: rgba(113, 225, 229, 0.18);
+  box-shadow:
+    inset 0 0 0 2px #71e1e5,
+    0 0 0 3px #fff;
+}
+
+.mapAnswerPin[data-selected='true'] {
+  background: rgba(113, 225, 229, 0.24);
+  box-shadow: inset 0 0 0 3px #71e1e5;
+}
+
+.mapAnswerPin[data-selected='true'] .mapAnswerPinBody {
+  background: #71e1e5;
+  color: #052227;
+}
+
+/*
+ * Committed. Nothing is carried by colour alone: the chosen pin and the keyed pin each say which
+ * they are in words on the pin itself, and the legend under the drawing repeats the wording.
+ */
+.mapAnswerPin[data-map-answer-state] {
+  cursor: default;
+}
+
+.mapAnswerPin[data-map-answer-state='correct'],
+.mapAnswerPin[data-map-answer-state='chosen-correct'] {
+  background: rgba(141, 222, 158, 0.2);
+  box-shadow: inset 0 0 0 3px #8dde9e;
+}
+
+.mapAnswerPin[data-map-answer-state='correct'] .mapAnswerPinBody,
+.mapAnswerPin[data-map-answer-state='chosen-correct'] .mapAnswerPinBody {
+  border-color: #8dde9e;
+}
+
+.mapAnswerPin[data-map-answer-state='chosen'] {
+  background: rgba(255, 191, 98, 0.18);
+  box-shadow: inset 0 0 0 3px #ffbf62;
+}
+
+.mapAnswerPin[data-map-answer-state='chosen'] .mapAnswerPinBody {
+  border-color: #ffbf62;
+}
+
+.mapAnswerFlag {
+  position: absolute;
+  bottom: -0.55rem;
+  padding: 0 0.3rem;
+  border-radius: 0.35rem;
+  background: #04181c;
+  box-shadow: inset 0 0 0 1px currentcolor;
+  color: #d8f2f4;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mapAnswerFlag[data-map-answer-flag='correct'],
+.mapAnswerFlag[data-map-answer-flag='chosen-correct'] {
+  color: #8dde9e;
+}
+
+.mapAnswerFlag[data-map-answer-flag='chosen'] {
+  color: #ffbf62;
+}
+
+.mapAnswerLegend {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: #c6dee0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.mapAnswerLegend li {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.mapAnswerLegendOrdinal {
+  justify-self: start;
+  min-width: 1.5rem;
+  padding: 0 0.25rem;
+  border: 1px solid rgba(125, 216, 221, 0.5);
+  border-radius: 0.35rem;
+  color: #a9dfe2;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* The drawing is the positioning context for the pins. */
+.circuitDiagramAnswerable {
+  position: relative;
+}
+
+/* The question, where the answer used to be listed. */
+.mapAnswerPrompt {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.mapAnswerStem {
+  margin: 0;
+  font-weight: 700;
+}
+
+.mapAnswerPrompt p {
+  margin: 0;
+}
+
+/* Told where the question is, and handed the way back. */
+.circuitAnswerElsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(255, 209, 102, 0.55);
+  border-left: 5px solid #ffd166;
+  border-radius: 0.6rem;
+  background: rgba(255, 209, 102, 0.1);
+  color: #fff3d1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.circuitAnswerElsewhere button {
+  min-height: 2rem;
+  padding: 0 0.6rem;
+  border: 1px solid #ffd166;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
