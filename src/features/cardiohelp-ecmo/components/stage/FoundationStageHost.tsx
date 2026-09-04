@@ -19,6 +19,7 @@ import {
   type EcmoCircuitWalkStop,
   type EcmoWalkComparisonBeat,
 } from '../../content/circuitWalk'
+import { ecmoDeliveryComponentById } from '../../content/deliveryAttribution'
 import { ecmoFoundationSectionById } from '../../content/foundationLessons'
 import {
   ecmoFoundationInitialVariant,
@@ -93,6 +94,9 @@ const DEVICE_BOUNDARY_SHORT =
 const DEVICE_BOUNDARY_FULL =
   'The simulated console follows the U.S. CARDIOHELP System Instructions for Use, Revision 2.3, January 2025. The VV and VA clinical teaching reflects contemporary ECMO practice and is not limited to the U.S. labeled indication or duration. This independent educational module does not replace current manufacturer instructions, local protocol, or supervised competency validation.'
 
+const LOOKING_BACK =
+  'You are looking back at an earlier step; nothing you have worked through is lost.'
+
 interface Progression {
   readonly index: number
   readonly furthestPerformed: number
@@ -100,7 +104,14 @@ interface Progression {
   readonly committedPredictionId: string | null
   readonly committedTransferId: string | null
   readonly choiceByStepId: Readonly<Record<string, string>>
+  /** Attribution steps: which component the learner assigned to each candidate change. */
+  readonly attributionByStepId: Readonly<Record<string, Readonly<Record<string, string>>>>
   readonly review: number | null
+  /**
+   * The furthest step the learner has ever entered, which is not the same as the furthest performed:
+   * entering a step does not perform it. This is what decides whether they are looking back.
+   */
+  readonly furthestEntered: number
   readonly surfacesByStepId: Readonly<Record<string, readonly StageSurfaceId[]>>
   /** The step whose teaching column the learner chose to see in full before committing. */
   readonly expandedTeachingStepId: string | null
@@ -170,7 +181,9 @@ function FoundationStageSession({
     committedPredictionId: null,
     committedTransferId: null,
     choiceByStepId: {},
+    attributionByStepId: {},
     review: null,
+    furthestEntered: mount.index,
     surfacesByStepId: {},
     expandedTeachingStepId: null,
   }))
@@ -277,6 +290,7 @@ function FoundationStageSession({
       index,
       review: null,
       performedIds: performedNow,
+      furthestEntered: Math.max(current.furthestEntered, index),
       furthestPerformed: Math.max(current.furthestPerformed, index - 1),
     }))
   }
@@ -303,6 +317,28 @@ function FoundationStageSession({
   }
 
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
+
+  /**
+   * Commit the whole set of attributions at once.
+   *
+   * One commitment for the set rather than one per row, so the learner reasons across all of them
+   * before any of them is marked — two of the candidates act on the same component by different
+   * routes, and revealing the first would give away the second.
+   */
+  function commitAttribution() {
+    if (activeStep.interaction.kind !== 'attribution' || stepPerformed) return
+    const answers = progression.attributionByStepId[activeStep.id] ?? {}
+    const complete = activeStep.interaction.attribution.candidates.every(
+      (candidate) => answers[candidate.id],
+    )
+    if (!complete) return
+    const performedNow = recordPerformed(activeStep.id)
+    setProgression((current) => ({
+      ...current,
+      performedIds: performedNow,
+      furthestPerformed: Math.max(current.furthestPerformed, activeIndex),
+    }))
+  }
 
   function commitPrediction() {
     if (activeStep.interaction.kind !== 'prediction' || !selectedChoiceId || stepPerformed) return
@@ -332,12 +368,37 @@ function FoundationStageSession({
     lifecycleAnalytics.recordActivityCompleted()
   }
 
+  /**
+   * Selecting a row in the step list reviews it in place, and changes nothing else.
+   *
+   * Deliberately not navigation. Entering a step loads the state that step's copy is written
+   * against — `phase-restoration` pins that — so a row that teleported would silently discard an
+   * evolved case the learner had built with the bounded actions. The way back is the Now card's
+   * Back control, which steps one at a time and says what it is doing.
+   */
   function selectStepRow(index: number) {
     setProgression((current) => {
       if (index === current.index) return current
       if (!current.performedIds.includes(lesson.steps[index]?.id ?? '')) return current
       return { ...current, review: current.review === index ? null : index }
     })
+  }
+
+  /**
+   * Back to a step already worked, on the learner's own request.
+   *
+   * An owner review in September 2026 found learners restarting a whole section to revisit one
+   * step, because the step list only ever expanded a recap and nothing offered a way back. This is
+   * that way back: the performed set is carried through untouched, so the section does not lose its
+   * progress, and the step is entered exactly as it is entered going forward — including reloading
+   * the state its copy assumes, because a step read against someone else's state is a step whose
+   * copy is no longer true.
+   */
+  function goToStep(index: number) {
+    const target = lesson.steps[index]
+    if (!target || index === progression.index) return
+    if (!performedIds.has(target.id)) return
+    enterStep(index, progression.performedIds)
   }
 
   function toggleSurface(surface: StageSurfaceId, open: boolean) {
@@ -371,17 +432,70 @@ function FoundationStageSession({
    * ---------------------------------------------------------------- */
 
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+  const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
+  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
+  const lookingBack = activeIndex < progression.furthestEntered
+  /** A step's own status line, with the looking-back reassurance appended when it applies. */
+  const withLookingBack = (own: string) => (lookingBack ? `${own} ${LOOKING_BACK}` : own)
+
   const nowModel: NowCardModel = (() => {
+    /*
+     * The way back, offered on every step after the first.
+     *
+     * The previous step is performed by construction — a learner only reaches step N by working
+     * step N-1, and a lesson mounted at a later phase marks the steps before it performed — so this
+     * is always a real destination rather than a control that sometimes does nothing.
+     */
     const base = {
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
       why: activeStep.rationale,
+      ...(canGoBack && previousStep
+        ? {
+            back: {
+              label: `Back to ${STAGE_PHASE_LABELS[previousStep.phase]}`,
+              onActivate: () => goToStep(activeIndex - 1),
+            },
+          }
+        : {}),
+      ...(lookingBack ? { status: LOOKING_BACK } : {}),
     }
     switch (activeStep.interaction.kind) {
+      case 'attribution': {
+        const answers = progression.attributionByStepId[activeStep.id] ?? {}
+        const unanswered = activeStep.interaction.attribution.candidates.filter(
+          (candidate) => !answers[candidate.id],
+        ).length
+        return stepPerformed
+          ? {
+              ...base,
+              status: withLookingBack('Answers recorded.'),
+              primary: isLastStep
+                ? undefined
+                : {
+                    label: 'Continue',
+                    onActivate: advance,
+                    icon: <ArrowRight aria-hidden="true" />,
+                  },
+            }
+          : {
+              ...base,
+              primary: {
+                label: activeStep.actionLabel,
+                onActivate: commitAttribution,
+                disabled: unanswered > 0,
+                disabledReason:
+                  unanswered === 1
+                    ? 'One change still needs a component.'
+                    : `${unanswered} changes still need a component.`,
+                icon: <SlidersHorizontal aria-hidden="true" />,
+              },
+            }
+      }
       case 'prediction':
         return stepPerformed
-          ? { ...base, status: 'Committed.' }
+          ? { ...base, status: withLookingBack('Committed.') }
           : {
               ...base,
               primary: {
@@ -394,7 +508,7 @@ function FoundationStageSession({
             }
       case 'transfer-item':
         return stepPerformed
-          ? { ...base, status: 'Done. This section has been worked through.' }
+          ? { ...base, status: withLookingBack('Done. This section has been worked through.') }
           : {
               ...base,
               primary: {
@@ -407,7 +521,7 @@ function FoundationStageSession({
             }
       default:
         return stepPerformed && isLastStep
-          ? { ...base, status: 'Done.' }
+          ? { ...base, status: withLookingBack('Done.') }
           : {
               ...base,
               primary: {
@@ -462,6 +576,83 @@ function FoundationStageSession({
 
   const nowBody = (() => {
     const { interaction } = activeStep
+    if (interaction.kind === 'attribution') {
+      const { attribution } = interaction
+      const answers = progression.attributionByStepId[activeStep.id] ?? {}
+      const revealed = stepPerformed
+      return (
+        <div className={styles.attribution} data-attribution>
+          <p className={styles.attributionPrompt}>{attribution.prompt}</p>
+          {attribution.candidates.map((candidate) => {
+            const chosen = answers[candidate.id]
+            const right = chosen === candidate.componentId
+            const actual = ecmoDeliveryComponentById(candidate.componentId)
+            const selectId = `attribution-${candidate.id}`
+            return (
+              <div
+                key={candidate.id}
+                className={styles.attributionRow}
+                data-attribution-candidate={candidate.id}
+                data-attribution-outcome={
+                  revealed ? (right ? 'correct' : 'not-correct') : undefined
+                }
+              >
+                <label htmlFor={selectId}>{candidate.label}</label>
+                <select
+                  id={selectId}
+                  value={chosen ?? ''}
+                  disabled={revealed}
+                  onChange={(event) =>
+                    setProgression((current) => ({
+                      ...current,
+                      attributionByStepId: {
+                        ...current.attributionByStepId,
+                        [activeStep.id]: {
+                          ...(current.attributionByStepId[activeStep.id] ?? {}),
+                          [candidate.id]: event.target.value,
+                        },
+                      },
+                    }))
+                  }
+                >
+                  <option value="">Choose a component…</option>
+                  {attribution.components.map((component) => (
+                    <option key={component.id} value={component.id}>
+                      {component.label}
+                    </option>
+                  ))}
+                </select>
+                {revealed ? (
+                  <p className={styles.attributionVerdict}>
+                    <strong data-attribution-outcome-label>
+                      {right ? 'Correct.' : 'Not correct.'}
+                    </strong>{' '}
+                    {right ? '' : `This acts on ${actual?.label.toLowerCase()}. `}
+                    {candidate.rationale}
+                  </p>
+                ) : null}
+              </div>
+            )
+          })}
+          {revealed ? (
+            <div className={styles.attributionComponents} data-attribution-components>
+              {attribution.components.map((component) => (
+                <p key={component.id}>
+                  <strong>{component.label}.</strong> {component.definition}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          <EcmoSourceList
+            compact
+            evidenceIds={attribution.sourceIds}
+            claims={attribution.claims}
+            title="Sources"
+            headingLevel={4}
+          />
+        </div>
+      )
+    }
     if (interaction.kind === 'prediction' || interaction.kind === 'transfer-item') {
       const { item } = interaction
       const committedId =

@@ -5,6 +5,7 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
+import { ecmoDeliveryAttribution } from '../content/deliveryAttribution'
 import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import {
   ecmoFoundationLessonRuntime,
@@ -65,11 +66,15 @@ jest.mock('../components/CircuitAndMonitors', () => ({
 
 type Phase = 'recognize' | 'predict' | 'act' | 'observe' | 'explain' | 'transfer'
 
+/** The section the harness last mounted, so the attribution helper can find its registry entry. */
+let mountedSectionId: EcmoInteractiveFoundationSectionId = 'why-extracorporeal-support'
+
 function mount(
   sectionId: EcmoInteractiveFoundationSectionId,
   supportMode: SupportMode = 'vv',
   initialPhase?: Phase,
 ) {
+  mountedSectionId = sectionId
   return render(
     <EcmoFoundationLessonActivity
       sectionId={sectionId}
@@ -173,9 +178,35 @@ function continueStep() {
 }
 
 /** Move forward through the Now card until the stage is on `phase`. Never skips a step. */
+
+/**
+ * Satisfy an attribution step if that is where the traversal has stopped. See the twin of this in
+ * `foundation-phase-restoration.test.tsx`: the first section's Act step is now a judgement to make,
+ * not a Continue to click, and the keyed component lives only in the registry.
+ */
+function answerAttributionIfPresent(): boolean {
+  const commit = screen.queryByRole('button', { name: 'Commit these answers' })
+  if (!commit) return false
+  for (const row of Array.from(
+    document.querySelectorAll<HTMLElement>('[data-attribution-candidate]'),
+  )) {
+    const candidateId = row.getAttribute('data-attribution-candidate')
+    const select = row.querySelector('select')
+    if (!candidateId || !select) continue
+    const keyed = ecmoDeliveryAttribution(mountedSectionId)?.candidates.find(
+      (candidate) => candidate.id === candidateId,
+    )
+    if (!keyed) continue
+    fireEvent.change(select, { target: { value: keyed.componentId } })
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Commit these answers' }))
+  return true
+}
+
 function continueTo(phase: Phase) {
   for (let guard = 0; currentPhase() !== phase; guard += 1) {
-    if (guard > 6) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
+    if (guard > 8) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
+    if (answerAttributionIfPresent()) continue
     continueStep()
   }
 }
@@ -1180,5 +1211,224 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     const before = loadedVariantId()
     press('[data-walk-next]')
     expect(loadedVariantId()).toBe(before)
+  })
+})
+
+/**
+ * The Act step of the first foundation section, which used to have nothing to do.
+ *
+ * An owner review in September 2026: "This one says ACT and to select the terms but there isn't
+ * anything to select... it says to select the ledger term but nothing selects, you just read it."
+ * The step now asks the learner to assign each of four proposed bedside changes to the component of
+ * oxygen delivery it acts on, and commits the set in one go.
+ *
+ * Two of the candidates act on oxygen content by different routes, so revealing any row before the
+ * set is committed would give the others away. These pin that nothing is revealed early.
+ */
+describe('assigning proposed changes to the component they act on', () => {
+  const SECTION = 'why-extracorporeal-support'
+
+  function rows(): HTMLElement[] {
+    return Array.from(document.querySelectorAll<HTMLElement>('[data-attribution-candidate]'))
+  }
+
+  function commitButton(): HTMLElement {
+    return screen.getByRole('button', { name: 'Commit these answers' })
+  }
+
+  function answer(candidateId: string, componentId: string) {
+    const row = rows().find((node) => node.dataset.attributionCandidate === candidateId)
+    if (!row) throw new Error(`no row for ${candidateId}`)
+    fireEvent.change(row.querySelector('select')!, { target: { value: componentId } })
+  }
+
+  function openActStep() {
+    mount(SECTION)
+    commitAndContinue(SECTION)
+  }
+
+  it('offers one real control per proposed change, which is what was missing', () => {
+    openActStep()
+    const attribution = ecmoDeliveryAttribution(SECTION)!
+
+    expect(rows()).toHaveLength(attribution.candidates.length)
+    for (const candidate of attribution.candidates) {
+      const row = rows().find((node) => node.dataset.attributionCandidate === candidate.id)
+      expect(row).toBeDefined()
+      const select = row!.querySelector('select')!
+      expect(select).toBeEnabled()
+      // Every component is offered on every row; the step is a judgement, not a process of
+      // elimination against a shrinking list.
+      expect(
+        Array.from(select.options)
+          .map((option) => option.value)
+          .filter(Boolean),
+      ).toEqual(attribution.components.map((component) => component.id))
+    }
+  })
+
+  it('will not commit until every change has been assigned', () => {
+    openActStep()
+    const attribution = ecmoDeliveryAttribution(SECTION)!
+    expect(commitButton()).toBeDisabled()
+
+    attribution.candidates.slice(0, -1).forEach((candidate) => {
+      answer(candidate.id, candidate.componentId)
+    })
+    expect(commitButton()).toBeDisabled()
+    expect(document.querySelector('[data-now-disabled-reason]')?.textContent).toMatch(
+      /one change still needs a component/i,
+    )
+
+    const last = attribution.candidates.at(-1)!
+    answer(last.id, last.componentId)
+    expect(commitButton()).toBeEnabled()
+  })
+
+  it('reveals nothing — no outcome, no reasoning, no definitions — before the set is committed', () => {
+    openActStep()
+    const attribution = ecmoDeliveryAttribution(SECTION)!
+    for (const candidate of attribution.candidates) {
+      answer(candidate.id, candidate.componentId)
+    }
+
+    // Answered but not committed: still nothing given away.
+    for (const row of rows()) expect(row).not.toHaveAttribute('data-attribution-outcome')
+    expect(document.querySelector('[data-attribution-outcome-label]')).toBeNull()
+    expect(document.querySelector('[data-attribution-components]')).toBeNull()
+    const text = document.body.textContent ?? ''
+    for (const candidate of attribution.candidates) {
+      expect(text).not.toContain(candidate.rationale)
+    }
+  })
+
+  it('says explicitly, per change, whether the learner was right', () => {
+    openActStep()
+    const attribution = ecmoDeliveryAttribution(SECTION)!
+    const [first, ...rest] = attribution.candidates
+    // One deliberately wrong: assign the transfusion to consumption.
+    answer(first.id, 'oxygen-consumption')
+    rest.forEach((candidate) => answer(candidate.id, candidate.componentId))
+    fireEvent.click(commitButton())
+
+    const wrongRow = rows().find((node) => node.dataset.attributionCandidate === first.id)!
+    expect(wrongRow).toHaveAttribute('data-attribution-outcome', 'not-correct')
+    expect(wrongRow.querySelector('[data-attribution-outcome-label]')?.textContent).toBe(
+      'Not correct.',
+    )
+    // And it names where the change actually acts, rather than only marking the answer.
+    expect(wrongRow.textContent).toContain('oxygen content')
+    expect(wrongRow.textContent).toContain(first.rationale)
+
+    for (const candidate of rest) {
+      const row = rows().find((node) => node.dataset.attributionCandidate === candidate.id)!
+      expect(row).toHaveAttribute('data-attribution-outcome', 'correct')
+      expect(row.querySelector('[data-attribution-outcome-label]')?.textContent).toBe('Correct.')
+      expect(row.textContent).toContain(candidate.rationale)
+    }
+  })
+
+  it('locks the answers once committed and lets the learner move on', () => {
+    openActStep()
+    const attribution = ecmoDeliveryAttribution(SECTION)!
+    for (const candidate of attribution.candidates) {
+      answer(candidate.id, candidate.componentId)
+    }
+    fireEvent.click(commitButton())
+
+    for (const row of rows()) expect(row.querySelector('select')).toBeDisabled()
+    expect(document.querySelector('[data-now-status]')?.textContent).toMatch(/answers recorded/i)
+    expect(document.querySelector('[data-attribution-components]')).not.toBeNull()
+
+    continueStep()
+    expect(currentPhase()).toBe('observe')
+  })
+
+  it('leaves the other nine sections on their bounded actions', () => {
+    mount('circuit-flow-path')
+    commitAndContinue('circuit-flow-path')
+    expect(currentPhase()).toBe('act')
+    expect(rows()).toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
+  })
+})
+
+/**
+ * The teaching pane has to change as the steps advance.
+ *
+ * Owner review, September 2026: "we have had four steps but nothing has changed as far as content
+ * in the ledger or things the user is supposed to do — it basically is just saying to read the same
+ * thing four times." Every step rendered the whole panel, so the step list moved and the pane did
+ * not. Each block now names the steps it is the focus of, and folds elsewhere rather than vanishing.
+ */
+describe('what the teaching pane shows, step by step', () => {
+  const SECTION = 'why-extracorporeal-support'
+
+  function openBlocks(): string[] {
+    return Array.from(document.querySelectorAll<HTMLElement>('[data-teaching-panel] > *'))
+      .filter((node) => !(node.tagName === 'DETAILS' && node.hasAttribute('data-phase-collapsed')))
+      .map((node) => node.querySelector('h3,summary')?.textContent?.trim() ?? '')
+      .filter(Boolean)
+  }
+
+  function explorerIsFolded(): boolean {
+    const explorer = document.querySelector('[data-oxygen-delivery-explorer]')
+    if (!explorer) return true
+    return explorer.closest('[data-phase-collapsed]') !== null
+  }
+
+  it('foregrounds the components while the learner is reading and predicting', () => {
+    mount(SECTION)
+    expect(openBlocks().join(' | ')).toMatch(/component by component/i)
+    // Nothing to manipulate yet; the explorer is folded away rather than absent.
+    expect(explorerIsFolded()).toBe(true)
+    expect(document.querySelector('[data-oxygen-delivery-explorer]')).not.toBeNull()
+  })
+
+  it('brings the interactive controls forward on the step that asks the learner to act', () => {
+    mount(SECTION)
+    commitAndContinue(SECTION)
+    expect(currentPhase()).toBe('act')
+    expect(explorerIsFolded()).toBe(false)
+    expect(screen.getByLabelText('Hemoglobin')).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Cardiac output/)).toBeInTheDocument()
+  })
+
+  it('moves the pane on as the steps advance, rather than repeating one view', () => {
+    mount(SECTION)
+    const seen = new Map<string, string>()
+    seen.set('recognize', openBlocks().join(' | '))
+    commitPredictionChoice(SECTION)
+    seen.set('predict', openBlocks().join(' | '))
+    for (const phase of ['act', 'observe', 'explain'] as const) {
+      continueTo(phase)
+      seen.set(phase, openBlocks().join(' | '))
+    }
+
+    /*
+     * Recognize and Predict deliberately share their reference material — the learner reads the
+     * components, then is asked about them, and the question's own stem carries every value it
+     * needs. What the review found was the *whole* section standing still, so what is pinned is
+     * that the pane actually moves: three distinct views across the five steps, with the steps that
+     * ask for something different showing something different.
+     */
+    expect(new Set(seen.values()).size).toBeGreaterThanOrEqual(3)
+    expect(seen.get('act')).not.toBe(seen.get('recognize'))
+    expect(seen.get('observe')).not.toBe(seen.get('predict'))
+    expect(seen.get('explain')).not.toBe(seen.get('act'))
+  })
+
+  it('keeps every folded block reachable, so nothing already read becomes lost', () => {
+    mount(SECTION)
+    commitAndContinue(SECTION)
+    const folded = Array.from(
+      document.querySelectorAll<HTMLDetailsElement>('[data-phase-collapsed]'),
+    )
+    expect(folded.length).toBeGreaterThan(0)
+    for (const node of folded) {
+      // A native disclosure: keyboard-operable, announced, and openable with no script.
+      expect(node.tagName).toBe('DETAILS')
+      expect(node.querySelector('summary')?.textContent?.trim()).toBeTruthy()
+    }
   })
 })

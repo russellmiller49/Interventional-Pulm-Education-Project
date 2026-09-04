@@ -10,7 +10,7 @@ import { isEcmoInteractiveFoundationSectionId } from './foundationLessonRuntime'
  * One answer to "where does this learner go next", for every entry surface.
  *
  * The module had two orderings and they disagreed. `learningPathways.ts` runs seventeen sections
- * per track from the delivery ledger through the circuit, the normal state and the controls, and
+ * per track from oxygen delivery through the circuit, the normal state and the controls, and
  * only then the console and the failures. `curriculum.ts` groups seven units over the ten drills
  * and seven cases, and knows nothing about the other seven sections. The hub resolved its primary
  * call to action through the second one and so opened a fresh learner on the console tour —

@@ -9,7 +9,7 @@ import type { EcmoInteractiveFoundationSectionId } from './foundationLessonRunti
  * Prediction and transfer items for the ten interactive foundation sections.
  *
  * Transfer is deliberately a different situation rather than the same question with the nouns
- * swapped: a learner who has understood the ledger should be able to reach a content problem from
+ * swapped: a learner who has understood oxygen delivery should be able to reach a content problem from
  * a flow problem, and a learner who has only memorised the first answer should not.
  *
  * Saturations are written without a unit symbol throughout — the learner-copy lint bars it, and
@@ -40,7 +40,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'content-and-flow-still-unknown',
             label:
-              'Very little — saturation is one part of content, and content still has to be multiplied by a flow.',
+              'Very little — saturation is one part of oxygen content, and content still has to be multiplied by a blood flow.',
             plausibility: 'best',
             rationale:
               'Delivery is flow multiplied by content, and content is dominated by hemoglobin as well as saturation. A high saturation on a low hemoglobin at a low flow can accompany markedly reduced delivery.',
@@ -58,19 +58,19 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
             label: 'Nothing can be said until oxygen consumption is measured.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'Consumption is genuinely part of the ledger, but the delivery side can already be recognised as compromised from the hemoglobin and the flow.',
+              'Oxygen consumption is genuinely part of the picture, but the delivery side can already be recognised as compromised from the hemoglobin and the flow.',
           },
           {
             id: 'raise-saturation-first',
             label: 'Raise the saturation further before considering anything else.',
             plausibility: 'unsafe',
             rationale:
-              'There is very little room left on the saturation term, and acting there leaves the two terms that are actually reduced untouched.',
+              'There is very little room left on the saturation, and acting there leaves the two components that are actually reduced untouched.',
           },
         ],
         correctChoiceIds: ['content-and-flow-still-unknown'],
         explanation:
-          'The ledger has three separable terms. Content depends mainly on hemoglobin and its saturation; flow is separate; consumption sits on the other side. A reassuring value in one term says nothing about the other two, which is why extracorporeal support is chosen by naming the step that has given way rather than by reading one number.',
+          'Oxygen delivery has three separable components. Oxygen content depends mainly on hemoglobin and its saturation; blood flow is separate; oxygen consumption sits on the other side. A reassuring value in one of them says nothing about the other two, which is why extracorporeal support is chosen by naming the component that is impaired rather than by reading one number.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },
@@ -81,12 +81,12 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         itemType: 'transfer-case',
         transferVariantId: 'ecmo.foundation.why.transfer-variant',
         contextRequirement: 'context-independent',
-        stem: 'A different patient has a saturation reading of 99 and a normal cardiac output, but a hemoglobin of 4.9 g/dL after ongoing bleeding. Which term of the delivery ledger has given way, and why would a saturation display be reassuring here?',
+        stem: 'A different patient has an oxygen saturation of 99 and a normal cardiac output, but a hemoglobin of 4.9 g/dL after ongoing bleeding. Which component of oxygen delivery is impaired, and why can the oxygen saturation still appear normal?',
         choices: [
           {
             id: 'content-via-hemoglobin',
             label:
-              'Content — the carrier itself is depleted, and saturation only reports the fraction of that reduced carrier that is loaded.',
+              'Oxygen content — the amount of hemoglobin available to carry oxygen is markedly reduced. Oxygen saturation only reflects the percentage of available hemoglobin that is bound to oxygen.',
             plausibility: 'best',
             rationale:
               'Saturation is a ratio. It stays high while the quantity being saturated falls, which is exactly why it reads as reassuring in profound anemia.',
@@ -94,7 +94,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'flow-term',
             label:
-              'Flow — a bleeding patient must have inadequate cardiac output, and the display reassures because the lungs still load whatever blood reaches them.',
+              'Blood flow — severe bleeding necessarily causes inadequate cardiac output, while the saturation remains normal because the lungs can still oxygenate the blood that reaches them.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'Cardiac output is stated to be normal here, and can be maintained or even raised in anemia.',
@@ -102,15 +102,15 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'consumption-term',
             label:
-              'Consumption — bleeding raises metabolic demand, and the display reassures because it reports supply rather than demand.',
+              'Oxygen consumption — ongoing bleeding primarily increases metabolic demand, while the saturation remains normal because oxygen supply is preserved.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'Demand can certainly rise, but the term that has unambiguously given way in this description is the carrier itself.',
+              'Demand can certainly rise, but the component that is unambiguously impaired in this description is the carrier itself.',
           },
         ],
         correctChoiceIds: ['content-via-hemoglobin'],
         explanation:
-          'The same ledger reaches a different answer. In the earlier situation flow and content were both reduced; here flow is intact and the carrier is depleted. A saturation display behaves identically in both, which is the reason it cannot be used alone.',
+          'The same framework reaches a different answer. In the earlier situation blood flow and oxygen content were both reduced; here flow is intact and the carrier is depleted. An oxygen saturation behaves identically in both, which is the reason it cannot be used alone.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },

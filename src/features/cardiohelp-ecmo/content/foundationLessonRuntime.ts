@@ -493,7 +493,7 @@ const vaGasSourceAfterVariant: EcmoFoundationStateVariant = {
  *
  * | Lesson                        | Mapped phase → variant                  | Why the rest are unmapped |
  * | ----------------------------- | --------------------------------------- | ------------------------- |
- * | why-extracorporeal-support    | —                                       | Every phase reads the selected reference ledger; the only variant authored is that reference. |
+ * | why-extracorporeal-support    | —                                       | Every phase reads the selected reference circuit; the only variant authored is that reference. |
  * | circuit-flow-path             | —                                       | Same: one variant exists, and each phase reads the live circuit at a named location. |
  * | pump-and-pressure-zones       | —                                       | Its comparisons are bounded changes *from* the reference, applied by the learner; opening on a changed circuit would remove the baseline the phase asks them to compare with. |
  * | blood-flow-versus-sweep       | —                                       | Same reasoning; both comparisons restore the reference first by design. |
@@ -516,27 +516,29 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
-        objective: 'Separate the terms that make up oxygen delivery.',
+        objective: 'Separate the components that make up oxygen delivery.',
         requiredAction:
-          'Read the ledger and note which term each displayed value belongs to: content, flow, or consumption.',
+          'Note which component each displayed value belongs to: oxygen content, blood flow, or oxygen consumption.',
         teachingPoint:
-          'Delivery is a flow multiplied by a content. A saturation on its own is one part of one term.',
+          'Oxygen delivery is a blood flow carrying an oxygen content. A saturation on its own is one part of one component.',
       },
       predict: {
         objective: 'Decide whether a reassuring saturation settles the question.',
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
-          'A patient can arrive at inadequate delivery through flow, through content, or through demand, and those are not interchangeable.',
+          'A patient can arrive at impaired oxygen delivery through blood flow, through oxygen content, or through demand, and those are not interchangeable.',
       },
       act: {
-        objective: 'Attribute a proposed change to the term it acts on.',
-        requiredAction: 'Select the ledger term each candidate change would move first.',
+        objective: 'Attribute a proposed change to the component of oxygen delivery it acts on.',
+        requiredAction:
+          'For each proposed change, choose the component of oxygen delivery it acts on, then commit the set.',
         teachingPoint:
-          'Naming the term a change acts on is what makes the next observation interpretable.',
+          'Naming the component a change acts on is what makes the next measurement interpretable.',
       },
       observe: {
-        objective: 'Read the selected track’s ledger as it stands.',
-        requiredAction: 'Compare what the circuit contributes with what it does not.',
+        objective: 'Read the components of oxygen delivery as they stand on this circuit.',
+        requiredAction:
+          'Move a component and compare what the circuit contributes with what it does not.',
         teachingPoint:
           'In VV the circuit changes the content of blood returning to the right heart; in VA it also adds flow.',
       },
@@ -547,10 +549,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Support holds a physiologic variable while something treatable is treated. It is not a treatment for the cause.',
       },
       transfer: {
-        objective: 'Apply the ledger to a different failing term.',
+        objective: 'Apply the concept to a different cause of impaired oxygen delivery.',
         requiredAction: 'Answer the transfer item and review the comparison.',
         teachingPoint:
-          'The same reasoning identifies a content problem as readily as a flow problem.',
+          'The same reasoning identifies an oxygen-content problem as readily as a blood-flow problem.',
       },
     },
     guidedActions: [RESTORE],

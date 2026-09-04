@@ -10,6 +10,28 @@ import { Link } from '@/i18n/navigation'
 
 type ClinicalLearningChoice = ClinicalLearningItem['choices'][number]
 
+/**
+ * The outcome first, then the reasoning.
+ *
+ * This card only ever renders after a commitment, so there is nothing to withhold: it says whether
+ * the learner was right and then why. The explicit label was added on an owner review in September
+ * 2026 — the card used to open with "The cues support this read", which never states the outcome —
+ * and it matches the wording `AnswerVerdict` uses so a learner meeting both cards meets one
+ * vocabulary. See `VerdictOutcome` there for why the descriptive sentence is kept rather than
+ * replaced.
+ */
+const plausibilityOutcome: Readonly<
+  Record<
+    ClinicalLearningChoice['plausibility'],
+    { readonly outcome: string; readonly label: string }
+  >
+> = {
+  best: { outcome: 'correct', label: 'Correct.' },
+  'reasonable-but-incomplete': { outcome: 'partly-correct', label: 'Partly correct.' },
+  'incorrect-mechanism': { outcome: 'not-correct', label: 'Not correct.' },
+  unsafe: { outcome: 'unsafe', label: 'Not correct, and unsafe.' },
+}
+
 const plausibilityFrame: Readonly<Record<ClinicalLearningChoice['plausibility'], string>> = {
   best: 'The cues support this read.',
   'reasonable-but-incomplete':
@@ -45,6 +67,7 @@ export function ChoiceReasoningFeedback({
       role={isUnsafe ? 'alert' : 'status'}
       aria-live="polite"
       data-plausibility={choice.plausibility}
+      data-verdict-outcome={plausibilityOutcome[choice.plausibility].outcome}
     >
       <div className="flex items-start gap-3">
         {isUnsafe ? (
@@ -53,7 +76,10 @@ export function ChoiceReasoningFeedback({
           <BookOpen className="mt-0.5 size-5 shrink-0 text-sky-300" aria-hidden="true" />
         )}
         <div>
-          <p className="font-bold text-white">{plausibilityFrame[choice.plausibility]}</p>
+          <p className="font-bold text-white">
+            <span data-verdict-outcome-label>{plausibilityOutcome[choice.plausibility].label}</span>{' '}
+            {plausibilityFrame[choice.plausibility]}
+          </p>
           <p className="mt-2 text-sm leading-6 text-slate-100">{choice.rationale}</p>
         </div>
       </div>

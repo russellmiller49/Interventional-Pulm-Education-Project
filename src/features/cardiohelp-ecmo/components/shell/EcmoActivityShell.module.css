@@ -493,3 +493,43 @@
     transition: none;
   }
 }
+
+/*
+ * Back to the previous step.
+ *
+ * Under the kicker rather than in the actions row, so it never competes with the one primary
+ * action. Low emphasis, full touch target.
+ */
+.nowBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: start;
+  min-height: 32px;
+  margin: 0.1rem 0 0;
+  padding: 0.2rem 0.45rem 0.2rem 0.25rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--muted, #9fb4b7);
+  font: inherit;
+  font-size: var(--ecmo-type-floor);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nowBack:hover {
+  color: var(--ink, #e5f4f6);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nowBack:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.nowBack svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}

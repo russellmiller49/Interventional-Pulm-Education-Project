@@ -54,7 +54,25 @@ type Plausibility = ClinicalLearningItem['choices'][number]['plausibility']
  */
 export type VerdictTiming = 'immediate-after-commit' | 'after-action-response' | 'debrief-only'
 
+/**
+ * The outcome, said in one or two words before anything else.
+ *
+ * These labels were deliberately absent until an owner review of the ECMO module in September 2026:
+ * the card opened with "That read holds", which describes the reasoning without ever saying whether
+ * the learner got it right. The owner's finding was blunt — "when a user gets a question right or
+ * wrong it should more explicitly say if it was correct or not" — and it applies to every lab that
+ * renders this card, so the label leads here rather than in one module's copy.
+ *
+ * The original sentence is kept after it. Saying only "Correct" would throw away the part that
+ * teaches, which is the description of *what* holds; the outcome tells the learner where they stand
+ * and the sentence tells them why.
+ */
+export type VerdictOutcome = 'correct' | 'partly-correct' | 'not-correct' | 'unsafe'
+
 interface VerdictCopy {
+  readonly outcome: VerdictOutcome
+  /** The explicit outcome, first thing read. */
+  readonly outcomeLabel: string
   readonly title: string
   readonly light: string
   readonly dark: string
@@ -62,21 +80,29 @@ interface VerdictCopy {
 
 const verdictCopy: Readonly<Record<Plausibility, VerdictCopy>> = {
   best: {
+    outcome: 'correct',
+    outcomeLabel: 'Correct.',
     title: 'That read holds',
     light: 'border-emerald-500/60 bg-emerald-50',
     dark: 'border-emerald-400/40 bg-emerald-950/25',
   },
   'reasonable-but-incomplete': {
+    outcome: 'partly-correct',
+    outcomeLabel: 'Partly correct.',
     title: 'Defensible, but not the whole picture',
     light: 'border-amber-500/60 bg-amber-50',
     dark: 'border-amber-400/40 bg-amber-950/25',
   },
   'incorrect-mechanism': {
+    outcome: 'not-correct',
+    outcomeLabel: 'Not correct.',
     title: 'That mechanism predicts a different pattern',
     light: 'border-rose-500/60 bg-rose-50',
     dark: 'border-rose-400/40 bg-rose-950/25',
   },
   unsafe: {
+    outcome: 'unsafe',
+    outcomeLabel: 'Not correct, and unsafe.',
     title: 'Stopping here — this could harm a real patient',
     light: 'border-rose-600/70 bg-rose-100',
     dark: 'border-red-400/50 bg-red-950/30',
@@ -172,12 +198,22 @@ export function AnswerVerdict({
       role={isUnsafe ? 'alert' : 'status'}
       aria-live={isUnsafe ? 'assertive' : 'polite'}
       data-answer-verdict
-      // Only once it is being told. See `withheldTone`.
+      // Only once it is being told. See `withheldTone`. The outcome is gated the same way, for the
+      // same reason: an attribute is readable by a stylesheet and by anyone who opens the inspector.
       data-plausibility={revealed ? chosen.plausibility : undefined}
+      data-verdict-outcome={revealed ? copy.outcome : undefined}
       data-timing={timing}
       data-revealed={revealed}
     >
-      <p className="font-semibold">{revealed ? copy.title : 'Answer recorded'}</p>
+      <p className="font-semibold">
+        {revealed ? (
+          <>
+            <span data-verdict-outcome-label>{copy.outcomeLabel}</span> {copy.title}
+          </>
+        ) : (
+          'Answer recorded'
+        )}
+      </p>
       <p className="mt-1">
         <span className="font-medium">You chose:</span> {chosen.label}
       </p>

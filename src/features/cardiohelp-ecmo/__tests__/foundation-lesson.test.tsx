@@ -381,10 +381,15 @@ describe('foundation teaching panels', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="why-extracorporeal-support" state={settled('vv')} />,
     )
-    const terms = [...container.querySelectorAll('[data-ledger-term]')].map((node) =>
-      node.getAttribute('data-ledger-term'),
+    const components = [...container.querySelectorAll('[data-delivery-component]')].map((node) =>
+      node.getAttribute('data-delivery-component'),
     )
-    expect(terms).toEqual(expect.arrayContaining(['Content', 'Flow', 'Consumption']))
+    // Named the way a clinician names them. An owner review in September 2026 replaced the module's
+    // internal "content / flow / consumption" shorthand with the clinical nouns on every surface a
+    // learner reads.
+    expect(components).toEqual(
+      expect.arrayContaining(['Oxygen content', 'Blood flow', 'Oxygen consumption']),
+    )
     // The configured model input must be labelled as configured, not as a measurement.
     expect(container.textContent).toMatch(/Configured setting/i)
   })

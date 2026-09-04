@@ -119,6 +119,53 @@ describe('AnswerVerdict timing policy', () => {
     expect(screen.getByText(/why the other answers do not fit/i)).toBeInTheDocument()
   })
 
+  /**
+   * The outcome, stated explicitly — and withheld exactly as strictly as the rest of the verdict.
+   *
+   * Added on an owner review in September 2026, which found the card opening with "That read holds"
+   * and never saying whether the learner was right. The label is gated on `revealed` alongside
+   * `data-plausibility`, for the reason `withheldTone` gives: an attribute or a heading that leaks
+   * the outcome before the timing policy allows it has defeated the policy, and this is the
+   * assertion that would catch it.
+   */
+  it.each([
+    ['drainage-limited', 'correct', 'Correct.'],
+    ['watch-longer', 'partly-correct', 'Partly correct.'],
+    ['membrane-clotting', 'not-correct', 'Not correct.'],
+    ['raise-speed', 'unsafe', 'Not correct, and unsafe.'],
+  ] as const)('states %s as %s once the verdict is told', (choiceId, outcome, label) => {
+    const { container } = render(
+      <AnswerVerdict item={item} choiceId={choiceId} timing="immediate-after-commit" />,
+    )
+    const card = container.querySelector('[data-answer-verdict]')
+    expect(card).toHaveAttribute('data-revealed', 'true')
+    expect(card).toHaveAttribute('data-verdict-outcome', outcome)
+    expect(container.querySelector('[data-verdict-outcome-label]')?.textContent).toBe(label)
+    // The descriptive sentence is kept after it; the label replaces nothing.
+    expect(container.querySelector('p')?.textContent).toMatch(
+      new RegExp(`^${label.replace('.', '\\.')}\\s`),
+    )
+  })
+
+  it('leaks no outcome, in text or in an attribute, while the verdict is withheld', () => {
+    for (const timing of ['after-action-response', 'debrief-only'] as const) {
+      const { container, unmount } = render(
+        <AnswerVerdict
+          item={item}
+          choiceId="membrane-clotting"
+          timing={timing}
+          actionObserved={false}
+        />,
+      )
+      const card = container.querySelector('[data-answer-verdict]')
+      expect(card).toHaveAttribute('data-revealed', 'false')
+      expect(card).not.toHaveAttribute('data-verdict-outcome')
+      expect(container.querySelector('[data-verdict-outcome-label]')).toBeNull()
+      expect(container.textContent ?? '').not.toMatch(/\bnot correct\b/i)
+      unmount()
+    }
+  })
+
   it('withholds the mechanism in guided Practice until the learner has acted and observed', () => {
     const before = render(
       <AnswerVerdict

@@ -1,6 +1,7 @@
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types'
 
+import { ecmoDeliveryAttribution } from '../../../content/deliveryAttribution'
 import { ecmoFoundationLearningItemsFor } from '../../../content/foundationLearningItems'
 import { ecmoFoundationSectionById } from '../../../content/foundationLessons'
 import {
@@ -92,12 +93,27 @@ export function buildFoundationStageLesson(
           actionLabel: 'Commit this prediction',
           interaction: { kind: 'prediction', item: items.prediction, verdict: 'choice-reasoning' },
         }
-      case 'act':
+      case 'act': {
+        /*
+         * A section that authors an attribution gets a real judgement to make here; the rest keep
+         * the bounded actions. Before this the Act step of every foundation section was the same
+         * Continue button, which is how the first section came to promise a selection it did not
+         * offer.
+         */
+        const attribution = ecmoDeliveryAttribution(sectionId)
+        if (attribution) {
+          return {
+            ...base,
+            actionLabel: 'Commit these answers',
+            interaction: { kind: 'attribution', attribution },
+          }
+        }
         return {
           ...base,
           actionLabel: 'Continue',
           interaction: { kind: 'bounded-actions', actions: runtime.guidedActions },
         }
+      }
       case 'transfer':
         return {
           ...base,

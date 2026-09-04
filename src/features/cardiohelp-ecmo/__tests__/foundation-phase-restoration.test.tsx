@@ -7,6 +7,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
+import { ecmoDeliveryAttribution } from '../content/deliveryAttribution'
 import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import { CARDIOHELP_PROGRESS_STORAGE_KEY, parseProgress } from '../engine/progress'
 import {
@@ -41,6 +42,8 @@ import type { SupportMode } from '../engine/types'
  */
 
 const mockPush = jest.fn()
+/** The section the harness last mounted, so the attribution helper can find its registry entry. */
+let mountedSectionId: EcmoInteractiveFoundationSectionId = 'why-extracorporeal-support'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -76,6 +79,7 @@ function mountAt(
   supportMode: SupportMode,
   initialPhase: CriticalCareActivityPhase,
 ) {
+  mountedSectionId = sectionId
   return render(
     <EcmoFoundationLessonActivity
       sectionId={sectionId}
@@ -140,9 +144,38 @@ function predictionChoices(): HTMLInputElement[] {
 }
 
 /** Move forward through the Now card until the stage is on `phase`. Never skips a step. */
+
+/**
+ * Satisfy an attribution step, if that is where the traversal has stopped.
+ *
+ * The first foundation section's Act step asks the learner to assign each proposed change to the
+ * component of oxygen delivery it acts on, so walking past it is no longer one Continue click. The
+ * keyed component comes from the registry, which is the only place it exists — the DOM deliberately
+ * does not carry it before the commitment.
+ */
+function answerAttributionIfPresent(): boolean {
+  const commit = screen.queryByRole('button', { name: 'Commit these answers' })
+  if (!commit) return false
+  for (const row of Array.from(
+    document.querySelectorAll<HTMLElement>('[data-attribution-candidate]'),
+  )) {
+    const candidateId = row.getAttribute('data-attribution-candidate')
+    const select = row.querySelector('select')
+    if (!candidateId || !select) continue
+    const keyed = ecmoDeliveryAttribution(mountedSectionId)?.candidates.find(
+      (candidate) => candidate.id === candidateId,
+    )
+    if (!keyed) continue
+    fireEvent.change(select, { target: { value: keyed.componentId } })
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Commit these answers' }))
+  return true
+}
+
 function continueTo(phase: CriticalCareActivityPhase) {
   for (let guard = 0; currentPhase() !== phase; guard += 1) {
-    if (guard > 6) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
+    if (guard > 8) throw new Error(`could not reach ${phase}; stuck at ${currentPhase()}`)
+    if (answerAttributionIfPresent()) continue
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
   }
 }
@@ -842,5 +875,106 @@ describe('phase restoration writes nothing and reconstructs no engine state', ()
 
     expect(variant.source).toEqual({ kind: 'scenario', scenarioId: 'va-gas-source-interruption' })
     expect(variant.setupActions?.every((action) => action.type === 'STEP')).toBe(true)
+  })
+})
+
+/**
+ * Going back to a step already worked, without restarting the section.
+ *
+ * An owner review in September 2026 found that the only way to revisit a step was the step list's
+ * inline recap, which nothing advertised, so learners were using "Restart section" and losing
+ * everything. The Now card now carries an explicit Back control. What these pin is that it is a
+ * real return rather than a reset: the section keeps its progress, a committed prediction stays
+ * committed, forward still works afterwards, and the card says the learner is looking back rather
+ * than leaving them to wonder whether they have undone something.
+ */
+describe('the way back to a step already worked', () => {
+  function backControl(): HTMLElement | null {
+    return document.querySelector<HTMLElement>('[data-now-back]')
+  }
+
+  it('offers no way back from the first step, and one from every step after it', () => {
+    mountAt('why-extracorporeal-support', 'vv', 'recognize')
+    expect(currentPhase()).toBe('recognize')
+    expect(backControl()).toBeNull()
+
+    continueTo('predict')
+    expect(backControl()).not.toBeNull()
+    expect(backControl()?.textContent).toContain('Back to Recognize')
+  })
+
+  it('returns to the previous step, keeps the section’s progress, and goes forward again', () => {
+    mountAt('why-extracorporeal-support', 'vv', 'recognize')
+    commitPredictionAndContinue('why-extracorporeal-support')
+    expect(currentPhase()).toBe('act')
+
+    // Back one step: the learner is on Predict again...
+    fireEvent.click(backControl()!)
+    expect(currentPhase()).toBe('predict')
+    // ...with the commitment intact, so nothing has to be answered twice.
+    for (const choice of predictionChoices()) expect(choice).toBeDisabled()
+    expect(predictionChoices().some((choice) => choice.checked)).toBe(true)
+    // ...and the steps already worked still read as worked. Act had only been entered, not
+    // performed, so it stays reachable rather than done — going back did not invent progress.
+    expect(stepRow('recognize').getAttribute('data-step-state')).toBe('done')
+    expect(stepRow('predict').getAttribute('data-step-state')).toBe('done')
+    expect(stepRow('act').getAttribute('data-step-state')).toBe('next')
+
+    // And forward is still available from here: the committed prediction keeps its Continue, so
+    // coming back is not a dead end.
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(currentPhase()).toBe('act')
+  })
+
+  it('says the learner is looking back, rather than leaving them to guess', () => {
+    mountAt('why-extracorporeal-support', 'vv', 'recognize')
+    commitPredictionAndContinue('why-extracorporeal-support')
+    continueTo('observe')
+
+    fireEvent.click(backControl()!)
+    expect(currentPhase()).toBe('act')
+    const status = document.querySelector('[data-now-status]')?.textContent ?? ''
+    expect(status).toMatch(/looking back at an earlier step/i)
+    expect(status).toMatch(/nothing you have worked through is lost/i)
+  })
+
+  it('walks all the way back to the first step one step at a time', () => {
+    mountAt('why-extracorporeal-support', 'vv', 'recognize')
+    commitPredictionAndContinue('why-extracorporeal-support')
+    continueTo('observe')
+    expect(currentPhase()).toBe('observe')
+
+    for (const expected of ['act', 'predict', 'recognize'] as const) {
+      fireEvent.click(backControl()!)
+      expect(currentPhase()).toBe(expected)
+    }
+    // At the first step there is nowhere further back to go.
+    expect(backControl()).toBeNull()
+    // Nothing was lost on the way: every step actually worked still reads as worked. Observe was
+    // entered but never performed — entering a step is not performing it — so it stays reachable
+    // rather than done.
+    for (const phase of ['recognize', 'predict', 'act'] as const) {
+      expect(stepRow(phase).getAttribute('data-step-state')).toBe('done')
+    }
+    expect(stepRow('observe').getAttribute('data-step-state')).toBe('next')
+  })
+
+  /**
+   * The reason row clicks are not navigation.
+   *
+   * Entering a step loads the state its copy is written against, so a row that teleported would
+   * discard an evolved case built with the bounded actions. Reviewing a row is therefore inert, and
+   * this is the assertion that keeps it that way now that a navigating control exists next to it.
+   */
+  it('leaves row review inert, so only the Back control moves the learner', () => {
+    mountAt('vv-integration-capstone', 'vv', 'recognize')
+    commitPredictionAndContinue('vv-integration-capstone')
+    continueTo('observe')
+    fireEvent.click(guidedAction('reveal-evolved-state'))
+    expect(loadedVariantId()).toBe('gas-source-after-change')
+
+    fireEvent.click(stepRow('recognize').querySelector('button')!)
+    expect(currentPhase()).toBe('observe')
+    expect(loadedVariantId()).toBe('gas-source-after-change')
   })
 })

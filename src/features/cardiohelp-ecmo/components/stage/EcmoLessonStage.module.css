@@ -576,3 +576,76 @@
 .teachingColumn[data-teaching-preview='true'] [data-teaching-panel] > :nth-child(n + 2) {
   display: none;
 }
+
+/* ------------------------------------------------------------------ *
+ * Attribution: assign each proposed change to the thing it acts on
+ * ------------------------------------------------------------------ */
+.attribution {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.attributionPrompt {
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+.attributionRow {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--bg, #0a1417);
+}
+
+.attributionRow label {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.attributionRow select {
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  min-height: 40px;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--panel, #0f1f24);
+  color: inherit;
+}
+
+.attributionRow select:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.attributionRow[data-attribution-outcome='correct'] {
+  border-color: var(--success, #59c88f);
+}
+
+.attributionRow[data-attribution-outcome='not-correct'] {
+  border-color: var(--warning, #f5c451);
+}
+
+.attributionVerdict {
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+.attributionComponents {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line, #244148);
+}
+
+.attributionComponents p {
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+  color: var(--muted, #9fb4b7);
+}

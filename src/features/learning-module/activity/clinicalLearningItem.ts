@@ -6,7 +6,8 @@ const stableId = z
   .max(160)
   .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/)
 
-export const learnerCopyReviewTerms = [
+/** Vocabulary that describes the software rather than the medicine. */
+const softwareInternalTerms = [
   'reducer',
   'engine',
   'route',
@@ -18,6 +19,17 @@ export const learnerCopyReviewTerms = [
   'deterministic attempt',
   'checkpoint payload',
   'simulator behavior',
+] as const
+
+/**
+ * Vocabulary that turns formative practice into an examination.
+ *
+ * This is the half of the review list that protects a publication position rather than a teaching
+ * preference: none of this content is credit-eligible, and copy that talks about a score, a
+ * percentage, a pass or a mastery claim asserts something the module is not in a position to assert.
+ * It stays banned in authored items and in the verdict cards alike.
+ */
+const gradingTerms = [
   'score',
   'scored',
   'points',
@@ -29,9 +41,6 @@ export const learnerCopyReviewTerms = [
   'passed',
   'fail',
   'failed',
-  'correct',
-  'incorrect',
-  'wrong',
   'mastery',
   'mastered',
   'exam',
@@ -46,11 +55,38 @@ export const learnerCopyReviewTerms = [
   'competency',
 ] as const
 
+/**
+ * Correctness labels — banned in authored item text, permitted in a verdict.
+ *
+ * These are separated from `gradingTerms` because they are governed by a different decision. In an
+ * authored stem, choice label or rationale a correctness word is answer leakage: a choice that says
+ * "the correct answer is..." hands over the key. That ban stands.
+ *
+ * In the verdict a learner reads *after* committing, the same words are the point. An owner review
+ * of the ECMO module in September 2026 found the cards describing the reasoning ("That read holds")
+ * without ever stating the outcome, and asked for the outcome to be explicit — which is also what
+ * the retrieval-practice literature asks for, since feedback a learner cannot decode does not
+ * correct anything. `AnswerVerdict` and `ChoiceReasoningFeedback` therefore lead with "Correct." or
+ * "Not correct." and are checked against `gradingTerms` alone, not against this list.
+ */
+const correctnessTerms = ['correct', 'incorrect', 'wrong'] as const
+
+/**
+ * Everything an authored item may not say. Composed in its original order, so the message a schema
+ * failure prints is unchanged.
+ */
+export const learnerCopyReviewTerms = [
+  ...softwareInternalTerms,
+  ...gradingTerms.slice(0, gradingTerms.indexOf('failed') + 1),
+  ...correctnessTerms,
+  ...gradingTerms.slice(gradingTerms.indexOf('failed') + 1),
+] as const
+
 function escapeRegularExpression(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function learnerCopyPattern(term: (typeof learnerCopyReviewTerms)[number]): RegExp {
+function learnerCopyPattern(term: string): RegExp {
   if (term === '%') return /%/
   if (term === 'attempt N of') return /\battempt\s+\d+\s+of\b/i
   if (term === 'X out of Y') return /\b\d+\s+out\s+of\s+\d+\b/i
@@ -60,6 +96,14 @@ function learnerCopyPattern(term: (typeof learnerCopyReviewTerms)[number]): RegE
 
 export function flaggedLearnerCopyTerms(value: string): readonly string[] {
   return learnerCopyReviewTerms.filter((term) => learnerCopyPattern(term).test(value))
+}
+
+/**
+ * The subset a verdict card must still avoid: examination and scoring vocabulary, but not the
+ * correctness label the card exists to state. See `correctnessTerms` for why the two are separate.
+ */
+export function flaggedGradingCopyTerms(value: string): readonly string[] {
+  return gradingTerms.filter((term) => learnerCopyPattern(term).test(value))
 }
 
 const clinicalLearningChoiceSchema = z

@@ -42,17 +42,28 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
     minutes: 8,
     paragraphs: [
       'Extracorporeal support is not a treatment for a diagnosis; it is a way of substituting for a failing step in oxygen delivery or carbon dioxide clearance while something else is given time to recover or to be corrected. Before any console appears, the useful question is which step has failed.',
-      'Oxygen delivery to the tissues is the product of blood flow and the oxygen content that blood carries. Oxygen content is dominated by hemoglobin and its saturation, with a small dissolved contribution. Consumption sits on the other side of the ledger. A patient can therefore arrive at inadequate delivery through a flow problem, a content problem, or a consumption problem — and those are not interchangeable, because support that raises one does not necessarily raise the others.',
+      'Oxygen delivery to the tissues is the product of blood flow and the oxygen content that blood carries. Oxygen content is dominated by hemoglobin and its saturation, with a small dissolved contribution. Oxygen consumption sits on the other side of the balance. A patient can therefore arrive at impaired delivery through a blood-flow problem, an oxygen-content problem, or a consumption problem — and those are not interchangeable, because support that raises one does not necessarily raise the others.',
       'Carbon dioxide behaves differently. It is far more diffusible than oxygen and its removal across a membrane is governed mostly by the gradient maintained on the gas side, not by how much blood is passing the membrane. That asymmetry is the reason the two controls on an extracorporeal circuit are not interchangeable, and it is developed in the blood-flow-versus-sweep section.',
       'Naming the failing step also names the limits. Extracorporeal support does not treat the underlying lung injury, the cardiac lesion, the sepsis, or the bleeding; it holds a physiologic variable while the treatable problem is treated. Every section that follows assumes this framing.',
     ],
     bullets: [
       'Delivery is flow multiplied by content; a normal saturation does not establish adequate delivery.',
-      'Consumption is part of the same ledger and can change independently of support.',
+      'Oxygen consumption is part of the same balance and can change independently of support.',
       'CO₂ removal and oxygenation are governed by different parts of the circuit.',
       'Support substitutes for a failing step; it does not treat the cause of the failure.',
     ],
-    sourceIds: [...coreSources, 'elso-adult-vv-2021', 'elso-adult-va-2021'],
+    // A physiology audit in September 2026 found this section citing the module-wide circuit sources
+    // for an argument about oxygen delivery, while the two records that actually support it — naming
+    // the failing step before changing support, and flow as a titrated dose — went uncited. Both are
+    // added here; the shared circuit sources stay because the section's closing paragraph is about
+    // what a circuit does and does not treat.
+    sourceIds: [
+      ...coreSources,
+      'ecmo-book-ch16',
+      'ecmo-book-ch17',
+      'elso-adult-vv-2021',
+      'elso-adult-va-2021',
+    ],
   },
   {
     id: 'circuit-flow-path',

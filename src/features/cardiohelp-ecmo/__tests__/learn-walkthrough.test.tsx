@@ -538,3 +538,56 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     expect(predictionSteps[0].predictionScenarioId).toBe('va-startup-sensor-orientation')
   })
 })
+
+/**
+ * Going back to a step already worked, on a drill.
+ *
+ * The foundation side of this is pinned in `foundation-phase-restoration.test.tsx`. A drill differs
+ * in one way worth its own assertion: it runs a single engine forward, so coming back does not
+ * rewind the circuit, and the card has to say that rather than implying the simulator came back too.
+ */
+describe('the way back on a drill', () => {
+  function backControl(): HTMLElement | null {
+    return document.querySelector<HTMLElement>('[data-now-back]')
+  }
+
+  it('offers no way back from the first step', async () => {
+    await mountDrill('preload-drainage-collapse')
+    expect(backControl()).toBeNull()
+  })
+
+  it('returns to the step before, keeps the commitment, and says the circuit did not rewind', async () => {
+    await mountDrill('preload-drainage-collapse')
+    readStep(/Inspect the starting pattern/i)
+    answerPredictionAndAdvance('preload-drainage-collapse')
+
+    // On the Act step now, with the commitment recorded in the engine.
+    const committedBefore = latestState().scenario.prediction
+    expect(committedBefore.committed).toBe(true)
+    const rpmBefore = latestState().device.rpmSetpoint
+
+    expect(backControl()?.textContent).toContain('Back to Predict')
+    fireEvent.click(backControl()!)
+
+    // The verdict is on screen again, the commitment is untouched, and the engine has not moved.
+    expect(document.querySelector('[data-answer-verdict]')).not.toBeNull()
+    expect(latestState().scenario.prediction).toEqual(committedBefore)
+    expect(latestState().device.rpmSetpoint).toBe(rpmBefore)
+
+    // And the card is honest about what came back and what did not.
+    expect(nowStatus()).toMatch(/looking back at an earlier step/i)
+    expect(nowStatus()).toMatch(/simulator is where you left it/i)
+    expect(nowStatus()).toMatch(/nothing you have worked through is lost/i)
+  })
+
+  it('goes forward again from a step it came back to', async () => {
+    const { lesson } = await mountDrill('preload-drainage-collapse')
+    readStep(/Inspect the starting pattern/i)
+    answerPredictionAndAdvance('preload-drainage-collapse')
+    const actTitle = lesson.steps[2].title
+
+    fireEvent.click(backControl()!)
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(screen.getByRole('heading', { name: actTitle })).toBeInTheDocument()
+  })
+})

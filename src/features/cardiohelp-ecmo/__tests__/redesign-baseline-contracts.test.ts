@@ -140,7 +140,7 @@ describe('ECMO redesign baseline — canonical section order', () => {
     expect(pathway.sections.map((section) => section.id)).toEqual(SECTION_IDS_BY_TRACK[track])
   })
 
-  it.each(TRACKS)('opens the %s track on the delivery-ledger section', (track) => {
+  it.each(TRACKS)('opens the %s track on the oxygen-delivery section', (track) => {
     // The redesign's whole premise: a fresh learner starts here, not at the console tour. Every
     // primary entry CTA resolves through the shared resolver, and for empty progress the resolver
     // returns this section. If this id ever moves, the entry copy and its tests move with it.

@@ -69,6 +69,11 @@ interface Progression {
   readonly clampedFrom: StagePhase | null
   readonly choiceByStepId: Readonly<Record<string, string>>
   readonly review: number | null
+  /**
+   * The furthest step ever entered, which is not the furthest performed: entering a step does not
+   * perform it. This is what decides whether the learner is looking back at something already done.
+   */
+  readonly furthestEntered: number
   /** Surfaces the learner opened or closed on a step, keyed by step id; absent = the step's own. */
   readonly surfacesByStepId: Readonly<Record<string, readonly StageSurfaceId[]>>
   /** The spotlighted control and how many times it was asked for, valid for one step only. */
@@ -86,6 +91,7 @@ const INITIAL_PROGRESSION: Progression = {
   clampedFrom: null,
   choiceByStepId: {},
   review: null,
+  furthestEntered: 0,
   surfacesByStepId: {},
   help: null,
 }
@@ -240,6 +246,7 @@ export function DrillStageHost({
         index,
         review: null,
         performedIds: performedNow,
+        furthestEntered: Math.max(current.furthestEntered, index),
         furthestPerformed: Math.max(
           current.furthestPerformed,
           performedNow.includes(lesson.steps[current.index]?.id ?? '') ? current.index : -1,
@@ -398,12 +405,27 @@ export function DrillStageHost({
     core.loadLearnScenario(sectionId)
   }
 
+  /** Selecting a row reviews it in place. See the foundation host's note on why this is not navigation. */
   function selectStepRow(index: number) {
     setProgression((current) => {
       if (index === current.index) return current
       if (!current.performedIds.includes(lesson.steps[index]?.id ?? '')) return current
       return { ...current, review: current.review === index ? null : index }
     })
+  }
+
+  /**
+   * Back to a step already worked. See the foundation host's note.
+   *
+   * One honesty point specific to drills: a drill runs one engine forward, so coming back does not
+   * rewind the circuit unless the step being entered authors its own scenario. The Now card says
+   * which of those happened rather than leaving the learner to guess.
+   */
+  function goToStep(index: number) {
+    const target = lesson.steps[index]
+    if (!target || index === activeIndex) return
+    if (!performedIds.has(target.id)) return
+    enterStep(index, progression.performedIds)
   }
 
   /* ---------------------------------------------------------------- *
@@ -421,12 +443,31 @@ export function DrillStageHost({
         }
       : undefined
 
+  const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
+  const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
+  const lookingBack = activeIndex < progression.furthestEntered
+
   const nowModel: NowCardModel = (() => {
+    /*
+     * The way back, offered on every step after the first.
+     *
+     * The previous step is performed by construction — a learner only reaches step N by working
+     * step N-1, and a lesson mounted at a later phase marks the steps before it performed — so this
+     * is always a real destination rather than a control that sometimes does nothing.
+     */
     const base = {
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
       why: activeStep.rationale,
+      ...(canGoBack && previousStep
+        ? {
+            back: {
+              label: `Back to ${STAGE_PHASE_LABELS[previousStep.phase]}`,
+              onActivate: () => goToStep(activeIndex - 1),
+            },
+          }
+        : {}),
     }
     if (finished) {
       return { ...base, status: 'Done. This section has been worked through.' }
@@ -434,7 +475,10 @@ export function DrillStageHost({
     if (stepPerformed) {
       return {
         ...base,
-        status: 'Done.',
+        // A drill runs one engine forward, so coming back does not rewind the circuit. Say so.
+        status: lookingBack
+          ? 'Done. You are looking back at an earlier step. The simulator is where you left it, and nothing you have worked through is lost.'
+          : 'Done.',
         primary: isLastStep
           ? undefined
           : { label: 'Next step', onActivate: advance, icon: <ArrowRight aria-hidden="true" /> },

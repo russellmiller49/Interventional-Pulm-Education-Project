@@ -1,6 +1,7 @@
 import type { ClinicalLearningItem } from '@/features/learning-module/activity/clinicalLearningItem'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
 
+import type { EcmoDeliveryAttribution } from '../../content/deliveryAttribution'
 import type { EcmoFoundationGuidedAction } from '../../content/foundationLessonRuntime'
 import type { EcmoLearnPredictionCommitment } from '../../content/learnPredictionItems'
 import type {
@@ -82,6 +83,15 @@ export type StageInteraction =
     }
   /** Foundation bounded actions: restore a variant, advance the clock, or record a look. */
   | { readonly kind: 'bounded-actions'; readonly actions: readonly EcmoFoundationGuidedAction[] }
+  /**
+   * Attribute each of several proposed changes to the thing it acts on, then commit the set.
+   *
+   * A second commit point, for an Act step whose work is a judgement rather than an operation. The
+   * first foundation section's Act step used to say "select the term each candidate change would
+   * move" while offering nothing selectable — an owner review in September 2026 found it, along with
+   * four consecutive steps that showed identical content. This is what that step asks now.
+   */
+  | { readonly kind: 'attribution'; readonly attribution: EcmoDeliveryAttribution }
   /** Foundation transfer item; committing it is what records the section as worked. */
   | { readonly kind: 'transfer-item'; readonly item: ClinicalLearningItem }
   /** Drill transfer: a different authored scenario loaded on entry, with one action to perform. */

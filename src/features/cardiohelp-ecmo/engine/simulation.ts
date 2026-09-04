@@ -1,6 +1,7 @@
 import { cardiohelpScenarioById, cardiohelpScenarios } from '../content/scenarios'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { ecmoReferenceProfiles, type EcmoReferenceProfileId } from '../content/referenceProfiles'
+import { OXYGEN_CARRIED_PER_GRAM_HEMOGLOBIN } from '../content/oxygenDeliveryArithmetic'
 import type {
   AlarmEvent,
   AlarmPriority,
@@ -1018,8 +1019,6 @@ export const DEFAULT_ECMO_MODEL_INPUTS: EcmoPhysiologyModelInputs = Object.freez
   oxygenConsumptionMlMin: 150,
 })
 
-const HUFNER_CONSTANT_ML_PER_G = 1.34
-
 /**
  * Systemic mixed venous saturation, estimated from the oxygen balance rather than held constant.
  *
@@ -1040,7 +1039,10 @@ export function deriveSystemicVenousSaturationEstimate(
       ? state.patient.nativeCardiacOutputLpm + recirculationAdjustedCircuitFlowLpm
       : state.patient.nativeCardiacOutputLpm
   const oxygenCarryingCapacity =
-    HUFNER_CONSTANT_ML_PER_G * state.circuit.hemoglobin * Math.max(systemicFlowLpm, 0.2) * 10
+    OXYGEN_CARRIED_PER_GRAM_HEMOGLOBIN *
+    state.circuit.hemoglobin *
+    Math.max(systemicFlowLpm, 0.2) *
+    10
   const consumption =
     state.modelInputs?.oxygenConsumptionMlMin ?? DEFAULT_ECMO_MODEL_INPUTS.oxygenConsumptionMlMin
   const extractedSaturationPoints = (consumption / oxygenCarryingCapacity) * 100

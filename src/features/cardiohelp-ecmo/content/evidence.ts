@@ -214,6 +214,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
     citation: 'Original educational simulation model created for this module.',
     supports: [
       'Deterministic RPM-flow-pressure trends',
+      'Bounded arterial oxygen content and oxygen-delivery arithmetic from hemoglobin, saturation and flow',
       'Simplified recirculation and sweep-to-PaCO2 responses',
       'Simplified peripheral-VA upper-body oxygenation and LV-loading response cues',
       'Bounded clinical deterioration and response after case-specific simulated interventions',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, type ReactNode } from 'react'
+import { ArrowLeft } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
 
@@ -25,6 +26,16 @@ export interface NowCardModel {
   readonly secondary?: NowCardAction
   /** A single line of state the learner is waiting on ("12 s since your last action"). */
   readonly status?: string
+  /**
+   * Back to the previous step.
+   *
+   * Kept out of the actions row on purpose. The card's whole premise is that there is one thing to
+   * do now, and a Back button sitting beside the primary action competes with it; placed under the
+   * kicker it is discoverable without arguing for attention. An owner review in September 2026
+   * found learners restarting a whole section to revisit one step, because the only way back was
+   * the step list's inline recap and nothing said it was there.
+   */
+  readonly back?: NowCardAction
   /** Disclosed on request; never part of the default read. */
   readonly why?: string
   readonly tone?: 'neutral' | 'safety'
@@ -58,6 +69,17 @@ export function EcmoNowCard({
       aria-labelledby={headingId}
     >
       <p className={styles.nowKicker}>{model.kicker}</p>
+      {model.back ? (
+        <button
+          type="button"
+          className={styles.nowBack}
+          data-now-back
+          onClick={model.back.onActivate}
+        >
+          <ArrowLeft aria-hidden="true" />
+          {model.back.label}
+        </button>
+      ) : null}
       <h2 id={headingId} className={styles.nowHeading}>
         {model.heading}
       </h2>
@@ -90,7 +112,7 @@ export function EcmoNowCard({
       ) : null}
       {model.why ? (
         <details className={styles.nowWhy} data-now-why>
-          <summary>Why this step</summary>
+          <summary>Why this matters</summary>
           <p>{model.why}</p>
         </details>
       ) : null}
