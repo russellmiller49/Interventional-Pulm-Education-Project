@@ -210,3 +210,34 @@ haloed with its label at 11.5 px (it was 6 px fitted whole, and off-screen below
 that), one map on the page, and a Next-then-Back within a pan settling on the right window. On VA
 the return halo follows the arterial cannula. Practice is untouched: poster width, no marking, no
 scroll.
+
+## 7. Citations, below the module (R4-OD-11)
+
+The owner, on the first foundation section: "Citations should be below the module and less
+prominent." The screenshot showed why — nine bordered citation cards with class badges, claim lines
+and copy buttons, spread through both panes, one set sitting between the learner's attribution
+answers and the button that commits them.
+
+- **One place.** `content/stageSources.ts` derives everything a lesson cites — the section record,
+  the runtime, the walk stops, both learning items, the attribution registry, the control panel, the
+  delivery arithmetic, the story problems, the pressure rows, the scenario and its prediction item —
+  and the stage cites that set once, in the shell footer. `stage/StageSourcesScope` suppresses each
+  pane's own list inside the stage; outside it — the render harness, panel tests, the Practice
+  debrief, the hub — a panel standing on its own still cites what it says.
+- **Less prominent.** A new `footnote` density: no border, no fill, no class chip, one small line
+  per source at the shell's floor type with the copy and open controls inline as text links. Shut on
+  every step, behind a footer link that reads "Sources for this section · 7".
+- **Opened, it floats.** The shell gives the footer an `auto` row and the panes the rest, so a list
+  that opened in flow took its height straight out of the lesson. It is anchored above the footer
+  instead: the panes keep every pixel, and Escape closes it back.
+- **The claims still wait for the commitment.** Collecting every source into one block moved the
+  drill's provenance out from behind the reveal `DrillStepTeaching` used to gate it with, and the
+  rendered pre-commit scan caught it on eight drills: a record's own "supports" sentence names the
+  mechanism it is registered for, and one record's limitation names an unloading device. So before
+  the prediction the footer gives titles and references and says the rest is coming; the commitment
+  unfolds it.
+
+`stage-sources.test.ts` is the drift guard the derivation needs: it mounts every foundation panel
+and every drill panel with their own lists rendering and fails if any id on their markup is missing
+from the set collected for that lesson. The panels are the authority on what they cite; the
+derivation only has to keep up.

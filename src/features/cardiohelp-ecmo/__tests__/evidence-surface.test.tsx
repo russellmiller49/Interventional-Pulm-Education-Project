@@ -392,14 +392,21 @@ describe('the five citing surfaces', () => {
     },
   )
 
-  it('cites the foundation narrative sources by title', () => {
+  it('cites the foundation narrative sources by title, in the footer with the rest of the lesson’s', () => {
+    /*
+     * The narrative used to print its own card list under the prose. An owner review in September
+     * 2026 moved every stage list into one folded block below the module, so the assertion is the
+     * same claim about a different place: the section's sources are cited, by title, with no raw
+     * id anywhere. The footer's set is the whole lesson's, so containment rather than equality.
+     */
     const { container } = render(
       <EcmoFoundationLessonActivity sectionId="circuit-flow-path" supportMode="vv" />,
     )
-    const sources = container.querySelector('[data-lesson-sources]')
+    expect(container.querySelector('[data-lesson-sources]')).toBeNull()
+    const sources = container.querySelector('[data-stage-sources]')
     expect(sources).not.toBeNull()
     const section = ecmoFoundationSectionById.get('circuit-flow-path')
-    expect(renderedIds(sources)).toEqual([...new Set(section?.sourceIds)])
+    expect(renderedIds(sources)).toEqual(expect.arrayContaining([...new Set(section?.sourceIds)]))
     for (const id of section?.sourceIds ?? []) {
       expect(sources?.querySelector(`[data-evidence-id="${id}"]`)?.textContent).toContain(
         evidenceById.get(id)?.title,

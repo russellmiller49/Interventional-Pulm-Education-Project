@@ -10,6 +10,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
 import { orderChoices } from '../../content/choiceOrder'
+import { ecmoDrillStageSources } from '../../content/stageSources'
 import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import { ecmoDrillSpecs } from '../../content/drillSpecs'
 import { isEcmoFoundationSectionId } from '../../content/foundationLessons'
@@ -27,7 +28,7 @@ import {
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { FitWidthSurface } from '../FitWidthSurface'
-import { EcmoSourceList } from '../evidence/EcmoSourceList'
+import { EcmoStageSources } from '../shell/EcmoStageSources'
 import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContextStrip'
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
@@ -41,6 +42,7 @@ import { DrillTeachingColumn } from './DrillTeachingColumn'
 import { panelControlIds, resolveGuidedSimulatorTask, targetLabels } from './drillControlResolver'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
+import { StageSourcesScope } from './StageSourcesScope'
 import { StepList } from './StepList'
 import {
   STAGE_PHASES,
@@ -461,6 +463,13 @@ export function DrillStageHost({
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
   const lookingBack = activeIndex < progression.furthestEntered
 
+  /*
+   * Every source this drill cites, for the footer that cites them all in one place. Derived from
+   * the content registries rather than reported by the panes at render, so the set cannot go stale
+   * behind a surface that quietly starts citing something new — see `content/stageSources.ts`.
+   */
+  const stageSources = useMemo(() => ecmoDrillStageSources(lesson.scenarioId), [lesson.scenarioId])
+
   const nowModel: NowCardModel = (() => {
     /*
      * The way back, offered on every step after the first.
@@ -564,14 +573,11 @@ export function DrillStageHost({
               theme="dark"
               onContinue={isLastStep ? undefined : advance}
             />
-            <div data-verdict-evidence>
-              <EcmoSourceList
-                compact
-                surface="shell"
-                evidenceIds={item.evidenceIds}
-                title="Sources"
-              />
-            </div>
+            {/*
+              The item's sources used to sit under the verdict. They are in the footer now, with
+              the rest of the drill's, and unfolded there the moment this verdict appears — which
+              is the commitment the claims were waiting for.
+            */}
           </>
         )
       }
@@ -639,6 +645,13 @@ export function DrillStageHost({
       />
     </FitWidthSurface>
   )
+
+  /*
+   * Every source this lesson cites, for the footer that cites them all in one place.
+   * Derived from the content registries rather than reported by the panes at render, so the
+   * set cannot go stale behind a surface that quietly starts citing something new — see
+   * `content/stageSources.ts` and the rendered check in `stage-sources.test.ts`.
+   */
 
   const simulator = (
     <EcmoSimulatorSurfaces
@@ -818,23 +831,33 @@ export function DrillStageHost({
       activeHref={`${cardiohelpEcmoNavBase}/learn`}
       activityMode
     >
-      <StageLayout
-        stageId={activeStep.id}
-        label={`Guided CARDIOHELP ${supportMode.toUpperCase()} lesson`}
-        supportMode={supportMode}
-        header={header}
-        contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
-        simulator={simulator}
-        teaching={teaching}
-        task={task}
-        footer={
-          <p className={styles.footerLine}>
-            Professional education only. Not a clinical device or a patient-specific guide; every
-            value is simulated. Follow current manufacturer instructions and local protocol.
-          </p>
-        }
-        overlay={helpDialog}
-      />
+      <StageSourcesScope>
+        <StageLayout
+          stageId={activeStep.id}
+          label={`Guided CARDIOHELP ${supportMode.toUpperCase()} lesson`}
+          supportMode={supportMode}
+          header={header}
+          contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
+          simulator={simulator}
+          teaching={teaching}
+          task={task}
+          footer={
+            <>
+              <p className={styles.footerLine}>
+                Professional education only. Not a clinical device or a patient-specific guide;
+                every value is simulated. Follow current manufacturer instructions and local
+                protocol.
+              </p>
+              <EcmoStageSources
+                sources={stageSources}
+                label="Sources for this lesson"
+                claimsVisible={predictionCommitted}
+              />
+            </>
+          }
+          overlay={helpDialog}
+        />
+      </StageSourcesScope>
     </CardiohelpModuleFrame>
   )
 }

@@ -18,6 +18,7 @@ import {
 } from '../../content/circuitWalk'
 import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
+import { useStageSourcesCollected } from '../stage/StageSourcesScope'
 import { ChannelValue, ModelBoundary, TextEquivalent, styles } from './shared'
 
 /**
@@ -93,6 +94,7 @@ export function EcmoCircuitWalk({
   onRunComparison,
   activeComparisonId = null,
 }: EcmoCircuitWalkProps) {
+  const sourcesCollectedElsewhere = useStageSourcesCollected()
   const headingId = useId()
   const headingRef = useRef<HTMLHeadingElement>(null)
   const mountedStopRef = useRef<EcmoCircuitWalkStopId | null>(null)
@@ -267,9 +269,11 @@ export function EcmoCircuitWalk({
 
       <ModelBoundary>{resolveEcmoModeText(stop.modelBoundary, supportMode)}</ModelBoundary>
 
-      <div className="mt-3" data-walk-sources>
-        <EcmoSourceList compact evidenceIds={stop.sourceIds} />
-      </div>
+      {sourcesCollectedElsewhere ? null : (
+        <div className="mt-3" data-walk-sources>
+          <EcmoSourceList compact evidenceIds={stop.sourceIds} />
+        </div>
+      )}
 
       <nav className="mt-4 flex flex-wrap items-center gap-2" aria-label="Circuit walk">
         <button

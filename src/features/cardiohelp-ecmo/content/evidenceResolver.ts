@@ -67,8 +67,15 @@ export interface EcmoResolvedCitation {
 }
 
 export interface ResolveEcmoEvidenceOptions {
-  /** Evidence id → the specific claim the citing surface takes from that source. */
-  readonly claims?: Readonly<Record<string, string>>
+  /**
+   * Evidence id → the claim, or claims, the citing surface takes from that source.
+   *
+   * A list rather than one string because one surface can now stand for several. The stage's
+   * footer cites a section's whole source set in one place, and a record the walk cites for where
+   * a reading is taken may be the same record a drill cites for what a pressure pattern means;
+   * collapsing those to one sentence would attribute a claim the surface never made.
+   */
+  readonly claims?: Readonly<Record<string, string | readonly string[]>>
 }
 
 export function ecmoEvidenceHref(
@@ -100,15 +107,16 @@ export function unregisteredEcmoCitation(id: string): EcmoResolvedCitation {
   }
 }
 
-function claimFor(
-  claims: Readonly<Record<string, string>> | undefined,
+function claimsFor(
+  claims: Readonly<Record<string, string | readonly string[]>> | undefined,
   id: string,
-): string | undefined {
+): readonly string[] {
   // Own keys only: a claims map is authored data, and a registry id must never be answered by
   // something inherited from Object.prototype.
-  if (!claims || !Object.hasOwn(claims, id)) return undefined
+  if (!claims || !Object.hasOwn(claims, id)) return []
   const claim = claims[id]
-  return typeof claim === 'string' && claim.length > 0 ? claim : undefined
+  const entries = typeof claim === 'string' ? [claim] : Array.isArray(claim) ? claim : []
+  return entries.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
 }
 
 export function resolveEcmoCitation(
@@ -123,7 +131,7 @@ export function resolveEcmoCitation(
     return unregisteredEcmoCitation(id)
   }
   const href = ecmoEvidenceHref(record)
-  const claim = claimFor(options.claims, id)
+  const claimed = claimsFor(options.claims, id)
   const resolved = {
     id: record.id,
     title: record.title,
@@ -134,7 +142,7 @@ export function resolveEcmoCitation(
     ...(record.url ? { url: record.url } : {}),
     ...(record.doi ? { doi: record.doi } : {}),
     ...(href ? { href } : {}),
-    supports: claim ? [claim] : record.supports,
+    supports: claimed.length > 0 ? claimed : record.supports,
     limitations: record.limitations,
   }
   return { ...resolved, copyText: ecmoCitationCopyText(resolved) }

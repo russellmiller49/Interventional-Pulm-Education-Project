@@ -205,3 +205,16 @@ name a channel in a caption before commitment, or mark anything on a drill befor
 commitment flag. The rendered leak scan over all twenty drills now asserts the map is unmarked at
 both scanned moments and denies the implicated caption; see
 [`r4-owner-review-record.md`](./r4-owner-review-record.md) §6.
+
+## R4-OD-11 — Citations below the module, and quiet
+
+Quoted: "Citations should be below the module and less prominent."
+
+Taken 2026-09-04. Every source a lesson cites is collected into one folded block in the stage
+footer; no pane prints a citation card. The block is titles and references until the learner has
+committed the prediction, because a record's registered "supports" sentence names the mechanism the
+drill is asking about — see [`r4-owner-review-record.md`](./r4-owner-review-record.md) §7.
+
+Unchanged, deliberately: the hub's sources panel, the Practice debrief's "Sources for this case",
+and every panel rendered outside the stage keep their full card lists. Those surfaces are _about_
+provenance, or stand alone with nothing to defer to.

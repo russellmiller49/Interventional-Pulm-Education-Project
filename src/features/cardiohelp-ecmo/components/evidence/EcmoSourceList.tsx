@@ -3,6 +3,7 @@
 import { useId } from 'react'
 
 import { resolveEcmoEvidence } from '../../content/evidenceResolver'
+import { useStageSourcesCollected } from '../stage/StageSourcesScope'
 import { EcmoCitation } from './EcmoCitation'
 import styles from './evidence.module.css'
 
@@ -23,9 +24,20 @@ export type EcmoSourceListHeadingLevel = 2 | 3 | 4 | 5 | 6
 
 export interface EcmoSourceListProps {
   readonly evidenceIds: readonly string[]
-  /** Evidence id → the claim this surface takes from that source. */
-  readonly claims?: Readonly<Record<string, string>>
+  /** Evidence id → the claim, or claims, this surface takes from that source. */
+  readonly claims?: Readonly<Record<string, string | readonly string[]>>
   readonly compact?: boolean
+  /**
+   * How loudly the list reads.
+   *
+   * `card` is the default and the only one there used to be: a bordered row per source with its
+   * class badge, for a surface whose subject is provenance. `footnote` is the stage footer's — no
+   * borders, no badges, one small line per source with its claim and its controls as text links,
+   * because the lesson is the subject there and the sources are what it can be checked against.
+   */
+  readonly density?: 'card' | 'footnote'
+  /** See `EcmoCitation`: false names each source without saying what it is cited for. */
+  readonly supportsVisible?: boolean
   readonly showLimitations?: boolean
   readonly title?: string
   readonly headingLevel?: EcmoSourceListHeadingLevel
@@ -38,6 +50,8 @@ export function EcmoSourceList({
   evidenceIds,
   claims,
   compact = false,
+  density = 'card',
+  supportsVisible = true,
   showLimitations,
   title,
   headingLevel = 3,
@@ -45,23 +59,33 @@ export function EcmoSourceList({
   surface = 'workspace',
 }: EcmoSourceListProps) {
   const ownLabelId = useId()
+  const collectedElsewhere = useStageSourcesCollected()
   const citations = resolveEcmoEvidence(evidenceIds, claims ? { claims } : {})
+  // Inside the lesson stage the footer cites this surface's sources for it. See StageSourcesScope.
+  if (collectedElsewhere && density !== 'footnote') return null
   if (citations.length === 0) return null
+  const footnote = density === 'footnote'
 
   const Heading = `h${headingLevel}` as const
   const labelId = title || !labelledBy ? ownLabelId : labelledBy
 
   return (
     <div
-      className={surface === 'shell' ? `${styles.list} ${styles.shell}` : styles.list}
+      className={[
+        styles.list,
+        surface === 'shell' ? styles.shell : '',
+        footnote ? styles.footnoteList : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       data-ecmo-source-list
-      data-density={compact ? 'compact' : 'full'}
+      data-density={footnote ? 'footnote' : compact ? 'compact' : 'full'}
     >
       {title ? (
         <Heading id={ownLabelId} className={styles.listTitle}>
           {title}
         </Heading>
-      ) : labelledBy ? null : (
+      ) : labelledBy || footnote ? null : (
         <span id={ownLabelId} className={styles.listLabel}>
           Sources
         </span>
@@ -72,6 +96,8 @@ export function EcmoSourceList({
             key={citation.id}
             citation={citation}
             compact={compact}
+            density={density}
+            supportsVisible={supportsVisible}
             showLimitations={showLimitations}
           />
         ))}

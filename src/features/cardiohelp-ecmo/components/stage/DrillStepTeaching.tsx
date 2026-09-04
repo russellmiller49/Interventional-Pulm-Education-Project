@@ -4,6 +4,7 @@ import { ECMO_CONTROL_PANEL } from '../../content/controlPanel'
 import { ecmoDrillSpecs, type EcmoKnobState, type EcmoKnobStrip } from '../../content/drillSpecs'
 import type { ScenarioDefinition } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
+import { useStageSourcesCollected } from './StageSourcesScope'
 import { EcmoLocalizationCard } from '../teaching/EcmoLocalizationCard'
 import { styles as teachingStyles } from '../teaching/shared'
 import type { StageStep } from './stageModel'
@@ -90,6 +91,7 @@ export function DrillStepTeaching({
   readonly predictionCommitted: boolean
   readonly hasAuthoredPanel: boolean
 }) {
+  const sourcesCollectedElsewhere = useStageSourcesCollected()
   if (!scenario) return null
 
   if (!predictionCommitted || step.phase === 'recognize' || step.phase === 'predict') {
@@ -176,18 +178,25 @@ export function DrillStepTeaching({
           <p className="mt-2">{spec.transferPrinciple}</p>
         </section>
       ) : null}
-      <section className={teachingStyles.section} aria-labelledby="drill-sources-heading">
-        <h3 id="drill-sources-heading" className={teachingStyles.heading}>
-          Sources for this pattern
-        </h3>
-        <div className="mt-2" data-drill-sources>
-          <EcmoSourceList
-            compact
-            evidenceIds={scenario.evidenceIds}
-            labelledBy="drill-sources-heading"
-          />
-        </div>
-      </section>
+      {/*
+        Provenance, where the panel stands on its own. Inside the stage the footer cites this
+        drill's whole set in one place, so the heading goes with the list rather than staying
+        behind as an empty section. See `stage/StageSourcesScope`.
+      */}
+      {sourcesCollectedElsewhere ? null : (
+        <section className={teachingStyles.section} aria-labelledby="drill-sources-heading">
+          <h3 id="drill-sources-heading" className={teachingStyles.heading}>
+            Sources for this pattern
+          </h3>
+          <div className="mt-2" data-drill-sources>
+            <EcmoSourceList
+              compact
+              evidenceIds={scenario.evidenceIds}
+              labelledBy="drill-sources-heading"
+            />
+          </div>
+        </section>
+      )}
     </div>
   )
 }

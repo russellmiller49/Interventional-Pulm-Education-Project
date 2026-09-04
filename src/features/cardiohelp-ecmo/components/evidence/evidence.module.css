@@ -229,3 +229,94 @@
 .checklistSummary {
   cursor: pointer;
 }
+
+/* ------------------------------------------------------------------ *
+ * Footnote density — the stage footer
+ *
+ * One small line per source instead of a bordered card: no border, no fill, no class chip, the
+ * claim on its own line and the controls as text links. The lesson is the subject on that screen
+ * and provenance is what it can be checked against, so this reads at the shell's floor type and
+ * gives up every card affordance except the words.
+ * ------------------------------------------------------------------ */
+
+.footnoteList {
+  gap: 0;
+}
+
+.footnoteList .items {
+  display: block;
+  grid-template-columns: none;
+  gap: 0;
+}
+
+.item.footnote {
+  display: block;
+  padding: 0.3rem 0 0.35rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.5;
+}
+
+.item.footnote + .item.footnote {
+  border-top: 1px solid var(--evidence-line);
+}
+
+.footnoteClass {
+  color: var(--evidence-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.footnoteClass::after {
+  content: ' · ';
+  letter-spacing: normal;
+}
+
+.item.footnote .title {
+  display: inline;
+  font-size: inherit;
+  font-weight: 700;
+}
+
+.item.footnote .citation,
+.item.footnote .supports,
+.item.footnote .limit {
+  display: block;
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+.item.footnote .citation {
+  display: inline;
+}
+
+.item.footnote .title::after {
+  content: ' ';
+}
+
+/* The controls belong on the reference line, not on one of their own: seven rows of buttons is
+ * the height that made this a panel rather than a footnote. */
+.item.footnote .actions {
+  display: inline-flex;
+  gap: 0.25rem 0.7rem;
+  margin-top: 0;
+  vertical-align: baseline;
+}
+
+.item.footnote .actions::before {
+  content: '·';
+  color: var(--evidence-muted);
+}
+
+.item.footnote .link,
+.item.footnote .copy {
+  min-height: 1.75rem;
+  font-size: inherit;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}

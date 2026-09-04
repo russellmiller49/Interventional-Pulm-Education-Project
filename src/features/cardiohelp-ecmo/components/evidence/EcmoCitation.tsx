@@ -26,11 +26,28 @@ export interface EcmoCitationProps {
   readonly citation: EcmoResolvedCitation
   /** One "Supports" line and no limit line: the density for a card that is about something else. */
   readonly compact?: boolean
+  /** `footnote` drops the badge and the borders and reads as one small line. See EcmoSourceList. */
+  readonly density?: 'card' | 'footnote'
+  /**
+   * Whether to state what the source supports.
+   *
+   * False before a learner has committed a prediction the source would answer. A record's own
+   * "supports" sentence names the mechanism it is registered for — "the centrifugal pump is preload
+   * dependent, and the drainage pressure sensor sits upstream of it" is the drill's answer — so a
+   * pre-commitment surface may name the source and not what it is cited for.
+   */
+  readonly supportsVisible?: boolean
   /** Show the record's limitation even in compact mode. Full mode always shows it. */
   readonly showLimitations?: boolean
 }
 
-export function EcmoCitation({ citation, compact = false, showLimitations }: EcmoCitationProps) {
+export function EcmoCitation({
+  citation,
+  compact = false,
+  density = 'card',
+  supportsVisible = true,
+  showLimitations,
+}: EcmoCitationProps) {
   const [status, setStatus] = useState('')
   const [fallbackVisible, setFallbackVisible] = useState(false)
   const fallbackRef = useRef<HTMLInputElement>(null)
@@ -41,7 +58,12 @@ export function EcmoCitation({ citation, compact = false, showLimitations }: Ecm
     if (fallbackVisible) fallbackRef.current?.focus()
   }, [fallbackVisible])
 
-  const supports = compact ? citation.supports.slice(0, 1) : citation.supports
+  const footnote = density === 'footnote'
+  // A footnote keeps every claim: it is the one place the section's provenance is stated, and a
+  // record cited for two things by two surfaces would otherwise lose one of them.
+  const allSupports = compact && !footnote ? citation.supports.slice(0, 1) : citation.supports
+  const supports = supportsVisible ? allSupports : []
+  // The limitation is a caveat about the source, not a claim it supports, so it survives the gate.
   const limitVisible = (showLimitations ?? !compact) && citation.limitations.length > 0
 
   const revealFallback = () => {
@@ -65,14 +87,27 @@ export function EcmoCitation({ citation, compact = false, showLimitations }: Ecm
 
   return (
     <li
-      className={compact ? `${styles.item} ${styles.compactItem}` : styles.item}
+      className={[styles.item, compact ? styles.compactItem : '', footnote ? styles.footnote : '']
+        .filter(Boolean)
+        .join(' ')}
       data-evidence-id={citation.id}
       data-source-class={citation.sourceClass}
-      data-citation-density={compact ? 'compact' : 'full'}
+      data-citation-density={footnote ? 'footnote' : compact ? 'compact' : 'full'}
     >
-      <span className={styles.badge} data-source-class={citation.sourceClass}>
-        {citation.sourceClassLabel}
-      </span>
+      {/*
+        The class badge is a card affordance. In a footnote the class is still named, in the same
+        words, as text at the head of the line — a row of coloured chips down the footer would be
+        the prominence this list exists to give up.
+      */}
+      {footnote ? (
+        <span className={styles.footnoteClass} data-source-class={citation.sourceClass}>
+          {citation.sourceClassLabel}
+        </span>
+      ) : (
+        <span className={styles.badge} data-source-class={citation.sourceClass}>
+          {citation.sourceClassLabel}
+        </span>
+      )}
       <cite className={styles.title} data-citation-title>
         {citation.title}
       </cite>

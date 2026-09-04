@@ -458,8 +458,18 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     expect(verdict?.textContent).toContain(best.rationale)
     expect(verdict?.textContent).toContain(best.label)
     expect(screen.getByText(/why the other answers do not fit/i)).toBeInTheDocument()
-    // The item's sources sit under the verdict, by title.
-    expect(document.querySelector('[data-verdict-evidence]')).not.toBeNull()
+    /*
+     * The item's sources used to sit under the verdict. An owner review in September 2026 moved
+     * every stage list into one folded block below the module, and the commitment that produced
+     * this verdict is what unfolds the claims, so that is what this checks: the block is there,
+     * it carries this item's sources, and it is now allowed to say what each is cited for.
+     */
+    expect(document.querySelector('[data-verdict-evidence]')).toBeNull()
+    const sources = document.querySelector('[data-stage-sources]')
+    expect(sources).toHaveAttribute('data-stage-sources-claims', 'true')
+    for (const id of ecmoLearnPredictionFor('preload-drainage-collapse')?.item.evidenceIds ?? []) {
+      expect(sources?.querySelector(`[data-evidence-id="${id}"]`)).not.toBeNull()
+    }
 
     // Committing did not move the learner on.
     expect(

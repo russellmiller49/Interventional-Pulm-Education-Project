@@ -13,6 +13,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
 import { orderChoices } from '../../content/choiceOrder'
+import { ecmoFoundationStageSources } from '../../content/stageSources'
 import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import {
   ecmoCircuitWalkStopsForSection,
@@ -44,6 +45,7 @@ import {
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
+import { EcmoStageSources } from '../shell/EcmoStageSources'
 import { FitWidthSurface } from '../FitWidthSurface'
 import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContextStrip'
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
@@ -61,6 +63,7 @@ import {
 import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
+import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
 import {
@@ -808,6 +811,14 @@ function FoundationStageSession({
     </FitWidthSurface>
   )
 
+  /*
+   * Every source this lesson cites, for the footer that cites them all in one place.
+   * Derived from the content registries rather than reported by the panes at render, so the
+   * set cannot go stale behind a surface that quietly starts citing something new — see
+   * `content/stageSources.ts` and the rendered check in `stage-sources.test.ts`.
+   */
+  const stageSources = useMemo(() => ecmoFoundationStageSources(sectionId), [sectionId])
+
   const simulator = (
     <>
       <EcmoSimulatorSurfaces
@@ -908,10 +919,11 @@ function FoundationStageSession({
                 <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
               </>
             ) : null}
-            {/* Provenance sits with the narrative at every prose level, not only the full read. */}
-            <div className="mt-2" data-lesson-sources>
-              <EcmoSourceList compact evidenceIds={section.sourceIds} title="Sources" />
-            </div>
+            {/*
+              The narrative's own source list used to sit here, at every prose level. An owner
+              review moved every stage list into one folded block in the footer, so this pane
+              carries the lesson and the footer carries what it rests on.
+            */}
           </section>
         ) : null}
         {conflict && prose === 'full' ? (
@@ -1063,24 +1075,34 @@ function FoundationStageSession({
       activeHref={`${cardiohelpEcmoNavBase}/learn`}
       activityMode
     >
-      <StageLayout
-        stageId={activeStep.id}
-        label={`${supportMode.toUpperCase()} foundation section`}
-        supportMode={supportMode}
-        fixedPathway={trackIsFixed ? supportMode : undefined}
-        header={header}
-        contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
-        simulator={simulator}
-        teaching={teaching}
-        task={task}
-        footer={
-          <p className={styles.footerLine}>
-            Professional education only. Not a clinical device or a patient-specific guide; every
-            value is simulated. Follow current manufacturer instructions and local protocol.
-          </p>
-        }
-        overlay={helpDialog}
-      />
+      <StageSourcesScope>
+        <StageLayout
+          stageId={activeStep.id}
+          label={`${supportMode.toUpperCase()} foundation section`}
+          supportMode={supportMode}
+          fixedPathway={trackIsFixed ? supportMode : undefined}
+          header={header}
+          contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
+          simulator={simulator}
+          teaching={teaching}
+          task={task}
+          footer={
+            <>
+              <p className={styles.footerLine}>
+                Professional education only. Not a clinical device or a patient-specific guide;
+                every value is simulated. Follow current manufacturer instructions and local
+                protocol.
+              </p>
+              <EcmoStageSources
+                sources={stageSources}
+                label="Sources for this section"
+                claimsVisible={predictionCommitted}
+              />
+            </>
+          }
+          overlay={helpDialog}
+        />
+      </StageSourcesScope>
     </CardiohelpModuleFrame>
   )
 }
