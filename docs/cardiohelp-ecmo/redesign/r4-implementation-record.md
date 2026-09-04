@@ -7,7 +7,16 @@ the scope statement; the owner decisions are in [`r4-owner-decisions.md`](./r4-o
 and the engine corrections in [`r4-scoring-honesty-record.md`](./r4-scoring-honesty-record.md).
 
 Base: `origin/main` at `42dcea42` (R3 = PR #117). Branch `claude/ecmo-9-3`, sixteen commits, one per
-increment. Prompted by a learner's written feedback on the sibling critical-care labs — too many
+increment.
+
+**A second round followed.** The owner walked the rebuilt first foundation section and reported five
+things: a verdict that never said whether the answer was right, an Act step that asked for a
+selection and offered none, four steps that rendered one identical panel, no way back without
+restarting, and the framework's own vocabulary throughout the learner's text. What each became is in
+[`r4-owner-review-record.md`](./r4-owner-review-record.md), the authority in `r4-owner-decisions.md`
+as R4-OD-5 to R4-OD-9, and the vocabulary table in
+[`r4-language-record.md`](./r4-language-record.md). Read those before this file's measurements: the
+foundation numbers in section 3 were taken before that round. Prompted by a learner's written feedback on the sibling critical-care labs — too many
 controls at once, an inert phase bar, a hidden objective, a dead Help button, small text, references
 that could not be opened — read against the `medical-education-modules` teaching standard.
 
