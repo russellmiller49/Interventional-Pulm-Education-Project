@@ -4,6 +4,8 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 
 import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
+import { presentationTitle } from '../content/casePresentation'
+import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { createInitialSimulationState } from '../engine'
 
@@ -105,8 +107,15 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(
       within(vaControl).getByRole('option', { name: /right-arm oxygenation/i }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: /Initiate VV ECMO/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /Initiate peripheral VA ECMO/i })).toBeInTheDocument()
+    // The picker names cases by presentation, and only the VA track's cases are offered.
+    const vvInitiation = clinicalPracticeScenarioById.get('clinical-vv-initiation-ards')!
+    const vaInitiation = clinicalPracticeScenarioById.get('va-clinical-initiation-shock')!
+    expect(
+      screen.queryByRole('option', { name: presentationTitle(vvInitiation) }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: presentationTitle(vaInitiation) }),
+    ).toBeInTheDocument()
   })
 
   it('reloads a clean walkthrough when the track changes and never scores Learn', async () => {
@@ -154,7 +163,14 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     await waitFor(() => {
       expect(container.querySelector('[data-sections-drawer]')).toBeInTheDocument()
     })
-    expect(screen.getByRole('button', { name: /Acute hypercapnic acidemia/i })).toBeInTheDocument()
+    const section = criticalCareLearningPathway('cardiohelp-ecmo', 'vv').sections.find(
+      (candidate) => candidate.id === 'acute-hypercapnia',
+    )!
+    // The drawer lists the retitled section, and hydration read the stored completion rather than
+    // overwriting it with a fresh envelope.
+    expect(screen.getByRole('button', { name: new RegExp(section.title) })).toBeInTheDocument()
+    const stored = JSON.parse(window.localStorage.getItem('cardiohelp-ecmo-progress-v1') ?? '{}')
+    expect(stored.completedLearnLessonIds).toContain('acute-hypercapnia')
   })
 
   it('renders mode-specific cannulation and supports keyboard panning of the schematic', () => {

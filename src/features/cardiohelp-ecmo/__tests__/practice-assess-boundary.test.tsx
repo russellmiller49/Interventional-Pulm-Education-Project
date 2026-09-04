@@ -10,7 +10,7 @@ import {
   ecmoSimulationReducer,
   selectScenarioOutcome,
 } from '../engine'
-import { PracticeCasePlayer } from '../components/PracticeCasePlayer'
+import { EcmoPracticeCaseView } from '../components/practice/EcmoPracticeActivity'
 
 /**
  * The boundary this package deliberately did not cross.
@@ -64,14 +64,20 @@ function renderPractice(
   const state = prepare ? prepare(initial) : initial
   const dispatch = jest.fn()
   render(
-    <PracticeCasePlayer
+    <EcmoPracticeCaseView
+      section="practice"
       state={state}
       scenario={scenario}
       progress={createDefaultProgress()}
       outcome={selectScenarioOutcome(state)}
+      supportMode={scenario.supportMode}
+      activityMode={mode === 'challenge' ? 'challenge' : 'practice'}
       dispatch={dispatch}
       onLoadScenario={jest.fn()}
+      onSelectTrack={jest.fn()}
       onReveal={jest.fn()}
+      onSaveAndExit={jest.fn()}
+      onReset={jest.fn()}
     />,
   )
   return { scenario, state, dispatch }
@@ -98,7 +104,9 @@ describe('Practice is unchanged by the Learn prediction work', () => {
     expect(screen.getByLabelText('Goal')).toBeInTheDocument()
     expect(screen.getByLabelText('First priority')).toBeInTheDocument()
     expect(screen.getByLabelText('Expected immediate effect')).toBeInTheDocument()
-    expect(screen.queryAllByRole('radio')).toHaveLength(0)
+    // Nothing in the case workflow is a radio choice set (the header's track toggle is chrome).
+    const caseColumn = screen.getByRole('region', { name: 'Case workflow' })
+    expect(within(caseColumn).queryAllByRole('radio')).toHaveLength(0)
     for (const label of learnChoiceLabels) {
       expect(screen.queryByText(label)).toBeNull()
     }
@@ -230,7 +238,7 @@ describe('Assess is unchanged by the Learn prediction work', () => {
     }
   })
 
-  it('still defers the teaching note on an action until the learner asks for it', () => {
+  it('still defers the teaching note on an action to the debrief', () => {
     const scenario = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-occult-hemorrhage',
     )

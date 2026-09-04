@@ -395,6 +395,11 @@ export interface ClinicalCaseDefinition {
   kind: ClinicalCaseKind
   sourceCase: string
   setting: string
+  /**
+   * What the case is called before its debrief: the presentation, never the diagnosis. Optional
+   * until every case has one authored (I5); `presentationTitle()` falls back to `patientLabel`.
+   */
+  presentationTitle?: string
   patientLabel: string
   openingNarrative: string
   decisionPrompt: string
@@ -461,6 +466,12 @@ export type ReassessmentDomain = 'device' | 'circuit' | 'patient'
 export interface ReassessmentOption {
   id: string
   label: string
+  /**
+   * Why this option does or does not describe the modeled response. Shown only in the debrief,
+   * beside the option the learner chose and the one the model expected; never before the reveal.
+   * Additive: options without one render no rationale rather than a manufactured sentence.
+   */
+  rationale?: string
 }
 
 export interface ReassessmentQuestion {
@@ -648,6 +659,8 @@ export interface ScenarioDefinition {
   assessmentPolicy?: ScenarioAssessmentPolicy
   reassessment?: ScenarioReassessmentDefinition
   hints?: readonly ScenarioHint[]
+  /** The capstones have no clinical case; this is what they are called and how they open. */
+  challengeBrief?: { readonly title: string; readonly presentation: string }
   unsafeActionPenalties: readonly UnsafeActionPenalty[]
   successPredicates: readonly string[]
   terminalRules: readonly string[]
