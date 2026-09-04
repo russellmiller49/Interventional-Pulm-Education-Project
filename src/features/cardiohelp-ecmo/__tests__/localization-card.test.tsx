@@ -94,7 +94,7 @@ describe('ECMO localization card — the scaffolded table', () => {
   it('says the circuit in front of the learner has nothing wrong with it', () => {
     const { container } = render(<EcmoLocalizationCard mode="scaffold-table" supportMode="vv" />)
     expect(container.querySelector('[data-localization-scaffold-note]')?.textContent).toMatch(
-      /no injected problem/i,
+      /no problem introduced/i,
     )
     expect(container.querySelector('[data-model-boundary]')?.textContent).toMatch(
       /simulation|model/i,

@@ -80,7 +80,7 @@ export const ecmoReferenceProfiles: Readonly<Record<EcmoReferenceProfileId, Ecmo
       supportMode: 'vv',
       title: 'Stable VV reference circuit',
       summary:
-        'A VV circuit running without any injected problem. Drainage and return are both venous, so circuit blood is in series with the native lung and some of what is returned is drained straight back.',
+        'A VV circuit running with no problem introduced. Drainage and return are both venous, so circuit blood is in series with the native lung and some of what is returned is drained straight back.',
       inputs: {
         rpmSetpoint: 3200,
         gas: { sweepLpm: 4, fio2: 1 },

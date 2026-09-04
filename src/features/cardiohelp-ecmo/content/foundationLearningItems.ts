@@ -110,7 +110,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         ],
         correctChoiceIds: ['content-via-hemoglobin'],
         explanation:
-          'The same framework reaches a different answer. In the earlier situation blood flow and oxygen content were both reduced; here flow is intact and the carrier is depleted. An oxygen saturation behaves identically in both, which is the reason it cannot be used alone.',
+          'The same reasoning reaches a different answer. In the earlier situation blood flow and oxygen content were both reduced; here flow is intact and the carrier is depleted. An oxygen saturation behaves identically in both, which is the reason it cannot be used alone.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },

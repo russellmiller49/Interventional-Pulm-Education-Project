@@ -5,7 +5,6 @@ import {
   OXYGEN_DELIVERY_ARITHMETIC_SOURCE_IDS,
 } from '../../content/oxygenDeliveryArithmetic'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
-import { ecmoFoundationLessonRuntime } from '../../content/foundationLessonRuntime'
 import type { EcmoSimulationState } from '../../engine/types'
 import { useStageTeachingScope } from '../stage/StageTeachingScope'
 import type { StagePhase } from '../stage/stageModel'
@@ -171,8 +170,8 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
           </p>
           <TextEquivalent>
             Extracorporeal support substitutes for a failing step in oxygen delivery or carbon
-            dioxide clearance. It holds a physiologic variable while the treatable problem is
-            treated; it does not treat the lung injury, the cardiac lesion, or the sepsis itself.
+            dioxide clearance. It holds that component while the treatable problem is treated; it
+            does not treat the lung injury, the cardiac lesion, or the sepsis itself.
           </TextEquivalent>
         </section>
       </PhaseBlock>

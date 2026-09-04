@@ -72,7 +72,7 @@ const SIGNAL_KIND_LABEL: Readonly<Record<DrillSignalKind, string>> = {
   'simulation-unmodeled': 'Not modeled here',
   'off-console': 'Measured off the console',
   estimated: 'Model estimate',
-  authored: 'Authored by this case',
+  authored: 'Set by this case',
   bedside: 'At the bedside, not on the console',
 }
 

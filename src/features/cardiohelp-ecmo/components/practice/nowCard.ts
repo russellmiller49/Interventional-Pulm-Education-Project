@@ -44,7 +44,7 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
       heading: 'This path would harm a real patient',
       body: [...input.safety.labels, input.safety.lastResponse ?? ''].filter(Boolean).join(' '),
       tone: 'safety',
-      primary: { label: 'Restart from the clean case', onActivate: actions.restart },
+      primary: { label: 'Restart this case from the beginning', onActivate: actions.restart },
     }
   }
 
@@ -81,7 +81,7 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
           body: 'Set the ordered speed on the console and the ordered sweep and oxygen fraction on the gas blender. Each order is matched from the simulator itself.',
           primary: input.initiation.nextControlId
             ? {
-                label: 'Go to the next unmatched control',
+                label: 'Go to the next control that does not match the order',
                 onActivate: () => actions.focusControl(input.initiation!.nextControlId!),
               }
             : undefined,
@@ -91,7 +91,7 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
         return {
           kicker,
           heading: 'Response observed — record it',
-          body: 'The circuit and the patient have had time to respond. Record what you see in the three domains.',
+          body: 'The circuit and the patient have had time to respond. Record what you see on the device, in the circuit and in the patient.',
           primary: { label: 'Go to reassess', onActivate: () => actions.openStage('reassess') },
         }
       }
@@ -130,7 +130,7 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
         return {
           kicker,
           heading: 'Your reassessment is recorded',
-          body: 'Reveal the debrief to compare what you recorded with the authored response, the causal chain and the sources.',
+          body: 'Reveal the debrief to compare what you recorded with the response this case teaches, the causal chain and the sources.',
           primary: { label: 'Reveal causal debrief', onActivate: actions.reveal },
         }
       }
@@ -145,13 +145,13 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
         return {
           kicker,
           heading: 'Your reassessment is recorded',
-          body: 'Reveal the debrief to compare what you recorded with the authored response, the causal chain and the sources.',
+          body: 'Reveal the debrief to compare what you recorded with the response this case teaches, the causal chain and the sources.',
           primary: { label: 'Reveal causal debrief', onActivate: actions.reveal },
         }
       }
       return {
         kicker,
-        heading: 'Compare your reasoning with the authored path',
+        heading: 'Compare your reasoning with the path this case teaches',
         body: 'Your committed plan, your actions and the modeled response are laid out below with their sources. Then pick up the next recommended step.',
         primary:
           input.nextLabel && actions.next

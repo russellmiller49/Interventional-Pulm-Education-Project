@@ -91,7 +91,7 @@ export function SourcesPanel({
         <div>
           <dt>Publication</dt>
           <dd>
-            {published ? 'Reviewed release' : 'Unlisted draft; clinical + device review pending'}
+            {published ? 'Reviewed release' : 'Unlisted draft; clinical and device review pending'}
           </dd>
         </div>
       </dl>

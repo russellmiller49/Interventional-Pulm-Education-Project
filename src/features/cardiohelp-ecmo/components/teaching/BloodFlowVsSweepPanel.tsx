@@ -187,7 +187,7 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
 
         <ModelBoundary>
           <span data-local-model-boundary="demand-and-native-lung-fixed">
-            Two of the terms in that sentence never move in this simulation. The patient&rsquo;s
+            Two of the factors in that sentence never move in this simulation. The patient&rsquo;s
             oxygen consumption is an authored constant, and the native lung&rsquo;s contribution is
             fixed, so nothing here can show you a patient whose demand rose or whose own lungs
             recovered. Both are among the commonest reasons a real ECMO patient&rsquo;s numbers

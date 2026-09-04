@@ -224,22 +224,22 @@ export function EcmoCaseDebrief({
 
   return (
     <div className={styles.debriefPanel} data-case-debrief>
-      <Block kicker="Debrief" heading="Your model and the authored one">
+      <Block kicker="Debrief" heading="Your reasoning and the case's own">
         <dl className={styles.planComparison}>
           {rows.map((row) => (
             <div key={row.label} data-matched={row.matched}>
               <dt>{row.label}</dt>
               <dd>
                 <span>You committed: {row.committed}</span>
-                {row.matched ? null : <span>Authored expectation: {row.expected}</span>}
+                {row.matched ? null : <span>Expected in this case: {row.expected}</span>}
               </dd>
             </div>
           ))}
         </dl>
         {!planMatched && causeCorrected ? (
           <p role="note">
-            Your later actions matched the authored path. That is remediation of the plan you
-            committed, not a match of it.
+            Your later actions matched the path this case teaches. That is a recovery from the plan
+            you committed, not a match of it.
           </p>
         ) : null}
         <h4>{scenario.debrief.diagnosis}</h4>
@@ -314,8 +314,8 @@ export function EcmoCaseDebrief({
         )}
         {usedClues.length ? (
           <p>
-            Clues used: {usedClues.map((hint) => hint.title).join(', ')}. They stay part of this
-            reasoning trace.
+            Clues used: {usedClues.map((hint) => hint.title).join(', ')}. They stay part of the
+            record of this run.
           </p>
         ) : null}
         {submitted ? (
@@ -339,7 +339,9 @@ export function EcmoCaseDebrief({
         ) : null}
         <div>
           <span className={styles.kicker}>
-            {clinicalCase ? 'What should have been done, and why' : 'The authored workflow'}
+            {clinicalCase
+              ? 'What should have been done, and why'
+              : 'The workflow this case teaches'}
           </span>
           <ol>
             {scenario.debrief.correctWorkflow.map((item) => (

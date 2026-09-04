@@ -53,7 +53,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Work the whole pre-use sequence before support is set: let the startup diagnostic run through, walk the circuit by hand from drainage cannula to return cannula, verify gas, power and backup, and pair it with the patient data the console has no way of producing.',
           plausibility: 'best',
           rationale:
-            'This is the only option that treats the four information domains the tour just established as four separate things to verify. The console reports on itself and on the sensors it can see; it says nothing about which way round the flow probe was clipped on, which limb a pressure line was tied to, whether the gas is actually flowing, how the cannulas are secured, or what the patient looks like. Doing it now, on a stopped and unpressurised circuit, is also the only moment when finding a problem costs nothing.',
+            'This is the only option that treats the four sources of information the tour just established as four separate things to verify. The console reports on itself and on the sensors it can see; it says nothing about which way round the flow probe was clipped on, which limb a pressure line was tied to, whether the gas is actually flowing, how the cannulas are secured, or what the patient looks like. Doing it now, on a stopped and unpressurised circuit, is also the only moment when finding a problem costs nothing.',
         },
         {
           id: 'diagnostic-is-the-verified-state',
@@ -333,7 +333,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         {
           id: 'raise-the-sweep',
           label:
-            'Raise the sweep gas, since both the patient’s saturation and the post-membrane saturation have fallen and gas transfer is the function that has given way.',
+            'Raise the sweep gas, since both the patient’s saturation and the post-membrane saturation have fallen and gas transfer is the function that has been lost.',
           plausibility: 'incorrect-mechanism',
           rationale:
             'The model behind this is that any deterioration in oxygenation is answered at the gas control. Sweep principally moves carbon dioxide clearance, and the pressure pattern refutes the reading anyway: a membrane whose gradient has widened several-fold is obstructing blood as well as exchanging poorly, and offering it more gas restores neither.',
@@ -500,7 +500,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Read this as an acute, uncompensated acidemia, and raise the sweep in a bounded step, re-checking a blood gas after it.',
           plausibility: 'best',
           rationale:
-            'A bicarbonate of 25 mmol/L beside a pH of 7.18 says the kidney has not yet defended the pH, so this is an acute rise rather than a tolerated chronic one, and the high work of breathing says the patient is still paying for it during a phase whose whole point is to take that work over. Carbon dioxide crosses the membrane readily, and what limits its removal is the partial-pressure difference for carbon dioxide held between blood and gas across that membrane. Moving more gas through the membrane each minute keeps that difference wide, which is what makes it the lever with both the mechanism and the room to move.',
+            'A bicarbonate of 25 mmol/L beside a pH of 7.18 says the kidney has not yet defended the pH, so this is an acute rise rather than a tolerated chronic one, and the high work of breathing says the patient is still paying for it during a phase whose whole point is to take that work over. Carbon dioxide crosses the membrane readily, and what limits its removal is the partial-pressure difference for carbon dioxide held between blood and gas across that membrane. Moving more gas through the membrane each minute keeps that difference wide, which is what makes it the control with both the mechanism and the room to move.',
         },
         {
           id: 'retrace-gas-source-first',
@@ -581,7 +581,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient in the maintenance phase of venovenous support has had no setting altered since the previous evening. The morning blood gas shows an arterial carbon dioxide of 58 mmHg, a bicarbonate of 34 mEq/L and a pH of 7.39. The patient is comfortable with a low work of breathing. Circuit blood flow, the post-pump and return-limb pressures, and the gradient across the membrane are all where they have been for hours. The overnight team has asked what should be done about the carbon dioxide. What do you commit to, and which goal does that commitment serve?',
+      stem: 'A patient in the maintenance phase of venovenous support has had no setting altered since the previous evening. The morning blood gas shows an arterial carbon dioxide of 58 mmHg, a bicarbonate of 34 mEq/L and a pH of 7.39. The patient is comfortable with a low work of breathing. Circuit blood flow, the post-pump and return-limb pressures, and the gradient across the membrane are all where they have been for hours. The overnight team has asked what should be done about the carbon dioxide. What do you commit to, and what are you acting to achieve?',
       choices: [
         {
           id: 'preserve-the-compensated-state',
@@ -710,7 +710,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
           label:
             'Call for an oxygenator exchange, since a membrane that has stopped exchanging gas has to be replaced; expect the post-membrane saturation to stay low until it is.',
           rationale:
-            'This treats lost gas transfer as synonymous with a membrane that has given way. Both leave the membrane returning blood it has not oxygenated, so a falling post-membrane saturation does not separate them; what separates them is that a membrane giving way usually declares itself over hours with a rising pressure drop across it, and that pressure drop has not moved while this change took minutes. An exchange also commits the patient to an interruption of support and fresh air-handling risk for the one component these findings argue against.',
+            'This treats lost gas transfer as synonymous with a membrane that has stopped working. Both leave the membrane returning blood it has not oxygenated, so a falling post-membrane saturation does not separate them; what separates them is that a deteriorating membrane usually declares itself over hours with a rising pressure drop across it, and that pressure drop has not moved while this change took minutes. An exchange also commits the patient to an interruption of support and fresh air-handling risk for the one component these findings argue against.',
           plausibility: 'incorrect-mechanism',
         },
       ],
@@ -868,7 +868,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
           id: 'lower-speed-to-stretch-the-battery',
           label: 'Lower the pump speed so that the remaining battery reserve lasts longer.',
           rationale:
-            'This treats circuit support as the expendable term and console run time as the one worth protecting. It gives away patient support for a power problem that has not touched the circuit — flow, pressures and oxygenation are all stated to be unchanged — and it leaves the missing supply exactly where it was, so the reserve still runs down in the end.',
+            'This treats circuit support as expendable and console run time as the thing worth protecting. It gives away patient support for a power problem that has not touched the circuit — flow, pressures and oxygenation are all stated to be unchanged — and it leaves the missing supply exactly where it was, so the reserve still runs down in the end.',
           plausibility: 'unsafe',
         },
         {
@@ -1198,7 +1198,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Establish where the resistance sits before any support setting is changed, reading the two post-pump pressures and the gradient against each other at matched flow and speed, alongside sensor plausibility and gas transfer.',
           plausibility: 'best',
           rationale:
-            'A gradient that has widened while the return-limb pressure moved down places the resistance in the membrane itself rather than beyond it, and a post-membrane saturation that has dropped fits the same component behaving the same way. What none of that settles on its own is whether the pressure channels are reporting plausibly, or whether the comparison was made at like flow and speed — a gradient is a resistance multiplied by whatever flow it is read at, so a slower circuit and a fouled membrane pull the number in opposite directions. Localizing the resistance is also what an escalation under the reviewed local exchange protocol rests on, which is why it comes before the support setting is touched.',
+            'A gradient that has widened while the return-limb pressure moved down places the resistance in the membrane itself rather than beyond it, and a post-membrane saturation that has dropped fits the same component behaving the same way. What none of that settles on its own is whether the pressure channels are reporting plausibly, or whether the comparison was made at like flow and speed — a gradient is a resistance multiplied by whatever flow it is read at, so a slower circuit and a fouled membrane pull the number in opposite directions. Localizing the resistance is also what an escalation under your unit’s exchange protocol rests on, which is why it comes before the support setting is touched.',
         },
         {
           id: 'raise-speed-to-restore-flow',
@@ -1325,7 +1325,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       ],
       correctChoiceIds: ['verify-upper-body-and-read-both-circulations'],
       explanation:
-        'Two arterial oxygenation readings taken from different parts of one patient are not one number measured twice; in femoral venoarterial support they report two circulations, and the site nearest the return cannula is the least able to say what the brain is receiving. Everything the console shows here is behaving. Everything that discriminates lives at the patient — where the reading was taken, whether the ventricle is ejecting, what the native lungs are doing to the blood it ejects, and where along the aorta the two streams meet. That is why the first commitment establishes the pattern rather than moving a setting, and why a reassuring femoral or post-membrane value is the most misleading number on this display. Model boundary: this lab reproduces the upper-body oxygenation cue with a bounded educational response curve. It does not model ventilator settings, cannulation options or cerebral oximetry, so the native-lung and configuration answers a real team would weigh here sit outside what can be committed to here. The modeled response stands for verification and escalation through the reviewed local protocol, not for a bedside maneuver that resolves differential oxygenation on its own.',
+        'Two arterial oxygenation readings taken from different parts of one patient are not one number measured twice; in femoral venoarterial support they report two circulations, and the site nearest the return cannula is the least able to say what the brain is receiving. Everything the console shows here is behaving. Everything that discriminates lives at the patient — where the reading was taken, whether the ventricle is ejecting, what the native lungs are doing to the blood it ejects, and where along the aorta the two streams meet. That is why the first step establishes the pattern rather than moving a setting, and why a reassuring femoral or post-membrane value is the most misleading number on this display. Model boundary: this lab reproduces the upper-body oxygenation cue with a bounded educational response curve. It does not model ventilator settings, cannulation options or cerebral oximetry, so the native-lung and configuration answers a real team would weigh here sit outside what can be committed to here. The modeled response stands for verification and escalation through the reviewed local protocol, not for a bedside maneuver that resolves differential oxygenation on its own.',
       evidenceIds: [
         'elso-adult-va-2021',
         'elso-neuro-monitoring-2024',
@@ -1475,7 +1475,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Raise pump speed so that more blood moves through the membrane each minute and carries more carbon dioxide out with it.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This collapses two separate controls into a single dose knob. Blood flow is titrated principally against oxygen delivery, and nothing here describes support that is short of flow, with a mean arterial pressure of 72 and a lactate of 1.8. Blood flow does make some real contribution to carbon dioxide removal at the bedside, but the sources for this drill place the dominant control on the gas side, and on retrograde arterial support extra pump speed also raises the afterload the native ventricle ejects against.',
+            'This collapses two separate controls into one. Blood flow is titrated principally against oxygen delivery, and nothing here describes support that is short of flow, with a mean arterial pressure of 72 and a lactate of 1.8. Blood flow does make some real contribution to carbon dioxide removal at the bedside, but the sources cited here place the dominant control on the gas side, and on retrograde arterial support extra pump speed also raises the afterload the native ventricle ejects against.',
         },
         {
           id: 'raise-sweep-gas-oxygen',
@@ -1498,12 +1498,12 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Read the pH of 7.18 as inadequate systemic perfusion and escalate vasopressor support before the gas path is examined.',
           plausibility: 'unsafe',
           rationale:
-            'This is the reflex that treats any low pH as shock. The acid-base data refute it, since the pH is being carried by the carbon dioxide term while the bicarbonate sits at 25, and so do the perfusion data, with a mean arterial pressure of 72 and a lactate of 1.8. Vasoconstriction also raises the afterload that retrograde circuit blood is driven against and can worsen loading of the left ventricle, while the patient goes on breathing 32 times a minute against carbon dioxide that nobody has removed.',
+            'This is the reflex that treats any low pH as shock. The acid-base data refute it, since the pH is being driven by the carbon dioxide while the bicarbonate sits at 25, and so do the perfusion data, with a mean arterial pressure of 72 and a lactate of 1.8. Vasoconstriction also raises the afterload that retrograde circuit blood is driven against and can worsen loading of the left ventricle, while the patient goes on breathing 32 times a minute against carbon dioxide that nobody has removed.',
         },
       ],
       correctChoiceIds: ['increase-sweep-gas-flow'],
       explanation:
-        'A PaCO2 of 68 with a bicarbonate of 25 puts the whole pH movement on the carbon dioxide term. This is an acute respiratory acidemia, not the compensated maintenance picture in which bicarbonate has climbed and the pH has drifted back toward normal, and the two are handled differently. Carbon dioxide crosses the membrane readily, so its removal is limited by the gradient held on the gas side: the flow of gas through the membrane is the control that moves it, while the oxygen fraction of that same gas and the blood-side dose act principally on oxygen. The circulatory data given, a mean arterial pressure of 72, a lactate of 1.8, a pulse pressure of 18 with an opening aortic valve, and mild pulmonary congestion, describe neither shock nor the loading pattern that would send the reasoning elsewhere. Whatever is changed, the reassessment has to cover PaCO2 and pH, right-arm oxygenation, native lung function, and perfusion, because a venoarterial patient is never described by a blood gas alone. Model boundary: here the carbon dioxide value walks along a straight-line teaching curve toward a target fixed by the gas-side setting alone, the bicarbonate is held constant so the pH follows the carbon dioxide term at once, and a single PaCO2 is carried for the whole patient, so upper-body and lower-body carbon dioxide cannot diverge here the way arterial saturations can during peripheral venoarterial support. At the bedside, removal also varies with membrane surface, blood flow, native ventilation, and carbon dioxide production; the response is neither immediate nor linear; and how quickly an acute acidemia should be brought back is a patient-specific judgement made under local protocol, since an abrupt drop in PaCO2 carries hazards of its own. The numbers here are bounded teaching values, not a bedside prescription.',
+        'A PaCO2 of 68 with a bicarbonate of 25 puts the whole pH movement on the carbon dioxide. This is an acute respiratory acidemia, not the compensated maintenance picture in which bicarbonate has climbed and the pH has drifted back toward normal, and the two are handled differently. Carbon dioxide crosses the membrane readily, so its removal is limited by the gradient held on the gas side: the flow of gas through the membrane is the control that moves it, while the oxygen fraction of that same gas and the blood-side dose act principally on oxygen. The circulatory data given, a mean arterial pressure of 72, a lactate of 1.8, a pulse pressure of 18 with an opening aortic valve, and mild pulmonary congestion, describe neither shock nor the loading pattern that would send the reasoning elsewhere. Whatever is changed, the reassessment has to cover PaCO2 and pH, right-arm oxygenation, native lung function, and perfusion, because a venoarterial patient is never described by a blood gas alone. Model boundary: here the carbon dioxide value walks along a straight-line teaching curve toward a target fixed by the gas-side setting alone, the bicarbonate is held constant so the pH follows the carbon dioxide term at once, and a single PaCO2 is carried for the whole patient, so upper-body and lower-body carbon dioxide cannot diverge here the way arterial saturations can during peripheral venoarterial support. At the bedside, removal also varies with membrane surface, blood flow, native ventilation, and carbon dioxide production; the response is neither immediate nor linear; and how quickly an acute acidemia should be brought back is a patient-specific judgement made under local protocol, since an abrupt drop in PaCO2 carries hazards of its own. The numbers here are bounded teaching values, not a bedside prescription.',
       evidenceIds: [
         'ecmo-book-ch16',
         'ecmo-book-ch18',
@@ -1576,7 +1576,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Arrange an oxygenator exchange, since blood is leaving the membrane at a saturation of 72, aiming to replace the one component that has visibly stopped exchanging gas.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads a membrane that has given way from its output alone. A membrane that is failing usually announces itself over hours, most often with a gradient across it that has been climbing, and this gradient has not moved. A membrane can also lose transfer with an unchanged gradient — condensation and plasma leak do exactly that — so what argues against acting here is not that the membrane is above suspicion but that an intact membrane receiving no gas produces this same output, and the gas path is the one item that can be excluded in seconds. Exchanging first interrupts support to replace a component that may well be working.',
+            'This reads a spent membrane from its output alone. A membrane that is failing usually announces itself over hours, most often with a gradient across it that has been climbing, and this gradient has not moved. A membrane can also lose transfer with an unchanged gradient — condensation and plasma leak do exactly that — so what argues against acting here is not that the membrane is above suspicion but that an intact membrane receiving no gas produces this same output, and the gas path is the one item that can be excluded in seconds. Exchanging first interrupts support to replace a component that may well be working.',
         },
         {
           id: 'resample-the-two-arterial-sites',
@@ -1660,7 +1660,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Close both clamps to separate the patient from the circuit, support the circulation by conventional means, and leave the circuit itself to the perfusion team.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Isolation genuinely is the first move, and calling for help belongs inside it — which is what makes this feel finished. It stops one step short of ending the event: the entry is still open, so support re-established through a limb that was never cleared reproduces the same alarm and the same stop. The authored sequence runs on to a resolved entry and a limb confirmed clear, and only then to resuming support per the current IFU and approved local protocol.',
+            'Isolation genuinely is the first move, and calling for help belongs inside it — which is what makes this feel finished. It stops one step short of ending the event: the entry is still open, so support re-established through a limb that was never cleared reproduces the same alarm and the same stop. The full sequence runs on to a resolved entry and a limb confirmed clear, and only then to resuming support per the current IFU and approved local protocol.',
         },
         {
           id: 'vasopressor-for-pressure',
@@ -1740,12 +1740,12 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Put the console back on a verified power source now, confirm flow, membrane pressures, perfusion and right-arm monitoring in the same action, and keep the backup console and emergency drive within reach of the cart.',
           plausibility: 'best',
           rationale:
-            'What has given way is the supply of power, and the reserve is a countdown that began the moment the changeover happened. A source counts only once it has been confirmed live, since the cart’s own cord, the outlet offered at the far end and the console itself are each candidates for what has given way. A verified source stops the countdown, confirming the patient establishes that the changeover cost the circulation nothing, and keeping the backup beside the cart covers the one threat a live source does not — losing the console outright. These belong in one action because on a moving cart they compete for the same pair of hands.',
+            'What has been lost is the supply of power, and the reserve is a countdown that began the moment the changeover happened. A source counts only once it has been confirmed live, since the cart’s own cord, the outlet offered at the far end and the console itself are each candidates for where it was lost. A verified source stops the countdown, confirming the patient establishes that the changeover cost the circulation nothing, and keeping the backup beside the cart covers the one threat a live source does not — losing the console outright. These belong in one action because on a moving cart they compete for the same pair of hands.',
         },
         {
           id: 'slow-the-pump-to-stretch-the-reserve',
           label:
-            'Bring the pump speed down so the reserve lasts until the cart reaches an outlet — a lower draw is the only lever on run time the team holds on a moving cart.',
+            'Bring the pump speed down so the reserve lasts until the cart reaches an outlet — a lower draw is the only way the team can stretch run time on a moving cart.',
           plausibility: 'unsafe',
           rationale:
             'The model behind this is that run time is the thing under threat and pump demand is the way to buy it. On venoarterial support the circuit carries a circulatory load and not only gas exchange, and how much of this patient’s systemic circulation rests on it is established nowhere in the situation — so this spends perfusion, the thing the move exists to protect, for an unstated amount of extra run time. Flow, the arterial trace and the right radial saturation are unchanged because support has been uninterrupted, not because it is surplus. The console is still on a draining reserve afterwards, so the threat itself is untouched.',
@@ -1756,7 +1756,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
             'Bring the backup console and emergency drive alongside the cart, then carry on and plug in at the scanner — the changeover was automatic, a reserve of 24 covers a short trip, and readiness beside the cart is what a battery interval is for.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Half of this is the taught answer: readiness travelling with the patient is exactly what an automatic changeover should trigger, and a learner who does this has understood that a battery is a bridge. What it leaves undone is the length of the bridge. A reserve of 24 is a reading under an unknown draw rather than a duration, and a move has no guaranteed end time — a held lift or a delayed scanner extends it. Readiness answers the console being lost outright; it does nothing about the reserve emptying.',
+            'Half of this holds: readiness travelling with the patient is exactly what an automatic changeover should trigger, and a learner who does this has understood that a battery is a bridge. What it leaves undone is the length of the bridge. A reserve of 24 is a reading under an unknown draw rather than a duration, and a move has no guaranteed end time — a held lift or a delayed scanner extends it. Readiness answers the console being lost outright; it does nothing about the reserve emptying.',
         },
         {
           id: 'search-the-circuit-for-the-alarm',

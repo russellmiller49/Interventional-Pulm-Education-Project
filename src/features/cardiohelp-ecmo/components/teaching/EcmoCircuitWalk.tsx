@@ -250,7 +250,7 @@ export function EcmoCircuitWalk({
       {pastPrediction && stop.kind === 'comparative' && stop.comparison && onRunComparison ? (
         <div className="mt-4 grid gap-2" data-walk-comparison>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Load each state and read it before loading the next
+            Load each circuit condition and read it before loading the next
           </p>
           {stop.comparison.map((beat) => (
             <button

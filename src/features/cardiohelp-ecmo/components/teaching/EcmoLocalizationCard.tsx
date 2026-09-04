@@ -151,7 +151,7 @@ export function EcmoLocalizationCard(props: EcmoLocalizationCardProps) {
       {revealed ? null : (
         <p className="mt-3 text-xs leading-5 text-muted-foreground" data-localization-scaffold-note>
           These are directions and patterns, not a diagnosis. The circuit in front of you has no
-          injected problem, and the drills that work each pattern come later in the pathway.
+          problem introduced, and the drills that work each pattern come later in the pathway.
         </p>
       )}
 

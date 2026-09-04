@@ -39,7 +39,7 @@ import {
  * it is described.
  */
 const BOUNDED_ACTION_NOTE =
-  'This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.'
+  'This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.'
 
 interface BubbleStep {
   readonly label: string
@@ -83,7 +83,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         !circuit.returnClampClosed &&
         device.pumpRunning,
       detail:
-        'One bounded step here, taken only once the source and the circuit are both right. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        'One simulated step here, taken only once the source and the circuit are both right. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
     },
   ]
 
@@ -94,7 +94,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
       clinicalQuestion="The bubble channel has raised a high-priority alarm and the pump has stopped on its own. What has that stop actually achieved, and what has to be true before this circuit carries blood to the patient again?"
       boundaries={[
         'This exercise injects an air event with no volume assigned to it and no threshold behind it. The manufacturer document supplied for this module is internally inconsistent on a bubble-size threshold, so this simulation offers no trigger value and teaches a sequence instead.',
-        'This module teaches isolation — return limb, then drainage limb, near the patient — because that is what separates a patient from an air column wherever the air is found. It deliberately does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific, and approved protocols differ on it. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        'This module teaches isolation — return limb, then drainage limb, near the patient — because that is what separates a patient from an air column wherever the air is found. It deliberately does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific, and approved protocols differ on it. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
         'This simulation does not represent the physical work of de-airing a real circuit, and it does not model the patient being carried conventionally while the circuit is off. Both are real and both happen in the time this lab compresses to a button.',
       ]}
     >
@@ -302,7 +302,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
           <p>
             It also refuses to let you open the last closed limb by hand while the latch still holds
             the pump. That would put the patient back on both limbs of a circuit moving no blood,
-            which is exactly the state the bounded resumption exists to skip past.
+            which is exactly the state the single resume step exists to skip past.
           </p>
         </HarmfulReflex>
       </AfterCommitment>

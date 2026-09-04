@@ -46,8 +46,8 @@ export function rowQuotesGrammar<H extends string>(
   return Object.values<CapstoneMatrixCell>(cells).some(isGrammarRowCell)
 }
 
-export const GRAMMAR_ROW_REFERENCE = 'Grammar row'
-export const OUTSIDE_GRAMMAR_NOTE = 'Not a pressure pattern in the grammar.'
+export const GRAMMAR_ROW_REFERENCE = 'Pressure pattern'
+export const OUTSIDE_GRAMMAR_NOTE = 'Not one of the four pressure patterns.'
 
 /** The row's signature sentence, resolved for the track the panel teaches. */
 export function grammarRowSignature(

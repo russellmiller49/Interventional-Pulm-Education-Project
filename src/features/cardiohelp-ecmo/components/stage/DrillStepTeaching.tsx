@@ -9,8 +9,8 @@ import { styles as teachingStyles } from '../teaching/shared'
 import type { StageStep } from './stageModel'
 
 const KNOB_STATE_LABEL: Readonly<Record<EcmoKnobState, string>> = {
-  'this-knob': 'this is the knob',
-  'not-this-knob': 'not this knob',
+  'this-knob': 'this is the control',
+  'not-this-knob': 'not this control',
   'harmful-reflex': 'the reflex that does harm here',
   'not-a-control': 'not a control in this state',
 }
@@ -104,7 +104,7 @@ export function DrillStepTeaching({
           Read before you decide
         </h3>
         <p className="mt-2">
-          Use the surfaces this step opened and compare the readings the instruction names. What
+          Use the panels this step opened and compare the readings the instruction names. What
           explains the pattern, the response that fits it, and the reflex to avoid are held here
           until you have committed a prediction.
         </p>

@@ -122,7 +122,7 @@ export function ecmoLocalizationRowIdForFamily(family: EcmoDrillFamily): EcmoLoc
  * names keeps `this-knob`, because a strip cannot say both of one knob, and the reflex in that
  * case is the wrong *direction* of the right knob rather than the wrong knob. In the bubble family
  * the intervention has latched the pump stopped, and the reducer holds it there whatever the speed
- * setting says, so pump speed is `not-a-control` rather than merely not this knob.
+ * setting says, so pump speed is `not-a-control` rather than merely not this setting.
  */
 export function deriveKnobStrip(
   scenario: ScenarioDefinition,
@@ -213,7 +213,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and starting the pump before the circuit has been walked is the reflex to resist. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a startup: the diagnostic covers the device, and the circuit, the sensors, the gas and the power are walked by hand.',
+        'Pump speed — not this setting, and starting the pump before the circuit has been walked is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a startup: the diagnostic covers the device, and the circuit, the sensors, the gas and the power are walked by hand.',
     },
     transferPrinciple:
       'A diagnostic that finishes tells you about the device; what it cannot see, you establish by hand before you trust a reading.',
@@ -231,7 +231,7 @@ const authored: readonly EcmoDrillSpec[] = [
       clamps: 'emergency-only',
       direction: 'decrease',
       sentence:
-        'Pump speed — this is the knob, and it goes down, as a holding move. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. Then find the cause: it is not on the panel.',
+        'Pump speed — this is the setting, and it goes down, as a holding move. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. Then find the cause: it is not on the panel.',
     },
     transferPrinciple:
       'Speed is a setting and flow is a result; when flow stops following speed, the limit is somewhere on the path, and the setting is not the fix.',
@@ -248,7 +248,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and driving it harder against the load is the reflex to resist. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a load: find it on the return path, from the membrane outlet to the cannula.',
+        'Pump speed — not this setting, and driving it harder against the load is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a load: find it on the return path, from the membrane outlet to the cannula.',
     },
     transferPrinciple:
       'A load downstream raises everything upstream of it, so both post-pump pressures move together when the load sits beyond the membrane.',
@@ -265,7 +265,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and driving it harder through the membrane is the reflex to resist. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a widening gradient: trend it at similar flow, corroborate it with what the membrane returns, and escalate through the pathway your unit uses.',
+        'Pump speed — not this setting, and driving it harder through the membrane is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a widening gradient: trend it at similar flow, corroborate it with what the membrane returns, and escalate through the pathway your unit uses.',
     },
     transferPrinciple:
       'A gradient is a resistance multiplied by a flow, so it is read against this circuit’s own earlier value at similar flow, never against a carried number.',
@@ -281,7 +281,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and asking for more flow is the reflex to resist, because it recruits more of the blood just returned. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers recirculation: the cause is where the returned blood goes, at the cannulas.',
+        'Pump speed — not this setting, and asking for more flow is the reflex to resist, because it recruits more of the blood just returned. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers recirculation: the cause is where the returned blood goes, at the cannulas.',
     },
     transferPrinciple:
       'Circuit flow and effective flow are different quantities, and the drainage-line saturation is what tells them apart.',
@@ -298,7 +298,7 @@ const authored: readonly EcmoDrillSpec[] = [
       clamps: 'emergency-only',
       direction: 'increase',
       sentence:
-        'Pump speed — not this knob. Sweep — this is the knob, and it goes up, in a bounded step. Oxygen fraction — not this knob. Clamps — not for this. Then let the response appear, and reassess the gas and the patient before the next step.',
+        'Pump speed — not this setting. Sweep — this is the setting, and it goes up, in a small step. Oxygen fraction — not this setting. Clamps — not for this. Then let the response appear, and reassess the gas and the patient before the next step.',
     },
     transferPrinciple:
       'One control for one axis, moved in bounded steps and reassessed, because the response is neither instant nor linear.',
@@ -315,7 +315,7 @@ const authored: readonly EcmoDrillSpec[] = [
       clamps: 'emergency-only',
       direction: 'hold',
       sentence:
-        'Pump speed — not this knob. Sweep — this is the knob, and it stays where it is. Oxygen fraction — not this knob. Clamps — not for this. A settled state is left settled; the number on its own is not the goal.',
+        'Pump speed — not this setting. Sweep — this is the setting, and it stays where it is. Oxygen fraction — not this setting. Clamps — not for this. A settled state is left settled; the number on its own is not the goal.',
     },
     transferPrinciple:
       'An abnormal number in a settled state is a reason to read the whole picture, not a reason to change a setting.',
@@ -332,7 +332,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and raising it because less oxygenated blood is reaching the patient is the reflex to resist. Sweep — not this knob: the setting is a request, and the request is still displayed. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a gas path: trace it from the source to the membrane and re-establish delivery you have confirmed.',
+        'Pump speed — not this setting, and raising it because less oxygenated blood is reaching the patient is the reflex to resist. Sweep — not this setting: the setting is a request, and the request is still displayed. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a gas path: trace it from the source to the membrane and re-establish delivery you have confirmed.',
     },
     transferPrinciple:
       'Unchanged pressures with worsening gas values point away from the blood path; a setting is a request, and delivery is confirmed separately.',
@@ -348,7 +348,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'this-emergency',
       sentence:
-        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — this is what they are for: isolate the patient, return limb then drainage limb, near the patient. Then find and clear the air source; how support is resumed belongs to the current IFU and your unit’s air-emergency protocol.',
+        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — this is what they are for: isolate the patient, return limb then drainage limb, near the patient. Then find and clear the air source; how support is resumed belongs to the current IFU and your unit’s air-emergency protocol.',
     },
     transferPrinciple:
       'A device’s stop, the patient’s isolation, the air source and the restart are four separate acts, and the first does not accomplish the second.',
@@ -364,7 +364,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and lowering it to stretch the reserve is the reflex to resist. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a power loss: put the console on a source you have confirmed live, with the backup within reach.',
+        'Pump speed — not this setting, and lowering it to stretch the reserve is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a power loss: put the console on a source you have confirmed live, with the backup within reach.',
     },
     transferPrinciple:
       'Reserve power buys time and nothing else; securing support means a confirmed source, not a slower pump.',
@@ -381,7 +381,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and starting the pump on shared hardware before its destinations have been confirmed is the reflex to resist. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a startup: the console cannot tell a vein from an artery, so the return, the right-arm monitor and the cannulated limb are established by hand.',
+        'Pump speed — not this setting, and starting the pump on shared hardware before its destinations have been confirmed is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a startup: the console cannot tell a vein from an artery, so the return, the right-arm monitor and the cannulated limb are established by hand.',
     },
     transferPrinciple:
       'Shared hardware does not know its destinations; on VA the console cannot show the vein from the artery, the upper body or the limb, so those are established by hand.',
@@ -399,7 +399,7 @@ const authored: readonly EcmoDrillSpec[] = [
       clamps: 'emergency-only',
       direction: 'decrease',
       sentence:
-        'Pump speed — this is the knob, and it goes down, as a holding move. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. Then find the cause: it is not on the panel, and the endpoint is the patient’s perfusion rather than the flow display.',
+        'Pump speed — this is the setting, and it goes down, as a holding move. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. Then find the cause: it is not on the panel, and the endpoint is the patient’s perfusion rather than the flow display.',
     },
     transferPrinciple:
       'On VA, circuit flow is one contributor to systemic perfusion, so a holding move is judged at the patient, not on the flow display.',
@@ -416,7 +416,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and driving it harder against the load is the reflex to resist. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a load: find it on the arterial return path, reading the patient’s own arterial pressure from its own monitor beside the circuit pressures.',
+        'Pump speed — not this setting, and driving it harder against the load is the reflex to resist. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a load: find it on the arterial return path, reading the patient’s own arterial pressure from its own monitor beside the circuit pressures.',
     },
     transferPrinciple:
       'The circuit’s return pressure is not the patient’s arterial pressure; the independent monitor sits beside the circuit pressures and is read with them.',
@@ -433,7 +433,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and driving it harder through the membrane is the reflex to resist, and on VA it also raises what the left ventricle ejects against. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a widening gradient: trend it at similar flow, then reassess the territories the circuit supplies, because the gradient says nothing about the patient’s pressure.',
+        'Pump speed — not this setting, and driving it harder through the membrane is the reflex to resist, and on VA it also raises what the left ventricle ejects against. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a widening gradient: trend it at similar flow, then reassess the territories the circuit supplies, because the gradient says nothing about the patient’s pressure.',
     },
     transferPrinciple:
       'A widening gradient belongs to the membrane and says nothing about the patient’s pressure or the territories the circuit supplies.',
@@ -449,7 +449,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and raising it to lift the right-hand number is the reflex to resist, because it loads a ventricle that is still ejecting. Sweep — not this knob. Oxygen fraction — not this knob: what leaves the membrane is already well saturated, and the problem is where it goes. Clamps — not for this. No knob answers a mixing point: sample the right arm, read the two circulations against each other, and escalate the support strategy.',
+        'Pump speed — not this setting, and raising it to lift the right-hand number is the reflex to resist, because it loads a ventricle that is still ejecting. Sweep — not this setting. Oxygen fraction — not this setting: what leaves the membrane is already well saturated, and the problem is where it goes. Clamps — not for this. No setting answers a mixing point: sample the right arm, read the two circulations against each other, and escalate the support strategy.',
     },
     transferPrinciple:
       'The sampling site is part of the measurement: each arterial site reports its own territory, and one reassuring number describes one place.',
@@ -465,7 +465,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers loading: read the pulse pressure, the valve and the lungs, and escalate for unloading evaluation.',
+        'Pump speed — not this setting, and raising it is the reflex to resist, because it adds to the pressure a ventricle that is barely ejecting has to open against. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers loading: read the pulse pressure, the valve and the lungs, and escalate for unloading evaluation.',
     },
     transferPrinciple:
       'An acceptable flow and mean pressure do not establish ejection; pulsatility, the valve and the lungs do.',
@@ -482,7 +482,7 @@ const authored: readonly EcmoDrillSpec[] = [
       clamps: 'emergency-only',
       direction: 'increase',
       sentence:
-        'Pump speed — not this knob. Sweep — this is the knob, and it goes up, in a bounded step. Oxygen fraction — not this knob. Clamps — not for this. Then reassess the gas, the right arm and the circulation; the VA checks do not stop because a knob was turned.',
+        'Pump speed — not this setting. Sweep — this is the setting, and it goes up, in a small step. Oxygen fraction — not this setting. Clamps — not for this. Then reassess the gas, the right arm and the circulation; the VA checks do not stop because a knob was turned.',
     },
     transferPrinciple:
       'The gas control answers the gas axis and nothing else; on VA the circulation, the upper body and the lungs are reassessed regardless.',
@@ -499,7 +499,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and raising it is the reflex to resist, because it sends the artery more of the blood the membrane is no longer oxygenating. Sweep — not this knob: the setting is a request, and the request is still displayed. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a gas path: trace it from the source to the membrane, re-establish delivery you have confirmed, and sample the upper body.',
+        'Pump speed — not this setting, and raising it is the reflex to resist, because it sends the artery more of the blood the membrane is no longer oxygenating. Sweep — not this setting: the setting is a request, and the request is still displayed. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a gas path: trace it from the source to the membrane, re-establish delivery you have confirmed, and sample the upper body.',
     },
     transferPrinciple:
       'Ongoing arterial flow is not oxygenated flow; when the gas path fails, what the circuit returns is sampled, not assumed.',
@@ -515,7 +515,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'this-emergency',
       sentence:
-        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — this is what they are for: isolate the patient, arterial return limb then drainage limb, near the patient, while the circulation carries on without the circuit’s share. Then find and clear the air source; how support is resumed belongs to the current IFU and your unit’s air-emergency protocol.',
+        'Pump speed — not a control while the intervention holds the pump stopped. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — this is what they are for: isolate the patient, arterial return limb then drainage limb, near the patient, while the circulation carries on without the circuit’s share. Then find and clear the air source; how support is resumed belongs to the current IFU and your unit’s air-emergency protocol.',
     },
     transferPrinciple:
       'A pump stop halts the circuit’s share of the circulation without isolating the artery, so isolation is a deliberate act and what is lost meanwhile is named.',
@@ -536,7 +536,7 @@ const authored: readonly EcmoDrillSpec[] = [
       oxygenFraction: 'not-this-knob',
       clamps: 'emergency-only',
       sentence:
-        'Pump speed — not this knob, and lowering it to stretch the reserve is the reflex to resist, because it trades circulation for run time. Sweep — not this knob. Oxygen fraction — not this knob. Clamps — not for this. No knob answers a power loss: put the console on a source you have confirmed live, with the backup within reach, and confirm the circulation paid nothing for the changeover.',
+        'Pump speed — not this setting, and lowering it to stretch the reserve is the reflex to resist, because it trades circulation for run time. Sweep — not this setting. Oxygen fraction — not this setting. Clamps — not for this. No setting answers a power loss: put the console on a source you have confirmed live, with the backup within reach, and confirm the circulation paid nothing for the changeover.',
     },
     transferPrinciple:
       'Trading flow for reserve trades circulation; a confirmed source secures support without spending what the move exists to protect.',
@@ -594,9 +594,9 @@ export function ecmoKnobStripClauses(
 }
 
 const KNOB_STATE_OPENING: Readonly<Record<EcmoKnobState, RegExp>> = {
-  'this-knob': /^this is the knob\b/,
-  'not-this-knob': /^not this knob\b/,
-  'harmful-reflex': /^not this knob\b/,
+  'this-knob': /^this is the setting\b/,
+  'not-this-knob': /^not this setting\b/,
+  'harmful-reflex': /^not this setting\b/,
   'not-a-control': /^not a control\b/,
 }
 
@@ -651,12 +651,12 @@ function knobStripSentenceErrors(scenarioId: string, strip: EcmoKnobStrip): read
     errors.push(`${scenarioId}: the clamps clause does not open the way ${strip.clamps} is written`)
   }
 
-  const findsTheCause = /\bNo knob answers\b/.test(strip.sentence)
+  const findsTheCause = /\bNo setting answers\b/.test(strip.sentence)
   if (strip.verdict === 'no-knob-find-the-cause' && !findsTheCause) {
-    errors.push(`${scenarioId}: a find-the-cause verdict must say that no knob answers it`)
+    errors.push(`${scenarioId}: a find-the-cause verdict must say that no setting answers it`)
   }
   if (strip.verdict === 'this-knob' && findsTheCause) {
-    errors.push(`${scenarioId}: a this-knob verdict cannot say that no knob answers it`)
+    errors.push(`${scenarioId}: a this-knob verdict cannot say that no setting answers it`)
   }
   if (strip.verdict === 'no-knob-isolate-first' && !/\bisolate\b/i.test(strip.sentence)) {
     errors.push(`${scenarioId}: an isolate-first verdict must say to isolate`)

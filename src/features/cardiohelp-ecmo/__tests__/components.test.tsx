@@ -109,7 +109,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     }
 
     const nowCard = container.querySelector('[data-now-card]') as HTMLElement
-    expect(within(nowCard).getByText('Start with four information domains')).toBeInTheDocument()
+    expect(within(nowCard).getByText('Start with four sources of information')).toBeInTheDocument()
     // A read step's one action is also what moves the lesson on.
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     const nextCard = container.querySelector('[data-now-card]') as HTMLElement
@@ -797,7 +797,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       expect(view.container.textContent).not.toContain(errorId)
     }
     expect(
-      within(interruption).getByRole('button', { name: /Restart from the clean case/i }),
+      within(interruption).getByRole('button', { name: /Restart this case from the beginning/i }),
     ).toBeInTheDocument()
   })
 

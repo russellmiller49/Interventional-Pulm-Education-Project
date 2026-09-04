@@ -960,6 +960,33 @@ describe('the way back to a step already worked', () => {
   })
 
   /**
+   * One current step, wherever the learner is standing.
+   *
+   * Found in the browser rather than here: a backwards move leaves the step already worked marked
+   * `done` while it is also the current row, and an implementation that marked both the row moved
+   * from and the row moved to would tell a screen reader there are two current steps with no way
+   * to tell which one the Now card is describing. Checked at every step of a full walk forward and
+   * a full walk back, because the two directions set the current index by different paths.
+   */
+  it('marks exactly one step as the current one, walking forward and back', () => {
+    mountAt('why-extracorporeal-support', 'vv', 'recognize')
+    const currentRows = () => document.querySelectorAll('[data-step-list] [aria-current="step"]')
+
+    expect(currentRows()).toHaveLength(1)
+    commitPredictionAndContinue('why-extracorporeal-support')
+    expect(currentRows()).toHaveLength(1)
+    for (const phase of ['observe', 'explain', 'transfer'] as const) {
+      continueTo(phase)
+      expect(`${phase}: ${currentRows().length}`).toBe(`${phase}: 1`)
+    }
+    for (const phase of ['explain', 'observe', 'act', 'predict', 'recognize'] as const) {
+      fireEvent.click(backControl()!)
+      expect(`back to ${phase}: ${currentRows().length}`).toBe(`back to ${phase}: 1`)
+      expect(currentPhase()).toBe(phase)
+    }
+  })
+
+  /**
    * The reason row clicks are not navigation.
    *
    * Entering a step loads the state its copy is written against, so a row that teleported would

@@ -27,14 +27,14 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
   'clinical-vv-initiation-ards': {
     reassessment: {
       instruction:
-        'Select the post-initiation finding in each domain that best demonstrates effective VV support.',
+        'Select the post-initiation finding for the device, the circuit and the patient that best demonstrates effective VV support.',
       device: {
         prompt: 'Which console finding is most consistent with the intended response?',
         options: [
           option(
             'vv-init-device-correct',
             'Ordered RPM is set, the pump is running, and forward flow is established.',
-            'With the circuit connected and the ordered RPM set, Start ECMO produces a running pump and measured forward flow. That is the console picture the modeled initiation produces.',
+            'With the circuit connected and the ordered RPM set, Start ECMO produces a running pump and measured forward flow. That is the console picture initiation produces in this case.',
           ),
           option(
             'vv-init-device-stopped',
@@ -60,7 +60,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vv-init-circuit-no-return',
             'The drainage limb fills, but no return flow reaches the patient.',
-            'A filling drainage limb with no return flow would mean an obstruction or an unopened path downstream of the pump. The model shows return flow reaching the patient once the pump starts.',
+            'A filling drainage limb with no return flow would mean an obstruction or an unopened path downstream of the pump. In this case return flow reaches the patient once the pump starts.',
           ),
           option(
             'vv-init-circuit-console-only',
@@ -76,7 +76,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vv-init-patient-correct',
             'SpO₂ improves and PaCO₂/pH begin correcting while work of breathing eases.',
-            'The modeled patient responds to forward VV flow with a rising SpO₂ and a PaCO₂ and pH that drift toward the case targets over simulated time, easing the work of breathing.',
+            'The patient responds to forward VV flow with a rising SpO₂ and a PaCO₂ and pH that drift toward the case targets over time, easing the work of breathing.',
           ),
           option(
             'vv-init-patient-map-only',
@@ -123,7 +123,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'hem-device-correct',
             'Pump demand was reduced on the console and pVen becomes less negative without chasing RPM.',
-            'Reducing pump demand on the console is the modeled first move: pVen becomes less negative and chatter eases, while the volume deficit is treated separately.',
+            'Reducing pump demand on the console is the expected first move: pVen becomes less negative and chatter eases, while the volume deficit is treated separately.',
           ),
           option(
             'hem-device-increase',
@@ -144,7 +144,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'hem-circuit-correct',
             'Drainage chatter eases, pVen recovers, and effective flow improves after resuscitation and source control.',
-            'Once blood products restore preload and the source is controlled, the modeled circuit shows chatter easing, pVen recovering, and effective flow returning without extra RPM.',
+            'Once blood products restore preload and the source is controlled, the circuit shows chatter easing, pVen recovering, and effective flow returning without extra RPM.',
           ),
           option(
             'hem-circuit-worse',
@@ -212,7 +212,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'tension-device-correct',
             'Flow recovers without escalating RPM as venous return improves.',
-            'The model recovers flow after decompression at the same RPM, because venous return comes back once intrathoracic pressure falls. No pump change was needed.',
+            'Flow recovers after decompression at the same RPM, because venous return comes back once intrathoracic pressure falls. No pump change was needed.',
           ),
           option(
             'tension-device-rpm',
@@ -428,7 +428,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'gas-patient-correct',
             'PaCO₂ begins falling and pH begins recovering over time after sweep is restored.',
-            'PaCO₂ falls and pH recovers over simulated time after sweep returns — a gradual trend, because the CO₂ load washes out at the rate the membrane clears it.',
+            'PaCO₂ falls and pH recovers over time after sweep returns — a gradual trend, because the CO₂ load washes out at the rate the membrane clears it.',
           ),
           option(
             'gas-patient-instant',
@@ -475,7 +475,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vv-oxy-device-correct',
             'Required flow is maintained without escalating RPM against a resistant oxygenator.',
-            'The modeled fix is a component exchange, not a speed change: flow is held at the existing RPM while the team prepares, and recovers once the resistant membrane is replaced.',
+            'The fix in this case is a component exchange, not a speed change: flow is held at the existing RPM while the team prepares, and recovers once the resistant membrane is replaced.',
           ),
           option(
             'vv-oxy-device-rpm',
@@ -835,7 +835,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vaso-device-zero',
             'Circuit flow is stopped to assess whether MAP improves.',
-            'Stopping circuit flow to see whether MAP improves removes support from a patient in shock. It would answer nothing about tone and is not a modeled response to any finding here.',
+            'Stopping circuit flow to see whether MAP improves removes support from a patient in shock. It would answer nothing about tone and is not a response to any finding in this case.',
           ),
         ],
         correctOptionId: 'vaso-device-correct',
@@ -1086,7 +1086,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'vv-air-device-correct',
             'The pump resumes only after the circuit is de-aired and confirmed clear; support is resumed per the current IFU and approved local protocol.',
-            'Resumption in the model is one bounded action taken after de-airing: the pump comes back with support restored, and the patient is never left across two open limbs of a stopped circuit.',
+            'Resumption here is a single step taken after de-airing: the pump comes back with support restored, and the patient is never left across two open limbs of a stopped circuit.',
           ),
           option(
             'vv-air-device-early-restart',
@@ -1175,7 +1175,7 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
           option(
             'va-air-device-correct',
             'The pump resumes only after de-airing, through the resumption governed by the current IFU and approved local protocol.',
-            'In the model, resumption is one bounded action available only once the circuit is de-aired; the pump returns with support restored and no interval of two open limbs on a stopped circuit.',
+            'Here, resumption is a single step available only once the circuit is de-aired; the pump returns with support restored and no interval of two open limbs on a stopped circuit.',
           ),
           option(
             'va-air-device-early-restart',
@@ -1270,23 +1270,23 @@ export function getClinicalPracticeSupport(
  */
 const fallbackRationale = {
   deviceExpected:
-    'This matches the device response the scenario authored as its expected finding. Read it against what the console actually showed after the cause was addressed.',
+    'This matches the device response this case expects. Read it against what the console actually showed after the cause was addressed.',
   deviceUnchanged:
     'The console is one of three places a cause shows itself, and some causes leave it unchanged on purpose. Rechecking it is how you learn which kind this was.',
   deviceAcknowledged:
     'Acknowledging an alarm changes the console’s reporting, not the cause. An alarm that stays quiet because the condition itself resolved is evidence; one silenced by a button is not.',
   circuitExpected:
-    'This matches the circuit or gas-path finding the scenario authored as its expected response. Compare it with the pressures, flow, and gas readings you saw after the cause was addressed.',
+    'This matches the circuit or gas-path finding this case expects. Compare it with the pressures, flow, and gas readings you saw after the cause was addressed.',
   circuitNumber:
     'One circuit value in isolation can be produced by several different causes. The pattern across pVen, pInt, pArt, flow, and the gas path is what distinguishes them.',
   circuitNone:
     'The circuit is where the cause acted, so it is where resolution first shows. Leaving it unchecked means the device reading and the patient change cannot be tied to a mechanism.',
   patientExpected:
-    'This matches the patient response the scenario authored as its expected finding. Patient values in this model change only as simulated time elapses, so the trend is what to compare.',
+    'This matches the patient response this case expects. The patient’s values change only as the case moves forward in time, so the trend is what to compare.',
   patientConsole:
     'The console reports the circuit, not the patient. Oxygenation, PaCO₂, MAP, and perfusion are read at the bedside, and every scenario here judges resolution there as well.',
   patientNone:
-    'Addressing the cause is the start of the response, not its end. The patient’s values move over simulated time afterwards, and that trend is the evidence the cause was the right one.',
+    'Addressing the cause is the start of the response, not its end. The patient’s values keep moving over the time that follows, and that trend is the evidence the cause was the right one.',
 } as const
 
 export function resolveScenarioReassessment(
@@ -1294,20 +1294,26 @@ export function resolveScenarioReassessment(
 ): ScenarioReassessmentDefinition {
   if (scenario.reassessment) return scenario.reassessment
 
-  const terms = scenario.expectation.acceptableReassessmentTerms
   const guidance = scenario.assessmentPolicy?.reassessmentGuidance
-  const fallbackLabel = (domain: 'device' | 'circuit' | 'patient', index: number) =>
-    guidance?.[domain] ??
-    `The ${domain} response includes the expected ${terms[index] ?? terms[0] ?? 'scenario'} finding.`
+  /*
+   * This used to interpolate `scenario.expectation.acceptableReassessmentTerms` into the label,
+   * which put the engine's own matching tokens on screen: "The circuit response includes the
+   * expected pint finding", and where a scenario had none, the literal word "scenario". A language
+   * audit in September 2026 replaced it with the sentence below. Each domain still gets its own
+   * option id, so the duplicate-option check the case validator runs is unaffected.
+   */
+  const fallbackLabel = (domain: 'device' | 'circuit' | 'patient') =>
+    guidance?.[domain] ?? `The ${domain} response shows the change this case expects.`
 
   return {
-    instruction: 'Select the expected post-intervention finding in each domain.',
+    instruction:
+      'Select the expected post-intervention finding for the device, the circuit and the patient.',
     device: {
       prompt: 'Which device/console finding best fits the expected response?',
       options: [
         option(
           `${scenario.id}-device-expected`,
-          fallbackLabel('device', 0),
+          fallbackLabel('device'),
           fallbackRationale.deviceExpected,
         ),
         option(
@@ -1328,7 +1334,7 @@ export function resolveScenarioReassessment(
       options: [
         option(
           `${scenario.id}-circuit-expected`,
-          fallbackLabel('circuit', 1),
+          fallbackLabel('circuit'),
           fallbackRationale.circuitExpected,
         ),
         option(
@@ -1349,7 +1355,7 @@ export function resolveScenarioReassessment(
       options: [
         option(
           `${scenario.id}-patient-expected`,
-          fallbackLabel('patient', 2),
+          fallbackLabel('patient'),
           fallbackRationale.patientExpected,
         ),
         option(

@@ -15,8 +15,15 @@ import { ECMO_TRACK_INCREMENTS, type EcmoTrackIncrements } from './trackIncremen
  * only one track teaches.
  *
  * Objectives name the discrimination the learner will be able to make, never the answer — so an
- * objective may not open with the action the drill ends in. The wording of every objective and
- * concept is the approved ladder's, verbatim. Shared sections appear once.
+ * objective may not open with the action the drill ends in. Shared sections appear once.
+ *
+ * The wording was the approved ladder's verbatim until an owner review in September 2026, which
+ * found the ladder itself carrying the module's internal vocabulary into text a learner reads:
+ * "which term of oxygen delivery has given way", "three knobs", "combine the grammar rows". Three
+ * objectives and one concept now say the same things in a clinician's words — a component is
+ * impaired, there are three controls, the patterns predict different things. Nothing about which
+ * discrimination a section enables has moved; see `docs/cardiohelp-ecmo/redesign/r4-language-record.md`
+ * for the table those substitutions come from.
  */
 
 export interface EcmoSectionSpec {
@@ -67,7 +74,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
     sectionId: 'why-extracorporeal-support',
     newConcept: 'delivery = flow × content; consumption on the other side',
     objective:
-      'Tell which term of oxygen delivery has given way from a saturation, a hemoglobin and a cardiac output, and which of those a circuit can stand in for',
+      'Tell which component of oxygen delivery is impaired from a saturation, a hemoglobin and a cardiac output, and which of those a circuit can stand in for',
     prerequisiteSectionIds: [],
   },
   {
@@ -86,7 +93,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
   },
   {
     sectionId: 'blood-flow-versus-sweep',
-    newConcept: 'three knobs, two axes; everything else is monitoring',
+    newConcept: 'three controls, two axes; everything else is monitoring',
     objective:
       'Given a rising CO₂ with steady oxygenation, or the reverse, decide which of the three settings to reach for, and recognise when none of them is',
     prerequisiteSectionIds: ['pump-and-pressure-zones'],
@@ -108,7 +115,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
   },
   {
     sectionId: 'startup-sensor-orientation',
-    newConcept: 'four information domains, one of which the console reports',
+    newConcept: 'four sources of information, one of which the console reports',
     objective:
       'Say, for each reading on the startup screen, which domain produced it, and which readings a stopped pump cannot produce',
     prerequisiteSectionIds: ['blood-flow-versus-sweep', 'vv-normal-state'],
@@ -179,7 +186,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
   },
   {
     sectionId: 'vv-integration-capstone',
-    newConcept: 'combine the grammar rows',
+    newConcept: 'combine what each pattern predicts',
     objective:
       'Separate four explanations by what each predicts elsewhere in the circuit and the patient',
     prerequisiteSectionIds: VV_APPLICATION_DRILLS,

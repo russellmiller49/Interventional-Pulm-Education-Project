@@ -92,3 +92,93 @@ to a later package, along with Practice cases for the three VA drills whose unit
 Decisions recorded in R0–R3 (the canonical seventeen-section order, the index-six console rule, the
 one-integration-last rule, the 4/3/3 shared/VV/VA split, the walk's six stops and its bounded
 speed step) were consumed, not reopened.
+
+---
+
+# The 2026-09-04 owner review round
+
+Five findings from the owner's own walk through the rebuilt first foundation section
+(`why-extracorporeal-support`), taken as decisions. What shipped against each is in
+[`r4-owner-review-record.md`](./r4-owner-review-record.md); the vocabulary table is in
+[`r4-language-record.md`](./r4-language-record.md).
+
+## R4-OD-5 — A verdict says whether the answer was right
+
+Quoted: "When a user gets question right or wrong it should more explicitly say if it was correct or
+not."
+
+**This relaxes a publication guard, and the relaxation is bounded.** `learnerCopyReviewTerms` in
+`learning-module/activity/clinicalLearningItem.ts` banned "correct", "incorrect" and "wrong"
+alongside the examination vocabulary, and `mechanical-ventilation/__tests__/lesson-answer-verdict.test.tsx`
+existed to stop a shared verdict from saying "Correct". That test was right to exist and was not
+edited to accept the new copy. The rule was split instead:
+
+- **`gradingTerms` stays banned everywhere** — score, points, grade, percent, pass, fail, mastery,
+  exam, quiz, assessment, certification, competency. This module is `draft`, unlisted and not
+  credit-eligible, and a card that talks about a score asserts something the module is in no
+  position to assert. `flaggedGradingCopyTerms()` is the helper both verdict components are now
+  held to, so the exemption cannot widen.
+- **`correctnessTerms` stays banned in authored items** — any stem, choice label, rationale or
+  explanation. There it is answer leakage.
+- **`correctnessTerms` is permitted in a post-commitment verdict.** After a learner has committed,
+  naming the outcome is the feedback; withholding it left them inferring from a border colour,
+  which is what the owner saw.
+
+`learnerCopyReviewTerms` still composes all three lists in its original order, so every authored-item
+check is byte-identical to before.
+
+## R4-OD-6 — An Act step that asks for an action must offer one
+
+Quoted: "This one says 'ACT' and to select the terms but there isn't anything to select… Shouldn't
+it allow the user to move the different slide bars?"
+
+Both halves are accepted. The step gains a real answer surface (`content/deliveryAttribution.ts`,
+four proposed bedside changes attributed to the component each acts on, committed as a set) and a
+real instrument (`OxygenDeliveryExplorer`, three live controls). The section's `requiredAction` now
+describes what the learner does rather than what the framework calls it.
+
+The explorer shows no target delivery, no adequacy verdict and no coloured zone, and no point on
+any scale is marked. That is the no-invented-threshold rule, not a limitation of the build.
+
+## R4-OD-7 — A step that shows the same thing is not a step
+
+Quoted: "We have had four steps but nothing has changed… it basically is just saying to read the
+same thing four times."
+
+Teaching blocks now declare the steps they are the focus of and fold to their heading elsewhere.
+Nothing already read becomes unreachable, and outside a stage every block renders, so the offline
+render harness and the panel tests still see all 16 panels and 83 states.
+
+## R4-OD-8 — Back, without restarting
+
+Quoted: "We should allow the user to go back to previous steps without having to restart from the
+beginning."
+
+Granted with one constraint the implementation discovered and the audit confirmed independently.
+Entering a step loads the state that step's copy is written against, so making the progress rows
+navigate would silently discard an evolved case on the sections whose later steps carry a variant —
+the restore-then-act defect class the whole foundation-session suite exists to prevent, arriving
+through a new door. Back is therefore its own control on the Now card, and the rows stay
+review-in-place.
+
+## R4-OD-9 — The framework's vocabulary is not the learner's
+
+Quoted: "The language… runs through the entire module." The owner's verbatim rewrites were applied
+as given. The audit that followed found 182 further instances across 40 files and one shared
+registry; 167 were applied, 11 were overruled on claim grounds, and 2 were left as owner decisions.
+See [`r4-language-record.md`](./r4-language-record.md).
+
+## Physiology-audit decisions taken under R4-OD-1
+
+An independent physiology pass on the new arithmetic surfaces raised two items that are decisions
+rather than fixes:
+
+- **The engine adds native cardiac output to recirculation-adjusted circuit flow in VA** to get the
+  systemic flow its oxygen balance uses (`engine/simulation.ts`), which is the exact addition
+  `content/ecmoValueGuides.ts` twice tells the learner never to make. The explorer does **not**
+  resolve this by adopting the sum: it uses the patient's own cardiac output, names it as such, and
+  its model boundary says the two are not added here. Reconciling the engine with its own value
+  guide is a new defect for the next round, not a silent change now.
+- **`bounded-educational-model` gained a `supports` entry** for the oxygen content and delivery
+  arithmetic. No record in this registry states an oxygen-content equation, so citing the model's
+  own record for its own arithmetic was resolvable-but-not-supporting until the entry existed.

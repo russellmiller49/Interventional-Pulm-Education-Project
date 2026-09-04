@@ -185,7 +185,7 @@ function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
         id: `${scenario.id}-reassess`,
         phase: 'reassess',
         target: input.reassessment.target,
-        title: 'Let the model respond, then reassess three domains',
+        title: 'Let the circuit respond, then reassess device, circuit and patient',
         instruction: input.reassessment.instruction,
         rationale:
           'A setpoint change or alarm acknowledgement is not the endpoint. Recheck the device, the circuit or gas path, and the patient response.',
@@ -220,7 +220,7 @@ const orientationLesson: GuidedLessonDefinition = {
       id: 'startup-orient-domains',
       phase: 'observe',
       target: 'circuit',
-      title: 'Start with four information domains',
+      title: 'Start with four sources of information',
       instruction:
         'Trace drainage → pump → oxygenator → return. Then identify the device console, separate gas blender, and independent patient monitor.',
       rationale:
@@ -505,7 +505,7 @@ const orientationLesson: GuidedLessonDefinition = {
       id: 'startup-transfer',
       phase: 'transfer',
       target: 'console',
-      title: 'Use this map in Practice',
+      title: 'Use this orientation in Practice',
       instruction:
         'In Practice, you will select the goal, find the correct surface, make the adjustment, and document device, circuit/gas, and patient responses without these cues.',
       rationale: orientationScenario.debrief.diagnosis,
@@ -549,7 +549,7 @@ const vaOrientationLesson: GuidedLessonDefinition = {
 }
 
 /** The one title every transfer step carries; the step is what changes, not its name. */
-export const ECMO_TRANSFER_STEP_TITLE = 'Transfer: carry the reasoning to a new circuit'
+export const ECMO_TRANSFER_STEP_TITLE = 'Carry the reasoning to a new circuit'
 
 /**
  * Where a transfer instruction cannot avoid naming the fix — a supply that has to be re-established,
@@ -557,7 +557,7 @@ export const ECMO_TRANSFER_STEP_TITLE = 'Transfer: carry the reasoning to a new 
  * it leads into is a worked example for the learner who reads it. Exactly the transfers into the
  * gas-path and air drills carry it; the registry validator holds that to be so.
  */
-export const ECMO_SCAFFOLDED_TRANSFER_PREFIX = 'Scaffolded worked example — '
+export const ECMO_SCAFFOLDED_TRANSFER_PREFIX = 'Worked example — '
 
 interface GuidedTransferVariant {
   readonly scenarioId: string
@@ -587,7 +587,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     target: 'console',
     instruction:
       'A newly unstable VV patient: flow is falling, pVen is more negative than it was, and the drainage line is juddering. Take a step off the pump speed on the rotary control as a holding move, then go and look for what changed.',
-    actionLabel: 'Reduce the transfer patient to 3300 RPM',
+    actionLabel: 'Reduce the new patient to 3300 RPM',
     action: { type: 'SET_RPM', rpm: 3300 },
     expectedResponse: [
       'The speed setpoint falls to the new value',
@@ -599,7 +599,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'afterload-return-obstruction',
     target: 'console',
     instruction:
-      'The transfer patient’s flow is falling while pInt and pArt rise together. Open Parameter list and work out whether the load sits before, across or after the membrane.',
+      'The new patient’s flow is falling while pInt and pArt rise together. Open Parameter list and work out whether the load sits before, across or after the membrane.',
     actionLabel: 'Open Parameter list for the new pressure pattern',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
     expectedResponse: [
@@ -638,7 +638,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'acute-hypercapnia',
     target: 'gas-panel',
     instruction:
-      'The transfer patient’s CO₂ is climbing and the pH is following it down, with oxygenation steady. Move the sweep on the separate blender by one bounded step, then read the PaCO₂ and pH again.',
+      'The new patient’s CO₂ is climbing and the pH is following it down, with oxygenation steady. Move the sweep on the separate blender by one small step, then read the PaCO₂ and pH again.',
     actionLabel: 'Set transfer sweep to 4.0 L/min',
     action: { type: 'SET_SWEEP', sweep: 4 },
     expectedResponse: [
@@ -679,8 +679,8 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'arterial-bubble-stop',
     target: 'circuit',
     instruction:
-      'A distinct arterial-bubble event stops the pump. Begin the authored isolation sequence by closing the return-limb clamp near the patient; do not treat acknowledgement as correction.',
-    actionLabel: 'Close the transfer patient return-limb clamp',
+      'A distinct arterial-bubble event stops the pump. Begin the isolation sequence by closing the return-limb clamp near the patient; do not treat acknowledgement as correction.',
+    actionLabel: 'Close the new patient return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
     expectedResponse: [
       'Return clamp CLOSED',
@@ -723,7 +723,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     target: 'console',
     instruction:
       'A newly unstable VA patient: flow is falling and swinging, pVen is more negative than it was, the drainage line is juddering, and the patient’s pressure is drifting down with the flow. Take a step off the pump speed as a holding move, then look for what changed.',
-    actionLabel: 'Reduce the transfer patient to 3300 RPM',
+    actionLabel: 'Reduce the new patient to 3300 RPM',
     action: { type: 'SET_RPM', rpm: 3300 },
     expectedResponse: [
       'The speed setpoint falls to the new value',
@@ -735,7 +735,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'va-afterload-arterial-return-obstruction',
     target: 'console',
     instruction:
-      'The transfer case now shows pInt and pArt rising together with falling flow, while the patient’s own arterial line has not moved. Open Parameter list and read the circuit pressures beside the arterial line and MAP.',
+      'The new case now shows pInt and pArt rising together with falling flow, while the patient’s own arterial line has not moved. Open Parameter list and read the circuit pressures beside the arterial line and MAP.',
     actionLabel: 'Open Parameter list for the new pressure pattern',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
     expectedResponse: [
@@ -774,7 +774,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'va-lv-loading',
     target: 'console',
     instruction:
-      'The transfer patient has an acceptable flow and MAP, a narrow pulse pressure, an aortic valve that is not seen to open, and a congested chest. Open Parameter list and read the console flow beside the native-heart signals.',
+      'The new patient has an acceptable flow and MAP, a narrow pulse pressure, an aortic valve that is not seen to open, and a congested chest. Open Parameter list and read the console flow beside the native-heart signals.',
     actionLabel: 'Open Parameter list for the flat-pulse variant',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
     expectedResponse: [
@@ -1277,7 +1277,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         instruction:
           'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
         rationale:
-          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
         actionLabel: 'Resume support per current IFU and approved local protocol',
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
@@ -1550,8 +1550,8 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         instruction:
           'Integrate pulsatility, valve opening, LV/echo and lung findings, then escalate for expert unloading evaluation.',
         rationale:
-          'This draft teaches recognition and escalation rather than a universal unloading device or threshold.',
-        actionLabel: 'Escalate the reviewed LV-loading response',
+          'This module teaches recognition and escalation rather than a universal unloading device or threshold.',
+        actionLabel: 'Escalate for unloading evaluation',
         actions: [{ type: 'CORRECT_FAULT', fault: 'lv-loading' }],
         expectedResponse: [
           'Expert escalation documented',
@@ -1602,7 +1602,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       expectedResponse: [
         'PaCO₂ begins to fall',
         'pH begins to improve',
-        'VA assessment remains multi-domain',
+        'Device, circuit and patient still each need reading',
       ],
     },
   }),
@@ -1704,7 +1704,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         instruction:
           'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol.',
         rationale:
-          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
         actionLabel: 'Resume support per current IFU and approved local protocol',
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [

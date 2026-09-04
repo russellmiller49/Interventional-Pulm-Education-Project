@@ -439,10 +439,10 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
           discriminating nothing.
         </p>
         <p className="mt-2 text-sm leading-6" data-grammar-reference-note>
-          Two of these explanations — the membrane and the gas path — are rows of the four-pattern
-          grammar taught with the pump and its pressures. In the three pressure rows their cells
-          quote that grammar row rather than restating it, and the other columns are marked as
-          patterns the grammar does not carry.
+          Two of these explanations — the membrane and the gas path — are two of the four pressure
+          patterns taught with the pump and its pressures. In the three pressure rows their cells
+          quote that pattern rather than restating it, and the other columns are marked as patterns
+          the four do not cover.
         </p>
 
         <div className="mt-3 overflow-x-auto">

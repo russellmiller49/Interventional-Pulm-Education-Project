@@ -68,9 +68,9 @@ export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: 
         <div>
           <p className="font-semibold">Educational model · draft</p>
           <p className="text-muted-foreground">
-            Circuit responses are bounded teaching approximations. Where the source set disagrees,
-            both positions are shown rather than reconciled, and neither is presented as a bedside
-            threshold.
+            Circuit responses are simplified teaching approximations. Where the source set
+            disagrees, both positions are shown rather than reconciled, and neither is presented as
+            a bedside threshold.
           </p>
         </div>
       </aside>

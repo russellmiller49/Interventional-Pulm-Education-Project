@@ -43,7 +43,7 @@ const clinicalUnsafeActions: readonly UnsafeActionPenalty[] = [
   },
   {
     id: 'support-reduction-on-battery',
-    label: 'Reduced pump support on reserve power to stretch the runtime',
+    label: 'Reduced pump support on reserve power to stretch the battery time',
     points: 50,
     critical: true,
   },
@@ -183,7 +183,7 @@ const vvInitiationCase: ClinicalCaseDefinition = {
       label: 'Confirm cannulation and connect the prepared VV circuit',
       category: 'procedure',
       description:
-        'Represent completion of supervised cannulation and connection; this is not a cannulation trainer.',
+        'Stands in for completion of supervised cannulation and connection; this is not a cannulation trainer.',
       effect: 'supportive',
       response: 'Drainage and return limbs are connected with the circuit still stopped.',
       prerequisites: ['vv-readiness-check'],
@@ -587,7 +587,8 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           id: 'tension-decompress',
           label: 'Perform emergency pleural decompression',
           category: 'procedure',
-          description: 'Represent immediate decompression followed by definitive pleural drainage.',
+          description:
+            'Stands in for immediate decompression followed by definitive pleural drainage.',
           effect: 'definitive',
           response: 'Intrathoracic pressure falls; CVP, pVen, ECMO flow, and MAP begin to recover.',
           patch: { patient: { lungSliding: 'bilateral', airwayPressure: 25 } },
@@ -878,7 +879,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       ],
       requiredInterventionIds: ['gas-inspect-path', 'gas-reconnect', 'gas-set-sweep'],
       completionResponse:
-        'Sweep gas is restored and PaCO₂ begins improving over simulated time rather than instantly.',
+        'Sweep gas is restored and PaCO₂ begins improving over time rather than instantly.',
       deteriorationResponse:
         'Gas-side failure causes progressive hypercapnia, acidemia, respiratory distress, and later oxygenation decline.',
     },
@@ -1039,7 +1040,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Exchange the failing component through the reviewed local process and reassess the patient and circuit.',
       ],
       safetyNotes: [
-        'This simulator deliberately does not encode a universal Δp alarm priority or exchange threshold.',
+        'This simulator deliberately does not set a universal Δp alarm priority or exchange threshold.',
       ],
     },
     evidenceIds: [
@@ -1143,7 +1144,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Resume support per current IFU and approved local protocol',
           category: 'circuit',
           description:
-            'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+            'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
           effect: 'definitive',
           response:
             'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
@@ -1896,7 +1897,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Prepare backup circulation and a replacement circuit early.',
         'Execute the reviewed exchange process and reassess MAP, flow, pressures, and oxygenation.',
       ],
-      safetyNotes: ['No universal Δp exchange threshold is encoded.'],
+      safetyNotes: ['No universal Δp exchange threshold is set here.'],
     },
     evidenceIds: [
       'elso-circuit-2022',
@@ -2000,7 +2001,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Resume support per current IFU and approved local protocol',
           category: 'circuit',
           description:
-            'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+            'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
           effect: 'definitive',
           response:
             'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',

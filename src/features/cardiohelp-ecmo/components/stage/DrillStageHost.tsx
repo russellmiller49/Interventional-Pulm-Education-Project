@@ -516,7 +516,7 @@ export function DrillStageHost({
         if (simulatorTask) {
           return {
             ...base,
-            status: `Waiting for: ${activeStep.actionLabel}. This step completes when the simulator reaches the requested state.`,
+            status: `Waiting for: ${activeStep.actionLabel}. This step is done once the simulator reaches the state you were asked for.`,
             secondary: showWhereAction,
           }
         }
@@ -657,10 +657,10 @@ export function DrillStageHost({
   const pairing = lesson.practicePairing
   const completionLead =
     pairing?.kind === 'mechanism-match'
-      ? 'The reasoning has been demonstrated. Apply it to the paired clinical case in Practice from a clean state with fewer cues.'
+      ? 'The reasoning has been worked through. Apply it to the paired clinical case in Practice, starting fresh with less prompting.'
       : pairing?.kind === 'next-in-unit'
-        ? 'The reasoning has been demonstrated. The next case in this unit is ready in Practice, from a clean state with fewer cues.'
-        : 'The reasoning has been demonstrated. Continue to the next section to keep building the track.'
+        ? 'The reasoning has been worked through. The next case in this unit is ready in Practice, starting fresh with less prompting.'
+        : 'The reasoning has been worked through. Continue to the next section to keep building on this.'
 
   const task = (
     <>
@@ -689,7 +689,7 @@ export function DrillStageHost({
           if (step.interaction.kind === 'prediction') {
             const choiceId = progression.choiceByStepId[step.id]
             const choice = step.interaction.item.choices.find((item) => item.id === choiceId)
-            return choice ? [`You chose: ${choice.label}`] : ['Prediction committed.']
+            return choice ? [`You chose: ${choice.label}`] : ['Prediction recorded.']
           }
           return step.expectedResponse ?? []
         }}

@@ -81,7 +81,7 @@ const ATTRIBUTIONS: Readonly<
   'why-extracorporeal-support': {
     sectionId: 'why-extracorporeal-support',
     prompt:
-      'Each of these is a reasonable thing to propose at the bedside. For each one, choose the component of oxygen delivery it acts on first.',
+      'Each of these is a reasonable thing to propose at the bedside. For each one, choose the part of the oxygen balance it acts on first.',
     components: DELIVERY_COMPONENTS,
     candidates: Object.freeze([
       {

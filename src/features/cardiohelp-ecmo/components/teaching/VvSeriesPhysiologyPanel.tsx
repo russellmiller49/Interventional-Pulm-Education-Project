@@ -252,8 +252,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
             </p>
             <p className="text-2xl font-semibold">{circuit.recirculationFraction.toFixed(3)}</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              The case authors where this starts. Asking the circuit for more flow than it opened
-              with raises it from there.
+              Each case sets where this starts. Asking the circuit for more flow than it opened with
+              raises it from there.
             </p>
           </div>
           <div className="rounded-xl border p-3" data-series-signal="native-cardiac-output">
@@ -292,8 +292,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
               {patient.systemicVenousSaturationEstimate.toFixed(1)}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              A latent quantity this simulation infers from its own oxygen balance. No sensor on the
-              circuit reads it and the CARDIOHELP never displays it.
+              A value this simulation infers from its own oxygen balance. No sensor on the circuit
+              reads it and the CARDIOHELP never displays it.
             </p>
           </div>
           <div className="rounded-xl border p-3" data-series-signal="post-oxygenator-saturation">
@@ -333,7 +333,7 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
 
       <section className={styles.section} aria-labelledby="comparison-heading">
         <h3 id="comparison-heading" className={styles.heading}>
-          This state against the VV reference circuit
+          This circuit against the VV reference circuit
         </h3>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm" data-reference-comparison>
@@ -350,7 +350,7 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
                   VV reference circuit
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  State on screen
+                  On screen now
                 </th>
                 <th scope="col" className="pb-1 font-semibold">
                   Direction

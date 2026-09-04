@@ -93,7 +93,7 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       supportMode: 'vv',
       title: 'Integration challenge',
       summary:
-        'One presentation, four explanations, and no scaffolding. Every drill on the track comes first.',
+        'One presentation, four explanations, and no prompting. Every drill on the track comes first.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'vv-off-sweep-capstone',
@@ -166,7 +166,7 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       supportMode: 'va',
       title: 'Integration challenge',
       summary:
-        'The same unchanged flow, with a second circulation to blame, and no scaffolding. Every drill on the track comes first.',
+        'The same unchanged flow, with a second circulation to blame, and no prompting. Every drill on the track comes first.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'va-mixed-circulation-capstone',

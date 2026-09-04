@@ -64,10 +64,10 @@ export function FoundationStoryProblems({
       aria-labelledby="story-problems-heading"
       data-story-problems
     >
-      <h3 id="story-problems-heading">Two story problems</h3>
+      <h3 id="story-problems-heading">Two bedside scenarios</h3>
       <p className={styles.storyIntro}>
-        A colleague has just moved one of the two controls for a reason that sounds sensible. Commit
-        which values move before the circuit responds, then run the same change and read it.
+        A colleague has just moved one of the two controls for a reason that sounds sensible.
+        Predict which values move before the circuit responds, then run the same change and read it.
       </p>
       {stories.map((story) => {
         const committedId = committed[story.id]

@@ -127,7 +127,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Recognition of LV loading, native ejection, differential oxygenation, and the need for independent patient assessment',
     ],
     limitations:
-      'This draft teaches recognition and escalation only. It does not encode cannulation, unloading-device selection, numeric treatment targets, or a VA weaning protocol.',
+      'This module teaches recognition and escalation only. It does not encode cannulation, unloading-device selection, numeric treatment targets, or a VA weaning protocol.',
   },
   {
     /**
@@ -221,7 +221,7 @@ export const cardiohelpEvidence: readonly EvidenceReference[] = [
       'Repeatable fault injection for prediction and reassessment practice',
     ],
     limitations:
-      'Not a validated patient digital twin. Values are simulated, bounded, deliberately simplified, and unsuitable for clinical prediction or treatment.',
+      'Not a validated patient digital twin. Values are simulated, deliberately simplified, and unsuitable for clinical prediction or treatment.',
   },
 ] as const
 

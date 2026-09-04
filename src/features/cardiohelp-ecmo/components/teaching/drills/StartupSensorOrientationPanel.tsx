@@ -115,7 +115,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
     >
       <section className={styles.section} aria-labelledby="startup-stage-heading">
         <h3 id="startup-stage-heading" className={styles.heading}>
-          The state on screen right now
+          The circuit on screen right now
         </h3>
         <p className="mt-2 font-semibold" data-startup-stage={stage}>
           {stage === 'pre-use'
@@ -212,7 +212,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
 
       <PatternReading
         rows={domains}
-        summary="Four domains, four different sources. Two of them have something on this console; two of them do not."
+        summary="Four sources of information, each read somewhere different. Two of them have something on this console; two of them do not."
       />
 
       <Discriminators

@@ -939,7 +939,7 @@ const ecmoLearnActivityIdsByTrack: Readonly<Record<EcmoTrack, readonly string[]>
 const ecmoAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'vv-off-sweep-capstone',
-    title: 'Unseen capstone: VV off-sweep trial',
+    title: 'VV integration challenge',
     track: 'vv',
     difficulty: 'advanced',
     curriculumStage: 'integration',

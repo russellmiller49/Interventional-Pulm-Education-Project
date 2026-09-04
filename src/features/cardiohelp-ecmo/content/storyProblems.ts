@@ -81,7 +81,7 @@ const authored: readonly EcmoStoryProblem[] = [
       ],
       correctChoiceIds: ['co2-falls-sat-holds'],
       explanation:
-        'The two controls act on two paths. Doubling the sweep steepens the carbon dioxide gradient and clears carbon dioxide faster, so PaCO₂ falls and pH rises; the saturation, which depends on how much blood passes the membrane and on the patient, hardly moves. The colleague reached for the knob on the other axis. Model boundary: PaCO₂ responds to sweep as a straight line in this simulation, by construction; real removal shows diminishing returns, so read the direction, not the slope.',
+        'The two controls act on two paths. Doubling the sweep steepens the carbon dioxide gradient and clears carbon dioxide faster, so PaCO₂ falls and pH rises; the saturation, which depends on how much blood passes the membrane and on the patient, hardly moves. The colleague reached for the control on the other axis. Model boundary: PaCO₂ responds to sweep as a straight line in this simulation, by construction; real removal shows diminishing returns, so read the direction, not the slope.',
       evidenceIds: [...sources],
       reviewStatus: 'draft',
     }),
@@ -129,12 +129,12 @@ const authored: readonly EcmoStoryProblem[] = [
             'Flow rises and the drainage pressure falls further; keep raising speed until the carbon dioxide moves.',
           plausibility: 'unsafe',
           rationale:
-            'Chasing a gas-side number with the blood-side knob pulls harder on the drainage limb for no gain on the axis that matters. The move to make is on the blender.',
+            'Chasing a gas-side number with the blood-side control pulls harder on the drainage limb for no gain on the axis that matters. The move to make is on the blender.',
         },
       ],
       correctChoiceIds: ['flow-rises-co2-holds'],
       explanation:
-        'Pump speed acts on the blood path: flow rises immediately and the saturation may nudge upward. The carbon dioxide, which lives on the gas path, hardly moves, and the pH stays where the carbon dioxide leaves it. The colleague reached for the knob on the other axis; the sweep is the control for this problem. Model boundary: drainage-limited flow, recirculation and native lung recovery are not part of this illustration; the reference circuit responds to speed alone.',
+        'Pump speed acts on the blood path: flow rises immediately and the saturation may nudge upward. The carbon dioxide, which lives on the gas path, hardly moves, and the pH stays where the carbon dioxide leaves it. The colleague reached for the control on the other axis; the sweep is the one this problem needs. Model boundary: drainage-limited flow, recirculation and native lung recovery are not part of this illustration; the reference circuit responds to speed alone.',
       evidenceIds: [...sources],
       reviewStatus: 'draft',
     }),

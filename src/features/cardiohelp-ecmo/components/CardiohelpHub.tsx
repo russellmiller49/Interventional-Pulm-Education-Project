@@ -316,8 +316,8 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 Challenge
               </Link>
               <span>
-                one harder case per track, open from the start, with fewer cues and the same causal
-                debrief.
+                one harder case per track, open from the start, with less prompting and the same
+                causal debrief.
               </span>
             </li>
           </ol>
@@ -338,7 +338,12 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             <strong>thApp</strong> {cardiohelpDeviceProfile.thApp}
           </span>
           <span>
-            <strong>Pathway</strong> VV + peripheral VA · draft review
+            {/*
+              One phrasing for one status. A language audit in September 2026 found the module
+              saying this three ways on three surfaces, of which "draft review" was the most
+              cryptic. This now matches the sentence the Sources panel below it prints.
+            */}
+            <strong>Pathway</strong> VV + peripheral VA · clinical and device review pending
           </span>
         </section>
 

@@ -24,7 +24,7 @@ export function presentationSummary(scenario: ScenarioDefinition): string {
   return (
     scenario.clinicalCase?.openingNarrative ??
     scenario.challengeBrief?.presentation ??
-    'The diagnosis and the corrective cues stay hidden until the debrief. Use every surface to commit your plan.'
+    'The diagnosis and the corrective steps stay hidden until the debrief. Use everything on screen to commit your plan.'
   )
 }
 

@@ -239,7 +239,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
 
         <ThreeDomainResponse
           circuitOrGasLabel="Gas path"
-          device="Pump speed left alone. The blood-path numbers were never the missing variable, and moving them would obscure the response to the correction."
+          device="Pump speed left alone. The blood-path numbers were never what was missing, and moving them would obscure the response to the correction."
           circuitOrGas="Source, blender, and the line into the membrane inspected in that order and continuity restored; sweep flow distinguished from sweep-gas oxygen fraction, and both confirmed against the restored supply rather than assumed from the dial."
           patient="Carbon dioxide, pH, and oxygenation reassessed after restoration, on the patient rather than on the circuit display."
         />

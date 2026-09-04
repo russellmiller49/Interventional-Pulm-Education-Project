@@ -230,7 +230,7 @@ export function CircuitSchematic({
         : state.scenario.activeFaults.includes('preload-limited') ||
             state.scenario.correctedFaults.includes('preload-limited')
           ? 'Preload-limited drainage pattern'
-          : 'No injected resistance pattern'
+          : 'No resistance pattern present'
 
   return (
     <section
@@ -463,7 +463,7 @@ export function CircuitSchematic({
                 aria-label={
                   mixingCueWithheld
                     ? 'VA monitoring cues'
-                    : 'VA native ejection, mixing, and monitoring cues'
+                    : 'VA native ejection, mixing, and monitoring markers'
                 }
                 data-va-mixing-cue={mixingCueWithheld ? 'withheld' : 'shown'}
               >
@@ -859,7 +859,7 @@ export function CircuitSchematic({
           <strong>{resistancePattern}</strong>
           <span>
             {drainageChattering && pressuresInterpretable
-              ? 'Visible + text cue: drainage line chattering with increasingly negative pVen.'
+              ? 'Drainage line chattering with increasingly negative pVen.'
               : pressuresInterpretable
                 ? 'Compare flow and all three pressure locations; do not interpret one value on its own.'
                 : 'The pressure zones are not reporting an interpretable value, so no pressure pattern can be read from this frame.'}
@@ -1262,7 +1262,7 @@ export function PatientMonitor({
                   {state.patient.distalLimbPerfusion} · NIRS {state.patient.distalLimbNirs}%
                 </strong>
                 <small data-local-model-boundary="limb-perfusion-fixed">
-                  Model boundary: this simulation holds the limb state where the case authored it.
+                  Model boundary: this simulation holds the limb state where the case set it.
                   Nothing you do to the circuit moves it, so it cannot be used to judge whether an
                   intervention helped the limb.
                 </small>
@@ -1414,7 +1414,7 @@ export function TrendPanel({
       ) : null}
       {parameter === 'deltaP' ? (
         <p className={styles.deltaBoundary}>
-          Δp is presented as a trend only. No fixed alarm priority is encoded pending target-device
+          Δp is presented as a trend only. No fixed alarm priority is set pending target-device
           review.
         </p>
       ) : null}

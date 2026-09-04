@@ -145,7 +145,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     takeaway:
       'The drainage limb reports what is available to drain. A pressure read here is about supply, not about what the pump can do.',
     modelBoundary:
-      'The drainage a circuit can supply is an authored teaching quantity. This reference circuit has drainage to spare at every speed the walk offers, so nothing here is a cut point.',
+      'The drainage a circuit can supply is a teaching quantity set for this simulation. This reference circuit has drainage to spare at every speed the walk offers, so nothing here is a cut point.',
     sourceIds: [...PLACE_SOURCES],
   },
   {

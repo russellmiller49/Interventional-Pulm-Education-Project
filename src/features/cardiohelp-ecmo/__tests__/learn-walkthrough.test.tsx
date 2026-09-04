@@ -86,7 +86,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Open Parameter list$/i })).not.toBeInTheDocument()
     expect(screen.getByText(/Do this on the simulator/i)).toBeInTheDocument()
-    expect(nowStatus()).toMatch(/completes when the simulator reaches the requested state/i)
+    expect(nowStatus()).toMatch(/is done once the simulator reaches the state you were asked for/i)
     expect(document.getElementById('cardiohelp-console')).toHaveAttribute(
       'data-guided-focus',
       'true',

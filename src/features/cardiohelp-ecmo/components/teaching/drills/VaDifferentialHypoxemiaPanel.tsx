@@ -206,7 +206,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
           </p>
           <p data-live-differential-state>
             {differentialActive
-              ? `The upper-body cue is active on this circuit, with the two arterial sites ${gap.toFixed(1)} points apart.`
+              ? `The upper-body pattern is active on this circuit, with the two arterial sites ${gap.toFixed(1)} points apart.`
               : corrected
                 ? 'The upper-body pattern has been recognised and escalated on this circuit, and the modeled right-radial value is moving along its authored recovery curve.'
                 : 'No upper-body differential is active on this circuit at the moment.'}

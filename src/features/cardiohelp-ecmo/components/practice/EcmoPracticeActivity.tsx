@@ -683,7 +683,7 @@ export function EcmoPracticeCaseView({
       {challengeActive ? (
         <p className={styles.helpClue} data-help-clues="off">
           Clues are off in Challenge. Read the console, the circuit and the patient; the debrief
-          compares your path with the authored one.
+          compares your path with the one this case teaches.
         </p>
       ) : hints.length ? (
         <div className={styles.helpClue} data-help-clues="on">
@@ -698,8 +698,8 @@ export function EcmoPracticeCaseView({
             </ol>
           ) : (
             <p>
-              No clue used yet. Each clue you take is recorded in the reasoning trace of the
-              debrief.
+              No clue used yet. Each clue you take is recorded in the debrief with the rest of your
+              reasoning.
             </p>
           )}
           {nextHint && !debriefRevealed ? (

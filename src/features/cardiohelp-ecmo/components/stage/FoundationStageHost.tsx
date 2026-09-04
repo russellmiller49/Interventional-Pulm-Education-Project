@@ -698,7 +698,7 @@ function FoundationStageSession({
         open={activeStep.interaction.kind === 'bounded-actions'}
         data-bounded-actions
       >
-        <summary>Bounded actions</summary>
+        <summary>Actions you can take</summary>
         <div className={styles.boundedActions}>
           {runtime.guidedActions.map((guided) => (
             <button
@@ -715,7 +715,7 @@ function FoundationStageSession({
           ))}
           {session.interactionsSinceRestore.length > 0 ? (
             <div data-interaction-evidence>
-              <p className={shellStyles.kicker}>Looked at since this state was loaded</p>
+              <p className={shellStyles.kicker}>Looked at since this circuit was loaded</p>
               <ul className="mt-1 grid gap-1">
                 {session.interactionsSinceRestore.map((id) => (
                   <li key={id} data-interaction={id}>
@@ -747,11 +747,11 @@ function FoundationStageSession({
 
   const stateCard = (
     <div className={styles.stateCard} data-active-state-variant={activeVariant.id}>
-      <p className={shellStyles.kicker}>State on screen</p>
+      <p className={shellStyles.kicker}>The circuit on screen</p>
       <p className="font-semibold">{activeVariant.label}</p>
       {running ? null : (
         <p data-clock-held>
-          The clock is held here, so this state stays as it is until you start it.
+          The clock is held here, so the circuit stays as it is until you start it.
         </p>
       )}
       {activeVariant.modelBoundary ? (
@@ -958,7 +958,7 @@ function FoundationStageSession({
           data-stage-completion
         >
           <h3>Section worked through</h3>
-          <p>Continue to the next section to keep building the track.</p>
+          <p>Continue to the next section to keep building on this.</p>
           {nextSection ? (
             <div className={styles.completionActions}>
               <button

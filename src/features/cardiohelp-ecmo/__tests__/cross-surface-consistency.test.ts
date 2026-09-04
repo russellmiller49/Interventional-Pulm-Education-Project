@@ -369,7 +369,7 @@ describe('I3g: the capstone matrices quote the grammar rows', () => {
           expect(node.querySelector('[data-grammar-row]')).toBeNull()
           expect(node.querySelector('[data-cell-direction]')?.textContent?.trim()).toBeTruthy()
           expect(node.querySelector('[data-outside-grammar]')?.textContent).toBe(
-            'Not a pressure pattern in the grammar.',
+            'Not one of the four pressure patterns.',
           )
         }
       }
@@ -407,7 +407,7 @@ describe('I3g: the capstone matrices quote the grammar rows', () => {
         expect(carrying[0].split(signature).length - 1).toBe(PRESSURE_ROW_IDS.length)
       }
       expect(
-        equivalents.filter((text) => text.includes('Not a pressure pattern in the grammar.')),
+        equivalents.filter((text) => text.includes('Not one of the four pressure patterns.')),
       ).not.toHaveLength(0)
     },
   )

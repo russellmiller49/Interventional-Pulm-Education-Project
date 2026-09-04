@@ -894,10 +894,10 @@ export function VaIntegrationCapstonePanel({
           discriminating nothing.
         </p>
         <p className="mt-2 text-sm leading-6" data-grammar-reference-note>
-          Two of these explanations — the membrane and the gas path — are rows of the four-pattern
-          grammar taught with the pump and its pressures. In the three pressure rows their cells
-          quote that grammar row rather than restating it, and the other columns are marked as
-          patterns the grammar does not carry.
+          Two of these explanations — the membrane and the gas path — are among the four pressure
+          patterns taught with the pump and its pressures. In the three pressure rows their cells
+          quote that pattern rather than restating it, and the other columns are marked as patterns
+          those four do not cover.
         </p>
 
         <div className="mt-3 overflow-x-auto">
@@ -1057,8 +1057,8 @@ export function VaIntegrationCapstonePanel({
           This simulation holds distal-limb perfusion and the near-infrared value fixed across every
           VA state this lesson can load, so it cannot demonstrate limb ischemia developing. The
           absence of a modeled change is therefore not evidence that limb perfusion is adequate — it
-          is the model having nothing to say. The bounded action that sends you to look at the limb
-          is in the panel beside this one, and it is there because that look is the measurement.
+          is the model having nothing to say. The one action that sends you to look at the limb is
+          in the panel beside this one, and it is there because that look is the measurement.
         </ModelBoundary>
       </section>
 

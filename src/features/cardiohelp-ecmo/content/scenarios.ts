@@ -76,7 +76,7 @@ const standardUnsafeActions: readonly UnsafeActionPenalty[] = [
   },
   {
     id: 'support-reduction-on-battery',
-    label: 'Reduced pump support on reserve power to stretch the runtime',
+    label: 'Reduced pump support on reserve power to stretch the battery time',
     points: 50,
     critical: true,
   },
@@ -392,8 +392,8 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'The response must be interpreted with pH, bicarbonate, symptoms, and clinical phase.',
       ],
       correctWorkflow: [
-        'Name the pH/CO2 goal, predict the direction, and make a bounded sweep adjustment.',
-        'Allow the simulated response, then reassess patient status and blood gas data.',
+        'Name the pH/CO2 goal, predict the direction, and make a measured sweep adjustment.',
+        'Allow time for the response, then reassess patient status and blood gas data.',
       ],
       safetyNotes: [
         'Sweep is an external gas-blender control, not a CARDIOHELP-i touchscreen control.',
@@ -449,7 +449,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'Gas transfer falls while blood flow persists',
     summary:
-      'A timed gas-source interruption causes CO2 retention and oxygenator gas-transfer decline while circuit blood flow remains present.',
+      'An unannounced gas-source interruption causes CO2 retention and oxygenator gas-transfer decline while circuit blood flow remains present.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -492,7 +492,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'Arterial bubble alarm with pump stop',
     summary:
-      'A scenario-triggered arterial bubble event stops the pump; correct the source and confirm the circuit clear before support is resumed.',
+      'An arterial bubble event during the run stops the pump; correct the source and confirm the circuit clear before support is resumed.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -508,7 +508,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     debrief: {
       diagnosis: 'Arterial bubble intervention with pump stop',
       causalChain: [
-        'The scenario injects an arterial bubble event without assigning a bubble size.',
+        'This case presents an arterial bubble event without assigning a bubble size.',
         'The enabled intervention generates a high-priority alarm and stops the pump.',
         'Reset is appropriate only after the air source is corrected and the circuit is confirmed clear.',
       ],
@@ -924,7 +924,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'VA assessment still requires independent circulation, upper-body oxygenation, lung, and blood-gas data.',
       ],
       correctWorkflow: [
-        'Name the acid-base goal and make a bounded external sweep adjustment.',
+        'Name the acid-base goal and make a measured external sweep adjustment.',
         'Reassess PaCO2, pH, right-arm oxygenation, native lung function, and perfusion.',
       ],
       safetyNotes: [
@@ -992,7 +992,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'VA arterial-return bubble alarm with pump stop',
     summary:
-      'A scenario-triggered post-oxygenator bubble event stops forward VA support; correct the source before reset.',
+      'A post-oxygenator bubble event during the run stops forward VA support; correct the source before reset.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -1013,7 +1013,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     debrief: {
       diagnosis: 'Arterial-return bubble intervention with VA pump stop',
       causalChain: [
-        'The scenario injects a bubble event without assigning a disputed size threshold.',
+        'This case presents a bubble event without assigning a disputed size threshold.',
         'The enabled intervention stops the pump, interrupting VA circulatory support.',
       ],
       correctWorkflow: [

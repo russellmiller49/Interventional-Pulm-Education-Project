@@ -161,10 +161,10 @@ describe('the authored knob strip is the derived one', () => {
     }
   })
 
-  it('says no knob answers it wherever no knob does', () => {
+  it('says no setting answers it wherever no setting does', () => {
     for (const id of DRILL_IDS) {
       const strip = ecmoDrillSpec(id).controlPanel
-      const saysNoKnob = /No knob answers/.test(strip.sentence)
+      const saysNoKnob = /No setting answers/.test(strip.sentence)
       expect(`${id}: ${saysNoKnob}`).toBe(`${id}: ${strip.verdict === 'no-knob-find-the-cause'}`)
     }
   })

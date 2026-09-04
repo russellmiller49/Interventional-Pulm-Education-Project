@@ -311,7 +311,7 @@ describe('what the module does still teach', () => {
 
   it('names the bounded action as an abstraction wherever it is described', () => {
     const abstraction =
-      /bounded simulation action stands in for the device- and program-specific\s+resumption sequence; it does not reproduce or teach that sequence/i
+      /single simulated action stands in for the device- and program-specific\s+resumption sequence; it does not reproduce or teach that sequence/i
     for (const relativePath of [
       'src/features/cardiohelp-ecmo/content/learnLessons.ts',
       'src/features/cardiohelp-ecmo/content/clinicalCases.ts',
@@ -322,9 +322,12 @@ describe('what the module does still teach', () => {
         `${relativePath}: true`,
       )
     }
-    // The bedside control says the same thing in its own words, beside the button.
+    // The bedside control says the same thing in its own words, beside the button. A language audit
+    // in September 2026 replaced "a bounded simulation abstraction" with "a deliberate
+    // simplification" — same hedge, without the module's internal vocabulary — so this now pins the
+    // substance that follows it rather than the label alone.
     expect(sourceOf('src/features/cardiohelp-ecmo/components/EcmoCircuit3D.tsx')).toMatch(
-      /bounded simulation abstraction/i,
+      /deliberate simplification\. It stands in for the device- and program-specific/i,
     )
   })
 

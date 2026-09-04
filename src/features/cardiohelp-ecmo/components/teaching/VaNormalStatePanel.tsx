@@ -915,7 +915,7 @@ export function VaNormalStatePanel({
 
       <section className={styles.section} aria-labelledby="va-beyond-circuit-heading">
         <h3 id="va-beyond-circuit-heading" className={styles.heading}>
-          What else belongs to the state
+          What else belongs to the picture
         </h3>
         <ul className="mt-3 grid gap-2" data-patient-context>
           <li className="rounded-xl border px-3 py-2 text-sm leading-6">
