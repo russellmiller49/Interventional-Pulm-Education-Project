@@ -53,7 +53,7 @@ const COPY_SOURCES: readonly string[] = [
   'src/features/cardiohelp-ecmo/content/controlPanel.ts',
   'src/features/cardiohelp-ecmo/content/circuitPresentation.ts',
   'src/features/cardiohelp-ecmo/components/teaching/EcmoLocalizationCard.tsx',
-  'src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx',
+  'src/features/cardiohelp-ecmo/components/circuit-map/circuitMapEmphasis.tsx',
   // The Practice surfaces: the stage panels and their buttons, the Now card the header and the
   // help dialog read from, the dialog itself, and the debrief that renders the authored workflow.
   'src/features/cardiohelp-ecmo/components/PracticeCasePlayer.tsx',

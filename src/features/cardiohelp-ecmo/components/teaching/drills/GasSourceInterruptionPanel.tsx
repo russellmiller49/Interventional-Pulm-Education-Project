@@ -1,7 +1,5 @@
-import { deriveEcmoCircuitPresentation } from '../../../content/circuitPresentation'
 import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../../engine/types'
-import { EcmoCircuitMinimap } from '../EcmoCircuitMinimap'
 import { EcmoDrillLocalization } from '../EcmoLocalizationCard'
 import { GuidedValue, TextEquivalent, styles } from '../shared'
 import {
@@ -54,20 +52,6 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
         'The gas panel is a schematic stand-in for a source, a blender, and a line into the membrane. This simulation does not represent the individual connections, the wall or cylinder supply, or the analyser a real check would use.',
       ]}
     >
-      {/*
-        Where these channels sit, in front of the table that reads them. Neutral until the learner
-        commits — the map is the same for every fault, so a segment marked before a prediction would
-        be the prediction. After the commitment it marks the part of the circuit the row explains,
-        which is the localization this drill exists to teach.
-      */}
-      <EcmoCircuitMinimap
-        supportMode="vv"
-        presentation={deriveEcmoCircuitPresentation(state, {
-          kind: 'drill-reveal',
-          rowId: 'gas-path-failure',
-        })}
-      />
-
       <SignalRegister
         rows={[
           valueSignalRow(

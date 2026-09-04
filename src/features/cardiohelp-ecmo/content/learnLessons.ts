@@ -220,12 +220,15 @@ const orientationLesson: GuidedLessonDefinition = {
       id: 'startup-orient-domains',
       phase: 'observe',
       target: 'circuit',
+      // The tour's subject is where the sensors sit, and the pressure-zone map draws every one of
+      // them with a leader to its place on the tubing — the geometry a table of names cannot show.
+      preferredCircuitView: 'diagnostic',
       title: 'Start with four sources of information',
       instruction:
         'Trace drainage → pump → oxygenator → return. Then identify the device console, separate gas blender, and independent patient monitor.',
       rationale:
         'The console reports device and circuit values, but it cannot replace inspection of tubing, gas delivery, cannulas, bedside physiology, or laboratory data.',
-      actionLabel: 'I can identify all four domains',
+      actionLabel: 'I can identify all four sources',
       expectedResponse: [
         'Console',
         'Circuit and sensors',

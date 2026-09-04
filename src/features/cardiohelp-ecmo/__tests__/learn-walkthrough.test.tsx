@@ -69,7 +69,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
 
     expect(screen.getByRole('heading', { name: lesson.steps[0].title })).toBeInTheDocument()
     // A read step's one action is the Now card's primary; there is no separate Next.
-    expect(nowPrimary()).toHaveTextContent(/identify all four domains/i)
+    expect(nowPrimary()).toHaveTextContent(/identify all four sources/i)
     expect(screen.queryByRole('button', { name: /^Next step$/i })).not.toBeInTheDocument()
     // The whole pathway is one disclosure away, not a standing rail.
     const drawer = document.querySelector('[data-sections-drawer]')
@@ -79,7 +79,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
       criticalCareLearningPathway('cardiohelp-ecmo', 'vv').sections.length,
     )
 
-    readStep(/identify all four domains/i)
+    readStep(/identify all four sources/i)
 
     expect(
       screen.getByRole('heading', { name: /which channels still mean anything/i }),
@@ -126,7 +126,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
   it('provides progressive help for the Menu to Alarm list path', async () => {
     await mountDrill('startup-sensor-orientation')
 
-    readStep(/identify all four domains/i)
+    readStep(/identify all four sources/i)
     await openConsoleScreenAndAdvance('Parameter list')
     // A3.3: the stopped-pump recognition is followed by a ramp, so the rest of the tour is read on
     // a running circuit rather than a dead one.
@@ -327,7 +327,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
   it('resets to the first step and clean simulation state when the section changes', async () => {
     await mountDrill('startup-sensor-orientation')
 
-    readStep(/identify all four domains/i)
+    readStep(/identify all four sources/i)
     fireEvent.click(screen.getByRole('button', { name: 'Parameter list' }))
     await waitFor(() => expect(nowStatus()).toMatch(/^Done\./))
     expect(latestState().device.screen).toBe('parameters')
@@ -489,7 +489,7 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     // answer, but there was still nothing to choose between and the payload was already filled in.
     await mountDrill('startup-sensor-orientation')
 
-    readStep(/identify all four domains/i)
+    readStep(/identify all four sources/i)
     await openConsoleScreenAndAdvance('Parameter list')
     await rampToReferenceSpeedAndAdvance()
     performAndAdvance('Let the circuit respond')

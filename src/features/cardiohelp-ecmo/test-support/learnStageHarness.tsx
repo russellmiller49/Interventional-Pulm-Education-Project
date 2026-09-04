@@ -123,7 +123,7 @@ export function answerPredictionAndAdvance(scenarioId: string, plausibility = 'b
 
 /** Walks the console tour from its first step to the authored prediction. */
 export async function walkOrientationToPrediction() {
-  readStep(/identify all four domains/i)
+  readStep(/identify all four sources/i)
   await openConsoleScreenAndAdvance('Parameter list')
   await rampToReferenceSpeedAndAdvance()
   performAndAdvance('Let the circuit respond')

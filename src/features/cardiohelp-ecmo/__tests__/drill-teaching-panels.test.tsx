@@ -444,36 +444,33 @@ describe('B4: the panels read the live circuit rather than static prose', () => 
 })
 
 /**
- * The shared circuit map and localization row, where they were added to a pilot drill.
+ * The localization row, where it was added to a pilot drill, and the map that used to sit beside it.
  *
- * Three drills carry them. The console tour gets the map in its sensor-sites state, before and
- * after commitment alike, because its subject is where the sensors are and its own signal register
- * already prints every one of those locations beside a reading. The drainage and gas-path drills
- * get a neutral map that becomes an implicated one, and the row that explains what happened, both
- * released by the same engine flag the rest of the panel is gated on.
+ * Two drills carry the row — drainage and gas path — released by the same engine flag the rest of
+ * the panel is gated on. The three pilot panels also used to draw a small circuit map of their own.
+ * An owner review in September 2026 retired it: the implicated places are now marked on the
+ * animated pressure-zone map in the simulator pane, which the drill's Explain step opens, and
+ * `circuit-map-emphasis.test.tsx` asserts that marking on the stage. What stays here is that no
+ * panel draws a map any more, and that nothing about the row leaks before commitment.
  *
  * The scan below is deliberately over the serialised DOM rather than the visible text: an answer
  * hidden in an `aria-label`, an SVG `<title>`, or a `data-` attribute is still an answer, and every
  * one of those is a place a diagram can leak that a prose panel cannot.
  */
 const MAPPED_PILOTS = {
-  'startup-sensor-orientation': { presentation: 'scaffold', rowId: null },
-  'preload-drainage-collapse': { presentation: 'neutral', rowId: 'drainage-limitation' },
-  'gas-source-interruption': { presentation: 'neutral', rowId: 'gas-path-failure' },
+  'startup-sensor-orientation': { rowId: null },
+  'preload-drainage-collapse': { rowId: 'drainage-limitation' },
+  'gas-source-interruption': { rowId: 'gas-path-failure' },
 } as const
 
 describe('R2: the circuit map and localization row inside the pilot drills', () => {
-  it.each(PILOT_IDS)('%s shows a map only where one was added, in its allowed state', (id) => {
-    const { container } = render(<EcmoDrillTeachingPanel state={settled(id)} />)
-    const map = container.querySelector('[data-circuit-minimap]')
-    const expected = (MAPPED_PILOTS as Record<string, { presentation: string } | undefined>)[id]
-
-    if (!expected) {
-      expect(map).toBeNull()
-      return
+  it.each(PILOT_IDS)('%s draws no circuit map of its own, in either state', (id) => {
+    for (const state of [settled(id), afterCommitment(settled(id))]) {
+      const { container, unmount } = render(<EcmoDrillTeachingPanel state={state} />)
+      expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
+      expect(container.querySelector('[data-map-emphasis]')).toBeNull()
+      unmount()
     }
-    expect(map).not.toBeNull()
-    expect(map?.getAttribute('data-presentation')).toBe(expected.presentation)
   })
 
   it.each(PILOT_IDS)('%s reveals no localization content before a commitment', (id) => {
@@ -514,7 +511,7 @@ describe('R2: the circuit map and localization row inside the pilot drills', () 
     }
   })
 
-  it.each(Object.keys(MAPPED_PILOTS))('%s opens the map and the row together', (id) => {
+  it.each(Object.keys(MAPPED_PILOTS))('%s opens the row once the learner has committed', (id) => {
     const plan = MAPPED_PILOTS[id as keyof typeof MAPPED_PILOTS]
     const { container } = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
 
@@ -522,22 +519,11 @@ describe('R2: the circuit map and localization row inside the pilot drills', () 
       // The console tour never implicates anything: it has no fault to localize.
       expect(container.querySelector('[data-localization-row]')).toBeNull()
       expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
-      expect(
-        container.querySelector('[data-circuit-minimap]')?.getAttribute('data-presentation'),
-      ).toBe('scaffold')
       return
     }
 
     const row = ecmoLocalizationRow(plan.rowId)
     expect(container.querySelector(`[data-localization-row="${row.id}"]`)).not.toBeNull()
-
-    const map = container.querySelector('[data-circuit-minimap]')
-    expect(map?.getAttribute('data-presentation')).toBe('implicated')
-    expect(map?.getAttribute('data-implicated-row')).toBe(row.id)
-    const marked = [...container.querySelectorAll('[data-circuit-implicated="true"]')].map((node) =>
-      node.getAttribute('data-map-segment'),
-    )
-    expect(marked).toEqual([...row.implicatedSegmentIds])
 
     // The row is inside the same gate as the rest of the mechanism teaching, not beside it.
     expect(

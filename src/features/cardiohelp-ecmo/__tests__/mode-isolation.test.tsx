@@ -121,15 +121,15 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
   it('reloads a clean walkthrough when the track changes and never scores Learn', async () => {
     const { container } = render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /identify all four domains/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /identify all four sources/i })).toBeInTheDocument()
     })
     const doneRows = () => container.querySelectorAll('[data-step-state="done"]')
-    fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
+    fireEvent.click(screen.getByRole('button', { name: /identify all four sources/i }))
     expect(doneRows()).toHaveLength(1)
 
     fireEvent.click(screen.getByRole('radio', { name: /VA track/i }))
     expect(doneRows()).toHaveLength(0)
-    fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
+    fireEvent.click(screen.getByRole('button', { name: /identify all four sources/i }))
     expect(doneRows()).toHaveLength(1)
 
     fireEvent.click(screen.getByRole('radio', { name: /VV track/i }))

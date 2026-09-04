@@ -131,3 +131,77 @@ Two measurements worth recording that this round did not change:
 - Subject-matter review of everything carrying `reviewStatus: 'draft'`, before the next human round.
 - The micro-cases, the three unpaired VA cases, and the held PR #94 panels, all deliberately out of
   the R4 rebuild.
+
+## 6. The circuit map, pointed at (R4-OD-10)
+
+The owner's sixth finding, from the circuit-walk section: the animated pressure-zone map was
+"basically hidden" — behind the bedside tab, below a console taller than the pane, scrolling
+sideways at a poster width, with nothing marked on it — while the teaching pane drew a small map of
+its own that read as hand-drawn beside it. Decision: keep the real map in the left pane and make
+the module point at it; retire the small one. What shipped:
+
+- **`components/circuit-map/`** — `circuitMapGeometry.ts` holds the drawing's path strings, which
+  the drawing and the highlight now both read (a second copy of a path is a second opinion about
+  where the limb is); `circuitMapEmphasis.tsx` turns the same presentation value the minimap
+  consumed into halo shapes with authored bounds, a caption, and a frame; `useViewBoxTween.ts` pans
+  the viewBox over 480 ms and cuts under reduced motion; `TweenedSvg.tsx` owns that state so a pan
+  re-renders one attribute, not the drawing and the 3D scene behind it.
+- **The map, on the stage.** The foundation adapter authors `circuitView: 'diagnostic'` on every
+  step of a section that walks the circuit; the drill adapter authors it on the Explain step of a
+  drill with a localization row; the console tour's circuit step authors it in `learnLessons.ts`,
+  because the tour's subject is where the sensors sit and the map draws every one with a leader to
+  its place. On entry the map scrolls its own pane — not the document, whose sticky header slid
+  over the caption in the first version — after the console above it has finished scaling; on a
+  stacked layout, where the document is the only scroller, it scrolls the document with a
+  scroll-margin that keeps it out from under the header. While something is marked, the map drops
+  its poster width, bleeds through the card padding, and its window follows the marking at a fixed
+  4:3 shape, never wider than the drawing and letterboxed rather than reshaped when a marking spans
+  it, so the box below the map does not move between stops. Unmarked, it keeps the poster and its
+  scroller: nothing is being pointed at, and fitting the whole drawing put every label at five
+  pixels while fitting the circuit panel cropped the VA cues in the patient half.
+- **Words with the marking.** An HTML caption above the map ("You are here: Centrifugal pump." /
+  "Implicated on this map: Patient venous drainage.") and the same sentence in the SVG's
+  description, plus "Ringed on the map: drainage pressure (pVen)." when and only when the flags are
+  drawn. The image is now named by its title and described by its description; it used to be named
+  by both, a hundred and twenty words of name.
+- **Retired.** `EcmoCircuitMinimap.tsx`, its two suites, and the text-equivalent builder and
+  `readingsWithheld` flag that only it read. The walk card keeps the sentence that says where the
+  marking is.
+
+### Verified adversarially before landing
+
+Four reviewers and a completeness critic over the uncommitted change. Fixed from the reviewers'
+findings:
+the fitted map regaining its 1040 px width at ≤760 px (the single-class fit rule lost the cascade
+to a media-query override; now compound); a pan frozen mid-crop when the target returned within
+480 ms (settledness is now decided from what is shown); the step-entry scroll measuring the panel
+before the console had scaled (deferred past the console's settle passes, and skipped for a hidden
+panel); halos drawn over "MEMBRANE OXYGENATOR", the fibre sub-label and the gas labels (the
+membrane ring is inset into the body, outlines get half a limb's band, the pre-membrane mark lost
+a redundant disc, sensor rings are the flag plus three); the ringed readings never named in words;
+a roving-tabindex tablist with no arrow keys, which the auto-selected map tab had made worse; the
+poster's scroll affordances surviving into pane mode; and the offline harness rendering the map
+behind its bedside gate. Confirmed by the reviewers and left as they were: every halo lies on the
+drawing's own path or a flag plus a margin; the geometry refactor changed no path string; the
+withheld map rings nothing; VA cannula and port variants hold; the tween and scroll never run in an
+effect body.
+
+Fixed from the critic's own findings, which none of the four had looked at: the console tour had
+lost its only map with nothing opening the real one; the step-entry scroll did nothing on stacked
+and short viewports, where the map is most hidden; the fitted unmarked map cropped the patient half
+with no way to reach it, which on VA is where the mixing region, the right-arm monitor and the limb
+check are drawn; and the offline review page rendered the map without its stylesheet, every halo a
+black fill. Recorded and accepted: on a compact layout the walk card and the map are on different
+tabs, so the marking's words travel with the map and the walk card's own sentence names the places
+instead. Two changes reach Practice as well and are deliberate: the image is named by its title and
+described by its description, and the circuit-view tablist has the arrow keys its roving tabindex
+always implied.
+
+### Measured
+
+At 1440 × 900 on `circuit-flow-path`, step 1: the map tab selected on entry, the panel's heading,
+tabs and caption at the top of the simulator pane with the document unscrolled, the drainage limb
+haloed with its label at 11.5 px (it was 6 px fitted whole, and off-screen below the console before
+that), one map on the page, and a Next-then-Back within a pan settling on the right window. On VA
+the return halo follows the arterial cannula. Practice is untouched: poster width, no marking, no
+scroll.

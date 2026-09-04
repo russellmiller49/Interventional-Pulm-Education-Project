@@ -3208,6 +3208,111 @@
   min-height: 360px;
 }
 
+/*
+ * The stage's map fits its pane. The poster width above exists for the Practice workbench, where
+ * the map has a scroller and a pan hint; on the lesson stage the map is the thing the step points
+ * at, and a highlight that sits off the edge of a horizontal scroller is a highlight nobody sees.
+ *
+ * The fitted drawing also bleeds through the panel's own padding on both sides — the pane is
+ * narrow, the poster is wide, and forty-eight pixels of card margin around a map whose type is
+ * already at the limit of legibility is the wrong thing to spend them on.
+ */
+/*
+ * Compound, on purpose: `.circuitSvg` sets its poster width again inside the ≤760px media block
+ * further down, and a single-class rule written here loses that cascade on source order. Two classes
+ * beat one at every width.
+ */
+.circuitSvg.circuitSvgFit {
+  min-width: 0;
+  min-height: 0;
+}
+
+.circuitDiagramFit {
+  margin-inline: calc(-1 * clamp(0.85rem, 1.8vw, 1.5rem));
+  width: auto;
+  overflow-x: hidden;
+}
+
+/*
+ * On a stacked layout the document is the only scroller, and the module header is sticky over it;
+ * a panel scrolled to the top of the page would sit under that header. The margin is the offset
+ * `scrollIntoView` honours.
+ */
+.circuitPanel {
+  scroll-margin-top: 6rem;
+}
+
+/* --- The map's "you are here" ------------------------------------------------------------ */
+
+.circuitEmphasisCaption {
+  margin: 0 0 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(255, 209, 102, 0.55);
+  border-left: 5px solid #ffd166;
+  border-radius: 10px;
+  background: rgba(255, 209, 102, 0.1);
+  color: #fff3d1;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/*
+ * Halo underneath, crisp edge on top, and a slow pulse on the halo only. Amber, because the drawing
+ * is teal and red and a third hue reads as an annotation rather than as another limb — but the
+ * width, the outline and the caption carry the marking for anyone the hue does not reach.
+ */
+.mapEmphasisHalo {
+  fill: none;
+  stroke: #ffd166;
+  stroke-width: 26;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.34;
+  animation: mapEmphasisPulse 2.4s ease-in-out infinite;
+}
+
+.mapEmphasisEdge {
+  fill: none;
+  stroke: #ffe9a8;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 10 6;
+}
+
+/*
+ * A ringed reading is a pointer, not the subject. Where a row implicates the drainage limb and the
+ * map also rings the four pressure channels the row is read across, five identical halos would say
+ * five places matter equally. The place gets the wide pulsing halo; a reading gets a thin, still
+ * ring that says "read this one" without competing with it.
+ */
+/* An outline around a body is already a shape; its band is half a limb's, so labels beside it stay clear. */
+.mapEmphasisHalo[data-map-halo='outline'] {
+  stroke-width: 14;
+}
+
+[data-map-emphasis-role='sensor-site'] .mapEmphasisHalo {
+  stroke-width: 6;
+  opacity: 0.3;
+  animation: none;
+}
+
+[data-map-emphasis-role='sensor-site'] .mapEmphasisEdge {
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+
+@keyframes mapEmphasisPulse {
+  0%,
+  100% {
+    opacity: 0.26;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .circuitSvg text {
   fill: #b8ced0;
   font-size: 11px;
@@ -5025,7 +5130,8 @@
   .cannulaReturnFlowMoving,
   .oxygenatorGasMoving,
   .chatteringTube,
-  .pumpRotor {
+  .pumpRotor,
+  .mapEmphasisHalo {
     animation: none !important;
   }
 }

@@ -62,7 +62,7 @@ function stepById(id: string): GuidedWalkthroughStep {
 /** Drive the orientation lesson as far as the settling step and stop there. */
 async function walkToSettlingStep() {
   await mountDrill('startup-sensor-orientation')
-  readStep(/identify all four domains/i)
+  readStep(/identify all four sources/i)
   await openConsoleScreenAndAdvance('Parameter list')
 
   const knob = screen.getByRole('slider', { name: /RPM rotary setpoint/i })
@@ -152,7 +152,7 @@ describe('a task-pane step is not presented as a console task', () => {
 
   it('leaves an ordinary console task with its focus, its help control and its target', async () => {
     await mountDrill('startup-sensor-orientation')
-    readStep(/identify all four domains/i)
+    readStep(/identify all four sources/i)
 
     // `startup-screen-parameters`: a genuine console task, one screen away.
     expect(document.querySelector('[data-simulator-task]')).not.toBeNull()

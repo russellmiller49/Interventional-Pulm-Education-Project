@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef } from 'react'
 
-import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import { ecmoSceneLabelName } from '../../content/circuitSceneAnchors'
 import {
   ecmoCircuitSegment,
@@ -19,7 +18,6 @@ import {
 } from '../../content/circuitWalk'
 import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
-import { EcmoCircuitMinimap } from './EcmoCircuitMinimap'
 import { ChannelValue, ModelBoundary, TextEquivalent, styles } from './shared'
 
 /**
@@ -175,37 +173,19 @@ export function EcmoCircuitWalk({
         })}
       </ul>
 
-      <EcmoCircuitMinimap
-        supportMode={supportMode}
-        // Flush: this card already boxes its content, and the map's own card chrome inside it cost
-        // the drawing the width the compact type floor was authored against. See the prop's doc.
-        frame="flush"
-        presentation={deriveEcmoCircuitPresentation(state, {
-          kind: 'foundation-walk-stop',
-          stopId: stop.id,
-          segmentIds: places,
-          // The map marks where the learner is standing either way; it names the readings only
-          // once naming them cannot answer anything. Ringing and labelling exactly the channel a
-          // prediction asks a learner to place is a sharper pointer than the seven this map used to
-          // flag in every phase, so narrowing without gating would have made it worse, not better.
-          sensorSiteIds: pastPrediction ? stop.sensorSiteIds : [],
-          // Withheld is not the same fact as absent: the map's text equivalent says which one it
-          // is, so the pump's genuine "no reading here" sentence is never spent on a gated stop.
-          readingsWithheld: !pastPrediction && stop.sensorSiteIds.length > 0,
-        })}
-      />
-
       {/*
-        The 3D correspondence, in words that are always on screen.
+        Where this stop is marked, in words that are always on screen.
 
-        The bedside scene hides its labels entirely on a compact viewport, and the learner can
-        switch them off at any width, so the highlight there is reinforcement rather than the
-        carrier. This line names the same objects the scene names, from the same strings, and it is
-        visible rather than screen-reader-only because the people it helps most include anyone
-        looking at a pane too narrow to show the scene at all.
+        The stop is marked on the pressure-zone map in the simulator pane — which the section opens
+        on every step — and in the bedside scene behind the map's other tab. This card used to draw
+        a small map of its own here; an owner review found it crude beside the real one and the
+        real one hidden, so the marking moved to the drawing the learner is meant to be looking at.
+        This line names the same places from the same strings, and it is visible rather than
+        screen-reader-only because the people it helps most include anyone on a pane too narrow to
+        show the simulator beside this card.
       */}
       <p className="mt-3 text-xs leading-5 text-muted-foreground" data-walk-scene-labels>
-        Highlighted in the bedside scene:{' '}
+        Marked on the circuit map and in the bedside scene:{' '}
         {sceneLabels.map((id) => ecmoSceneLabelName(id, supportMode)).join(' · ')}.
       </p>
 

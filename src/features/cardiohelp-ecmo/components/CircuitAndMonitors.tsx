@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Activity,
   CheckCircle2,
@@ -22,9 +22,23 @@ import type {
   SimulationAction,
   TrendParameter,
 } from '../engine'
+import type { EcmoCircuitPresentation } from '../content/circuitPresentation'
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { UNAVAILABLE_INDICATION, formatChannelReadout, isInterpretable } from './channelReadout'
+import {
+  CircuitMapEmphasisLayer,
+  circuitMapEmphasisCaption,
+  circuitMapEmphasisTargets,
+  circuitMapFrameFor,
+  circuitMapViewBoxRect,
+} from './circuit-map/circuitMapEmphasis'
+import {
+  circuitMapGeometry,
+  viewBoxString,
+  type CircuitMapFrame,
+} from './circuit-map/circuitMapGeometry'
+import { TweenedSvg } from './circuit-map/TweenedSvg'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
@@ -78,6 +92,23 @@ export interface SimulationPanelProps {
    * nothing that knows where these names sit in space has to cross into the teaching layer.
    */
   emphasisSceneLabelIds?: readonly string[] | null
+  /**
+   * What the pressure-zone map is marking: a walk stop, an implicated row, or nothing.
+   *
+   * The same value the teaching pane's small map used to consume, derived the same way, so the
+   * marking here and the reveal beside it cannot disagree. See `circuit-map/circuitMapEmphasis`.
+   */
+  circuitPresentation?: EcmoCircuitPresentation | null
+  /**
+   * How the map is framed. Defaults to whatever fits the marked places; a host walking a path that
+   * starts in the patient passes `whole` so the frame does not jump between stops.
+   */
+  circuitFrame?: CircuitMapFrame
+  /**
+   * `pane` lets the map scale to its container instead of insisting on its poster width and
+   * scrolling sideways. The stage uses it; the Practice workbench keeps the poster.
+   */
+  circuitFit?: 'poster' | 'pane'
 }
 
 /**
@@ -103,6 +134,19 @@ function CircuitChannelReadout({
   )
 }
 
+/** The closest ancestor that scrolls vertically and has something to scroll, or null. */
+function nearestScrollingAncestor(element: HTMLElement): HTMLElement | null {
+  let node: HTMLElement | null = element.parentElement
+  while (node && node !== document.body) {
+    const { overflowY } = getComputedStyle(node)
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
+
 export function CircuitSchematic({
   state,
   dispatch,
@@ -111,6 +155,9 @@ export function CircuitSchematic({
   guidedControlId,
   circuitViewPreference,
   emphasisSceneLabelIds,
+  circuitPresentation = null,
+  circuitFrame,
+  circuitFit = 'poster',
   onSaveForLater,
   locationDisclosure = 'full',
 }: SimulationPanelProps) {
@@ -130,6 +177,58 @@ export function CircuitSchematic({
     setAppliedPreferenceKey(preferenceKey)
     if (circuitViewPreference) setCircuitView(circuitViewPreference.view)
   }
+  /*
+   * A step that opens the map also brings it into view.
+   *
+   * The console sits above this panel in the simulator pane and is taller than the pane, so a map
+   * a step had opened and marked was sitting a thousand pixels below the fold — opened, lit, and
+   * unseen. Scrolled once per step entry, on the same key the tab preference is applied on, so a
+   * learner who scrolls away within a step is not dragged back.
+   */
+  const panelRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (circuitViewPreference?.view !== 'diagnostic') return
+    const panel = panelRef.current
+    if (!panel) return
+    /*
+     * The pane, not the page. `scrollIntoView` scrolls every scrollable ancestor, and on the stage
+     * the document has a little give of its own: it slid the sticky header over the map's caption
+     * and left the panel's heading above the viewport. So this finds the nearest ancestor that
+     * actually scrolls and moves only that one.
+     */
+    /*
+     * Measured after the pane has settled, not on this commit. The console above this panel is
+     * scaled to the pane's width by a layout effect that runs after this one and shortens it, so
+     * a position read now is read against the unscaled console and lands the map's heading and
+     * tabs above the pane. The console's own settle passes run at 0 and 48 ms; this waits them out
+     * and reads the position when it scrolls.
+     */
+    const timer = window.setTimeout(() => {
+      // A closed surface has nothing to scroll to.
+      if (panel.getClientRects().length === 0) return
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+      const behavior = reduceMotion ? 'auto' : 'smooth'
+      const scroller = nearestScrollingAncestor(panel)
+      if (!scroller) {
+        // A stacked or short layout, where the document is the only scroller. The stylesheet's
+        // scroll-margin on the panel keeps it out from under the sticky header.
+        if (typeof panel.scrollIntoView === 'function') {
+          panel.scrollIntoView({ block: 'start', behavior })
+        }
+        return
+      }
+      const offset = panel.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+      const top = scroller.scrollTop + offset - 8
+      if (typeof scroller.scrollTo === 'function') {
+        scroller.scrollTo({ top, behavior })
+      } else {
+        scroller.scrollTop = top
+      }
+    }, 80)
+    return () => window.clearTimeout(timer)
+    // Once per applied preference; the view itself is read from the preference, not tracked.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferenceKey])
 
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
@@ -152,7 +251,8 @@ export function CircuitSchematic({
   const supportModeLabel = isVa ? 'VA' : 'VV'
   const returnVesselLabel = isVa ? 'femoral artery' : 'femoral vein'
   const returnDestinationLabel = isVa ? 'arterial circulation / aorta' : 'right atrium'
-  const returnPortX = isVa ? 244 : 214
+  const geometry = circuitMapGeometry(state.supportMode)
+  const { returnPortX } = geometry
   const bloodMoving = state.device.pumpRunning && Math.abs(state.circuit.bloodFlow) > 0.05
   /*
    * The same owner the 3D scene and the HUD read, not the raw engine flag.
@@ -180,10 +280,28 @@ export function CircuitSchematic({
     isVa &&
     state.scenario.activeFaults.includes('differential-hypoxemia') &&
     !state.scenario.prediction.committed
-  const postPumpPath = 'M486 346 Q512 346 526 364 Q536 377 552 385 H700'
-  const returnLimbPath = `M825 385 H1000 Q1042 385 1042 427 V512 Q1042 540 1014 540 H${
-    returnPortX + 28
-  } Q${returnPortX} 540 ${returnPortX} 512 V455`
+  const postPumpPath = geometry.postPumpLimb
+  const returnLimbPath = geometry.returnLimb
+  /*
+   * The marking, resolved once for the drawing, its caption and its description. Sensor-site halos
+   * exist only when the flags they ring are drawn: a withheld map has nothing to ring.
+   */
+  const emphasisTargets = circuitMapEmphasisTargets(circuitPresentation, state.supportMode, {
+    sensorFlagsDrawn: locationsDisclosed,
+  })
+  const emphasisCaption = circuitMapEmphasisCaption(circuitPresentation, state.supportMode, {
+    sensorFlagsDrawn: locationsDisclosed,
+  })
+  /*
+   * The fit applies only while something is marked. An unmarked map — a drill before its
+   * commitment, a learner opening the tab on a section that walks nothing, the console tour — is
+   * not being pointed at, and the poster with its scroller is the honest way to show all of it:
+   * fitted whole it put every label at five pixels, and fitted to the circuit panel it cut off the
+   * patient half, which on VA holds the mixing region, the right-arm monitor and the limb check.
+   */
+  const fitted = circuitFit === 'pane' && emphasisTargets.length > 0
+  const frame: CircuitMapFrame = circuitMapFrameFor(emphasisTargets, circuitFrame)
+  const frameRect = circuitMapViewBoxRect(frame, emphasisTargets)
   /*
    * Two descriptions, one per disclosure depth, both complete for what the drawing shows at that
    * depth.
@@ -218,7 +336,7 @@ export function CircuitSchematic({
     drainageChattering
       ? ' The drainage limb is currently marked as chattering: it is drawn with a broken outline and labelled DRAINAGE CHATTER.'
       : ''
-  }`
+  }${emphasisCaption ? ` ${emphasisCaption}` : ''}`
   const resistancePattern = !diagnosisRevealed
     ? 'Pattern label withheld until reassessment and reveal'
     : state.scenario.activeFaults.includes('oxygenator-resistance') ||
@@ -235,6 +353,7 @@ export function CircuitSchematic({
   return (
     <section
       id="cardiohelp-circuit-panel"
+      ref={panelRef}
       className={styles.circuitPanel}
       aria-labelledby="circuit-heading"
       data-guided-focus={guidedTarget === 'circuit'}
@@ -270,7 +389,38 @@ export function CircuitSchematic({
         <span className={styles.modePill}>{supportModeLabel}</span>
       </div>
 
-      <div className={styles.circuitViewTabs} role="tablist" aria-label="Circuit view">
+      {/*
+        Roving tabindex needs the arrow keys that go with it. The step selects a tab on entry and
+        leaves the other at tabindex −1, so without this a keyboard user could reach the map and
+        never the bedside scene, or the reverse.
+      */}
+      <div
+        className={styles.circuitViewTabs}
+        role="tablist"
+        aria-label="Circuit view"
+        onKeyDown={(event) => {
+          const order: readonly CircuitViewPreference[] = ['bedside', 'diagnostic']
+          const index = order.indexOf(circuitView)
+          let next: CircuitViewPreference | null = null
+          if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            next = order[(index + 1) % order.length]
+          } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            next = order[(index - 1 + order.length) % order.length]
+          } else if (event.key === 'Home') {
+            next = order[0]
+          } else if (event.key === 'End') {
+            next = order[order.length - 1]
+          }
+          if (!next) return
+          event.preventDefault()
+          setCircuitView(next)
+          document
+            .getElementById(
+              next === 'bedside' ? 'cardiohelp-bedside-view-tab' : 'cardiohelp-diagnostic-view-tab',
+            )
+            ?.focus()
+        }}
+      >
         <button
           type="button"
           role="tab"
@@ -326,13 +476,34 @@ export function CircuitSchematic({
         aria-labelledby="cardiohelp-diagnostic-view-tab"
         hidden={circuitView !== 'diagnostic'}
       >
+        {/*
+          The marking in words, above the drawing rather than inside it: HTML text keeps its size
+          when the map scales, and it is real text to a screen reader rather than part of an image.
+          Not a live region — the walk announces its own stop, and the drill reveals through its
+          card — so a stop change is not read out twice.
+        */}
+        {emphasisCaption ? (
+          <p className={styles.circuitEmphasisCaption} data-map-emphasis-caption>
+            {emphasisCaption}
+          </p>
+        ) : null}
+        {/*
+          Fitted, the drawing has nothing to scroll, so it takes no tab stop, promises no scrolling
+          and handles no arrow keys — a focus stop that does nothing is a broken promise to a
+          keyboard user. The poster keeps all three.
+        */}
         <div
           ref={diagramScrollRef}
-          className={styles.circuitDiagramScroll}
+          className={`${styles.circuitDiagramScroll} ${fitted ? styles.circuitDiagramFit : ''}`}
           role="group"
-          aria-label={`${supportModeLabel} ECMO circuit diagram; horizontally scrollable on narrow screens`}
-          tabIndex={0}
+          aria-label={
+            fitted
+              ? `${supportModeLabel} ECMO circuit diagram`
+              : `${supportModeLabel} ECMO circuit diagram; horizontally scrollable on narrow screens`
+          }
+          tabIndex={fitted ? undefined : 0}
           onKeyDown={(event) => {
+            if (fitted) return
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
             event.preventDefault()
             const diagram = diagramScrollRef.current
@@ -347,12 +518,21 @@ export function CircuitSchematic({
             }
           }}
         >
-          <svg
-            className={styles.circuitSvg}
-            viewBox="0 0 1120 590"
+          {/*
+            Named by its title and described by its description. These used to be joined into one
+            accessible name — a hundred and twenty words of it — which a screen reader read out as
+            the image's name before anything else; the caption made it longer still.
+          */}
+          <TweenedSvg
+            frameRect={frameRect}
+            className={`${styles.circuitSvg} ${fitted ? styles.circuitSvgFit : ''}`}
             role="img"
-            aria-labelledby="circuit-svg-title circuit-svg-desc"
+            aria-labelledby="circuit-svg-title"
+            aria-describedby="circuit-svg-desc"
             preserveAspectRatio="xMidYMid meet"
+            data-map-frame={frame}
+            data-map-window={viewBoxString(frameRect)}
+            data-map-emphasis-active={emphasisTargets.length > 0 ? 'true' : undefined}
           >
             <title id="circuit-svg-title">{`${supportModeLabel} ECMO femoral-femoral circuit schematic`}</title>
             <desc id="circuit-svg-desc">{circuitDescription}</desc>
@@ -441,23 +621,15 @@ export function CircuitSchematic({
             />
 
             <path
-              d="M146 245 C132 295 110 366 96 447"
+              d={geometry.drainageCannula}
               className={`${styles.drainageCannula} ${bloodMoving ? styles.cannulaFlowMoving : ''}`}
               markerEnd="url(#cardiohelp-venous-arrow)"
             />
-            {isVa ? (
-              <path
-                d="M244 447 C226 411 207 379 197 335 C195 299 194 247 193 213"
-                className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
-                markerEnd="url(#cardiohelp-return-arrow)"
-              />
-            ) : (
-              <path
-                d="M214 447 C199 384 181 291 170 185"
-                className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
-                markerEnd="url(#cardiohelp-return-arrow)"
-              />
-            )}
+            <path
+              d={geometry.returnCannula}
+              className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
+              markerEnd="url(#cardiohelp-return-arrow)"
+            />
             {isVa ? (
               <g
                 aria-label={
@@ -539,11 +711,11 @@ export function CircuitSchematic({
               className={drainageChattering ? styles.chatteringTube : undefined}
             >
               <path
-                d="M96 447 C215 467 293 385 405 385"
+                d={geometry.drainageLimb}
                 className={`${styles.circuitLimb} ${styles.drainageLimb}`}
               />
               <path
-                d="M96 447 C215 467 293 385 405 385"
+                d={geometry.drainageLimb}
                 className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
                 markerEnd="url(#cardiohelp-flow-arrow)"
               />
@@ -625,14 +797,14 @@ export function CircuitSchematic({
                 className={styles.oxygenatorFiber}
               />
             ))}
-            <path d="M700 385 H825" className={styles.oxygenatorBloodPath} />
+            <path d={geometry.membraneBloodPath} className={styles.oxygenatorBloodPath} />
             <path
-              d="M700 385 H825"
+              d={geometry.membraneBloodPath}
               className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
               markerEnd="url(#cardiohelp-flow-arrow)"
             />
             <path
-              d="M762 462 V310"
+              d={geometry.membraneGasPath}
               className={`${styles.oxygenatorGasPath} ${gasMoving ? styles.oxygenatorGasMoving : ''}`}
               markerEnd="url(#cardiohelp-gas-arrow)"
             />
@@ -748,7 +920,8 @@ export function CircuitSchematic({
               className={styles.staticDirectionArrow}
               markerEnd="url(#cardiohelp-return-arrow)"
             />
-          </svg>
+            <CircuitMapEmphasisLayer targets={emphasisTargets} />
+          </TweenedSvg>
         </div>
         {/*
           Its own class, not the pan hint's: `.circuitPanHint` is `display: none` above 1000px, so
@@ -762,10 +935,12 @@ export function CircuitSchematic({
             sensor markers appear on this map once you have committed your prediction.
           </p>
         )}
-        <p className={styles.circuitPanHint}>
-          On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
-          the full circuit.
-        </p>
+        {fitted ? null : (
+          <p className={styles.circuitPanHint}>
+            On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to
+            inspect the full circuit.
+          </p>
+        )}
         {isVa && !mixingCueWithheld ? (
           <p className={styles.circuitPanHint} data-local-model-boundary="va-mixing-fixed">
             Model boundary: the mixing region is drawn where this diagram places it and does not

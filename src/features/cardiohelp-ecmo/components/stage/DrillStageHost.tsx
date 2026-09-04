@@ -10,6 +10,8 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
 import { orderChoices } from '../../content/choiceOrder'
+import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
+import { ecmoDrillSpecs } from '../../content/drillSpecs'
 import { isEcmoFoundationSectionId } from '../../content/foundationLessons'
 import { ecmoSectionSpecById } from '../../content/sectionSpecs'
 import type {
@@ -221,6 +223,18 @@ export function DrillStageHost({
   )
   const circuitViewPreference = activeStep.circuitView
     ? { view: activeStep.circuitView, stepId: activeStep.id }
+    : null
+  /*
+   * What the pressure-zone map marks for this drill: the implicated places of its localization
+   * row, once the prediction is committed and not before. The derivation consults the engine's own
+   * commitment flag, the same gate the localization card reveals through, so the map and the card
+   * cannot disagree. A drill with no row — the startup tour, the CO₂ drills, the bubble and power
+   * drills — marks nothing, and says so through the absence of a caption rather than through a
+   * marker that would have to mean "nowhere".
+   */
+  const localizationRowId = ecmoDrillSpecs[lesson.scenarioId]?.localizationRowId
+  const circuitPresentation = localizationRowId
+    ? deriveEcmoCircuitPresentation(state, { kind: 'drill-reveal', rowId: localizationRowId })
     : null
 
   /* ---------------------------------------------------------------- *
@@ -635,6 +649,8 @@ export function DrillStageHost({
       guidedTarget={activeStep.focusTarget}
       guidedControlId={guidedControlId}
       circuitViewPreference={circuitViewPreference}
+      circuitPresentation={circuitPresentation}
+      circuitFit="pane"
       openSurfaces={openSurfaces}
       onToggleSurface={toggleSurface}
       onSaveForLater={() => router.push(cardiohelpEcmoNavBase)}

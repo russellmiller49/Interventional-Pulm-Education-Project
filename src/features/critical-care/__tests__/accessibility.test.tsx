@@ -5,7 +5,14 @@ import { axe } from 'jest-axe'
 
 import { CrrtPressureLocalizationLab } from '@/features/baxter-crrt/components/CrrtPressureLocalizationLab'
 import { CardiohelpHub } from '@/features/cardiohelp-ecmo/components/CardiohelpHub'
-import { CircuitAndMonitors } from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
+import {
+  CircuitAndMonitors,
+  CircuitSchematic,
+} from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
+import {
+  ecmoCircuitWalkStopsForSection,
+  ecmoWalkStopSegmentIds,
+} from '@/features/cardiohelp-ecmo/content/circuitWalk'
 import { EcmoContinueCta } from '@/features/cardiohelp-ecmo/components/EcmoContinueCta'
 import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/CardiohelpWorkbench'
 import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
@@ -203,9 +210,12 @@ describe('critical-care accessibility surfaces', () => {
       ).not.toBeInTheDocument(),
     )
     fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    // The channel walk is the image's description; its name is the short title. They used to be
+    // joined into one hundred-word name, which the September 2026 map work separated.
     expect(
       screen.getByRole('img', {
-        name: /pVen pressure zone.*pInt.*pArt/i,
+        name: /circuit schematic/i,
+        description: /pVen pressure zone.*pInt.*pArt/i,
       }),
     ).toBeInTheDocument()
     const circuitLegend = screen.getByRole('list', { name: 'Circuit schematic legend' })
@@ -298,11 +308,13 @@ describe('critical-care accessibility surfaces', () => {
   )
 
   /**
-   * The two foundation panels that carry the shared circuit map and the localization table.
+   * The two foundation panels that walk the circuit, and the map their walk is marked on.
    *
-   * Foundation panels had no automated coverage here at all, which mattered once they started
-   * rendering a diagram: an `<svg role="img">` without an accessible name is a violation, and the
-   * map's name is wired through a generated id that only exists at render time.
+   * The panels used to carry a small map of their own; it was retired in September 2026 and the
+   * marking moved to the simulator pane's pressure-zone map, which gained an emphasis layer. So
+   * this checks both halves: the walk panel with no drawing in it, and the real map marked at a
+   * walk stop — an `<svg role="img">` whose name and description now carry the caption, plus an
+   * HTML caption and an `aria-hidden` overlay that must not become a second, unnamed image.
    */
   it.each(['circuit-flow-path', 'pump-and-pressure-zones'] as const)(
     'keeps the %s foundation panel free of automated violations',
@@ -314,10 +326,49 @@ describe('critical-care accessibility surfaces', () => {
       const { container } = render(
         <EcmoFoundationTeachingPanel sectionId={sectionId} state={state} />,
       )
-      expect(container.querySelector('[data-circuit-minimap] svg[role="img"]')).not.toBeNull()
+      expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
+      expect(container.querySelector('[data-walk-stop]')).not.toBeNull()
       expect(await axe(container)).toHaveNoViolations()
     },
   )
+
+  it('keeps the pressure-zone map free of automated violations while it marks a walk stop', async () => {
+    let state = createEcmoReferenceState('vv-reference')
+    for (let tick = 0; tick < 8; tick += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+    const stop = ecmoCircuitWalkStopsForSection('circuit-flow-path')[0]
+    const view = render(
+      <CircuitSchematic
+        state={state}
+        dispatch={jest.fn()}
+        controlsEnabled={false}
+        circuitFit="pane"
+        circuitFrame="whole"
+        locationDisclosure="withheld"
+        circuitPresentation={{
+          kind: 'walk-stop',
+          stopId: stop.id,
+          segmentIds: ecmoWalkStopSegmentIds(stop),
+          sensorSiteIds: [],
+        }}
+      />,
+    )
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Checking this display' }),
+      ).not.toBeInTheDocument(),
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    expect(
+      screen.getByRole('img', {
+        name: /circuit schematic/i,
+        description: /You are here: Patient venous drainage\./,
+      }),
+    ).toBeInTheDocument()
+    expect(view.container.querySelector('[data-map-emphasis]')).not.toBeNull()
+    expect(await axe(view.container)).toHaveNoViolations()
+  })
 
   it('labels every pane of the ECMO lesson stage and keeps its chrome accessible', async () => {
     window.history.replaceState(

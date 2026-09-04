@@ -334,8 +334,15 @@ describe('a guided step names the circuit surface it is read on', () => {
   )
 
   it('does not force a view on steps that have no reason to', () => {
-    expect(stepById('startup-orient-domains').preferredCircuitView).toBeUndefined()
+    expect(stepById('startup-screen-parameters').preferredCircuitView).toBeUndefined()
     expect(stepById('startup-settle-circuit').preferredCircuitView).toBeUndefined()
+  })
+
+  it('opens the pressure-zone map on the tour’s circuit step, which is about where the sensors sit', () => {
+    // This step used to be the example of one with no reason to force a view. It gained one in
+    // September 2026 when the small map the tour's panel drew was retired: the pressure-zone map
+    // draws every sensor with a leader to its place, which is the tour's subject.
+    expect(stepById('startup-orient-domains').preferredCircuitView).toBe('diagnostic')
   })
 
   it('keeps the circuit component free of scenario ids', () => {

@@ -2,6 +2,7 @@ import { criticalCareLearningPathway } from '@/features/critical-care/content/le
 import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types'
 
 import { presentationTitle } from '../../../content/casePresentation'
+import { ecmoDrillSpecs } from '../../../content/drillSpecs'
 import { clinicalPracticeScenarioById } from '../../../content/clinicalCases'
 import { pairedCaseForLesson } from '../../../content/curriculum'
 import {
@@ -125,6 +126,12 @@ function stageStepFromGuided(
 }
 
 function explainStep(scenarioId: string, ordinal: number): StageStep {
+  /*
+   * A drill with a localization row marks that row's places on the pressure-zone map once the
+   * prediction is committed, so its Explain step opens the map: the explanation names a place, and
+   * the place is on screen beside it. The rows that mark nothing keep the console alone.
+   */
+  const marksTheMap = Boolean(ecmoDrillSpecs[scenarioId]?.localizationRowId)
   return {
     id: `${scenarioId}-explain`,
     ordinal,
@@ -135,7 +142,8 @@ function explainStep(scenarioId: string, ordinal: number): StageStep {
     actionLabel: 'I have read what explains it',
     interaction: { kind: 'read' },
     focusTarget: null,
-    surfaces: [],
+    surfaces: marksTheMap ? ['circuit'] : [],
+    ...(marksTheMap ? { circuitView: 'diagnostic' as const } : {}),
     teaching: { prose: 'none', blocks: 'all' },
     gate: 'after-prediction',
   }

@@ -13,9 +13,11 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 import { useRouter } from '@/i18n/navigation'
 
 import { orderChoices } from '../../content/choiceOrder'
+import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import {
   ecmoCircuitWalkStopsForSection,
   ecmoWalkStopSceneLabelIds,
+  ecmoWalkStopSegmentIds,
   type EcmoCircuitWalkStop,
   type EcmoWalkComparisonBeat,
 } from '../../content/circuitWalk'
@@ -272,6 +274,24 @@ function FoundationStageSession({
 
   const emphasisSceneLabelIds = activeWalkStop
     ? ecmoWalkStopSceneLabelIds(activeWalkStop, supportMode)
+    : null
+  /*
+   * The same "you are here" the walk card used to draw on its own small map, now marked on the
+   * pressure-zone map in the simulator pane. Same derivation, same gating: the readings a stop
+   * reports are named only once naming them cannot answer this section's prediction.
+   */
+  const circuitPresentation = activeWalkStop
+    ? deriveEcmoCircuitPresentation(session.simulation, {
+        kind: 'foundation-walk-stop',
+        stopId: activeWalkStop.id,
+        segmentIds: ecmoWalkStopSegmentIds(activeWalkStop),
+        sensorSiteIds: predictionCommitted ? activeWalkStop.sensorSiteIds : [],
+      })
+    : null
+  // The map opens on the step's authored view, once per step entry; the walk sections author the
+  // pressure-zone map so the marked stop is on screen without a tab click.
+  const circuitViewPreference = activeStep.circuitView
+    ? { view: activeStep.circuitView, stepId: activeStep.id }
     : null
 
   /* ---------------------------------------------------------------- *
@@ -797,6 +817,10 @@ function FoundationStageSession({
         dispatch={(action) => dispatch({ type: 'SIMULATION', action })}
         controlsEnabled={false}
         emphasisSceneLabelIds={emphasisSceneLabelIds}
+        circuitPresentation={circuitPresentation}
+        // No frame override: the map's window follows the stop, and pans between stops.
+        circuitFit="pane"
+        circuitViewPreference={circuitViewPreference}
         locationDisclosure={foundationCircuitLocationDisclosure(sectionId, predictionCommitted)}
         openSurfaces={openSurfaces}
         onToggleSurface={toggleSurface}

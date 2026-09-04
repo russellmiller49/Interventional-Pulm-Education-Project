@@ -1,3 +1,4 @@
+import { ecmoCircuitWalkStopsForSection } from '../../../content/circuitWalk'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types'
 
@@ -68,6 +69,13 @@ export function buildFoundationStageLesson(
   const sectionIndex = pathwaySectionIndex(pathway, sectionId)
   const pathwaySection = pathway.sections[sectionIndex]
 
+  /*
+   * A section that walks the circuit is read on the pressure-zone map, where the walk marks its
+   * stop. Authored on every step of the section so the map is on screen from the first one, and
+   * applied on entry only, so a learner who opens the bedside scene keeps it for that step.
+   */
+  const walksTheCircuit = ecmoCircuitWalkStopsForSection(sectionId).length > 0
+
   const steps: StageStep[] = STAGE_PHASES.map((phase, index) => {
     const copy = runtime.phases[phase]
     const base = {
@@ -79,6 +87,7 @@ export function buildFoundationStageLesson(
       rationale: copy.teachingPoint,
       focusTarget: null,
       surfaces: SURFACES_BY_PHASE[phase],
+      ...(walksTheCircuit ? { circuitView: 'diagnostic' as const } : {}),
       teaching: { prose: PROSE_BY_PHASE[phase], blocks: 'all' } as const,
       gate: (phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction') as
         | 'open'

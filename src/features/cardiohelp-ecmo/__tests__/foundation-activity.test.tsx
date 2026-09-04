@@ -58,7 +58,20 @@ jest.mock('../components/CardiohelpConsole', () => ({
   CardiohelpConsole: () => <div data-testid="cardiohelp-console" />,
 }))
 jest.mock('../components/CircuitAndMonitors', () => ({
-  CircuitSchematic: () => <div data-testid="circuit-schematic" />,
+  // The map is asserted as a drawing in circuit-map-emphasis.test.tsx. Here it records what the
+  // stage asked it to mark and how much it was allowed to disclose, so the leak contract below can
+  // read the props rather than the pixels.
+  CircuitSchematic: (props: {
+    locationDisclosure?: string
+    circuitPresentation?: { kind: string; sensorSiteIds?: readonly string[] } | null
+  }) => (
+    <div
+      data-testid="circuit-schematic"
+      data-location-disclosure={props.locationDisclosure ?? 'full'}
+      data-presentation-kind={props.circuitPresentation?.kind ?? 'none'}
+      data-presentation-sites={(props.circuitPresentation?.sensorSiteIds ?? []).join(' ')}
+    />
+  ),
   GasBlenderPanel: () => <div data-testid="gas-blender-panel" />,
   PatientMonitor: () => <div data-testid="patient-monitor" />,
   TrendPanel: () => <div data-testid="trend-panel" />,
@@ -254,6 +267,19 @@ beforeEach(() => {
 afterEach(() => {
   jest.useRealTimers()
 })
+
+/** The simulator pane's pressure-zone map (mocked above), as the stage handed it its marking. */
+function circuitMap(): HTMLElement {
+  const map = document.querySelector<HTMLElement>('[data-testid="circuit-schematic"]')
+  if (!map) throw new Error('No circuit map on the stage')
+  return map
+}
+
+/** The sensor sites the stage asked the map to ring for the current walk stop. */
+function ringedSensorSites(): string[] {
+  const sites = circuitMap().getAttribute('data-presentation-sites') ?? ''
+  return sites ? sites.split(' ') : []
+}
 
 describe('the lesson clock belongs to the loaded state, not to the component', () => {
   it('holds the capstone in front of the change it opens on', () => {
@@ -1091,9 +1117,13 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     expect(walkCard().textContent).not.toMatch(/\bpVen\b/)
     expect(walkCard().querySelector('[data-walk-reported-here]')).toBeNull()
     expect(walkCard().querySelector('[data-walk-live-signals]')).toBeNull()
-    // The map does not label them either: ringing exactly the channel the prediction asks a learner
+    // The map does not ring them either: ringing exactly the channel the prediction asks a learner
     // to place would be a sharper pointer than the seven this map flagged before the walk existed.
-    expect(walkCard().querySelectorAll('[data-map-sensor-site]')).toHaveLength(0)
+    // The map is the simulator pane's pressure-zone map now, which withholds its channel placements
+    // for this section until commitment — so there is no flag to ring, and nothing is rung.
+    expect(circuitMap().getAttribute('data-location-disclosure')).toBe('withheld')
+    expect(circuitMap().getAttribute('data-presentation-kind')).toBe('walk-stop')
+    expect(ringedSensorSites()).toHaveLength(0)
 
     // Reaching for the Act step uncommitted is the bypass the independent review reproduced; it
     // reveals nothing now, because the step is not the authority and the row will not move.
@@ -1102,7 +1132,7 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     fireEvent.click(stepRow('act').querySelector('button')!)
     expect(currentPhase()).toBe('predict')
     expect(walkCard().textContent).not.toMatch(/Reported here/i)
-    expect(walkCard().querySelectorAll('[data-map-sensor-site]')).toHaveLength(0)
+    expect(ringedSensorSites()).toHaveLength(0)
     cleanup()
 
     mount('circuit-flow-path')
@@ -1110,7 +1140,9 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     expect(walkCard().querySelector('[data-walk-reported-here]')?.textContent).toMatch(
       /drainage pressure \(pVen\)/,
     )
-    expect(walkCard().querySelectorAll('[data-map-sensor-site]').length).toBeGreaterThan(0)
+    // Committed: the placements are drawn, and the stop's own reading is rung on the map.
+    expect(circuitMap().getAttribute('data-location-disclosure')).toBe('full')
+    expect(ringedSensorSites()).toEqual(['pVen'])
   })
 
   it('keeps the walk open when a committed learner reviews an earlier step', () => {

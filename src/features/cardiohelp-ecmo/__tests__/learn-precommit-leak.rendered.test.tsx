@@ -7,7 +7,10 @@ import {
 } from '../components/stage/adapters/drillStageAdapter'
 import { resolveGuidedSimulatorTask } from '../components/stage/drillControlResolver'
 import type { StageLesson, StageStep } from '../components/stage/stageModel'
+import { circuitMapEmphasisCaption } from '../components/circuit-map/circuitMapEmphasis'
+import { ecmoCircuitSegment, resolveEcmoModeText } from '../content/circuitSegments'
 import { ecmoDrillSpec, ecmoDrillSpecs } from '../content/drillSpecs'
+import { ecmoLocalizationRow } from '../content/localizationCards'
 import { ECMO_TRANSFER_STEP_TITLE } from '../content/learnLessons'
 import {
   cardiohelpScenarioById,
@@ -180,9 +183,45 @@ function denySetFor(scenarioId: string): DenySet {
     phrases.push({ where: 'expected direction label', text: directionLabel })
   }
 
+  /*
+   * The map's own reveal. Once the learner commits, the pressure-zone map marks the row's places
+   * and captions them "Implicated on this map: …". That sentence, and the labels of the places it
+   * names, are answers this scan would not otherwise know about — the deny patterns are written
+   * against the debrief, not the map — so a drill with a row adds them here. Segment ids are not
+   * denied: they are also how the walk names where it is standing, before anything is asked.
+   */
+  if (spec.localizationRowId) {
+    const implicated = { kind: 'implicated', rowId: spec.localizationRowId } as const
+    const caption = circuitMapEmphasisCaption(implicated, scenario.supportMode, {
+      sensorFlagsDrawn: false,
+    })
+    if (caption) phrases.push({ where: 'map implicated caption', text: caption })
+    for (const segmentId of ecmoLocalizationRow(spec.localizationRowId).implicatedSegmentIds) {
+      phrases.push({
+        where: `map implicated segment ${segmentId}`,
+        text: `Implicated on this map: ${resolveEcmoModeText(ecmoCircuitSegment(segmentId).label, scenario.supportMode)}`,
+      })
+    }
+  }
+
   // Very short sentences ("Pump running.") would fire on legitimate readouts.
   const substantial = phrases.filter(({ text }) => text.split(/\s+/).length >= 3)
   return { patterns: spec.precommitDenyPatterns, phrases: substantial }
+}
+
+/**
+ * The map marks nothing before commitment: no halo, no caption, on any drill. A drill with a row
+ * marks the row's places the moment the engine records the commitment and not a step sooner; a
+ * drill without a row never marks anything. Either way, before the prediction there is nothing.
+ */
+function mapMarkingLeaks(): readonly string[] {
+  const leaks: string[] = []
+  for (const node of Array.from(document.querySelectorAll('[data-map-emphasis-target]'))) {
+    leaks.push(`map marks ${node.getAttribute('data-map-emphasis-target')} before commitment`)
+  }
+  const caption = document.querySelector('[data-map-emphasis-caption]')
+  if (caption) leaks.push(`map caption before commitment: ${caption.textContent}`)
+  return leaks
 }
 
 /* ------------------------------------------------------------------ *
@@ -437,7 +476,7 @@ describe('nothing rendered before a drill’s prediction answers it', () => {
       expect(latestState().scenario.prediction.committed).toBe(false)
 
       const first = scan(scenarioId, 'first step', deny)
-      leaks.push(...first.leaks, ...stepListLeaks(lesson, 'first step'))
+      leaks.push(...first.leaks, ...stepListLeaks(lesson, 'first step'), ...mapMarkingLeaks())
       first.excused.forEach((text) => excused.add(text))
 
       await driveToPrediction(lesson)
@@ -446,7 +485,11 @@ describe('nothing rendered before a drill’s prediction answers it', () => {
       expect(latestState().scenario.prediction.committed).toBe(false)
 
       const prediction = scan(scenarioId, 'prediction step', deny)
-      leaks.push(...prediction.leaks, ...stepListLeaks(lesson, 'prediction step'))
+      leaks.push(
+        ...prediction.leaks,
+        ...stepListLeaks(lesson, 'prediction step'),
+        ...mapMarkingLeaks(),
+      )
       prediction.excused.forEach((text) => excused.add(text))
 
       expect(leaks).toEqual([])

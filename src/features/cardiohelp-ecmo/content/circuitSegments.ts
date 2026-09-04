@@ -15,7 +15,7 @@ import { validateEvidenceIds } from './evidence'
  * and pressure zones are the groupings the drills compare against each other. Every consumer names
  * a place by id and renders whatever this file says that place is called.
  *
- * Pure content. No React, no three.js, no engine values — the minimap draws this, the localization
+ * Pure content. No React, no three.js, no engine values — the circuit map marks this, the localization
  * rows point into it, and the later circuit walk will drive it, and none of those may fork it.
  * Deliberately *not* here: clamp positions, the VA mixing region, and anything about the patient's
  * own circulation. Those are different models with different boundaries, and folding them in would
@@ -81,7 +81,7 @@ export interface EcmoCircuitSegment {
   readonly path: EcmoCircuitPathKind
   /** The full name a lesson uses in prose and a text equivalent reads out. */
   readonly label: EcmoModeText
-  /** The short name the minimap draws, sized for the narrowest supported teaching pane. */
+  /** A short name for a drawing with no room for the label: registry vocabulary, kept for that use. */
   readonly mapLabel: EcmoModeText
   /** What happens here, one sentence, as the circuit walk states it. */
   readonly detail: EcmoModeText
@@ -114,7 +114,7 @@ export interface EcmoSensorSite {
   readonly deviceLabel: string
   /** What the circuit-walk stop lists under "Reported here". */
   readonly stopLabel: string
-  /** What the minimap flags at this location. */
+  /** What a map rings at this location. */
   readonly mapLabel: string
   readonly kind: 'measured' | 'derived'
   readonly segmentId: EcmoCircuitSegmentId

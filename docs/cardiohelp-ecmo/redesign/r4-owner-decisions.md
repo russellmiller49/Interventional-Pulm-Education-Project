@@ -182,3 +182,26 @@ rather than fixes:
 - **`bounded-educational-model` gained a `supports` entry** for the oxygen content and delivery
   arithmetic. No record in this registry states an oxygen-content equation, so citing the model's
   own record for its own arithmetic was resolvable-but-not-supporting until the entry existed.
+
+## R4-OD-10 — The circuit map is the map, and the module points at it
+
+Quoted: "We should replace the hand drawn schematic with the … pump flow animation which is basically
+hidden, enhance it. I'm not sure if moving to center panel or making the module highlight it in the
+left panel is better though."
+
+Two decisions, taken on the recommendation and confirmed by the owner on 2026-09-04:
+
+- **Left panel, highlighted.** The animated pressure-zone map stays in the simulator pane and the
+  module now points at it: the two circuit-walk sections open the map tab on every step, light the
+  stop's segments on it with a caption, scroll the pane to it, and pan a window across it as the
+  walk moves; a drill with a localization row lights the row's places the moment the learner
+  commits. The map was not moved to the teaching pane because it was drawn for a thousand pixels of
+  width and the teaching pane has four hundred; anything that fits there is the small map again.
+- **The hand-drawn minimap is retired everywhere** — the circuit walk and the three drill panels
+  that carried it. One circuit drawing, in the widest pane, driven by the step.
+
+What the highlight may never do: mark a sensor site while the map is withholding its placements,
+name a channel in a caption before commitment, or mark anything on a drill before the engine's own
+commitment flag. The rendered leak scan over all twenty drills now asserts the map is unmarked at
+both scanned moments and denies the implicated caption; see
+[`r4-owner-review-record.md`](./r4-owner-review-record.md) §6.
