@@ -24,6 +24,12 @@
 
 .caseColumn,
 .simulatorColumn {
+  /*
+   * `position: relative` is load-bearing: the surfaces contain absolutely positioned labels whose
+   * containing block would otherwise be the page, so they would escape this scroller's clip and
+   * give the whole document a scrollable overflow of two thousand pixels (measured 2026-09-04).
+   */
+  position: relative;
   min-height: 0;
   overflow: auto;
   scrollbar-gutter: stable;

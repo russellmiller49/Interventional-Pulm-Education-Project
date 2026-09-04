@@ -102,6 +102,8 @@ interface Progression {
   readonly choiceByStepId: Readonly<Record<string, string>>
   readonly review: number | null
   readonly surfacesByStepId: Readonly<Record<string, readonly StageSurfaceId[]>>
+  /** The step whose teaching column the learner chose to see in full before committing. */
+  readonly expandedTeachingStepId: string | null
 }
 
 export function FoundationStageHost({
@@ -170,6 +172,7 @@ function FoundationStageSession({
     choiceByStepId: {},
     review: null,
     surfacesByStepId: {},
+    expandedTeachingStepId: null,
   }))
   const walkStops = ecmoCircuitWalkStopsForSection(sectionId)
   const [activeWalkStop, setActiveWalkStop] = useState<EcmoCircuitWalkStop | null>(
@@ -614,8 +617,42 @@ function FoundationStageSession({
   )
 
   const prose = activeStep.teaching.prose
+  /*
+   * Per-step reveal of the teaching column.
+   *
+   * A foundation panel is written as a whole lesson — the walk, the comparisons, the definitions,
+   * the boundaries. Read all at once on the first step it is a wall (the R4 baseline measured a
+   * teaching pane holding twelve screens of it). Until the prediction is committed only the first
+   * block of the panel is shown, with one control that shows the rest; from the Act step on the
+   * whole panel renders. The choice is per step and is not persisted.
+   */
+  const teachingPreview =
+    !predictionCommitted && (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
+  const teachingExpanded = teachingPreview && progression.expandedTeachingStepId === activeStep.id
   const teaching = (
-    <div className={styles.teachingColumn} data-pane="teaching">
+    <div
+      className={styles.teachingColumn}
+      data-pane="teaching"
+      data-teaching-preview={teachingPreview && !teachingExpanded ? 'true' : undefined}
+    >
+      {teachingPreview ? (
+        <button
+          type="button"
+          className={styles.teachingRevealToggle}
+          aria-expanded={teachingExpanded}
+          data-teaching-reveal
+          onClick={() =>
+            setProgression((current) => ({
+              ...current,
+              expandedTeachingStepId: teachingExpanded ? null : activeStep.id,
+            }))
+          }
+        >
+          {teachingExpanded
+            ? 'Show only the first part of the teaching'
+            : 'Show the rest of the teaching for this section'}
+        </button>
+      ) : null}
       <StageTeachingScope
         value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
       >
