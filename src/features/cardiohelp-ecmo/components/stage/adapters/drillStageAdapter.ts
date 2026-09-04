@@ -1,8 +1,9 @@
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { pathwaySectionIndex } from '@/features/learning-module/curriculum/types'
 
+import { presentationTitle } from '../../../content/casePresentation'
 import { clinicalPracticeScenarioById } from '../../../content/clinicalCases'
-import { pairedCaseIdsForLesson } from '../../../content/curriculum'
+import { pairedCaseForLesson } from '../../../content/curriculum'
 import {
   cardiohelpLearnLessonByScenarioId,
   cardiohelpLearnLessons,
@@ -140,6 +141,21 @@ function explainStep(scenarioId: string, ordinal: number): StageStep {
   }
 }
 
+/**
+ * The Practice case the completion card offers, named by its presentation.
+ *
+ * `pairedCaseForLesson` decides which case and what the card may call it. The title is the case's
+ * presentation title because the card is read before the case is worked, and a scenario's own title
+ * names its diagnosis.
+ */
+function resolvePracticePairing(scenarioId: string): StageLesson['practicePairing'] {
+  const pairing = pairedCaseForLesson(scenarioId)
+  if (pairing.kind === 'none') return undefined
+  const clinical = clinicalPracticeScenarioById.get(pairing.caseId)
+  if (!clinical) return undefined
+  return { kind: pairing.kind, caseId: clinical.id, title: presentationTitle(clinical) }
+}
+
 export function buildDrillStageLesson(
   lesson: GuidedLessonDefinition,
   supportMode: SupportMode,
@@ -166,8 +182,7 @@ export function buildDrillStageLesson(
   }
 
   const predictionStepIndex = steps.findIndex((step) => step.interaction.kind === 'prediction')
-  const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
-  const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
+  const practicePairing = resolvePracticePairing(lesson.scenarioId)
 
   return {
     kind: 'drill',
@@ -182,6 +197,6 @@ export function buildDrillStageLesson(
     steps,
     predictionStepIndex,
     lifecycleActivityId: `ecmo:learn:${lesson.scenarioId}`,
-    ...(pairedCase ? { practicePairing: { caseId: pairedCase.id, title: pairedCase.title } } : {}),
+    ...(practicePairing ? { practicePairing } : {}),
   }
 }

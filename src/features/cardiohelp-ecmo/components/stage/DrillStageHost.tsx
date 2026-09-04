@@ -605,6 +605,19 @@ export function DrillStageHost({
     />
   )
 
+  /*
+   * What the completion card offers depends on what the unit holds. Only a case that applies the
+   * mechanism this lesson taught is called an application of it; the unit's next case is offered as
+   * exactly that, and a unit with no case offers the next section alone.
+   */
+  const pairing = lesson.practicePairing
+  const completionLead =
+    pairing?.kind === 'mechanism-match'
+      ? 'The reasoning has been demonstrated. Apply it to the paired clinical case in Practice from a clean state with fewer cues.'
+      : pairing?.kind === 'next-in-unit'
+        ? 'The reasoning has been demonstrated. The next case in this unit is ready in Practice, from a clean state with fewer cues.'
+        : 'The reasoning has been demonstrated. Continue to the next section to keep building the track.'
+
   const task = (
     <>
       <div ref={nowHeadingRef} tabIndex={-1} data-now-focus>
@@ -646,24 +659,26 @@ export function DrillStageHost({
           data-stage-completion
         >
           <h3>Section worked through</h3>
-          <p>
-            {lesson.practicePairing
-              ? 'The reasoning has been demonstrated. Apply it to the paired clinical case in Practice from a clean state with fewer cues.'
-              : 'The reasoning has been demonstrated. Continue to the next section to keep building the track.'}
-          </p>
+          <p>{completionLead}</p>
+          {pairing?.kind === 'next-in-unit' ? (
+            <p data-practice-pairing-note>It applies a different mechanism from this lesson.</p>
+          ) : null}
           <div className={styles.completionActions}>
-            {lesson.practicePairing ? (
+            {pairing ? (
               <button
                 type="button"
                 className={shellStyles.nowPrimary}
+                data-practice-pairing={pairing.kind}
                 onClick={() =>
                   router.push({
                     pathname: `${cardiohelpEcmoNavBase}/practice`,
-                    query: { case: lesson.practicePairing?.caseId ?? '', track: supportMode },
+                    query: { case: pairing.caseId, track: supportMode },
                   })
                 }
               >
-                Apply this in Practice: {lesson.practicePairing.title}
+                {pairing.kind === 'mechanism-match'
+                  ? `Apply this in Practice: ${pairing.title}`
+                  : `Next case in this unit: ${pairing.title}`}
                 <ArrowRight aria-hidden="true" />
               </button>
             ) : null}

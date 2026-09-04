@@ -229,7 +229,11 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
         'acute-hypercapnia',
       )
     })
-    fireEvent.click(screen.getByRole('button', { name: /Apply this in Practice/i }))
+    // I3f: acute-hypercapnia teaches sweep against a CO₂ load, and its unit's one case is the
+    // gas-path disconnection — a different mechanism. The mechanism map therefore offers that case
+    // as the unit's next case, not as an application of this lesson; "Apply this in Practice" is
+    // reserved for a case that applies the mechanism just taught.
+    fireEvent.click(screen.getByRole('button', { name: /Next case in this unit/i }))
     expect(mockRouterPush).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: expect.stringContaining('/practice'),

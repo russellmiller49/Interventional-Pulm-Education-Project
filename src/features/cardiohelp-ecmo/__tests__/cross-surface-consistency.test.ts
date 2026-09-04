@@ -1,10 +1,22 @@
+import { render } from '@testing-library/react'
+import { createElement } from 'react'
+
 import {
   assertCrossSurfaceCausalConsistencyAll,
   measureLearnOutcome,
   type CrossSurfaceCausalClaim,
 } from '@/features/critical-care/test-support/crossSurfaceConsistency'
 
+import { VaIntegrationCapstonePanel } from '../components/teaching/VaIntegrationCapstonePanel'
+import { VvIntegrationCapstonePanel } from '../components/teaching/VvIntegrationCapstonePanel'
+import { resolveEcmoModeText } from '../content/circuitSegments'
 import { clinicalPracticeScenarios } from '../content/clinicalCases'
+import {
+  ecmoFoundationLessonRuntimes,
+  ecmoFoundationVariants,
+} from '../content/foundationLessonRuntime'
+import { ecmoLocalizationRow, type EcmoLocalizationRowId } from '../content/localizationCards'
+import { createFoundationVariantState } from '../session/foundationSession'
 import {
   RECIRCULATION_FRACTION,
   calculateNominalCardiohelpBloodFlowLMin,
@@ -281,4 +293,122 @@ describe('A2: the RPM-escalation guard family', () => {
     expect(state.scenario.criticalErrors).toContain('rpm-during-collapse')
     expect(state.scenario.criticalErrors).not.toContain('rpm-during-recirculation')
   })
+})
+
+/**
+ * I3g — the capstone matrices quote the diagnostic grammar rather than paraphrasing it.
+ *
+ * The membrane and gas-path columns of both integration matrices are two of the grammar's four
+ * rows, and the pressure rows are where the grammar speaks. Each such cell used to carry its own
+ * sentence; a learner met "they separate: pInt rises while pArt does not follow it" in the capstone
+ * after "the pre-membrane pressure separates from the return pressure; the gradient widens" in the
+ * pump lesson, with no way to tell a paraphrase from a new rule. The cells now render the registry's
+ * signature, so the sentence is the same one in both places by construction, and the columns the
+ * grammar does not cover say so.
+ */
+describe('I3g: the capstone matrices quote the grammar rows', () => {
+  const PRESSURE_ROW_IDS = ['pVen', 'pInt-and-pArt', 'deltaP-trend'] as const
+  const GRAMMAR_COLUMNS: readonly (readonly [string, EcmoLocalizationRowId])[] = [
+    ['membrane-dysfunction', 'membrane-resistance'],
+    ['gas-side-interruption', 'gas-path-failure'],
+  ]
+
+  /** The capstone in its presenting state — the state the lesson opens in. */
+  function renderCapstone(supportMode: 'vv' | 'va'): HTMLElement {
+    const sectionId = supportMode === 'vv' ? 'vv-integration-capstone' : 'va-integration-capstone'
+    const runtime = ecmoFoundationLessonRuntimes[sectionId]
+    const variant = ecmoFoundationVariants(runtime, supportMode)[0]
+    const Panel = supportMode === 'vv' ? VvIntegrationCapstonePanel : VaIntegrationCapstonePanel
+    return render(createElement(Panel, { state: createFoundationVariantState(variant) })).container
+  }
+
+  function cell(container: HTMLElement, rowId: string, hypothesisId: string): HTMLElement {
+    const node = container.querySelector<HTMLElement>(
+      `[data-matrix-cell="${rowId}:${hypothesisId}"]`,
+    )
+    if (!node) throw new Error(`No matrix cell ${rowId}:${hypothesisId}`)
+    return node
+  }
+
+  it.each(['vv', 'va'] as const)(
+    '%s: every pressure-row cell of a grammar column is the row signature, verbatim',
+    (supportMode) => {
+      const container = renderCapstone(supportMode)
+      for (const rowId of PRESSURE_ROW_IDS) {
+        for (const [hypothesisId, grammarRowId] of GRAMMAR_COLUMNS) {
+          const node = cell(container, rowId, hypothesisId)
+          const row = ecmoLocalizationRow(grammarRowId)
+          expect(node.querySelector('[data-grammar-row]')?.getAttribute('data-grammar-row')).toBe(
+            grammarRowId,
+          )
+          expect(node.querySelector('[data-grammar-row-signature]')?.textContent).toBe(
+            resolveEcmoModeText(row.signature, supportMode),
+          )
+          expect(node.querySelector('[data-grammar-row-reference]')?.textContent).toContain(
+            row.label,
+          )
+          expect(node.querySelector('[data-outside-grammar]')).toBeNull()
+        }
+      }
+    },
+  )
+
+  it.each(['vv', 'va'] as const)(
+    '%s: the other columns of a pressure row keep authored text and say the grammar has no row for them',
+    (supportMode) => {
+      const container = renderCapstone(supportMode)
+      const grammarHypotheses = new Set(GRAMMAR_COLUMNS.map(([hypothesisId]) => hypothesisId))
+      const columns = [...container.querySelectorAll('[data-hypothesis-column]')].map(
+        (node) => node.getAttribute('data-hypothesis-column') ?? '',
+      )
+      expect(columns.filter((id) => !grammarHypotheses.has(id)).length).toBeGreaterThan(0)
+      for (const rowId of PRESSURE_ROW_IDS) {
+        for (const hypothesisId of columns) {
+          if (grammarHypotheses.has(hypothesisId)) continue
+          const node = cell(container, rowId, hypothesisId)
+          expect(node.querySelector('[data-grammar-row]')).toBeNull()
+          expect(node.querySelector('[data-cell-direction]')?.textContent?.trim()).toBeTruthy()
+          expect(node.querySelector('[data-outside-grammar]')?.textContent).toBe(
+            'Not a pressure pattern in the grammar.',
+          )
+        }
+      }
+    },
+  )
+
+  it.each(['vv', 'va'] as const)(
+    '%s: no cell outside the pressure rows quotes a grammar row or carries the note',
+    (supportMode) => {
+      const container = renderCapstone(supportMode)
+      for (const node of container.querySelectorAll('[data-matrix-cell]')) {
+        const [rowId] = (node.getAttribute('data-matrix-cell') ?? '').split(':')
+        if ((PRESSURE_ROW_IDS as readonly string[]).includes(rowId)) continue
+        expect(node.querySelector('[data-grammar-row]')).toBeNull()
+        expect(node.querySelector('[data-outside-grammar]')).toBeNull()
+      }
+    },
+  )
+
+  it.each(['vv', 'va'] as const)(
+    '%s: the text equivalents carry the same signature, so a screen reader is told what the table says',
+    (supportMode) => {
+      const container = renderCapstone(supportMode)
+      const equivalents = [...container.querySelectorAll('[data-text-equivalent]')].map(
+        (node) => node.textContent ?? '',
+      )
+      for (const [, grammarRowId] of GRAMMAR_COLUMNS) {
+        const signature = resolveEcmoModeText(
+          ecmoLocalizationRow(grammarRowId).signature,
+          supportMode,
+        )
+        const carrying = equivalents.filter((text) => text.includes(signature))
+        // One equivalent per grammar column, and it quotes the row once per pressure row.
+        expect(carrying).toHaveLength(1)
+        expect(carrying[0].split(signature).length - 1).toBe(PRESSURE_ROW_IDS.length)
+      }
+      expect(
+        equivalents.filter((text) => text.includes('Not a pressure pattern in the grammar.')),
+      ).not.toHaveLength(0)
+    },
+  )
 })

@@ -1,5 +1,11 @@
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types'
+import {
+  CapstoneMatrixCellBody,
+  matrixCellEquivalent,
+  rowQuotesGrammar,
+  type CapstoneMatrixCell,
+} from './capstoneGrammarCell'
 import { GuidedValue, ModelBoundary, TextEquivalent, round, styles } from './shared'
 
 /**
@@ -15,6 +21,9 @@ import { GuidedValue, ModelBoundary, TextEquivalent, round, styles } from './sha
  *     displayed flow falls rather than staying put, and the panel says so;
  *   - no preset isolates a patient-side deterioration while leaving the circuit untouched, so the
  *     patient-side column is a source-backed hypothesis card rather than a preview to load.
+ *
+ * The membrane and gas-path columns are two rows of the diagnostic grammar, so in the three pressure
+ * rows their cells quote the grammar row rather than restating it — see `capstoneGrammarCell.tsx`.
  */
 
 type HypothesisId =
@@ -30,15 +39,6 @@ const hypotheses: readonly { readonly id: HypothesisId; readonly label: string }
   { id: 'patient-side-change', label: 'The patient has changed' },
 ]
 
-interface MatrixCell {
-  /** Expected direction, stated as a direction rather than a value. */
-  readonly direction: string
-  /** What makes this row useful for telling this explanation from the others. */
-  readonly discriminator: string
-  /** Where this simulation, or the supplied sources, cannot support the expectation. */
-  readonly limitation?: string
-}
-
 interface MatrixRow {
   readonly id: string
   readonly label: string
@@ -47,8 +47,11 @@ interface MatrixRow {
     /** Reason-specific text when a channel reports no number. */
     readonly reason?: string
   }
-  readonly cells: Readonly<Record<HypothesisId, MatrixCell>>
+  readonly cells: Readonly<Record<HypothesisId, CapstoneMatrixCell>>
 }
+
+/** This panel describes a venovenous circuit; the grammar rows are resolved for that track. */
+const SUPPORT_MODE = 'vv'
 
 function channelText(readout: EcmoChannelReadout, unit: string, precision = 0) {
   return readout.displayed === null
@@ -98,13 +101,14 @@ const rows: readonly MatrixRow[] = [
           'Drainage is not the limit here, which is what separates this from a preload problem.',
       },
       'membrane-dysfunction': {
-        direction: 'Little changed. The problem sits downstream of the pump.',
-        discriminator: 'A drainage pressure that has not moved points away from the drainage side.',
+        grammarRowId: 'membrane-resistance',
+        discriminator:
+          'A drainage pressure that has not moved argues against the drainage side; the problem sits downstream of the pump.',
       },
       'gas-side-interruption': {
-        direction: 'Unchanged. The gas path has no pressure channel in it at all.',
+        grammarRowId: 'gas-path-failure',
         discriminator:
-          'Every circuit pressure staying still while gas exchange collapses is itself the finding.',
+          'The gas path has no pressure channel in it at all, so every circuit pressure staying still while gas exchange collapses is itself the finding.',
       },
       'patient-side-change': {
         direction:
@@ -135,13 +139,14 @@ const rows: readonly MatrixRow[] = [
         discriminator: 'They move because flow moved. Nothing has separated them from one another.',
       },
       'membrane-dysfunction': {
-        direction: 'They separate: pInt rises while pArt does not follow it.',
+        grammarRowId: 'membrane-resistance',
         discriminator:
           'Separation between the two is the membrane signature; rising together is the return-side one.',
       },
       'gas-side-interruption': {
-        direction: 'Unchanged, both of them.',
-        discriminator: 'Gas transfer has failed with the blood path entirely undisturbed.',
+        grammarRowId: 'gas-path-failure',
+        discriminator:
+          'Both unchanged: gas transfer has failed with the blood path entirely undisturbed.',
       },
       'patient-side-change': {
         direction: 'Unchanged.',
@@ -160,13 +165,13 @@ const rows: readonly MatrixRow[] = [
           'A gradient read without its flow is not interpretable. Compare it at a similar flow before calling it a membrane change.',
       },
       'membrane-dysfunction': {
-        direction: 'Rises out of proportion to flow, and keeps rising over a run.',
+        grammarRowId: 'membrane-resistance',
         discriminator:
-          'This is the single most useful row for this explanation, provided the flow it was measured at is known.',
+          'This is the single most useful row for this explanation, provided the flow it was measured at is known — and a widening that continues over a run says more than any one reading.',
       },
       'gas-side-interruption': {
-        direction: 'Unchanged.',
-        discriminator: 'The membrane is intact; nothing is reaching its gas side.',
+        grammarRowId: 'gas-path-failure',
+        discriminator: 'Unchanged: the membrane is intact, and nothing is reaching its gas side.',
       },
       'patient-side-change': {
         direction: 'Unchanged.',
@@ -433,6 +438,12 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
           or because one row does not separate it — a row that discriminates nothing is reported as
           discriminating nothing.
         </p>
+        <p className="mt-2 text-sm leading-6" data-grammar-reference-note>
+          Two of these explanations — the membrane and the gas path — are rows of the four-pattern
+          grammar taught with the pump and its pressures. In the three pressure rows their cells
+          quote that grammar row rather than restating it, and the other columns are marked as
+          patterns the grammar does not carry.
+        </p>
 
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[64rem] text-left text-sm" data-hypothesis-matrix>
@@ -477,27 +488,19 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
                         </span>
                       ) : null}
                     </td>
-                    {hypotheses.map((hypothesis) => {
-                      const cell = row.cells[hypothesis.id]
-                      return (
-                        <td
-                          key={hypothesis.id}
-                          className="py-2 pr-3"
-                          data-matrix-cell={`${row.id}:${hypothesis.id}`}
-                        >
-                          <span className="block">{cell.direction}</span>
-                          <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                            {cell.discriminator}
-                          </span>
-                          {cell.limitation ? (
-                            <span className="mt-1 block text-xs leading-5" data-cell-limitation>
-                              <span className="font-semibold">Limitation. </span>
-                              {cell.limitation}
-                            </span>
-                          ) : null}
-                        </td>
-                      )
-                    })}
+                    {hypotheses.map((hypothesis) => (
+                      <td
+                        key={hypothesis.id}
+                        className="py-2 pr-3"
+                        data-matrix-cell={`${row.id}:${hypothesis.id}`}
+                      >
+                        <CapstoneMatrixCellBody
+                          cell={row.cells[hypothesis.id]}
+                          supportMode={SUPPORT_MODE}
+                          outsideGrammar={rowQuotesGrammar(row.cells)}
+                        />
+                      </td>
+                    ))}
                   </tr>
                 )
               })}
@@ -509,7 +512,10 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
           <TextEquivalent key={hypothesis.id}>
             <span className="font-semibold">{hypothesis.label}. </span>
             {rows
-              .map((row) => `${row.label}: ${row.cells[hypothesis.id].direction}`)
+              .map(
+                (row) =>
+                  `${row.label}: ${matrixCellEquivalent(row.cells, hypothesis.id, SUPPORT_MODE)}`,
+              )
               .join(' ')}{' '}
             {rows
               .filter((row) => row.cells[hypothesis.id].limitation)

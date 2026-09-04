@@ -142,7 +142,19 @@ export interface StageLesson {
   readonly steps: readonly StageStep[]
   readonly predictionStepIndex: number
   readonly lifecycleActivityId: string
-  readonly practicePairing?: { readonly caseId: string; readonly title: string }
+  /**
+   * The Practice case the completion card offers, when the lesson's unit holds one.
+   *
+   * `mechanism-match` is a case that applies the mechanism this lesson taught, and the card calls it
+   * an application. `next-in-unit` is the unit's first case when none does; the card offers it as
+   * what comes next and says it applies a different mechanism. Absent when the unit has no case.
+   * `title` is the case's presentation title — a scenario's own title names its diagnosis.
+   */
+  readonly practicePairing?: {
+    readonly kind: 'mechanism-match' | 'next-in-unit'
+    readonly caseId: string
+    readonly title: string
+  }
 }
 
 /**

@@ -1,4 +1,4 @@
-import type { SupportMode } from '../engine/types'
+import type { FaultId, SupportMode } from '../engine/types'
 import {
   cardiohelpCapstonePrerequisiteIdsBySupportMode,
   cardiohelpScenarioById,
@@ -204,6 +204,132 @@ export function pairedLessonIdsForCase(caseScenarioId: string): readonly string[
   return unitId ? (curriculumUnitById.get(unitId)?.lessonScenarioIds ?? []) : []
 }
 
+/* ------------------------------------------------------------------ *
+ * Learn -> Practice pairing by mechanism (I3f)
+ * ------------------------------------------------------------------ */
+
+/**
+ * The mechanism a lesson teaches or a case applies, in one vocabulary for both.
+ *
+ * A unit groups by theme, and a theme is not a mechanism: the VA afterload unit holds a return-side
+ * drill, a membrane drill, a vasoplegia case and a membrane case. Reading a lesson's paired case as
+ * "the first case in its unit" sent the membrane drill to the vasoplegia case and the VA air drill
+ * to the limb-ischemia case, each under the words "apply this in Practice". The bridge is truthful
+ * only when the two sides name the same mechanism, so the mechanism is declared on both sides here
+ * and the pairing is validated against it. Four of these keys are the four rows of the diagnostic
+ * grammar in `localizationCards.ts`, under the same names.
+ */
+export type EcmoCaseMechanism =
+  | 'initiation'
+  | 'drainage-limitation'
+  | 'return-path-resistance'
+  | 'membrane-resistance'
+  | 'recirculation'
+  | 'acute-hypercapnia'
+  | 'compensated-hypercapnia'
+  | 'gas-path-failure'
+  | 'circuit-air'
+  | 'power-loss'
+  | 'differential-hypoxemia'
+  | 'lv-loading'
+  | 'vasoplegia'
+  | 'limb-ischemia'
+
+/**
+ * The mechanism a drill teaches, read from the fault its expectation corrects.
+ *
+ * Both tracks share these faults, so one map covers all twenty lessons without listing them.
+ */
+const mechanismByDrillFault: Readonly<Partial<Record<FaultId, EcmoCaseMechanism>>> = {
+  'startup-inspection': 'initiation',
+  'preload-limited': 'drainage-limitation',
+  'return-obstruction': 'return-path-resistance',
+  'oxygenator-resistance': 'membrane-resistance',
+  recirculation: 'recirculation',
+  'acute-hypercapnia': 'acute-hypercapnia',
+  'compensated-hypercapnia': 'compensated-hypercapnia',
+  'gas-source-interruption': 'gas-path-failure',
+  'arterial-bubble': 'circuit-air',
+  'ac-power-loss': 'power-loss',
+  'differential-hypoxemia': 'differential-hypoxemia',
+  'lv-loading': 'lv-loading',
+}
+
+/** The mechanism a lesson teaches, or null when its scenario corrects a fault with no mechanism. */
+export function lessonMechanism(lessonScenarioId: string): EcmoCaseMechanism | null {
+  const scenario = cardiohelpScenarioById.get(lessonScenarioId)
+  return scenario ? (mechanismByDrillFault[scenario.expectation.correctiveFault] ?? null) : null
+}
+
+/**
+ * The mechanism each Practice case applies. Authored, because a case's corrective fault names its
+ * diagnosis (`hemorrhagic-hypovolemia`, `tamponade`) rather than the mechanism the diagnosis acts
+ * through (a drainage limitation, in both). Every registered case must appear here.
+ */
+export const caseMechanismByCaseId: ReadonlyMap<string, EcmoCaseMechanism> = new Map<
+  string,
+  EcmoCaseMechanism
+>([
+  ['clinical-vv-initiation-ards', 'initiation'],
+  ['clinical-vv-occult-hemorrhage', 'drainage-limitation'],
+  ['clinical-vv-tension-pneumothorax', 'drainage-limitation'],
+  ['clinical-vv-oxygenator-thrombosis', 'membrane-resistance'],
+  ['clinical-vv-recirculation-migration', 'recirculation'],
+  ['clinical-vv-gas-disconnection', 'gas-path-failure'],
+  ['clinical-vv-circuit-air-embolism', 'circuit-air'],
+  ['va-clinical-initiation-shock', 'initiation'],
+  ['va-clinical-tamponade', 'drainage-limitation'],
+  ['va-clinical-vasoplegia', 'vasoplegia'],
+  ['va-clinical-oxygenator-thrombosis', 'membrane-resistance'],
+  ['va-clinical-differential-hypoxemia', 'differential-hypoxemia'],
+  ['va-clinical-limb-ischemia', 'limb-ischemia'],
+  ['va-clinical-circuit-air-embolism', 'circuit-air'],
+])
+
+/**
+ * The case that applies the mechanism a lesson taught, where its unit has one.
+ *
+ * Authored rather than derived so the pairing is readable in one place; `validateCurriculumRegistry`
+ * holds every entry to the same unit, the same track and the same mechanism, and fails when a lesson
+ * left off this map has a same-mechanism case sitting in its unit. Lessons absent here fall through
+ * to `next-in-unit` or `none` in `pairedCaseForLesson`.
+ */
+export const pairedCaseIdByLessonScenarioId: ReadonlyMap<string, string> = new Map<string, string>([
+  ['startup-sensor-orientation', 'clinical-vv-initiation-ards'],
+  ['preload-drainage-collapse', 'clinical-vv-occult-hemorrhage'],
+  ['afterload-oxygenator-resistance', 'clinical-vv-oxygenator-thrombosis'],
+  ['vv-recirculation', 'clinical-vv-recirculation-migration'],
+  ['gas-source-interruption', 'clinical-vv-gas-disconnection'],
+  ['arterial-bubble-stop', 'clinical-vv-circuit-air-embolism'],
+  ['va-startup-sensor-orientation', 'va-clinical-initiation-shock'],
+  ['va-preload-drainage-collapse', 'va-clinical-tamponade'],
+  ['va-afterload-oxygenator-resistance', 'va-clinical-oxygenator-thrombosis'],
+  ['va-differential-hypoxemia', 'va-clinical-differential-hypoxemia'],
+  ['va-arterial-bubble-stop', 'va-clinical-circuit-air-embolism'],
+])
+
+export type PairedCaseForLesson =
+  /** A case in the lesson's unit that applies the mechanism the lesson taught. */
+  | { readonly kind: 'mechanism-match'; readonly caseId: string }
+  /** The unit's first case, offered as what comes next rather than as an application. */
+  | { readonly kind: 'next-in-unit'; readonly caseId: string }
+  /** The unit has no case. Three VA drills sit here until cases are authored for them. */
+  | { readonly kind: 'none' }
+
+/**
+ * What the completion card may offer after a lesson, and what it may call it.
+ *
+ * The distinction is the copy's: "Apply this in Practice" is only true of a `mechanism-match`. A
+ * `next-in-unit` case is still worth going to, and the card sends the learner there, but it says the
+ * case applies a different mechanism rather than pretending otherwise.
+ */
+export function pairedCaseForLesson(lessonScenarioId: string): PairedCaseForLesson {
+  const matched = pairedCaseIdByLessonScenarioId.get(lessonScenarioId)
+  if (matched) return { kind: 'mechanism-match', caseId: matched }
+  const [first] = pairedCaseIdsForLesson(lessonScenarioId)
+  return first ? { kind: 'next-in-unit', caseId: first } : { kind: 'none' }
+}
+
 export function capstoneScenarioIdForMode(supportMode: SupportMode): string {
   const capstone = cardiohelpCurriculum[supportMode].find((unit) => unit.capstoneScenarioId)
   if (!capstone?.capstoneScenarioId) {
@@ -389,6 +515,83 @@ export function validateCurriculumRegistry(): string[] {
       if (!seenLessons.has(scenarioId)) {
         errors.push(
           `${supportMode}: capstone prerequisite ${scenarioId} has no curriculum lesson, so the capstone could never unlock through Learn`,
+        )
+      }
+    }
+  }
+
+  errors.push(...validatePracticePairing())
+
+  return errors
+}
+
+/**
+ * The mechanism pairing, held to the units on one side and the mechanisms on the other.
+ *
+ * Same unit and same track are the structural half; same mechanism is the half that makes the
+ * completion card's "apply this" truthful. The completeness check closes the gap the first two leave
+ * open: a lesson missing from the map would silently become `next-in-unit` even when a case that
+ * applies its mechanism is sitting beside it. The two maps are parameters so a test can prove each
+ * check bites; the registry validator calls it with the authored ones.
+ */
+export function validatePracticePairing(
+  pairs: ReadonlyMap<string, string> = pairedCaseIdByLessonScenarioId,
+  mechanisms: ReadonlyMap<string, EcmoCaseMechanism> = caseMechanismByCaseId,
+): string[] {
+  const errors: string[] = []
+
+  for (const lesson of cardiohelpLearnLessonByScenarioId.values()) {
+    if (lessonMechanism(lesson.scenarioId) === null) {
+      errors.push(
+        `pairing: lesson ${lesson.scenarioId} corrects a fault with no declared mechanism`,
+      )
+    }
+  }
+  for (const clinical of clinicalPracticeScenarioById.values()) {
+    if (!mechanisms.has(clinical.id)) {
+      errors.push(`pairing: case ${clinical.id} declares no mechanism`)
+    }
+  }
+  for (const caseId of mechanisms.keys()) {
+    if (!clinicalPracticeScenarioById.has(caseId)) {
+      errors.push(`pairing: ${caseId} declares a mechanism but is not a registered case`)
+    }
+  }
+
+  for (const [lessonId, caseId] of pairs) {
+    const lessonUnitId = unitIdByLessonScenarioId.get(lessonId)
+    const caseUnitId = unitIdByCaseScenarioId.get(caseId)
+    if (!lessonUnitId) errors.push(`pairing: ${lessonId} is not a curriculum lesson`)
+    if (!caseUnitId) errors.push(`pairing: ${caseId} is not a curriculum case`)
+    if (lessonUnitId && caseUnitId && lessonUnitId !== caseUnitId) {
+      errors.push(
+        `pairing: ${lessonId} (${lessonUnitId}) is paired with ${caseId} (${caseUnitId}); a paired case sits in its lesson's unit`,
+      )
+    }
+    const lesson = cardiohelpLearnLessonByScenarioId.get(lessonId)
+    const clinical = clinicalPracticeScenarioById.get(caseId)
+    if (lesson && clinical && lesson.supportMode !== clinical.supportMode) {
+      errors.push(
+        `pairing: ${lessonId} is on ${lesson.supportMode} but ${caseId} is on ${clinical.supportMode}`,
+      )
+    }
+    const taught = lessonMechanism(lessonId)
+    const applied = mechanisms.get(caseId)
+    if (taught && applied && taught !== applied) {
+      errors.push(`pairing: ${lessonId} teaches ${taught} but ${caseId} applies ${applied}`)
+    }
+  }
+
+  for (const unit of allUnits) {
+    for (const lessonId of unit.lessonScenarioIds) {
+      if (pairs.has(lessonId)) continue
+      const taught = lessonMechanism(lessonId)
+      const unpaired = unit.caseScenarioIds.find(
+        (caseId) => taught !== null && mechanisms.get(caseId) === taught,
+      )
+      if (unpaired) {
+        errors.push(
+          `pairing: ${lessonId} and ${unpaired} share the ${taught} mechanism in ${unit.id} but are not paired`,
         )
       }
     }
