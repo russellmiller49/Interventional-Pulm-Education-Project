@@ -8,6 +8,11 @@ import type { SupportMode } from '../engine/types'
  * a normal patient–circuit state looks like. These sections are the missing physiology: they carry
  * prose rather than a simulator walkthrough, and they precede the console tour.
  *
+ * A section's title, rail label, minutes and summary are the pathway row's of the same id, held
+ * equal by `learn-precommit-leak.test.ts`: every one of them names what the learner sees rather
+ * than the mechanism the section's own prediction asks for, and the summary of a section may not
+ * answer that section's prediction stem.
+ *
  * Authoring only. No engine state, alarm behavior, or scoring rule belongs here.
  */
 export interface EcmoFoundationSection {
@@ -30,12 +35,11 @@ const coreSources = ['ecmo-book-ch9', 'elso-circuit-2022', 'bounded-educational-
 export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.freeze([
   {
     id: 'why-extracorporeal-support',
-    title:
-      'Why extracorporeal support: content, delivery, consumption, and the failure it addresses',
+    title: 'Why extracorporeal support exists',
     shortTitle: 'Why ECMO',
     summary:
-      'Start from oxygen delivery and consumption, and name the specific failure extracorporeal support is being asked to correct.',
-    minutes: 12,
+      'Start from what the tissues need and the three things that decide whether they get it, then name the one a circuit can stand in for.',
+    minutes: 8,
     paragraphs: [
       'Extracorporeal support is not a treatment for a diagnosis; it is a way of substituting for a failing step in oxygen delivery or carbon dioxide clearance while something else is given time to recover or to be corrected. Before any console appears, the useful question is which step has failed.',
       'Oxygen delivery to the tissues is the product of blood flow and the oxygen content that blood carries. Oxygen content is dominated by hemoglobin and its saturation, with a small dissolved contribution. Consumption sits on the other side of the ledger. A patient can therefore arrive at inadequate delivery through a flow problem, a content problem, or a consumption problem — and those are not interchangeable, because support that raises one does not necessarily raise the others.',
@@ -52,11 +56,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   },
   {
     id: 'circuit-flow-path',
-    title: 'Drainage → pump → membrane lung → return: the circuit as a flow path',
-    shortTitle: 'Flow path',
+    title: 'Drainage → pump → membrane lung → return: a walk round the circuit',
+    shortTitle: 'Circuit walk',
     summary:
-      'Follow blood once through the circuit and name what each component can and cannot do.',
-    minutes: 12,
+      'Walk the blood once round a running circuit, one stop per component, and learn where every displayed reading is taken before you read its value.',
+    minutes: 10,
     paragraphs: [
       'Blood leaves the patient through a drainage cannula, passes through the pump, crosses the membrane lung, and is returned through a return cannula. Every signal on the console describes a location on that path, and almost every reasoning error in later sections comes from reading a signal without knowing where it sits.',
       'The drainage limb depends on the volume available to it and on the resistance between the patient and the pump inlet. It is where preload problems present. The pump does not create volume; it moves what reaches it, and it fails toward the drainage side when volume does not arrive.',
@@ -73,11 +77,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   },
   {
     id: 'pump-and-pressure-zones',
-    title: 'Centrifugal pump preload and afterload, and the circuit pressure zones',
+    title: 'The pump, and the pressures either side of it',
     shortTitle: 'Pump & pressures',
     summary:
-      'A centrifugal pump is preload dependent and afterload sensitive. The pressure zones make that visible.',
-    minutes: 12,
+      'Turn the speed up on a running circuit and watch what the pressures either side of the pump do, then read the three of them as a set.',
+    minutes: 10,
     paragraphs: [
       'A centrifugal pump generates flow by imparting energy to blood, and how much flow results at a given rotational speed depends on the conditions on both sides of it. It is preload dependent: without adequate volume arriving, raising speed does not produce proportional flow and instead generates increasingly negative pressure on the drainage side. It is afterload sensitive: as the resistance it pumps against rises, the flow produced at the same speed falls.',
       'This is why speed and flow are separate readings and why treating them as equivalent is the single most consequential misreading in the module. A rising speed with a falling flow is information, not a malfunction to be corrected by raising speed further.',
@@ -94,11 +98,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   },
   {
     id: 'blood-flow-versus-sweep',
-    title: 'Blood flow versus sweep: oxygen versus CO₂ transfer',
-    shortTitle: 'Flow vs sweep',
+    title: 'The control panel: the three things you can change',
+    shortTitle: 'Controls',
     summary:
-      'Two controls, two different jobs. Confusing them is the most common gas-exchange error in the module.',
-    minutes: 12,
+      'You can change three things on this circuit; everything else is monitoring. Find out which problem each one reaches, and when none of them does.',
+    minutes: 10,
     paragraphs: [
       'Oxygen transfer across the membrane is limited mainly by how much desaturated blood is presented to it. Raising blood flow through the circuit presents more blood for oxygenation and is therefore the control that principally affects oxygenation — subject to the drainage limits from the previous section.',
       'Carbon dioxide clearance is limited mainly by the gradient maintained on the gas side. Sweep gas flowing past the membrane carries CO₂ away and keeps that gradient wide. Increasing sweep increases CO₂ removal with comparatively little effect on oxygenation; increasing blood flow increases oxygenation with comparatively little effect on CO₂.',
@@ -118,11 +122,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   {
     id: 'vv-series-physiology',
     supportMode: 'vv',
-    title: 'VV series physiology, effective flow, and recirculation',
-    shortTitle: 'Series & recirculation',
+    title: 'In series with the heart: what the flow number counts',
+    shortTitle: 'In series',
     summary:
-      'In VV the circuit sits in series with the patient’s own circulation, and part of what it pumps can be blood it just returned.',
-    minutes: 14,
+      'The circuit sits in series with the patient’s own circulation. Work out what the flow number counts and what it leaves out, using the drainage-line saturation against the patient’s own.',
+    minutes: 10,
     paragraphs: [
       'VV support drains venous blood, oxygenates it, and returns it to the venous side. The patient’s own heart then pumps that blood through the lungs and onward. The circuit is in series with the native circulation: it improves the oxygen content of blood entering the right heart, and it provides no circulatory support.',
       'Effective flow is the portion of circuit flow that actually delivers freshly oxygenated blood into the systemic circulation. Recirculation is the portion that is drained again immediately after being returned, without having reached the tissues. Recirculated blood is counted by the flow display exactly like effective flow, because the circuit cannot tell the difference.',
@@ -140,11 +144,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   {
     id: 'vv-normal-state',
     supportMode: 'vv',
-    title: 'The normal VV patient–circuit state',
+    title: 'A stable VV run: the baseline you read everything against',
     shortTitle: 'Normal VV',
     summary:
-      'What a stable, uneventful VV run looks like — the reference every later failure section is read against.',
-    minutes: 12,
+      'What a steady, uneventful run looks like for this patient and this circuit, so that every later change has something to be read against.',
+    minutes: 8,
     paragraphs: [
       'A stable VV run has a settled relationship between its parts: a drainage pressure that is negative but steady, a flow that matches the set speed without hunting, a pressure drop across the membrane that is stable from hour to hour, and gas exchange that is adequate on an unremarkable sweep setting.',
       'The patient side is equally part of the normal state. The native lungs are still there and still contributing; the ventilator is typically set to rest them rather than to achieve gas exchange alone; the patient has a cardiac output that is doing the systemic work. Sedation, volume state, and temperature all sit inside this picture.',
@@ -162,10 +166,10 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   {
     id: 'vv-integration-capstone',
     supportMode: 'vv',
-    title: 'VV integration: displayed flow unchanged, patient deteriorating',
+    title: 'One presentation, four explanations: flow unchanged, patient worse',
     shortTitle: 'Integrate VV',
     summary:
-      'One presentation, four circuit explanations. Use the pressure zones, the gas side, and the patient to separate them.',
+      'The flow display has not moved and the patient is deteriorating. Name the explanation you expect and what you expect to find if you are right, then look.',
     minutes: 18,
     paragraphs: [
       'This section combines the whole track. A patient on stable VV support deteriorates — worsening systemic oxygenation, or a rising CO₂, or both — and the flow display has not changed. The flow display not changing is the point: it is what makes each of the competing explanations survive a casual look.',
@@ -187,11 +191,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   {
     id: 'va-parallel-physiology',
     supportMode: 'va',
-    title: 'VA parallel circulation, LV loading, and differential oxygenation',
-    shortTitle: 'Parallel & loading',
+    title: 'In parallel with the heart: who fills the aorta',
+    shortTitle: 'In parallel',
     summary:
-      'In VA the circuit runs in parallel with the heart, and the two circulations compete for the same aorta.',
-    minutes: 14,
+      'The heart still ejects into the aorta the circuit returns to. Work out where the two streams meet, what moves that place, and which signals tell you.',
+    minutes: 12,
     paragraphs: [
       'VA support drains venous blood, oxygenates it, and returns it to the arterial side. The circuit now runs in parallel with the native heart rather than in series with it, and it provides circulatory support as well as gas exchange. The consequences of that parallelism are the whole of this track.',
       'The first consequence is loading. Returning blood into the arterial system raises the resistance the left ventricle must eject against, while venous drainage reduces what reaches it. A ventricle that is recovering, or that is being supported at high circuit flows, can end up distended and unable to open the aortic valve. LV loading is therefore not a complication of VA support so much as a property of it that must be actively watched.',
@@ -216,11 +220,11 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   {
     id: 'va-normal-state',
     supportMode: 'va',
-    title: 'The normal VA patient–circuit state',
-    shortTitle: 'Normal VA',
+    title: 'A stable VA run: VV plus two ideas',
+    shortTitle: 'Plus two ideas',
     summary:
-      'What a stable peripheral VA run looks like, including the signals that only exist because the circulations are in parallel.',
-    minutes: 12,
+      'Everything a stable VV run has, plus the signals that exist only because the return goes to an artery and two circulations share one aorta.',
+    minutes: 10,
     paragraphs: [
       'A stable VA run shares the circuit-side picture of a stable VV run: a steady negative drainage pressure, a flow that matches the set speed, a stable pressure drop across the membrane, and adequate gas exchange on an unremarkable sweep. Those are read the same way here.',
       'What is added is everything produced by parallel circulation. There is an arterial waveform whose pulsatility reports how much the native heart is still ejecting. There is evidence about whether the aortic valve is opening. There is an upper-body oxygenation signal that is distinct from the circuit’s own, because of the mixing watershed. And there is a perfusion question at the cannulated limb, distal to an arterial cannula that occupies part of the vessel.',
@@ -238,10 +242,10 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
   {
     id: 'va-integration-capstone',
     supportMode: 'va',
-    title: 'VA integration: displayed flow unchanged, patient deteriorating',
+    title: 'The same unchanged flow, with a second circulation to blame',
     shortTitle: 'Integrate VA',
     summary:
-      'The same unchanged flow display, with native-circuit competition added to the differential.',
+      'The flow display has not moved and the patient is deteriorating, and parallel circulation adds explanations VV never had. Name what you expect and what would confirm it, then look.',
     minutes: 18,
     paragraphs: [
       'A patient on stable peripheral VA support deteriorates while the flow display is unchanged. Everything from the VV integration section still applies — recirculation has a VA analogue, the membrane can fail, the gas side can be interrupted, and the patient can change — but parallel circulation adds explanations that do not exist in VV.',

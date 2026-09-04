@@ -13,6 +13,10 @@ import { clinicalPracticeScenarioById } from './clinicalCases'
  * of ordering for pickers, the Learn -> Practice bridge, the hub map, and the
  * capstone prerequisites. Lessons are referenced by their drill scenario id
  * (a guided lesson's `scenarioId`), cases by their clinical scenario id.
+ *
+ * A unit's title and summary are read on the hub before any of its drills is opened, so they name
+ * what the learner will see and read — never a fault, its mechanism or the move that answers it.
+ * `learn-precommit-leak.test.ts` holds each unit to the deny patterns of the drills it lists.
  */
 export interface CurriculumUnit {
   id: string
@@ -29,45 +33,45 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'vv-1-foundations',
       supportMode: 'vv',
-      title: 'Foundations & console orientation',
+      title: 'Foundations and the console',
       summary:
-        'Tour every console screen, sensor, and physical control, then initiate VV support for refractory ARDS from written case orders.',
+        'Why the support exists, a walk round the circuit, the pump and its pressures, the three controls and the normal run — then the console, and a first run brought up from written orders.',
       lessonScenarioIds: ['startup-sensor-orientation'],
       caseScenarioIds: ['clinical-vv-initiation-ards'],
     },
     {
       id: 'vv-2-drainage-preload',
       supportMode: 'vv',
-      title: 'Drainage & preload',
+      title: 'Reading a falling flow',
       summary:
-        'Recognize drainage collapse from pVen and chatter, then manage its two classic patient-level causes: occult hemorrhage and tension pneumothorax.',
+        'A run that was steady is not any more. Read the flow, the drainage pressure and the line together, then carry the same reading into two bedside cases.',
       lessonScenarioIds: ['preload-drainage-collapse'],
       caseScenarioIds: ['clinical-vv-occult-hemorrhage', 'clinical-vv-tension-pneumothorax'],
     },
     {
       id: 'vv-3-afterload',
       supportMode: 'vv',
-      title: 'Afterload & circuit resistance',
+      title: 'Reading the two pressures',
       summary:
-        'Localize resistance to the return pathway or the membrane lung using the pressure pattern, then manage oxygenator thrombosis definitively.',
+        'Two pressures sit either side of the membrane. Learn what it means when they move together and when they pull apart, then take that reading into a case.',
       lessonScenarioIds: ['afterload-return-obstruction', 'afterload-oxygenator-resistance'],
       caseScenarioIds: ['clinical-vv-oxygenator-thrombosis'],
     },
     {
       id: 'vv-4-recirculation',
       supportMode: 'vv',
-      title: 'Oxygenation & recirculation',
+      title: 'Reading the flow number against the patient',
       summary:
-        'Separate effective support from displayed flow, and correct recirculation caused by cannula migration instead of chasing RPM.',
+        'The flow number is up and the patient is worse. Decide what the number is worth before anything is changed, then work the case where it happens.',
       lessonScenarioIds: ['vv-recirculation'],
       caseScenarioIds: ['clinical-vv-recirculation-migration'],
     },
     {
       id: 'vv-5-sweep',
       supportMode: 'vv',
-      title: 'Sweep gas & CO₂',
+      title: 'Reading CO₂',
       summary:
-        'Use sweep — not blood flow — to control PaCO₂ and pH, and find gas-side failures when hypercapnia appears with a quiet pump.',
+        'Three runs where the CO₂ is the story: one climbing, one high but steady, and one where nothing on the pressure display has moved. Decide which of them calls for a setting change and which does not.',
       lessonScenarioIds: [
         'acute-hypercapnia',
         'compensated-hypercapnia',
@@ -78,18 +82,18 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'vv-6-emergencies',
       supportMode: 'vv',
-      title: 'Emergencies & transport',
+      title: 'When the pump stops or the power goes',
       summary:
-        'Respond to an arterial bubble stop with clamp isolation, manage a full circuit-air emergency, and handle AC power loss during transport.',
+        'A bubble alarm has stopped the pump; later, the console is on battery mid-transport. Tell what the device has done from what still has to be done, then work the air emergency as a case.',
       lessonScenarioIds: ['arterial-bubble-stop', 'transport-power-loss'],
       caseScenarioIds: ['clinical-vv-circuit-air-embolism'],
     },
     {
       id: 'vv-7-capstone',
       supportMode: 'vv',
-      title: 'VV integration challenge',
+      title: 'Integration challenge',
       summary:
-        'An open challenge that combines drainage, sweep, and safety reasoning. Prior VV lessons are recommended context.',
+        'One presentation, four explanations, and no scaffolding. Every drill on the track comes first.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'vv-off-sweep-capstone',
@@ -99,27 +103,27 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'va-1-foundations',
       supportMode: 'va',
-      title: 'Foundations & console orientation',
+      title: 'Foundations and the console on VA',
       summary:
-        'Tour the console in the VA configuration, then initiate peripheral VA support for refractory cardiogenic shock from written case orders.',
+        'The shared physiology, then VA’s two extra ideas, then the same console on a circuit whose return goes to an artery — and a first run brought up from written orders.',
       lessonScenarioIds: ['va-startup-sensor-orientation'],
       caseScenarioIds: ['va-clinical-initiation-shock'],
     },
     {
       id: 'va-2-drainage-preload',
       supportMode: 'va',
-      title: 'Drainage & preload',
+      title: 'Reading a falling flow on VA',
       summary:
-        'Recognize VA drainage collapse, then manage postcardiotomy tamponade — the obstructive cause that circuit adjustments cannot fix.',
+        'Flow falls, and this time the patient’s pressure falls with it. Read the flow, the drainage pressure and the patient together, then carry the reading into a case where the cause is not on the circuit.',
       lessonScenarioIds: ['va-preload-drainage-collapse'],
       caseScenarioIds: ['va-clinical-tamponade'],
     },
     {
       id: 'va-3-afterload',
       supportMode: 'va',
-      title: 'Afterload & hemodynamics',
+      title: 'Reading the two pressures beside the patient’s own',
       summary:
-        'Localize circuit resistance, distinguish vasoplegia from inadequate flow, and exchange a thrombosed oxygenator before support collapses.',
+        'The two circuit pressures move, and the patient’s arterial line sits beside them on its own monitor. Read them together, then work two cases where the pressure and the flow disagree.',
       lessonScenarioIds: [
         'va-afterload-arterial-return-obstruction',
         'va-afterload-oxygenator-resistance',
@@ -129,18 +133,18 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
     {
       id: 'va-4-differential-hypoxemia',
       supportMode: 'va',
-      title: 'Differential hypoxemia',
+      title: 'Reading two circulations',
       summary:
-        'Protect cerebral and coronary oxygen delivery when recovering native ejection sends poorly oxygenated blood to the upper body.',
+        'One saturation from the right arm, one from the groin, and a circuit that looks fine. Say what each sample reports before deciding whether the console can change it, then work the case.',
       lessonScenarioIds: ['va-differential-hypoxemia'],
       caseScenarioIds: ['va-clinical-differential-hypoxemia'],
     },
     {
       id: 'va-5-lv-loading-gas',
       supportMode: 'va',
-      title: 'LV loading & gas exchange',
+      title: 'Reading CO₂ and the heart',
       summary:
-        'Recognize concerning LV-loading cues on peripheral VA support and manage sweep-side hypercapnia and gas-source failures.',
+        'A flat pulse under an acceptable pressure, a CO₂ that is climbing, and a gas transfer that falls while arterial flow holds. Three reads where the circuit display stays reassuring.',
       lessonScenarioIds: ['va-lv-loading', 'va-acute-hypercapnia', 'va-gas-source-interruption'],
       caseScenarioIds: [],
     },
@@ -151,18 +155,18 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       // Move it to va-3-afterload if you prefer grouping by hemodynamics.
       id: 'va-6-complications',
       supportMode: 'va',
-      title: 'Complications, emergencies & transport',
+      title: 'When the pump stops or the power goes, on VA',
       summary:
-        'Manage cannulated-limb ischemia, an arterial bubble stop with clamp isolation, a circuit-air emergency, and AC power loss during transport.',
+        'A bubble alarm stops the pump on a circuit the circulation depends on; later, the console is on battery mid-transport. Say what each stop costs and what still has to be done, then work the limb and the air emergency as cases.',
       lessonScenarioIds: ['va-arterial-bubble-stop', 'va-transport-power-loss'],
       caseScenarioIds: ['va-clinical-limb-ischemia', 'va-clinical-circuit-air-embolism'],
     },
     {
       id: 'va-7-capstone',
       supportMode: 'va',
-      title: 'VA integration challenge',
+      title: 'Integration challenge',
       summary:
-        'An open challenge that combines mixed-circulation and safety reasoning. Prior VA lessons are recommended context.',
+        'The same unchanged flow, with a second circulation to blame, and no scaffolding. Every drill on the track comes first.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'va-mixed-circulation-capstone',

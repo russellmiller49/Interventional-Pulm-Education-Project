@@ -129,6 +129,19 @@ explicit **do not read the lesson title aloud** instruction. Two contracts pin i
 is parsed and compared against `cardiohelpLearnLessons`, and the participant sheet is checked to
 contain neither the lesson title nor the scenario title for any of the six.
 
+> **2026-09-03 — retitled under R4 (I3a), recorded here rather than rewritten above.** The four
+> titles quoted in this D16 entry are the titles as they stood at the time; they were what the
+> packet was designed around. R4 renamed every section on both pathways to its presentation — the
+> six pilot rows are now "Meet the console, the circuit, and the external controls", "Flow falls
+> and the drainage line judders", "Flow is up and the patient is worse", "Gas transfer falls while
+> flow holds", "Bubble alarm: the pump stopped itself" and "Right arm low, groin fine, circuit
+> reassuring" — with the rail label, the lesson header, the activity catalog and the drill's
+> single objective held to the same registry, and `learn-precommit-leak.test.ts` holding every
+> pre-commit surface (pathway row, lesson header, observe step, the previous lesson's transfer
+> step, curriculum unit) to the drill's own deny patterns. The guide's scope table carries the new
+> titles and rail labels; its callout keeps the do-not-read-aloud rule, now as a framing rule
+> rather than a leak repair. The participant sheet is unchanged and still names no lesson.
+
 **Two guards were also strengthened rather than added**, because they would have passed against the
 defects above:
 

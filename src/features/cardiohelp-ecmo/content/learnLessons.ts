@@ -1,3 +1,5 @@
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
+
 import type {
   CircuitViewPreference,
   GuidedLessonDefinition,
@@ -7,8 +9,10 @@ import type {
   SimulationAction,
   SupportMode,
 } from '../engine/types'
+import { ecmoDrillSpec } from './drillSpecs'
 import { requireEcmoLearnPrediction } from './learnPredictionItems'
 import { cardiohelpScenarioById, cardiohelpScenarios, TIP_TO_TIP_CHECK_ID } from './scenarios'
+import { ecmoSectionSpecById, ecmoSectionSpec } from './sectionSpecs'
 
 interface ResponseStepInput {
   id: string
@@ -28,8 +32,15 @@ interface ResponseStepInput {
 
 interface StandardLessonInput {
   scenarioId: string
-  title: string
-  learningObjectives: readonly string[]
+  /**
+   * The observe step is the first thing a learner reads, and the prediction follows it. Its
+   * instruction says what to read and compare, its rationale says why those readings are the
+   * ones to compare, and its expected response lists observable signals — a number that moved, a
+   * line that judders, a status that changed. None of the three says why the pattern arose, which
+   * control answers it, or which reflex to resist: that is the drill's answer, and it belongs to
+   * the verdict. `learn-precommit-leak.test.ts` holds every observe step to its drill's deny
+   * patterns.
+   */
   observe: {
     target: GuidedTarget
     instruction: string
@@ -56,6 +67,32 @@ function requireScenario(scenarioId: string): ScenarioDefinition {
   const scenario = cardiohelpScenarioById.get(scenarioId)
   if (!scenario) throw new Error(`Missing CARDIOHELP scenario for guided lesson: ${scenarioId}`)
   return scenario
+}
+
+/**
+ * A lesson is named by the pathway row that lists it, and by nothing else.
+ *
+ * The lesson header and the pathway rail show the same string, and the human-testing packet pins
+ * that string, so a second authored copy here could only drift from the first. Every title on the
+ * pathway names the presentation the learner sees — never the fault, its mechanism, the move that
+ * answers it or the reflex to resist — because the header stays on screen through the prediction.
+ */
+function pathwaySectionTitle(supportMode: SupportMode, scenarioId: string): string {
+  const section = criticalCareLearningPathway('cardiohelp-ecmo', supportMode).sections.find(
+    (candidate) => candidate.id === scenarioId,
+  )
+  if (!section) {
+    throw new Error(`No ${supportMode} pathway section names the guided lesson ${scenarioId}`)
+  }
+  return section.title
+}
+
+/**
+ * The one objective a lesson states, verbatim from the section spec: the discrimination the
+ * learner will be able to make, never the action the drill ends in.
+ */
+function lessonObjectives(scenarioId: string): readonly string[] {
+  return [ecmoSectionSpec(scenarioId).objective]
 }
 
 function step(
@@ -119,8 +156,8 @@ function standardLesson(input: StandardLessonInput): GuidedLessonDefinition {
     id: `learn-${scenario.id}`,
     scenarioId: scenario.id,
     supportMode: scenario.supportMode,
-    title: input.title,
-    learningObjectives: input.learningObjectives,
+    title: pathwaySectionTitle(scenario.supportMode, scenario.id),
+    learningObjectives: lessonObjectives(scenario.id),
     steps: [
       step({
         id: `${scenario.id}-observe`,
@@ -176,12 +213,8 @@ const orientationLesson: GuidedLessonDefinition = {
   id: 'learn-startup-sensor-orientation',
   scenarioId: orientationScenario.id,
   supportMode: 'vv',
-  title: 'Console, circuit, and external-control orientation',
-  learningObjectives: [
-    'Separate console data from circuit, gas-path, and patient assessment.',
-    'Locate the core screens and physical controls without entering service surfaces.',
-    'Complete self-test and a tip-to-tip pre-use inspection before support changes.',
-  ],
+  title: pathwaySectionTitle('vv', orientationScenario.id),
+  learningObjectives: lessonObjectives(orientationScenario.id),
   steps: [
     step({
       id: 'startup-orient-domains',
@@ -428,7 +461,7 @@ const orientationLesson: GuidedLessonDefinition = {
       expectedResponse: [
         'The pump is stopped and the speed setpoint returns to zero',
         'The pressure channels stop reporting, as they did at the start',
-        'The startup diagnostic and the tip-to-tip inspection are both still outstanding',
+        'Nothing about the circuit has been verified yet: no diagnostic has run and no one has walked the tubing',
       ],
     }),
     // Shares its id shape with the drills so the VA lesson below can substitute its own scenario's
@@ -492,12 +525,8 @@ const vaOrientationLesson: GuidedLessonDefinition = {
   id: 'learn-va-startup-sensor-orientation',
   scenarioId: vaOrientationScenario.id,
   supportMode: 'va',
-  title: 'VA console, femoral circuit, and independent-monitor orientation',
-  learningObjectives: [
-    'Trace femoral venous drainage and femoral arterial return as two distinct limbs.',
-    'Separate post-oxygenator circuit values from patient arterial pressure and upper-body oxygenation.',
-    'Pair the shared console with pulsatility, native-heart, right-arm, and cannulated-limb assessment.',
-  ],
+  title: pathwaySectionTitle('va', vaOrientationScenario.id),
+  learningObjectives: lessonObjectives(vaOrientationScenario.id),
   steps: orientationLesson.steps.map((item) => ({
     ...item,
     id: `va-${item.id}`,
@@ -519,15 +548,37 @@ const vaOrientationLesson: GuidedLessonDefinition = {
   })),
 }
 
+/** The one title every transfer step carries; the step is what changes, not its name. */
+export const ECMO_TRANSFER_STEP_TITLE = 'Transfer: carry the reasoning to a new circuit'
+
+/**
+ * Where a transfer instruction cannot avoid naming the fix — a supply that has to be re-established,
+ * a clamp that has to be closed — the disclosure is made explicit rather than hidden, and the drill
+ * it leads into is a worked example for the learner who reads it. Exactly the transfers into the
+ * gas-path and air drills carry it; the registry validator holds that to be so.
+ */
+export const ECMO_SCAFFOLDED_TRANSFER_PREFIX = 'Scaffolded worked example — '
+
 interface GuidedTransferVariant {
   readonly scenarioId: string
   readonly target: GuidedTarget
+  /**
+   * Names the presentation on the new circuit and the class of action to take on it — a look at
+   * a screen, a bounded move on one control, a walk of the circuit — never the fault the next
+   * drill will ask the learner to find, its mechanism, or the reflex to resist. The transfer step
+   * is the last thing read before that drill's prediction, so `learn-precommit-leak.test.ts`
+   * holds it to the next drill's deny patterns.
+   */
   readonly instruction: string
   readonly actionLabel: string
   readonly action: SimulationAction
+  /** Observable signals after the action, on the new circuit. */
+  readonly expectedResponse: readonly string[]
   readonly setupActions?: readonly SimulationAction[]
   /** Set where the transfer action is a bedside control rather than a pressure comparison. */
   readonly preferredCircuitView?: CircuitViewPreference
+  /** The instruction names the fix, and says so with `ECMO_SCAFFOLDED_TRANSFER_PREFIX`. */
+  readonly scaffolded?: true
 }
 
 const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTransferVariant>> = {
@@ -535,49 +586,79 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'preload-drainage-collapse',
     target: 'console',
     instruction:
-      'A newly unstable VV patient has falling flow, increasingly negative pVen, and drainage chatter. Reduce pump demand on the real rotary control before reassessing the drainage cause.',
+      'A newly unstable VV patient: flow is falling, pVen is more negative than it was, and the drainage line is juddering. Take a step off the pump speed on the rotary control as a holding move, then go and look for what changed.',
     actionLabel: 'Reduce the transfer patient to 3300 RPM',
     action: { type: 'SET_RPM', rpm: 3300 },
+    expectedResponse: [
+      'The speed setpoint falls to the new value',
+      'pVen and the drainage line answer the lower demand, or do not',
+      'The cause of the change is still to be found',
+    ],
   },
   'preload-drainage-collapse': {
     scenarioId: 'afterload-return-obstruction',
     target: 'console',
     instruction:
-      'The transfer patient has falling flow with pInt and pArt rising together. Open the parameter screen and localize whether resistance is before, across, or after the oxygenator.',
+      'The transfer patient’s flow is falling while pInt and pArt rise together. Open Parameter list and work out whether the load sits before, across or after the membrane.',
     actionLabel: 'Open Parameter list for the new pressure pattern',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
+    expectedResponse: [
+      'Parameter list open',
+      'pInt and pArt read side by side with the Δp trend',
+      'Flow read against an unchanged speed',
+    ],
   },
   'afterload-return-obstruction': {
     scenarioId: 'afterload-oxygenator-resistance',
     target: 'console',
     instruction:
-      'In this contrasting pressure pattern, pInt separates from pArt and oxygenator pressure drop rises. Open the parameter screen and compare the three pressure locations.',
-    actionLabel: 'Open Parameter list for the oxygenator-resistance variant',
+      'In this contrasting pattern pInt pulls away from pArt and the Δp trend climbs. Open Parameter list and compare the three pressure locations against where they sat earlier.',
+    actionLabel: 'Open Parameter list for the second pressure pattern',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
+    expectedResponse: [
+      'Parameter list open',
+      'pInt, pArt and the Δp trend read against where they sat earlier',
+      'Flow read against an unchanged speed',
+    ],
   },
   'afterload-oxygenator-resistance': {
     scenarioId: 'vv-recirculation',
     target: 'console',
     instruction:
-      'Displayed flow is high but patient oxygenation remains limited. Open Blood parameters and compare pre-oxygenator saturation with independent patient oxygenation before attributing the problem to membrane resistance.',
-    actionLabel: 'Open Blood parameters for the recirculation variant',
+      'Displayed flow is high and the patient’s oxygenation is not keeping up. Open Blood parameters and compare the pre-oxygenator saturation with the patient’s own before deciding what the flow number is worth.',
+    actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
+    expectedResponse: [
+      'Blood parameters open',
+      'Pre-oxygenator saturation read beside the patient’s own',
+      'Displayed flow read beside both',
+    ],
   },
   'vv-recirculation': {
     scenarioId: 'acute-hypercapnia',
     target: 'gas-panel',
     instruction:
-      'The transfer patient now has acute hypercapnic acidemia without a recirculation pattern. Increase the separate sweep control to 4.0 L/min and observe PaCO₂ and pH.',
+      'The transfer patient’s CO₂ is climbing and the pH is following it down, with oxygenation steady. Move the sweep on the separate blender by one bounded step, then read the PaCO₂ and pH again.',
     actionLabel: 'Set transfer sweep to 4.0 L/min',
     action: { type: 'SET_SWEEP', sweep: 4 },
+    expectedResponse: [
+      'Sweep set to the new value on the separate blender',
+      'PaCO₂ and pH re-read after the model responds',
+      'Pump speed and sweep-gas oxygen fraction untouched',
+    ],
   },
   'acute-hypercapnia': {
     scenarioId: 'compensated-hypercapnia',
     target: 'console',
     instruction:
-      'The new patient has elevated PaCO₂ with a compensated pH and low work of breathing. Open Blood parameters and reconcile the full acid–base context before changing sweep.',
-    actionLabel: 'Open Blood parameters for the compensated variant',
+      'The new patient’s CO₂ is high, the pH is near normal and the breathing is comfortable. Open Blood parameters and read the whole acid–base picture before deciding whether any setting should move.',
+    actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
+    expectedResponse: [
+      'Blood parameters open',
+      'PaCO₂ read beside pH, bicarbonate and work of breathing',
+      'No setting changed yet',
+    ],
   },
   'compensated-hypercapnia': {
     scenarioId: 'gas-source-interruption',
@@ -586,7 +667,13 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'Blood flow persists but the external gas source has just been interrupted. Restore the verified source on the separate gas panel and reassess membrane gas transfer.',
     actionLabel: 'Restore the verified gas source',
     action: { type: 'RESTORE_GAS_SOURCE' },
+    expectedResponse: [
+      'Source shows connected',
+      'Set sweep and delivered sweep agree again',
+      'PaCO₂ and post-membrane saturation re-read after the model responds',
+    ],
     setupActions: [{ type: 'TICK', seconds: 5 }],
+    scaffolded: true,
   },
   'gas-source-interruption': {
     scenarioId: 'arterial-bubble-stop',
@@ -595,73 +682,119 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'A distinct arterial-bubble event stops the pump. Begin the authored isolation sequence by closing the return-limb clamp near the patient; do not treat acknowledgement as correction.',
     actionLabel: 'Close the transfer patient return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    expectedResponse: [
+      'Return clamp CLOSED',
+      'Pump still stopped, latch still set',
+      'Drainage clamp still open — the sequence continues in the drill',
+    ],
     preferredCircuitView: 'bedside',
     setupActions: [{ type: 'TICK', seconds: 4 }],
+    scaffolded: true,
   },
   'arterial-bubble-stop': {
     scenarioId: 'transport-power-loss',
     target: 'console',
     instruction:
-      'During transport, AC power is lost and the console is running on a low battery. Restore a verified AC source from the Transport screen and confirm ongoing flow and backup readiness.',
-    actionLabel: 'Restore verified AC power',
+      'During transport the supply drops out and the console changes over to a low reserve. From the Transport screen, put the console back on a source you have confirmed live, then check that flow never paused and that the fallback is within reach.',
+    actionLabel: 'Put the transfer console on confirmed AC power',
     action: { type: 'RESTORE_AC_POWER' },
+    expectedResponse: [
+      'Power-source indicator shows the supply again',
+      'Reserve reading no longer falling',
+      'Flow read against its value before the changeover',
+    ],
     setupActions: [{ type: 'TICK', seconds: 3 }],
   },
   'transport-power-loss': {
     scenarioId: 'startup-sensor-orientation',
     target: 'circuit',
     instruction:
-      'A fresh circuit is now at startup rather than in transport. Perform the tip-to-tip circuit and sensor check before any support adjustment.',
+      'A fresh circuit is at startup rather than in transport. Walk it from the drainage cannula to the return cannula, with every sensor, before any support is adjusted.',
     actionLabel: 'Perform the transfer circuit check',
     action: { type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID },
+    expectedResponse: [
+      'Circuit walked from the drainage cannula to the return cannula',
+      'Sensors, gas and power read as separate facts',
+      'Nothing on this circuit is assumed from the console alone',
+    ],
   },
   'va-startup-sensor-orientation': {
     scenarioId: 'va-preload-drainage-collapse',
     target: 'console',
     instruction:
-      'A newly unstable VA patient has falling systemic-support flow, increasingly negative pVen, and venous-line chatter. Reduce pump demand before reassessing preload and the drainage limb.',
+      'A newly unstable VA patient: flow is falling and swinging, pVen is more negative than it was, the drainage line is juddering, and the patient’s pressure is drifting down with the flow. Take a step off the pump speed as a holding move, then look for what changed.',
     actionLabel: 'Reduce the transfer patient to 3300 RPM',
     action: { type: 'SET_RPM', rpm: 3300 },
+    expectedResponse: [
+      'The speed setpoint falls to the new value',
+      'pVen, the drainage line and the patient’s pressure answer the lower demand, or do not',
+      'The cause of the change is still to be found',
+    ],
   },
   'va-preload-drainage-collapse': {
     scenarioId: 'va-afterload-arterial-return-obstruction',
     target: 'console',
     instruction:
-      'The transfer case now shows pInt and pArt rising together with falling flow. Open Parameter list and distinguish circuit return pressure from the patient arterial line and MAP.',
-    actionLabel: 'Open Parameter list for the arterial-return variant',
+      'The transfer case now shows pInt and pArt rising together with falling flow, while the patient’s own arterial line has not moved. Open Parameter list and read the circuit pressures beside the arterial line and MAP.',
+    actionLabel: 'Open Parameter list for the new pressure pattern',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
+    expectedResponse: [
+      'Parameter list open',
+      'pInt and pArt read beside the patient’s own arterial line',
+      'Flow read against an unchanged speed',
+    ],
   },
   'va-afterload-arterial-return-obstruction': {
     scenarioId: 'va-afterload-oxygenator-resistance',
     target: 'console',
     instruction:
-      'The new pattern has pInt separating from pArt with a rising oxygenator pressure drop. Open Parameter list and compare matched flow, RPM, and pressure locations.',
-    actionLabel: 'Open Parameter list for the oxygenator variant',
+      'The new pattern has pInt pulling away from pArt with a rising pressure-drop trend. Open Parameter list and compare matched flow, speed and the three pressure locations against where they sat earlier.',
+    actionLabel: 'Open Parameter list for the second pressure pattern',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
+    expectedResponse: [
+      'Parameter list open',
+      'pInt, pArt and the pressure-drop trend read against where they sat earlier',
+      'Flow read against an unchanged speed',
+    ],
   },
   'va-afterload-oxygenator-resistance': {
     scenarioId: 'va-differential-hypoxemia',
     target: 'console',
     instruction:
-      'The circuit now has reassuring post-oxygenator blood while right-arm oxygenation is low. Open Blood parameters and compare circuit data with upper- and lower-body patient observations.',
-    actionLabel: 'Open Blood parameters for the mixed-circulation variant',
+      'The circuit is returning well-saturated blood while the right-arm saturation is low. Open Blood parameters and compare the circuit’s readings with the upper- and lower-body samples.',
+    actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
+    expectedResponse: [
+      'Blood parameters open',
+      'Post-membrane saturation read beside the right-arm and femoral samples',
+      'The arterial trace read beside all three',
+    ],
   },
   'va-differential-hypoxemia': {
     scenarioId: 'va-lv-loading',
     target: 'console',
     instruction:
-      'The transfer patient has acceptable flow and MAP but narrow pulse pressure, absent aortic-valve opening, and pulmonary congestion. Open Parameter list and reconcile console flow with native-heart data.',
-    actionLabel: 'Open Parameter list for the LV-loading variant',
+      'The transfer patient has an acceptable flow and MAP, a narrow pulse pressure, an aortic valve that is not seen to open, and a congested chest. Open Parameter list and read the console flow beside the native-heart signals.',
+    actionLabel: 'Open Parameter list for the flat-pulse variant',
     action: { type: 'SET_SCREEN', screen: 'parameters' },
+    expectedResponse: [
+      'Parameter list open',
+      'Console flow read beside the pulse pressure, the valve and the chest',
+      'MAP read as one number among those',
+    ],
   },
   'va-lv-loading': {
     scenarioId: 'va-acute-hypercapnia',
     target: 'gas-panel',
     instruction:
-      'The new VA patient has acute hypercapnic acidemia. Increase the external sweep control to 4.0 L/min while continuing to assess circulation and right-arm oxygenation.',
+      'The new VA patient’s CO₂ is climbing and the pH is following it down. Move the sweep on the external blender by one bounded step, and keep reading the circulation and the right-arm saturation while you do.',
     actionLabel: 'Set transfer sweep to 4.0 L/min',
     action: { type: 'SET_SWEEP', sweep: 4 },
+    expectedResponse: [
+      'Sweep set to the new value on the external blender',
+      'PaCO₂ and pH re-read after the model responds',
+      'Right-arm saturation and the arterial trace re-read with them',
+    ],
   },
   'va-acute-hypercapnia': {
     scenarioId: 'va-gas-source-interruption',
@@ -670,7 +803,13 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'VA blood flow persists after an external gas-source interruption. Restore the verified source and reassess post-oxygenator transfer, right-arm oxygenation, PaCO₂, and perfusion.',
     actionLabel: 'Restore the verified gas source',
     action: { type: 'RESTORE_GAS_SOURCE' },
+    expectedResponse: [
+      'Source shows connected',
+      'Set sweep and delivered sweep agree again',
+      'Post-membrane saturation, both arterial saturations and PaCO₂ re-read after the model responds',
+    ],
     setupActions: [{ type: 'TICK', seconds: 5 }],
+    scaffolded: true,
   },
   'va-gas-source-interruption': {
     scenarioId: 'va-arterial-bubble-stop',
@@ -679,46 +818,74 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
       'A distinct VA arterial-return bubble event stops forward support. Begin isolation by closing the arterial return-limb clamp near the patient, before source correction, de-airing, and resumption.',
     actionLabel: 'Close the VA return-limb clamp',
     action: { type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true },
+    expectedResponse: [
+      'Arterial return clamp CLOSED',
+      'Pump still stopped, latch still set',
+      'Drainage clamp still open — the sequence continues in the drill',
+    ],
     preferredCircuitView: 'bedside',
     setupActions: [{ type: 'TICK', seconds: 4 }],
+    scaffolded: true,
   },
   'va-arterial-bubble-stop': {
     scenarioId: 'va-transport-power-loss',
     target: 'console',
     instruction:
-      'AC power is lost during VA transport and battery reserve is limited. Restore a verified AC source and confirm continuous circulatory support and backup readiness.',
-    actionLabel: 'Restore verified AC power',
+      'The supply drops out during VA transport and the reserve is limited. Put the console back on a source you have confirmed live, then check that the circulation paid nothing for the changeover and that the fallback is within reach.',
+    actionLabel: 'Put the transfer console on confirmed AC power',
     action: { type: 'RESTORE_AC_POWER' },
+    expectedResponse: [
+      'Power-source indicator shows the supply again',
+      'Reserve reading no longer falling',
+      'Flow, pressures and the arterial trace read against their values before the changeover',
+    ],
     setupActions: [{ type: 'TICK', seconds: 3 }],
   },
   'va-transport-power-loss': {
     scenarioId: 'va-startup-sensor-orientation',
     target: 'circuit',
     instruction:
-      'A new VA circuit is at startup. Trace femoral venous drainage to femoral arterial return and perform the tip-to-tip circuit and sensor check before support changes.',
+      'A new VA circuit is at startup. Trace femoral venous drainage to femoral arterial return and walk every sensor before support changes.',
     actionLabel: 'Perform the VA transfer circuit check',
     action: { type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID },
+    expectedResponse: [
+      'Circuit walked from femoral venous drainage to femoral arterial return',
+      'Sensors, gas, power and the right-arm monitor read as separate facts',
+      'Nothing on this circuit is assumed from the console alone',
+    ],
   },
 }
 
+/**
+ * The transfer step of every lesson: one observable action on a different authored circuit.
+ *
+ * The step's title is a constant, its rationale is the principle the drill spec carries forward
+ * from the lesson just finished, and its instruction names the new presentation and the class of
+ * action. What it may not carry is the next scenario's name, causal chain or safety notes — the
+ * first thing a learner reads before that drill's own prediction cannot be that drill's answer.
+ */
 function withRealTransferVariant(lesson: GuidedLessonDefinition): GuidedLessonDefinition {
   const variant = guidedTransferVariantByLessonScenarioId[lesson.scenarioId]
   if (!variant) return lesson
-  const transferScenario = requireScenario(variant.scenarioId)
+  // Called for its failure: a transfer into a scenario that does not exist refuses to construct.
+  requireScenario(variant.scenarioId)
+  const { transferPrinciple } = ecmoDrillSpec(lesson.scenarioId)
   return {
     ...lesson,
     steps: lesson.steps.map((lessonStep) =>
       lessonStep.phase === 'transfer'
         ? {
             ...lessonStep,
-            title: `Transfer: ${transferScenario.title}`,
-            instruction: variant.instruction,
-            rationale: transferScenario.debrief.causalChain.join(' '),
+            title: ECMO_TRANSFER_STEP_TITLE,
+            instruction: variant.scaffolded
+              ? `${ECMO_SCAFFOLDED_TRANSFER_PREFIX}${variant.instruction}`
+              : variant.instruction,
+            rationale: transferPrinciple,
             target: variant.target,
             preferredCircuitView: variant.preferredCircuitView,
             actionLabel: variant.actionLabel,
             actions: [variant.action],
-            expectedResponse: transferScenario.debrief.safetyNotes,
+            expectedResponse: variant.expectedResponse,
             transferScenarioId: variant.scenarioId,
             transferVariantId: `${lesson.scenarioId}-to-${variant.scenarioId}`,
             transferSetupActions: variant.setupActions ?? [],
@@ -732,26 +899,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   orientationLesson,
   standardLesson({
     scenarioId: 'preload-drainage-collapse',
-    title: 'Preload-limited flow and drainage collapse',
-    learningObjectives: [
-      'Recognize falling flow, increasingly negative pVen, and chattering as a drainage pattern.',
-      // The objectives sit in the lesson header, which stays on screen through the prediction step.
-      // Naming the fitting action here — and the reflex to avoid — answered the question the step
-      // was about to ask, so they name the discrimination to make instead of the move to make.
-      'Separate what the pump is asking for from what the drainage side can supply.',
-      'Work out which side of the pump the limitation is on before changing a setting.',
-    ],
     observe: {
       target: 'circuit',
       instruction:
-        'Compare blood flow, pVen, and the drainage line. Do not begin by chasing the lower flow number.',
+        'Read blood flow, pVen and the drainage line as one pattern, then read the two post-pump pressures against them.',
       preferredCircuitView: 'diagnostic',
       rationale:
-        'When venous return cannot meet pump demand, drainage pressure becomes more negative and the cannula or vessel can intermittently collapse.',
+        'Three readings sit on the drainage side of the pump and two sit beyond it. Which of them moved, and in which direction, is what the pattern has to tell you before any setting is touched.',
       expectedResponse: [
-        'Falling or unstable flow',
-        'More negative pVen',
-        'Visible and text-labeled drainage chatter',
+        'Flow falling, or swinging from one moment to the next',
+        'pVen more negative than at the opening of the run',
+        'Drainage chatter shown on the line and named in text',
       ],
     },
     responseSteps: [
@@ -796,21 +954,16 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'afterload-return-obstruction',
-    title: 'Return-side obstruction',
-    learningObjectives: [
-      'Recognize pInt and pArt rising together while flow falls.',
-      'Use the Δp trend to distinguish downstream resistance from oxygenator resistance.',
-    ],
     observe: {
       target: 'circuit',
-      instruction: 'Compare pInt, pArt, Δp trend, and flow as one pressure pattern.',
+      instruction: 'Compare pInt, pArt, the Δp trend and flow as one pressure pattern.',
       preferredCircuitView: 'diagnostic',
       rationale:
-        'Resistance after the oxygenator raises both pre- and post-oxygenator pressures, while the pressure drop across the oxygenator may change little.',
+        'Two pressures sit either side of the membrane, and the Δp trend is their difference over time. Read whether the two moved together or apart, and what the flow did while they moved.',
       expectedResponse: [
         'pInt rises',
         'pArt rises with it',
-        'Flow falls',
+        'Flow falls at an unchanged speed',
         'Δp trend changes little',
       ],
     },
@@ -843,22 +996,18 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'afterload-oxygenator-resistance',
-    title: 'Oxygenator resistance or dysfunction pattern',
-    learningObjectives: [
-      'Recognize pInt rising relative to pArt with a rising Δp trend.',
-      'Escalate the circuit/oxygenator problem without inventing a fixed Δp alarm priority.',
-    ],
     observe: {
       target: 'circuit',
       instruction:
-        'Compare pre-oxygenator pInt with post-oxygenator pArt and the direction of the Δp trend.',
+        'Compare pre-oxygenator pInt with post-oxygenator pArt, and the direction of the Δp trend.',
       preferredCircuitView: 'diagnostic',
       rationale:
-        'Resistance across the membrane increases the pressure difference between pInt and pArt and can constrain flow.',
+        'The same two pressures, read the same way: together or apart, and what the flow did at an unchanged speed. Compare the Δp trend with where it sat earlier in the run at a similar flow, and read the post-membrane saturation beside it.',
       expectedResponse: [
-        'pInt rises relative to pArt',
+        'pInt rises while pArt does not',
         'Δp trend rises',
-        'Flow becomes constrained',
+        'Flow lower at the same speed',
+        'Post-membrane saturation lower than this morning',
       ],
     },
     responseSteps: [
@@ -890,26 +1039,19 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'vv-recirculation',
-    title: 'VV recirculation despite high displayed flow',
-    learningObjectives: [
-      'Distinguish displayed circuit flow from effective systemic support.',
-      'Recognize the patient/pre-oxygenator saturation pattern of recirculation.',
-    ],
     observe: {
       target: 'patient-monitor',
       instruction:
-        'Compare displayed flow with patient SpO₂ and pre-oxygenator saturation rather than assuming more L/min means more support.',
+        'Read displayed flow beside the patient’s SpO₂ and the pre-oxygenator saturation, and note which way each has moved since the run was steady.',
       rationale:
         // A reason to look, not the mechanism. This rationale runs on the step before the
-        // prediction, so stating that more flow widens the recirculated share — and that the two
-        // numbers then move in opposite directions — handed over both the mechanism and the
-        // direction of the harmful reflex the drill exists to test. The panel states both, after
-        // the learner has committed.
-        'Displayed litres and the support the patient actually receives are separate quantities. Compare the saturation drawn back into the circuit with the patient’s own before deciding what the flow number is worth.',
+        // prediction, so it names the three places to read and the comparison to make, and leaves
+        // what the comparison means to the verdict.
+        'Three readings from three places: the flow at the pump, the saturation drawn back into the circuit, and the patient’s own. Compare the second with the third before deciding what the first is worth.',
       expectedResponse: [
-        'High displayed flow',
-        'Limited oxygenation response',
-        'Pre-oxygenator saturation rises toward patient saturation',
+        'Displayed flow high, and unchanged or rising',
+        'Patient SpO₂ drifting down',
+        'Pre-oxygenator saturation climbing toward the patient’s own',
       ],
     },
     responseSteps: [
@@ -942,22 +1084,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'acute-hypercapnia',
-    title: 'Acute hypercapnic acidemia',
-    learningObjectives: [
-      'Use sweep—not pump RPM or sweep-gas FiO₂—as the primary CO₂ control.',
-      'Make a bounded change and reassess pH, PaCO₂, and work of breathing.',
-    ],
     observe: {
       target: 'patient-monitor',
       instruction:
         'Read PaCO₂, pH, bicarbonate, work of breathing, and the stabilization phase together.',
       rationale:
-        'Acute CO₂ retention with acidemia is different from a compensated maintenance state.',
+        'Four readings and a phase. Read the pH beside the CO₂, the bicarbonate beside both, and the work of breathing beside all three, and note whether the picture is settled or still moving.',
       expectedResponse: [
-        'PaCO₂ 68 mmHg',
-        'pH 7.18',
-        'Bicarbonate 25 mmol/L',
-        'High work of breathing',
+        'PaCO₂ high and climbing',
+        'pH low',
+        'Bicarbonate not raised',
+        'Work of breathing high',
       ],
     },
     responseSteps: [
@@ -989,17 +1126,12 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'compensated-hypercapnia',
-    title: 'Compensated hypercapnia during maintenance',
-    learningObjectives: [
-      'Interpret PaCO₂ with pH, bicarbonate, symptoms, and clinical phase.',
-      'Avoid blind normalization of a compensated value.',
-    ],
     observe: {
       target: 'patient-monitor',
       instruction:
-        'Compare PaCO₂ 58 with pH 7.39, bicarbonate 34, low work of breathing, and the maintenance phase.',
+        'Compare the PaCO₂ with the pH, the bicarbonate, the work of breathing and the phase of the run.',
       rationale:
-        'An elevated PaCO₂ does not automatically mean the same corrective action in every acid-base state or clinical phase.',
+        'The same four readings and the same phase question as before. Read them as one picture and note which of them has moved and which has not.',
       expectedResponse: [
         'Elevated PaCO₂',
         'Near-normal pH',
@@ -1036,22 +1168,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'gas-source-interruption',
-    title: 'Gas-source interruption with preserved blood flow',
-    learningObjectives: [
-      'Recognize that circuit blood flow can persist without membrane gas flow.',
-      'Separate the blood path from the gas path when gas exchange falls.',
-    ],
     observe: {
       target: 'gas-panel',
       instruction:
-        'Advance to the interruption, then compare gas-source status, blood flow, PaCO₂, and oxygenation.',
+        'Advance to the event, then compare the gas panel, the blood flow, the circuit pressures, the PaCO₂ and the patient’s oxygenation.',
       rationale:
-        'A normal-looking flow value does not prove intact sweep-gas delivery or membrane gas exchange.',
+        'Four rows to read rather than one status: the blood path, the gas panel, what the membrane is returning, and the patient. Compare what has moved with what has not.',
       expectedResponse: [
-        'Gas source interrupted',
-        'Blood flow persists',
-        'PaCO₂ rises',
-        'Oxygenator contribution falls',
+        'Set sweep and delivered sweep disagree',
+        'Blood flow and the circuit pressures unchanged',
+        'PaCO₂ rising',
+        'Post-membrane saturation falls',
       ],
     },
     responseSteps: [
@@ -1085,22 +1212,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'arterial-bubble-stop',
-    title: 'Arterial bubble intervention and cause-before-reset',
-    learningObjectives: [
-      'Recognize the scenario-triggered bubble alarm and automatic pump stop.',
-      'Tell the device state, the isolation state, the air source, and the patient apart.',
-      'Recognize that this lab bounds the restart rather than teaching an order for it.',
-    ],
     observe: {
       target: 'console',
       instruction:
         'Advance to the bubble event and read the text alarm, pump state, and circuit bubble latch.',
       rationale:
-        'The exercise intentionally uses no numerical bubble-size threshold; it teaches response sequence.',
+        'Read the alarm text, the pump state, the flow, the two clamps and the latch as five separate facts. Note which of them the device changed on its own and which it did not.',
       expectedResponse: [
         'High-priority arterial bubble alarm',
-        'Pump stopped with intervention enabled',
-        'Reset remains required',
+        'Pump stopped, flow reading zero',
+        'Both near-patient clamps still open',
+        'Bubble latch set; reset still required',
       ],
     },
     responseSteps: [
@@ -1178,21 +1300,16 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'transport-power-loss',
-    title: 'Transport power loss and backup readiness',
-    learningObjectives: [
-      'Recognize automatic transition from AC to battery power.',
-      'Restore verified power while maintaining immediate backup readiness.',
-    ],
     observe: {
       target: 'console',
       instruction:
-        'Advance to AC loss and identify the new power source, battery percentage, circuit flow, and patient state.',
+        'Advance to the event, then read the power-source indicator, the reserve reading, the circuit flow and the patient.',
       rationale:
-        'Battery operation buys time; it does not remove the need to restore a verified source and prepare backup support.',
+        'Four readings: which source the console says it is on, how much reserve it reports and which way that is moving, whether flow paused, and whether the patient changed. Read them before deciding what the moment calls for.',
       expectedResponse: [
-        'Power source changes to battery',
-        'Battery begins at 24%',
-        'Circuit support continues initially',
+        'Power-source indicator shows battery',
+        'Reserve reading falling',
+        'Circuit flow and pressures unchanged',
       ],
     },
     responseSteps: [
@@ -1227,23 +1344,18 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   vaOrientationLesson,
   standardLesson({
     scenarioId: 'va-preload-drainage-collapse',
-    title: 'VA preload-limited drainage and falling systemic support',
-    learningObjectives: [
-      'Recognize increasingly negative pVen, chatter, and unstable VA flow as a drainage pattern.',
-      'Reduce pump demand before correcting the drainage cause.',
-      'Reassess perfusion and native-heart endpoints rather than displayed flow alone.',
-    ],
     observe: {
       target: 'circuit',
       instruction:
-        'Compare flow, pVen, venous drainage-line motion, MAP, and patient perfusion before changing the pump.',
+        'Read flow, pVen and the drainage line together, then the MAP, the arterial trace and the patient’s perfusion beside them.',
       preferredCircuitView: 'diagnostic',
       rationale:
-        'The pump cannot create venous return; escalating RPM can worsen caval or cannula collapse.',
+        'The same three drainage-side readings as on VV, and now two more on the patient: the mean pressure and the pulse under it. Read which moved with the flow and which did not.',
       expectedResponse: [
-        'Unstable flow',
-        'Increasingly negative pVen',
-        'Visible and text-labeled drainage chatter',
+        'Flow swinging from one moment to the next',
+        'pVen more negative than at handover',
+        'Drainage chatter shown on the line and named in text',
+        'MAP lower than at handover, with the pulse under it unchanged',
       ],
     },
     responseSteps: [
@@ -1288,22 +1400,18 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-afterload-arterial-return-obstruction',
-    title: 'VA arterial-return resistance',
-    learningObjectives: [
-      'Recognize pInt and pArt rising together while flow falls.',
-      'Keep circuit pArt separate from patient MAP and arterial-line pressure.',
-    ],
     observe: {
       target: 'circuit',
       instruction:
-        'Compare pInt, pArt, pressure-drop trend, flow, the arterial return limb, and independent MAP.',
+        'Compare pInt, pArt, the pressure-drop trend, flow, the arterial return limb, and the independent MAP.',
       preferredCircuitView: 'diagnostic',
       rationale:
-        'Resistance after the oxygenator raises both post-pump circuit pressures; patient afterload may contribute but is not measured by pArt.',
+        'Two circuit pressures and their trend, then the patient’s own arterial line on its own monitor beside them. Read whether the circuit pair moved together or apart, and whether the patient’s pressure moved with them.',
       expectedResponse: [
         'pInt and pArt rise together',
-        'Flow falls',
+        'Flow falls at an unchanged speed',
         'Pressure-drop trend changes comparatively little',
+        'Patient MAP and pulse unchanged on the independent monitor',
       ],
     },
     responseSteps: [
@@ -1337,21 +1445,18 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-afterload-oxygenator-resistance',
-    title: 'VA oxygenator resistance pattern',
-    learningObjectives: [
-      'Recognize pInt separating from pArt with a rising pressure-drop trend.',
-      'Evaluate the trend at comparable flow/RPM without inventing a fixed threshold.',
-    ],
     observe: {
       target: 'circuit',
-      instruction: 'Compare pInt, pArt, pressure-drop trend, matched flow/RPM, and gas transfer.',
+      instruction:
+        'Compare pInt, pArt, the pressure-drop trend, matched flow and speed, and gas transfer.',
       preferredCircuitView: 'diagnostic',
       rationale:
-        'Resistance across the oxygenator raises pre-oxygenator pressure relative to post-oxygenator pressure.',
+        'The same pair read the same way, at an unchanged speed. Compare the trend between them with where it sat earlier at a similar flow, and read the post-membrane saturation beside it.',
       expectedResponse: [
-        'pInt rises relative to pArt',
+        'pInt rises while pArt does not',
         'Pressure-drop trend rises',
-        'Flow becomes constrained',
+        'Flow lower at the same speed',
+        'Post-membrane saturation lower than this morning',
       ],
     },
     responseSteps: [
@@ -1383,20 +1488,15 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-differential-hypoxemia',
-    title: 'Peripheral VA differential upper-body oxygenation',
-    learningObjectives: [
-      'Recognize two competing circulations during femoral VA support.',
-      'Say which territory each arterial sampling site reports during femoral VA support.',
-    ],
     observe: {
       target: 'patient-monitor',
       instruction:
         'Compare right-radial saturation, femoral-arterial saturation, post-oxygenator saturation, pulse pressure, and native lung status.',
       rationale:
-        'Antegrade native output can supply the upper body with poorly oxygenated blood while retrograde ECMO return oxygenates the lower body.',
+        'Three saturations from three places, and the arterial trace beside them. Read which of the three disagree, and whether the trace shows the heart is ejecting.',
       expectedResponse: [
         'Low right-radial SpO₂',
-        'High femoral/post-oxygenator saturation',
+        'Femoral and post-oxygenator saturations high',
         'Native pulsatility present',
       ],
     },
@@ -1429,22 +1529,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-lv-loading',
-    title: 'VA LV-loading recognition',
-    learningObjectives: [
-      'Recognize that acceptable console flow and MAP can coexist with poor native LV ejection.',
-      'Use pulsatility, aortic-valve opening, lung, echo, and perfusion data to trigger expert escalation.',
-    ],
     observe: {
       target: 'patient-monitor',
       instruction:
         'Compare flow and MAP with pulse pressure, aortic-valve opening, native output, and pulmonary congestion.',
       rationale:
-        'Retrograde arterial support can raise LV afterload; console flow cannot establish adequate native ejection.',
+        'Two numbers that look acceptable, and four signals that do not: the pulse pressure, the valve, the estimated native output and the chest. Read the second group beside the first.',
       expectedResponse: [
         'Narrow pulse pressure',
-        'Aortic valve not opening',
+        'Aortic valve not seen to open',
         'Marked pulmonary congestion',
-        'Apparently adequate flow/MAP',
+        'Flow and MAP in their usual range',
       ],
     },
     responseSteps: [
@@ -1476,18 +1571,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-acute-hypercapnia',
-    title: 'VA phase-aware sweep adjustment',
-    learningObjectives: [
-      'Use the external sweep control for a CO₂-focused problem.',
-      'Continue independent upper-body, circulatory, and native-lung assessment.',
-    ],
     observe: {
       target: 'patient-monitor',
       instruction:
         'Read PaCO₂, pH, bicarbonate, right-arm oxygenation, perfusion, and phase together.',
       rationale:
-        'Sweep changes membrane CO₂ clearance; it does not replace VA circulatory or mixed-circulation assessment.',
-      expectedResponse: ['PaCO₂ 68 mmHg', 'pH 7.18', 'Acute rather than compensated pattern'],
+        'The acid–base readings first, then everything VA adds: the right-arm saturation, the pressure and the pulse, the lactate and the chest. Read which group has moved.',
+      expectedResponse: [
+        'PaCO₂ high',
+        'pH low, with the bicarbonate not raised',
+        'Right-arm saturation, MAP and pulse pressure unchanged',
+      ],
     },
     responseSteps: [
       {
@@ -1514,21 +1608,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-gas-source-interruption',
-    title: 'VA gas-source interruption with continued arterial flow',
-    learningObjectives: [
-      'Recognize that VA circuit flow can continue without membrane gas transfer.',
-      'Restore the source before interpreting sweep or FiO₂ setpoints.',
-    ],
     observe: {
       target: 'gas-panel',
       instruction:
-        'Advance to the interruption and compare source status, circuit flow, post-oxygenator data, right-arm oxygenation, and PaCO₂.',
+        'Advance to the event, then compare the gas panel, the circuit flow and pressures, the post-membrane saturation, both arterial saturations and the PaCO₂.',
       rationale:
-        'Ongoing arterial return flow is not evidence that returned blood is being oxygenated or ventilated by the membrane.',
+        'Five rows: the blood path, the gas panel, what the membrane is returning, the two arterial sites, and the gas values. Compare what has moved with what has not, and note whether the two arterial sites moved together or apart.',
       expectedResponse: [
-        'Gas source interrupted',
-        'VA blood flow persists',
-        'Gas transfer deteriorates',
+        'Set sweep and delivered sweep disagree',
+        'Circuit flow and pressures unchanged',
+        'Post-membrane saturation falls',
+        'Right-arm and femoral saturations fall together',
       ],
     },
     responseSteps: [
@@ -1555,23 +1645,17 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-arterial-bubble-stop',
-    title: 'VA arterial-return bubble and cause-before-reset',
-    learningObjectives: [
-      'Recognize the bubble intervention and loss of forward VA support.',
-      'Isolate the arterial circulation with near-patient clamps before de-airing.',
-      'Correct and clear the source before support is resumed per the current IFU and approved local protocol.',
-    ],
     observe: {
       target: 'console',
       instruction:
         'Advance to the event and read the text alarm, pump state, flow, and arterial-return bubble latch.',
       rationale:
-        'The response sequence matters without assigning a disputed numerical bubble threshold.',
+        'Read the alarm text, the pump state, the flow, the two clamps, the latch and the patient’s pressure as separate facts. Note which the device changed on its own, and what the circulation is doing without the circuit’s share.',
       expectedResponse: [
-        'High-priority bubble alarm',
-        'Pump stopped',
-        'VA circulatory support interrupted',
-        'Reset latched',
+        'High-priority bubble alarm on the arterial return limb',
+        'Pump stopped, flow reading zero',
+        'Both near-patient clamps still open',
+        'MAP falling; bubble latch set',
       ],
     },
     responseSteps: [
@@ -1643,21 +1727,16 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
   }),
   standardLesson({
     scenarioId: 'va-transport-power-loss',
-    title: 'VA transport power loss and circulatory backup',
-    learningObjectives: [
-      'Recognize automatic battery transition during VA support.',
-      'Restore verified power while preserving immediate circulatory backup readiness.',
-    ],
     observe: {
       target: 'console',
       instruction:
-        'Advance to AC loss and identify source, battery, circuit flow, pressures, perfusion, and backup readiness.',
+        'Advance to the event, then read the power-source indicator, the reserve reading, the circuit flow and pressures, the arterial trace and the right-arm saturation.',
       rationale:
-        'Battery operation buys time but does not remove the need for a verified source and prepared backup.',
+        'The same four readings as on VV — source, reserve and its direction, flow, patient — and now the arterial trace beside them, because here the circulation is what the flow is carrying.',
       expectedResponse: [
-        'Power changes to battery',
-        'Battery begins at 24%',
-        'VA support initially continues',
+        'Power-source indicator shows battery',
+        'Reserve reading falling',
+        'Circuit flow, pressures and the arterial trace unchanged',
       ],
     },
     responseSteps: [
@@ -1747,6 +1826,33 @@ export function validateGuidedLessonRegistry(): string[] {
     if (!lesson.title.trim()) errors.push(`${lesson.id}: missing title`)
     if (!lesson.learningObjectives.length) errors.push(`${lesson.id}: missing objectives`)
 
+    // The lesson header and the pathway rail show one string, and the human-testing packet pins
+    // it: the lesson is named by its pathway row, on the track it belongs to.
+    const pathwaySection = criticalCareLearningPathway(
+      'cardiohelp-ecmo',
+      lesson.supportMode,
+    ).sections.find((section) => section.id === lesson.scenarioId)
+    if (!pathwaySection) {
+      errors.push(`${lesson.id}: no ${lesson.supportMode} pathway section carries it`)
+    } else if (pathwaySection.title !== lesson.title) {
+      errors.push(
+        `${lesson.id}: titled "${lesson.title}" where the pathway says "${pathwaySection.title}"`,
+      )
+    }
+
+    // One objective, and it is the section spec's: the discrimination, never the move.
+    const sectionSpec = ecmoSectionSpecById.get(lesson.scenarioId)
+    if (!sectionSpec) {
+      errors.push(`${lesson.id}: no section spec states its objective`)
+    } else if (
+      lesson.learningObjectives.length !== 1 ||
+      lesson.learningObjectives[0] !== sectionSpec.objective
+    ) {
+      errors.push(
+        `${lesson.id}: states an objective other than the section spec's, or more than one`,
+      )
+    }
+
     const stepIds = new Set<string>()
     for (const item of lesson.steps) {
       if (stepIds.has(item.id)) errors.push(`${lesson.id}: duplicate step id ${item.id}`)
@@ -1764,6 +1870,31 @@ export function validateGuidedLessonRegistry(): string[] {
         }
         if (item.transferScenarioId === lesson.scenarioId) {
           errors.push(`${lesson.id}/${item.id}: transfer must use a different scenario`)
+        }
+        if (item.title !== ECMO_TRANSFER_STEP_TITLE) {
+          errors.push(`${lesson.id}/${item.id}: a transfer step carries the one transfer title`)
+        }
+        if (item.rationale !== ecmoDrillSpec(lesson.scenarioId).transferPrinciple) {
+          errors.push(
+            `${lesson.id}/${item.id}: the transfer rationale is the drill's transfer principle`,
+          )
+        }
+        // Exactly the transfers into the gas-path and air drills are worked examples, and say so.
+        const transferTarget = item.transferScenarioId
+          ? cardiohelpScenarioById.get(item.transferScenarioId)
+          : undefined
+        const mustDisclose =
+          transferTarget?.family === 'gas-source' || transferTarget?.family === 'bubble'
+        const discloses = item.instruction.startsWith(ECMO_SCAFFOLDED_TRANSFER_PREFIX)
+        if (mustDisclose && !discloses) {
+          errors.push(
+            `${lesson.id}/${item.id}: a transfer into a ${transferTarget?.family} drill names the fix and must say it is a worked example`,
+          )
+        }
+        if (discloses && !mustDisclose) {
+          errors.push(
+            `${lesson.id}/${item.id}: only a transfer into a gas-path or air drill is a worked example`,
+          )
         }
         if (item.actions.length !== 1) {
           errors.push(`${lesson.id}/${item.id}: transfer requires one observable learner action`)
