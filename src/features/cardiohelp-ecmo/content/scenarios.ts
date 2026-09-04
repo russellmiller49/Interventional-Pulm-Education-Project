@@ -68,6 +68,19 @@ const standardUnsafeActions: readonly UnsafeActionPenalty[] = [
     critical: true,
   },
   {
+    id: 'air-correction-before-isolation',
+    label:
+      'Corrected or cleared circuit air before both near-patient clamps had isolated the patient',
+    points: 50,
+    critical: true,
+  },
+  {
+    id: 'support-reduction-on-battery',
+    label: 'Reduced pump support on reserve power to stretch the runtime',
+    points: 50,
+    critical: true,
+  },
+  {
     // Kept separate from `rpm-during-collapse`: recirculation is not a drainage-collapse state, and
     // labelling it as one would name the wrong mechanism in the debrief the learner reads.
     id: 'rpm-during-recirculation',
@@ -535,6 +548,17 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctiveFault: 'ac-power-loss',
       acceptableReassessmentTerms: ['ac', 'battery', 'backup', 'flow'],
     },
+    assessmentPolicy: {
+      // B6-004: the case's own opening speed, never an invented flow target.
+      requireBaselineSupportRestored: true,
+      minimumObservationSeconds: 1,
+      reassessmentGuidance: {
+        device:
+          'The power-source indicator shows AC again and the battery reading is no longer falling.',
+        circuit: 'Circuit flow and pressures ran unchanged through the changeover and after it.',
+        patient: 'Oxygenation and perfusion are unchanged from before the event.',
+      },
+    },
     debrief: {
       diagnosis: 'Transport mains-power loss with battery escalation risk',
       causalChain: [
@@ -543,10 +567,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Recognize the power-source indicator and restore a verified AC source.',
-        'Confirm circuit flow and patient status and maintain immediate backup-console/emergency-drive readiness.',
+        'Confirm circuit flow and patient status. Backup-console and emergency-drive readiness is a bedside obligation this simulator does not represent or credit.',
       ],
       safetyNotes: [
-        'This screen exercise teaches recognition and readiness, not hands-on emergency-drive competency.',
+        'This screen exercise teaches recognition and readiness; hands-on emergency-drive practice belongs to bedside training with the device.',
       ],
     },
     evidenceIds: [
@@ -587,6 +611,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         circuit: 'Confirm sweep is off while blood continues through the circuit.',
         patient: 'Record SpO₂ first, work of breathing second, then PaCO₂/pH.',
       },
+    },
+    challengeBrief: {
+      title:
+        'Settled gas exchange on VV support, and the question of whether the patient still needs it',
+      presentation:
+        'Saturation, PaCO₂ and pH sit where the team wants them, breathing is unlabored, and the circuit runs steadily at its current settings; nothing has been changed yet.',
     },
     debrief: {
       diagnosis: 'VV separation assessment with sweep off and circuit blood flow maintained',
@@ -647,7 +677,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Confirm gas, power, backup readiness, right-arm monitoring, native ejection, and cannulated-limb assessment.',
       ],
       safetyNotes: [
-        'This is recognition training, not cannulation or distal-perfusion competency.',
+        'This is recognition training; cannulation and distal-perfusion technique are learned at the bedside, not here.',
       ],
     },
     evidenceIds: [
@@ -1024,6 +1054,17 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctiveFault: 'ac-power-loss',
       acceptableReassessmentTerms: ['ac', 'battery', 'backup', 'perfusion'],
     },
+    assessmentPolicy: {
+      // B6-004: the case's own opening speed, never an invented flow target.
+      requireBaselineSupportRestored: true,
+      minimumObservationSeconds: 1,
+      reassessmentGuidance: {
+        device:
+          'The power-source indicator shows AC again and the battery reading is no longer falling.',
+        circuit: 'Circuit flow and pressures ran unchanged through the changeover and after it.',
+        patient: 'MAP, perfusion and right-arm saturation are unchanged from before the event.',
+      },
+    },
     debrief: {
       diagnosis: 'Transport mains-power loss during VA circulatory support',
       causalChain: [
@@ -1032,10 +1073,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Recognize the power source and restore verified AC.',
-        'Confirm flow, pressures, perfusion, right-arm monitoring, and immediate backup-console/emergency-drive readiness.',
+        'Confirm flow, pressures, perfusion and right-arm monitoring. Backup-console and emergency-drive readiness is a bedside obligation this simulator does not represent or credit.',
       ],
       safetyNotes: [
-        'Recognition and readiness are taught; hands-on emergency-drive competency is not certified.',
+        'Recognition and readiness are taught here; hands-on emergency-drive practice is a bedside obligation this simulator does not represent.',
       ],
     },
     evidenceIds: [
@@ -1104,6 +1145,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         patient:
           'Integrate right-arm oxygenation, pulsatility/native ejection, lung function, and systemic plus limb perfusion.',
       },
+    },
+    challengeBrief: {
+      title: 'Flow unchanged, patient worse: one presentation, several explanations',
+      presentation:
+        'Displayed VA flow and the post-oxygenator sample are unchanged, yet the patient looks worse and the right-hand and femoral saturations no longer agree.',
     },
     debrief: {
       diagnosis: 'Peripheral VA differential upper-body oxygenation pattern',

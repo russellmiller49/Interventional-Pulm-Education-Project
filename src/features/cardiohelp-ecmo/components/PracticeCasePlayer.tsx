@@ -595,7 +595,7 @@ export function ActionPanel({
               disabled={!enabled}
               onClick={() => dispatch({ type: 'SET_RPM', rpm: state.device.rpmSetpoint - 300 })}
             >
-              <Gauge aria-hidden="true" /> Reduce RPM 300
+              <Gauge aria-hidden="true" /> Reduce RPM 300 (authored step)
             </button>
             <button
               type="button"
@@ -603,7 +603,7 @@ export function ActionPanel({
               disabled={!enabled}
               onClick={() => dispatch({ type: 'SET_RPM', rpm: state.device.rpmSetpoint + 300 })}
             >
-              <AlertOctagon aria-hidden="true" /> Increase RPM 300
+              <AlertOctagon aria-hidden="true" /> Increase RPM 300 (authored step)
             </button>
           </>
         ) : null}
@@ -646,7 +646,7 @@ export function ActionPanel({
             disabled={!enabled || state.device.powerSource === 'ac'}
             onClick={() => dispatch({ type: 'RESTORE_AC_POWER' })}
           >
-            <CheckCircle2 aria-hidden="true" /> Restore AC power + verify backup
+            <CheckCircle2 aria-hidden="true" /> Restore AC power
           </button>
         ) : null}
         {scenario.id === 'vv-off-sweep-capstone' ? (

@@ -54,6 +54,12 @@ const COPY_SOURCES: readonly string[] = [
   'src/features/cardiohelp-ecmo/content/circuitPresentation.ts',
   'src/features/cardiohelp-ecmo/components/teaching/EcmoLocalizationCard.tsx',
   'src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx',
+  // The Practice surfaces: the stage panels and their buttons, the Now card the header and the
+  // help dialog read from, the dialog itself, and the debrief that renders the authored workflow.
+  'src/features/cardiohelp-ecmo/components/PracticeCasePlayer.tsx',
+  'src/features/cardiohelp-ecmo/components/practice/nowCard.ts',
+  'src/features/cardiohelp-ecmo/components/practice/EcmoCaseDebrief.tsx',
+  'src/features/cardiohelp-ecmo/components/shell/EcmoHelpDialog.tsx',
   'docs/cardiohelp-ecmo/e5-model-limitations.md',
   'docs/cardiohelp-ecmo/b3-b4-novice-think-aloud-script.md',
 ]
@@ -80,6 +86,21 @@ const BANNED: readonly { readonly pattern: RegExp; readonly why: string }[] = [
   {
     pattern: /open (?:the )?drainage(?: limb)?,? then (?:the )?return/i,
     why: 'teaches a resumption clamp order',
+  },
+  // B6-003: the phrasings the Practice copy actually used to teach an unclamping order.
+  { pattern: /reopened in order/i, why: 'teaches a resumption clamp order' },
+  { pattern: /resume support in order/i, why: 'implies the module teaches a resumption order' },
+  { pattern: /ordered unclamping/i, why: 'teaches a resumption clamp order' },
+  { pattern: /bounded, ordered sequence/i, why: 'implies the module teaches one order' },
+  {
+    pattern: /re-establish (?:VA )?support in the correct order/i,
+    why: 'implies the module teaches a resumption order',
+  },
+  // B6-015: the simulator has no backup-console or emergency-drive state, so no button, step or
+  // finding may claim one was verified.
+  {
+    pattern: /verif(?:y|ied) backup/i,
+    why: 'credits a backup check the simulator does not represent',
   },
 ]
 
@@ -128,7 +149,26 @@ function bubbleLearnerCopy(): readonly { readonly where: string; readonly text: 
   for (const caseId of BUBBLE_CASES) {
     const scenario = clinicalPracticeScenarioById.get(caseId)
     if (!scenario) throw new Error(`No clinical case ${caseId}`)
+    const clinicalCase = scenario.clinicalCase
+    if (!clinicalCase) throw new Error(`${caseId} has no clinical case`)
     copy.push({ where: `${caseId}.summary`, text: scenario.summary })
+    // Everything the case says before, during and after the plan: the presentation and the
+    // patient line, the narrative, the task, the objectives, the data and the two outcomes.
+    copy.push({ where: `${caseId}.presentationTitle`, text: clinicalCase.presentationTitle ?? '' })
+    copy.push({ where: `${caseId}.patientLabel`, text: clinicalCase.patientLabel })
+    copy.push({ where: `${caseId}.openingNarrative`, text: clinicalCase.openingNarrative })
+    copy.push({ where: `${caseId}.decisionPrompt`, text: clinicalCase.decisionPrompt })
+    for (const objective of clinicalCase.learningObjectives) {
+      copy.push({ where: `${caseId}.objective`, text: objective })
+    }
+    for (const item of clinicalCase.data) {
+      copy.push({ where: `${caseId}.data.${item.label}`, text: item.value })
+    }
+    copy.push({ where: `${caseId}.completionResponse`, text: clinicalCase.completionResponse })
+    copy.push({
+      where: `${caseId}.deteriorationResponse`,
+      text: clinicalCase.deteriorationResponse,
+    })
     for (const note of scenario.debrief.safetyNotes) {
       copy.push({ where: `${caseId}.safetyNote`, text: note })
     }
@@ -143,6 +183,9 @@ function bubbleLearnerCopy(): readonly { readonly where: string; readonly text: 
         text: intervention.description,
       })
       copy.push({ where: `${caseId}.${intervention.id}.response`, text: intervention.response })
+      for (const finding of intervention.reveals ?? []) {
+        copy.push({ where: `${caseId}.${intervention.id}.reveals`, text: finding })
+      }
       if (intervention.simulatorAction) {
         copy.push({
           where: `${caseId}.${intervention.id}.instruction`,
@@ -153,6 +196,25 @@ function bubbleLearnerCopy(): readonly { readonly where: string; readonly text: 
     for (const hint of scenario.hints ?? []) {
       copy.push({ where: `${caseId}.hint.title`, text: hint.title })
       copy.push({ where: `${caseId}.hint.text`, text: hint.text })
+    }
+    // The reassessment prompts and every option a learner can pick, with its rationale: the one
+    // place an "expected finding" could describe a resumption order as the modeled response.
+    const reassessment = scenario.reassessment
+    if (reassessment) {
+      copy.push({ where: `${caseId}.reassessment.instruction`, text: reassessment.instruction })
+      for (const domain of ['device', 'circuit', 'patient'] as const) {
+        const question = reassessment[domain]
+        copy.push({ where: `${caseId}.${domain}.prompt`, text: question.prompt })
+        for (const option of question.options) {
+          copy.push({ where: `${caseId}.${domain}.${option.id}.label`, text: option.label })
+          if (option.rationale) {
+            copy.push({
+              where: `${caseId}.${domain}.${option.id}.rationale`,
+              text: option.rationale,
+            })
+          }
+        }
+      }
     }
   }
   return copy

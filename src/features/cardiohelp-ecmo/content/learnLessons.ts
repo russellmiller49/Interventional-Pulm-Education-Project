@@ -340,7 +340,7 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'Find transport power status',
       instruction:
-        'Open Transport and locate AC/battery source, remaining charge, and the need for verified backup readiness.',
+        'Open Transport and locate the AC/battery source and the remaining charge; backup-console and emergency-drive readiness is not on this screen and is confirmed at the bedside.',
       rationale:
         'Power-source recognition is part of transport readiness; an on-screen battery icon is not a complete backup plan.',
       actionLabel: 'Open Transport',
@@ -1321,7 +1321,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
           'Restore a verified AC source, then confirm flow, patient status, and immediate backup-console/emergency-drive readiness.',
         rationale:
           'Transport safety depends on continuous support and a prepared fallback, not only the power icon.',
-        actionLabel: 'Restore AC power + verify backup readiness',
+        actionLabel: 'Restore AC power',
         actions: [{ type: 'RESTORE_AC_POWER' }],
         expectedResponse: [
           'Power source returns to AC',
@@ -1748,7 +1748,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
           'Restore verified AC, then confirm flow, perfusion, patient status, and backup-console/emergency-drive readiness.',
         rationale:
           'Continuity of circulatory support depends on both current power and a prepared fallback.',
-        actionLabel: 'Restore AC power + verify backup readiness',
+        actionLabel: 'Restore AC power',
         actions: [{ type: 'RESTORE_AC_POWER' }],
         expectedResponse: [
           'Power returns to AC',

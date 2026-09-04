@@ -207,11 +207,53 @@ describe('B6-004 — reducing support on reserve power', () => {
     expect(selectScenarioOutcome(state).mastery).toBe(true)
   })
 
+  it.each(transports)(
+    '%s: the reassessment counts only with support back at the speed the case opened at',
+    (scenarioId) => {
+      let state = commitExpectation(createInitialSimulationState(scenarioId, 'guided'))
+      const opening = state.device.rpmSetpoint
+      state = tick(state, 3)
+      // A learner who slowed the pump before restoring power is charged, and the case also
+      // withholds the reassessment until support is back where the case began (B6-004).
+      state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: opening - 400 })
+      state = ecmoSimulationReducer(state, { type: 'RESTORE_AC_POWER' })
+      state = tick(state, 6)
+      const lowered = reassessCorrectly(state)
+      expect(lowered.scenario.credit.reassessment).toBe(false)
+      const restored = reassessCorrectly(
+        tick(ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: opening }), 6),
+      )
+      expect(restored.scenario.credit.reassessment).toBe(true)
+      // The earlier reduction still stands against mastery.
+      expect(selectScenarioOutcome(reveal(restored)).mastery).toBe(false)
+    },
+  )
+
   it('the lower flow target and zero flow are charged the same way on battery', () => {
     let state = commitExpectation(createInitialSimulationState('transport-power-loss', 'guided'))
     state = tick(state, 3)
     const zero = run(state, [{ type: 'PRESS_SAFETY' }, { type: 'TOGGLE_ZERO_FLOW' }])
     expect(zero.scenario.criticalErrors).toContain('support-reduction-on-battery')
+  })
+})
+
+describe('every safety event the model can raise has an authored label', () => {
+  it.each([
+    ['arterial-bubble-stop', 'air-correction-before-isolation'],
+    ['va-arterial-bubble-stop', 'air-correction-before-isolation'],
+    ['clinical-vv-circuit-air-embolism', 'air-correction-before-isolation'],
+    ['va-clinical-circuit-air-embolism', 'air-correction-before-isolation'],
+    ['transport-power-loss', 'support-reduction-on-battery'],
+    ['va-transport-power-loss', 'support-reduction-on-battery'],
+  ])('%s registers %s so the debrief never prints an identifier', (scenarioId, penaltyId) => {
+    const penalty = definitionOf(scenarioId).unsafeActionPenalties.find(
+      (item) => item.id === penaltyId,
+    )
+    expect(penalty).toBeDefined()
+    expect(penalty?.critical).toBe(true)
+    // A sentence, not the key: the label is what `describeSafetyEvent` puts in front of the learner.
+    expect(penalty?.label).not.toBe(penaltyId)
+    expect(penalty?.label).toMatch(/\s/)
   })
 })
 
