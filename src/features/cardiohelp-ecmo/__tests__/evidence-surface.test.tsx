@@ -37,17 +37,26 @@ jest.mock('@/i18n/navigation', () => ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string }
+    children: ReactNode
+  }) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...props}>
       {children}
     </a>
   ),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 jest.mock('../components/CardiohelpConsole', () => ({
   CardiohelpConsole: () => <div data-testid="cardiohelp-console" />,
 }))
+// The stage renders the four monitor surfaces by name, so all four named exports are stubbed.
 jest.mock('../components/CircuitAndMonitors', () => ({
-  CircuitAndMonitors: () => <div data-testid="circuit-and-monitors" />,
+  CircuitSchematic: () => <div data-testid="circuit-schematic" />,
+  GasBlenderPanel: () => <div data-testid="gas-blender-panel" />,
+  PatientMonitor: () => <div data-testid="patient-monitor" />,
+  TrendPanel: () => <div data-testid="trend-panel" />,
 }))
 
 const REGISTERED_IDS = cardiohelpEvidence.map((reference) => reference.id)

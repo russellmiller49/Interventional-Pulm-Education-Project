@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
-import styles from './EcmoFoundationWorkspace.module.css'
+import styles from './FitWidthSurface.module.css'
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
 
 /**

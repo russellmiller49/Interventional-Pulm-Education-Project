@@ -65,7 +65,7 @@ export function EcmoSimulatorSurfaces({
         const panelId = `${baseId}-${surface}`
         return (
           <section key={surface} className={styles.surface} data-surface={surface} data-open={open}>
-            <h3 className={styles.surfaceHeading}>
+            <h2 className={styles.surfaceHeading}>
               <button
                 type="button"
                 className={styles.surfaceToggle}
@@ -78,7 +78,7 @@ export function EcmoSimulatorSurfaces({
                   {open ? 'Hide' : 'Show'}
                 </span>
               </button>
-            </h3>
+            </h2>
             <div id={panelId} className={styles.surfaceBody} hidden={!open}>
               {panels[surface]}
             </div>

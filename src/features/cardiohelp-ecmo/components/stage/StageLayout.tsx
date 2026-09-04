@@ -30,9 +30,15 @@ export function StageLayout({
   task,
   footer,
   overlay,
+  supportMode,
+  fixedPathway,
 }: {
   readonly stageId: string
   readonly label: string
+  /** Stamped on the frame so a test can read which reference circuit is behind the teaching. */
+  readonly supportMode?: string
+  /** Present when the section runs on one track regardless of the requested one. */
+  readonly fixedPathway?: string
   readonly header: ReactNode
   readonly contextStrip?: ReactNode
   readonly simulator: ReactNode
@@ -50,7 +56,12 @@ export function StageLayout({
       contextStrip={contextStrip}
       footer={footer}
     >
-      <div className={styles.workspaceFrame} data-ecmo-stage-frame>
+      <div
+        className={styles.workspaceFrame}
+        data-ecmo-stage-frame
+        data-support-mode={supportMode}
+        data-fixed-pathway={fixedPathway}
+      >
         <ResizableTeachingWorkspace
           className={styles.workspace}
           primary={

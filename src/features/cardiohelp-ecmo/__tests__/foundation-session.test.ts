@@ -22,7 +22,17 @@ import {
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
 import type { EcmoSimulationState, SimulationAction } from '../engine/types'
 
-const activitySource = readFileSync(
+/*
+ * The foundation activity is a shim over the lesson stage: `EcmoFoundationLessonActivity.tsx`
+ * renders `FoundationStageHost`, and the host is where the session is mounted, the clock run, the
+ * prediction committed and the one write made. The source scans below read the host, and one case
+ * pins that the shim really is a shim — nothing about the session lives there any more.
+ */
+const hostSource = readFileSync(
+  join(process.cwd(), 'src/features/cardiohelp-ecmo/components/stage/FoundationStageHost.tsx'),
+  'utf8',
+)
+const shimSource = readFileSync(
   join(process.cwd(), 'src/features/cardiohelp-ecmo/components/EcmoFoundationLessonActivity.tsx'),
   'utf8',
 )
@@ -40,37 +50,62 @@ function fold(
   return actions.reduce(ecmoSimulationReducer, state)
 }
 
+/** The body of one top-level function declaration in the host, from its name to the next one. */
+function hostFunction(name: string): string {
+  const start = hostSource.indexOf(`function ${name}(`)
+  if (start < 0) throw new Error(`${name} is not declared in FoundationStageHost.tsx`)
+  const rest = hostSource.slice(start + `function ${name}(`.length)
+  const next = rest.search(/\n  (?:function|const|let) /)
+  return rest.slice(0, next < 0 ? undefined : next)
+}
+
 describe('the restore-then-act sequence is gone', () => {
   it('keeps no pending-action state and no effect that dispatches after a restore', () => {
-    expect(activitySource).not.toMatch(/pendingAction/)
-    expect(activitySource).not.toMatch(/setPendingAction/)
-    expect(activitySource).not.toMatch(/react-hooks\/exhaustive-deps/)
-    expect(activitySource).not.toMatch(/eslint-disable/)
+    expect(hostSource).not.toMatch(/pendingAction/)
+    expect(hostSource).not.toMatch(/setPendingAction/)
+    expect(hostSource).not.toMatch(/react-hooks\/exhaustive-deps/)
+    expect(hostSource).not.toMatch(/eslint-disable/)
+  })
+
+  it('leaves nothing of the session in the shim', () => {
+    // The route still imports the activity by its old name; the name is all that is left of it.
+    expect(shimSource).toContain('<FoundationStageHost')
+    for (const forbidden of [
+      'useEffect',
+      'useReducer',
+      'useState',
+      'dispatch',
+      'persistFoundationSectionCompleted',
+      'localStorage',
+      'sessionStorage',
+    ]) {
+      expect(shimSource).not.toContain(forbidden)
+    }
   })
 
   /**
    * The invariant, rather than a count of effects.
    *
    * This used to assert that the activity had exactly one `useEffect`, as a proxy for "no effect
-   * dispatches a simulation action after a restore". The layout package added effects that measure
-   * the workspace and wire up pane scroll memory, so the count no longer means what it meant — but
+   * dispatches a simulation action after a restore". The host has effects that move focus to the
+   * Now card and write the phase into the URL, so the count no longer means what it meant — but
    * the thing it was protecting is directly checkable: of every effect in the file, only one may
    * dispatch, and that one is the clock.
    */
   it('lets only one effect dispatch, and that effect only runs the clock', () => {
     const effectBodies: string[] = []
     const opener = /use(?:Isomorphic)?(?:Layout)?Effect\(/g
-    for (let match = opener.exec(activitySource); match; match = opener.exec(activitySource)) {
+    for (let match = opener.exec(hostSource); match; match = opener.exec(hostSource)) {
       let depth = 0
       let index = match.index + match[0].length - 1
       const start = index
       do {
-        const character = activitySource[index]
+        const character = hostSource[index]
         if (character === '(') depth += 1
         if (character === ')') depth -= 1
         index += 1
-      } while (depth > 0 && index < activitySource.length)
-      effectBodies.push(activitySource.slice(start, index))
+      } while (depth > 0 && index < hostSource.length)
+      effectBodies.push(hostSource.slice(start, index))
     }
 
     expect(effectBodies.length).toBeGreaterThan(0)
@@ -78,6 +113,9 @@ describe('the restore-then-act sequence is gone', () => {
     expect(dispatching).toHaveLength(1)
     expect(dispatching[0]).toMatch(/setInterval\(\s*\n?\s*\(\) => dispatch\(\{ type: 'SIMULATION'/)
     expect(dispatching[0]).toContain("action: { type: 'STEP' }")
+    // The clock is the only thing that effect does: no restore, no guided action, no progression.
+    expect(dispatching[0]).not.toMatch(/RESTORE_SOURCE_AND_APPLY|ecmoFoundationRestoreAction/)
+    expect(dispatching[0]).not.toMatch(/setProgression|enterStep|advance\(/)
   })
 
   it('never records a scenario result, mastery, or Practice progress', () => {
@@ -93,7 +131,7 @@ describe('the restore-then-act sequence is gone', () => {
       'COMMIT_REASSESSMENT',
       'CORRECT_FAULT',
     ]) {
-      expect(activitySource).not.toContain(forbidden)
+      expect(hostSource).not.toContain(forbidden)
     }
   })
 
@@ -111,47 +149,53 @@ describe('the restore-then-act sequence is gone', () => {
    */
   it('persists through exactly one named writer, and touches no storage API directly', () => {
     const progressImports =
-      activitySource.match(/import \{[^}]*\} from '\.\.\/engine\/progress'/g) ?? []
+      hostSource.match(/import \{[^}]*\} from '\.\.\/\.\.\/engine\/progress'/g) ?? []
     expect(progressImports).toHaveLength(1)
     expect(progressImports[0]).toContain('persistFoundationSectionCompleted')
+    expect(hostSource.match(/from '[^']*progress'/g)).toHaveLength(1)
 
     // Exactly one call site. The import mentions the name without parentheses, so this counts calls.
-    expect(activitySource.match(/persistFoundationSectionCompleted\(/g)).toHaveLength(1)
+    expect(hostSource.match(/persistFoundationSectionCompleted\(/g)).toHaveLength(1)
 
     for (const forbidden of ['localStorage', 'sessionStorage', 'JSON.parse', 'JSON.stringify']) {
-      expect(activitySource).not.toContain(forbidden)
+      expect(hostSource).not.toContain(forbidden)
     }
   })
 
   it('marks the section worked from the transfer commit, not from navigation', () => {
-    // The continue link does not render on the last section of a pathway, so recording there would
-    // leave a learner who finished everything permanently one section short of done.
-    expect(activitySource).toMatch(/onClick=\{\(\) => commitTransfer\(choice\.id\)\}/)
-
-    const commitTransfer = activitySource.slice(
-      activitySource.indexOf('const commitTransfer'),
-      activitySource.indexOf('const commitTransfer') + 400,
-    )
-    expect(commitTransfer).toContain('setCommittedTransferId(choiceId)')
+    // The continue button does not render on the last section of a pathway, so recording there
+    // would leave a learner who finished everything permanently one section short of done.
+    const commitTransfer = hostFunction('commitTransfer')
+    expect(commitTransfer).toContain('committedTransferId: selectedChoiceId')
     expect(commitTransfer).toContain('persistFoundationSectionCompleted(sectionId)')
+    // Wired to the transfer item's primary action, and to nothing else.
+    expect(hostSource).toMatch(/case 'transfer-item':[\s\S]*?onActivate: commitTransfer/)
+    for (const name of ['advance', 'enterStep', 'goToSection', 'selectStepRow']) {
+      expect(hostFunction(name)).not.toContain('persistFoundationSectionCompleted')
+    }
   })
 
   it('offers no way to declare the lesson finished', () => {
-    expect(activitySource).not.toMatch(/mark lesson complete/i)
+    expect(hostSource).not.toMatch(/mark lesson complete/i)
   })
 
   it('keeps the bounded actions reachable in the transfer phase', () => {
     // The VV capstone's transfer step is "load the re-drainage preview and read it", which is
     // impossible if the action list disappears when the transfer item appears.
-    expect(activitySource).toMatch(/phase !== 'recognize' && phase !== 'predict'/)
-    expect(activitySource).not.toMatch(/phase === 'act' \|\| phase === 'observe'\s*\?/)
+    expect(hostSource).toMatch(
+      /predictionCommitted && activeStep\.phase !== 'recognize' && activeStep\.phase !== 'predict'/,
+    )
+    expect(hostSource).not.toMatch(/phase === 'act' \|\| phase === 'observe'\s*\?/)
   })
 
   it('commits a prediction without advancing the phase on its own', () => {
-    expect(activitySource).toMatch(/onClick=\{\(\) => setCommittedPredictionId\(choice\.id\)\}/)
+    const commitPrediction = hostFunction('commitPrediction')
+    expect(commitPrediction).toContain('committedPredictionId: selectedChoiceId')
     // Advancing is a separate, explicit button. `foundation-activity.test.tsx` mounts this and
     // asserts the behaviour; the source match only pins that the two remain separate controls.
-    expect(activitySource).toMatch(/onClick=\{\(\) => goToPhase\('act'\)\}/)
+    expect(commitPrediction).not.toMatch(/advance\(|enterStep\(|index:/)
+    expect(hostSource).toMatch(/case 'prediction':[\s\S]*?onActivate: commitPrediction/)
+    expect(hostSource).toMatch(/onClick=\{advance\}>\s*Continue\s*<\/button>/)
   })
 })
 

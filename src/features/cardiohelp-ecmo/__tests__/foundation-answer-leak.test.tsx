@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
+import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import type { SupportMode } from '../engine/types'
 import { answerLeakMatch, ANSWER_LEAK_MATCHERS } from '../test-support/answerLeakMatchers'
 
@@ -15,7 +16,9 @@ import { answerLeakMatch, ANSWER_LEAK_MATCHERS } from '../test-support/answerLea
  * component's diagnostic map placed pInt on pump outflow — visibly, in its SVG description, and in
  * hidden mounted DOM one tab-click from exposure. A leak test earns nothing by scanning a mock, so
  * the only module mocked here is `EcmoCircuit3D`, the WebGL leaf jsdom genuinely cannot render;
- * everything else is the real learner activity.
+ * everything else is the real learner activity, now rendered on the lesson stage — the step list,
+ * the Now card and its folded "why", the Sections drawer and the four surface disclosures are all
+ * part of the scanned document.
  *
  * The keyed prediction is "Where in the blood path does the circuit report pInt?", and the leak is
  * any content that locates pInt after the pump and before the membrane — not one exact sentence,
@@ -25,16 +28,23 @@ import { answerLeakMatch, ANSWER_LEAK_MATCHERS } from '../test-support/answerLea
  * There is no negation exception: a unit that matches fails, full stop.
  */
 
+const mockPush = jest.fn()
+
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string }
+    children: ReactNode
+  }) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...props}>
       {children}
     </a>
   ),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 jest.mock('../components/CardiohelpConsole', () => ({
   CardiohelpConsole: () => <div data-testid="cardiohelp-console" />,
@@ -105,11 +115,30 @@ function diagnosticPintFlag(): Element | null {
   return diagnosticSvg().querySelector('[data-sensor-flag="pInt"]')
 }
 
+function currentStage(): string {
+  return document.querySelector('[data-ecmo-shell="learn"]')?.getAttribute('data-stage') ?? ''
+}
+
+/** From the opening step, the Now card's one action leads to the Predict step. */
+function goToPredict() {
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  expect(currentStage()).toBe('circuit-flow-path-predict')
+}
+
+/**
+ * Commit the prediction the way a learner does: one option chosen by its id — the rendered order
+ * is rotated, so "the first option" is not a stable thing — then the Now card's primary.
+ */
 function commitPrediction() {
-  fireEvent.click(screen.getByRole('button', { name: 'predict' }))
-  const choice = document.querySelector<HTMLElement>('#prediction-heading + div button')
+  goToPredict()
+  const { prediction } = ecmoFoundationLearningItemsFor('circuit-flow-path')
+  const choice = document.querySelector<HTMLInputElement>(
+    `fieldset[data-prediction-choices] input[value="${prediction.choices[0].id}"]`,
+  )
   if (!choice) throw new Error('no prediction choice rendered')
   fireEvent.click(choice)
+  fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+  expect(document.querySelector('[data-verdict]')).not.toBeNull()
 }
 
 function mountLesson(track: SupportMode, initialPhase?: 'act') {
@@ -129,6 +158,7 @@ describe('before commitment, nothing in the composed activity locates pInt', () 
     '%s: the recognize phase discloses no equivalent of the keyed answer',
     (track) => {
       mountLesson(track)
+      expect(currentStage()).toBe('circuit-flow-path-recognize')
       expectNoLeak()
       // The precommit surface is not silent about the withholding: it says when the locations come.
       expect(document.body.textContent).toMatch(/once you have committed/i)
@@ -139,7 +169,7 @@ describe('before commitment, nothing in the composed activity locates pInt', () 
     '%s: the predict phase, with the stem on screen, still discloses nothing',
     (track) => {
       mountLesson(track)
-      fireEvent.click(screen.getByRole('button', { name: 'predict' }))
+      goToPredict()
       expect(document.body.textContent).toMatch(/Where in the blood path does the circuit report/i)
       expectNoLeak()
     },
@@ -147,6 +177,11 @@ describe('before commitment, nothing in the composed activity locates pInt', () 
 
   it('a direct URL into a later phase discloses nothing either', () => {
     mountLesson('vv', 'act')
+    // Clamped to the prediction: the step the URL asked for stays locked, and its title with it.
+    expect(currentStage()).toBe('circuit-flow-path-predict')
+    expect(
+      document.querySelector('[data-step-list] li[data-step-id="circuit-flow-path-act"]'),
+    ).toHaveAttribute('data-step-state', 'locked')
     expectNoLeak()
   })
 

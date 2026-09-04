@@ -7,8 +7,7 @@ import { CrrtPressureLocalizationLab } from '@/features/baxter-crrt/components/C
 import { CardiohelpHub } from '@/features/cardiohelp-ecmo/components/CardiohelpHub'
 import { CircuitAndMonitors } from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
 import { EcmoContinueCta } from '@/features/cardiohelp-ecmo/components/EcmoContinueCta'
-import { EcmoLearnWorkspace } from '@/features/cardiohelp-ecmo/components/EcmoLearnWorkspace'
-import { resolveGuidedLesson } from '@/features/cardiohelp-ecmo/components/LearnLessonPlayer'
+import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/CardiohelpWorkbench'
 import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import { ecmoDrillTeachingPanelScenarioIds } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import { EcmoFoundationTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoFoundationTeachingPanel'
@@ -29,6 +28,14 @@ import { criticalCareConcepts } from '../content/concepts'
 import type { CriticalCarePublicClientCatalog } from '../content/publicCatalogTypes'
 import { ScenarioTeachingDebrief } from '@/features/learning-module/components/ScenarioTeachingDebrief'
 import type { ScenarioFeedbackEvent } from '@/features/learning-module/scenarioFeedback'
+
+// The console facsimile is a device surface with its own contract; this suite covers the stage's
+// chrome around it, so the console is a labelled stand-in here.
+jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpConsole', () => ({
+  CardiohelpConsole: () => (
+    <section id="cardiohelp-console" aria-label="CARDIOHELP console stand-in" />
+  ),
+}))
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -55,6 +62,8 @@ jest.mock('@/i18n/navigation', () => ({
       </a>
     )
   },
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 
 const catalog: CriticalCarePublicClientCatalog = {
@@ -310,25 +319,23 @@ describe('critical-care accessibility surfaces', () => {
     },
   )
 
-  it('labels every pane of the ECMO Learn workspace and keeps its chrome accessible', async () => {
-    const state = createInitialEcmoState('preload-drainage-collapse', 'guided')
-    const view = render(
-      <EcmoLearnWorkspace
-        state={state}
-        lesson={resolveGuidedLesson('preload-drainage-collapse')}
-        dispatch={jest.fn()}
-        simulator={<div>Live simulator stand-in</div>}
-        onSelectLesson={jest.fn()}
-        onCompleteLesson={jest.fn()}
-        onTryPractice={jest.fn()}
-        onTargetChange={jest.fn()}
-        onControlHelpChange={jest.fn()}
-      />,
+  it('labels every pane of the ECMO lesson stage and keeps its chrome accessible', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/en/cardiohelp-ecmo/learn?lesson=preload-drainage-collapse&track=vv',
     )
+    const view = render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(view.container.querySelector('[data-now-card]')).not.toBeNull()
+    })
 
-    for (const label of ['Live simulator', 'Teaching', 'Current task']) {
+    for (const label of ['Simulator', 'Teaching', 'Steps']) {
       expect(screen.getByRole('region', { name: `${label} panel` })).toBeInTheDocument()
     }
+    expect(view.container.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(
+      1,
+    )
     expect(await axe(view.container)).toHaveNoViolations()
   })
 

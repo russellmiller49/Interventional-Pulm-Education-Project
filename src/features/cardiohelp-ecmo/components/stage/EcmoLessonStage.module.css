@@ -430,3 +430,49 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* ------------------------------------------------------------------ *
+ * Foundation state card
+ * ------------------------------------------------------------------ */
+
+.stateCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.stateCard p {
+  margin: 0;
+}
+
+.stateControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.boundaryNote {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.boundedActionsPanel > summary {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boundedActionsPanel[open] > summary {
+  margin-bottom: 0.5rem;
+}

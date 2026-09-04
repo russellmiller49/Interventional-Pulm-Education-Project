@@ -35,7 +35,10 @@ const COPY_SOURCES: readonly string[] = [
   'src/features/cardiohelp-ecmo/content/practiceSupport.ts',
   'src/features/cardiohelp-ecmo/components/teaching/drills/ArterialBubbleStopPanel.tsx',
   'src/features/cardiohelp-ecmo/components/EcmoCircuit3D.tsx',
-  'src/features/cardiohelp-ecmo/components/LearnLessonPlayer.tsx',
+  // The stage's control resolver carries the bounded-resumption instruction the drill steps show.
+  'src/features/cardiohelp-ecmo/components/stage/drillControlResolver.ts',
+  'src/features/cardiohelp-ecmo/components/stage/DrillStageHost.tsx',
+  'src/features/cardiohelp-ecmo/components/stage/DrillStepTeaching.tsx',
   'src/features/cardiohelp-ecmo/engine/reducer.ts',
   'src/features/cardiohelp-ecmo/engine/types.ts',
   'src/features/critical-care/content/learningPathways.ts',

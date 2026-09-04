@@ -12,7 +12,11 @@ import { useRouter } from '@/i18n/navigation'
 import { orderChoices } from '../../content/choiceOrder'
 import { isEcmoFoundationSectionId } from '../../content/foundationLessons'
 import { ecmoSectionSpecById } from '../../content/sectionSpecs'
-import type { GuidedControlId, GuidedLessonDefinition } from '../../engine/types'
+import type {
+  EcmoSimulationState,
+  GuidedControlId,
+  GuidedLessonDefinition,
+} from '../../engine/types'
 import {
   useEcmoSessionCore,
   type EcmoSessionLoadContext,
@@ -120,7 +124,14 @@ function predictionPerformed(lesson: StageLesson, performedIds: readonly string[
   return step ? performedIds.includes(step.id) : true
 }
 
-export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) {
+export function DrillStageHost({
+  locale = 'en',
+  onStateChange,
+}: {
+  readonly locale?: string
+  /** Observability seam: the engine state after every change. See `EcmoLessonStage`. */
+  readonly onStateChange?: (state: EcmoSimulationState) => void
+}) {
   const router = useRouter()
   const [progression, setProgression] = useState<Progression>(INITIAL_PROGRESSION)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -150,6 +161,10 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
   const core = useEcmoSessionCore({ section: 'learn', onLearnLessonLoaded })
   const { state, dispatch, hydrated, learnLesson, supportMode, setSemanticPhase } = core
   useAlarmAudio(state)
+
+  useEffect(() => {
+    onStateChange?.(state)
+  }, [onStateChange, state])
 
   const lesson = useMemo(
     () => buildDrillStageLesson(learnLesson, learnLesson.supportMode),
@@ -190,7 +205,9 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
     simulatorTask?.controlId ??
     (activeStep.focusTarget ? panelControlIds[activeStep.focusTarget] : null)
   const help = progression.help?.stepId === activeStep.id ? progression.help : null
-  const guidedControlId = help?.controlId ?? null
+  // While help is on for this step it follows the task: once the Menu is pressed, the next
+  // unsatisfied control (the alarm list) is the one that lights up, as the learner expects.
+  const guidedControlId = help ? helpControlId : null
   const openSurfaces = useMemo(
     () =>
       new Set<StageSurfaceId>(progression.surfacesByStepId[activeStep.id] ?? activeStep.surfaces),
@@ -308,7 +325,7 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
     enterStep(next, performedNow)
   }, [activeIndex, activeStep.id, enterStep, lesson.steps.length, recordPerformed])
 
-  // Finishing the last step is what records the drill as worked — once per load.
+  // Finishing the closing step is what records the drill as worked — once per load.
   useEffect(() => {
     if (!finished || completionRecorded.current === lesson.scenarioId) return
     completionRecorded.current = lesson.scenarioId
@@ -729,6 +746,7 @@ export function DrillStageHost({ locale = 'en' }: { readonly locale?: string }) 
       <StageLayout
         stageId={activeStep.id}
         label={`Guided CARDIOHELP ${supportMode.toUpperCase()} lesson`}
+        supportMode={supportMode}
         header={header}
         contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
         simulator={simulator}
