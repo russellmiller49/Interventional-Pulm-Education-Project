@@ -588,9 +588,11 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
   }
 
   if (!gas.sourceConnected) {
+    // The reading, not the fault: this line reaches the console status bar before the gas-path
+    // drills' prediction, where "Gas source interrupted" was the answer stated as an alarm.
     descriptors.push({
       code: 'GAS_SOURCE',
-      message: 'Gas source interrupted',
+      message: 'Sweep gas delivered below set flow',
       priority: 'high',
       source: 'gas-panel',
       parameter: 'Sweep gas',
@@ -1229,7 +1231,22 @@ function derivePatient(state: EcmoSimulationState, flow: number): PatientState {
   }
 }
 
-export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationState {
+export interface DeriveSimulationOptions {
+  /**
+   * Whether the patient (and the membrane's outlet saturation) may move in this derivation.
+   *
+   * True when the clock advanced. False for action-time recomputation — a clamp, a correction, a
+   * resumption — where the circuit must be recomputed but nothing about the patient may change at an
+   * unchanged simulation time (B6-012).
+   */
+  readonly advancePatient?: boolean
+}
+
+export function deriveSimulation(
+  state: EcmoSimulationState,
+  derivationOptions: DeriveSimulationOptions = {},
+): EcmoSimulationState {
+  const options = { advancePatient: true, ...derivationOptions }
   let device = applyLpmControl(state)
   const clinicalSupportInactive =
     state.scenario.clinical !== null && state.scenario.clinical.supportStatus !== 'on-ecmo'
@@ -1268,11 +1285,24 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     state,
     recirculationAdjustedCircuitFlowLpm,
   )
-  const postOxygenatorSaturation = hasFault(state, 'oxygenator-resistance')
+  /*
+   * B6-007. Blood leaves the membrane at the saturation the gas side can give it: with sweep
+   * flowing, the oxygen fraction sets it; with no sweep — source off or set to zero — no oxygen is
+   * added, so it leaves at the saturation it arrived with (a conservation statement inside the
+   * bounded model, not a clinical endpoint). It is state, approached at a bounded rate while the
+   * clock advances, so an action at an unchanged time cannot move it (B6-012), and so a value that
+   * used to sit at 99 while the patient desaturated now falls with the trial that removed the gas.
+   */
+  const gasDelivered = state.gas.sourceConnected && state.gas.sweepLpm > 0
+  const postOxygenatorTarget = hasFault(state, 'oxygenator-resistance')
     ? 88
-    : state.gas.sourceConnected
+    : gasDelivered
       ? round(96 + state.gas.fio2 * 3, 1)
-      : 72
+      : systemicVenousSaturationEstimate
+  const postOxygenatorSaturation =
+    options.advancePatient && isNewClockSample
+      ? round(moveToward(state.circuit.postOxygenatorSaturation, postOxygenatorTarget, 2), 1)
+      : state.circuit.postOxygenatorSaturation
   const deltaP = round(pressures.pInt - pressures.pArt, 0)
   const venousLineSaturation = round(
     deriveDrainageSaturation(
@@ -1353,13 +1383,15 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     circuit = { ...circuit, bloodFlow: 0 }
   }
 
-  const derived = derivePatient({ ...state, device, circuit }, flow)
-  // Latent, estimated, and kept on the patient rather than the circuit so it can never be mistaken
-  // for the console's venous-probe reading.
-  const patient: PatientState = {
-    ...derived,
-    systemicVenousSaturationEstimate: round(systemicVenousSaturationEstimate, 1),
-  }
+  // B6-012: at an unchanged clock the patient is exactly what it was. Only a tick may move it.
+  const patient: PatientState = options.advancePatient
+    ? {
+        ...derivePatient({ ...state, device, circuit }, flow),
+        // Latent, estimated, and kept on the patient rather than the circuit so it can never be
+        // mistaken for the console's venous-probe reading.
+        systemicVenousSaturationEstimate: round(systemicVenousSaturationEstimate, 1),
+      }
+    : state.patient
   const intermediate: EcmoSimulationState = { ...state, device, circuit, patient }
   const reconciled = reconcileAlarms(intermediate)
   const trend: TrendSample = {
@@ -1375,9 +1407,12 @@ export function deriveSimulation(state: EcmoSimulationState): EcmoSimulationStat
     lactate: patient.lactate,
   }
 
+  // One sample per second of the clock: a recomputation at the same time replaces the last sample
+  // rather than plotting two points at one instant.
+  const trends = isNewClockSample ? [...state.trends, trend] : [...state.trends.slice(0, -1), trend]
   return {
     ...intermediate,
     ...reconciled,
-    trends: [...state.trends, trend].slice(-MAX_TREND_SAMPLES),
+    trends: trends.slice(-MAX_TREND_SAMPLES),
   }
 }

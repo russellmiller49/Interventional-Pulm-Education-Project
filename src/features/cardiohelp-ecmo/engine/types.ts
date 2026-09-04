@@ -532,6 +532,22 @@ export interface ScenarioRuntime {
     control: PredictionControl | null
     direction: PredictionDirection | null
   }
+  /**
+   * What the learner actually did, kept apart from what they committed (B6-005).
+   *
+   * Plan credit (`credit.goal/control/direction`) is written once, by `COMMIT_PREDICTION`, and
+   * never again. Later actions that match the expected control record here instead, so the
+   * debrief can say "your later actions matched the authored path" without laundering a wrong plan
+   * into a right one.
+   */
+  execution?: { controlMatched: boolean; directionMatched: boolean }
+  /**
+   * Patient changes an action has earned but the clock has not yet delivered (B6-012).
+   *
+   * Nothing about the patient moves at an unchanged simulation time: an authored patient patch
+   * from a corrected fault or a clinical intervention waits here and lands on the next second.
+   */
+  pendingPatientPatch?: Partial<PatientState>
   reassessment: ReassessmentSubmission | null
   credit: ScenarioCredit
   penalties: number
@@ -616,6 +632,11 @@ export interface ScenarioAssessmentPolicy {
   minimumObservationSeconds: number
   preserveCircuitBloodFlow?: boolean
   prohibitSweepZeroWhileFlowing?: boolean
+  /**
+   * The reassessment counts only once support is back at the speed the case opened at (B6-004).
+   * The case's own opening speed, never an invented flow target.
+   */
+  requireBaselineSupportRestored?: boolean
   requiredTermGroupsByDomain?: {
     device?: readonly (readonly string[])[]
     circuit?: readonly (readonly string[])[]

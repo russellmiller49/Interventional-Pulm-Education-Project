@@ -95,12 +95,19 @@ export function applyClinicalIntervention(
     }
   }
 
+  // B6-012: device, circuit and gas respond at once; the patient's authored change waits for the
+  // next second of the clock, where `advanceOneSecond` applies it before deriving the patient.
   const patched: EcmoSimulationState = {
     ...state,
     device: { ...state.device, ...selected.patch?.device },
     circuit: { ...state.circuit, ...selected.patch?.circuit },
     gas: { ...state.gas, ...selected.patch?.gas },
-    patient: { ...state.patient, ...selected.patch?.patient },
+    scenario: selected.patch?.patient
+      ? {
+          ...state.scenario,
+          pendingPatientPatch: { ...state.scenario.pendingPatientPatch, ...selected.patch.patient },
+        }
+      : state.scenario,
   }
   const record = {
     id: `${selected.id}-${state.simulationTime}-${clinical.appliedInterventions.length}`,
@@ -208,6 +215,7 @@ export function attemptClinicalEcmoStart(
 export function markClinicalImproving(
   state: EcmoSimulationState,
   definition: ScenarioDefinition,
+  options: { readonly trajectoryUnchanged?: boolean } = {},
 ): EcmoSimulationState {
   const clinical = state.scenario.clinical
   if (!clinical || !definition.clinicalCase) return state
@@ -217,7 +225,8 @@ export function markClinicalImproving(
       ...state.scenario,
       clinical: {
         ...clinical,
-        trajectory: 'improving',
+        // B6-006: recognising a state is recorded, but it does not turn the patient around.
+        trajectory: options.trajectoryUnchanged ? clinical.trajectory : 'improving',
         lastResponse: definition.clinicalCase.completionResponse,
       },
     },

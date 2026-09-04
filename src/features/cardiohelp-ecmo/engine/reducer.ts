@@ -21,6 +21,7 @@ import type {
   ScenarioCredit,
   ScenarioDefinition,
   SimulationAction,
+  PatientState,
 } from './types'
 
 const actionLabels: Partial<Record<SimulationAction['type'], string>> = {
@@ -146,8 +147,9 @@ function applyClinicalInterventionAndResolve(
     next = next.scenario.activeFaults.includes(definition.expectation.correctiveFault)
       ? correctFault(next, definition.expectation.correctiveFault)
       : markClinicalImproving(next, definition)
-    next = deriveSimulation(next)
-    next = updateCredit(next, { control: true })
+    // Action time: the circuit is recomputed, the patient waits for the clock (B6-012).
+    next = deriveSimulation(next, { advancePatient: false })
+    next = recordExecution(next, { controlMatched: true, directionMatched: true })
   }
   return { state: next, result }
 }
@@ -236,11 +238,33 @@ function airIsCorrectedAndClear(state: EcmoSimulationState): boolean {
   )
 }
 
+/**
+ * Faults whose authored "correction" is recognition and escalation, not treatment (B6-006).
+ *
+ * Reviewing the right arm against the groin, or recognising a loading left ventricle, earns the
+ * case's cause credit and opens the reassessment — but it changes nothing about the patient. The
+ * fault therefore stays active in the model: the right-radial saturation, its alarm, the pulse
+ * pressure and the valve keep doing what the physiology does until a treatment this module does not
+ * simulate is given. Naming a problem is not the same as fixing it, and the display must not say
+ * otherwise.
+ */
+export const RECOGNITION_ONLY_FAULTS: readonly FaultId[] = ['differential-hypoxemia', 'lv-loading']
+
+/** On reserve power with the mains loss still standing: the moment the transport lesson is about. */
+function reducesSupportOnBattery(state: EcmoSimulationState): boolean {
+  return state.device.powerSource === 'battery' && hasFault(state, 'ac-power-loss')
+}
+
+/** Both near-patient clamps closed: the patient is off the circuit's air column (B6-002). */
+export function patientIsolated(state: EcmoSimulationState): boolean {
+  return state.circuit.drainageClampClosed && state.circuit.returnClampClosed
+}
+
 function markFaultCorrected(state: EcmoSimulationState, fault: FaultId): EcmoSimulationState {
   const correctedFaults = state.scenario.correctedFaults.includes(fault)
     ? state.scenario.correctedFaults
     : [...state.scenario.correctedFaults, fault]
-  const preserveLatch = fault === 'arterial-bubble'
+  const preserveLatch = fault === 'arterial-bubble' || RECOGNITION_ONLY_FAULTS.includes(fault)
   const activeFaults = preserveLatch
     ? state.scenario.activeFaults
     : state.scenario.activeFaults.filter((active) => active !== fault)
@@ -259,7 +283,11 @@ function markFaultCorrected(state: EcmoSimulationState, fault: FaultId): EcmoSim
     { cause: true },
   )
   const definition = getDefinition(credited)
-  return definition.clinicalCase ? markClinicalImproving(credited, definition) : credited
+  if (!definition.clinicalCase) return credited
+  return markClinicalImproving(credited, definition, {
+    // Recognition records the authored response but leaves the trajectory where the physiology is.
+    trajectoryUnchanged: RECOGNITION_ONLY_FAULTS.includes(fault),
+  })
 }
 
 function actionMatchesControl(
@@ -318,7 +346,8 @@ function applyControlCredit(
       (definition.expectation.direction === 'off' && action.sweep === 0)
   }
 
-  let credited = updateCredit(next, { control: true, direction })
+  // B6-005: what the learner did is recorded as execution; the plan credit they committed stays.
+  let credited = recordExecution(next, { controlMatched: true, directionMatched: direction })
   if (
     direction &&
     ((definition.expectation.control === 'sweep' && action.type === 'SET_SWEEP') ||
@@ -327,6 +356,23 @@ function applyControlCredit(
     credited = markFaultCorrected(credited, definition.expectation.correctiveFault)
   }
   return credited
+}
+
+function recordExecution(
+  state: EcmoSimulationState,
+  changes: Partial<NonNullable<EcmoSimulationState['scenario']['execution']>>,
+): EcmoSimulationState {
+  const current = state.scenario.execution ?? { controlMatched: false, directionMatched: false }
+  return {
+    ...state,
+    scenario: {
+      ...state.scenario,
+      execution: {
+        controlMatched: current.controlMatched || Boolean(changes.controlMatched),
+        directionMatched: current.directionMatched || Boolean(changes.directionMatched),
+      },
+    },
+  }
 }
 
 function correctFault(state: EcmoSimulationState, fault: FaultId): EcmoSimulationState {
@@ -356,50 +402,58 @@ function correctFault(state: EcmoSimulationState, fault: FaultId): EcmoSimulatio
     next = { ...next, device: { ...next.device, pumpRunning: true } }
   }
   if (fault === 'hemorrhagic-hypovolemia') {
-    next = {
-      ...next,
-      circuit: {
-        ...next.circuit,
-        hemoglobin: Math.max(8.7, next.circuit.hemoglobin),
-        hematocrit: Math.max(26, next.circuit.hematocrit),
+    next = queuePatientPatch(
+      {
+        ...next,
+        circuit: {
+          ...next.circuit,
+          hemoglobin: Math.max(8.7, next.circuit.hemoglobin),
+          hematocrit: Math.max(26, next.circuit.hematocrit),
+        },
       },
-      patient: {
-        ...next.patient,
+      {
         meanArterialPressure: Math.max(65, next.patient.meanArterialPressure),
         centralVenousPressure: 7,
       },
-    }
+    )
   }
   if (fault === 'tension-pneumothorax') {
-    next = {
-      ...next,
-      patient: {
-        ...next.patient,
-        lungSliding: 'bilateral',
-        airwayPressure: 25,
-        centralVenousPressure: 10,
-      },
-    }
+    next = queuePatientPatch(next, {
+      lungSliding: 'bilateral',
+      airwayPressure: 25,
+      centralVenousPressure: 10,
+    })
   }
   if (fault === 'tamponade') {
-    next = {
-      ...next,
-      patient: { ...next.patient, centralVenousPressure: 10, meanArterialPressure: 62 },
-    }
+    next = queuePatientPatch(next, { centralVenousPressure: 10, meanArterialPressure: 62 })
   }
   if (fault === 'vasoplegia') {
-    next = {
-      ...next,
-      patient: { ...next.patient, meanArterialPressure: 65 },
-    }
+    next = queuePatientPatch(next, { meanArterialPressure: 65 })
   }
   if (fault === 'distal-limb-ischemia') {
-    next = {
-      ...next,
-      patient: { ...next.patient, distalLimbPerfusion: 'normal', distalLimbNirs: 62 },
-    }
+    next = queuePatientPatch(next, { distalLimbPerfusion: 'normal', distalLimbNirs: 62 })
   }
   return markFaultCorrected(next, fault)
+}
+
+/**
+ * An authored patient change earned by an action, held until the clock next advances (B6-012).
+ *
+ * The circuit and the device respond to a clamp or a correction at once — that is what the console
+ * shows. The patient does not change in zero seconds, so the change waits for `advanceOneSecond`,
+ * where it lands before the patient is derived for that second.
+ */
+export function queuePatientPatch(
+  state: EcmoSimulationState,
+  patch: Partial<PatientState>,
+): EcmoSimulationState {
+  return {
+    ...state,
+    scenario: {
+      ...state.scenario,
+      pendingPatientPatch: { ...state.scenario.pendingPatientPatch, ...patch },
+    },
+  }
 }
 
 function injectScheduledFaults(state: EcmoSimulationState): EcmoSimulationState {
@@ -427,14 +481,23 @@ function advanceOneSecond(state: EcmoSimulationState): EcmoSimulationState {
   const nextTime = state.simulationTime + 1
   const lastActionTime =
     [...state.history].reverse().find((entry) => entry.kind === 'action')?.time ?? 0
+  // Earned patient changes land now, with the second that carries them (B6-012).
+  const pending = state.scenario.pendingPatientPatch
+  const withPatch: EcmoSimulationState = pending
+    ? {
+        ...state,
+        patient: { ...state.patient, ...pending },
+        scenario: { ...state.scenario, pendingPatientPatch: undefined },
+      }
+    : state
   const timeAdvanced: EcmoSimulationState = {
-    ...state,
+    ...withPatch,
     simulationTime: nextTime,
     device: {
-      ...state.device,
-      locked: state.device.locked || nextTime - lastActionTime >= 180,
-      timers: state.device.timers.map((timer, index) =>
-        state.device.timerRunning[index]
+      ...withPatch.device,
+      locked: withPatch.device.locked || nextTime - lastActionTime >= 180,
+      timers: withPatch.device.timers.map((timer, index) =>
+        withPatch.device.timerRunning[index]
           ? index === 3
             ? Math.max(0, timer - 1)
             : timer + 1
@@ -602,6 +665,12 @@ export function ecmoSimulationReducer(
       ) {
         next = addCriticalError(next, 'capstone-flow-reduction', 50)
       }
+      // B6-004: reserve power buys time, not permission. Trading support for runtime on battery is
+      // the reflex the transport lesson calls unsafe, so the model charges it rather than rewarding
+      // the longer runtime.
+      if (reducesSupportOnBattery(state) && action.rpm < state.device.rpmSetpoint) {
+        next = addCriticalError(next, 'support-reduction-on-battery', 50)
+      }
       const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
       if (simulatorIntervention) {
         next = applyClinicalInterventionAndResolve(next, definition, simulatorIntervention.id).state
@@ -628,6 +697,9 @@ export function ecmoSimulationReducer(
         action.flow !== state.device.lpmSetpoint
       ) {
         next = addCriticalError(next, 'capstone-flow-reduction', 50)
+      }
+      if (reducesSupportOnBattery(state) && action.flow < state.device.lpmSetpoint) {
+        next = addCriticalError(next, 'support-reduction-on-battery', 50)
       }
       return appendHistory(next, 'action', actionLabels.SET_FLOW_TARGET ?? '')
     }
@@ -767,6 +839,17 @@ export function ecmoSimulationReducer(
         return appendHistory(state, 'system', 'Zero flow requires Safety to be held')
       }
       const zeroFlowDefinition = getDefinition(state)
+      if (reducesSupportOnBattery(state) && !state.device.zeroFlowActive) {
+        return appendHistory(
+          addCriticalError(
+            { ...state, device: { ...state.device, zeroFlowActive: true, safetyHeld: false } },
+            'support-reduction-on-battery',
+            50,
+          ),
+          'action',
+          actionLabels.TOGGLE_ZERO_FLOW ?? '',
+        )
+      }
       return appendHistory(
         zeroFlowDefinition.assessmentPolicy?.preserveCircuitBloodFlow &&
           !state.device.zeroFlowActive
@@ -875,17 +958,29 @@ export function ecmoSimulationReducer(
           'Resume rejected: correct the air source and clear the circuit first',
         )
       }
-      const resumed = deriveSimulation({
-        ...state,
-        device: { ...state.device, pumpRunning: true },
-        circuit: {
-          ...state.circuit,
-          arterialBubbleDetected: false,
-          bubbleResetRequired: false,
-          drainageClampClosed: false,
-          returnClampClosed: false,
+      // B6-002: resumption is the act of bringing an isolated patient back. With neither clamp ever
+      // closed there was no isolation to come back from, and the sequence was skipped.
+      if (!state.circuit.drainageClampClosed && !state.circuit.returnClampClosed) {
+        return appendHistory(
+          addCriticalError(state, 'air-correction-before-isolation', 50),
+          'action',
+          'Resume rejected: the patient was never isolated from the air column',
+        )
+      }
+      const resumed = deriveSimulation(
+        {
+          ...state,
+          device: { ...state.device, pumpRunning: true },
+          circuit: {
+            ...state.circuit,
+            arterialBubbleDetected: false,
+            bubbleResetRequired: false,
+            drainageClampClosed: false,
+            returnClampClosed: false,
+          },
         },
-      })
+        { advancePatient: false },
+      )
       /*
        * The clinical intervention resolves before the fault is retired, not after.
        *
@@ -964,11 +1059,14 @@ export function ecmoSimulationReducer(
         !circuit.bubbleResetRequired &&
         !state.device.zeroFlowActive &&
         state.device.rpmSetpoint > 0
-      let next = deriveSimulation({
-        ...state,
-        device: canResumeAfterOpening ? { ...state.device, pumpRunning: true } : state.device,
-        circuit,
-      })
+      let next = deriveSimulation(
+        {
+          ...state,
+          device: canResumeAfterOpening ? { ...state.device, pumpRunning: true } : state.device,
+          circuit,
+        },
+        { advancePatient: false },
+      )
       if (closing && definition.assessmentPolicy?.preserveCircuitBloodFlow) {
         next = addCriticalError(next, 'capstone-flow-reduction', 50)
       }
@@ -993,6 +1091,19 @@ export function ecmoSimulationReducer(
       )
     }
     case 'CORRECT_FAULT': {
+      // B6-002: the air source is corrected on a circuit the patient is off, or not at all. A
+      // stopped pump is not isolation; both near-patient clamps are.
+      if (
+        action.fault === 'arterial-bubble' &&
+        hasFault(state, 'arterial-bubble') &&
+        !patientIsolated(state)
+      ) {
+        return appendHistory(
+          addCriticalError(state, 'air-correction-before-isolation', 50),
+          'action',
+          'Air correction held: isolate the patient with both near-patient clamps first',
+        )
+      }
       const next = correctFault(state, action.fault)
       return appendHistory(
         applyControlCredit(state, next, action),
@@ -1025,6 +1136,18 @@ export function ecmoSimulationReducer(
           `Action held: use ${selected.simulatorAction.control} on the simulator`,
         )
       }
+      // B6-002, clinical path: de-airing clears the detector and the latch through a patch. It is
+      // refused, and charged, while the patient is still on either limb of the air column.
+      const clearsAir =
+        selected?.patch?.circuit?.arterialBubbleDetected === false ||
+        selected?.patch?.circuit?.bubbleResetRequired === false
+      if (clearsAir && state.circuit.arterialBubbleDetected && !patientIsolated(state)) {
+        return appendHistory(
+          addCriticalError(state, 'air-correction-before-isolation', 50),
+          'action',
+          'De-airing held: isolate the patient with both near-patient clamps first',
+        )
+      }
       const { state: next, result } = applyClinicalInterventionAndResolve(
         state,
         definition,
@@ -1042,9 +1165,11 @@ export function ecmoSimulationReducer(
       const definition = getDefinition(state)
       const result = attemptClinicalEcmoStart(state, definition)
       const next = result.started
-        ? updateCredit(
-            deriveSimulation(correctFault(result.state, definition.expectation.correctiveFault)),
-            { control: true },
+        ? recordExecution(
+            deriveSimulation(correctFault(result.state, definition.expectation.correctiveFault), {
+              advancePatient: false,
+            }),
+            { controlMatched: true, directionMatched: true },
           )
         : result.state
       return appendHistory(
@@ -1127,7 +1252,17 @@ export function ecmoSimulationReducer(
       const causeCorrected = state.scenario.correctedFaults.includes(
         definition.expectation.correctiveFault,
       )
-      const valid = submissionReady && causeCorrected && answersCorrect && observedAfterAction
+      // B6-004: on the transport cases the response is read with support back at the speed the
+      // case opened at — the case's own number, not an invented target.
+      const supportRestored =
+        !definition.assessmentPolicy?.requireBaselineSupportRestored ||
+        state.device.rpmSetpoint >= state.scenario.baselineRpmSetpoint
+      const valid =
+        submissionReady &&
+        causeCorrected &&
+        answersCorrect &&
+        observedAfterAction &&
+        supportRestored
       const assessmentState =
         submissionReady && acknowledgementOnlyAttempt
           ? addCriticalError(state, 'ack-without-correction', 30)
@@ -1162,7 +1297,7 @@ export function ecmoSimulationReducer(
     case 'INJECT_FAULT':
       return injectFault(state, action.fault)
     case 'DISCONNECT_FLOW_SENSOR':
-      return deriveSimulation(injectFault(state, 'flow-sensor-failure'))
+      return deriveSimulation(injectFault(state, 'flow-sensor-failure'), { advancePatient: false })
     default:
       return state
   }
