@@ -17,21 +17,19 @@ import type { SupportMode } from '../../engine/types'
 export const CIRCUIT_MAP_VIEWBOX = Object.freeze({ x: 0, y: 0, width: 1120, height: 590 })
 
 /**
- * The three ways the map can be framed.
+ * The two ways the map can be framed.
  *
- * `whole` is the drawing as authored: the patient on the left, the circuit on the right. `circuit`
- * frames the extracorporeal panel alone, which is where every limb, the pump, the membrane and the
- * sensor flags live. `follow` frames whatever is being marked: the smallest window of a fixed shape
- * that holds the marked places with room around them, never tighter than a minimum window and never
- * outside the drawing — so a walk that stands at the pump shows the pump at a size a learner can
- * read, and a stop that spans the whole return path shows the whole return path.
+ * `whole` is the drawing as authored: the patient on the left, the circuit on the right. It is
+ * what the lesson stage shows, marked or not — the walk is a "you are here" on the whole path, and
+ * a learner who wants the drawing larger widens the pane and gets all of it larger. `circuit`
+ * frames the extracorporeal panel alone and is kept for a host that asks for it.
  *
- * The poster was drawn for a thousand pixels of width. On the lesson stage it gets about half that,
- * which is why `follow` exists: fitting the whole drawing to the pane makes every label five pixels
- * tall, and scrolling it sideways hides the half the lesson is not standing in. A window that moves
- * with the marking keeps the type at the size it was drawn for.
+ * A first version panned a window across the drawing to follow the marked place, to keep the type
+ * legible in a narrow pane. The owner's verdict on it: "I can't see the whole animation, and
+ * resizing the panel just makes the part I can see bigger." The window is gone; the pane is the
+ * zoom.
  */
-export type CircuitMapFrame = 'whole' | 'circuit' | 'follow'
+export type CircuitMapFrame = 'whole' | 'circuit'
 
 export interface CircuitMapRect {
   readonly x: number
@@ -40,75 +38,21 @@ export interface CircuitMapRect {
   readonly height: number
 }
 
-export const CIRCUIT_MAP_FRAME_RECT: Readonly<Record<'whole' | 'circuit', CircuitMapRect>> =
+export const CIRCUIT_MAP_FRAME_RECT: Readonly<Record<CircuitMapFrame, CircuitMapRect>> =
   Object.freeze({
     whole: { x: 0, y: 0, width: 1120, height: 590 },
     // The circuit backdrop is x 330–1102, y 22–522, with the return-limb label below it at y 568.
     circuit: { x: 318, y: 10, width: 796, height: 572 },
   })
 
-export const CIRCUIT_MAP_FRAME_VIEWBOX: Readonly<Record<'whole' | 'circuit', string>> =
-  Object.freeze({
-    whole: viewBoxString(CIRCUIT_MAP_FRAME_RECT.whole),
-    circuit: viewBoxString(CIRCUIT_MAP_FRAME_RECT.circuit),
-  })
+export const CIRCUIT_MAP_FRAME_VIEWBOX: Readonly<Record<CircuitMapFrame, string>> = Object.freeze({
+  whole: viewBoxString(CIRCUIT_MAP_FRAME_RECT.whole),
+  circuit: viewBoxString(CIRCUIT_MAP_FRAME_RECT.circuit),
+})
 
 export function viewBoxString(rect: CircuitMapRect): string {
   const round = (value: number) => Math.round(value * 10) / 10
   return `${round(rect.x)} ${round(rect.y)} ${round(rect.width)} ${round(rect.height)}`
-}
-
-/**
- * The following window: the same shape every time, so the map's box on the page keeps one height
- * as the window moves and nothing below it reflows between stops; never smaller than a window in
- * which the smallest marked thing — the pump — is still surrounded by the limbs that feed it.
- *
- * A marking wider than the drawing can be framed at this shape is framed at the drawing's full
- * width with the window taller than the drawing: the map letterboxes rather than changing shape.
- * The first version clamped both dimensions to the drawing instead, and the box's height changed
- * by a fifth of its width between the membrane stop and the return stop — the whole pane below the
- * map moved while the pan was still running.
- */
-export const FOLLOW_ASPECT = 4 / 3
-const FOLLOW_MIN_WIDTH = 520
-const FOLLOW_PADDING = 44
-
-export function circuitMapFollowRect(bounds: readonly CircuitMapRect[]): CircuitMapRect {
-  const whole = CIRCUIT_MAP_FRAME_RECT.whole
-  if (bounds.length === 0) return whole
-  let left = Infinity
-  let top = Infinity
-  let right = -Infinity
-  let bottom = -Infinity
-  for (const b of bounds) {
-    left = Math.min(left, b.x)
-    top = Math.min(top, b.y)
-    right = Math.max(right, b.x + b.width)
-    bottom = Math.max(bottom, b.y + b.height)
-  }
-  left -= FOLLOW_PADDING
-  top -= FOLLOW_PADDING
-  right += FOLLOW_PADDING
-  bottom += FOLLOW_PADDING
-
-  // Grow to the fixed shape, and to the minimum, about the centre of what is marked.
-  let width = Math.max(right - left, FOLLOW_MIN_WIDTH)
-  let height = Math.max(bottom - top, FOLLOW_MIN_WIDTH / FOLLOW_ASPECT)
-  if (width / height > FOLLOW_ASPECT) height = width / FOLLOW_ASPECT
-  else width = height * FOLLOW_ASPECT
-  // Never wider than the drawing; the height follows the shape, past the drawing if it must.
-  if (width > whole.width) {
-    width = whole.width
-    height = width / FOLLOW_ASPECT
-  }
-  const centreX = (left + right) / 2
-  const centreY = (top + bottom) / 2
-  const x = Math.min(Math.max(centreX - width / 2, whole.x), whole.x + whole.width - width)
-  const y =
-    height >= whole.height
-      ? whole.y + (whole.height - height) / 2
-      : Math.min(Math.max(centreY - height / 2, whole.y), whole.y + whole.height - height)
-  return { x, y, width, height }
 }
 
 export interface CircuitMapGeometry {

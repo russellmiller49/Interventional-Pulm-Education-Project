@@ -30,15 +30,12 @@ import {
   CircuitMapEmphasisLayer,
   circuitMapEmphasisCaption,
   circuitMapEmphasisTargets,
-  circuitMapFrameFor,
-  circuitMapViewBoxRect,
 } from './circuit-map/circuitMapEmphasis'
 import {
+  CIRCUIT_MAP_FRAME_VIEWBOX,
   circuitMapGeometry,
-  viewBoxString,
   type CircuitMapFrame,
 } from './circuit-map/circuitMapGeometry'
-import { TweenedSvg } from './circuit-map/TweenedSvg'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
@@ -99,14 +96,12 @@ export interface SimulationPanelProps {
    * marking here and the reveal beside it cannot disagree. See `circuit-map/circuitMapEmphasis`.
    */
   circuitPresentation?: EcmoCircuitPresentation | null
-  /**
-   * How the map is framed. Defaults to whatever fits the marked places; a host walking a path that
-   * starts in the patient passes `whole` so the frame does not jump between stops.
-   */
+  /** How the map is framed. The whole drawing unless a host asks for the circuit panel alone. */
   circuitFrame?: CircuitMapFrame
   /**
    * `pane` lets the map scale to its container instead of insisting on its poster width and
-   * scrolling sideways. The stage uses it; the Practice workbench keeps the poster.
+   * scrolling sideways, so a wider pane is a larger map. The stage uses it; the Practice workbench
+   * keeps the poster.
    */
   circuitFit?: 'poster' | 'pane'
 }
@@ -156,7 +151,7 @@ export function CircuitSchematic({
   circuitViewPreference,
   emphasisSceneLabelIds,
   circuitPresentation = null,
-  circuitFrame,
+  circuitFrame = 'whole',
   circuitFit = 'poster',
   onSaveForLater,
   locationDisclosure = 'full',
@@ -293,15 +288,12 @@ export function CircuitSchematic({
     sensorFlagsDrawn: locationsDisclosed,
   })
   /*
-   * The fit applies only while something is marked. An unmarked map — a drill before its
-   * commitment, a learner opening the tab on a section that walks nothing, the console tour — is
-   * not being pointed at, and the poster with its scroller is the honest way to show all of it:
-   * fitted whole it put every label at five pixels, and fitted to the circuit panel it cut off the
-   * patient half, which on VA holds the mixing region, the right-arm monitor and the limb check.
+   * Fitted, the whole drawing scales to the pane: a wider pane is a larger map, and the marked
+   * place is always seen against the rest of the circuit. A first version panned a window across
+   * the drawing to follow the marking; the owner could not see the whole animation and resizing
+   * the pane only magnified the crop, so the window went. The pane is the zoom.
    */
-  const fitted = circuitFit === 'pane' && emphasisTargets.length > 0
-  const frame: CircuitMapFrame = circuitMapFrameFor(emphasisTargets, circuitFrame)
-  const frameRect = circuitMapViewBoxRect(frame, emphasisTargets)
+  const fitted = circuitFit === 'pane'
   /*
    * Two descriptions, one per disclosure depth, both complete for what the drawing shows at that
    * depth.
@@ -523,15 +515,14 @@ export function CircuitSchematic({
             accessible name — a hundred and twenty words of it — which a screen reader read out as
             the image's name before anything else; the caption made it longer still.
           */}
-          <TweenedSvg
-            frameRect={frameRect}
+          <svg
             className={`${styles.circuitSvg} ${fitted ? styles.circuitSvgFit : ''}`}
+            viewBox={CIRCUIT_MAP_FRAME_VIEWBOX[circuitFrame]}
             role="img"
             aria-labelledby="circuit-svg-title"
             aria-describedby="circuit-svg-desc"
             preserveAspectRatio="xMidYMid meet"
-            data-map-frame={frame}
-            data-map-window={viewBoxString(frameRect)}
+            data-map-frame={circuitFrame}
             data-map-emphasis-active={emphasisTargets.length > 0 ? 'true' : undefined}
           >
             <title id="circuit-svg-title">{`${supportModeLabel} ECMO femoral-femoral circuit schematic`}</title>
@@ -921,7 +912,7 @@ export function CircuitSchematic({
               markerEnd="url(#cardiohelp-return-arrow)"
             />
             <CircuitMapEmphasisLayer targets={emphasisTargets} />
-          </TweenedSvg>
+          </svg>
         </div>
         {/*
           Its own class, not the pan hint's: `.circuitPanHint` is `display: none` above 1000px, so

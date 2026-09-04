@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -8,17 +8,11 @@ import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLesson
 import {
   circuitMapEmphasisCaption,
   circuitMapEmphasisTargets,
-  circuitMapFrameFor,
-  circuitMapViewBoxRect,
 } from '../components/circuit-map/circuitMapEmphasis'
 import {
-  CIRCUIT_MAP_FRAME_RECT,
   CIRCUIT_MAP_FRAME_VIEWBOX,
-  FOLLOW_ASPECT,
   circuitMapGeometry,
-  viewBoxString,
 } from '../components/circuit-map/circuitMapGeometry'
-import { TweenedSvg } from '../components/circuit-map/TweenedSvg'
 import {
   buildDrillStageLesson,
   resolveGuidedLesson,
@@ -229,32 +223,7 @@ describe('what the map is asked to mark', () => {
     )
   })
 
-  it('says where you are in one sentence, and where the problem lives in a different one', () => {
-    const stop = walkStopPresentation('circuit-flow-path', 0, { readingsVisible: false })
-    expect(circuitMapEmphasisCaption(stop, 'vv')).toBe(
-      `You are here: ${resolveEcmoModeText(ecmoCircuitSegment('drainage').label, 'vv')}.`,
-    )
-    const implicated: EcmoCircuitPresentation = { kind: 'implicated', rowId: 'gas-path-failure' }
-    const caption = circuitMapEmphasisCaption(implicated, 'vv') ?? ''
-    expect(caption).toMatch(/^Implicated on this map: /)
-    expect(caption).not.toMatch(/You are here/)
-  })
-
-  it('follows the marking when there is one, shows the whole drawing when there is not, and yields to a host', () => {
-    expect(circuitMapFrameFor([])).toBe('whole')
-    for (const rowId of [
-      'membrane-resistance',
-      'gas-path-failure',
-      'drainage-limitation',
-      'return-path-resistance',
-    ] as const) {
-      const targets = circuitMapEmphasisTargets({ kind: 'implicated', rowId }, 'vv', {
-        sensorFlagsDrawn: true,
-      })
-      expect(circuitMapFrameFor(targets)).toBe('follow')
-      expect(circuitMapFrameFor(targets, 'whole')).toBe('whole')
-    }
-    // The fixed frames stay inside the drawing.
+  it('keeps both fixed frames inside the drawing', () => {
     for (const viewBox of Object.values(CIRCUIT_MAP_FRAME_VIEWBOX)) {
       const [x, y, width, height] = viewBox.split(' ').map(Number)
       expect(x).toBeGreaterThanOrEqual(0)
@@ -264,53 +233,15 @@ describe('what the map is asked to mark', () => {
     }
   })
 
-  it('opens a following window of one shape that holds the marked places and never outruns the drawing sideways', () => {
-    const whole = CIRCUIT_MAP_FRAME_RECT.whole
-    const stops = [
-      ...ecmoCircuitWalkStopsForSection('circuit-flow-path'),
-      ...ecmoCircuitWalkStopsForSection('pump-and-pressure-zones'),
-    ]
-    const heightsAtFullWidth = new Set<number>()
-    for (const stop of stops) {
-      const presentation: EcmoCircuitPresentation = {
-        kind: 'walk-stop',
-        stopId: stop.id,
-        segmentIds: ecmoWalkStopSegmentIds(stop),
-        sensorSiteIds: stop.sensorSiteIds,
-      }
-      const targets = circuitMapEmphasisTargets(presentation, 'vv', { sensorFlagsDrawn: true })
-      const window = circuitMapViewBoxRect('follow', targets)
-      // One shape, always — so the map's box keeps one height as the window moves. A marking wider
-      // than the drawing gets the drawing's full width and a window taller than the drawing: the
-      // map letterboxes rather than changing shape.
-      expect(Math.abs(window.width / window.height - FOLLOW_ASPECT)).toBeLessThan(0.01)
-      expect(window.width).toBeLessThanOrEqual(whole.width + 0.01)
-      expect(window.x).toBeGreaterThanOrEqual(whole.x)
-      expect(window.x + window.width).toBeLessThanOrEqual(whole.x + whole.width + 0.01)
-      if (window.height <= whole.height) {
-        expect(window.y).toBeGreaterThanOrEqual(whole.y)
-        expect(window.y + window.height).toBeLessThanOrEqual(whole.y + whole.height + 0.01)
-      } else {
-        // Letterboxed: centred on the drawing.
-        expect(Math.abs(window.y + window.height / 2 - whole.height / 2)).toBeLessThan(0.01)
-        heightsAtFullWidth.add(window.height)
-      }
-      // Holding every marked box.
-      for (const target of targets) {
-        const held =
-          target.bounds.x >= window.x - 0.01 &&
-          target.bounds.x + target.bounds.width <= window.x + window.width + 0.01 &&
-          target.bounds.y >= window.y - 0.01 &&
-          target.bounds.y + target.bounds.height <= window.y + window.height + 0.01
-        expect(`${stop.id}/${target.id}: ${held ? 'held' : 'cropped'}`).toBe(
-          `${stop.id}/${target.id}: held`,
-        )
-      }
-      // And never a blob: the smallest window still shows the pump with the limbs around it.
-      expect(window.width).toBeGreaterThanOrEqual(520)
-    }
-    // Every full-width window is the same window height, so those stops share one box height.
-    expect(heightsAtFullWidth.size).toBeLessThanOrEqual(1)
+  it('says where you are in one sentence, and where the problem lives in a different one', () => {
+    const stop = walkStopPresentation('circuit-flow-path', 0, { readingsVisible: false })
+    expect(circuitMapEmphasisCaption(stop, 'vv')).toBe(
+      `You are here: ${resolveEcmoModeText(ecmoCircuitSegment('drainage').label, 'vv')}.`,
+    )
+    const implicated: EcmoCircuitPresentation = { kind: 'implicated', rowId: 'gas-path-failure' }
+    const caption = circuitMapEmphasisCaption(implicated, 'vv') ?? ''
+    expect(caption).toMatch(/^Implicated on this map: /)
+    expect(caption).not.toMatch(/You are here/)
   })
 })
 
@@ -366,21 +297,48 @@ describe('the drawing, marked', () => {
     expect(container.querySelector('[data-map-emphasis]')?.getAttribute('aria-hidden')).toBe('true')
   })
 
-  it('marks nothing, says nothing and keeps the poster when there is nothing to mark, even when asked to fit', () => {
-    const { container } = renderMap(settledReference('va'), { circuitFit: 'pane' })
+  it('shows the whole drawing, marked or not, and fits the pane when the host asks', () => {
+    const state = settledReference('va')
+    const implicated: EcmoCircuitPresentation = { kind: 'implicated', rowId: 'membrane-resistance' }
+    for (const presentation of [null, implicated]) {
+      const { container, unmount } = renderMap(state, {
+        circuitPresentation: presentation,
+        circuitFit: 'pane',
+      })
+      const svg = container.querySelector('svg[data-map-frame]')
+      // The whole circuit, always: the marking is read against the rest of the path, and a wider
+      // pane is a larger map. A window that followed the marking hid the rest of the animation.
+      expect(svg?.getAttribute('data-map-frame')).toBe('whole')
+      expect(svg?.getAttribute('viewBox')).toBe(CIRCUIT_MAP_FRAME_VIEWBOX.whole)
+      expect(svg?.getAttribute('class')).toMatch(/circuitSvgFit/)
+      // Fitted, there is nothing to scroll sideways: no tab stop, no swipe hint, no promise of one.
+      const scroller = svg?.parentElement
+      expect(scroller?.getAttribute('tabindex')).toBeNull()
+      expect(scroller?.getAttribute('aria-label')).not.toMatch(/horizontally scrollable/)
+      expect(container.textContent).not.toMatch(/swipe the diagram/)
+      unmount()
+    }
+    // The poster keeps its scroller and the affordances that go with it.
+    const poster = renderMap(state, { circuitPresentation: implicated })
+    const svg = poster.container.querySelector('svg[data-map-frame]')
+    expect(svg?.getAttribute('class')).not.toMatch(/circuitSvgFit/)
+    expect(svg?.parentElement?.getAttribute('tabindex')).toBe('0')
+    expect(poster.container.textContent).toMatch(/swipe the diagram/)
+    poster.unmount()
+    // A host may still ask for the circuit panel alone.
+    const panel = renderMap(state, { circuitPresentation: implicated, circuitFrame: 'circuit' })
+    expect(panel.container.querySelector('svg[data-map-frame]')?.getAttribute('viewBox')).toBe(
+      CIRCUIT_MAP_FRAME_VIEWBOX.circuit,
+    )
+  })
+
+  it('marks nothing and says nothing when there is nothing to mark', () => {
+    const { container } = renderMap(settledReference('vv'))
     expect(container.querySelector('[data-map-emphasis]')).toBeNull()
     expect(container.querySelector('[data-map-emphasis-caption]')).toBeNull()
-    const svg = container.querySelector('svg[data-map-frame]')
-    expect(svg?.getAttribute('data-map-emphasis-active')).toBeNull()
-    expect(svg?.getAttribute('viewBox')).toBe(CIRCUIT_MAP_FRAME_VIEWBOX.whole)
-    // Unmarked, the map is not being pointed at: it keeps its poster width and its scroller, with
-    // the scroller's tab stop and its label, so the VA annotations in the patient half stay
-    // reachable rather than cropped behind an overflow that cannot be swiped.
-    expect(svg?.getAttribute('class')).not.toMatch(/circuitSvgFit/)
-    const scroller = svg?.parentElement
-    expect(scroller?.getAttribute('tabindex')).toBe('0')
-    expect(scroller?.getAttribute('aria-label')).toMatch(/horizontally scrollable/)
-    expect(container.textContent).toMatch(/swipe the diagram/)
+    expect(
+      container.querySelector('svg[data-map-frame]')?.getAttribute('data-map-emphasis-active'),
+    ).toBeNull()
   })
 
   it('rings no sensor site while the map is withholding its placements', () => {
@@ -394,29 +352,6 @@ describe('the drawing, marked', () => {
     expect(container.querySelector('[data-map-emphasis-role="sensor-site"]')).toBeNull()
     // The segment is still marked: where you are is not a placement.
     expect(markedSegments(container)).toEqual(['drainage'])
-  })
-
-  it('follows the marking by default, takes the frame the host asks for, and fits the pane when told to', () => {
-    const state = settledReference('vv')
-    const implicated: EcmoCircuitPresentation = { kind: 'implicated', rowId: 'membrane-resistance' }
-    const fitted = renderMap(state, { circuitPresentation: implicated, circuitFit: 'pane' })
-    const svg = fitted.container.querySelector('svg[data-map-frame]')
-    expect(svg?.getAttribute('data-map-frame')).toBe('follow')
-    const targets = circuitMapEmphasisTargets(implicated, 'vv', { sensorFlagsDrawn: true })
-    const expected = viewBoxString(circuitMapViewBoxRect('follow', targets))
-    expect(svg?.getAttribute('data-map-window')).toBe(expected)
-    // The first window is taken as it is: there is nothing to pan from.
-    expect(svg?.getAttribute('viewBox')).toBe(expected)
-    expect(svg?.getAttribute('class')).toMatch(/circuitSvgFit/)
-    fitted.unmount()
-
-    const whole = renderMap(state, { circuitPresentation: implicated, circuitFrame: 'whole' })
-    expect(whole.container.querySelector('svg[data-map-frame]')?.getAttribute('viewBox')).toBe(
-      CIRCUIT_MAP_FRAME_VIEWBOX.whole,
-    )
-    expect(whole.container.querySelector('svg[data-map-frame]')?.getAttribute('class')).not.toMatch(
-      /circuitSvgFit/,
-    )
   })
 
   it('holds still under reduced motion, and never carries the marking in colour alone', () => {
@@ -473,110 +408,6 @@ describe('what the reviewers reproduced, pinned', () => {
       /Arterial return to the patient/,
     )
   })
-
-  describe('the pan', () => {
-    let frames: FrameRequestCallback[] = []
-    let now = 0
-    beforeEach(() => {
-      frames = []
-      now = 0
-      window.requestAnimationFrame = (callback) => {
-        frames.push(callback)
-        return frames.length
-      }
-      window.cancelAnimationFrame = (handle) => {
-        frames[handle - 1] = () => {}
-      }
-      window.matchMedia = jest.fn().mockReturnValue({
-        matches: false,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-      })
-    })
-    afterEach(() => {
-      jest.useRealTimers()
-    })
-    function drain(ms: number) {
-      // Run every frame queued so far, advancing the clock, until the pan finishes or ms is spent.
-      const end = now + ms
-      while (frames.length > 0 && now < end) {
-        const pending = frames.splice(0)
-        now += 16
-        for (const callback of pending) act(() => callback(now))
-      }
-    }
-    const A = { x: 0, y: 187.5, width: 520, height: 390 }
-    const B = { x: 195, y: 200, width: 520, height: 390 }
-
-    it('takes the first window as it is, and pans to the next one', () => {
-      const view = render(
-        <TweenedSvg frameRect={A} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      const svg = () => view.getByTestId('svg')
-      expect(svg().getAttribute('viewBox')).toBe(viewBoxString(A))
-      view.rerender(
-        <TweenedSvg frameRect={B} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      drain(100)
-      const midway = svg().getAttribute('viewBox')
-      expect(midway).not.toBe(viewBoxString(A))
-      expect(midway).not.toBe(viewBoxString(B))
-      drain(1000)
-      expect(svg().getAttribute('viewBox')).toBe(viewBoxString(B))
-    })
-
-    it('settles on the starting window when the target returns to it mid-pan', () => {
-      const view = render(
-        <TweenedSvg frameRect={A} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      view.rerender(
-        <TweenedSvg frameRect={B} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      drain(120)
-      expect(view.getByTestId('svg').getAttribute('viewBox')).not.toBe(viewBoxString(A))
-      view.rerender(
-        <TweenedSvg frameRect={A} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      drain(1000)
-      // The first version compared the target against the last window a pan had *finished* on,
-      // and left the drawing frozen on a crop between the two; this compares against what is shown.
-      expect(view.getByTestId('svg').getAttribute('viewBox')).toBe(viewBoxString(A))
-    })
-
-    it('cuts rather than pans under reduced motion', () => {
-      jest.useFakeTimers()
-      ;(window.matchMedia as jest.Mock).mockReturnValue({
-        matches: true,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-      })
-      const view = render(
-        <TweenedSvg frameRect={A} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      view.rerender(
-        <TweenedSvg frameRect={B} data-testid="svg">
-          <g />
-        </TweenedSvg>,
-      )
-      act(() => {
-        jest.runOnlyPendingTimers()
-      })
-      expect(frames).toHaveLength(0)
-      expect(view.getByTestId('svg').getAttribute('viewBox')).toBe(viewBoxString(B))
-    })
-  })
 })
 
 /* ------------------------------------------------------------------ *
@@ -606,10 +437,10 @@ describe('the circuit walk, marked on the real map', () => {
     expect(document.querySelector('[data-map-emphasis-caption]')?.textContent).toBe(
       'You are here: Patient venous drainage.',
     )
-    // The window follows the stop rather than showing a drawing too wide for the pane to read.
-    expect(document.querySelector('svg[data-map-frame]')?.getAttribute('data-map-frame')).toBe(
-      'follow',
-    )
+    // The whole drawing, fitted to the pane, with the stop lit on it.
+    const svg = document.querySelector('svg[data-map-frame]')
+    expect(svg?.getAttribute('data-map-frame')).toBe('whole')
+    expect(svg?.getAttribute('class')).toMatch(/circuitSvgFit/)
     // And there is exactly one map on the page — the small one in the teaching pane is gone.
     expect(document.querySelector('[data-circuit-minimap]')).toBeNull()
     expect(document.querySelectorAll('[data-map-emphasis]')).toHaveLength(1)
@@ -618,18 +449,16 @@ describe('the circuit walk, marked on the real map', () => {
   it('moves the marking with the walk', () => {
     mountSection('circuit-flow-path')
     const stops = ecmoCircuitWalkStopsForSection('circuit-flow-path')
-    const windows = new Set<string>()
     for (let index = 1; index < stops.length; index += 1) {
       fireEvent.click(document.querySelector('[data-walk-next]')!)
       expect(`${stops[index].id}: ${markedSegments().join(',')}`).toBe(
         `${stops[index].id}: ${ecmoWalkStopSegmentIds(stops[index]).join(',')}`,
       )
-      windows.add(
-        document.querySelector('svg[data-map-frame]')?.getAttribute('data-map-window') ?? '',
+      // The drawing itself stays put: only the marking moves.
+      expect(document.querySelector('svg[data-map-frame]')?.getAttribute('viewBox')).toBe(
+        CIRCUIT_MAP_FRAME_VIEWBOX.whole,
       )
     }
-    // The window went somewhere: the drawing's crop moved with the walk.
-    expect(windows.size).toBeGreaterThan(1)
     // The teaching card says where the marking is, in the same words each time.
     expect(document.querySelector('[data-walk-scene-labels]')?.textContent).toMatch(
       /^Marked on the circuit map and in the bedside scene:/,
@@ -711,12 +540,8 @@ describe('a drill, marked on the real map once the learner has committed', () =>
     await mountDrill('preload-drainage-collapse')
     expect(document.querySelector('[data-map-emphasis]')).toBeNull()
     expect(document.querySelector('[data-map-emphasis-caption]')).toBeNull()
-    // Unmarked, the map keeps the poster and its scroller: nothing is being pointed at yet.
     expect(document.querySelector('svg[data-map-frame]')?.getAttribute('data-map-frame')).toBe(
       'whole',
-    )
-    expect(document.querySelector('svg[data-map-frame]')?.getAttribute('class')).not.toMatch(
-      /circuitSvgFit/,
     )
 
     readStep(/Inspect the starting pattern/i)

@@ -143,9 +143,7 @@ the module point at it; retire the small one. What shipped:
 - **`components/circuit-map/`** — `circuitMapGeometry.ts` holds the drawing's path strings, which
   the drawing and the highlight now both read (a second copy of a path is a second opinion about
   where the limb is); `circuitMapEmphasis.tsx` turns the same presentation value the minimap
-  consumed into halo shapes with authored bounds, a caption, and a frame; `useViewBoxTween.ts` pans
-  the viewBox over 480 ms and cuts under reduced motion; `TweenedSvg.tsx` owns that state so a pan
-  re-renders one attribute, not the drawing and the 3D scene behind it.
+  consumed into halo shapes and a caption.
 - **The map, on the stage.** The foundation adapter authors `circuitView: 'diagnostic'` on every
   step of a section that walks the circuit; the drill adapter authors it on the Explain step of a
   drill with a localization row; the console tour's circuit step authors it in `learnLessons.ts`,
@@ -153,12 +151,19 @@ the module point at it; retire the small one. What shipped:
   its place. On entry the map scrolls its own pane — not the document, whose sticky header slid
   over the caption in the first version — after the console above it has finished scaling; on a
   stacked layout, where the document is the only scroller, it scrolls the document with a
-  scroll-margin that keeps it out from under the header. While something is marked, the map drops
-  its poster width, bleeds through the card padding, and its window follows the marking at a fixed
-  4:3 shape, never wider than the drawing and letterboxed rather than reshaped when a marking spans
-  it, so the box below the map does not move between stops. Unmarked, it keeps the poster and its
-  scroller: nothing is being pointed at, and fitting the whole drawing put every label at five
-  pixels while fitting the circuit panel cropped the VA cues in the patient half.
+  scroll-margin that keeps it out from under the header. On the stage the map drops its poster
+  width and bleeds through the card padding, so the whole drawing fits the pane and a wider pane is
+  a larger map — the resize handle is the zoom.
+
+  **A window that followed the marking was built, reviewed, and then removed on the owner's
+  verdict.** The first version panned a 4:3 window across the drawing to the marked place, to keep
+  the type legible in a narrow pane. The owner's reaction, on the drainage stop: "I can't see the
+  whole animation, and when I resize the panel it just makes the part I can see bigger but doesn't
+  make anything else more visible, and I don't see any way to drag the view." That is the right
+  call — a "you are here" belongs on the whole map, not on a crop of it — so the window, its tween
+  and the authored bounds that drove it are gone, along with the unmarked-map exception they had
+  forced. What stays is the fit.
+
 - **Words with the marking.** An HTML caption above the map ("You are here: Centrifugal pump." /
   "Implicated on this map: Patient venous drainage.") and the same sentence in the SVG's
   description, plus "Ringed on the map: drainage pressure (pVen)." when and only when the flags are
@@ -174,7 +179,7 @@ Four reviewers and a completeness critic over the uncommitted change. Fixed from
 findings:
 the fitted map regaining its 1040 px width at ≤760 px (the single-class fit rule lost the cascade
 to a media-query override; now compound); a pan frozen mid-crop when the target returned within
-480 ms (settledness is now decided from what is shown); the step-entry scroll measuring the panel
+480 ms (fixed, then made moot when the window itself went); the step-entry scroll measuring the panel
 before the console had scaled (deferred past the console's settle passes, and skipped for a hidden
 panel); halos drawn over "MEMBRANE OXYGENATOR", the fibre sub-label and the gas labels (the
 membrane ring is inset into the body, outlines get half a limb's band, the pre-membrane mark lost

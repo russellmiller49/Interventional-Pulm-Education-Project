@@ -13,13 +13,7 @@ import {
 } from '../../content/circuitSegments'
 import type { SupportMode } from '../../engine/types'
 import styles from '../cardiohelp-ecmo.module.css'
-import {
-  CIRCUIT_MAP_FRAME_RECT,
-  circuitMapFollowRect,
-  circuitMapGeometry,
-  type CircuitMapFrame,
-  type CircuitMapRect,
-} from './circuitMapGeometry'
+import { circuitMapGeometry } from './circuitMapGeometry'
 
 /**
  * The map's "you are here", and its "the problem lives here".
@@ -57,20 +51,10 @@ export interface CircuitMapEmphasisTarget {
   readonly id: EcmoCircuitSegmentId | EcmoSensorSiteId
   readonly role: 'segment' | 'sensor-site'
   readonly shapes: readonly EmphasisShape[]
-  /**
-   * The box the marked thing and its own labels occupy, in map units.
-   *
-   * Authored beside the shapes rather than measured from them, because a Bézier path's extent is
-   * not something worth computing at render, and because the labels a learner needs beside a marked
-   * place — "CENTRIFUGAL PUMP" under the pump — are not part of the halo but must not be cropped by
-   * a window that follows it.
-   */
-  readonly bounds: CircuitMapRect
 }
 
 interface SegmentMark {
   readonly shapes: readonly EmphasisShape[]
-  readonly bounds: CircuitMapRect
 }
 
 function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode): SegmentMark {
@@ -80,7 +64,6 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
       // The torso, which is where both cannulas start and end.
       return {
         shapes: [{ kind: 'rect', x: 84, y: 118, width: 168, height: 378, rx: 48 }],
-        bounds: { x: 30, y: 40, width: 270, height: 490 },
       }
     case 'drainage':
       return {
@@ -88,21 +71,16 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
           { kind: 'path', d: g.drainageCannula },
           { kind: 'path', d: g.drainageLimb },
         ],
-        // The cannula from the vein, the limb to the pump inlet, and the limb's label above it.
-        bounds: { x: 30, y: 245, width: 380, height: 275 },
       }
     case 'pump':
       return {
         shapes: [{ kind: 'circle', cx: g.pump.cx, cy: g.pump.cy, r: g.pump.r + 6 }],
-        // Wide enough for "CENTER INLET → TANGENTIAL OUTFLOW" under the body.
-        bounds: { x: 350, y: 320, width: 210, height: 165 },
       }
     case 'pre-membrane':
       // The limb halo runs through the access point, which sits on the limb; a second disc there
       // covered the end of "PUMP OUTFLOW" and added nothing.
       return {
         shapes: [{ kind: 'path', d: g.postPumpLimb }],
-        bounds: { x: 486, y: 310, width: 230, height: 100 },
       }
     case 'membrane':
       // Inset into the body rather than drawn around it: a ring outside the body put its band over
@@ -119,14 +97,10 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
             rx: 20,
           },
         ],
-        // The body, its labels above and below (the lower one starts at x 643), and the gas labels.
-        bounds: { x: 640, y: 260, width: 270, height: 250 },
       }
     case 'post-membrane':
       return {
         shapes: [{ kind: 'path', d: g.postMembraneRun }],
-        // The run past pArt and the flow and bubble sensor, whose flags sit above it.
-        bounds: { x: 825, y: 262, width: 220, height: 215 },
       }
     case 'return':
       return {
@@ -134,7 +108,6 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
           { kind: 'path', d: g.returnRun },
           { kind: 'path', d: g.returnCannula },
         ],
-        bounds: { x: 150, y: 180, width: 900, height: 395 },
       }
     case 'gas-supply':
       // The sweep inlet at the foot of the membrane, and the label that names it.
@@ -143,7 +116,6 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
           { kind: 'circle', cx: 762, cy: 466, r: 18 },
           { kind: 'rect', x: 824, y: 443, width: 88, height: 24, rx: 8 },
         ],
-        bounds: { x: 740, y: 440, width: 200, height: 70 },
       }
     case 'membrane-gas-side':
       return {
@@ -151,7 +123,6 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
           { kind: 'path', d: g.membraneGasPath },
           { kind: 'rect', x: 712, y: 306, width: 100, height: 158, rx: 8 },
         ],
-        bounds: { x: 700, y: 262, width: 210, height: 250 },
       }
   }
 }
@@ -167,7 +138,6 @@ function segmentMark(segmentId: EcmoCircuitSegmentId, supportMode: SupportMode):
 function sensorSiteMark(siteId: EcmoSensorSiteId): SegmentMark | null {
   const flag = (x: number, y: number, width: number, height: number, rx: number): SegmentMark => ({
     shapes: [{ kind: 'rect', x, y, width, height, rx }],
-    bounds: { x, y, width, height },
   })
   // Each ring is the drawn flag plus three units. The flags already sit close to the labels
   // beneath them ("GAS EXHAUST" under pArt, "PRE-OXYGENATOR ACCESS" under pInt), so a ring cannot
@@ -250,27 +220,6 @@ export function circuitMapEmphasisCaption(
     })
   if (ringed.length === 0) return place
   return `${place} Ringed on the map: ${ringed.join(', ')}.`
-}
-
-/**
- * The frame that fits what is emphasised: a window that follows the marking when there is one, the
- * whole drawing when there is not. A host's override wins.
- */
-export function circuitMapFrameFor(
-  targets: readonly CircuitMapEmphasisTarget[],
-  override?: CircuitMapFrame,
-): CircuitMapFrame {
-  if (override) return override
-  return targets.length === 0 ? 'whole' : 'follow'
-}
-
-/** The window a frame resolves to, given what is marked. */
-export function circuitMapViewBoxRect(
-  frame: CircuitMapFrame,
-  targets: readonly CircuitMapEmphasisTarget[],
-): CircuitMapRect {
-  if (frame === 'follow') return circuitMapFollowRect(targets.map((target) => target.bounds))
-  return CIRCUIT_MAP_FRAME_RECT[frame]
 }
 
 /**

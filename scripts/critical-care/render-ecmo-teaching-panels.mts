@@ -668,9 +668,8 @@ const MAP_STATES: readonly (readonly [string, SupportMode, EcmoCircuitPresentati
 ]
 
 /*
- * The pressure-zone map, marked. Rendered the way the lesson stage renders it — fitted to its pane
- * with the window following the marking — at the width the stage gives it on a 1440px screen and
- * at the pane's floor. The map's own stylesheet is not loaded here, so the halos are drawn from
+ * The pressure-zone map, marked. Rendered the way the lesson stage renders it — the whole drawing
+ * fitted to its pane — at the width the stage gives it on a 1440px screen and at the pane's floor. The map's own stylesheet is not loaded here, so the halos are drawn from
  * the attributes alone; what this page reviews is that every state marks the right places, at a
  * size a learner can read, with the caption and the description saying the same thing.
  */
@@ -776,7 +775,7 @@ ${bundledCss}
 ${drills}
 
 <h1>Circuit map, marked (${MAP_STATES.length} states at each width)</h1>
-<p>The pressure-zone map as the lesson stage renders it, fitted to its pane with the window following the marking: every walk stop and every implicated row, at the width a 1440px screen gives the simulator pane and at the pane's floor. Check that each state marks the right places, that the halo sits on the thing it names and clears the labels beside it, that the caption above the map and the description behind it say the same thing, and that no label the state needs is cropped by its window.</p>
+<p>The pressure-zone map as the lesson stage renders it, the whole drawing fitted to its pane: every walk stop and every implicated row, at the width a 1440px screen gives the simulator pane and at the pane's floor. Check that each state marks the right places, that the halo sits on the thing it names and clears the labels beside it, and that the caption above the map and the description behind it say the same thing.</p>
 ${maps}
 
 <h1>Foundation panels (${foundationCount} sections, ${renderedCells} states)</h1>
