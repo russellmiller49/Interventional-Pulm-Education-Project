@@ -6300,14 +6300,80 @@ details[open] > .hubUnitSummary::after {
 }
 
 .mapAnswerLegend li {
+  min-width: 0;
+}
+
+/*
+ * Every option is a row, pinned or not. Uniform on purpose: if the option that is not a place
+ * looked like a lesser thing, the shape of an option would hint at whether it is the keyed one.
+ */
+.mapAnswerRow {
   display: grid;
-  grid-template-columns: 1.5rem 1fr;
+  grid-template-columns: 1.75rem 1fr;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+
+.mapAnswerRow:hover {
+  border-color: rgba(125, 216, 221, 0.55);
+  background: rgba(113, 225, 229, 0.08);
+}
+
+.mapAnswerRow:has(input:focus-visible),
+.mapAnswerLegend li:focus-within .mapAnswerRow {
+  border-color: #71e1e5;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.mapAnswerRow[data-selected='true'] {
+  border-color: #71e1e5;
+  background: rgba(113, 225, 229, 0.16);
+}
+
+.mapAnswerRow[data-selected='true'] .mapAnswerLegendOrdinal {
+  border-color: #71e1e5;
+  background: #71e1e5;
+  color: #052227;
+}
+
+.mapAnswerRow[data-map-answer-state] {
+  cursor: default;
+}
+
+.mapAnswerRow[data-map-answer-state='correct'],
+.mapAnswerRow[data-map-answer-state='chosen-correct'] {
+  border-color: #8dde9e;
+}
+
+.mapAnswerRow[data-map-answer-state='chosen'] {
+  border-color: #ffbf62;
+}
+
+.mapAnswerRowFlag {
+  margin-left: 0.4rem;
+  padding: 0 0.3rem;
+  border-radius: 0.3rem;
+  box-shadow: inset 0 0 0 1px currentcolor;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mapAnswerRowFlag[data-map-answer-row-flag='correct'],
+.mapAnswerRowFlag[data-map-answer-row-flag='chosen-correct'] {
+  color: #8dde9e;
+}
+
+.mapAnswerRowFlag[data-map-answer-row-flag='chosen'] {
+  color: #ffbf62;
 }
 
 .mapAnswerLegendOrdinal {
-  justify-self: start;
+  justify-self: stretch;
   min-width: 1.5rem;
   padding: 0 0.25rem;
   border: 1px solid rgba(125, 216, 221, 0.5);

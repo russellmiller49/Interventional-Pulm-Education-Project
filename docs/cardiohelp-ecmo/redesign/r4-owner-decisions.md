@@ -229,6 +229,10 @@ Taken 2026-09-04, as click rather than drag. The flow-path prediction is now ans
 of four numbered pins on the pressure-zone map; the radio group moved onto the drawing and stayed a
 radio group. See [`r4-owner-review-record.md`](./r4-owner-review-record.md) §8.
 
-The rule for which items follow: every choice must be a place on the circuit. The two transfer items
-that ask where a pattern localises each offer "there is not enough information to say" — a real
-answer, and nowhere on a drawing — so they keep their lists rather than lose that choice.
+The rule for which items follow: every one of an item's answers must be expressible on the circuit,
+either as a place on it or as the explicit statement that the pattern does not point at one. Asked
+to extend it, all three qualifying items were converted — the flow-path prediction and both "where
+does this localise" transfers, the latter two via an off-circuit option that keeps their "not enough
+information" answer. The other seventeen keep their lists because their choices are statements,
+directions, controls, actions or explanations-with-findings; the table of which and why is in the
+review record.

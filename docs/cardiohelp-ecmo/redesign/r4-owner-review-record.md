@@ -285,3 +285,54 @@ always a list in that pane.
 to aim at, no two overlapping for one item), the radio-group semantics, the pre-commit silence, the
 committed marking, and the wrong-tab route back. The three suites that mock the drawing now render
 the real fieldset inside their mock, because mocking the picture should not mock the answer control.
+
+### 8b. The other predictions (2026-09-04)
+
+Asked for after the first one landed: "make the other predictions answerable on the map too."
+
+Every foundation item was read against the rule. **Three qualify and all three now do it**: the
+flow-path prediction ("where does the circuit report pInt?") and the two transfer items that ask
+where a pattern localises — flow-path ("which part of the circuit does that pattern indicate?") and
+pump-and-pressure-zones ("where does that pattern localise?").
+
+The two transfers were held back only by their "there is not enough information" choice, which is a
+real answer and is nowhere on a drawing. Rather than delete it, the answer surface learned to
+express it: an **off-circuit option**, a row under the legend in the same radio group, with no pin.
+Answering a "where" question then includes deciding whether the answer is a where at all — which is
+the discrimination those two items were written for. It is never the keyed answer on either item,
+which is asserted.
+
+That change also restructured the control for the better. Every option is now a **row** under the
+drawing and each place additionally gets its **pin**; both are labels for the same hidden radio, so
+a learner can answer from either, the rows stay uniform whether or not an option has a pin, and the
+words are legible at the pane width the map actually gets. The pin carries the numeral, the row
+carries the words, and the accessible name reads "2. Between the pump outlet and the membrane lung"
+because the row's own number badge is `aria-hidden`. Uniform rows are deliberate: if the option
+without a pin looked like a lesser thing, the shape of an option would hint at whether it is keyed.
+
+**The seventeen items that keep their lists, and why.** Their choices are not places, so pointing
+at a circuit cannot say them:
+
+| Kind of choice                                    | Example                                                                                              | Items                                                                            |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| What a reading establishes                        | "Very little — saturation is one part of oxygen content"                                             | why-extracorporeal-support ×2, vv-normal-state ×2, va-normal-state ×2            |
+| A direction a value should move                   | "Flow should rise somewhat, and the drainage pressure should become more negative"                   | pump-and-pressure-zones prediction                                               |
+| A control to reach for                            | "The sweep-gas setting"                                                                              | blood-flow-versus-sweep prediction                                               |
+| An action to take                                 | "Raise the pump speed until the carbon dioxide value comes down"                                     | blood-flow-versus-sweep transfer, va-integration prediction                      |
+| An explanation carrying its own expected findings | "The gas side has been interrupted — expect an intact blood path, every circuit pressure unchanged…" | both capstone predictions, vv-series ×2, va-parallel ×2, vv-integration transfer |
+
+Two near misses worth recording. The **why-extracorporeal-support transfer** asks which _component
+of oxygen delivery_ is impaired — a real "which one" question, but its three answers are content,
+flow and consumption, which live on the delivery bars, not on the circuit; answering it on the
+circuit map would be pointing at the wrong drawing. The **VA capstone transfer** has three answers
+that are arguably places — the gas supply, the mixing watershed, the distended ventricle — but the
+mixing region and the ventricle are deliberately _not_ circuit segments (`content/circuitSegments.ts`
+excludes the VA mixing region and the patient's own circulation as different models with different
+boundaries), and its fourth answer is a reasoning claim about a control being set. Mapping it would
+mean breaking that boundary to express three of four answers.
+
+The twenty drill predictions are all "which explanation do you commit to, and what does it oblige
+you to do next", carrying the goal/control/direction triple. Not places, and not candidates.
+
+`map-answer.test.tsx` pins the qualifying list itself, so adding an item is a decision someone
+makes deliberately with the rule in front of them.

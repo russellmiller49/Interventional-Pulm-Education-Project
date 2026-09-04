@@ -11,6 +11,7 @@ import { ecmoFoundationLearningItems } from '../content/foundationLearningItems'
 import {
   ecmoMapAnsweredItemIds,
   ecmoMapAnswerTargets,
+  isOffCircuitTarget,
   validateEcmoMapAnswerTargets,
 } from '../content/mapAnswerTargets'
 
@@ -77,25 +78,45 @@ describe('the items answered on the circuit', () => {
       expect(targets.map((target) => target.choiceId).sort()).toEqual(
         item.choices.map((choice) => choice.id).sort(),
       )
-      const segments = targets.map((target) => target.segmentId)
+      const segments = targets.flatMap((target) =>
+        isOffCircuitTarget(target) ? [] : [target.segmentId],
+      )
       expect(segments).toEqual([...new Set(segments)])
+      // Two places at least, or the drawing is not being used to answer anything.
+      expect(segments.length).toBeGreaterThanOrEqual(2)
     }
   })
 
-  it('leaves an item alone when one of its answers is not a place', () => {
+  it('maps the three items whose answers are all expressible on the circuit, and no others', () => {
     /*
-     * The rule that decides. Both "where does that pattern localise" items offer "there is not
-     * enough information to say" — a real answer, and one that is nowhere on a circuit. Forcing
-     * those onto the map would mean deleting the choice that teaches restraint, so they keep their
-     * list, and this fails if anyone maps them without removing the reason not to.
+     * The rule that decides, stated as the list it produces. An item qualifies when every one of
+     * its answers can be given on the drawing — as a place, or as the explicit statement that the
+     * pattern does not point at one. Everything else keeps its list, and the reason is in the
+     * choices: statements about what a reading establishes, directions a value should move,
+     * controls to reach for, actions to take, or explanations that carry their own expected
+     * findings. None of those is a place, and pointing at a circuit cannot say them.
+     *
+     * Pinned here so adding an item is a decision someone makes on purpose, with this comment in
+     * front of them, rather than a mapping that quietly turns a question into a different one.
      */
-    for (const item of allItems()) {
-      const hasNonPlace = item.choices.some((choice) =>
-        /not enough information|insufficient information/i.test(choice.label),
-      )
-      expect(`${item.id}: ${hasNonPlace && ecmoMapAnswerTargets(item.id) ? 'mapped' : 'ok'}`).toBe(
-        `${item.id}: ok`,
-      )
+    expect([...ecmoMapAnsweredItemIds].sort()).toEqual([
+      'ecmo.foundation.path.prediction',
+      'ecmo.foundation.path.transfer',
+      'ecmo.foundation.pump.transfer',
+    ])
+  })
+
+  it('expresses a “not enough information” answer as an option with no place', () => {
+    for (const itemId of ['ecmo.foundation.path.transfer', 'ecmo.foundation.pump.transfer']) {
+      const targets = ecmoMapAnswerTargets(itemId) ?? []
+      const offCircuit = targets.filter(isOffCircuitTarget)
+      expect(offCircuit).toHaveLength(1)
+      const item = allItems().find((candidate) => candidate.id === itemId)
+      const label = item?.choices.find((choice) => choice.id === offCircuit[0].choiceId)?.label
+      // The choice that survives because the surface can express it.
+      expect(label).toMatch(/not enough information/i)
+      // And it is never the keyed answer, so the map is not a trick.
+      expect(item?.correctChoiceIds).not.toContain(offCircuit[0].choiceId)
     }
   })
 
@@ -103,10 +124,11 @@ describe('the items answered on the circuit', () => {
     const whole = CIRCUIT_MAP_FRAME_RECT.whole
     for (const itemId of ecmoMapAnsweredItemIds) {
       const targets = ecmoMapAnswerTargets(itemId) ?? []
-      const rects = targets.map((target) => {
+      const rects = targets.flatMap((target) => {
+        if (isOffCircuitTarget(target)) return []
         const rect = circuitMapHotspot(target.segmentId)
         if (!rect) throw new Error(`${itemId}: ${target.segmentId} has no hotspot`)
-        return { id: target.segmentId, rect }
+        return [{ id: target.segmentId, rect }]
       })
       for (const { id, rect } of rects) {
         expect(`${id}: inside`).toBe(
@@ -198,16 +220,26 @@ describe('answering on the circuit', () => {
         .choices.map((choice) => choice.id)
         .sort(),
     )
-    // Each radio is named by its pin: the visible numeral, and the place it stands on.
+    // Each option is labelled twice: by its row, and by the pin standing on the place it names.
     for (const [index, target] of (ecmoMapAnswerTargets(PATH_PREDICTION) ?? []).entries()) {
-      const label = pin(target.choiceId)
-      const visible = label?.querySelector('[aria-hidden="true"]')?.textContent?.trim()
-      const accessible = label?.textContent ?? ''
-      expect(visible).toBe(String(index + 1))
+      const input = radio(target.choiceId)
+      const labels = [...(input.labels ?? [])]
+      expect(labels).toHaveLength(2)
+      const ordinal = String(index + 1)
+      // The pin shows the number, the row shows the words, and the name carries both — so each
+      // visible label is part of what is announced.
+      expect(pin(target.choiceId)?.textContent?.trim()).toBe(ordinal)
       const choiceLabel = item().choices.find((choice) => choice.id === target.choiceId)?.label
-      expect(accessible).toContain(choiceLabel)
-      // What is seen is part of what is announced.
-      expect(accessible).toContain(String(index + 1))
+      const name = labels
+        .map((label) => {
+          const clone = label.cloneNode(true) as HTMLElement
+          for (const hidden of clone.querySelectorAll('[aria-hidden="true"]')) hidden.remove()
+          return clone.textContent ?? ''
+        })
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      expect(name).toBe(`${ordinal} ${choiceLabel}`)
     }
   })
 
@@ -297,6 +329,89 @@ describe('answering on the circuit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
     fireEvent.click(screen.getByRole('tab', { name: 'Bedside 3D circuit' }))
     expect(container.querySelector('[data-answer-elsewhere]')).toBeNull()
+  })
+
+  it('answers both “where does this localise” transfers on the circuit as well', () => {
+    for (const [sectionId, itemId] of [
+      ['circuit-flow-path', 'ecmo.foundation.path.transfer'],
+      ['pump-and-pressure-zones', 'ecmo.foundation.pump.transfer'],
+    ] as const) {
+      const view = render(
+        <EcmoFoundationLessonActivity
+          sectionId={sectionId}
+          supportMode="vv"
+          initialPhase="recognize"
+        />,
+      )
+      // Commit the prediction, then walk to the transfer step: the later steps are gated on it.
+      fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+      const first = document.querySelector<HTMLInputElement>('[data-prediction-choices] input')
+      fireEvent.click(first as HTMLInputElement)
+      fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+      for (let step = 0; step < 4; step += 1) {
+        const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
+          /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
+        )
+        if (!next || next.disabled) break
+        fireEvent.click(next)
+      }
+
+      const fieldset = document.querySelector('[data-map-answer]')
+      expect(`${itemId}: ${fieldset ? 'on the map' : 'still a list'}`).toBe(`${itemId}: on the map`)
+      const targets = ecmoMapAnswerTargets(itemId) ?? []
+      for (const target of targets) {
+        const row = document.querySelector(`[data-map-answer-row="${target.choiceId}"]`)
+        expect(`${target.choiceId}: a row`).toBe(`${target.choiceId}: ${row ? 'a row' : 'missing'}`)
+        // A place gets a pin; the answer that is not a place gets a row and no pin.
+        const hasPin = document.querySelector(`[data-map-answer-choice="${target.choiceId}"]`)
+        expect(`${target.choiceId}: ${hasPin ? 'pinned' : 'unpinned'}`).toBe(
+          `${target.choiceId}: ${isOffCircuitTarget(target) ? 'unpinned' : 'pinned'}`,
+        )
+      }
+      view.unmount()
+    }
+  })
+
+  it('lets the learner answer that the pattern does not point anywhere', () => {
+    render(
+      <EcmoFoundationLessonActivity
+        sectionId="circuit-flow-path"
+        supportMode="vv"
+        initialPhase="recognize"
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    fireEvent.click(radio('between-pump-and-membrane'))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+    for (let step = 0; step < 4; step += 1) {
+      const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
+        /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
+      )
+      if (!next || next.disabled) break
+      fireEvent.click(next)
+    }
+    // The off-circuit option is answerable, and answering it is answering the item.
+    const offCircuit = document.querySelector<HTMLInputElement>(
+      '[data-map-answer] input[value="not-enough"]',
+    )
+    expect(offCircuit).not.toBeNull()
+    fireEvent.click(offCircuit as HTMLInputElement)
+    expect(
+      document.querySelector('[data-map-answer-row="not-enough"]')?.getAttribute('data-selected'),
+    ).toBe('true')
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
+    expect(document.querySelector('[data-verdict-outcome-label]')?.textContent).toBe(
+      'Partly correct.',
+    )
+    // The keyed place is marked on the drawing, and the row the learner took says which it was.
+    expect(
+      document
+        .querySelector('[data-map-answer-choice="return-side"]')
+        ?.getAttribute('data-map-answer-state'),
+    ).toBe('correct')
+    expect(document.querySelector('[data-map-answer-row="not-enough"]')?.textContent).toContain(
+      'Your answer',
+    )
   })
 
   it('leaves the sections whose answers are not places on their lists', () => {
