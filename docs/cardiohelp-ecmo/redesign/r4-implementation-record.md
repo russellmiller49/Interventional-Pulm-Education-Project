@@ -31,7 +31,7 @@ that could not be opened — read against the `medical-education-modules` teachi
 | I6 scoring honesty    | `544b8932`             | The nine lifted defects, corrected in the engine with `scoring-honesty.test.ts`                                                                                                                                   |
 | I5 presentation       | `3bd0f432`             | Presentation titles for 14 cases and 2 capstones, discrimination objectives, B6-003/B6-015 copy, penalty registrations                                                                                            |
 | I3d rendered scan     | `7ee8bf39`             | `learn-precommit-leak.rendered.test.tsx` over all twenty drills at two moments, and the component leaks it found                                                                                                  |
-| I7 records            | this commit            | This file, the owner-decision and scoring records, the D-5 baseline, the B6 banner, the navigation-competence task, the per-step teaching preview on foundations                                                  |
+| I7 records            | this commit            | This file, the owner-decision and scoring records, the D-5 baseline, the B6 banner, the navigation-competence check on the participant sheet, the per-step teaching preview on foundations                        |
 
 Untouched: route paths and the `?lesson/?track/?case/?phase` names; scenario, section and activity
 ids; the progress key `cardiohelp-ecmo-progress-v1` and envelope v2; the module nav titles and the

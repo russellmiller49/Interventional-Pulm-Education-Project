@@ -27,7 +27,7 @@ wherever you like in it.
 
 ---
 
-## Task 0 — finding your way
+## Before the tasks — finding your way
 
 The module's front page is open. Nothing has been chosen yet.
 
