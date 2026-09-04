@@ -174,7 +174,9 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
   })
 
   it('renders mode-specific cannulation and supports keyboard panning of the schematic', () => {
-    const state = createInitialSimulationState('va-differential-hypoxemia')
+    // A VA circuit without the differential-oxygenation fault: on that fault the map withholds its
+    // mixing cue until the prediction is committed (learn-precommit-leak.rendered.test.tsx).
+    const state = createInitialSimulationState('va-lv-loading')
     render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
     fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
 

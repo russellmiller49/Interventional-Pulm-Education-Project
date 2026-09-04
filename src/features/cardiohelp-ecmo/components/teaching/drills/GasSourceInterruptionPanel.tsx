@@ -37,6 +37,11 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
   const sourceConnected = state.gas.sourceConnected
   const interrupted = state.scenario.activeFaults.includes('gas-source-interruption')
   const restored = state.scenario.correctedFaults.includes('gas-source-interruption')
+  // What reaches the membrane, by the model's own rule: the set flow while the source is connected,
+  // nothing while it is not. The pre-commit blocks print this number beside the setting rather than
+  // the supply state in words, which is this drill's answer.
+  const deliveredSweep = (sourceConnected ? state.gas.sweepLpm : 0).toFixed(1)
+  const setSweep = state.gas.sweepLpm.toFixed(1)
 
   return (
     <DrillPanelFrame
@@ -66,10 +71,10 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
       <SignalRegister
         rows={[
           valueSignalRow(
-            'Sweep-gas source',
-            'Separate external gas path, upstream of the blender',
-            sourceConnected ? 'Connected' : 'Interrupted',
-            'Whether the supply upstream of the blender is continuous.',
+            'Sweep delivered',
+            'Separate external gas path, between the blender and the membrane',
+            `${deliveredSweep} L/min`,
+            'What is reaching the membrane, read against the setting below.',
             'authored',
           ),
           offConsoleSignalRow(
@@ -123,7 +128,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             'The independent reading, produced by the patient rather than by the circuit.',
           ),
         ]}
-        summary={`The gas source is ${sourceConnected ? 'connected' : 'interrupted'}, with sweep set to ${state.gas.sweepLpm.toFixed(1)} L/min and a sweep-gas oxygen fraction of ${state.gas.fio2.toFixed(2)}. Blood flow ${state.circuit.bloodFlow.toFixed(2)} L/min. Post-membrane saturation ${state.circuit.postOxygenatorSaturation.toFixed(1)}%, patient arterial carbon dioxide ${state.patient.paCO2.toFixed(0)}, patient saturation ${state.patient.spo2.toFixed(1)}%.`}
+        summary={`Sweep is set to ${setSweep} L/min with ${deliveredSweep} L/min reaching the membrane, at a sweep-gas oxygen fraction of ${state.gas.fio2.toFixed(2)}. Blood flow ${state.circuit.bloodFlow.toFixed(2)} L/min. Post-membrane saturation ${state.circuit.postOxygenatorSaturation.toFixed(1)}%, patient arterial carbon dioxide ${state.patient.paCO2.toFixed(0)}, patient saturation ${state.patient.spo2.toFixed(1)}%.`}
       />
 
       <PatternReading
@@ -138,9 +143,9 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
           },
           {
             label: 'Gas path',
-            reading: `Source ${sourceConnected ? 'connected' : 'interrupted'} · sweep ${state.gas.sweepLpm.toFixed(1)} L/min · oxygen fraction ${state.gas.fio2.toFixed(2)}`,
+            reading: `Sweep set ${setSweep} L/min · delivered ${deliveredSweep} L/min · oxygen fraction ${state.gas.fio2.toFixed(2)}`,
             movement:
-              'Three separate facts: whether supply is continuous, and the two settings on the blender.',
+              'Three separate facts: what is set, what is reaching the membrane, and the oxygen fraction of the gas.',
           },
           {
             label: 'Gas transfer at the membrane',
@@ -168,7 +173,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             question:
               'Is a sweep number on a blender a statement about supply, or about delivery to the membrane?',
             whereToLook:
-              'The source row and the sweep row of the signal table, which are deliberately separate entries.',
+              'The sweep-delivered row and the sweep-setting row of the signal table, which are deliberately separate entries.',
           },
           {
             question:

@@ -54,7 +54,11 @@ export type StageBlockVisibility = 'shown' | 'collapsed' | 'hidden'
  *
  * Recognize and Predict foreground the question and the live signals. Act and Observe keep the
  * signals open and fold the question away. Explain and Transfer foreground the post-commitment
- * blocks and fold the reading blocks. Boundaries are always reachable and open only at Explain.
+ * blocks and fold the reading blocks. Boundaries say what the model leaves out of the mechanism,
+ * so they are read once the mechanism is the learner's to read: absent until the prediction is
+ * committed, reachable after it, and open only at Explain. Before commitment the air drill's
+ * boundary named the clamp order and the VA mixing drill's named the mixing point, one disclosure
+ * click from the question each was the answer to.
  */
 export function drillBlockVisibility(
   kind: DrillBlockKind,
@@ -77,7 +81,8 @@ export function drillBlockVisibility(
           ? 'collapsed'
           : 'hidden'
     case 'boundary':
-      return phase === 'explain' ? 'shown' : 'collapsed'
+      if (phase === 'explain') return 'shown'
+      return scope.predictionCommitted ? 'collapsed' : 'hidden'
     default:
       return 'shown'
   }

@@ -166,6 +166,20 @@ export function CircuitSchematic({
   const drainageChattering = drainageChatterActive(state)
   const gasMoving = state.gas.sourceConnected && state.gas.sweepLpm > 0
   const startupInspectionCompleted = state.scenario.correctedFaults.includes('startup-inspection')
+  /*
+   * The VA drawing marks where the two circulations meet. For the one question whose answer is
+   * that meeting point — the differential-oxygenation fault, before its prediction is committed —
+   * the map keeps the right-arm monitor and the limb reminder, which are readings, and withholds
+   * the native-ejection arrow, the mixing point and their words in the drawing, in its description
+   * and in the boundary note alike, the way it withholds the channel placements for the flow-path
+   * section. Derived from the engine's own fault list and commitment flag, as the pattern label
+   * below is, so this component still never has to know which case is loaded; every other VA
+   * lesson draws the cue as it always has.
+   */
+  const mixingCueWithheld =
+    isVa &&
+    state.scenario.activeFaults.includes('differential-hypoxemia') &&
+    !state.scenario.prediction.committed
   const postPumpPath = 'M486 346 Q512 346 526 364 Q536 377 552 385 H700'
   const returnLimbPath = `M825 385 H1000 Q1042 385 1042 427 V512 Q1042 540 1014 540 H${
     returnPortX + 28
@@ -194,7 +208,9 @@ export function CircuitSchematic({
       : ' Where each pressure channel is taken on this path is what this lesson asks you to place, so the sensor locations are drawn and described once you have committed your prediction.'
   }${
     isVa
-      ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
+      ? mixingCueWithheld
+        ? ' Right-arm monitoring and the need for a separate distal-limb review are also shown; the rest of the venoarterial annotation is drawn once you have committed your prediction.'
+        : ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
       : ' Both cannulas remain in the venous circulation and systemic flow still depends on the native heart.'
   } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.${
     // The chatter badge is drawn inside an SVG with role="img", so its text is not exposed to
@@ -443,17 +459,31 @@ export function CircuitSchematic({
               />
             )}
             {isVa ? (
-              <g aria-label="VA native ejection, mixing, and monitoring cues">
-                <path
-                  d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
-                  className={styles.nativeEjectionPath}
-                  markerEnd="url(#cardiohelp-return-arrow)"
-                />
-                <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
-                <path d="M196 207 V188 H278" className={styles.mixingLeader} />
-                <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
-                  MIXING REGION VARIES
-                </text>
+              <g
+                aria-label={
+                  mixingCueWithheld
+                    ? 'VA monitoring cues'
+                    : 'VA native ejection, mixing, and monitoring cues'
+                }
+                data-va-mixing-cue={mixingCueWithheld ? 'withheld' : 'shown'}
+              >
+                {mixingCueWithheld ? null : (
+                  <>
+                    <path
+                      d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
+                      className={styles.nativeEjectionPath}
+                      markerEnd="url(#cardiohelp-return-arrow)"
+                    />
+                    <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
+                    <path d="M196 207 V188 H278" className={styles.mixingLeader} />
+                    <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
+                      MIXING REGION VARIES
+                    </text>
+                    <text x="42" y="109" className={styles.vaCueLabel}>
+                      NATIVE EJECTION → UPPER BODY
+                    </text>
+                  </>
+                )}
                 <circle cx="258" cy="223" r="23" className={styles.rightArmMonitor} />
                 <text x="258" y="219" textAnchor="middle" className={styles.rightArmMonitorLabel}>
                   R ARM
@@ -464,9 +494,6 @@ export function CircuitSchematic({
                 <path d="M244 447 C255 462 263 476 266 493" className={styles.distalPerfusionCue} />
                 <text x="288" y="493" textAnchor="end" className={styles.distalPerfusionLabel}>
                   DISTAL LIMB CHECK
-                </text>
-                <text x="42" y="109" className={styles.vaCueLabel}>
-                  NATIVE EJECTION → UPPER BODY
                 </text>
               </g>
             ) : null}
@@ -739,12 +766,18 @@ export function CircuitSchematic({
           On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
           the full circuit.
         </p>
-        {isVa ? (
+        {isVa && !mixingCueWithheld ? (
           <p className={styles.circuitPanHint} data-local-model-boundary="va-mixing-fixed">
             Model boundary: the mixing region is drawn where this diagram places it and does not
             move. In a real VA circuit its position shifts with the balance between native ejection
             and circuit flow, and that shift is what decides which beds each side supplies. This
             simulation does not derive it, so nothing you change here will move the label.
+          </p>
+        ) : null}
+        {mixingCueWithheld ? (
+          <p className={styles.circuitWithheldNote} data-va-mixing-withheld-note>
+            Part of this map’s venoarterial annotation is held back until you have committed your
+            prediction.
           </p>
         ) : null}
 
@@ -828,7 +861,7 @@ export function CircuitSchematic({
             {drainageChattering && pressuresInterpretable
               ? 'Visible + text cue: drainage line chattering with increasingly negative pVen.'
               : pressuresInterpretable
-                ? 'Compare flow and all three pressure locations; do not interpret one value in isolation.'
+                ? 'Compare flow and all three pressure locations; do not interpret one value on its own.'
                 : 'The pressure zones are not reporting an interpretable value, so no pressure pattern can be read from this frame.'}
           </span>
         </div>
@@ -890,6 +923,10 @@ export function GasBlenderPanel({
   const fio2TargetMatched = initiationTargets
     ? Math.abs(state.gas.fio2 - initiationTargets.fio2) <= (initiationTargets.fio2Tolerance ?? 0.01)
     : false
+  // The blender's setting and what reaches the membrane, the two numbers the observe steps ask the
+  // learner to compare. Delivered is the model's own rule: the set flow while the source is
+  // connected, nothing while it is not.
+  const deliveredSweepLpm = state.gas.sourceConnected ? state.gas.sweepLpm : 0
 
   return (
     <section
@@ -1042,13 +1079,26 @@ export function GasBlenderPanel({
         </small>
       </label>
 
-      <div className={styles.sourceState} data-connected={state.gas.sourceConnected} role="status">
+      {/*
+        Two readings, not a status word. This block used to print the supply state in words — "Gas
+        source interrupted", "No sweep-gas delivery" — which is the gas-path drills' answer stated
+        as a label, on the surface those drills open before their prediction. The disagreement
+        between the set and the delivered flow is the signal the observe step asks the learner to
+        read; what it means waits for the revealed localization row.
+      */}
+      <div
+        className={styles.sourceState}
+        data-connected={state.gas.sourceConnected}
+        data-sweep-delivery
+        role="status"
+      >
         {state.gas.sourceConnected ? <PlugZap aria-hidden="true" /> : <Fan aria-hidden="true" />}
         <span>
-          <strong>Gas source {state.gas.sourceConnected ? 'connected' : 'interrupted'}</strong>
-          <small>
-            {state.gas.sourceConnected ? 'Flow available to oxygenator' : 'No sweep-gas delivery'}
-          </small>
+          <strong>
+            Set {state.gas.sweepLpm.toFixed(1)} L/min · delivered {deliveredSweepLpm.toFixed(1)}{' '}
+            L/min
+          </strong>
+          <small>Sweep flow reaching the membrane, read against the setting</small>
         </span>
       </div>
       {!state.gas.sourceConnected ? (

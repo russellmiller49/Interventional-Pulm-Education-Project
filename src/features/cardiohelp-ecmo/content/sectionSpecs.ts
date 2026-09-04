@@ -165,7 +165,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
   },
   {
     sectionId: 'arterial-bubble-stop',
-    newConcept: 'a stopped pump is not an isolated patient',
+    newConcept: 'a stopped pump has not taken the patient off the circuit',
     objective:
       "Tell the device's stop, the clamps that protect the patient, the air source and the restart apart as separate acts",
     prerequisiteSectionIds: ['startup-sensor-orientation'],
@@ -257,7 +257,7 @@ export const ecmoSectionSpecs: readonly EcmoSectionSpec[] = Object.freeze([
   },
   {
     sectionId: 'va-arterial-bubble-stop',
-    newConcept: 'a pump stop interrupts circulation but does not isolate the artery',
+    newConcept: 'a pump stop interrupts circulation but leaves the artery on the circuit',
     objective:
       "Tell the device's stop, the clamps that protect the patient, the air source and the restart apart, and name what circulation loses meanwhile",
     prerequisiteSectionIds: ['va-startup-sensor-orientation'],

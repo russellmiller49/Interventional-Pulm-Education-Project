@@ -81,9 +81,11 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
     },
     {
       label: 'Circuit and sensors',
+      // The state of the circuit domain as a reading — inspected or not — without the name of the
+      // walk, which is this drill's answer and is held for the verdict.
       reading: state.circuit.circuitInspected
-        ? 'Tip-to-tip inspection recorded on this circuit.'
-        : 'No tip-to-tip inspection recorded on this circuit.',
+        ? 'Circuit inspection recorded on this circuit.'
+        : 'No circuit inspection recorded on this circuit.',
       movement:
         'Flow-probe orientation, which pressure sits on which limb, connections and both cannulas are established by hand, not by the screen.',
     },
@@ -125,7 +127,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
         <p className="mt-1">{stageSummary}</p>
         {inspectionOutstanding ? (
           <p className="mt-2 text-muted-foreground" data-startup-inspection-outstanding>
-            The startup diagnostic and the tip-to-tip inspection are both still outstanding on this
+            The startup diagnostic and the circuit inspection are both still outstanding on this
             circuit — whether you have arrived here for the first time or come back to it after the
             demonstration.
           </p>
