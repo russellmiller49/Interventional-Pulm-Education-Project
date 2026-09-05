@@ -361,7 +361,7 @@ describe('stage layout', () => {
 
   it('bounds the module shell on the viewport and contains its overflow', () => {
     const rule = cssRuleBody(moduleCss, ".moduleShell[data-activity-mode='true']")
-    expect(rule).toContain('height: calc(100dvh - 4rem)')
+    expect(rule).toContain('height: calc(100dvh - var(--site-header-height, 4rem))')
     expect(rule).toContain('min-height: 0')
     expect(rule).toContain('overflow: hidden')
   })

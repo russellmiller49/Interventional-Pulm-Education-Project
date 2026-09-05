@@ -21,7 +21,7 @@
   .moduleShell[data-activity-mode='true'] {
     width: 100%;
     max-width: none;
-    height: calc(100dvh - 4rem);
+    height: calc(100dvh - var(--site-header-height, 4rem));
     min-height: 0;
     overflow: hidden;
     padding: 0;

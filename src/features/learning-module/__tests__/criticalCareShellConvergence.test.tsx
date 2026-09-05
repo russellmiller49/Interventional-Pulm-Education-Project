@@ -51,7 +51,7 @@ describe('critical-care shared shell convergence', () => {
     ]) {
       const moduleStyles = readFileSync(join(process.cwd(), path), 'utf8')
       expect(moduleStyles).toMatch(
-        /\.moduleShell\[data-activity-mode='true'\][\s\S]*height: calc\(100dvh - 4rem\)[\s\S]*overflow: hidden/,
+        /\.moduleShell\[data-activity-mode='true'\][\s\S]*height: calc\(100dvh - var\(--site-header-height, 4rem\)\)[\s\S]*overflow: hidden/,
       )
     }
   })

@@ -194,6 +194,22 @@ The round's task copy also told the learner to use "Advance one breath", which l
 a breath boundary where flow is back at zero and the pause does not count; it now says to press
 Pause while the flow trace is below its zero line, and to press Run and try again if missed.
 
+## 6d. Owner review, third finding
+
+"The website header cuts off the top of the module." The site header is `h-16 md:h-20` with a
+one-pixel border — 81px on a desktop — and every critical-care module shell reserved a flat 4rem
+(64px) for it, so the stage was 17px taller than the space beneath the header, the document could
+scroll by that much, and the section header's kicker slid under the sticky site header. The ECMO R4
+record measured the same residual and left it as a shared-frame constant outside its scope.
+
+Fixed at the source rather than papered over: `globals.css` now declares `--site-header-height`
+(`calc(4rem + 1px)`, `calc(5rem + 1px)` from the `md` breakpoint), matching the header's classes,
+and the four module shells plus the shared V2 frame size themselves to
+`calc(100dvh - var(--site-header-height, 4rem))`. At 1440×900 the header and the stage now sum to
+exactly the viewport (81 + 819) and `window.scrollY` stays at zero after a forced scroll. The two
+tests that pinned the literal (`criticalCareShellConvergence`, `foundation-workspace-layout`) pin
+the token form; the ECMO, MCS and CRRT suites — 148 suites, 3476 tests — pass unchanged otherwise.
+
 ## 7. What the tests pin
 
 `npx jest src/features/mechanical-ventilation src/features/critical-care src/features/learning-module 'src/app/\[locale\]/mechanical-ventilation' --runInBand`:
