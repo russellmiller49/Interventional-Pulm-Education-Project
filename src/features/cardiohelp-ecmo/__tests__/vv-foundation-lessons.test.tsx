@@ -237,7 +237,7 @@ describe('vv-series-physiology panel', () => {
       <EcmoFoundationTeachingPanel sectionId="vv-series-physiology" state={state} />,
     )
     const text = container.textContent ?? ''
-    expect(text).toMatch(/the case authors where this starts/i)
+    expect(text).toMatch(/each case sets where this starts/i)
     expect(text).toMatch(/more flow than (it|the case) opened with raises/i)
     // The direction is the teaching object; the coefficient is not a bedside quantity.
     expect(text).toMatch(/the direction is the teaching object here, not the size/i)

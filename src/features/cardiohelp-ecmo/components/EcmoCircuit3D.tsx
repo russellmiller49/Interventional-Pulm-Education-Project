@@ -271,9 +271,9 @@ export function EcmoCircuit3D({
           <span className={styles.kicker}>Interactive flow isolation</span>
           <h3>Bedside circuit clamps</h3>
           <p>
-            Closing either modeled limb immediately interrupts forward circuit flow. Use clamp
-            isolation only when the learning scenario calls for it; a running pump against an
-            occluded limb can create hazardous pressure conditions.
+            Closing either limb immediately interrupts forward circuit flow. Use clamp isolation
+            only when the learning scenario calls for it; a running pump against an occluded limb
+            can create hazardous pressure conditions.
           </p>
         </div>
         <div className={styles.clampControlGrid}>
@@ -312,7 +312,7 @@ export function EcmoCircuit3D({
             <span>
               <strong>Resume support per current IFU and approved local protocol</strong>
               <small>
-                A bounded simulation abstraction. It stands in for the device- and program-specific
+                A deliberate simplification. It stands in for the device- and program-specific
                 resumption sequence and does not reproduce or teach that sequence.
               </small>
             </span>
@@ -327,10 +327,10 @@ export function EcmoCircuit3D({
           <strong>{flowState}</strong>
           <span>
             {!clampControlsEnabled
-              ? 'Commit the scenario prediction before using circuit isolation controls.'
+              ? 'Commit your prediction for this case before using the circuit isolation controls.'
               : closedClampCount === 0
                 ? 'Both circuit clamps are open.'
-                : `${closedClampCount} clamp${closedClampCount === 1 ? '' : 's'} closed; modeled forward flow is stopped.`}
+                : `${closedClampCount} clamp${closedClampCount === 1 ? '' : 's'} closed; forward flow is stopped.`}
           </span>
         </div>
       </div>

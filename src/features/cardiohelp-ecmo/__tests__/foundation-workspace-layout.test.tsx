@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { EcmoFoundationLessonActivity } from '../components/EcmoFoundationLessonActivity'
@@ -9,37 +9,42 @@ import { FitWidthSurface, fitWidthScale } from '../components/FitWidthSurface'
 import { ecmoInteractiveFoundationSectionIds } from '../content/foundationLessonRuntime'
 
 /**
- * The foundation workspace's layout guarantees.
+ * The foundation section's layout guarantees, now on the lesson stage.
  *
- * Four of them are measurable here and one is not. Scale arithmetic, pane focus, scroll containment
- * and which classes and tokens are declared are all assertable in jsdom. Computed colour contrast is
- * not: jsdom does not resolve `hsl(var(--token))`, cascade a CSS module, or composite a background,
- * so a "contrast" assertion here would be measuring a stub. That one is measured in a browser
- * against the real stylesheet, through the fixture built by
- * `scripts/cardiohelp-ecmo/build-foundation-workspace-preview.mts`, which publishes
- * `window.__ecmoWorkspaceProbe()` for exactly that purpose. What is asserted here instead is that the
- * workspace carries the theme class and that the class declares every token the utilities read —
- * the two things that, if broken, would silently reinstate the unreadable text.
+ * Two of them are measurable here and one is not. Scale arithmetic and which classes, panes and
+ * tokens are declared are assertable in jsdom. Computed colour contrast is not: jsdom does not
+ * resolve `hsl(var(--token))`, cascade a CSS module, or composite a background, so a "contrast"
+ * assertion here would be measuring a stub. That one is measured in a browser against the real
+ * stylesheet. What is asserted here instead is the arrangement a learner reads — three panes in a
+ * frame the shell sizes to the viewport — and that the stylesheet still declares the rules that,
+ * if broken, would silently reinstate a page that scrolls as a whole or paints dark text on dark.
  */
+
+const mockPush = jest.fn()
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string }
+    children: ReactNode
+  }) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...props}>
       {children}
     </a>
   ),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 
 /**
- * Mount counters on the two device panes.
+ * Mount counters on the two device surfaces.
  *
  * Neither renders under jsdom — the circuit view reaches three.js through `EcmoCircuit3D` — and
  * neither is what these assertions read. What matters is how many times each is mounted, because a
- * focus change that remounted the console would restart the simulation the learner is reading.
+ * layout that remounted the console would restart the simulation the learner is reading.
  */
 const consoleMounts = { count: 0 }
 const circuitMounts = { count: 0 }
@@ -59,33 +64,43 @@ jest.mock('../components/CardiohelpConsole', () => {
 jest.mock('../components/CircuitAndMonitors', () => {
   const { useEffect } = jest.requireActual<typeof import('react')>('react')
   return {
-    CircuitAndMonitors: () => {
+    CircuitSchematic: () => {
       useEffect(() => {
         circuitMounts.count += 1
       }, [])
-      return <div data-testid="circuit-and-monitors" />
+      return <div data-testid="circuit-schematic" />
     },
+    GasBlenderPanel: () => <div data-testid="gas-blender-panel" />,
+    PatientMonitor: () => <div data-testid="patient-monitor" />,
+    TrendPanel: () => <div data-testid="trend-panel" />,
   }
 })
 
-const workspaceCssPath = join(
-  process.cwd(),
-  'src/features/cardiohelp-ecmo/components/EcmoFoundationWorkspace.module.css',
+const moduleCss = readFileSync(
+  join(process.cwd(), 'src/features/cardiohelp-ecmo/components/cardiohelp-ecmo.module.css'),
+  'utf8',
 )
-const workspaceCss = readFileSync(workspaceCssPath, 'utf8')
+const stageCss = readFileSync(
+  join(process.cwd(), 'src/features/cardiohelp-ecmo/components/stage/EcmoLessonStage.module.css'),
+  'utf8',
+)
+const fitWidthCss = readFileSync(
+  join(process.cwd(), 'src/features/cardiohelp-ecmo/components/FitWidthSurface.module.css'),
+  'utf8',
+)
 
-/** The block of a single top-level rule, so a token can be asserted to be in the right rule. */
-function cssRuleBody(selector: string): string {
-  const start = workspaceCss.indexOf(`${selector} {`)
-  if (start < 0)
-    throw new Error(`${selector} is not declared in EcmoFoundationWorkspace.module.css`)
-  const end = workspaceCss.indexOf('}', start)
-  return workspaceCss.slice(start, end)
+/** The block of a single rule, so a declaration can be asserted to be in the right rule. */
+function cssRuleBody(css: string, selector: string): string {
+  const start = css.indexOf(`${selector} {`)
+  if (start < 0) throw new Error(`${selector} is not declared in the stylesheet`)
+  const end = css.indexOf('}', start)
+  return css.slice(start, end)
 }
 
 beforeEach(() => {
   consoleMounts.count = 0
   circuitMounts.count = 0
+  mockPush.mockReset()
 })
 
 afterEach(cleanup)
@@ -263,7 +278,7 @@ describe('FitWidthSurface', () => {
     expect(surface().dataset.availableWidth).toBe('400')
   })
 
-  it('remeasures when the workspace focus changes', () => {
+  it('remeasures when the remeasure key changes', () => {
     geometry.available = 400
     geometry.intrinsicWidth = 800
     geometry.intrinsicHeight = 600
@@ -275,7 +290,7 @@ describe('FitWidthSurface', () => {
     const measurementsAfterMount = geometry.contentMeasurements
     expect(surface().dataset.fitScale).toBe('0.5000')
 
-    // Maximizing the pane widens it. Nothing about the child changed, so only a remeasure can find it.
+    // The pane widened. Nothing about the child changed, so only a remeasure can find it.
     geometry.available = 1200
     rerender(
       <FitWidthSurface remeasureKey="primary">
@@ -301,12 +316,14 @@ describe('FitWidthSurface', () => {
     expect(surface().dataset.fitMode).toBe('actual')
     expect(surface().dataset.fitScale).toBe('1.0000')
     expect(content().style.transform).toBe('')
-    expect(cssRuleBody(".fitSurface[data-fit-mode='actual']")).toContain('overflow-x: auto')
+    expect(cssRuleBody(fitWidthCss, ".fitSurface[data-fit-mode='actual']")).toContain(
+      'overflow-x: auto',
+    )
   })
 })
 
 /* ------------------------------------------------------------------ *
- * B. Workspace focus
+ * B. The stage layout
  * ------------------------------------------------------------------ */
 
 function mountLesson(
@@ -318,218 +335,103 @@ function mountLesson(
   return render(<EcmoFoundationLessonActivity sectionId={sectionId} supportMode={supportMode} />)
 }
 
-function frame() {
-  const element = document.querySelector('[data-ecmo-workspace-frame]')
-  if (!(element instanceof HTMLElement)) throw new Error('no workspace frame rendered')
+function shell(): HTMLElement {
+  const element = document.querySelector('[data-critical-care-activity-shell]')
+  if (!(element instanceof HTMLElement)) throw new Error('no activity shell rendered')
   return element
 }
 
-function paneRegions() {
-  return Array.from(document.querySelectorAll('[data-ecmo-workspace-frame] [role="region"]'))
+function panes(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('[data-pane]'))
 }
 
-function scroller(pane: 'primary' | 'secondary' | 'tertiary') {
-  const element = document.querySelector(`[data-scroll-pane="${pane}"]`)
-  if (!(element instanceof HTMLElement)) throw new Error(`no scroll pane stamped for ${pane}`)
-  return element
-}
-
-describe('foundation workspace focus', () => {
-  it('renders all three panes, and only one of each device surface, by default', () => {
+describe('stage layout', () => {
+  it('renders the shell root inside the module frame’s activity mode', () => {
     mountLesson()
 
-    expect(frame().dataset.workspaceFocus).toBe('all')
-    expect(paneRegions()).toHaveLength(3)
-    for (const region of paneRegions()) {
-      expect(region.getAttribute('data-mobile-visible')).toBe('true')
-    }
-    expect(screen.getAllByTestId('cardiohelp-console')).toHaveLength(1)
-    expect(screen.getAllByTestId('circuit-and-monitors')).toHaveLength(1)
-    expect(consoleMounts.count).toBe(1)
-    expect(circuitMounts.count).toBe(1)
-    // One workspace, not two.
-    expect(document.querySelectorAll('[data-ecmo-workspace-frame] > section')).toHaveLength(1)
+    expect(shell().getAttribute('data-critical-care-activity-shell')).toBe('true')
+    expect(shell().getAttribute('data-ecmo-shell')).toBe('learn')
+    expect(shell().getAttribute('aria-label')).toBe('VV foundation section')
+    // The frame hands the viewport to the shell rather than letting the page grow.
+    const frame = shell().closest('main')
+    expect(frame).not.toBeNull()
+    expect(frame?.getAttribute('data-activity-mode')).toBe('true')
+    expect(shell().querySelector('[data-ecmo-stage-frame]')).not.toBeNull()
   })
 
-  it('maximizes the device pane and hides the other two', () => {
-    mountLesson()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize circuit & console' }))
-
-    expect(frame().dataset.workspaceFocus).toBe('primary')
-    const visibility = paneRegions().map((region) => region.getAttribute('data-mobile-visible'))
-    expect(visibility).toEqual(['true', 'false', 'false'])
-    expect(screen.getByRole('button', { name: 'Maximize circuit & console' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-  })
-
-  it('maximizes the teaching and activity panes too', () => {
-    mountLesson()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize teaching' }))
-    expect(frame().dataset.workspaceFocus).toBe('secondary')
-    expect(paneRegions().map((region) => region.getAttribute('data-mobile-visible'))).toEqual([
-      'false',
-      'true',
-      'false',
-    ])
-
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize your turn' }))
-    expect(frame().dataset.workspaceFocus).toBe('tertiary')
-    expect(paneRegions().map((region) => region.getAttribute('data-mobile-visible'))).toEqual([
-      'false',
-      'false',
-      'true',
-    ])
-  })
-
-  it('hides the resize handles and collapses to one column while focused', () => {
-    mountLesson()
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize circuit & console' }))
-
-    const workspace = document.querySelector('[data-ecmo-workspace-frame] > section')
-    expect(workspace?.className).toContain('focusedWorkspace')
-
-    // What that class does. jsdom applies no CSS module, so the rule itself is the assertion.
-    expect(workspaceCss).toContain(
-      '.focusedWorkspace [data-teaching-resize-handle] {\n  display: none;\n}',
-    )
-    expect(workspaceCss).toContain(
-      ".focusedWorkspace [data-mobile-visible='false'] {\n  display: none;\n}",
-    )
-    expect(cssRuleBody('.focusedWorkspace.focusedWorkspace')).toContain(
-      'grid-template-columns: minmax(0, 1fr)',
-    )
-  })
-
-  it('restores all three panes without remounting the simulation', () => {
-    mountLesson()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize circuit & console' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Return to three panes' }))
-
-    expect(frame().dataset.workspaceFocus).toBe('all')
-    expect(paneRegions().map((region) => region.getAttribute('data-mobile-visible'))).toEqual([
-      'true',
-      'true',
-      'true',
-    ])
-    expect(screen.getAllByTestId('cardiohelp-console')).toHaveLength(1)
-    expect(screen.getAllByTestId('circuit-and-monitors')).toHaveLength(1)
-    expect(consoleMounts.count).toBe(1)
-    expect(circuitMounts.count).toBe(1)
-  })
-
-  it('toggles focus off when the same pane is chosen twice', () => {
-    mountLesson()
-    const button = screen.getByRole('button', { name: 'Maximize teaching' })
-
-    fireEvent.click(button)
-    expect(frame().dataset.workspaceFocus).toBe('secondary')
-    fireEvent.click(button)
-    expect(frame().dataset.workspaceFocus).toBe('all')
-  })
-
-  it('announces the focused pane politely, and only offers a restore when there is one', () => {
-    mountLesson()
-
-    const restore = screen.getByRole('button', { name: 'Return to three panes' })
-    expect(restore).toBeDisabled()
-    expect(screen.getByText('All three workspace panels are shown.').getAttribute('role')).toBe(
-      'status',
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize circuit & console' }))
-
-    expect(restore).toBeEnabled()
-    const announcement = screen.getByText(/Circuit & console is maximized/)
-    expect(announcement).toHaveAttribute('role', 'status')
-    expect(announcement).toHaveClass('sr-only')
-  })
-
-  it('offers the console at actual size, defaulting to fit', () => {
-    mountLesson()
-    const toggle = screen.getByRole('button', { name: 'Console at actual size' })
-
-    expect(toggle).toHaveAttribute('aria-pressed', 'false')
-    expect(toggle.dataset.consoleFitMode).toBe('fit')
-
-    fireEvent.click(toggle)
-
-    expect(toggle).toHaveAttribute('aria-pressed', 'true')
-    expect(toggle.dataset.consoleFitMode).toBe('actual')
-  })
-})
-
-/* ------------------------------------------------------------------ *
- * C. Scroll containment
- * ------------------------------------------------------------------ */
-
-describe('foundation workspace pane scrolling', () => {
-  it('stamps the scroll marker on the element that actually scrolls', () => {
-    mountLesson()
-
-    for (const pane of ['primary', 'secondary', 'tertiary'] as const) {
-      // The scrolling element is the shared pane region, not this activity's content wrapper.
-      expect(scroller(pane).getAttribute('role')).toBe('region')
-      expect(scroller(pane).querySelector('[data-pane]')).not.toBeNull()
-    }
-    expect(scroller('secondary').querySelector('[data-pane="teaching"]')).not.toBeNull()
-  })
-
-  it('declares independent, contained scrolling for every pane', () => {
-    const rule = cssRuleBody('.readableWorkspace [data-scroll-pane]')
-    expect(rule).toContain('min-width: 0')
+  it('bounds the module shell on the viewport and contains its overflow', () => {
+    const rule = cssRuleBody(moduleCss, ".moduleShell[data-activity-mode='true']")
+    expect(rule).toContain('height: calc(100dvh - 4rem)')
     expect(rule).toContain('min-height: 0')
-    expect(rule).toContain('overflow-y: auto')
-    expect(rule).toContain('overscroll-behavior: contain')
-    expect(rule).toContain('scrollbar-gutter: stable')
+    expect(rule).toContain('overflow: hidden')
   })
 
-  it('scrolls one pane without moving the others or the page', () => {
-    mountLesson()
-    const before = {
-      primary: scroller('primary').scrollTop,
-      secondary: scroller('secondary').scrollTop,
-      tertiary: scroller('tertiary').scrollTop,
-      page: window.scrollY,
+  it('fills the shell with the workspace frame and paints the dark workspace', () => {
+    const frame = cssRuleBody(stageCss, '.workspaceFrame')
+    expect(frame).toContain('height: 100%')
+    expect(frame).toContain('min-height: 0')
+
+    // Doubled for specificity: the shared `.workspace` rule paints a light surface at the same
+    // single-class specificity, and which of two equal rules wins would depend on stylesheet order.
+    const workspace = cssRuleBody(stageCss, '.workspace.workspace')
+    expect(workspace).toContain('color-scheme: dark')
+    expect(workspace).toMatch(/background: #/)
+    expect(workspace).toMatch(/color: var\(--ink/)
+
+    // And the dark palette re-declares every semantic token the utilities read.
+    const tokens = cssRuleBody(stageCss, '.workspace')
+    for (const token of [
+      '--background',
+      '--foreground',
+      '--card',
+      '--card-foreground',
+      '--muted',
+      '--muted-foreground',
+      '--primary',
+      '--primary-foreground',
+      '--border',
+      '--input',
+      '--ring',
+    ]) {
+      expect(tokens).toContain(`${token}: `)
     }
-
-    scroller('secondary').scrollTop = 480
-    fireEvent.scroll(scroller('secondary'))
-
-    expect(scroller('secondary').scrollTop).toBe(480)
-    expect(scroller('primary').scrollTop).toBe(before.primary)
-    expect(scroller('tertiary').scrollTop).toBe(before.tertiary)
-    expect(window.scrollY).toBe(before.page)
   })
 
-  it('puts each pane back where it was after a focus change', () => {
+  it('renders exactly three panes, each in its own labelled region of the shared workspace', () => {
     mountLesson()
 
-    scroller('secondary').scrollTop = 240
-    fireEvent.scroll(scroller('secondary'))
-    scroller('primary').scrollTop = 90
-    fireEvent.scroll(scroller('primary'))
+    expect(panes().map((pane) => pane.getAttribute('data-pane'))).toEqual([
+      'simulator',
+      'teaching',
+      'task',
+    ])
+    const workspace = screen.getByRole('region', {
+      name: 'ECMO lesson workspace: simulator, teaching, and steps',
+    })
+    expect(workspace.className).toContain('workspace')
+    expect(shell().querySelector('[data-ecmo-stage-frame]')).toContainElement(workspace)
+    for (const [pane, label] of [
+      ['simulator', 'Simulator panel'],
+      ['teaching', 'Teaching panel'],
+      ['task', 'Steps panel'],
+    ] as const) {
+      const region = screen.getByRole('region', { name: label })
+      expect(region.querySelector(`[data-pane="${pane}"]`)).not.toBeNull()
+    }
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Maximize circuit & console' }))
-    /*
-     * A browser destroys the scroll box of a pane it takes out of the layout, so the pane comes back
-     * at the top. jsdom has no layout and so cannot do that to us; the reset is applied by hand here
-     * so that what is under test is the restore, which is the part that has to work. The browser
-     * fixture confirms the reset itself: at 1280 × 800 the teaching pane really does read 0 while
-     * hidden and 520 again after the restore.
-     */
-    scroller('secondary').scrollTop = 0
-    scroller('tertiary').scrollTop = 0
+  it('mounts the console once, scaled to fit the simulator pane', () => {
+    mountLesson()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Return to three panes' }))
-
-    expect(scroller('secondary').scrollTop).toBe(240)
-    expect(scroller('primary').scrollTop).toBe(90)
-    expect(window.scrollY).toBe(0)
+    const simulator = document.querySelector('[data-pane="simulator"]')
+    const fit = simulator?.querySelector('[data-fit-width-surface]')
+    expect(fit).not.toBeNull()
+    expect(fit?.getAttribute('data-fit-mode')).toBe('fit')
+    expect(fit?.querySelector('[data-testid="cardiohelp-console"]')).not.toBeNull()
+    expect(screen.getAllByTestId('cardiohelp-console')).toHaveLength(1)
+    expect(screen.getAllByTestId('circuit-schematic')).toHaveLength(1)
+    expect(consoleMounts.count).toBe(1)
+    expect(circuitMounts.count).toBe(1)
   })
 
   it('keeps a wide matrix inside its own horizontal scroller', () => {
@@ -537,106 +439,29 @@ describe('foundation workspace pane scrolling', () => {
 
     const matrix = document.querySelector('[data-hypothesis-matrix]')
     expect(matrix).not.toBeNull()
-    const scrollerElement = matrix?.parentElement
-    expect(scrollerElement?.className).toContain('overflow-x-auto')
+    expect(document.querySelector('[data-pane="teaching"]')).toContainElement(matrix as HTMLElement)
+    const scroller = matrix?.parentElement
+    expect(scroller?.className).toContain('overflow-x-auto')
     // And the pane it lives in is allowed to be narrower than the matrix.
-    expect(cssRuleBody('.readingPane :global(.overflow-x-auto)')).toContain('min-width: 0')
-  })
-})
-
-/* ------------------------------------------------------------------ *
- * D. Theme
- * ------------------------------------------------------------------ */
-
-describe('foundation workspace theme', () => {
-  const semanticTokens = [
-    '--background',
-    '--foreground',
-    '--card',
-    '--card-foreground',
-    '--popover',
-    '--popover-foreground',
-    '--muted',
-    '--muted-foreground',
-    '--primary',
-    '--primary-foreground',
-    '--border',
-    '--input',
-    '--ring',
-  ]
-
-  it('puts the readable-theme class on the shared workspace', () => {
-    mountLesson()
-    const workspace = document.querySelector('[data-ecmo-workspace-frame] > section')
-    expect(workspace?.className).toContain('readableWorkspace')
-  })
-
-  it('re-declares every semantic token the utilities read', () => {
-    const rule = cssRuleBody('.readableWorkspace')
-    for (const token of semanticTokens) {
-      expect(rule).toContain(`${token}: `)
-    }
-    expect(rule).toContain('color-scheme: light')
-  })
-
-  it('bounds the workspace height on the viewport and a measured offset', () => {
-    const rule = cssRuleBody('.workspaceFrame')
-    expect(rule).toContain('100dvh')
-    expect(rule).toContain('var(--ecmo-workspace-offset')
-    expect(rule).toContain('min-height: 0')
-    expect(rule).toContain('overflow: hidden')
-  })
-
-  it('hands the device palette back to the console and circuit surfaces', () => {
-    mountLesson()
-    const surface = document.querySelector('[data-pane="circuit-and-console"] > .deviceSurface')
-    expect(surface).not.toBeNull()
-    expect(surface?.querySelector('[data-testid="cardiohelp-console"]')).not.toBeNull()
-    expect(surface?.querySelector('[data-testid="circuit-and-monitors"]')).not.toBeNull()
-    expect(cssRuleBody('.deviceSurface')).toContain('color: var(--ink')
-  })
-
-  it('sets essential copy without opacity-based dimming', () => {
-    mountLesson()
-
-    for (const pane of ['teaching', 'your-turn'] as const) {
-      const root = document.querySelector(`[data-pane="${pane}"]`)
-      expect(root).not.toBeNull()
-      const dimmed = Array.from(root?.querySelectorAll('*') ?? []).filter((element) => {
-        const className = element.getAttribute('class') ?? ''
-        return /(^|\s)opacity-\d/.test(className) || /text-[a-z-]+\/\d/.test(className)
-      })
-      expect(dimmed.map((element) => element.getAttribute('class'))).toEqual([])
-    }
-  })
-
-  it('promotes the reading panes to body-sized copy', () => {
-    mountLesson()
-    for (const pane of ['teaching', 'your-turn'] as const) {
-      expect(document.querySelector(`[data-pane="${pane}"]`)?.className).toContain('readingPane')
-    }
-    expect(cssRuleBody('.readingPane :global(.text-sm)')).toContain('font-size: 1rem')
-    expect(cssRuleBody('.readingPane :global(.text-xs)')).toContain('font-size: 0.9375rem')
-    // A short tracked uppercase string is a label and stays compact.
-    expect(cssRuleBody('.readingPane :global(.text-xs.uppercase)')).toContain(
-      'font-size: 0.8125rem',
+    expect(cssRuleBody(stageCss, '.teachingColumn :global(.overflow-x-auto)')).toContain(
+      'min-width: 0',
     )
   })
 })
 
 /* ------------------------------------------------------------------ *
- * E. Regression
+ * C. Regression
  * ------------------------------------------------------------------ */
 
-describe('foundation workspace regression', () => {
-  it('still mounts all ten interactive foundation sections in the workspace', () => {
+describe('stage layout regression', () => {
+  it('still mounts all ten interactive foundation sections on the stage', () => {
     expect(ecmoInteractiveFoundationSectionIds).toHaveLength(10)
 
     for (const sectionId of ecmoInteractiveFoundationSectionIds) {
       const supportMode = sectionId.startsWith('va-') ? 'va' : 'vv'
       const view = mountLesson(sectionId, supportMode)
-      expect(frame().dataset.workspaceFocus).toBe('all')
-      expect(paneRegions()).toHaveLength(3)
+      expect(shell().getAttribute('data-stage')).toBe(`${sectionId}-recognize`)
+      expect(panes()).toHaveLength(3)
       expect(screen.getAllByTestId('cardiohelp-console')).toHaveLength(1)
       view.unmount()
     }

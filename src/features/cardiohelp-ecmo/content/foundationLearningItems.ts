@@ -9,7 +9,7 @@ import type { EcmoInteractiveFoundationSectionId } from './foundationLessonRunti
  * Prediction and transfer items for the ten interactive foundation sections.
  *
  * Transfer is deliberately a different situation rather than the same question with the nouns
- * swapped: a learner who has understood the ledger should be able to reach a content problem from
+ * swapped: a learner who has understood oxygen delivery should be able to reach a content problem from
  * a flow problem, and a learner who has only memorised the first answer should not.
  *
  * Saturations are written without a unit symbol throughout — the learner-copy lint bars it, and
@@ -40,7 +40,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'content-and-flow-still-unknown',
             label:
-              'Very little — saturation is one part of content, and content still has to be multiplied by a flow.',
+              'Very little — saturation is one part of oxygen content, and content still has to be multiplied by a blood flow.',
             plausibility: 'best',
             rationale:
               'Delivery is flow multiplied by content, and content is dominated by hemoglobin as well as saturation. A high saturation on a low hemoglobin at a low flow can accompany markedly reduced delivery.',
@@ -58,19 +58,19 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
             label: 'Nothing can be said until oxygen consumption is measured.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'Consumption is genuinely part of the ledger, but the delivery side can already be recognised as compromised from the hemoglobin and the flow.',
+              'Oxygen consumption is genuinely part of the picture, but the delivery side can already be recognised as compromised from the hemoglobin and the flow.',
           },
           {
             id: 'raise-saturation-first',
             label: 'Raise the saturation further before considering anything else.',
             plausibility: 'unsafe',
             rationale:
-              'There is very little room left on the saturation term, and acting there leaves the two terms that are actually reduced untouched.',
+              'There is very little room left on the saturation, and acting there leaves the two components that are actually reduced untouched.',
           },
         ],
         correctChoiceIds: ['content-and-flow-still-unknown'],
         explanation:
-          'The ledger has three separable terms. Content depends mainly on hemoglobin and its saturation; flow is separate; consumption sits on the other side. A reassuring value in one term says nothing about the other two, which is why extracorporeal support is chosen by naming the step that has given way rather than by reading one number.',
+          'Oxygen delivery has three separable components. Oxygen content depends mainly on hemoglobin and its saturation; blood flow is separate; oxygen consumption sits on the other side. A reassuring value in one of them says nothing about the other two, which is why extracorporeal support is chosen by naming the component that is impaired rather than by reading one number.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },
@@ -81,34 +81,36 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         itemType: 'transfer-case',
         transferVariantId: 'ecmo.foundation.why.transfer-variant',
         contextRequirement: 'context-independent',
-        stem: 'A different patient has a saturation reading of 99 and a normal cardiac output, but a hemoglobin of 4.9 g/dL after ongoing bleeding. Which term of the delivery ledger has given way, and why would a saturation display be reassuring here?',
+        stem: 'A different patient has an oxygen saturation of 99 and a normal cardiac output, but a hemoglobin of 4.9 g/dL after ongoing bleeding. Which component of oxygen delivery is impaired, and why can the oxygen saturation still appear normal?',
         choices: [
           {
             id: 'content-via-hemoglobin',
             label:
-              'Content — the carrier itself is depleted, and saturation only reports the fraction of that reduced carrier that is loaded.',
+              'Oxygen content — the amount of hemoglobin available to carry oxygen is markedly reduced. Oxygen saturation only reflects the percentage of available hemoglobin that is bound to oxygen.',
             plausibility: 'best',
             rationale:
               'Saturation is a ratio. It stays high while the quantity being saturated falls, which is exactly why it reads as reassuring in profound anemia.',
           },
           {
             id: 'flow-term',
-            label: 'Flow — a bleeding patient must have inadequate cardiac output.',
+            label:
+              'Blood flow — severe bleeding necessarily causes inadequate cardiac output, while the saturation remains normal because the lungs can still oxygenate the blood that reaches them.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'Cardiac output is stated to be normal here, and can be maintained or even raised in anemia.',
           },
           {
             id: 'consumption-term',
-            label: 'Consumption — bleeding raises metabolic demand.',
+            label:
+              'Oxygen consumption — ongoing bleeding primarily increases metabolic demand, while the saturation remains normal because oxygen supply is preserved.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'Demand can certainly rise, but the term that has unambiguously given way in this description is the carrier itself.',
+              'Demand can certainly rise, but the component that is unambiguously impaired in this description is the carrier itself.',
           },
         ],
         correctChoiceIds: ['content-via-hemoglobin'],
         explanation:
-          'The same ledger reaches a different answer. In the earlier situation flow and content were both reduced; here flow is intact and the carrier is depleted. A saturation display behaves identically in both, which is the reason it cannot be used alone.',
+          'The same reasoning reaches a different answer. In the earlier situation blood flow and oxygen content were both reduced; here flow is intact and the carrier is depleted. An oxygen saturation behaves identically in both, which is the reason it cannot be used alone.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },
@@ -223,7 +225,8 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'flow-up-drainage-unchanged',
-            label: 'Flow should rise and the drainage pressure should stay where it is.',
+            label:
+              'Flow should rise and the drainage pressure should stay where it is, since the extra flow comes from the pump rather than from the drainage side.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'Flow does rise, but it is produced by increased suction, so the drainage side does not stay unchanged.',
@@ -237,7 +240,8 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'flow-down',
-            label: 'Flow should decrease because the circuit resistance rises with speed.',
+            label:
+              'Flow should decrease because the circuit resistance rises with speed, and the drainage pressure should ease as less blood is drawn.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'In a circuit with drainage available, raising speed raises flow. Flow stops responding when drainage becomes the limit, which this reference circuit is not.',
@@ -267,21 +271,23 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'membrane-resistance',
-            label: 'To the membrane lung.',
+            label:
+              'To the membrane lung — the pump is straining to push blood across a fouling membrane.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'A membrane limit shows itself as a widening gradient between the post-pump and return zones, not as a drainage pressure that keeps falling.',
           },
           {
             id: 'return-resistance',
-            label: 'To the return limb.',
+            label: 'To the return limb — something beyond the membrane is holding the flow back.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'Return-side resistance raises the post-pump pressures together; it does not drive the drainage side steadily more negative.',
           },
           {
             id: 'insufficient-information',
-            label: 'There is not enough information to say.',
+            label:
+              'There is not enough information to say without the gradient across the membrane.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'The flow-versus-speed relationship together with the drainage trend is the discriminating pair, and both are given.',
@@ -358,14 +364,16 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'gas-must-be-intact',
-            label: 'That gas delivery must be intact, since the circuit is still moving blood.',
+            label:
+              'That gas delivery must be intact, since a circuit still moving blood through the membrane is still ventilating it.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'The pump will keep moving blood through a membrane that is receiving no sweep gas at all.',
           },
           {
             id: 'membrane-failing',
-            label: 'That the membrane has stopped exchanging and should be changed.',
+            label:
+              'That the membrane has stopped exchanging and should be changed, since blood is still flowing through it.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'A membrane problem is one possibility, but the gas supply itself has to be examined before the membrane is blamed for not receiving it.',
@@ -405,7 +413,8 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'membrane-losing-transfer',
-            label: 'The membrane lung has stopped transferring oxygen properly.',
+            label:
+              'The membrane lung has stopped transferring oxygen properly, and the venous-line value has only climbed because the pump is running faster.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'A membrane losing transfer lowers the post-membrane saturation, and the drainage value follows the systemic value down with it. Here the drainage value has moved the other way.',
@@ -413,7 +422,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'native-lung-improving',
             label:
-              'The native lungs have recovered, which is raising the saturations the circuit sees.',
+              'The native lungs have recovered, which is raising the saturations the circuit sees on both sides of the membrane.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'Recovering native lungs would improve systemic oxygenation rather than worsen it, and the description states that systemic oxygenation is getting worse.',
@@ -451,14 +460,15 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'true-increase-in-useful-support',
             label:
-              'Useful support has genuinely increased: less of what is returned is being drained again, so the drainage limb now looks more like systemic venous blood.',
+              'Useful support has genuinely increased: less of what is returned is drained again, so the drainage limb now looks more like systemic venous blood.',
             plausibility: 'best',
             rationale:
               'When the re-drained share falls, the drainage saturation drops back toward the systemic value and more of what the pump moves reaches the tissues. Improving systemic oxygenation is the confirmation that the extra flow is doing work.',
           },
           {
             id: 'increased-recirculation',
-            label: 'Re-drainage has increased and the display is flattering the change.',
+            label:
+              'Re-drainage has increased and the display is flattering the change — a higher flow number straight after a cannula move is the re-drained share growing.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'More re-drainage pushes the drainage saturation up and systemic oxygenation down. Both have moved in the opposite direction here.',
@@ -466,7 +476,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'membrane-dysfunction',
             label:
-              'The membrane lung is beginning to give way, which is why the drainage value fell.',
+              'The membrane lung is beginning to give way, which is why the drainage value fell — the returned blood carries less oxygen back with it.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'A membrane losing transfer lowers the post-membrane saturation and worsens systemic oxygenation. Systemic oxygenation has improved here.',
@@ -499,7 +509,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'very-little-on-its-own',
             label:
-              'Very little — it has to be read against this circuit’s own history, its cannula and configuration, the patient’s context, and whether that channel is reporting properly.',
+              'Very little — it has to be read against this circuit’s own history, its cannula and configuration, and whether that channel is reporting properly.',
             plausibility: 'best',
             rationale:
               'Cannula size and position, patient size, temperature, hemoglobin, volume state and the device configuration all move this number without anything having gone awry. What carries information is the relationship among the signals and how it has behaved over time.',
@@ -507,14 +517,15 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'establishes-drainage-limitation',
             label:
-              'It establishes drainage limitation, because a more negative drainage pressure means the circuit is running short of volume.',
+              'It establishes drainage limitation, because a more negative drainage pressure means the circuit is running short of volume, whatever the flow is doing.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'Drainage limitation shows itself as flow that stops following speed while suction rises to chase it. Here flow has matched the set speed for hours.',
           },
           {
             id: 'deserves-attention',
-            label: 'It deserves attention, because any unfamiliar value should be looked into.',
+            label:
+              'It deserves attention, because any unfamiliar value should be looked into before the rest of the picture is trusted.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'Looking into it is sensible. The question is what it establishes, and on its own — with every other signal steady — it establishes very little.',
@@ -601,7 +612,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'recirculation-risen',
             label:
-              'Re-drainage has risen — expect a venous-line saturation that has climbed away from the systemic value while the flow that does useful work has fallen.',
+              'Re-drainage has risen — expect a venous-line saturation that has climbed away from the systemic value, the flow that does useful work fallen, and the carbon dioxide rising with the lost flow.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'A real member of this list, and the predicted finding is right. But re-drainage acts on oxygenation through the flow that reaches the tissues and leaves carbon dioxide clearance largely alone, so it does not account for a carbon dioxide value moving this fast.',
@@ -609,7 +620,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'membrane-failing',
             label:
-              'The membrane is failing — expect a gradient that has been climbing and a post-membrane saturation that no longer looks like the output of a working lung.',
+              'The membrane is failing — expect a gradient that has been climbing and a post-membrane saturation that no longer looks like the output of a working lung, with carbon dioxide the first function to go.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'Also a real member of this list with the right predicted finding. A membrane usually announces itself over hours in a climbing gradient rather than over minutes, so the speed here fits it poorly.',
@@ -647,7 +658,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'returned-blood-drained-again',
             label:
-              'A large share of what the pump returns is drained again immediately — so the pump counts it, the drainage limb is diluted by it, and very little of it reaches the tissues.',
+              'A large share of what the pump returns is drained again at once — the pump counts it, the drainage limb is diluted by it, and little of it reaches the tissues.',
             plausibility: 'best',
             rationale:
               'One mechanism produces all three readings. The pump cannot distinguish blood on its second circuit from blood on its first, the drainage limb is a mixture that the returned blood pulls upward, and what is left over after re-drainage is what actually does work.',
@@ -655,7 +666,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'membrane-transferring-more',
             label:
-              'The membrane is transferring more oxygen than before, which raises every saturation the circuit reports.',
+              'The membrane is transferring more oxygen than before, which raises every saturation the circuit reports, so the higher venous-line value is simply better blood coming back.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'The post-membrane saturation has not changed, and the patient’s systemic oxygenation is worse rather than better.',
@@ -663,7 +674,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'patient-venous-improved',
             label:
-              'The patient’s own venous saturation has improved, and the drainage limb is reporting that improvement.',
+              'The patient’s own venous saturation has improved, and the drainage limb is reporting that improvement while the pump simply moves more of it.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'The modeled systemic venous value has moved in the opposite direction. The drainage limb and the systemic estimate diverging is the finding, not a shared improvement.',
@@ -696,28 +707,31 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'watershed-moved-distally',
             label:
-              'The heart is ejecting more of its own poorly oxygenated blood, so the place where the two circulations meet has moved more distally and the upper body is now being supplied by the native lungs.',
+              'The heart is ejecting more of its own poorly oxygenated blood, so the two circulations now meet more distally and the upper body is being supplied by the native lungs.',
             plausibility: 'best',
             rationale:
               'In peripheral femoral venoarterial support the circuit returns blood retrograde up the aorta while the ventricle ejects anterograde down it. Raising native ejection relative to circuit flow moves their meeting place more distally, away from the aortic root and toward the return cannula, so the brachiocephalic, left common carotid and left subclavian arteries come to be filled from the native side. Where the meeting place sits relative to the aortic root also decides what the coronary arteries receive, and the right radial value does not settle that on its own.',
           },
           {
             id: 'membrane-losing-transfer',
-            label: 'The membrane lung has stopped transferring oxygen properly.',
+            label:
+              'The membrane lung has stopped transferring oxygen properly, and the right radial site is the first to show it because it lies furthest from the return cannula.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'A membrane losing transfer lowers the post-membrane saturation, and the femoral value would fall with it. Both are unchanged, and the femoral sample is the one nearest the return cannula.',
           },
           {
             id: 'circuit-flow-too-low',
-            label: 'Circuit flow has become inadequate and should be increased.',
+            label:
+              'Circuit flow has become inadequate and should be increased, since the upper body is the part of the circulation furthest from the return cannula and the first to run short.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'Displayed flow is unchanged, and the lower body is well saturated. Raising flow acts on a circulation that is already delivering what it was delivering.',
           },
           {
             id: 'sampling-artefact',
-            label: 'The two samples disagree, so one of them is unreliable and should be repeated.',
+            label:
+              'The two samples disagree, so one of them is unreliable and should be repeated before anything is read into a single low value.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'Repeating a sample is never unreasonable, but two arterial sites disagreeing is the expected consequence of two circulations in parallel rather than evidence of a bad sample. Treating the difference as noise discards the finding.',
@@ -725,7 +739,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'reassuring-recovery',
             label:
-              'Native cardiac function is recovering, so this is good news and needs no action.',
+              'Native cardiac function is recovering, so this is good news and needs no action — a heart that ejects again is what the support was for.',
             plausibility: 'unsafe',
             rationale:
               'Recovering ejection is indeed what produces this pattern, which is exactly why it is dangerous: the improvement in the heart is delivering poorly oxygenated blood to the brain and the coronary circulation. It is a finding that calls for attention to the native lungs, not for reassurance.',
@@ -796,14 +810,15 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'circuit-stable-patient-unestablished',
             label:
-              'That the circuit is behaving steadily — and nothing yet about pulsatility, whether the valve is opening, the difference between two arterial sampling sites, or the cannulated limb.',
+              'That the circuit is behaving steadily — and nothing yet about pulsatility, valve opening, the two arterial sampling sites, or the cannulated limb.',
             plausibility: 'best',
             rationale:
               'Every signal listed belongs to the circuit. The findings that distinguish a stable venoarterial run from a deteriorating one live outside the console, and an unchanged console is silent about all of them.',
           },
           {
             id: 'run-is-stable',
-            label: 'That the run is stable and the patient can be reviewed at the next round.',
+            label:
+              'That the run is stable and the patient can be reviewed at the next round, since a circuit that has not moved for hours has nothing left to declare.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'This treats the circuit display as a summary of the patient. In venoarterial support a distended ventricle, a moved watershed and a threatened limb can all develop with the console entirely unchanged.',
@@ -893,7 +908,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'sample-both-arterial-sites',
             label:
-              'Read an upper-body and a lower-body arterial saturation against each other, and look at the arterial trace and whether the valve is opening.',
+              'Read an upper-body and a lower-body arterial saturation against each other, and look at the arterial trace and the valve.',
             plausibility: 'best',
             rationale:
               'A gap between the two sites indicates a moved watershed; a flat trace with a valve that has stopped opening indicates a distended ventricle. One look at those two things separates the two explanations that an unchanged circuit is most likely to be hiding.',
@@ -907,14 +922,16 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'change-the-membrane',
-            label: 'Arrange a membrane change, since the membrane is the component that fails.',
+            label:
+              'Arrange a membrane change, since the membrane is the component that fails and the one the console cannot report on directly.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'A membrane losing performance shows itself in the gradient across it and in the post-membrane saturation. Both are stated to be unchanged, so this acts on the one component the findings already argue against.',
           },
           {
             id: 'wait-and-repeat',
-            label: 'Repeat the same circuit observations in an hour and see whether they move.',
+            label:
+              'Repeat the same circuit observations in an hour and see whether they move, since a real problem declares itself on the console given time.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
               'Repeating a set of signals that is already stated to be unchanged does not add information. The explanations still open are precisely the ones the circuit does not report.',
@@ -945,7 +962,8 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           },
           {
             id: 'watershed-moved',
-            label: 'The mixing watershed has moved and the upper body is receiving native blood.',
+            label:
+              'The mixing watershed has moved and the upper body is receiving native blood, which is what the carbon dioxide rise reflects.',
             plausibility: 'incorrect-mechanism',
             rationale:
               'That mechanism separates the two arterial saturations rather than lowering both, and it does not move carbon dioxide quickly.',
@@ -960,7 +978,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'sweep-is-set-so-gas-is-flowing',
             label:
-              'The gas side can be excluded, because the sweep control is still set where it was.',
+              'The gas side can be excluded, because the sweep control is still set where it was and a control that is set is a control that is delivering.',
             plausibility: 'unsafe',
             rationale:
               'A setting on a control establishes what was asked for, not what is arriving at the membrane. Excluding the gas path without looking at the connection is how the fastest and most reversible explanation gets missed.',

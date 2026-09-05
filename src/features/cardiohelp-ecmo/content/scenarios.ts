@@ -68,6 +68,19 @@ const standardUnsafeActions: readonly UnsafeActionPenalty[] = [
     critical: true,
   },
   {
+    id: 'air-correction-before-isolation',
+    label:
+      'Corrected or cleared circuit air before both near-patient clamps had isolated the patient',
+    points: 50,
+    critical: true,
+  },
+  {
+    id: 'support-reduction-on-battery',
+    label: 'Reduced pump support on reserve power to stretch the battery time',
+    points: 50,
+    critical: true,
+  },
+  {
     // Kept separate from `rpm-during-collapse`: recirculation is not a drainage-collapse state, and
     // labelling it as one would name the wrong mechanism in the debrief the learner reads.
     id: 'rpm-during-recirculation',
@@ -199,7 +212,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       safetyNotes: ['Reject a failed self-test and follow local replacement/escalation policy.'],
     },
-    evidenceIds: ['ifu-console-workflow', 'ifu-us-2025-scope', 'ecmo-book-ch9'],
+    evidenceIds: [
+      'ifu-console-workflow',
+      'ifu-us-2025-scope',
+      'ecmo-book-ch9',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'preload-drainage-collapse',
@@ -374,8 +392,8 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'The response must be interpreted with pH, bicarbonate, symptoms, and clinical phase.',
       ],
       correctWorkflow: [
-        'Name the pH/CO2 goal, predict the direction, and make a bounded sweep adjustment.',
-        'Allow the simulated response, then reassess patient status and blood gas data.',
+        'Name the pH/CO2 goal, predict the direction, and make a measured sweep adjustment.',
+        'Allow time for the response, then reassess patient status and blood gas data.',
       ],
       safetyNotes: [
         'Sweep is an external gas-blender control, not a CARDIOHELP-i touchscreen control.',
@@ -431,7 +449,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'Gas transfer falls while blood flow persists',
     summary:
-      'A timed gas-source interruption causes CO2 retention and oxygenator gas-transfer decline while circuit blood flow remains present.',
+      'An unannounced gas-source interruption causes CO2 retention and oxygenator gas-transfer decline while circuit blood flow remains present.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -474,7 +492,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'Arterial bubble alarm with pump stop',
     summary:
-      'A scenario-triggered arterial bubble event stops the pump; correct the source and confirm the circuit clear before support is resumed.',
+      'An arterial bubble event during the run stops the pump; correct the source and confirm the circuit clear before support is resumed.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -490,7 +508,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     debrief: {
       diagnosis: 'Arterial bubble intervention with pump stop',
       causalChain: [
-        'The scenario injects an arterial bubble event without assigning a bubble size.',
+        'This case presents an arterial bubble event without assigning a bubble size.',
         'The enabled intervention generates a high-priority alarm and stops the pump.',
         'Reset is appropriate only after the air source is corrected and the circuit is confirmed clear.',
       ],
@@ -504,7 +522,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s approved ECMO air-emergency protocol; this simulation does not teach that choreography.',
       ],
     },
-    evidenceIds: ['ifu-console-workflow', 'ifu-anomaly-boundary', 'elso-circuit-2022'],
+    evidenceIds: [
+      'ifu-console-workflow',
+      'ifu-anomaly-boundary',
+      'elso-circuit-2022',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'transport-power-loss',
@@ -525,6 +548,17 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctiveFault: 'ac-power-loss',
       acceptableReassessmentTerms: ['ac', 'battery', 'backup', 'flow'],
     },
+    assessmentPolicy: {
+      // B6-004: the case's own opening speed, never an invented flow target.
+      requireBaselineSupportRestored: true,
+      minimumObservationSeconds: 1,
+      reassessmentGuidance: {
+        device:
+          'The power-source indicator shows AC again and the battery reading is no longer falling.',
+        circuit: 'Circuit flow and pressures ran unchanged through the changeover and after it.',
+        patient: 'Oxygenation and perfusion are unchanged from before the event.',
+      },
+    },
     debrief: {
       diagnosis: 'Transport mains-power loss with battery escalation risk',
       causalChain: [
@@ -533,13 +567,18 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Recognize the power-source indicator and restore a verified AC source.',
-        'Confirm circuit flow and patient status and maintain immediate backup-console/emergency-drive readiness.',
+        'Confirm circuit flow and patient status. Backup-console and emergency-drive readiness is a bedside obligation this simulator does not represent or credit.',
       ],
       safetyNotes: [
-        'This screen exercise teaches recognition and readiness, not hands-on emergency-drive competency.',
+        'This screen exercise teaches recognition and readiness; hands-on emergency-drive practice belongs to bedside training with the device.',
       ],
     },
-    evidenceIds: ['ifu-console-workflow', 'ecmo-book-ch9', 'elso-circuit-2022'],
+    evidenceIds: [
+      'ifu-console-workflow',
+      'ecmo-book-ch9',
+      'elso-circuit-2022',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'vv-off-sweep-capstone',
@@ -572,6 +611,12 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         circuit: 'Confirm sweep is off while blood continues through the circuit.',
         patient: 'Record SpO₂ first, work of breathing second, then PaCO₂/pH.',
       },
+    },
+    challengeBrief: {
+      title:
+        'Settled gas exchange on VV support, and the question of whether the patient still needs it',
+      presentation:
+        'Saturation, PaCO₂ and pH sit where the team wants them, breathing is unlabored, and the circuit runs steadily at its current settings; nothing has been changed yet.',
     },
     debrief: {
       diagnosis: 'VV separation assessment with sweep off and circuit blood flow maintained',
@@ -632,7 +677,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Confirm gas, power, backup readiness, right-arm monitoring, native ejection, and cannulated-limb assessment.',
       ],
       safetyNotes: [
-        'This is recognition training, not cannulation or distal-perfusion competency.',
+        'This is recognition training; cannulation and distal-perfusion technique are learned at the bedside, not here.',
       ],
     },
     evidenceIds: [
@@ -879,7 +924,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'VA assessment still requires independent circulation, upper-body oxygenation, lung, and blood-gas data.',
       ],
       correctWorkflow: [
-        'Name the acid-base goal and make a bounded external sweep adjustment.',
+        'Name the acid-base goal and make a measured external sweep adjustment.',
         'Reassess PaCO2, pH, right-arm oxygenation, native lung function, and perfusion.',
       ],
       safetyNotes: [
@@ -932,7 +977,13 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Ongoing VA blood flow does not prove that the arterial return blood is adequately oxygenated.',
       ],
     },
-    evidenceIds: ['ecmo-book-ch9', 'ecmo-book-ch18', 'elso-circuit-2022', 'elso-adult-va-2021'],
+    evidenceIds: [
+      'ecmo-book-ch9',
+      'ecmo-book-ch18',
+      'elso-circuit-2022',
+      'elso-adult-va-2021',
+      'bounded-educational-model',
+    ],
   }),
   scenario({
     id: 'va-arterial-bubble-stop',
@@ -941,7 +992,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     stationId: 'troubleshooting',
     title: 'VA arterial-return bubble alarm with pump stop',
     summary:
-      'A scenario-triggered post-oxygenator bubble event stops forward VA support; correct the source before reset.',
+      'A post-oxygenator bubble event during the run stops forward VA support; correct the source before reset.',
     clinicalPhase: 'maintenance',
     initialState: {},
     timedFaults: [
@@ -962,7 +1013,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     debrief: {
       diagnosis: 'Arterial-return bubble intervention with VA pump stop',
       causalChain: [
-        'The scenario injects a bubble event without assigning a disputed size threshold.',
+        'This case presents a bubble event without assigning a disputed size threshold.',
         'The enabled intervention stops the pump, interrupting VA circulatory support.',
       ],
       correctWorkflow: [
@@ -980,6 +1031,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       'ifu-anomaly-boundary',
       'elso-circuit-2022',
       'elso-adult-va-2021',
+      'bounded-educational-model',
     ],
   }),
   scenario({
@@ -1002,6 +1054,17 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctiveFault: 'ac-power-loss',
       acceptableReassessmentTerms: ['ac', 'battery', 'backup', 'perfusion'],
     },
+    assessmentPolicy: {
+      // B6-004: the case's own opening speed, never an invented flow target.
+      requireBaselineSupportRestored: true,
+      minimumObservationSeconds: 1,
+      reassessmentGuidance: {
+        device:
+          'The power-source indicator shows AC again and the battery reading is no longer falling.',
+        circuit: 'Circuit flow and pressures ran unchanged through the changeover and after it.',
+        patient: 'MAP, perfusion and right-arm saturation are unchanged from before the event.',
+      },
+    },
     debrief: {
       diagnosis: 'Transport mains-power loss during VA circulatory support',
       causalChain: [
@@ -1010,10 +1073,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Recognize the power source and restore verified AC.',
-        'Confirm flow, pressures, perfusion, right-arm monitoring, and immediate backup-console/emergency-drive readiness.',
+        'Confirm flow, pressures, perfusion and right-arm monitoring. Backup-console and emergency-drive readiness is a bedside obligation this simulator does not represent or credit.',
       ],
       safetyNotes: [
-        'Recognition and readiness are taught; hands-on emergency-drive competency is not certified.',
+        'Recognition and readiness are taught here; hands-on emergency-drive practice is a bedside obligation this simulator does not represent.',
       ],
     },
     evidenceIds: [
@@ -1021,6 +1084,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       'ecmo-book-ch9',
       'elso-circuit-2022',
       'elso-adult-va-2021',
+      'bounded-educational-model',
     ],
   }),
   scenario({
@@ -1081,6 +1145,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         patient:
           'Integrate right-arm oxygenation, pulsatility/native ejection, lung function, and systemic plus limb perfusion.',
       },
+    },
+    challengeBrief: {
+      title: 'Flow unchanged, patient worse: one presentation, several explanations',
+      presentation:
+        'Displayed VA flow and the post-oxygenator sample are unchanged, yet the patient looks worse and the right-hand and femoral saturations no longer agree.',
     },
     debrief: {
       diagnosis: 'Peripheral VA differential upper-body oxygenation pattern',

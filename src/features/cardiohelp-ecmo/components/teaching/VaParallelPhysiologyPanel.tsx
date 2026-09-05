@@ -591,7 +591,7 @@ export function VaParallelPhysiologyPanel({
 
       <section className={styles.section} aria-labelledby="va-comparison-heading">
         <h3 id="va-comparison-heading" className={styles.heading}>
-          This state against the settled VA reference circuit
+          This circuit against the settled VA reference circuit
         </h3>
 
         <div className="mt-3 overflow-x-auto">
@@ -611,7 +611,7 @@ export function VaParallelPhysiologyPanel({
                   VA reference circuit
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  State on screen
+                  On screen now
                 </th>
                 <th scope="col" className="pb-1 font-semibold">
                   Direction

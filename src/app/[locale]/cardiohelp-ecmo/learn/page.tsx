@@ -102,14 +102,14 @@ export default async function CardiohelpEcmoLearnPage({ params, searchParams }: 
         `/${resolvedLocale}/cardiohelp-ecmo/learn?lesson=${lesson}&track=${resolved}${phaseQuery}` as Route,
       )
     }
+    // The stage renders its own module frame in activity mode, so nothing wraps it here.
     return (
-      <CardiohelpModuleFrame locale={locale} activeHref={`${cardiohelpEcmoNavBase}/learn`}>
-        <EcmoFoundationLessonActivity
-          sectionId={lesson}
-          supportMode={resolved}
-          initialPhase={phase}
-        />
-      </CardiohelpModuleFrame>
+      <EcmoFoundationLessonActivity
+        sectionId={lesson}
+        supportMode={resolved}
+        initialPhase={phase}
+        locale={locale}
+      />
     )
   }
 

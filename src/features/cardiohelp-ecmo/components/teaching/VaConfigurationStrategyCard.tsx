@@ -1,3 +1,4 @@
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { ModelBoundary, styles, VA_MODELED_CONFIGURATION } from './shared'
 
 /**
@@ -95,7 +96,7 @@ export const VA_CONFIGURATION_STRATEGIES: readonly VaConfigurationStrategy[] = [
     doesNotChange:
       'It does not change the cannulation topology and it does not move where the two streams meet. It addresses the content of the native stream rather than the position of the mixing point.',
     caution:
-      'What can be done for the native lungs, and whether anything can be, is a judgement about that patient made by the treating team under local practice. This entry names the term of the problem the change acts on, not a ventilator strategy and no value to reach.',
+      'What can be done for the native lungs, and whether anything can be, is a judgement about that patient made by the treating team under local practice. This entry names the part of the problem the change acts on, not a ventilator strategy and no value to reach.',
     modelBoundary:
       'Not available as a manoeuvre here. This simulation authors the two arterial saturations from the loaded case rather than deriving them from what the native lungs are doing, so native-lung recovery cannot be applied and watched.',
     evidenceIds: [...DUAL_CIRCULATION_SOURCES, 'elso-adult-va-2021'],
@@ -290,9 +291,9 @@ export function VaConfigurationStrategyCard({
           parallel-physiology section of this track.
         </ModelBoundary>
 
-        <p className="mt-2 text-xs leading-5 text-muted-foreground" data-configuration-card-sources>
-          Sources: {CARD_SOURCES.join(', ')}
-        </p>
+        <div className="mt-3" data-configuration-card-sources>
+          <EcmoSourceList compact evidenceIds={CARD_SOURCES} />
+        </div>
       </section>
     )
   }
@@ -374,9 +375,9 @@ export function VaConfigurationStrategyCard({
         you can load and check.
       </ModelBoundary>
 
-      <p className="mt-2 text-xs leading-5 text-muted-foreground" data-configuration-card-sources>
-        Sources: {CARD_SOURCES.join(', ')}
-      </p>
+      <div className="mt-3" data-configuration-card-sources>
+        <EcmoSourceList compact evidenceIds={CARD_SOURCES} />
+      </div>
     </section>
   )
 }

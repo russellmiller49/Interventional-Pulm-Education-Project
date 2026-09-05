@@ -1,7 +1,10 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
-import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
+import {
+  flaggedGradingCopyTerms,
+  flaggedLearnerCopyTerms,
+} from '@/features/learning-module/activity/clinicalLearningItem'
 
 import { MechanicalVentilationLessonActivity } from '../components/MechanicalVentilationLessonActivity'
 import { mechanicalVentilationLessonItems, mechanicalVentilationLessons } from '../content'
@@ -201,10 +204,21 @@ describe('Mechanical Ventilation Learn verdict — what the shared component sta
     fireEvent.click(screen.getByLabelText(item.choices[0].label))
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
 
-    // The local verdict headed a best answer "Correct" — a term this project rejects in authored
-    // learner copy, and the reason the shared component words its framings the way it does.
+    /*
+     * The local verdict headed a best answer "Correct" — a term this project rejects in authored
+     * learner copy, and the reason the shared component words its framings the way it does.
+     *
+     * An owner review of the ECMO module in September 2026 asked for the outcome to be said in as
+     * many words, and the shared card can now do that — but only where a caller opts in with
+     * `outcome="stated"`. Mechanical ventilation has not, so this lab still reads exactly as it
+     * did and this contract still holds in full. The half of the rule that is not a teaching
+     * preference is checked separately by `flaggedGradingCopyTerms`: this content is not
+     * credit-eligible, so no card may talk about a score, a percentage, a pass or a mastery claim.
+     */
     const heading = verdictNode().querySelector('p')?.textContent ?? ''
     expect(heading.length).toBeGreaterThan(0)
     expect(flaggedLearnerCopyTerms(heading)).toEqual([])
+    expect(flaggedGradingCopyTerms(heading)).toEqual([])
+    expect(verdictNode()).not.toHaveAttribute('data-verdict-outcome')
   })
 })

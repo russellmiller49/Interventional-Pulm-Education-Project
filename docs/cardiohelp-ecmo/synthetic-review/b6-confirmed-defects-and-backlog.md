@@ -11,11 +11,30 @@
 >   own proposed test — assert the hub call to action against the pathway's first incomplete
 >   section for a fresh progress object — is implemented as
 >   `__tests__/hub-landing-door-alignment.test.tsx`.
-> - **Every other item, B6-001 to B6-010 and B6-012 to B6-020, is unchanged** and keeps the
->   priority it was admitted with. R0 re-ranks nothing: the attempted B5 sessions produced no
->   codable human findings, so no item was confirmed, refuted, or re-prioritised by human
->   evidence. Items touching the engine, Practice, Assess, scoring, or the frozen pilot panels
->   remain owner-gated future packages.
+> - **Status under R4 (2026-09-03/04, branch `claude/ecmo-9-3`; owner decision R4-OD-1 lifted
+>   D-4 for the engine and scoring items):**
+>   - **B6-001, B6-002, B6-004, B6-005, B6-006, B6-007, B6-012 — closed in the engine (R4 I6).**
+>     Each is excluded by `__tests__/scoring-honesty.test.ts`, driven end to end with a positive
+>     sibling path; `docs/cardiohelp-ecmo/redesign/r4-scoring-honesty-record.md` records what each
+>     became.
+>   - **B6-003, B6-015 — closed in copy and policy (R4 I5).** Resumption reads "per the current IFU
+>     and approved local protocol" everywhere; backup readiness is stated as a bedside obligation
+>     the simulator does not represent or credit; the transport scenarios author their own
+>     reassessment guidance. `resumption-copy-contract.test.ts` bans the missed phrase forms.
+>   - **B6-008 — closed (R4 I3a, I3d, I4, I5).** Titles, objectives, rail labels, unit copy,
+>     observe steps and transfer steps are presentation-named; the pure-content scan
+>     (`learn-precommit-leak.test.ts`) and the rendered scan over all twenty drills
+>     (`learn-precommit-leak.rendered.test.tsx`) hold every pre-commit surface to each drill's deny
+>     patterns; Practice masks the diagnosis until the debrief. Two operable control labels remain
+>     disclosed by owner decision (see `r4-owner-decisions.md`).
+>   - **B6-009 — closed (R4 I3c).** Deterministic per-item rotation and the length rule in
+>     `choice-order.test.ts`; rationales likewise balanced (`reassessment-rationales.test.ts`).
+>   - **B6-010 — closed (R4 I3f).** `pairedCaseForLesson` maps by mechanism with an honest
+>     next-in-unit fallback; the three VA drills without a case are a recorded gap.
+>   - **B6-016, B6-017 — closed (R4 I2, I4).** Learn verdicts carry the item's claim-scoped sources;
+>     safety events reach the learner through authored labels only.
+>   - **B6-013, B6-014, B6-018, B6-019, B6-020 — unchanged.** Not in the R4 scope; they keep the
+>     priority they were admitted with.
 > - The refuted/narrowed table at the end retains its dispositions unchanged.
 
 No human observation is being reported.

@@ -1458,7 +1458,7 @@
   color: #06191c;
   border-radius: 999px;
   background: var(--cyan-bright);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -3206,6 +3206,111 @@
   min-width: 1040px;
   height: auto;
   min-height: 360px;
+}
+
+/*
+ * The stage's map fits its pane. The poster width above exists for the Practice workbench, where
+ * the map has a scroller and a pan hint; on the lesson stage the map is the thing the step points
+ * at, and a highlight that sits off the edge of a horizontal scroller is a highlight nobody sees.
+ *
+ * The fitted drawing also bleeds through the panel's own padding on both sides — the pane is
+ * narrow, the poster is wide, and forty-eight pixels of card margin around a map whose type is
+ * already at the limit of legibility is the wrong thing to spend them on.
+ */
+/*
+ * Compound, on purpose: `.circuitSvg` sets its poster width again inside the ≤760px media block
+ * further down, and a single-class rule written here loses that cascade on source order. Two classes
+ * beat one at every width.
+ */
+.circuitSvg.circuitSvgFit {
+  min-width: 0;
+  min-height: 0;
+}
+
+.circuitDiagramFit {
+  margin-inline: calc(-1 * clamp(0.85rem, 1.8vw, 1.5rem));
+  width: auto;
+  overflow-x: hidden;
+}
+
+/*
+ * On a stacked layout the document is the only scroller, and the module header is sticky over it;
+ * a panel scrolled to the top of the page would sit under that header. The margin is the offset
+ * `scrollIntoView` honours.
+ */
+.circuitPanel {
+  scroll-margin-top: 6rem;
+}
+
+/* --- The map's "you are here" ------------------------------------------------------------ */
+
+.circuitEmphasisCaption {
+  margin: 0 0 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(255, 209, 102, 0.55);
+  border-left: 5px solid #ffd166;
+  border-radius: 10px;
+  background: rgba(255, 209, 102, 0.1);
+  color: #fff3d1;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/*
+ * Halo underneath, crisp edge on top, and a slow pulse on the halo only. Amber, because the drawing
+ * is teal and red and a third hue reads as an annotation rather than as another limb — but the
+ * width, the outline and the caption carry the marking for anyone the hue does not reach.
+ */
+.mapEmphasisHalo {
+  fill: none;
+  stroke: #ffd166;
+  stroke-width: 26;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.34;
+  animation: mapEmphasisPulse 2.4s ease-in-out infinite;
+}
+
+.mapEmphasisEdge {
+  fill: none;
+  stroke: #ffe9a8;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 10 6;
+}
+
+/*
+ * A ringed reading is a pointer, not the subject. Where a row implicates the drainage limb and the
+ * map also rings the four pressure channels the row is read across, five identical halos would say
+ * five places matter equally. The place gets the wide pulsing halo; a reading gets a thin, still
+ * ring that says "read this one" without competing with it.
+ */
+/* An outline around a body is already a shape; its band is half a limb's, so labels beside it stay clear. */
+.mapEmphasisHalo[data-map-halo='outline'] {
+  stroke-width: 14;
+}
+
+[data-map-emphasis-role='sensor-site'] .mapEmphasisHalo {
+  stroke-width: 6;
+  opacity: 0.3;
+  animation: none;
+}
+
+[data-map-emphasis-role='sensor-site'] .mapEmphasisEdge {
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+
+@keyframes mapEmphasisPulse {
+  0%,
+  100% {
+    opacity: 0.26;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .circuitSvg text {
@@ -5025,7 +5130,8 @@
   .cannulaReturnFlowMoving,
   .oxygenatorGasMoving,
   .chatteringTube,
-  .pumpRotor {
+  .pumpRotor,
+  .mapEmphasisHalo {
     animation: none !important;
   }
 }
@@ -5160,7 +5266,7 @@
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
-  font-size: 0.85rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
   font-weight: 700;
   cursor: pointer;
 }
@@ -5889,4 +5995,440 @@
 .circuit3dHud span[data-mode] {
   border-color: rgba(113, 225, 229, 0.5);
   color: var(--cyan-bright);
+}
+
+/* ------------------------------------------------------------------ *
+ * Hub: one door, one map (R4 I3e)
+ * ------------------------------------------------------------------ */
+.hubBrowseToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.7rem 1.05rem;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hubBrowseToggle:hover,
+.hubBrowseToggle[aria-expanded='true'] {
+  border-color: rgba(113, 225, 229, 0.5);
+}
+
+.hubBrowseToggle:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.hubBrowseToggle svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 160ms ease;
+}
+
+.hubBrowseToggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.hubBrowsePanel {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.hubBrowsePanel[hidden] {
+  display: none;
+}
+
+.hubPathwayPageLink {
+  justify-self: start;
+  color: var(--cyan-bright, #71e1e5);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hubUnitSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  list-style: none;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.hubUnitSummary::-webkit-details-marker {
+  display: none;
+}
+
+.hubUnitSummary:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.hubUnitSummary > span[aria-hidden='true'] {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.hubUnitSummaryText {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.hubUnitSummaryText strong {
+  font-size: 1rem;
+}
+
+.hubUnitSummaryText small {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.hubUnitSummary::after {
+  content: '';
+  margin-left: auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+details[open] > .hubUnitSummary::after {
+  transform: rotate(-135deg);
+}
+
+.hubUnitBody {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.hubLayers {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hubLayers li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  align-items: baseline;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.hubLayers a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hubTrackIncrement {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* ---------------------------------------------------------------------------
+ * Answering on the circuit
+ *
+ * A numbered pin per candidate location, laid over the drawing at percentages of its own viewBox,
+ * plus a legend under it that says what each number is. The pins are labels for a real radio
+ * group; everything below is appearance only.
+ * ------------------------------------------------------------------------ */
+
+.mapAnswer {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+/*
+ * The overlay is the drawing's box, not the block's.
+ *
+ * `inset: 0` would have stretched it over the legend underneath as well, and every pin's vertical
+ * percentage would have been read against a taller box than the one it was measured in. Anchoring
+ * the top three edges and taking the height from the drawing's own aspect ratio makes the overlay
+ * exactly the SVG's box however tall the legend grows.
+ */
+.mapAnswerPins {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  aspect-ratio: 1120 / 590;
+  /* The drawing underneath stays readable: only the pins take the pointer. */
+  pointer-events: none;
+}
+
+.mapAnswerPin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  background: rgba(4, 24, 28, 0.35);
+  box-shadow: inset 0 0 0 2px rgba(125, 216, 221, 0.5);
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mapAnswerPin:hover {
+  background: rgba(113, 225, 229, 0.16);
+  box-shadow: inset 0 0 0 2px #71e1e5;
+}
+
+.mapAnswerPinBody {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #71e1e5;
+  border-radius: 999px;
+  background: #04181c;
+  color: #eaf9fa;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus lands on the hidden input, so the pin it labels is what has to show the ring. */
+.mapAnswerPin:focus-within {
+  background: rgba(113, 225, 229, 0.18);
+  box-shadow:
+    inset 0 0 0 2px #71e1e5,
+    0 0 0 3px #fff;
+}
+
+.mapAnswerPin[data-selected='true'] {
+  background: rgba(113, 225, 229, 0.24);
+  box-shadow: inset 0 0 0 3px #71e1e5;
+}
+
+.mapAnswerPin[data-selected='true'] .mapAnswerPinBody {
+  background: #71e1e5;
+  color: #052227;
+}
+
+/*
+ * Committed. Nothing is carried by colour alone: the chosen pin and the keyed pin each say which
+ * they are in words on the pin itself, and the legend under the drawing repeats the wording.
+ */
+.mapAnswerPin[data-map-answer-state] {
+  cursor: default;
+}
+
+.mapAnswerPin[data-map-answer-state='correct'],
+.mapAnswerPin[data-map-answer-state='chosen-correct'] {
+  background: rgba(141, 222, 158, 0.2);
+  box-shadow: inset 0 0 0 3px #8dde9e;
+}
+
+.mapAnswerPin[data-map-answer-state='correct'] .mapAnswerPinBody,
+.mapAnswerPin[data-map-answer-state='chosen-correct'] .mapAnswerPinBody {
+  border-color: #8dde9e;
+}
+
+.mapAnswerPin[data-map-answer-state='chosen'] {
+  background: rgba(255, 191, 98, 0.18);
+  box-shadow: inset 0 0 0 3px #ffbf62;
+}
+
+.mapAnswerPin[data-map-answer-state='chosen'] .mapAnswerPinBody {
+  border-color: #ffbf62;
+}
+
+.mapAnswerFlag {
+  position: absolute;
+  bottom: -0.55rem;
+  padding: 0 0.3rem;
+  border-radius: 0.35rem;
+  background: #04181c;
+  box-shadow: inset 0 0 0 1px currentcolor;
+  color: #d8f2f4;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mapAnswerFlag[data-map-answer-flag='correct'],
+.mapAnswerFlag[data-map-answer-flag='chosen-correct'] {
+  color: #8dde9e;
+}
+
+.mapAnswerFlag[data-map-answer-flag='chosen'] {
+  color: #ffbf62;
+}
+
+.mapAnswerLegend {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: #c6dee0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.mapAnswerLegend li {
+  min-width: 0;
+}
+
+/*
+ * Every option is a row, pinned or not. Uniform on purpose: if the option that is not a place
+ * looked like a lesser thing, the shape of an option would hint at whether it is the keyed one.
+ */
+.mapAnswerRow {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+
+.mapAnswerRow:hover {
+  border-color: rgba(125, 216, 221, 0.55);
+  background: rgba(113, 225, 229, 0.08);
+}
+
+.mapAnswerRow:has(input:focus-visible),
+.mapAnswerLegend li:focus-within .mapAnswerRow {
+  border-color: #71e1e5;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.mapAnswerRow[data-selected='true'] {
+  border-color: #71e1e5;
+  background: rgba(113, 225, 229, 0.16);
+}
+
+.mapAnswerRow[data-selected='true'] .mapAnswerLegendOrdinal {
+  border-color: #71e1e5;
+  background: #71e1e5;
+  color: #052227;
+}
+
+.mapAnswerRow[data-map-answer-state] {
+  cursor: default;
+}
+
+.mapAnswerRow[data-map-answer-state='correct'],
+.mapAnswerRow[data-map-answer-state='chosen-correct'] {
+  border-color: #8dde9e;
+}
+
+.mapAnswerRow[data-map-answer-state='chosen'] {
+  border-color: #ffbf62;
+}
+
+.mapAnswerRowFlag {
+  margin-left: 0.4rem;
+  padding: 0 0.3rem;
+  border-radius: 0.3rem;
+  box-shadow: inset 0 0 0 1px currentcolor;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mapAnswerRowFlag[data-map-answer-row-flag='correct'],
+.mapAnswerRowFlag[data-map-answer-row-flag='chosen-correct'] {
+  color: #8dde9e;
+}
+
+.mapAnswerRowFlag[data-map-answer-row-flag='chosen'] {
+  color: #ffbf62;
+}
+
+.mapAnswerLegendOrdinal {
+  justify-self: stretch;
+  min-width: 1.5rem;
+  padding: 0 0.25rem;
+  border: 1px solid rgba(125, 216, 221, 0.5);
+  border-radius: 0.35rem;
+  color: #a9dfe2;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* The drawing is the positioning context for the pins. */
+.circuitDiagramAnswerable {
+  position: relative;
+}
+
+/* The question, where the answer used to be listed. */
+.mapAnswerPrompt {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.mapAnswerStem {
+  margin: 0;
+  font-weight: 700;
+}
+
+.mapAnswerPrompt p {
+  margin: 0;
+}
+
+/* Told where the question is, and handed the way back. */
+.circuitAnswerElsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(255, 209, 102, 0.55);
+  border-left: 5px solid #ffd166;
+  border-radius: 0.6rem;
+  background: rgba(255, 209, 102, 0.1);
+  color: #fff3d1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.circuitAnswerElsewhere button {
+  min-height: 2rem;
+  padding: 0 0.6rem;
+  border: 1px solid #ffd166;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
 }

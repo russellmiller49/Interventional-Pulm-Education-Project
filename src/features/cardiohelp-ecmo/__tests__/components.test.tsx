@@ -16,7 +16,11 @@ import {
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
-import { PracticeCasePlayer } from '../components/PracticeCasePlayer'
+import {
+  EcmoPracticeCaseView,
+  type EcmoPracticeCaseViewProps,
+} from '../components/practice/EcmoPracticeActivity'
+import { presentationTitle } from '../content/casePresentation'
 
 const mockRouterPush = jest.fn()
 
@@ -82,10 +86,10 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'ROTARY_DELTA', delta: 1 })
   })
 
-  it('renders the Learn workbench with section navigation and no Practice scoring', async () => {
+  it('renders the Learn stage with one progression, one Now card, and no Practice scoring', async () => {
     const { container } = render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(container.querySelector('[data-now-card]')).toBeInTheDocument()
     })
 
     const nav = screen.getByRole('navigation', { name: /ECMO Management module sections/i })
@@ -96,65 +100,129 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(within(nav).getByRole('link', { name: /Overview/i })).not.toHaveAttribute('aria-current')
     expect(screen.getByText(/Guided focus: circuit and sensors/i)).toBeInTheDocument()
     expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
-    const sharedPhases = screen.getByRole('group', { name: 'ECMO shared activity phases' })
-    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
-      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
-    }
+    // One progression: the lesson's own step list, and no shared six-phase bar above it.
+    expect(screen.queryByRole('group', { name: 'ECMO shared activity phases' })).toBeNull()
+    expect(container.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-now-card]')).toHaveLength(1)
     for (const legacyLabel of ['Orient', 'Interpret', 'Respond', 'Reassess']) {
       expect(screen.queryByText(legacyLabel, { selector: 'strong' })).not.toBeInTheDocument()
     }
 
-    const currentTask = screen.getByRole('complementary', { name: 'Current task' })
-    expect(within(currentTask).getByText('Start with four information domains')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
-    // A3.3: the first console step is now a stopped-pump recognition activity, and the tour
-    // proper runs after the circuit has been ramped up.
+    const nowCard = container.querySelector('[data-now-card]') as HTMLElement
+    expect(within(nowCard).getByText('Start with four sources of information')).toBeInTheDocument()
+    // A read step's one action is also what moves the lesson on.
+    fireEvent.click(screen.getByRole('button', { name: /identify all four sources/i }))
+    const nextCard = container.querySelector('[data-now-card]') as HTMLElement
     expect(
-      within(currentTask).getByText('The pump is stopped: which channels still mean anything?'),
+      within(nextCard).getByText('The pump is stopped: which channels still mean anything?'),
     ).toBeInTheDocument()
     expect(
-      within(currentTask).getByText(/show the unavailable indication rather than a number/i),
+      within(nextCard).getByText(/show the unavailable indication rather than a number/i),
     ).toBeInTheDocument()
+    expect(container.querySelector('[data-stage]')).toHaveAttribute(
+      'data-stage',
+      'startup-screen-parameters',
+    )
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
   })
 
-  it('opens each case on a brief stage while keeping the workflow and console available', async () => {
-    render(<CardiohelpWorkbench section="practice" />)
+  /**
+   * The Practice view mounted the way the route mounts it, minus the session: a built engine state
+   * and a recording dispatch. Everything the learner sees is a function of that state.
+   */
+  function renderCaseView(
+    state: ReturnType<typeof createInitialSimulationState>,
+    overrides: Partial<EcmoPracticeCaseViewProps> = {},
+  ) {
+    const scenario =
+      clinicalPracticeScenarios.find((item) => item.id === state.scenario.scenarioId) ??
+      cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)
+    if (!scenario) throw new Error(`Missing scenario ${state.scenario.scenarioId}`)
+    const dispatch = jest.fn()
+    const props: EcmoPracticeCaseViewProps = {
+      section: 'practice',
+      state,
+      scenario,
+      outcome: selectScenarioOutcome(state),
+      progress: createDefaultProgress(),
+      supportMode: scenario.supportMode,
+      activityMode: state.simulationMode === 'challenge' ? 'challenge' : 'practice',
+      dispatch,
+      onLoadScenario: jest.fn(),
+      onSelectTrack: jest.fn(),
+      onReveal: jest.fn(),
+      onSaveAndExit: jest.fn(),
+      onReset: jest.fn(),
+      ...overrides,
+    }
+    const view = render(<EcmoPracticeCaseView {...props} />)
+    return { scenario, dispatch, props, view }
+  }
+
+  function commitExpectation(state: ReturnType<typeof createInitialSimulationState>) {
+    const scenario =
+      clinicalPracticeScenarios.find((item) => item.id === state.scenario.scenarioId) ??
+      cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)
+    if (!scenario) throw new Error('missing scenario')
+    return ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: scenario.expectation.goalId,
+      control: scenario.expectation.control,
+      direction: scenario.expectation.direction,
+    })
+  }
+
+  it('opens each case on a brief stage with one Now card and no diagnosis in sight', async () => {
+    const { container } = render(<CardiohelpWorkbench section="practice" />)
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
+    const scenario = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-initiation-ards',
+    )!
 
-    expect(screen.queryByRole('heading', { name: /Guided lessons/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Learning objectives/i })).toBeInTheDocument()
-    expect(
-      screen.getByText(/Verify circuit, sensors, gas, power, and team readiness/i),
-    ).toBeInTheDocument()
+    // One progression, one Now card, and the shared six-phase bar is gone.
+    expect(screen.queryByRole('group', { name: 'ECMO shared activity phases' })).toBeNull()
+    expect(container.querySelectorAll('[data-now-card]')).toHaveLength(1)
+    expect(container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'brief')
+    const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
+    expect(within(workflow).getAllByRole('button')).toHaveLength(5)
+    expect(within(workflow).getByRole('button', { name: /\bBrief\b/ })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
+    // Later stages are rows, not doors: number and name only, nothing to inspect.
+    for (const later of ['Plan', 'Manage', 'Reassess', 'Debrief']) {
+      expect(within(workflow).getByRole('button', { name: new RegExp(later) })).toBeDisabled()
+    }
     expect(screen.queryByRole('button', { name: 'Commit before action' })).not.toBeInTheDocument()
     expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
-    const currentTask = screen.getByRole('complementary', { name: 'Current task' })
+
+    // The title is the presentation, not the diagnosis, and the objectives wait for the debrief.
     expect(
-      within(currentTask).getByText(/Review the observable patient, indication/i),
+      screen.getByRole('heading', { level: 1, name: presentationTitle(scenario) }),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Learning objectives/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(scenario.debrief.diagnosis)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
-    expect(within(currentTask).getByText(/Complete readiness checks/i)).toBeInTheDocument()
+    expect(container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'plan')
+    const nowCard = container.querySelector('[data-now-card]') as HTMLElement
     expect(
-      within(currentTask).getAllByText(/Choose the immediate goal, the control or bedside action/i),
-    ).not.toHaveLength(0)
+      within(nowCard).getByText(/Commit your plan before touching anything/i),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Standard practice' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Less coaching \(harder\)/i })).toBeInTheDocument()
+    // The coaching toggle lives under Case options, not in the case column.
+    const options = container.querySelector('[data-case-options]') as HTMLElement
+    expect(within(options).getByRole('button', { name: 'Standard practice' })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', {
-        name: /Initiate VV ECMO for refractory severe ARDS/i,
-      }),
+      within(options).getByRole('button', { name: /Less coaching \(harder\)/i }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Step complete—now verify what changed/i)).not.toBeInTheDocument()
   })
 
   it('runs the VV initiation case from committed plan through readiness, settings, and support', async () => {
-    render(<CardiohelpWorkbench section="practice" />)
+    const { container } = render(<CardiohelpWorkbench section="practice" />)
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
@@ -180,6 +248,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
             payload.eventPayload?.moduleId === 'cardiohelp-ecmo',
         ),
     ).toBe(true)
+    expect(container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'manage')
 
     const readinessButton = screen.getByRole('button', {
       name: /Complete VV readiness and tip-to-tip check/i,
@@ -209,18 +278,20 @@ describe('CARDIOHELP ECMO learner interface', () => {
       }),
     )
     const rpmControl = screen.getByRole('slider', { name: /RPM rotary setpoint/i })
-    expect(rpmControl).toHaveFocus()
+    await waitFor(() => expect(rpmControl).toHaveFocus())
     const increaseSetpoint = screen.getByRole('button', { name: /Increase setpoint/i })
     for (let index = 0; index < 8; index += 1) fireEvent.click(increaseSetpoint)
     expect(rpmControl).toHaveAttribute('aria-valuenow', '3200')
 
+    // The gas blender opens when the checklist sends the learner to it.
     fireEvent.click(
       within(settingChecklist).getByRole('button', {
         name: /Go to Sweep flow control/i,
       }),
     )
+    expect(container.querySelector('[data-surface="gas"]')).toHaveAttribute('data-open', 'true')
     const sweepControl = screen.getByRole('slider', { name: /Sweep flow control/i })
-    expect(sweepControl).toHaveFocus()
+    await waitFor(() => expect(sweepControl).toHaveFocus())
     for (let index = 0; index < 4; index += 1) {
       fireEvent.keyDown(sweepControl, { key: 'ArrowRight' })
     }
@@ -231,7 +302,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       }),
     )
     const fio2Control = screen.getByRole('slider', { name: /Sweep-gas FiO₂ control/i })
-    expect(fio2Control).toHaveFocus()
+    await waitFor(() => expect(fio2Control).toHaveFocus())
     fireEvent.keyDown(fio2Control, { key: 'End' })
 
     expect(screen.getByText(/All three case orders match/i)).toBeInTheDocument()
@@ -240,39 +311,26 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Start ECMO with current settings' }))
 
-    expect(screen.getByText(/Patient trajectory · improving/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/Forward VV flow is established/i).length).toBeGreaterThan(0)
-
+    // Support is running and every required step is done: the stage moves on with the engine.
     const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
-    const sharedPhases = screen.getByRole('group', { name: 'ECMO shared activity phases' })
-    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
-      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
-    }
     expect(within(workflow).getByRole('button', { name: /Reassess/i })).toHaveAttribute(
       'aria-current',
       'step',
     )
+    expect(container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'reassess')
+
+    // A reached stage can be looked back at, read-only, with its response still on it.
     fireEvent.click(within(workflow).getByRole('button', { name: /Manage/i }))
+    expect(container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'manage')
+    expect(container.querySelector('[data-reviewing-stage]')).toBeInTheDocument()
+    expect(screen.getByText(/Patient trajectory · improving/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Forward VV flow is established/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Start ECMO with current settings' })).toBeDisabled()
   })
 
   it('requires all prediction fields before committing', () => {
     const state = createInitialSimulationState('clinical-vv-initiation-ards')
-    const scenario = clinicalPracticeScenarios.find(
-      (item) => item.id === state.scenario.scenarioId,
-    )!
-    const dispatch = jest.fn()
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={dispatch}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
+    const { dispatch } = renderCaseView(state)
 
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     const commit = screen.getByRole('button', { name: 'Commit before action' })
@@ -296,17 +354,10 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
   })
 
-  it('shows the current workflow step and provides a one-click observation advance', () => {
-    const definition = clinicalPracticeScenarios.find(
-      (item) => item.id === 'clinical-vv-occult-hemorrhage',
-    )!
-    let state = createInitialSimulationState(definition.id, 'guided')
-    state = ecmoSimulationReducer(state, {
-      type: 'COMMIT_PREDICTION',
-      goalId: definition.expectation.goalId,
-      control: definition.expectation.control,
-      direction: definition.expectation.direction,
-    })
+  it('shows the current stage on the Now card and provides a one-click observation advance', () => {
+    let state = commitExpectation(
+      createInitialSimulationState('clinical-vv-occult-hemorrhage', 'guided'),
+    )
     state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 3200 })
     for (const interventionId of [
       'hemorrhage-search',
@@ -318,25 +369,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
         interventionId,
       })
     }
-    const dispatch = jest.fn()
+    const { dispatch, view } = renderCaseView(state)
 
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={definition}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={dispatch}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
-
+    const nowCard = view.container.querySelector('[data-now-card]') as HTMLElement
     expect(
-      screen.getByRole('heading', { name: /Observe the response for 4 more seconds/i }),
+      within(nowCard).getByRole('heading', { name: /Let the response develop — 4 s to go/i }),
     ).toBeInTheDocument()
     const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
-    expect(within(workflow).getByRole('button', { name: /Reassess current/i })).toHaveAttribute(
+    expect(within(workflow).getByRole('button', { name: /Reassess/i })).toHaveAttribute(
       'aria-current',
       'step',
     )
@@ -345,7 +385,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       screen.getByRole('button', { name: /Commit reassessment · select all three responses/i }),
     ).toBeDisabled()
 
-    fireEvent.click(screen.getByRole('button', { name: /Advance 4 seconds now/i }))
+    fireEvent.click(within(nowCard).getByRole('button', { name: /Advance 4 seconds now/i }))
     expect(dispatch).toHaveBeenCalledTimes(4)
     expect(dispatch).toHaveBeenNthCalledWith(1, { type: 'STEP' })
     expect(dispatch).toHaveBeenNthCalledWith(4, { type: 'STEP' })
@@ -355,29 +395,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const definition = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-tension-pneumothorax',
     )!
-    let state = createInitialSimulationState(definition.id, 'guided')
-    state = ecmoSimulationReducer(state, {
-      type: 'COMMIT_PREDICTION',
-      goalId: definition.expectation.goalId,
-      control: definition.expectation.control,
-      direction: definition.expectation.direction,
-    })
-    state = ecmoSimulationReducer(state, {
-      type: 'CORRECT_FAULT',
-      fault: definition.expectation.correctiveFault,
-    })
-
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={definition}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
+    let state = commitExpectation(createInitialSimulationState(definition.id, 'guided'))
+    // Manage is done the way a learner does it: every required intervention applied, which is
+    // also what resolves the case's corrective fault.
+    for (const interventionId of definition.clinicalCase!.requiredInterventionIds) {
+      state = ecmoSimulationReducer(state, { type: 'APPLY_CLINICAL_INTERVENTION', interventionId })
+    }
+    expect(state.scenario.correctedFaults).toContain(definition.expectation.correctiveFault)
+    renderCaseView(state)
 
     const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
     expect(within(workflow).getByRole('button', { name: /Reassess/i })).toHaveAttribute(
@@ -396,42 +421,33 @@ describe('CARDIOHELP ECMO learner interface', () => {
         name: /Commit reassessment · select all three responses/i,
       }),
     ).toBeDisabled()
-    expect(screen.getByRole('button', { name: /Advance 3 seconds now/i })).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('button', { name: /Advance 3 seconds now/i }).length,
+    ).toBeGreaterThan(0)
   })
 
-  it('uses objective reassessment choices and offers qualitative clues', () => {
+  it('uses objective reassessment choices and offers qualitative clues through Help', () => {
     const definition = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-tension-pneumothorax',
     )!
-    let state = createInitialSimulationState(definition.id, 'guided')
-    state = ecmoSimulationReducer(state, {
-      type: 'COMMIT_PREDICTION',
-      goalId: definition.expectation.goalId,
-      control: definition.expectation.control,
-      direction: definition.expectation.direction,
-    })
-    state = ecmoSimulationReducer(state, {
-      type: 'CORRECT_FAULT',
-      fault: definition.expectation.correctiveFault,
-    })
-    const dispatch = jest.fn()
+    let state = commitExpectation(createInitialSimulationState(definition.id, 'guided'))
+    for (const interventionId of definition.clinicalCase!.requiredInterventionIds) {
+      state = ecmoSimulationReducer(state, { type: 'APPLY_CLINICAL_INTERVENTION', interventionId })
+    }
+    const { dispatch } = renderCaseView(state)
 
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={definition}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={dispatch}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
-
-    expect(screen.getAllByRole('radio')).toHaveLength(9)
+    const reassessmentPanel = screen.getByRole('region', { name: /Reassess before reveal/i })
+    expect(within(reassessmentPanel).getAllByRole('radio')).toHaveLength(9)
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    const clueButton = screen.getByRole('button', { name: /Give me a clue/i })
-    fireEvent.click(clueButton)
+    // Clues live behind "What do I do now?", with the Now card's own instruction beside them.
+    expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /What do I do now\?/i }))
+    const dialog = document.querySelector('[data-ecmo-help-dialog]') as HTMLElement
+    // Help re-states the Now card — the same instruction, never a different one.
+    const nowHeading = document.querySelector('[data-now-card] h2')?.textContent ?? ''
+    expect(nowHeading.length).toBeGreaterThan(0)
+    expect(within(dialog).getByText(nowHeading)).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByRole('button', { name: /Give me a clue/i }))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'REQUEST_HINT',
       hintId: definition.hints?.[0].id,
@@ -439,28 +455,10 @@ describe('CARDIOHELP ECMO learner interface', () => {
   })
 
   it('directs required machine changes to the real simulator control', () => {
-    const definition = clinicalPracticeScenarios.find(
-      (item) => item.id === 'clinical-vv-occult-hemorrhage',
-    )!
-    let state = createInitialSimulationState(definition.id, 'guided')
-    state = ecmoSimulationReducer(state, {
-      type: 'COMMIT_PREDICTION',
-      goalId: definition.expectation.goalId,
-      control: definition.expectation.control,
-      direction: definition.expectation.direction,
-    })
-
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={definition}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
+    const state = commitExpectation(
+      createInitialSimulationState('clinical-vv-occult-hemorrhage', 'guided'),
     )
+    const { view } = renderCaseView(state)
 
     expect(
       screen.getByText(/Machine changes cannot be applied from this side panel/i),
@@ -469,6 +467,11 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(
       screen.queryByRole('button', { name: /Temporarily reduce pump demand/i }),
     ).not.toBeInTheDocument()
+    const nowCard = view.container.querySelector('[data-now-card]') as HTMLElement
+    expect(
+      within(nowCard).getByRole('heading', { name: /Make the machine change on the simulator/i }),
+    ).toBeInTheDocument()
+    expect(within(nowCard).getByRole('button', { name: /Go to the control/i })).toBeInTheDocument()
   })
 
   it('asks for confirmation before discarding a committed case attempt', async () => {
@@ -477,6 +480,12 @@ describe('CARDIOHELP ECMO learner interface', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
+    const initiation = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-initiation-ards',
+    )!
+    const hemorrhage = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-occult-hemorrhage',
+    )!
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     fireEvent.change(screen.getByLabelText('Goal'), {
       target: { value: 'initiate-vv-support' },
@@ -494,7 +503,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
     expect(confirmSpy).toHaveBeenCalled()
     expect(
-      screen.getByRole('heading', { name: /Initiate VV ECMO for refractory severe ARDS/i }),
+      screen.getByRole('heading', { level: 1, name: presentationTitle(initiation) }),
     ).toBeInTheDocument()
 
     confirmSpy.mockReturnValue(true)
@@ -502,28 +511,15 @@ describe('CARDIOHELP ECMO learner interface', () => {
       target: { value: 'clinical-vv-occult-hemorrhage' },
     })
     expect(
-      screen.getByRole('heading', { name: /Occult hemorrhage with drainage insufficiency/i }),
+      screen.getByRole('heading', { level: 1, name: presentationTitle(hemorrhage) }),
     ).toBeInTheDocument()
     confirmSpy.mockRestore()
   })
 
-  it('offers every track case grouped by curriculum unit without mixing VV and VA', () => {
+  it('offers every track case grouped by curriculum unit, by presentation, without mixing VV and VA', () => {
     const state = createInitialSimulationState('clinical-vv-initiation-ards')
-    const scenario = clinicalPracticeScenarios.find(
-      (item) => item.id === state.scenario.scenarioId,
-    )!
     const onLoadScenario = jest.fn()
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={onLoadScenario}
-        onReveal={jest.fn()}
-      />,
-    )
+    renderCaseView(state, { onLoadScenario })
 
     const caseSelect = screen.getByLabelText('Case')
     const vvCaseCount = cardiohelpCurriculum.vv.reduce(
@@ -531,18 +527,21 @@ describe('CARDIOHELP ECMO learner interface', () => {
       0,
     )
     expect(within(caseSelect).getAllByRole('option')).toHaveLength(vvCaseCount)
+    const unitTwo = cardiohelpCurriculum.vv[1]
     expect(
-      within(caseSelect).getByRole('group', { name: /Unit 2 · Drainage & preload/i }),
+      within(caseSelect).getByRole('group', { name: `Unit 2 · ${unitTwo.title}` }),
     ).toBeInTheDocument()
-    expect(
-      within(caseSelect).getByRole('option', {
-        name: /Initiate VV ECMO for refractory severe ARDS/i,
-      }),
-    ).toBeInTheDocument()
+    for (const caseId of cardiohelpCurriculum.vv.flatMap((unit) => unit.caseScenarioIds)) {
+      const definition = clinicalPracticeScenarios.find((item) => item.id === caseId)!
+      expect(
+        within(caseSelect).getByRole('option', { name: presentationTitle(definition) }),
+      ).toBeInTheDocument()
+      // The picker never names the diagnosis.
+      expect(within(caseSelect).queryByRole('option', { name: definition.title })).toBeNull()
+    }
     expect(
       within(caseSelect).queryByRole('option', { name: /Initiate peripheral VA ECMO/i }),
     ).not.toBeInTheDocument()
-    expect(screen.getByText(/Unit 1 · Foundations & console orientation/i)).toBeInTheDocument()
 
     fireEvent.change(caseSelect, { target: { value: 'clinical-vv-occult-hemorrhage' } })
     expect(onLoadScenario).toHaveBeenCalledWith('clinical-vv-occult-hemorrhage')
@@ -560,22 +559,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
       type: 'CORRECT_FAULT',
       fault: 'differential-hypoxemia',
     })
-    const scenario = cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)!
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-        section="assess"
-      />,
-    )
+    const { scenario } = renderCaseView(state, { section: 'assess', activityMode: 'challenge' })
 
-    expect(screen.getByText('Challenge')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
+    expect(screen.getByText(/Challenge · VA track/i)).toBeInTheDocument()
+    // The capstone is named by its presentation until the debrief, never by its diagnosis.
+    expect(
+      screen.getByRole('heading', { level: 1, name: presentationTitle(scenario) }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: scenario.title })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Case')).not.toBeInTheDocument()
     expect(screen.getByText(/Advance 10 more simulated second/i)).toBeInTheDocument()
     expect(screen.getByText('Required review domains').closest('[role="note"]')).toHaveTextContent(
@@ -583,49 +574,28 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )
     expect(screen.getByRole('button', { name: /Commit reassessment/i })).toBeDisabled()
     expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Hide diagnosis cues/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
-    expect(screen.getByText(/Challenge mode collects teaching feedback/i)).toHaveAttribute(
-      'role',
-      'note',
+    fireEvent.click(screen.getByRole('button', { name: /What do I do now\?/i }))
+    expect(document.querySelector('[data-help-clues="off"]')).toHaveTextContent(
+      /Clues are off in Challenge/i,
     )
-    for (const objective of scenario.clinicalCase?.learningObjectives ?? []) {
-      expect(screen.getByText(objective)).toBeInTheDocument()
-    }
   })
 
-  it('keeps authored initiation orders and objectives visible while challenge clues stay deferred', () => {
-    const state = createInitialSimulationState('clinical-vv-initiation-ards')
-    const scenario = clinicalPracticeScenarios.find(
-      (item) => item.id === 'clinical-vv-initiation-ards',
-    )!
-    render(
-      <>
-        <PracticeCasePlayer
-          state={state}
-          scenario={scenario}
-          progress={createDefaultProgress()}
-          outcome={selectScenarioOutcome(state)}
-          dispatch={jest.fn()}
-          onLoadScenario={jest.fn()}
-          onReveal={jest.fn()}
-          section="assess"
-        />
-        <CardiohelpConsole
-          state={state}
-          dispatch={jest.fn()}
-          controlsEnabled={false}
-          initiationTargets={scenario.clinicalCase?.initiationTargets ?? null}
-        />
-      </>,
-    )
+  it('keeps authored initiation orders visible in Challenge while objectives and clues wait for the debrief', () => {
+    const state = createInitialSimulationState('clinical-vv-initiation-ards', 'challenge')
+    const { scenario } = renderCaseView(state, { section: 'assess', activityMode: 'challenge' })
 
-    expect(screen.getByText('Simulated case order')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
+    // The console's and the blender's simulated case orders are part of the simulator, not of the
+    // masking.
+    expect(screen.getAllByText('Simulated case order').length).toBeGreaterThan(0)
+    expect(
+      screen.getByRole('heading', { level: 1, name: presentationTitle(scenario) }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: scenario.title })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
     for (const objective of scenario.clinicalCase?.learningObjectives ?? []) {
-      expect(screen.getByText(objective)).toBeInTheDocument()
+      expect(screen.queryByText(objective)).not.toBeInTheDocument()
     }
   })
 
@@ -660,25 +630,13 @@ describe('CARDIOHELP ECMO learner interface', () => {
         },
       },
     ].reduce(ecmoSimulationReducer, state)
-    const scenario = clinicalPracticeScenarios.find(
-      (item) => item.id === state.scenario.scenarioId,
-    )!
     const onReveal = jest.fn()
-    const onPhaseChange = jest.fn()
+    const onStageChange = jest.fn()
+    const { props, view } = renderCaseView(state, { onReveal, onStageChange })
 
-    const view = render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={onReveal}
-        onPhaseChange={onPhaseChange}
-      />,
-    )
-
+    // The stage is Debrief, waiting on the reveal; the reassessment panel stays readable.
+    expect(view.container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'debrief')
+    expect(onStageChange).toHaveBeenLastCalledWith('debrief')
     expect(screen.getByText(/Reassessment submitted\. Select/i)).toHaveTextContent(
       /Reassessment submitted.*Reveal causal debrief/i,
     )
@@ -691,34 +649,40 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
     expect(revealButton).toBeEnabled()
     expect(revealButton).toHaveFocus()
+    // And the Now card offers the same door.
+    const nowCard = view.container.querySelector('[data-now-card]') as HTMLElement
+    expect(within(nowCard).getByRole('button', { name: /Reveal causal debrief/i })).toBeEnabled()
+    // Nothing before the reveal marks a choice as matched or not.
+    expect(document.querySelector('[data-result="correct"]')).toBeNull()
+    expect(document.querySelector('[data-result="incorrect"]')).toBeNull()
 
     fireEvent.click(revealButton)
     expect(onReveal).toHaveBeenCalledTimes(1)
 
     const revealedState = ecmoSimulationReducer(state, { type: 'REVEAL_DEBRIEF' })
     view.rerender(
-      <PracticeCasePlayer
+      <EcmoPracticeCaseView
+        {...props}
         state={revealedState}
-        scenario={scenario}
-        progress={createDefaultProgress()}
         outcome={selectScenarioOutcome(revealedState)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={onReveal}
-        onPhaseChange={onPhaseChange}
       />,
     )
-    expect(onPhaseChange).toHaveBeenLastCalledWith('explain')
-    expect(onPhaseChange).not.toHaveBeenCalledWith('transfer')
-    expect(screen.getByRole('note', { name: /Reassessment comparison/i })).toHaveTextContent(
-      /At least one selected response differs from the authored post-intervention evidence/i,
-    )
-    expect(screen.getByRole('link', { name: /Review the paired lesson/i })).toHaveAttribute(
-      'href',
-      expect.stringContaining('lesson=va-differential-hypoxemia'),
-    )
-    expect(screen.getByRole('link', { name: /Next recommended/i })).toBeInTheDocument()
-    expect(screen.getByText(/Learning objectives/i)).toBeInTheDocument()
+    const debrief = view.container.querySelector('[data-case-debrief]') as HTMLElement
+    expect(debrief).toBeInTheDocument()
+    // The diagnosis is finally allowed to appear, in the title and in the debrief.
+    expect(screen.getByRole('heading', { level: 1, name: definition.title })).toBeInTheDocument()
+    expect(within(debrief).getByText(definition.debrief.diagnosis)).toBeInTheDocument()
+    // Every domain names what was recorded and what the model showed, in words.
+    expect(within(debrief).getAllByText(/You recorded:/i)).toHaveLength(3)
+    expect(within(debrief).getAllByText(/Modeled response:/i)).toHaveLength(3)
+    expect(
+      within(debrief).getByRole('link', { name: /Review the paired lesson/i }),
+    ).toHaveAttribute('href', expect.stringContaining('lesson=va-differential-hypoxemia'))
+    expect(within(debrief).getByText(/What this case was designed to teach/i)).toBeInTheDocument()
+    for (const objective of definition.clinicalCase?.learningObjectives ?? []) {
+      expect(within(debrief).getByText(objective)).toBeInTheDocument()
+    }
+    expect(within(debrief).getByRole('button', { name: /Replay this case/i })).toBeInTheDocument()
   })
 
   it('withholds injected pattern labels until reassessment and reveal', () => {
@@ -765,36 +729,31 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
   })
 
-  it('keeps scenario titles and summaries visible in Challenge mode', () => {
+  it('masks the diagnosis and the unit name in Challenge until the debrief', () => {
     const state = createInitialSimulationState('gas-source-interruption', 'challenge')
-    const scenario = cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)!
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
+    const { scenario, view } = renderCaseView(state, { activityMode: 'challenge' })
 
-    expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
-    expect(screen.getByText(scenario.summary)).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: scenario.title })).not.toBeInTheDocument()
+    expect(screen.queryByText(scenario.summary)).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 1, name: presentationTitle(scenario) }),
+    ).toBeInTheDocument()
+    // Units are numbered, not named, so a unit title cannot hand over the mechanism.
+    const options = view.container.querySelector('[data-case-options]') as HTMLElement
+    for (const group of within(options).getAllByRole('group')) {
+      if (group.tagName === 'OPTGROUP') expect(group).toHaveAccessibleName(/^Unit \d+$/)
+    }
+    // Never masked: the kicker, the stage, the strip and its alarm chip.
+    expect(screen.getByText(/Practice · VV track/i)).toBeInTheDocument()
+    expect(view.container.querySelector('[data-stage]')).toHaveAttribute('data-stage', 'plan')
+    expect(screen.getByText(/No active device alarm/i)).toBeInTheDocument()
   })
 
-  it('defers routine clinical teaching in Challenge mode and reveals it on request', () => {
+  it('defers routine clinical teaching in Challenge mode to the debrief, with no toggle to skip ahead', () => {
     const scenario = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-occult-hemorrhage',
     )!
-    let state = createInitialSimulationState(scenario.id, 'challenge')
-    state = ecmoSimulationReducer(state, {
-      type: 'COMMIT_PREDICTION',
-      goalId: scenario.expectation.goalId,
-      control: scenario.expectation.control,
-      direction: scenario.expectation.direction,
-    })
+    let state = commitExpectation(createInitialSimulationState(scenario.id, 'challenge'))
     const intervention = scenario.clinicalCase!.interventions.find(
       (item) => item.id === 'hemorrhage-search',
     )!
@@ -802,38 +761,22 @@ describe('CARDIOHELP ECMO learner interface', () => {
       type: 'APPLY_CLINICAL_INTERVENTION',
       interventionId: intervention.id,
     })
-
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
+    renderCaseView(state, { activityMode: 'challenge' })
 
     expect(screen.queryByText(intervention.response)).not.toBeInTheDocument()
     expect(screen.getByText(/Routine teaching note saved for the debrief/i)).toBeInTheDocument()
-    fireEvent.click(
-      screen.getByRole('checkbox', { name: /Show teaching notes after each action/i }),
-    )
-    expect(screen.getAllByText(intervention.response).length).toBeGreaterThan(0)
+    expect(
+      screen.queryByRole('checkbox', { name: /Show teaching notes after each action/i }),
+    ).not.toBeInTheDocument()
+    // Practice shows its task after the commit; Challenge keeps it for the debrief.
+    expect(document.querySelector('[data-decision-prompt]')).toBeNull()
   })
 
   it('keeps a catastrophic ECMO action visible as an immediate safety interruption', () => {
     const scenario = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-initiation-ards',
     )!
-    let state = createInitialSimulationState(scenario.id, 'challenge')
-    state = ecmoSimulationReducer(state, {
-      type: 'COMMIT_PREDICTION',
-      goalId: scenario.expectation.goalId,
-      control: scenario.expectation.control,
-      direction: scenario.expectation.direction,
-    })
+    let state = commitExpectation(createInitialSimulationState(scenario.id, 'challenge'))
     const unsafe = scenario.clinicalCase!.interventions.find(
       (item) => item.id === 'vv-pressure-escalation',
     )!
@@ -841,24 +784,20 @@ describe('CARDIOHELP ECMO learner interface', () => {
       type: 'APPLY_CLINICAL_INTERVENTION',
       interventionId: unsafe.id,
     })
+    const { view } = renderCaseView(state, { activityMode: 'challenge' })
 
-    render(
-      <PracticeCasePlayer
-        state={state}
-        scenario={scenario}
-        progress={createDefaultProgress()}
-        outcome={selectScenarioOutcome(state)}
-        dispatch={jest.fn()}
-        onLoadScenario={jest.fn()}
-        onReveal={jest.fn()}
-      />,
-    )
-
+    // The Now card becomes the safety alert: the authored label, never the identifier.
     const interruption = screen.getByRole('alert')
-    expect(interruption).toHaveTextContent(/Safety interruption/i)
+    expect(interruption).toHaveTextContent(/Stopped for safety/i)
     expect(interruption).toHaveTextContent(unsafe.response)
+    for (const errorId of state.scenario.criticalErrors) {
+      const label = scenario.unsafeActionPenalties.find((item) => item.id === errorId)?.label
+      expect(label).toBeDefined()
+      expect(interruption).toHaveTextContent(label!)
+      expect(view.container.textContent).not.toContain(errorId)
+    }
     expect(
-      within(interruption).getByRole('button', { name: /Restart from the clean case/i }),
+      within(interruption).getByRole('button', { name: /Restart this case from the beginning/i }),
     ).toBeInTheDocument()
   })
 

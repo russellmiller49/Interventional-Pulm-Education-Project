@@ -1,0 +1,651 @@
+/*
+ * The lesson stage: one Learn surface for every section of the pathway.
+ *
+ * Everything shared with Practice lives in `../shell/EcmoActivityShell.module.css`. This file
+ * holds what only the stage has — the three-pane workspace on the dark shell, the step list, the
+ * Sections drawer, the task column's cards — and the type promotions for the shared components
+ * rendered into its panes.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Workspace frame and dark theme
+ * ------------------------------------------------------------------ */
+
+.workspaceFrame {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+@media (max-width: 1023px), (max-height: 699px) {
+  .workspaceFrame {
+    height: auto;
+  }
+}
+
+/* Tailwind is configured as `hsl(var(--token))`, so these are bare HSL triples. */
+.workspace {
+  --background: 194 44% 8%;
+  --foreground: 180 33% 94%;
+  --card: 191 41% 12%;
+  --card-foreground: 180 33% 94%;
+  --popover: 191 41% 12%;
+  --popover-foreground: 180 33% 94%;
+  --muted: 192 36% 16%;
+  --muted-foreground: 190 14% 74%;
+  --primary: 183 58% 67%;
+  --primary-foreground: 194 60% 8%;
+  --secondary: 192 36% 20%;
+  --secondary-foreground: 180 33% 94%;
+  --accent: 34 100% 69%;
+  --accent-foreground: 194 60% 8%;
+  --destructive: 356 100% 71%;
+  --destructive-foreground: 194 60% 8%;
+  --border: 187 25% 38%;
+  --input: 187 25% 38%;
+  --ring: 183 58% 67%;
+}
+
+/*
+ * Doubled for specificity: the shared `.workspace` rule in `teaching-workspace.module.css` paints
+ * a light surface at the same single-class specificity, and which of two equal rules wins would
+ * otherwise depend on stylesheet order. Every declaration that contradicts it lives here.
+ */
+.workspace.workspace {
+  color: var(--ink, #eaf4f4);
+  color-scheme: dark;
+  background: #061519;
+}
+
+.workspace [data-scroll-pane] {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* ------------------------------------------------------------------ *
+ * Panes
+ * ------------------------------------------------------------------ */
+
+.simulatorPane,
+.teachingColumn,
+.taskColumn {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+/*
+ * The teaching panels and the shared verdict components are written in `text-sm`/`text-xs`.
+ * Promoted here rather than in their JSX: several of them are shared and not this module's to
+ * edit, and the floor is a property of the surface they render into.
+ */
+.teachingColumn :global(.text-sm),
+.taskColumn :global(.text-sm) {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.teachingColumn :global(.text-xs),
+.taskColumn :global(.text-xs) {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* A genuine label — short, uppercase, tracked — stays compact. */
+.teachingColumn :global(.text-xs.uppercase),
+.taskColumn :global(.text-xs.uppercase) {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+}
+
+.teachingColumn :global(.leading-5),
+.taskColumn :global(.leading-5) {
+  line-height: 1.55;
+}
+
+/* Essential explanation is never dimmed. */
+.teachingColumn p,
+.teachingColumn li,
+.teachingColumn dd,
+.teachingColumn dt,
+.teachingColumn td,
+.teachingColumn th,
+.teachingColumn strong,
+.teachingColumn em,
+.taskColumn p,
+.taskColumn li,
+.taskColumn strong {
+  opacity: 1;
+}
+
+.teachingColumn :global(.overflow-x-auto) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* The console and circuit are dark device surfaces; hand the shell's ink back to their controls. */
+.simulatorPane {
+  color: var(--ink, #eaf4f4);
+}
+
+/* ------------------------------------------------------------------ *
+ * Step list
+ * ------------------------------------------------------------------ */
+
+.stepList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepRow {
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  background: rgba(16, 46, 52, 0.35);
+}
+
+.stepRow[data-step-state='current'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.stepRow[data-step-state='locked'] {
+  opacity: 0.7;
+}
+
+.stepButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  text-align: left;
+  cursor: pointer;
+}
+
+.stepButton:disabled {
+  cursor: default;
+}
+
+.stepButton:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.stepOrdinal {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.stepOrdinal svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.stepRow[data-step-state='done'] .stepOrdinal {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.stepText {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.stepPhase {
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stepTitle {
+  font-weight: 600;
+}
+
+.stepRecap {
+  padding: 0 0.7rem 0.6rem 3.05rem;
+  color: var(--muted, #9fb4b7);
+}
+
+.stepRecap ul,
+.stepRecap p {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.stepRecap p {
+  padding-left: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Sections drawer
+ * ------------------------------------------------------------------ */
+
+.sectionsDrawer {
+  position: relative;
+}
+
+.sectionsSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  background: rgba(16, 46, 52, 0.72);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.sectionsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.sectionsSummary:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.sectionsPosition {
+  color: var(--muted, #9fb4b7);
+  font-weight: 600;
+}
+
+.sectionsPanel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  width: min(26rem, calc(100vw - 2rem));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  background: var(--panel, #10262b);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
+}
+
+/* ------------------------------------------------------------------ *
+ * Task column cards
+ * ------------------------------------------------------------------ */
+
+.objectives summary {
+  color: var(--muted, #9fb4b7);
+  cursor: pointer;
+}
+
+.objectives ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.completion {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--green, #76d69b);
+  border-radius: 1rem;
+}
+
+.completion h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.completion p {
+  margin: 0;
+}
+
+.completionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.choiceList {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choiceList legend {
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.choice[data-selected='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.choice input {
+  margin-top: 0.25rem;
+}
+
+.taskInstruction {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+}
+
+.boundedActions {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.boundedAction {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  background: transparent;
+  color: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  text-align: left;
+  cursor: pointer;
+}
+
+.boundedAction small {
+  display: block;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.footerLine {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Scoped teaching blocks
+ * ------------------------------------------------------------------ */
+
+/* A folded block's summary is its heading; the section's own heading inside stays for its label. */
+.teachingColumn details[data-stage-collapsed] {
+  min-width: 0;
+}
+
+.teachingColumn details[data-stage-collapsed] > summary {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teachingColumn details[data-stage-collapsed][open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.teachingColumn details[data-stage-collapsed] > section > h3:first-child,
+.teachingColumn details[data-stage-collapsed] > div > section > h3:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Foundation state card
+ * ------------------------------------------------------------------ */
+
+.stateCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.stateCard p {
+  margin: 0;
+}
+
+.stateControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.boundaryNote {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.boundedActionsPanel > summary {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boundedActionsPanel[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Story problems (foundation Observe step)
+ * ------------------------------------------------------------------ */
+.storyProblems {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--panel, #0f1f24);
+}
+
+.storyProblems h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.storyIntro {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+.storyCard {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.6rem 0 0;
+  border-top: 1px dashed var(--line, #244148);
+}
+
+.storyCard h4 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.storyTriad {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem 0.75rem;
+  margin: 0;
+}
+
+.storyTriad div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  background: var(--bg, #0a1417);
+}
+
+.storyTriad dt {
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.storyTriad dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.storyVerdict {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+/* ------------------------------------------------------------------ *
+ * Foundation teaching preview: first block only until the prediction is committed
+ * ------------------------------------------------------------------ */
+.teachingRevealToggle {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line, #244148);
+  background: transparent;
+  color: var(--ink, #e5f4f6);
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.teachingRevealToggle:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+/* Everything after the panel's first block waits for the reveal or the commitment. */
+.teachingColumn[data-teaching-preview='true'] [data-teaching-panel] > :nth-child(n + 2) {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Attribution: assign each proposed change to the thing it acts on
+ * ------------------------------------------------------------------ */
+.attribution {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.attributionPrompt {
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+.attributionRow {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--bg, #0a1417);
+}
+
+.attributionRow label {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.attributionRow select {
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  min-height: 40px;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--panel, #0f1f24);
+  color: inherit;
+}
+
+.attributionRow select:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.attributionRow[data-attribution-outcome='correct'] {
+  border-color: var(--success, #59c88f);
+}
+
+.attributionRow[data-attribution-outcome='not-correct'] {
+  border-color: var(--warning, #f5c451);
+}
+
+.attributionVerdict {
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+.attributionComponents {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line, #244148);
+}
+
+.attributionComponents p {
+  margin: 0;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+  color: var(--muted, #9fb4b7);
+}

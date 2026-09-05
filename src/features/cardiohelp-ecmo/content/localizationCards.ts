@@ -95,7 +95,7 @@ export interface EcmoLocalizationRow {
   readonly gradientComparisonBasis?: 'at-similar-blood-flow'
   /** The channels that carry the pattern. */
   readonly sensorSiteIds: readonly [EcmoSensorSiteId, ...EcmoSensorSiteId[]]
-  /** What the minimap marks when this row is the explanation. */
+  /** What the circuit map marks when this row is the explanation. */
   readonly implicatedSegmentIds: readonly [EcmoCircuitSegmentId, ...EcmoCircuitSegmentId[]]
   /** What to inspect first. Four at most, because a longer list is not carried to a bedside. */
   readonly causes: readonly string[]

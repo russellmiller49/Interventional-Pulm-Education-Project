@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -135,7 +135,7 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
   it('wraps the guided-drill console in a fit-to-width surface', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-now-card]')).not.toBeNull()
     })
 
     const console_ = document.getElementById('cardiohelp-console')
@@ -151,30 +151,35 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
     expect(circuit?.closest('[data-fit-width-surface]')).toBeNull()
   })
 
-  it('leaves Practice exactly as it was, with no scaling surface', async () => {
-    render(<CardiohelpWorkbench section="practice" />)
-    await waitFor(() => {
-      expect(document.getElementById('cardiohelp-console')).not.toBeNull()
-    })
-    expect(
-      document.getElementById('cardiohelp-console')?.closest('[data-fit-width-surface]'),
-    ).toBeNull()
-  })
-
-  it('leaves Assess exactly as it was, with no scaling surface', async () => {
-    render(<CardiohelpWorkbench section="assess" />)
-    await waitFor(() => {
-      expect(document.getElementById('cardiohelp-console')).not.toBeNull()
-    })
-    expect(
-      document.getElementById('cardiohelp-console')?.closest('[data-fit-width-surface]'),
-    ).toBeNull()
-  })
+  /*
+   * R4 put Practice and Challenge on the same lean shell as Learn, so the console is fit-scaled
+   * there too (the B5 pin that Practice kept an unscaled console is superseded). What has to stay
+   * true on every route is that the one console and one circuit render once, so every guided
+   * control id resolves to exactly one element.
+   */
+  it.each(['practice', 'assess'] as const)(
+    'fit-scales the console on the %s route and keeps every guided control id unique',
+    async (section) => {
+      render(<CardiohelpWorkbench section={section} />)
+      await waitFor(() => {
+        expect(document.getElementById('cardiohelp-console')).not.toBeNull()
+      })
+      const surface = document
+        .getElementById('cardiohelp-console')
+        ?.closest('[data-fit-width-surface]')
+      expect(surface).not.toBeNull()
+      expect(surface).toHaveAttribute('data-fit-mode', 'fit')
+      expect(document.querySelectorAll('#cardiohelp-console')).toHaveLength(1)
+      expect(document.querySelectorAll('#cardiohelp-circuit-panel')).toHaveLength(1)
+      const ids = Array.from(document.querySelectorAll('[id^="cardiohelp-"]')).map((el) => el.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    },
+  )
 
   it('still renders exactly one console and one circuit panel on the Learn route', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-now-card]')).not.toBeNull()
     })
     // Guided help resolves controls with getElementById, so a second copy would silently retarget it.
     expect(document.querySelectorAll('#cardiohelp-console')).toHaveLength(1)
@@ -184,7 +189,7 @@ describe('B5: the Learn route scales the console to the pane it lives in', () =>
   it('keeps every guided control id unique across the whole Learn document', async () => {
     render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-now-card]')).not.toBeNull()
     })
     const ids = [...document.querySelectorAll('[id^="cardiohelp-"]')].map((node) => node.id)
     expect(ids.length).toBeGreaterThan(0)

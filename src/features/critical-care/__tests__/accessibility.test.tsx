@@ -5,10 +5,18 @@ import { axe } from 'jest-axe'
 
 import { CrrtPressureLocalizationLab } from '@/features/baxter-crrt/components/CrrtPressureLocalizationLab'
 import { CardiohelpHub } from '@/features/cardiohelp-ecmo/components/CardiohelpHub'
-import { CircuitAndMonitors } from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
+import {
+  CircuitAndMonitors,
+  CircuitSchematic,
+} from '@/features/cardiohelp-ecmo/components/CircuitAndMonitors'
+import {
+  ecmoCircuitWalkStopsForSection,
+  ecmoWalkStopSegmentIds,
+} from '@/features/cardiohelp-ecmo/content/circuitWalk'
+import { ecmoFoundationLearningItems } from '@/features/cardiohelp-ecmo/content/foundationLearningItems'
+import { ecmoMapAnswerTargets } from '@/features/cardiohelp-ecmo/content/mapAnswerTargets'
 import { EcmoContinueCta } from '@/features/cardiohelp-ecmo/components/EcmoContinueCta'
-import { EcmoLearnWorkspace } from '@/features/cardiohelp-ecmo/components/EcmoLearnWorkspace'
-import { resolveGuidedLesson } from '@/features/cardiohelp-ecmo/components/LearnLessonPlayer'
+import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/CardiohelpWorkbench'
 import { EcmoDrillTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import { ecmoDrillTeachingPanelScenarioIds } from '@/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel'
 import { EcmoFoundationTeachingPanel } from '@/features/cardiohelp-ecmo/components/teaching/EcmoFoundationTeachingPanel'
@@ -29,6 +37,14 @@ import { criticalCareConcepts } from '../content/concepts'
 import type { CriticalCarePublicClientCatalog } from '../content/publicCatalogTypes'
 import { ScenarioTeachingDebrief } from '@/features/learning-module/components/ScenarioTeachingDebrief'
 import type { ScenarioFeedbackEvent } from '@/features/learning-module/scenarioFeedback'
+
+// The console facsimile is a device surface with its own contract; this suite covers the stage's
+// chrome around it, so the console is a labelled stand-in here.
+jest.mock('@/features/cardiohelp-ecmo/components/CardiohelpConsole', () => ({
+  CardiohelpConsole: () => (
+    <section id="cardiohelp-console" aria-label="CARDIOHELP console stand-in" />
+  ),
+}))
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -55,6 +71,8 @@ jest.mock('@/i18n/navigation', () => ({
       </a>
     )
   },
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 
 const catalog: CriticalCarePublicClientCatalog = {
@@ -194,9 +212,12 @@ describe('critical-care accessibility surfaces', () => {
       ).not.toBeInTheDocument(),
     )
     fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    // The channel walk is the image's description; its name is the short title. They used to be
+    // joined into one hundred-word name, which the September 2026 map work separated.
     expect(
       screen.getByRole('img', {
-        name: /pVen pressure zone.*pInt.*pArt/i,
+        name: /circuit schematic/i,
+        description: /pVen pressure zone.*pInt.*pArt/i,
       }),
     ).toBeInTheDocument()
     const circuitLegend = screen.getByRole('list', { name: 'Circuit schematic legend' })
@@ -289,11 +310,13 @@ describe('critical-care accessibility surfaces', () => {
   )
 
   /**
-   * The two foundation panels that carry the shared circuit map and the localization table.
+   * The two foundation panels that walk the circuit, and the map their walk is marked on.
    *
-   * Foundation panels had no automated coverage here at all, which mattered once they started
-   * rendering a diagram: an `<svg role="img">` without an accessible name is a violation, and the
-   * map's name is wired through a generated id that only exists at render time.
+   * The panels used to carry a small map of their own; it was retired in September 2026 and the
+   * marking moved to the simulator pane's pressure-zone map, which gained an emphasis layer. So
+   * this checks both halves: the walk panel with no drawing in it, and the real map marked at a
+   * walk stop — an `<svg role="img">` whose name and description now carry the caption, plus an
+   * HTML caption and an `aria-hidden` overlay that must not become a second, unnamed image.
    */
   it.each(['circuit-flow-path', 'pump-and-pressure-zones'] as const)(
     'keeps the %s foundation panel free of automated violations',
@@ -305,30 +328,117 @@ describe('critical-care accessibility surfaces', () => {
       const { container } = render(
         <EcmoFoundationTeachingPanel sectionId={sectionId} state={state} />,
       )
-      expect(container.querySelector('[data-circuit-minimap] svg[role="img"]')).not.toBeNull()
+      expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
+      expect(container.querySelector('[data-walk-stop]')).not.toBeNull()
       expect(await axe(container)).toHaveNoViolations()
     },
   )
 
-  it('labels every pane of the ECMO Learn workspace and keeps its chrome accessible', async () => {
-    const state = createInitialEcmoState('preload-drainage-collapse', 'guided')
+  it('keeps the pressure-zone map free of automated violations while it marks a walk stop', async () => {
+    let state = createEcmoReferenceState('vv-reference')
+    for (let tick = 0; tick < 8; tick += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+    const stop = ecmoCircuitWalkStopsForSection('circuit-flow-path')[0]
     const view = render(
-      <EcmoLearnWorkspace
+      <CircuitSchematic
         state={state}
-        lesson={resolveGuidedLesson('preload-drainage-collapse')}
         dispatch={jest.fn()}
-        simulator={<div>Live simulator stand-in</div>}
-        onSelectLesson={jest.fn()}
-        onCompleteLesson={jest.fn()}
-        onTryPractice={jest.fn()}
-        onTargetChange={jest.fn()}
-        onControlHelpChange={jest.fn()}
+        controlsEnabled={false}
+        circuitFit="pane"
+        circuitFrame="whole"
+        locationDisclosure="withheld"
+        circuitPresentation={{
+          kind: 'walk-stop',
+          stopId: stop.id,
+          segmentIds: ecmoWalkStopSegmentIds(stop),
+          sensorSiteIds: [],
+        }}
       />,
     )
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Checking this display' }),
+      ).not.toBeInTheDocument(),
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    expect(
+      screen.getByRole('img', {
+        name: /circuit schematic/i,
+        description: /You are here: Patient venous drainage\./,
+      }),
+    ).toBeInTheDocument()
+    expect(view.container.querySelector('[data-map-emphasis]')).not.toBeNull()
+    expect(await axe(view.container)).toHaveNoViolations()
+  })
 
-    for (const label of ['Live simulator', 'Teaching', 'Current task']) {
+  it('keeps the circuit’s own answer control free of automated violations', async () => {
+    /*
+     * The prediction about a place is answered by pointing at the place: numbered pins over the
+     * drawing, each one a label for a hidden radio. A control laid over a picture is exactly where
+     * a name or a role goes missing, so it gets its own axe pass, before and after the commitment.
+     */
+    let state = createEcmoReferenceState('vv-reference')
+    for (let tick = 0; tick < 8; tick += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+    const item = ecmoFoundationLearningItems['circuit-flow-path'].prediction
+    const targets = ecmoMapAnswerTargets(item.id) ?? []
+    const answer = {
+      item,
+      targets,
+      correctChoiceIds: item.correctChoiceIds,
+      name: 'axe-map-answer',
+      onSelect: jest.fn(),
+    }
+    const pending = render(
+      <CircuitSchematic
+        state={state}
+        dispatch={jest.fn()}
+        controlsEnabled={false}
+        circuitFit="pane"
+        mapAnswer={{ ...answer, selectedChoiceId: null, committedChoiceId: null }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    expect(screen.getAllByRole('radio')).toHaveLength(item.choices.length)
+    expect(await axe(pending.container)).toHaveNoViolations()
+    pending.unmount()
+
+    const committed = render(
+      <CircuitSchematic
+        state={state}
+        dispatch={jest.fn()}
+        controlsEnabled={false}
+        circuitFit="pane"
+        mapAnswer={{
+          ...answer,
+          selectedChoiceId: targets[0]?.choiceId ?? null,
+          committedChoiceId: targets[0]?.choiceId ?? null,
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
+    expect(await axe(committed.container)).toHaveNoViolations()
+  })
+
+  it('labels every pane of the ECMO lesson stage and keeps its chrome accessible', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/en/cardiohelp-ecmo/learn?lesson=preload-drainage-collapse&track=vv',
+    )
+    const view = render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(view.container.querySelector('[data-now-card]')).not.toBeNull()
+    })
+
+    for (const label of ['Simulator', 'Teaching', 'Steps']) {
       expect(screen.getByRole('region', { name: `${label} panel` })).toBeInTheDocument()
     }
+    expect(view.container.querySelectorAll('[data-step-list] [aria-current="step"]')).toHaveLength(
+      1,
+    )
     expect(await axe(view.container)).toHaveNoViolations()
   })
 
@@ -363,12 +473,15 @@ describe('critical-care accessibility surfaces', () => {
     expect(view.container.querySelectorAll('[data-ecmo-continue]')).toHaveLength(1)
 
     const primary = screen.getByRole('link', { name: /^Continue —/ })
-    const browse = screen.getByRole('link', { name: /^Browse all \d+ sections$/ })
-    // Real links, so they are in the tab order and operable by keyboard without a handler.
-    for (const control of [primary, browse]) {
-      expect(control.tagName).toBe('A')
-      expect(control).toHaveAttribute('href')
-    }
+    // A real link, so it is in the tab order and operable by keyboard without a handler.
+    expect(primary.tagName).toBe('A')
+    expect(primary).toHaveAttribute('href')
+    // Browsing opens the map in place (one door, one map): a real button that names the region it
+    // controls, so it is keyboard-operable and its state is announced.
+    const browse = screen.getByRole('button', { name: /^Browse all \d+ sections$/ })
+    expect(browse).toHaveAttribute('aria-expanded', 'false')
+    expect(browse).toHaveAttribute('aria-controls')
+    expect(document.getElementById(browse.getAttribute('aria-controls') ?? '')).not.toBeNull()
 
     // The track chooser is a real radio group — not just the markup of one. Exactly one option is
     // in the tab sequence and the arrow keys move within the group, which is the half that was

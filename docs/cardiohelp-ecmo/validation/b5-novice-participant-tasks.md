@@ -27,6 +27,21 @@ wherever you like in it.
 
 ---
 
+## Before the tasks — finding your way
+
+The module's front page is open. Nothing has been chosen yet.
+
+**Tell us where you would start, and start there.** Then, without help, tell us three things: what
+the screen is asking you to do right now, where you are in the whole sequence, and how you would
+get to the next part when you are done. If you cannot find any of the three, say so — that is the
+finding.
+
+(The person sitting with you will note whether you reached the intended starting point unaided.
+If you did not, the clinical tasks below are set aside for today and we talk about what got in the
+way instead.)
+
+---
+
 ## Task 1
 
 A lesson is open in front of you. Do not touch any control yet.

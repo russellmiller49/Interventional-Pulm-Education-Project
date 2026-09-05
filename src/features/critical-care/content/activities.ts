@@ -21,6 +21,7 @@ import { criticalCarePathways } from './pathways'
 import { criticalCareReferences } from './references'
 import { criticalCareEvidenceById } from './evidenceRegistry'
 import {
+  criticalCareLearningPathway,
   validateCriticalCareLearningPathways,
   validateLearningPathwayCoverage,
 } from './learningPathways'
@@ -787,273 +788,96 @@ const mcsAssessSeeds: readonly ActivitySeed[] = [
 }))
 
 /**
- * Every existing ECMO Learn lesson wraps a failure-mode drill on the live circuit, so they stage
- * as `application`; the two console tours are `orientation`. The shared physiology foundation
- * that should precede them is authored in WP10 §5.1.
+ * Every ECMO Learn section is one row of the module's learning pathway, and the pathway is where
+ * its title, its one-sentence description and its honest minutes are authored. A seed carries only
+ * what the pathway does not — the track the activity is filed under, its stage, its ordinal and its
+ * difficulty — and reads the rest from the pathway row of the same id, so the catalog cannot name a
+ * section differently from the rail that lists it.
+ *
+ * The ten drills stage as `application` and the two console tours as `orientation`; the physiology
+ * foundation of WP10 §5.1 precedes them, and each track ends on its integration capstone.
  */
-const ecmoLessonSeeds: readonly ActivitySeed[] = (
-  [
-    // The physiology foundation authored in WP10 §5.1. These precede the console tour: a learner
-    // previously met the CARDIOHELP screen before learning what a membrane lung does. The four
-    // shared sections carry track 'vv' only so they have one canonical deep link; both track
-    // pathways reference the same activity.
-    [
-      'why-extracorporeal-support',
-      'Why extracorporeal support: content, delivery, consumption, and the failure it addresses',
-      'vv',
-      'orientation',
-      1,
-      'foundation',
-      12,
-    ],
-    [
-      'circuit-flow-path',
-      'Drainage → pump → membrane lung → return: the circuit as a flow path',
-      'vv',
-      'foundation',
-      1,
-      'foundation',
-      12,
-    ],
-    [
-      'pump-and-pressure-zones',
-      'Centrifugal pump preload and afterload, and the circuit pressure zones',
-      'vv',
-      'foundation',
-      2,
-      'foundation',
-      12,
-    ],
-    [
-      'blood-flow-versus-sweep',
-      'Blood flow versus sweep: oxygen versus CO₂ transfer',
-      'vv',
-      'mechanism',
-      1,
-      'intermediate',
-      12,
-    ],
-    [
-      'vv-series-physiology',
-      'VV series physiology, effective flow, and recirculation',
-      'vv',
-      'mechanism',
-      2,
-      'intermediate',
-      14,
-    ],
-    [
-      'vv-normal-state',
-      'The normal VV patient–circuit state',
-      'vv',
-      'foundation',
-      3,
-      'foundation',
-      12,
-    ],
-    [
-      'va-parallel-physiology',
-      'VA parallel circulation, LV loading, and differential oxygenation',
-      'va',
-      'mechanism',
-      3,
-      'intermediate',
-      14,
-    ],
-    [
-      'va-normal-state',
-      'The normal VA patient–circuit state',
-      'va',
-      'foundation',
-      4,
-      'foundation',
-      12,
-    ],
-    [
-      'startup-sensor-orientation',
-      'Console, circuit, and external-control orientation',
-      'vv',
-      'orientation',
-      2,
-      'foundation',
-    ],
-    [
-      'preload-drainage-collapse',
-      'Preload-limited flow and drainage collapse',
-      'vv',
-      'application',
-      1,
-      'intermediate',
-    ],
-    [
-      'afterload-return-obstruction',
-      'Return-side obstruction',
-      'vv',
-      'application',
-      2,
-      'intermediate',
-    ],
-    [
-      'afterload-oxygenator-resistance',
-      'Oxygenator resistance or dysfunction pattern',
-      'vv',
-      'application',
-      3,
-      'intermediate',
-    ],
-    [
-      'vv-recirculation',
-      'VV recirculation despite high displayed flow',
-      'vv',
-      'application',
-      4,
-      'advanced',
-    ],
-    ['acute-hypercapnia', 'Acute hypercapnic acidemia', 'vv', 'application', 5, 'intermediate'],
-    [
-      'compensated-hypercapnia',
-      'Compensated hypercapnia during maintenance',
-      'vv',
-      'application',
-      6,
-      'intermediate',
-    ],
-    [
-      'gas-source-interruption',
-      'Gas-source interruption with preserved blood flow',
-      'vv',
-      'application',
-      7,
-      'intermediate',
-    ],
-    [
-      'arterial-bubble-stop',
-      'Arterial bubble intervention and cause-before-reset',
-      'vv',
-      'application',
-      8,
-      'advanced',
-    ],
-    [
-      'transport-power-loss',
-      'Transport power loss and backup readiness',
-      'vv',
-      'application',
-      9,
-      'intermediate',
-    ],
-    [
-      'va-startup-sensor-orientation',
-      'VA console, femoral circuit, and independent-monitor orientation',
-      'va',
-      'orientation',
-      3,
-      'foundation',
-    ],
-    [
-      'va-preload-drainage-collapse',
-      'VA preload-limited drainage and falling systemic support',
-      'va',
-      'application',
-      10,
-      'intermediate',
-    ],
-    [
-      'va-afterload-arterial-return-obstruction',
-      'VA arterial-return resistance',
-      'va',
-      'application',
-      11,
-      'intermediate',
-    ],
-    [
-      'va-afterload-oxygenator-resistance',
-      'VA oxygenator resistance pattern',
-      'va',
-      'application',
-      12,
-      'intermediate',
-    ],
-    [
-      'va-differential-hypoxemia',
-      'Peripheral VA differential upper-body oxygenation',
-      'va',
-      'application',
-      13,
-      'advanced',
-    ],
-    ['va-lv-loading', 'VA LV-loading recognition', 'va', 'application', 14, 'advanced'],
-    [
-      'va-acute-hypercapnia',
-      'VA phase-aware sweep adjustment',
-      'va',
-      'application',
-      15,
-      'intermediate',
-    ],
-    [
-      'va-gas-source-interruption',
-      'VA gas-source interruption with continued arterial flow',
-      'va',
-      'application',
-      16,
-      'intermediate',
-    ],
-    [
-      'va-arterial-bubble-stop',
-      'VA arterial-return bubble and cause-before-reset',
-      'va',
-      'application',
-      17,
-      'advanced',
-    ],
-    [
-      'va-transport-power-loss',
-      'VA transport power loss and circulatory backup',
-      'va',
-      'application',
-      18,
-      'intermediate',
-    ],
-    [
-      'vv-integration-capstone',
-      'VV integration: displayed flow unchanged, patient deteriorating',
-      'vv',
-      'integration',
-      1,
-      'advanced',
-      18,
-    ],
-    [
-      'va-integration-capstone',
-      'VA integration: displayed flow unchanged, patient deteriorating',
-      'va',
-      'integration',
-      2,
-      'advanced',
-      18,
-    ],
-  ] as const
-).map(([sourceId, title, track, curriculumStage, stageOrder, difficulty, estimatedMinutes]) => ({
-  sourceId,
-  title,
-  track,
-  difficulty,
-  curriculumStage,
-  stageOrder,
-  ...(estimatedMinutes === undefined ? {} : { estimatedMinutes }),
-  competencyIds: [
-    'ecmo-circuit-assessment',
-    'ecmo-device-management',
-    'ecmo-patient-management',
-    'ecmo-safety',
-  ],
-  pathwayIds:
-    track === 'vv'
-      ? ['acute-respiratory-failure', 'multiorgan-critical-illness']
-      : ['cardiogenic-and-rv-shock', 'shock-and-perfusion', 'multiorgan-critical-illness'],
-  evidenceIds: ['cardiohelp-i-us-2025'],
-}))
+type EcmoLessonSeedRow = readonly [
+  sourceId: string,
+  track: EcmoTrack,
+  curriculumStage: CriticalCareCurriculumStage,
+  stageOrder: number,
+  difficulty: CriticalCareDifficulty,
+]
+
+function ecmoPathwaySectionForSeed(track: EcmoTrack, sourceId: string) {
+  const section = criticalCareLearningPathway('cardiohelp-ecmo', track).sections.find(
+    (candidate) => candidate.id === sourceId,
+  )
+  if (!section) {
+    throw new Error(`No ${track} ECMO pathway section carries the Learn seed ${sourceId}`)
+  }
+  return section
+}
+
+const ecmoLessonSeedRows: readonly EcmoLessonSeedRow[] = [
+  // The physiology foundation authored in WP10 §5.1. These precede the console tour: a learner
+  // previously met the CARDIOHELP screen before learning what a membrane lung does. The four
+  // shared sections carry track 'vv' only so they have one canonical deep link; both track
+  // pathways reference the same activity.
+  ['why-extracorporeal-support', 'vv', 'orientation', 1, 'foundation'],
+  ['circuit-flow-path', 'vv', 'foundation', 1, 'foundation'],
+  ['pump-and-pressure-zones', 'vv', 'foundation', 2, 'foundation'],
+  ['blood-flow-versus-sweep', 'vv', 'mechanism', 1, 'intermediate'],
+  ['vv-series-physiology', 'vv', 'mechanism', 2, 'intermediate'],
+  ['vv-normal-state', 'vv', 'foundation', 3, 'foundation'],
+  ['va-parallel-physiology', 'va', 'mechanism', 3, 'intermediate'],
+  ['va-normal-state', 'va', 'foundation', 4, 'foundation'],
+  ['startup-sensor-orientation', 'vv', 'orientation', 2, 'foundation'],
+  ['preload-drainage-collapse', 'vv', 'application', 1, 'intermediate'],
+  ['afterload-return-obstruction', 'vv', 'application', 2, 'intermediate'],
+  ['afterload-oxygenator-resistance', 'vv', 'application', 3, 'intermediate'],
+  ['vv-recirculation', 'vv', 'application', 4, 'advanced'],
+  ['acute-hypercapnia', 'vv', 'application', 5, 'intermediate'],
+  ['compensated-hypercapnia', 'vv', 'application', 6, 'intermediate'],
+  ['gas-source-interruption', 'vv', 'application', 7, 'intermediate'],
+  ['arterial-bubble-stop', 'vv', 'application', 8, 'advanced'],
+  ['transport-power-loss', 'vv', 'application', 9, 'intermediate'],
+  ['va-startup-sensor-orientation', 'va', 'orientation', 3, 'foundation'],
+  ['va-preload-drainage-collapse', 'va', 'application', 10, 'intermediate'],
+  ['va-afterload-arterial-return-obstruction', 'va', 'application', 11, 'intermediate'],
+  ['va-afterload-oxygenator-resistance', 'va', 'application', 12, 'intermediate'],
+  ['va-differential-hypoxemia', 'va', 'application', 13, 'advanced'],
+  ['va-lv-loading', 'va', 'application', 14, 'advanced'],
+  ['va-acute-hypercapnia', 'va', 'application', 15, 'intermediate'],
+  ['va-gas-source-interruption', 'va', 'application', 16, 'intermediate'],
+  ['va-arterial-bubble-stop', 'va', 'application', 17, 'advanced'],
+  ['va-transport-power-loss', 'va', 'application', 18, 'intermediate'],
+  ['vv-integration-capstone', 'vv', 'integration', 1, 'advanced'],
+  ['va-integration-capstone', 'va', 'integration', 2, 'advanced'],
+]
+
+const ecmoLessonSeeds: readonly ActivitySeed[] = ecmoLessonSeedRows.map(
+  ([sourceId, track, curriculumStage, stageOrder, difficulty]) => {
+    const section = ecmoPathwaySectionForSeed(track, sourceId)
+    return {
+      sourceId,
+      title: section.title,
+      description: section.description,
+      estimatedMinutes: section.minutes,
+      track,
+      difficulty,
+      curriculumStage,
+      stageOrder,
+      competencyIds: [
+        'ecmo-circuit-assessment',
+        'ecmo-device-management',
+        'ecmo-patient-management',
+        'ecmo-safety',
+      ],
+      pathwayIds:
+        track === 'vv'
+          ? ['acute-respiratory-failure', 'multiorgan-critical-illness']
+          : ['cardiogenic-and-rv-shock', 'shock-and-perfusion', 'multiorgan-critical-illness'],
+      evidenceIds: ['cardiohelp-i-us-2025'],
+    }
+  },
+)
 
 const ecmoPracticeSeeds: readonly ActivitySeed[] = [
   ['clinical-vv-initiation-ards', 'Initiate VV ECMO for refractory severe ARDS', 'vv'],
@@ -1115,7 +939,7 @@ const ecmoLearnActivityIdsByTrack: Readonly<Record<EcmoTrack, readonly string[]>
 const ecmoAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'vv-off-sweep-capstone',
-    title: 'Unseen capstone: VV off-sweep trial',
+    title: 'VV integration challenge',
     track: 'vv',
     difficulty: 'advanced',
     curriculumStage: 'integration',

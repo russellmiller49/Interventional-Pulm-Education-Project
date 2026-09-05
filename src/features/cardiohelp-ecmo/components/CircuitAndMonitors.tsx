@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Activity,
   CheckCircle2,
@@ -22,9 +22,24 @@ import type {
   SimulationAction,
   TrendParameter,
 } from '../engine'
+import type { EcmoCircuitPresentation } from '../content/circuitPresentation'
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { UNAVAILABLE_INDICATION, formatChannelReadout, isInterpretable } from './channelReadout'
+import {
+  CircuitMapEmphasisLayer,
+  circuitMapEmphasisCaption,
+  circuitMapEmphasisTargets,
+} from './circuit-map/circuitMapEmphasis'
+import {
+  CircuitMapAnswerFieldset,
+  type CircuitMapAnswerProps,
+} from './circuit-map/CircuitMapAnswerFieldset'
+import {
+  CIRCUIT_MAP_FRAME_VIEWBOX,
+  circuitMapGeometry,
+  type CircuitMapFrame,
+} from './circuit-map/circuitMapGeometry'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
@@ -53,7 +68,7 @@ import { EcmoCircuit3D } from './EcmoCircuit3D'
  */
 export type CircuitLocationDisclosure = 'full' | 'withheld'
 
-interface SimulationPanelProps {
+export interface SimulationPanelProps {
   state: EcmoSimulationState
   dispatch: (action: SimulationAction) => void
   controlsEnabled: boolean
@@ -78,6 +93,29 @@ interface SimulationPanelProps {
    * nothing that knows where these names sit in space has to cross into the teaching layer.
    */
   emphasisSceneLabelIds?: readonly string[] | null
+  /**
+   * What the pressure-zone map is marking: a walk stop, an implicated row, or nothing.
+   *
+   * The same value the teaching pane's small map used to consume, derived the same way, so the
+   * marking here and the reveal beside it cannot disagree. See `circuit-map/circuitMapEmphasis`.
+   */
+  circuitPresentation?: EcmoCircuitPresentation | null
+  /** How the map is framed. The whole drawing unless a host asks for the circuit panel alone. */
+  circuitFrame?: CircuitMapFrame
+  /**
+   * `pane` lets the map scale to its container instead of insisting on its poster width and
+   * scrolling sideways, so a wider pane is a larger map. The stage uses it; the Practice workbench
+   * keeps the poster.
+   */
+  circuitFit?: 'poster' | 'pane'
+  /**
+   * A prediction the learner answers by pointing at the circuit rather than by reading a list.
+   *
+   * Rendered as numbered pins over the drawing with a legend beneath it. Only in `pane` fit, where
+   * the drawing's box is exactly its own aspect and a percentage lands where the geometry says it
+   * does; in the poster's horizontal scroller it would not.
+   */
+  mapAnswer?: CircuitMapAnswerProps | null
 }
 
 /**
@@ -103,7 +141,20 @@ function CircuitChannelReadout({
   )
 }
 
-function CircuitSchematic({
+/** The closest ancestor that scrolls vertically and has something to scroll, or null. */
+function nearestScrollingAncestor(element: HTMLElement): HTMLElement | null {
+  let node: HTMLElement | null = element.parentElement
+  while (node && node !== document.body) {
+    const { overflowY } = getComputedStyle(node)
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
+
+export function CircuitSchematic({
   state,
   dispatch,
   controlsEnabled,
@@ -111,6 +162,10 @@ function CircuitSchematic({
   guidedControlId,
   circuitViewPreference,
   emphasisSceneLabelIds,
+  circuitPresentation = null,
+  circuitFrame = 'whole',
+  circuitFit = 'poster',
+  mapAnswer = null,
   onSaveForLater,
   locationDisclosure = 'full',
 }: SimulationPanelProps) {
@@ -130,6 +185,58 @@ function CircuitSchematic({
     setAppliedPreferenceKey(preferenceKey)
     if (circuitViewPreference) setCircuitView(circuitViewPreference.view)
   }
+  /*
+   * A step that opens the map also brings it into view.
+   *
+   * The console sits above this panel in the simulator pane and is taller than the pane, so a map
+   * a step had opened and marked was sitting a thousand pixels below the fold — opened, lit, and
+   * unseen. Scrolled once per step entry, on the same key the tab preference is applied on, so a
+   * learner who scrolls away within a step is not dragged back.
+   */
+  const panelRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (circuitViewPreference?.view !== 'diagnostic') return
+    const panel = panelRef.current
+    if (!panel) return
+    /*
+     * The pane, not the page. `scrollIntoView` scrolls every scrollable ancestor, and on the stage
+     * the document has a little give of its own: it slid the sticky header over the map's caption
+     * and left the panel's heading above the viewport. So this finds the nearest ancestor that
+     * actually scrolls and moves only that one.
+     */
+    /*
+     * Measured after the pane has settled, not on this commit. The console above this panel is
+     * scaled to the pane's width by a layout effect that runs after this one and shortens it, so
+     * a position read now is read against the unscaled console and lands the map's heading and
+     * tabs above the pane. The console's own settle passes run at 0 and 48 ms; this waits them out
+     * and reads the position when it scrolls.
+     */
+    const timer = window.setTimeout(() => {
+      // A closed surface has nothing to scroll to.
+      if (panel.getClientRects().length === 0) return
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+      const behavior = reduceMotion ? 'auto' : 'smooth'
+      const scroller = nearestScrollingAncestor(panel)
+      if (!scroller) {
+        // A stacked or short layout, where the document is the only scroller. The stylesheet's
+        // scroll-margin on the panel keeps it out from under the sticky header.
+        if (typeof panel.scrollIntoView === 'function') {
+          panel.scrollIntoView({ block: 'start', behavior })
+        }
+        return
+      }
+      const offset = panel.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+      const top = scroller.scrollTop + offset - 8
+      if (typeof scroller.scrollTo === 'function') {
+        scroller.scrollTo({ top, behavior })
+      } else {
+        scroller.scrollTop = top
+      }
+    }, 80)
+    return () => window.clearTimeout(timer)
+    // Once per applied preference; the view itself is read from the preference, not tracked.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferenceKey])
 
   const clampGuidedHelpActive =
     guidedControlId === 'cardiohelp-clamp-drainage' ||
@@ -152,7 +259,8 @@ function CircuitSchematic({
   const supportModeLabel = isVa ? 'VA' : 'VV'
   const returnVesselLabel = isVa ? 'femoral artery' : 'femoral vein'
   const returnDestinationLabel = isVa ? 'arterial circulation / aorta' : 'right atrium'
-  const returnPortX = isVa ? 244 : 214
+  const geometry = circuitMapGeometry(state.supportMode)
+  const { returnPortX } = geometry
   const bloodMoving = state.device.pumpRunning && Math.abs(state.circuit.bloodFlow) > 0.05
   /*
    * The same owner the 3D scene and the HUD read, not the raw engine flag.
@@ -166,10 +274,42 @@ function CircuitSchematic({
   const drainageChattering = drainageChatterActive(state)
   const gasMoving = state.gas.sourceConnected && state.gas.sweepLpm > 0
   const startupInspectionCompleted = state.scenario.correctedFaults.includes('startup-inspection')
-  const postPumpPath = 'M486 346 Q512 346 526 364 Q536 377 552 385 H700'
-  const returnLimbPath = `M825 385 H1000 Q1042 385 1042 427 V512 Q1042 540 1014 540 H${
-    returnPortX + 28
-  } Q${returnPortX} 540 ${returnPortX} 512 V455`
+  /*
+   * The VA drawing marks where the two circulations meet. For the one question whose answer is
+   * that meeting point — the differential-oxygenation fault, before its prediction is committed —
+   * the map keeps the right-arm monitor and the limb reminder, which are readings, and withholds
+   * the native-ejection arrow, the mixing point and their words in the drawing, in its description
+   * and in the boundary note alike, the way it withholds the channel placements for the flow-path
+   * section. Derived from the engine's own fault list and commitment flag, as the pattern label
+   * below is, so this component still never has to know which case is loaded; every other VA
+   * lesson draws the cue as it always has.
+   */
+  const mixingCueWithheld =
+    isVa &&
+    state.scenario.activeFaults.includes('differential-hypoxemia') &&
+    !state.scenario.prediction.committed
+  const postPumpPath = geometry.postPumpLimb
+  const returnLimbPath = geometry.returnLimb
+  /*
+   * The marking, resolved once for the drawing, its caption and its description. Sensor-site halos
+   * exist only when the flags they ring are drawn: a withheld map has nothing to ring.
+   */
+  const emphasisTargets = circuitMapEmphasisTargets(circuitPresentation, state.supportMode, {
+    sensorFlagsDrawn: locationsDisclosed,
+  })
+  const emphasisCaption = circuitMapEmphasisCaption(circuitPresentation, state.supportMode, {
+    sensorFlagsDrawn: locationsDisclosed,
+  })
+  /*
+   * Fitted, the whole drawing scales to the pane: a wider pane is a larger map, and the marked
+   * place is always seen against the rest of the circuit. A first version panned a window across
+   * the drawing to follow the marking; the owner could not see the whole animation and resizing
+   * the pane only magnified the crop, so the window went. The pane is the zoom.
+   */
+  const fitted = circuitFit === 'pane'
+  // Pins are placed by percentage of the drawing, which only holds where the drawing fits its box.
+  const answerable = fitted ? mapAnswer : null
+  const answerPending = Boolean(answerable && answerable.committedChoiceId === null)
   /*
    * Two descriptions, one per disclosure depth, both complete for what the drawing shows at that
    * depth.
@@ -194,7 +334,9 @@ function CircuitSchematic({
       : ' Where each pressure channel is taken on this path is what this lesson asks you to place, so the sensor locations are drawn and described once you have committed your prediction.'
   }${
     isVa
-      ? ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
+      ? mixingCueWithheld
+        ? ' Right-arm monitoring and the need for a separate distal-limb review are also shown; the rest of the venoarterial annotation is drawn once you have committed your prediction.'
+        : ' Native cardiac ejection, the approximate mixing region, right-arm monitoring, and the need for a separate distal-limb review are also shown.'
       : ' Both cannulas remain in the venous circulation and systemic flow still depends on the native heart.'
   } The pump uses a center-inlet to tangential-outflow schematic. In the oxygenator, blood is shown moving around simplified hollow fibers while sweep gas moves through them. Static arrows show direction. Moving dashes show simulated blood motion when circuit flow is present. Component geometry is conceptual rather than device-exact.${
     // The chatter badge is drawn inside an SVG with role="img", so its text is not exposed to
@@ -202,7 +344,7 @@ function CircuitSchematic({
     drainageChattering
       ? ' The drainage limb is currently marked as chattering: it is drawn with a broken outline and labelled DRAINAGE CHATTER.'
       : ''
-  }`
+  }${emphasisCaption ? ` ${emphasisCaption}` : ''}`
   const resistancePattern = !diagnosisRevealed
     ? 'Pattern label withheld until reassessment and reveal'
     : state.scenario.activeFaults.includes('oxygenator-resistance') ||
@@ -214,11 +356,12 @@ function CircuitSchematic({
         : state.scenario.activeFaults.includes('preload-limited') ||
             state.scenario.correctedFaults.includes('preload-limited')
           ? 'Preload-limited drainage pattern'
-          : 'No injected resistance pattern'
+          : 'No resistance pattern present'
 
   return (
     <section
       id="cardiohelp-circuit-panel"
+      ref={panelRef}
       className={styles.circuitPanel}
       aria-labelledby="circuit-heading"
       data-guided-focus={guidedTarget === 'circuit'}
@@ -254,7 +397,38 @@ function CircuitSchematic({
         <span className={styles.modePill}>{supportModeLabel}</span>
       </div>
 
-      <div className={styles.circuitViewTabs} role="tablist" aria-label="Circuit view">
+      {/*
+        Roving tabindex needs the arrow keys that go with it. The step selects a tab on entry and
+        leaves the other at tabindex −1, so without this a keyboard user could reach the map and
+        never the bedside scene, or the reverse.
+      */}
+      <div
+        className={styles.circuitViewTabs}
+        role="tablist"
+        aria-label="Circuit view"
+        onKeyDown={(event) => {
+          const order: readonly CircuitViewPreference[] = ['bedside', 'diagnostic']
+          const index = order.indexOf(circuitView)
+          let next: CircuitViewPreference | null = null
+          if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            next = order[(index + 1) % order.length]
+          } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            next = order[(index - 1 + order.length) % order.length]
+          } else if (event.key === 'Home') {
+            next = order[0]
+          } else if (event.key === 'End') {
+            next = order[order.length - 1]
+          }
+          if (!next) return
+          event.preventDefault()
+          setCircuitView(next)
+          document
+            .getElementById(
+              next === 'bedside' ? 'cardiohelp-bedside-view-tab' : 'cardiohelp-diagnostic-view-tab',
+            )
+            ?.focus()
+        }}
+      >
         <button
           type="button"
           role="tab"
@@ -285,6 +459,20 @@ function CircuitSchematic({
         aria-labelledby="cardiohelp-bedside-view-tab"
         hidden={circuitView !== 'bedside'}
       >
+        {/*
+          Nobody gets stranded on the wrong tab. The pins live on the pressure-zone map, so a
+          learner who came here to look at the bedside scene with an answer still to give is told
+          where the question is and handed the way back — rather than finding the map tab disabled,
+          or worse, finding no way to answer at all.
+        */}
+        {answerPending ? (
+          <p className={styles.circuitAnswerElsewhere} data-answer-elsewhere>
+            This step is answered on the pressure-zone map.{' '}
+            <button type="button" onClick={() => setCircuitView('diagnostic')}>
+              Show the pressure-zone map
+            </button>
+          </p>
+        ) : null}
         <SimulationLaunchGate
           activityTitle="CARDIOHELP bedside circuit model"
           minimumViewport="desktop"
@@ -310,13 +498,34 @@ function CircuitSchematic({
         aria-labelledby="cardiohelp-diagnostic-view-tab"
         hidden={circuitView !== 'diagnostic'}
       >
+        {/*
+          The marking in words, above the drawing rather than inside it: HTML text keeps its size
+          when the map scales, and it is real text to a screen reader rather than part of an image.
+          Not a live region — the walk announces its own stop, and the drill reveals through its
+          card — so a stop change is not read out twice.
+        */}
+        {emphasisCaption ? (
+          <p className={styles.circuitEmphasisCaption} data-map-emphasis-caption>
+            {emphasisCaption}
+          </p>
+        ) : null}
+        {/*
+          Fitted, the drawing has nothing to scroll, so it takes no tab stop, promises no scrolling
+          and handles no arrow keys — a focus stop that does nothing is a broken promise to a
+          keyboard user. The poster keeps all three.
+        */}
         <div
           ref={diagramScrollRef}
-          className={styles.circuitDiagramScroll}
+          className={`${styles.circuitDiagramScroll} ${fitted ? styles.circuitDiagramFit : ''}`}
           role="group"
-          aria-label={`${supportModeLabel} ECMO circuit diagram; horizontally scrollable on narrow screens`}
-          tabIndex={0}
+          aria-label={
+            fitted
+              ? `${supportModeLabel} ECMO circuit diagram`
+              : `${supportModeLabel} ECMO circuit diagram; horizontally scrollable on narrow screens`
+          }
+          tabIndex={fitted ? undefined : 0}
           onKeyDown={(event) => {
+            if (fitted) return
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
             event.preventDefault()
             const diagram = diagramScrollRef.current
@@ -331,397 +540,418 @@ function CircuitSchematic({
             }
           }}
         >
-          <svg
-            className={styles.circuitSvg}
-            viewBox="0 0 1120 590"
-            role="img"
-            aria-labelledby="circuit-svg-title circuit-svg-desc"
-            preserveAspectRatio="xMidYMid meet"
+          {/*
+            Named by its title and described by its description. These used to be joined into one
+            accessible name — a hundred and twenty words of it — which a screen reader read out as
+            the image's name before anything else; the caption made it longer still.
+          */}
+          <div
+            className={answerable ? styles.circuitDiagramAnswerable : undefined}
+            data-circuit-drawing
           >
-            <title id="circuit-svg-title">{`${supportModeLabel} ECMO femoral-femoral circuit schematic`}</title>
-            <desc id="circuit-svg-desc">{circuitDescription}</desc>
-            <defs>
-              <linearGradient id="cardiohelp-post-pump-gradient" x1="0" x2="1">
-                <stop offset="0" stopColor="#467f9b" />
-                <stop offset="0.62" stopColor="#a64359" />
-                <stop offset="1" stopColor="#e15d69" />
-              </linearGradient>
-              <marker
-                id="cardiohelp-flow-arrow"
-                markerWidth="9"
-                markerHeight="9"
-                refX="7"
-                refY="4.5"
-                orient="auto"
-              >
-                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.flowArrowMarker} />
-              </marker>
-              <marker
-                id="cardiohelp-venous-arrow"
-                markerWidth="9"
-                markerHeight="9"
-                refX="7"
-                refY="4.5"
-                orient="auto"
-              >
-                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.venousArrowMarker} />
-              </marker>
-              <marker
-                id="cardiohelp-return-arrow"
-                markerWidth="9"
-                markerHeight="9"
-                refX="7"
-                refY="4.5"
-                orient="auto"
-              >
-                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.returnArrowMarker} />
-              </marker>
-              <marker
-                id="cardiohelp-gas-arrow"
-                markerWidth="9"
-                markerHeight="9"
-                refX="7"
-                refY="4.5"
-                orient="auto"
-              >
-                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.gasArrowMarker} />
-              </marker>
-            </defs>
+            <svg
+              className={`${styles.circuitSvg} ${fitted ? styles.circuitSvgFit : ''}`}
+              viewBox={CIRCUIT_MAP_FRAME_VIEWBOX[circuitFrame]}
+              role="img"
+              aria-labelledby="circuit-svg-title"
+              aria-describedby="circuit-svg-desc"
+              preserveAspectRatio="xMidYMid meet"
+              data-map-frame={circuitFrame}
+              data-map-emphasis-active={emphasisTargets.length > 0 ? 'true' : undefined}
+            >
+              <title id="circuit-svg-title">{`${supportModeLabel} ECMO femoral-femoral circuit schematic`}</title>
+              <desc id="circuit-svg-desc">{circuitDescription}</desc>
+              <defs>
+                <linearGradient id="cardiohelp-post-pump-gradient" x1="0" x2="1">
+                  <stop offset="0" stopColor="#467f9b" />
+                  <stop offset="0.62" stopColor="#a64359" />
+                  <stop offset="1" stopColor="#e15d69" />
+                </linearGradient>
+                <marker
+                  id="cardiohelp-flow-arrow"
+                  markerWidth="9"
+                  markerHeight="9"
+                  refX="7"
+                  refY="4.5"
+                  orient="auto"
+                >
+                  <path d="M0 0 L0 9 L8 4.5 Z" className={styles.flowArrowMarker} />
+                </marker>
+                <marker
+                  id="cardiohelp-venous-arrow"
+                  markerWidth="9"
+                  markerHeight="9"
+                  refX="7"
+                  refY="4.5"
+                  orient="auto"
+                >
+                  <path d="M0 0 L0 9 L8 4.5 Z" className={styles.venousArrowMarker} />
+                </marker>
+                <marker
+                  id="cardiohelp-return-arrow"
+                  markerWidth="9"
+                  markerHeight="9"
+                  refX="7"
+                  refY="4.5"
+                  orient="auto"
+                >
+                  <path d="M0 0 L0 9 L8 4.5 Z" className={styles.returnArrowMarker} />
+                </marker>
+                <marker
+                  id="cardiohelp-gas-arrow"
+                  markerWidth="9"
+                  markerHeight="9"
+                  refX="7"
+                  refY="4.5"
+                  orient="auto"
+                >
+                  <path d="M0 0 L0 9 L8 4.5 Z" className={styles.gasArrowMarker} />
+                </marker>
+              </defs>
 
-            <rect
-              x="18"
-              y="22"
-              width="294"
-              height="500"
-              rx="30"
-              className={styles.anatomyBackdrop}
-            />
-            <text x="42" y="55" className={styles.svgSectionLabel}>
-              PATIENT / CANNULATION
-            </text>
-            <text x="42" y="76" className={styles.svgSectionSubLabel}>
-              Simplified anterior anatomy
-            </text>
+              <rect
+                x="18"
+                y="22"
+                width="294"
+                height="500"
+                rx="30"
+                className={styles.anatomyBackdrop}
+              />
+              <text x="42" y="55" className={styles.svgSectionLabel}>
+                PATIENT / CANNULATION
+              </text>
+              <text x="42" y="76" className={styles.svgSectionSubLabel}>
+                Simplified anterior anatomy
+              </text>
 
-            <circle cx="164" cy="103" r="35" className={styles.anatomyOutline} />
-            <path
-              d="M124 145 Q164 123 204 145 L224 247 Q234 320 218 405 L244 484 H199 L169 410 L138 484 H93 L111 405 Q95 319 105 247 Z"
-              className={styles.anatomyOutline}
-            />
-            <path d="M113 167 Q76 226 68 294" className={styles.anatomyArm} />
-            <path d="M214 167 Q252 226 260 294" className={styles.anatomyArm} />
-
-            <path
-              d="M149 181 C144 230 144 324 145 388 M145 358 C126 389 109 418 96 447 M145 358 C164 390 190 420 214 447"
-              className={styles.venousAnatomy}
-            />
-            <path
-              d="M191 181 C200 232 197 326 195 388 M195 358 C178 392 161 420 147 451 M195 358 C213 391 230 420 244 447"
-              className={styles.arterialAnatomy}
-            />
-            <path
-              d="M157 166 C145 150 149 137 163 141 C176 125 194 138 190 155 C187 169 170 181 164 185 C160 181 158 174 157 166 Z"
-              className={styles.heartShape}
-            />
-
-            <path
-              d="M146 245 C132 295 110 366 96 447"
-              className={`${styles.drainageCannula} ${bloodMoving ? styles.cannulaFlowMoving : ''}`}
-              markerEnd="url(#cardiohelp-venous-arrow)"
-            />
-            {isVa ? (
+              <circle cx="164" cy="103" r="35" className={styles.anatomyOutline} />
               <path
-                d="M244 447 C226 411 207 379 197 335 C195 299 194 247 193 213"
+                d="M124 145 Q164 123 204 145 L224 247 Q234 320 218 405 L244 484 H199 L169 410 L138 484 H93 L111 405 Q95 319 105 247 Z"
+                className={styles.anatomyOutline}
+              />
+              <path d="M113 167 Q76 226 68 294" className={styles.anatomyArm} />
+              <path d="M214 167 Q252 226 260 294" className={styles.anatomyArm} />
+
+              <path
+                d="M149 181 C144 230 144 324 145 388 M145 358 C126 389 109 418 96 447 M145 358 C164 390 190 420 214 447"
+                className={styles.venousAnatomy}
+              />
+              <path
+                d="M191 181 C200 232 197 326 195 388 M195 358 C178 392 161 420 147 451 M195 358 C213 391 230 420 244 447"
+                className={styles.arterialAnatomy}
+              />
+              <path
+                d="M157 166 C145 150 149 137 163 141 C176 125 194 138 190 155 C187 169 170 181 164 185 C160 181 158 174 157 166 Z"
+                className={styles.heartShape}
+              />
+
+              <path
+                d={geometry.drainageCannula}
+                className={`${styles.drainageCannula} ${bloodMoving ? styles.cannulaFlowMoving : ''}`}
+                markerEnd="url(#cardiohelp-venous-arrow)"
+              />
+              <path
+                d={geometry.returnCannula}
                 className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
                 markerEnd="url(#cardiohelp-return-arrow)"
               />
-            ) : (
-              <path
-                d="M214 447 C199 384 181 291 170 185"
-                className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
-                markerEnd="url(#cardiohelp-return-arrow)"
+              {isVa ? (
+                <g
+                  aria-label={
+                    mixingCueWithheld
+                      ? 'VA monitoring cues'
+                      : 'VA native ejection, mixing, and monitoring markers'
+                  }
+                  data-va-mixing-cue={mixingCueWithheld ? 'withheld' : 'shown'}
+                >
+                  {mixingCueWithheld ? null : (
+                    <>
+                      <path
+                        d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
+                        className={styles.nativeEjectionPath}
+                        markerEnd="url(#cardiohelp-return-arrow)"
+                      />
+                      <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
+                      <path d="M196 207 V188 H278" className={styles.mixingLeader} />
+                      <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
+                        MIXING REGION VARIES
+                      </text>
+                      <text x="42" y="109" className={styles.vaCueLabel}>
+                        NATIVE EJECTION → UPPER BODY
+                      </text>
+                    </>
+                  )}
+                  <circle cx="258" cy="223" r="23" className={styles.rightArmMonitor} />
+                  <text x="258" y="219" textAnchor="middle" className={styles.rightArmMonitorLabel}>
+                    R ARM
+                  </text>
+                  <text x="258" y="231" textAnchor="middle" className={styles.rightArmMonitorValue}>
+                    {state.patient.rightRadialSpo2.toFixed(0)}%
+                  </text>
+                  <path
+                    d="M244 447 C255 462 263 476 266 493"
+                    className={styles.distalPerfusionCue}
+                  />
+                  <text x="288" y="493" textAnchor="end" className={styles.distalPerfusionLabel}>
+                    DISTAL LIMB CHECK
+                  </text>
+                </g>
+              ) : null}
+              <circle cx="96" cy="447" r="8" className={styles.drainageInsertionSite} />
+              <circle cx={returnPortX} cy="447" r="8" className={styles.returnInsertionSite} />
+              <text x="34" y="500" className={styles.cannulaLabel}>
+                Femoral vein drainage
+              </text>
+              <text x="158" y="519" className={styles.cannulaLabel}>
+                {isVa ? 'Femoral artery return' : 'Femoral vein return'}
+              </text>
+              <text x="38" y="329" className={styles.anatomyVesselLabel}>
+                VENOUS
+              </text>
+              <text x="210" y="329" className={styles.anatomyVesselLabel}>
+                ARTERIAL
+              </text>
+
+              <rect
+                x="330"
+                y="22"
+                width="772"
+                height="500"
+                rx="30"
+                className={styles.circuitBackdrop}
               />
-            )}
-            {isVa ? (
-              <g aria-label="VA native ejection, mixing, and monitoring cues">
-                <path
-                  d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
-                  className={styles.nativeEjectionPath}
-                  markerEnd="url(#cardiohelp-return-arrow)"
-                />
-                <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
-                <path d="M196 207 V188 H278" className={styles.mixingLeader} />
-                <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
-                  MIXING REGION VARIES
-                </text>
-                <circle cx="258" cy="223" r="23" className={styles.rightArmMonitor} />
-                <text x="258" y="219" textAnchor="middle" className={styles.rightArmMonitorLabel}>
-                  R ARM
-                </text>
-                <text x="258" y="231" textAnchor="middle" className={styles.rightArmMonitorValue}>
-                  {state.patient.rightRadialSpo2.toFixed(0)}%
-                </text>
-                <path d="M244 447 C255 462 263 476 266 493" className={styles.distalPerfusionCue} />
-                <text x="288" y="493" textAnchor="end" className={styles.distalPerfusionLabel}>
-                  DISTAL LIMB CHECK
-                </text>
-                <text x="42" y="109" className={styles.vaCueLabel}>
-                  NATIVE EJECTION → UPPER BODY
-                </text>
-              </g>
-            ) : null}
-            <circle cx="96" cy="447" r="8" className={styles.drainageInsertionSite} />
-            <circle cx={returnPortX} cy="447" r="8" className={styles.returnInsertionSite} />
-            <text x="34" y="500" className={styles.cannulaLabel}>
-              Femoral vein drainage
-            </text>
-            <text x="158" y="519" className={styles.cannulaLabel}>
-              {isVa ? 'Femoral artery return' : 'Femoral vein return'}
-            </text>
-            <text x="38" y="329" className={styles.anatomyVesselLabel}>
-              VENOUS
-            </text>
-            <text x="210" y="329" className={styles.anatomyVesselLabel}>
-              ARTERIAL
-            </text>
+              <text x="354" y="55" className={styles.svgSectionLabel}>
+                EXTRACORPOREAL CIRCUIT
+              </text>
+              <text x="354" y="76" className={styles.svgSectionSubLabel}>
+                Follow the arrows from drainage to return
+              </text>
 
-            <rect
-              x="330"
-              y="22"
-              width="772"
-              height="500"
-              rx="30"
-              className={styles.circuitBackdrop}
-            />
-            <text x="354" y="55" className={styles.svgSectionLabel}>
-              EXTRACORPOREAL CIRCUIT
-            </text>
-            <text x="354" y="76" className={styles.svgSectionSubLabel}>
-              Follow the arrows from drainage to return
-            </text>
-
-            {/*
+              {/*
               Chatter is drawn from the engine flag, and it is drawn three ways: the limb judders,
               its wall goes to a broken outline, and a bordered badge names it in words. Motion is
               suppressed under reduced motion and colour alone is never the carrier, so the cue
               survives both.
             */}
-            <g
-              data-limb="drainage"
-              data-chattering={drainageChattering || undefined}
-              className={drainageChattering ? styles.chatteringTube : undefined}
-            >
-              <path
-                d="M96 447 C215 467 293 385 405 385"
-                className={`${styles.circuitLimb} ${styles.drainageLimb}`}
-              />
-              <path
-                d="M96 447 C215 467 293 385 405 385"
-                className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-                markerEnd="url(#cardiohelp-flow-arrow)"
-              />
-            </g>
-            <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
-              DRAINAGE LIMB · NEGATIVE PRESSURE
-            </text>
-            {/*
+              <g
+                data-limb="drainage"
+                data-chattering={drainageChattering || undefined}
+                className={drainageChattering ? styles.chatteringTube : undefined}
+              >
+                <path
+                  d={geometry.drainageLimb}
+                  className={`${styles.circuitLimb} ${styles.drainageLimb}`}
+                />
+                <path
+                  d={geometry.drainageLimb}
+                  className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
+                  markerEnd="url(#cardiohelp-flow-arrow)"
+                />
+              </g>
+              <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
+                DRAINAGE LIMB · NEGATIVE PRESSURE
+              </text>
+              {/*
               Directly under the limb's own label, not down in the anatomy panel.
               It was at (286, 500), where its opaque plate covered the VA `DISTAL LIMB CHECK` label
               at (288, 493) and clipped `Femoral vein/artery return` at (158, 519). Here it names the
               limb it sits beside and the box is clear of every other text anchor — asserted by test.
             */}
-            {drainageChattering ? (
-              <g className={styles.limbStatusBadge} transform="translate(286 378)">
-                <rect x="-76" y="-11" width="152" height="22" rx="7" />
-                <text y="5" textAnchor="middle">
-                  DRAINAGE CHATTER
-                </text>
-              </g>
-            ) : null}
+              {drainageChattering ? (
+                <g className={styles.limbStatusBadge} transform="translate(286 378)">
+                  <rect x="-76" y="-11" width="152" height="22" rx="7" />
+                  <text y="5" textAnchor="middle">
+                    DRAINAGE CHATTER
+                  </text>
+                </g>
+              ) : null}
 
-            <path d={postPumpPath} className={`${styles.circuitLimb} ${styles.postPumpLimb}`} />
-            <path
-              d={postPumpPath}
-              className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-              markerEnd="url(#cardiohelp-flow-arrow)"
-            />
-            <text x="601" y="361" textAnchor="middle" className={styles.limbLabel}>
-              PUMP OUTFLOW
-            </text>
-
-            <path d={returnLimbPath} className={`${styles.circuitLimb} ${styles.returnLimb}`} />
-            <path
-              d={returnLimbPath}
-              className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-              markerEnd="url(#cardiohelp-flow-arrow)"
-            />
-            <text x="692" y="568" textAnchor="middle" className={styles.returnLimbLabel}>
-              RETURN LIMB · POSITIVE PRESSURE · TO {returnVesselLabel.toUpperCase()}
-            </text>
-
-            <g transform="translate(455 385)">
-              <circle r="53" className={styles.pumpBody} />
-              <circle r="40" className={styles.pumpInnerRing} />
+              <path d={postPumpPath} className={`${styles.circuitLimb} ${styles.postPumpLimb}`} />
               <path
-                d="M-25 -6 C-10 -34 31 -25 35 5 C24 34 -17 35 -35 7 C-25 2 -16 -2 -25 -6 Z"
-                className={`${styles.pumpRotor} ${state.device.pumpRunning ? styles.pumpRotorRunning : ''}`}
-              />
-              <path
-                d="M-48 0 H-8 C10 0 24 -11 31 -29"
-                className={styles.pumpMechanismPath}
+                d={postPumpPath}
+                className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
                 markerEnd="url(#cardiohelp-flow-arrow)"
               />
-              <circle r="8" className={styles.pumpHub} />
-              <text y="78" textAnchor="middle" className={styles.componentLabel}>
-                CENTRIFUGAL PUMP
+              <text x="601" y="361" textAnchor="middle" className={styles.limbLabel}>
+                PUMP OUTFLOW
               </text>
-              <text y="93" textAnchor="middle" className={styles.componentSubLabel}>
-                CENTER INLET → TANGENTIAL OUTFLOW
-              </text>
-            </g>
 
-            <rect
-              x="700"
-              y="292"
-              width="125"
-              height="186"
-              rx="22"
-              className={styles.oxygenatorBody}
-            />
-            {Array.from({ length: 7 }, (_, index) => (
-              <line
-                key={index}
-                x1={720 + index * 14}
-                x2={720 + index * 14}
-                y1="315"
-                y2="454"
-                className={styles.oxygenatorFiber}
+              <path d={returnLimbPath} className={`${styles.circuitLimb} ${styles.returnLimb}`} />
+              <path
+                d={returnLimbPath}
+                className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
+                markerEnd="url(#cardiohelp-flow-arrow)"
               />
-            ))}
-            <path d="M700 385 H825" className={styles.oxygenatorBloodPath} />
-            <path
-              d="M700 385 H825"
-              className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-              markerEnd="url(#cardiohelp-flow-arrow)"
-            />
-            <path
-              d="M762 462 V310"
-              className={`${styles.oxygenatorGasPath} ${gasMoving ? styles.oxygenatorGasMoving : ''}`}
-              markerEnd="url(#cardiohelp-gas-arrow)"
-            />
-            <text x="762" y="272" textAnchor="middle" className={styles.componentLabel}>
-              MEMBRANE OXYGENATOR
-            </text>
-            <text x="762" y="500" textAnchor="middle" className={styles.componentSubLabel}>
-              BLOOD AROUND FIBERS · GAS THROUGH FIBERS
-            </text>
-            <text x="832" y="319" className={styles.oxygenatorGasLabel}>
-              GAS EXHAUST
-            </text>
-            <text x="832" y="459" className={styles.oxygenatorGasLabel}>
-              SWEEP GAS IN
-            </text>
+              <text x="692" y="568" textAnchor="middle" className={styles.returnLimbLabel}>
+                RETURN LIMB · POSITIVE PRESSURE · TO {returnVesselLabel.toUpperCase()}
+              </text>
 
-            {/*
+              <g transform="translate(455 385)">
+                <circle r="53" className={styles.pumpBody} />
+                <circle r="40" className={styles.pumpInnerRing} />
+                <path
+                  d="M-25 -6 C-10 -34 31 -25 35 5 C24 34 -17 35 -35 7 C-25 2 -16 -2 -25 -6 Z"
+                  className={`${styles.pumpRotor} ${state.device.pumpRunning ? styles.pumpRotorRunning : ''}`}
+                />
+                <path
+                  d="M-48 0 H-8 C10 0 24 -11 31 -29"
+                  className={styles.pumpMechanismPath}
+                  markerEnd="url(#cardiohelp-flow-arrow)"
+                />
+                <circle r="8" className={styles.pumpHub} />
+                <text y="78" textAnchor="middle" className={styles.componentLabel}>
+                  CENTRIFUGAL PUMP
+                </text>
+                <text y="93" textAnchor="middle" className={styles.componentSubLabel}>
+                  CENTER INLET → TANGENTIAL OUTFLOW
+                </text>
+              </g>
+
+              <rect
+                x="700"
+                y="292"
+                width="125"
+                height="186"
+                rx="22"
+                className={styles.oxygenatorBody}
+              />
+              {Array.from({ length: 7 }, (_, index) => (
+                <line
+                  key={index}
+                  x1={720 + index * 14}
+                  x2={720 + index * 14}
+                  y1="315"
+                  y2="454"
+                  className={styles.oxygenatorFiber}
+                />
+              ))}
+              <path d={geometry.membraneBloodPath} className={styles.oxygenatorBloodPath} />
+              <path
+                d={geometry.membraneBloodPath}
+                className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
+                markerEnd="url(#cardiohelp-flow-arrow)"
+              />
+              <path
+                d={geometry.membraneGasPath}
+                className={`${styles.oxygenatorGasPath} ${gasMoving ? styles.oxygenatorGasMoving : ''}`}
+                markerEnd="url(#cardiohelp-gas-arrow)"
+              />
+              <text x="762" y="272" textAnchor="middle" className={styles.componentLabel}>
+                MEMBRANE OXYGENATOR
+              </text>
+              <text x="762" y="500" textAnchor="middle" className={styles.componentSubLabel}>
+                BLOOD AROUND FIBERS · GAS THROUGH FIBERS
+              </text>
+              <text x="832" y="319" className={styles.oxygenatorGasLabel}>
+                GAS EXHAUST
+              </text>
+              <text x="832" y="459" className={styles.oxygenatorGasLabel}>
+                SWEEP GAS IN
+              </text>
+
+              {/*
               The channel placements — the four sensor flags and the Δp bracket that names
               pInt − pArt across the membrane — wait for the commitment together with the SVG
               description above. Everything they point at (limbs, pump, membrane, access point)
               stays: the topology is the teaching, the placements are the answer.
             */}
-            {locationsDisclosed ? (
-              <>
-                <g data-delta-bracket>
-                  <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
-                  <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
-                    Δp TREND = pInt − pArt ·{' '}
-                    {
-                      formatChannelReadout('Δp trend', state.circuit.readouts.deltaP, 'mmHg', 0)
-                        .displayText
-                    }
-                  </text>
-                </g>
+              {locationsDisclosed ? (
+                <>
+                  <g data-delta-bracket>
+                    <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
+                    <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
+                      Δp TREND = pInt − pArt ·{' '}
+                      {
+                        formatChannelReadout('Δp trend', state.circuit.readouts.deltaP, 'mmHg', 0)
+                          .displayText
+                      }
+                    </text>
+                  </g>
 
-                <g
-                  transform="translate(340 321)"
-                  className={styles.sensorFlag}
-                  data-sensor-flag="pVen"
-                >
-                  <rect x="-34" y="-20" width="68" height="40" rx="10" />
-                  <text y="5" textAnchor="middle">
-                    pVen
-                  </text>
-                  <path d="M0 20 V57" className={styles.sensorLeader} />
-                </g>
-                <g
-                  transform="translate(584 295)"
-                  className={styles.sensorFlag}
-                  data-sensor-flag="pInt"
-                >
-                  <rect x="-34" y="-20" width="68" height="40" rx="10" />
-                  <text y="5" textAnchor="middle">
-                    pInt
-                  </text>
-                  <path d="M0 20 V83" className={styles.sensorLeader} />
-                </g>
-                <g
-                  transform="translate(884 295)"
-                  className={styles.sensorFlag}
-                  data-sensor-flag="pArt"
-                >
-                  <rect x="-34" y="-20" width="68" height="40" rx="10" />
-                  <text y="5" textAnchor="middle">
-                    pArt
-                  </text>
-                  <path d="M0 20 V83" className={styles.sensorLeader} />
-                </g>
-                <g
-                  transform="translate(963 314)"
-                  className={styles.sensorFlag}
-                  data-sensor-flag="flow-bubble"
-                >
-                  <rect x="-52" y="-24" width="104" height="48" rx="11" />
-                  <text y="-2" textAnchor="middle">
-                    FLOW +
-                  </text>
-                  <text y="13" textAnchor="middle">
-                    BUBBLE SENSOR
-                  </text>
-                  <path d="M0 24 V64" className={styles.sensorLeader} />
-                </g>
-              </>
-            ) : null}
-            <circle cx="650" cy="385" r="10" className={styles.accessPoint} />
-            <path d="M650 375 V333" className={styles.accessLeader} />
-            <text x="650" y="320" textAnchor="middle" className={styles.accessLabel}>
-              PRE-OXYGENATOR ACCESS
-            </text>
+                  <g
+                    transform="translate(340 321)"
+                    className={styles.sensorFlag}
+                    data-sensor-flag="pVen"
+                  >
+                    <rect x="-34" y="-20" width="68" height="40" rx="10" />
+                    <text y="5" textAnchor="middle">
+                      pVen
+                    </text>
+                    <path d="M0 20 V57" className={styles.sensorLeader} />
+                  </g>
+                  <g
+                    transform="translate(584 295)"
+                    className={styles.sensorFlag}
+                    data-sensor-flag="pInt"
+                  >
+                    <rect x="-34" y="-20" width="68" height="40" rx="10" />
+                    <text y="5" textAnchor="middle">
+                      pInt
+                    </text>
+                    <path d="M0 20 V83" className={styles.sensorLeader} />
+                  </g>
+                  <g
+                    transform="translate(884 295)"
+                    className={styles.sensorFlag}
+                    data-sensor-flag="pArt"
+                  >
+                    <rect x="-34" y="-20" width="68" height="40" rx="10" />
+                    <text y="5" textAnchor="middle">
+                      pArt
+                    </text>
+                    <path d="M0 20 V83" className={styles.sensorLeader} />
+                  </g>
+                  <g
+                    transform="translate(963 314)"
+                    className={styles.sensorFlag}
+                    data-sensor-flag="flow-bubble"
+                  >
+                    <rect x="-52" y="-24" width="104" height="48" rx="11" />
+                    <text y="-2" textAnchor="middle">
+                      FLOW +
+                    </text>
+                    <text y="13" textAnchor="middle">
+                      BUBBLE SENSOR
+                    </text>
+                    <path d="M0 24 V64" className={styles.sensorLeader} />
+                  </g>
+                </>
+              ) : null}
+              <circle cx="650" cy="385" r="10" className={styles.accessPoint} />
+              <path d="M650 375 V333" className={styles.accessLeader} />
+              <text x="650" y="320" textAnchor="middle" className={styles.accessLabel}>
+                PRE-OXYGENATOR ACCESS
+              </text>
 
-            <path
-              d="M236 428 H298"
-              className={styles.staticDirectionArrow}
-              markerEnd="url(#cardiohelp-venous-arrow)"
-            />
-            <path
-              d="M526 414 H614"
-              className={styles.staticDirectionArrow}
-              markerEnd="url(#cardiohelp-flow-arrow)"
-            />
-            <path
-              d="M987 420 V478"
-              className={styles.staticDirectionArrow}
-              markerEnd="url(#cardiohelp-return-arrow)"
-            />
-            <path
-              d="M688 540 H594"
-              className={styles.staticDirectionArrow}
-              markerEnd="url(#cardiohelp-return-arrow)"
-            />
-            <path
-              d={`M${returnPortX} 505 V470`}
-              className={styles.staticDirectionArrow}
-              markerEnd="url(#cardiohelp-return-arrow)"
-            />
-          </svg>
+              <path
+                d="M236 428 H298"
+                className={styles.staticDirectionArrow}
+                markerEnd="url(#cardiohelp-venous-arrow)"
+              />
+              <path
+                d="M526 414 H614"
+                className={styles.staticDirectionArrow}
+                markerEnd="url(#cardiohelp-flow-arrow)"
+              />
+              <path
+                d="M987 420 V478"
+                className={styles.staticDirectionArrow}
+                markerEnd="url(#cardiohelp-return-arrow)"
+              />
+              <path
+                d="M688 540 H594"
+                className={styles.staticDirectionArrow}
+                markerEnd="url(#cardiohelp-return-arrow)"
+              />
+              <path
+                d={`M${returnPortX} 505 V470`}
+                className={styles.staticDirectionArrow}
+                markerEnd="url(#cardiohelp-return-arrow)"
+              />
+              <CircuitMapEmphasisLayer targets={emphasisTargets} />
+            </svg>
+            {answerable ? <CircuitMapAnswerFieldset {...answerable} /> : null}
+          </div>
         </div>
         {/*
           Its own class, not the pan hint's: `.circuitPanHint` is `display: none` above 1000px, so
@@ -735,16 +965,24 @@ function CircuitSchematic({
             sensor markers appear on this map once you have committed your prediction.
           </p>
         )}
-        <p className={styles.circuitPanHint}>
-          On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
-          the full circuit.
-        </p>
-        {isVa ? (
+        {fitted ? null : (
+          <p className={styles.circuitPanHint}>
+            On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to
+            inspect the full circuit.
+          </p>
+        )}
+        {isVa && !mixingCueWithheld ? (
           <p className={styles.circuitPanHint} data-local-model-boundary="va-mixing-fixed">
             Model boundary: the mixing region is drawn where this diagram places it and does not
             move. In a real VA circuit its position shifts with the balance between native ejection
             and circuit flow, and that shift is what decides which beds each side supplies. This
             simulation does not derive it, so nothing you change here will move the label.
+          </p>
+        ) : null}
+        {mixingCueWithheld ? (
+          <p className={styles.circuitWithheldNote} data-va-mixing-withheld-note>
+            Part of this map’s venoarterial annotation is held back until you have committed your
+            prediction.
           </p>
         ) : null}
 
@@ -826,9 +1064,9 @@ function CircuitSchematic({
           <strong>{resistancePattern}</strong>
           <span>
             {drainageChattering && pressuresInterpretable
-              ? 'Visible + text cue: drainage line chattering with increasingly negative pVen.'
+              ? 'Drainage line chattering with increasingly negative pVen.'
               : pressuresInterpretable
-                ? 'Compare flow and all three pressure locations; do not interpret one value in isolation.'
+                ? 'Compare flow and all three pressure locations; do not interpret one value on its own.'
                 : 'The pressure zones are not reporting an interpretable value, so no pressure pattern can be read from this frame.'}
           </span>
         </div>
@@ -875,7 +1113,7 @@ function CircuitSchematic({
   )
 }
 
-function GasBlenderPanel({
+export function GasBlenderPanel({
   state,
   dispatch,
   controlsEnabled,
@@ -890,6 +1128,10 @@ function GasBlenderPanel({
   const fio2TargetMatched = initiationTargets
     ? Math.abs(state.gas.fio2 - initiationTargets.fio2) <= (initiationTargets.fio2Tolerance ?? 0.01)
     : false
+  // The blender's setting and what reaches the membrane, the two numbers the observe steps ask the
+  // learner to compare. Delivered is the model's own rule: the set flow while the source is
+  // connected, nothing while it is not.
+  const deliveredSweepLpm = state.gas.sourceConnected ? state.gas.sweepLpm : 0
 
   return (
     <section
@@ -1042,13 +1284,26 @@ function GasBlenderPanel({
         </small>
       </label>
 
-      <div className={styles.sourceState} data-connected={state.gas.sourceConnected} role="status">
+      {/*
+        Two readings, not a status word. This block used to print the supply state in words — "Gas
+        source interrupted", "No sweep-gas delivery" — which is the gas-path drills' answer stated
+        as a label, on the surface those drills open before their prediction. The disagreement
+        between the set and the delivered flow is the signal the observe step asks the learner to
+        read; what it means waits for the revealed localization row.
+      */}
+      <div
+        className={styles.sourceState}
+        data-connected={state.gas.sourceConnected}
+        data-sweep-delivery
+        role="status"
+      >
         {state.gas.sourceConnected ? <PlugZap aria-hidden="true" /> : <Fan aria-hidden="true" />}
         <span>
-          <strong>Gas source {state.gas.sourceConnected ? 'connected' : 'interrupted'}</strong>
-          <small>
-            {state.gas.sourceConnected ? 'Flow available to oxygenator' : 'No sweep-gas delivery'}
-          </small>
+          <strong>
+            Set {state.gas.sweepLpm.toFixed(1)} L/min · delivered {deliveredSweepLpm.toFixed(1)}{' '}
+            L/min
+          </strong>
+          <small>Sweep flow reaching the membrane, read against the setting</small>
         </span>
       </div>
       {!state.gas.sourceConnected ? (
@@ -1067,7 +1322,7 @@ function GasBlenderPanel({
   )
 }
 
-function PatientMonitor({
+export function PatientMonitor({
   state,
   guidedTarget,
   guidedControlId,
@@ -1212,7 +1467,7 @@ function PatientMonitor({
                   {state.patient.distalLimbPerfusion} · NIRS {state.patient.distalLimbNirs}%
                 </strong>
                 <small data-local-model-boundary="limb-perfusion-fixed">
-                  Model boundary: this simulation holds the limb state where the case authored it.
+                  Model boundary: this simulation holds the limb state where the case set it.
                   Nothing you do to the circuit moves it, so it cannot be used to judge whether an
                   intervention helped the limb.
                 </small>
@@ -1242,7 +1497,7 @@ const trendMeta: Record<TrendParameter, { label: string; unit: string; color: st
   lactate: { label: 'Lactate', unit: 'mmol/L', color: '#ff9b7a' },
 }
 
-function TrendPanel({
+export function TrendPanel({
   state,
   guidedTarget,
   guidedControlId,
@@ -1364,7 +1619,7 @@ function TrendPanel({
       ) : null}
       {parameter === 'deltaP' ? (
         <p className={styles.deltaBoundary}>
-          Δp is presented as a trend only. No fixed alarm priority is encoded pending target-device
+          Δp is presented as a trend only. No fixed alarm priority is set pending target-device
           review.
         </p>
       ) : null}

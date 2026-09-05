@@ -244,7 +244,7 @@ ECMO air-emergency protocol. **The module does not teach where clamp opening, pu
 console reset fall relative to one another during resumption.** Every learner-facing surface says
 so, and everywhere the action is described it carries the same sentence:
 
-> This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.
+> This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.
 
 Nothing claims the protocol itself was "verified", and nothing claims the simulator checked that a
 real protocol was followed. Reset is never a response to the alarm and never a substitute for source

@@ -234,7 +234,7 @@ const systemicVenousEstimate: CriticalCareDerivedValueGuide = {
       id: 'ecmo.systemic-venous.model-estimate',
       kind: 'educational-model-boundary',
       statement:
-        'This simulation estimates systemic venous saturation from arterial saturation, hemoglobin, systemic flow, and an authored oxygen consumption.',
+        'This simulation estimates systemic venous saturation from arterial saturation, hemoglobin, systemic flow, and an oxygen consumption this simulation sets.',
       appliesWhen:
         'Inside this simulation only. It exists so the drainage-versus-systemic distinction can be shown at all, and carries no clinical authority.',
       evidenceIds: ['bounded-educational-model'],
@@ -254,7 +254,7 @@ const oxygenConsumption: CriticalCareDerivedValueGuide = {
   unit: 'mL/min',
   liveValueType: 'configured',
   interpretation:
-    'A setting this simulation is given so its oxygen balance closes. It is authored per reference profile, not observed.',
+    'A setting this simulation is given so its oxygen balance closes. It is set per reference profile, not observed.',
   references: [
     {
       id: 'ecmo.vo2.authored-input',
@@ -280,7 +280,7 @@ const recirculationAdjustedFlow: CriticalCareDerivedValueGuide = {
   formula: 'circuit blood flow × (1 − recirculation fraction)',
   liveValueType: 'derived',
   interpretation:
-    'Circuit flow with the immediately re-drained fraction removed. In VV it is the part of the pump’s output that does useful work; in VA the recirculation term is zero, so it simply equals displayed circuit flow.',
+    'Circuit flow with the immediately re-drained fraction removed. In VV it is the part of the pump’s output that does useful work; in VA recirculation is zero, so it simply equals displayed circuit flow.',
   references: [
     {
       id: 'ecmo.adjusted-flow.model-quantity',
@@ -328,10 +328,10 @@ const recirculationFraction: CriticalCareDerivedValueGuide = {
       statement:
         'Once recirculation is established, raising the pump speed above the speed the case opened with raises the modeled share, so the flow left after re-drainage falls even though the displayed L/min rises.',
       appliesWhen:
-        'Only above the case’s own starting speed, and only while the recirculation state is active. Lowering the speed does not move the share back below the authored value: a cannula relationship is not undone by turning the pump down.',
+        'Only above the case’s own starting speed, and only while the recirculation state is active. Lowering the speed does not move the share back below the value the case set: a cannula relationship is not undone by turning the pump down.',
       evidenceIds: ['bounded-educational-model'],
       caveat:
-        'The rate at which the share rises is an authored teaching coefficient chosen so the direction is unmistakable across the speed range, not a measured entrainment ratio. Read the direction, never the number.',
+        'The rate at which the share rises is a teaching coefficient chosen for this simulation so the direction is unmistakable across the speed range, not a measured entrainment ratio. Read the direction, never the number.',
     },
     {
       id: 'ecmo.recirculation-fraction.mixture-relationship',

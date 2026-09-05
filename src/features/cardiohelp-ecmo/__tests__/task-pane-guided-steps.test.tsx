@@ -1,16 +1,17 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useCallback, useReducer, useState, type AnchorHTMLAttributes, type ReactNode } from 'react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { cardiohelpLearnLessons } from '../content/learnLessons'
+import type { GuidedWalkthroughStep } from '../engine'
 import {
-  createInitialSimulationState,
-  ecmoSimulationReducer,
-  type GuidedControlId,
-  type GuidedTarget,
-  type GuidedWalkthroughStep,
-} from '../engine'
-import { CardiohelpConsole } from '../components/CardiohelpConsole'
-import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLessonPlayer'
+  latestState,
+  mountDrill,
+  nowPrimary,
+  nowStatus,
+  readStep,
+  resetStageHarness,
+  openConsoleScreenAndAdvance,
+} from '../test-support/learnStageHarness'
 
 /**
  * A step the learner completes in the lesson pane must not be dressed as a console task.
@@ -23,7 +24,8 @@ import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLesso
  * the hunt the owner reported.
  *
  * These tests pin the distinction at the level it is authored (`interaction`), not at the level of
- * one step id, and they pin that a task-pane step still reaches the same simulator state.
+ * one step id, and they pin that a task-pane step still reaches the same simulator state — now on
+ * the lesson stage, where the step is a model advance the Now card performs.
  */
 
 jest.setTimeout(30_000)
@@ -33,11 +35,16 @@ jest.mock('@/i18n/navigation', () => ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string; query?: Record<string, string> }
+    children: ReactNode
+  }) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...props}>
       {children}
     </a>
   ),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 
 const SETTLE_STEP_ID = 'startup-settle-circuit'
@@ -52,96 +59,25 @@ function stepById(id: string): GuidedWalkthroughStep {
   return found
 }
 
-interface Probe {
-  rpmSetpoint: number
-  pumpRunning: boolean
-  flow: number
-  pVen: string
-  pInt: string
-  pArt: string
-  deltaP: string
-}
-
-function readProbe(): Probe {
-  return JSON.parse(screen.getByTestId('probe').textContent ?? '{}') as Probe
-}
-
-const targetChanges: (GuidedTarget | null)[] = []
-
-function Harness({ scenarioId }: { scenarioId: string }) {
-  const [state, dispatch] = useReducer(ecmoSimulationReducer, scenarioId, (id) =>
-    createInitialSimulationState(id, 'guided'),
-  )
-  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>('circuit')
-  const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
-  const lesson = resolveGuidedLesson(scenarioId)
-  /*
-   * Stable identity, like the real workbench's `useCallback`. An inline arrow here re-runs the
-   * player's step-entry effect on every render, and that effect clears the help control — which
-   * looks exactly like a broken help button.
-   */
-  const handleTargetChange = useCallback((target: GuidedTarget | null) => {
-    targetChanges.push(target)
-    setGuidedTarget(target)
-  }, [])
-
-  const probe: Probe = {
-    rpmSetpoint: state.device.rpmSetpoint,
-    pumpRunning: state.device.pumpRunning,
-    flow: state.circuit.bloodFlow,
-    pVen: state.circuit.readouts.pVen.status,
-    pInt: state.circuit.readouts.pInt.status,
-    pArt: state.circuit.readouts.pArt.status,
-    deltaP: state.circuit.readouts.deltaP.status,
-  }
-
-  return (
-    <>
-      <output data-testid="probe">{JSON.stringify(probe)}</output>
-      <LearnLessonPlayer
-        key={lesson.id}
-        state={state}
-        lesson={lesson}
-        dispatch={dispatch}
-        onSelectLesson={jest.fn()}
-        onCompleteLesson={jest.fn()}
-        onTryPractice={jest.fn()}
-        onTargetChange={handleTargetChange}
-        onControlHelpChange={setGuidedControlId}
-      />
-      <CardiohelpConsole
-        state={state}
-        dispatch={dispatch}
-        controlsEnabled
-        guidedTarget={guidedTarget}
-        guidedControlId={guidedControlId}
-      />
-    </>
-  )
-}
-
-function nextStep() {
-  fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
-}
-
 /** Drive the orientation lesson as far as the settling step and stop there. */
 async function walkToSettlingStep() {
-  render(<Harness scenarioId="startup-sensor-orientation" />)
-  fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
-  nextStep()
-
-  fireEvent.click(screen.getByRole('button', { name: 'Parameter list' }))
-  await waitFor(() => expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled())
-  nextStep()
+  await mountDrill('startup-sensor-orientation')
+  readStep(/identify all four sources/i)
+  await openConsoleScreenAndAdvance('Parameter list')
 
   const knob = screen.getByRole('slider', { name: /RPM rotary setpoint/i })
-  while (readProbe().rpmSetpoint < 3200) fireEvent.keyDown(knob, { key: 'ArrowUp' })
-  await waitFor(() => expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled())
-  nextStep()
+  while (latestState().device.rpmSetpoint < 3200) fireEvent.keyDown(knob, { key: 'ArrowUp' })
+  await waitFor(() => expect(nowStatus()).toMatch(/^Done\./))
+  fireEvent.click(screen.getByRole('button', { name: /^Next step$/i }))
 }
 
 beforeEach(() => {
-  targetChanges.length = 0
+  resetStageHarness()
+  Object.defineProperty(global, 'fetch', {
+    configurable: true,
+    writable: true,
+    value: jest.fn().mockResolvedValue({ ok: true }),
+  })
 })
 
 describe('a task-pane step is not presented as a console task', () => {
@@ -163,15 +99,13 @@ describe('a task-pane step is not presented as a console task', () => {
     await walkToSettlingStep()
 
     expect(screen.getByRole('heading', { name: 'Let the circuit respond' })).toBeInTheDocument()
-    // The whole defect in one assertion: the last target published on entering this step is null,
-    // so no panel is told it is the thing to look at.
-    expect(targetChanges.at(-1)).toBeNull()
-
+    // The whole defect in one assertion: no panel is told it is the thing to look at.
     const consolePanel = document.getElementById('cardiohelp-console')
     expect(consolePanel).not.toBeNull()
     expect(consolePanel).toHaveAttribute('data-guided-focus', 'false')
     expect(screen.queryByText(/Guided focus: device console/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Focus: Device console/i)).not.toBeInTheDocument()
+    expect(document.querySelector('[data-simulator-task]')).toBeNull()
   })
 
   it('offers no help-finding control, because there is nothing on the console to find', async () => {
@@ -188,42 +122,40 @@ describe('a task-pane step is not presented as a console task', () => {
     await walkToSettlingStep()
 
     expect(screen.getByText(/No console action is required/i)).toBeInTheDocument()
-    expect(screen.getByText(/Simulation update — no console action/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Let the circuit respond' })).toHaveAttribute(
-      'data-interaction',
-      'task-pane',
-    )
+    expect(nowStatus()).toMatch(/Simulation update — no console action/i)
+    expect(nowPrimary()).toHaveTextContent('Let the circuit respond')
   })
 
   it('reaches the same running circuit, flow and readouts the tour is read on', async () => {
     await walkToSettlingStep()
 
-    const before = readProbe()
-    expect(before).toMatchObject({ rpmSetpoint: 3200, pumpRunning: false, flow: 0 })
+    const before = latestState()
+    expect(before.device.rpmSetpoint).toBe(3200)
+    expect(before.device.pumpRunning).toBe(false)
+    expect(before.circuit.bloodFlow).toBe(0)
 
     fireEvent.click(screen.getByRole('button', { name: 'Let the circuit respond' }))
 
-    const after = readProbe()
-    expect(after.rpmSetpoint).toBe(3200)
-    expect(after.pumpRunning).toBe(true)
-    expect(after.flow).toBeGreaterThan(0)
+    const after = latestState()
+    expect(after.device.rpmSetpoint).toBe(3200)
+    expect(after.device.pumpRunning).toBe(true)
+    expect(after.circuit.bloodFlow).toBeGreaterThan(0)
     for (const channel of ['pVen', 'pInt', 'pArt', 'deltaP'] as const) {
-      expect(after[channel]).toBe('valid')
+      expect(after.circuit.readouts[channel].status).toBe('valid')
     }
 
-    // And the separate Next step control still exists and is now enabled — the button performs the
+    // And the separate Next step control now exists and is enabled — the button performs the
     // step, it does not silently advance the lesson.
-    expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled()
+    expect(nowStatus()).toMatch(/^Done\./)
+    expect(screen.getByRole('button', { name: /^Next step$/i })).toBeEnabled()
   })
 
   it('leaves an ordinary console task with its focus, its help control and its target', async () => {
-    render(<Harness scenarioId="startup-sensor-orientation" />)
-    fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
-    nextStep()
+    await mountDrill('startup-sensor-orientation')
+    readStep(/identify all four sources/i)
 
     // `startup-screen-parameters`: a genuine console task, one screen away.
-    expect(screen.getAllByText(/Focus: Device console/i).length).toBeGreaterThan(0)
-    expect(targetChanges.at(-1)).toBe('console')
+    expect(document.querySelector('[data-simulator-task]')).not.toBeNull()
     expect(screen.getByRole('button', { name: /Show me where/i })).toBeInTheDocument()
     expect(document.getElementById('cardiohelp-console')).toHaveAttribute(
       'data-guided-focus',

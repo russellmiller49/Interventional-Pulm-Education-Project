@@ -381,10 +381,15 @@ describe('foundation teaching panels', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="why-extracorporeal-support" state={settled('vv')} />,
     )
-    const terms = [...container.querySelectorAll('[data-ledger-term]')].map((node) =>
-      node.getAttribute('data-ledger-term'),
+    const components = [...container.querySelectorAll('[data-delivery-component]')].map((node) =>
+      node.getAttribute('data-delivery-component'),
     )
-    expect(terms).toEqual(expect.arrayContaining(['Content', 'Flow', 'Consumption']))
+    // Named the way a clinician names them. An owner review in September 2026 replaced the module's
+    // internal "content / flow / consumption" shorthand with the clinical nouns on every surface a
+    // learner reads.
+    expect(components).toEqual(
+      expect.arrayContaining(['Oxygen content', 'Blood flow', 'Oxygen consumption']),
+    )
     // The configured model input must be labelled as configured, not as a measurement.
     expect(container.textContent).toMatch(/Configured setting/i)
   })
@@ -461,20 +466,23 @@ describe('foundation teaching panels', () => {
     expect(vaLine).not.toMatch(/drainage/i)
   })
 
-  it('circuit-flow-path draws the circuit, marked where the walk is standing', () => {
+  it('circuit-flow-path draws no map of its own, and says where the walk is marked instead', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
     )
-    const map = container.querySelector('[data-circuit-minimap]')
-    expect(map).not.toBeNull()
-    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
-    expect(map?.getAttribute('data-walk-stop')).toBe('walk-drainage')
-    // Embedded flush: the stop card already boxes it, and the doubled chrome cost the drawing the
-    // width the compact type floor was authored against (11.4px at the 280px pane floor).
-    expect(map?.getAttribute('data-map-frame')).toBe('flush')
-    // Exactly one map in the pane: the walk's replaced the section's rather than joining it.
-    expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
-    // A foundation map teaches; it never marks a segment as the culprit.
+    /*
+     * The walk used to carry a small map in this pane. An owner review in September 2026 found it
+     * crude beside the animated pressure-zone map in the simulator pane and that map hidden behind
+     * its tab with nothing marked on it, so the marking moved there — the stage opens the map on
+     * every walk step and lights the stop's segments on it (`circuit-map-emphasis.test.tsx`). What
+     * this pane keeps is the sentence that says so.
+     */
+    expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
+    expect(container.querySelector('[data-map-emphasis]')).toBeNull()
+    expect(container.querySelector('[data-walk-scene-labels]')?.textContent).toMatch(
+      /^Marked on the circuit map and in the bedside scene:/,
+    )
+    // A foundation walk teaches; it never marks a segment as the culprit.
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
   })
 
@@ -489,11 +497,18 @@ describe('foundation teaching panels', () => {
     ).toBeTruthy()
   })
 
-  it('circuit-flow-path returns to the arterial side under VA', () => {
-    const { container } = render(
+  it('circuit-flow-path returns to the arterial side under VA, and the venous side under VV', () => {
+    // The phrase used to come from the small map's text equivalent. The map is gone; the panel's
+    // own description of the blood path still names the vessel the track returns to.
+    const va = render(
       <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('va')} />,
     )
-    expect(container.textContent).toMatch(/Arterial return to the patient/i)
+    expect(va.container.textContent).toMatch(/post-oxygenator → arterial return/i)
+    va.unmount()
+    const vv = render(
+      <EcmoFoundationTeachingPanel sectionId="circuit-flow-path" state={settled('vv')} />,
+    )
+    expect(vv.container.textContent).toMatch(/post-oxygenator → venous return/i)
   })
 
   /*
@@ -571,10 +586,9 @@ describe('foundation teaching panels', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel sectionId="pump-and-pressure-zones" state={settled('vv')} />,
     )
-    const map = container.querySelector('[data-circuit-minimap]')
-    expect(map?.getAttribute('data-presentation')).toBe('walk-stop')
-    expect(map?.getAttribute('data-walk-stop')).toBe('walk-pump-under-load')
-    expect(container.querySelectorAll('[data-circuit-minimap]')).toHaveLength(1)
+    // The walk opens on its first stop; the marking itself lives on the simulator pane's map.
+    expect(container.querySelector('[data-walk-stop="walk-pump-under-load"]')).not.toBeNull()
+    expect(container.querySelector('[data-circuit-minimap]')).toBeNull()
     expect(container.querySelector('[data-circuit-implicated]')).toBeNull()
 
     // The scaffold is pattern and location. The shortlist, the response and the reflex belong to

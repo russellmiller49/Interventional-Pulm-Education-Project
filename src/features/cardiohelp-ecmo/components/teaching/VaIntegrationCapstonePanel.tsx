@@ -5,6 +5,12 @@ import {
 import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types'
 import type { EcmoFoundationSnapshot } from '../../session/foundationSession'
 import {
+  CapstoneMatrixCellBody,
+  matrixCellEquivalent,
+  rowQuotesGrammar,
+  type CapstoneMatrixCell,
+} from './capstoneGrammarCell'
+import {
   AwaitingCircuit,
   GuidedValue,
   ModelBoundary,
@@ -49,6 +55,9 @@ import { VaConfigurationStrategyCard } from './VaConfigurationStrategyCard'
  *     leaves both arterial saturations and the carbon dioxide value where they were;
  *   - the differential-oxygenation state authors the two arterial saturations directly instead of
  *     computing a watershed position from native ejection.
+ *
+ * The membrane and gas-path columns are two rows of the diagnostic grammar, so in the three pressure
+ * rows their cells quote the grammar row rather than restating it — see `capstoneGrammarCell.tsx`.
  *
  * The presenting case and the differential-oxygenation state settle to the same state, so the
  * presenting case *is* that mechanism. There is deliberately no separate preview for it, and the
@@ -102,15 +111,6 @@ const hypotheses: readonly {
   },
 ]
 
-interface MatrixCell {
-  /** Expected direction, stated as a direction rather than a value. */
-  readonly direction: string
-  /** What makes this row useful for telling this explanation from the others. */
-  readonly discriminator: string
-  /** Where this simulation, or the supplied sources, cannot support the expectation. */
-  readonly limitation?: string
-}
-
 interface MatrixRow {
   readonly id: string
   readonly label: string
@@ -119,8 +119,11 @@ interface MatrixRow {
     /** Reason-specific text when a channel reports no number. */
     readonly reason?: string
   }
-  readonly cells: Readonly<Record<HypothesisId, MatrixCell>>
+  readonly cells: Readonly<Record<HypothesisId, CapstoneMatrixCell>>
 }
+
+/** This panel describes a venoarterial circuit; the grammar rows are resolved for that track. */
+const SUPPORT_MODE = 'va'
 
 function channelText(readout: EcmoChannelReadout, unit: string, precision = 0) {
   return readout.displayed === null
@@ -227,14 +230,16 @@ const rows: readonly MatrixRow[] = [
           'A congested circulation changes what a drainage cannula sees at the bedside. This simulation does not couple loading back to the drainage pressure.',
       },
       'membrane-dysfunction': {
-        direction:
-          'Little changed, and moves only as far as the lower flow moves it. The problem sits downstream of the pump.',
-        discriminator: 'A drainage pressure that has not moved points away from the drainage side.',
+        grammarRowId: 'membrane-resistance',
+        discriminator:
+          'A drainage pressure that has not moved argues against the drainage side; the problem sits downstream of the pump.',
+        limitation:
+          'The membrane preview in this simulation also constrains flow, so the drainage pressure moves a little with the lower flow rather than standing entirely still.',
       },
       'gas-side-interruption': {
-        direction: 'Unchanged. The gas path has no pressure channel in it at all.',
+        grammarRowId: 'gas-path-failure',
         discriminator:
-          'Every circuit pressure staying still while gas exchange collapses is itself the finding.',
+          'The gas path has no pressure channel in it at all, so every circuit pressure staying still while gas exchange collapses is itself the finding.',
       },
       vasoplegia: {
         direction:
@@ -272,14 +277,16 @@ const rows: readonly MatrixRow[] = [
           'At the bedside the return side works against the arterial pressure, so a rising load can raise pArt. This simulation does not model that coupling.',
       },
       'membrane-dysfunction': {
-        direction:
-          'They separate: pInt rises steeply while pArt does not follow, and in this simulation pArt falls as the flow falls.',
+        grammarRowId: 'membrane-resistance',
         discriminator:
           'Separation between the two is the membrane signature; rising together is a return-side one.',
+        limitation:
+          'In this simulation pArt falls as the flow falls, because the membrane preview constrains flow as well as raising the gradient. Read the separation, not where pArt has settled.',
       },
       'gas-side-interruption': {
-        direction: 'Unchanged, both of them.',
-        discriminator: 'Gas transfer has failed with the blood path entirely undisturbed.',
+        grammarRowId: 'gas-path-failure',
+        discriminator:
+          'Both unchanged: gas transfer has failed with the blood path entirely undisturbed.',
       },
       vasoplegia: {
         direction:
@@ -306,14 +313,13 @@ const rows: readonly MatrixRow[] = [
           'A gradient that has not moved while the ventricle has is what keeps the explanation on the patient side.',
       },
       'membrane-dysfunction': {
-        direction:
-          'Rises, and rises even though the flow carrying it has fallen — the opposite of what a flow change alone would do.',
+        grammarRowId: 'membrane-resistance',
         discriminator:
-          'This is the single most useful row for this explanation, provided the flow it was measured at is known.',
+          'This is the single most useful row for this explanation, provided the flow it was measured at is known. Here it widens even though the flow carrying it has fallen — the opposite of what a flow change alone would do.',
       },
       'gas-side-interruption': {
-        direction: 'Unchanged.',
-        discriminator: 'The membrane is intact; nothing is reaching its gas side.',
+        grammarRowId: 'gas-path-failure',
+        discriminator: 'Unchanged: the membrane is intact, and nothing is reaching its gas side.',
       },
       vasoplegia: {
         direction: 'Little changed.',
@@ -887,6 +893,12 @@ export function VaIntegrationCapstonePanel({
           or because one row does not separate it — a row that discriminates nothing is reported as
           discriminating nothing.
         </p>
+        <p className="mt-2 text-sm leading-6" data-grammar-reference-note>
+          Two of these explanations — the membrane and the gas path — are among the four pressure
+          patterns taught with the pump and its pressures. In the three pressure rows their cells
+          quote that pattern rather than restating it, and the other columns are marked as patterns
+          those four do not cover.
+        </p>
 
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[76rem] text-left text-sm" data-hypothesis-matrix>
@@ -935,27 +947,19 @@ export function VaIntegrationCapstonePanel({
                         </span>
                       ) : null}
                     </td>
-                    {hypotheses.map((hypothesis) => {
-                      const cell = row.cells[hypothesis.id]
-                      return (
-                        <td
-                          key={hypothesis.id}
-                          className="py-2 pr-3"
-                          data-matrix-cell={`${row.id}:${hypothesis.id}`}
-                        >
-                          <span className="block">{cell.direction}</span>
-                          <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                            {cell.discriminator}
-                          </span>
-                          {cell.limitation ? (
-                            <span className="mt-1 block text-xs leading-5" data-cell-limitation>
-                              <span className="font-semibold">Limitation. </span>
-                              {cell.limitation}
-                            </span>
-                          ) : null}
-                        </td>
-                      )
-                    })}
+                    {hypotheses.map((hypothesis) => (
+                      <td
+                        key={hypothesis.id}
+                        className="py-2 pr-3"
+                        data-matrix-cell={`${row.id}:${hypothesis.id}`}
+                      >
+                        <CapstoneMatrixCellBody
+                          cell={row.cells[hypothesis.id]}
+                          supportMode={SUPPORT_MODE}
+                          outsideGrammar={rowQuotesGrammar(row.cells)}
+                        />
+                      </td>
+                    ))}
                   </tr>
                 )
               })}
@@ -967,7 +971,12 @@ export function VaIntegrationCapstonePanel({
           <TextEquivalent key={hypothesis.id}>
             <span className="font-semibold">{hypothesis.label}. </span>
             {hypothesis.mechanism}{' '}
-            {rows.map((row) => `${row.label}: ${row.cells[hypothesis.id].direction}`).join(' ')}{' '}
+            {rows
+              .map(
+                (row) =>
+                  `${row.label}: ${matrixCellEquivalent(row.cells, hypothesis.id, SUPPORT_MODE)}`,
+              )
+              .join(' ')}{' '}
             {rows
               .filter((row) => row.cells[hypothesis.id].limitation)
               .map((row) => `Limitation for ${row.label}: ${row.cells[hypothesis.id].limitation}`)
@@ -1048,8 +1057,8 @@ export function VaIntegrationCapstonePanel({
           This simulation holds distal-limb perfusion and the near-infrared value fixed across every
           VA state this lesson can load, so it cannot demonstrate limb ischemia developing. The
           absence of a modeled change is therefore not evidence that limb perfusion is adequate — it
-          is the model having nothing to say. The bounded action that sends you to look at the limb
-          is in the panel beside this one, and it is there because that look is the measurement.
+          is the model having nothing to say. The one action that sends you to look at the limb is
+          in the panel beside this one, and it is there because that look is the measurement.
         </ModelBoundary>
       </section>
 

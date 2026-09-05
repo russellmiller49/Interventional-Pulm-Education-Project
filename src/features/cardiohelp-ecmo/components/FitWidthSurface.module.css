@@ -1,0 +1,22 @@
+/*
+ * The fit-to-width surface. The CARDIOHELP console cannot lay out below about 820px, which is
+ * wider than the pane it sits in at any common laptop width, so the surface scales it rather than
+ * squeezing it; "actual size" turns the surface into a horizontal scroller instead.
+ */
+
+.fitSurface {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.fitSurface[data-fit-mode='actual'] {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+
+.fitContent {
+  transform-origin: top left;
+}

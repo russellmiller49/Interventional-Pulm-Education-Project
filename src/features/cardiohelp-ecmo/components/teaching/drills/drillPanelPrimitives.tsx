@@ -8,6 +8,7 @@ import {
 } from '../../../content/scenarios'
 import { UNAVAILABLE_INDICATION, formatChannelReadout } from '../../channelReadout'
 import { ModelBoundary, TextEquivalent, styles } from '../shared'
+import { StageBlock } from '../StageBlock'
 
 /**
  * Structure shared by every live drill teaching panel.
@@ -71,7 +72,7 @@ const SIGNAL_KIND_LABEL: Readonly<Record<DrillSignalKind, string>> = {
   'simulation-unmodeled': 'Not modeled here',
   'off-console': 'Measured off the console',
   estimated: 'Model estimate',
-  authored: 'Authored by this case',
+  authored: 'Set by this case',
   bedside: 'At the bedside, not on the console',
 }
 
@@ -162,79 +163,81 @@ export function SignalRegister({
   readonly headingId?: string
 }) {
   return (
-    <section className={styles.section} aria-labelledby={headingId}>
-      <h3 id={headingId} className={styles.heading}>
-        {title}
-      </h3>
-      {/*
+    <StageBlock kind="signals" heading={title}>
+      <section className={styles.section} aria-labelledby={headingId}>
+        <h3 id={headingId} className={styles.heading}>
+          {title}
+        </h3>
+        {/*
         Focusable, because it is the only way to reach the columns it clips. The teaching pane is
         `overflow-x: hidden`, so when this table is wider than the pane a pointer user can drag it
         sideways and a keyboard user previously could not reach the "what it is worth" column at all.
         A scroll container that holds content needs a name and a tab stop.
       */}
-      <div
-        className="mt-3 overflow-x-auto"
-        tabIndex={0}
-        role="group"
-        aria-labelledby={headingId}
-        data-signal-register-scroller
-      >
-        <table className="w-full text-sm" data-signal-register>
-          <caption className="sr-only">
-            Every signal this drill turns on, where it is measured, and whether it is valid,
-            unavailable, unmodeled, estimated, off the console, at the bedside, or authored.
-          </caption>
-          <thead>
-            <tr className="text-left">
-              <th scope="col" className="pr-3 pb-1">
-                Signal
-              </th>
-              <th scope="col" className="pr-3 pb-1">
-                Measured at
-              </th>
-              <th scope="col" className="pr-3 pb-1">
-                Now
-              </th>
-              <th scope="col" className="pb-1">
-                What it is worth
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.label} data-signal={row.label} data-signal-kind={row.kind}>
-                <th scope="row" className="pr-3 pt-3 align-top font-semibold">
-                  {row.label}
+        <div
+          className="mt-3 overflow-x-auto"
+          tabIndex={0}
+          role="group"
+          aria-labelledby={headingId}
+          data-signal-register-scroller
+        >
+          <table className="w-full text-sm" data-signal-register>
+            <caption className="sr-only">
+              Every signal this drill turns on, where it is measured, and whether it is valid,
+              unavailable, unmodeled, estimated, off the console, at the bedside, or authored.
+            </caption>
+            <thead>
+              <tr className="text-left">
+                <th scope="col" className="pr-3 pb-1">
+                  Signal
                 </th>
-                <td className="pr-3 pt-3 align-top" data-signal-site>
-                  {row.measuredAt}
-                </td>
-                <td className="pr-3 pt-3 align-top font-semibold" data-signal-value>
-                  {row.value}
-                </td>
-                <td className="pt-3 align-top">
-                  <span className="inline-block" data-signal-kind-label>
-                    {SIGNAL_KIND_LABEL[row.kind]}
-                  </span>
-                  <span className="mt-1 block text-muted-foreground">{row.note}</span>
-                </td>
+                <th scope="col" className="pr-3 pb-1">
+                  Measured at
+                </th>
+                <th scope="col" className="pr-3 pb-1">
+                  Now
+                </th>
+                <th scope="col" className="pb-1">
+                  What it is worth
+                </th>
               </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label} data-signal={row.label} data-signal-kind={row.kind}>
+                  <th scope="row" className="pr-3 pt-3 align-top font-semibold">
+                    {row.label}
+                  </th>
+                  <td className="pr-3 pt-3 align-top" data-signal-site>
+                    {row.measuredAt}
+                  </td>
+                  <td className="pr-3 pt-3 align-top font-semibold" data-signal-value>
+                    {row.value}
+                  </td>
+                  <td className="pt-3 align-top">
+                    <span className="inline-block" data-signal-kind-label>
+                      {SIGNAL_KIND_LABEL[row.kind]}
+                    </span>
+                    <span className="mt-1 block text-muted-foreground">{row.note}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <dl className="mt-3 grid gap-1" data-signal-kind-legend>
+          {(Object.keys(SIGNAL_KIND_LEGEND) as DrillSignalKind[])
+            .filter((kind) => rows.some((row) => row.kind === kind))
+            .map((kind) => (
+              <div key={kind} className="flex flex-wrap gap-1">
+                <dt className="font-semibold">{SIGNAL_KIND_LABEL[kind]}:</dt>
+                <dd className="text-muted-foreground">{SIGNAL_KIND_LEGEND[kind]}.</dd>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-      <dl className="mt-3 grid gap-1" data-signal-kind-legend>
-        {(Object.keys(SIGNAL_KIND_LEGEND) as DrillSignalKind[])
-          .filter((kind) => rows.some((row) => row.kind === kind))
-          .map((kind) => (
-            <div key={kind} className="flex flex-wrap gap-1">
-              <dt className="font-semibold">{SIGNAL_KIND_LABEL[kind]}:</dt>
-              <dd className="text-muted-foreground">{SIGNAL_KIND_LEGEND[kind]}.</dd>
-            </div>
-          ))}
-      </dl>
-      <TextEquivalent>{summary}</TextEquivalent>
-    </section>
+        </dl>
+        <TextEquivalent>{summary}</TextEquivalent>
+      </section>
+    </StageBlock>
   )
 }
 
@@ -268,25 +271,31 @@ export function PatternReading({
   readonly headingId?: string
 }) {
   return (
-    <section className={styles.section} aria-labelledby={headingId}>
-      <h3 id={headingId} className={styles.heading}>
-        {title}
-      </h3>
-      <dl className="mt-3 grid gap-2" data-drill-pattern>
-        {rows.map((row) => (
-          <div key={row.label} className="rounded-xl border px-3 py-2" data-pattern-row={row.label}>
-            <dt className="font-semibold">{row.label}</dt>
-            <dd className="mt-1">
-              <span data-pattern-reading>{row.reading}</span>{' '}
-              <span className="text-muted-foreground" data-pattern-movement>
-                {row.movement}
-              </span>
-            </dd>
-          </div>
-        ))}
-      </dl>
-      <TextEquivalent>{summary}</TextEquivalent>
-    </section>
+    <StageBlock kind="pattern" heading={title}>
+      <section className={styles.section} aria-labelledby={headingId}>
+        <h3 id={headingId} className={styles.heading}>
+          {title}
+        </h3>
+        <dl className="mt-3 grid gap-2" data-drill-pattern>
+          {rows.map((row) => (
+            <div
+              key={row.label}
+              className="rounded-xl border px-3 py-2"
+              data-pattern-row={row.label}
+            >
+              <dt className="font-semibold">{row.label}</dt>
+              <dd className="mt-1">
+                <span data-pattern-reading>{row.reading}</span>{' '}
+                <span className="text-muted-foreground" data-pattern-movement>
+                  {row.movement}
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <TextEquivalent>{summary}</TextEquivalent>
+      </section>
+    </StageBlock>
   )
 }
 
@@ -309,23 +318,25 @@ export interface DrillDiscriminator {
  */
 export function Discriminators({ items }: { readonly items: readonly DrillDiscriminator[] }) {
   return (
-    <section className={styles.section} aria-labelledby="drill-discriminators-heading">
-      <h3 id="drill-discriminators-heading" className={styles.heading}>
-        Questions that separate the possibilities
-      </h3>
-      <ul className="mt-3 grid gap-2" data-drill-discriminators>
-        {items.map((item) => (
-          <li key={item.question} className="rounded-xl border px-3 py-2" data-discriminator>
-            <p className="font-semibold">{item.question}</p>
-            <p className="mt-1 text-muted-foreground">{item.whereToLook}</p>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-3 text-muted-foreground" data-precommit-note>
-        These are questions, not answers. Which way each one falls is what you are being asked to
-        commit to.
-      </p>
-    </section>
+    <StageBlock kind="discriminators" heading="Questions that separate the possibilities">
+      <section className={styles.section} aria-labelledby="drill-discriminators-heading">
+        <h3 id="drill-discriminators-heading" className={styles.heading}>
+          Questions that separate the possibilities
+        </h3>
+        <ul className="mt-3 grid gap-2" data-drill-discriminators>
+          {items.map((item) => (
+            <li key={item.question} className="rounded-xl border px-3 py-2" data-discriminator>
+              <p className="font-semibold">{item.question}</p>
+              <p className="mt-1 text-muted-foreground">{item.whereToLook}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-muted-foreground" data-precommit-note>
+          These are questions, not answers. Which way each one falls is what you are being asked to
+          commit to.
+        </p>
+      </section>
+    </StageBlock>
   )
 }
 
@@ -383,10 +394,12 @@ export function AfterCommitment({
     )
   }
   return (
-    <div className="grid gap-4" data-after-commitment>
-      <CommittedChoice state={state} />
-      {children}
-    </div>
+    <StageBlock kind="after-commitment" heading="What explains it, and the response that fits">
+      <div className="grid gap-4" data-after-commitment>
+        <CommittedChoice state={state} />
+        {children}
+      </div>
+    </StageBlock>
   )
 }
 
@@ -533,24 +546,28 @@ export function DrillPanelFrame({
       data-drill-panel={scenarioId}
       data-drill-support-mode={supportMode}
     >
-      <section className={styles.section} aria-labelledby="drill-question-heading">
-        <h3 id="drill-question-heading" className={styles.heading}>
-          What is being decided
-        </h3>
-        <p className="mt-2" data-clinical-question>
-          {clinicalQuestion}
-        </p>
-      </section>
+      <StageBlock kind="question" heading="What is being decided">
+        <section className={styles.section} aria-labelledby="drill-question-heading">
+          <h3 id="drill-question-heading" className={styles.heading}>
+            What is being decided
+          </h3>
+          <p className="mt-2" data-clinical-question>
+            {clinicalQuestion}
+          </p>
+        </section>
+      </StageBlock>
       {children}
-      <section className={styles.section} aria-labelledby="drill-boundary-heading">
-        <h3 id="drill-boundary-heading" className={styles.heading}>
-          What this simulation cannot show you
-        </h3>
-        {boundaries.map((boundary, index) => (
-          // Authored prose in a fixed list; there is no other stable key and the list never reorders.
-          <ModelBoundary key={index}>{boundary}</ModelBoundary>
-        ))}
-      </section>
+      <StageBlock kind="boundary" heading="What this simulation cannot show you">
+        <section className={styles.section} aria-labelledby="drill-boundary-heading">
+          <h3 id="drill-boundary-heading" className={styles.heading}>
+            What this simulation cannot show you
+          </h3>
+          {boundaries.map((boundary, index) => (
+            // Authored prose in a fixed list; there is no other stable key and the list never reorders.
+            <ModelBoundary key={index}>{boundary}</ModelBoundary>
+          ))}
+        </section>
+      </StageBlock>
     </div>
   )
 }

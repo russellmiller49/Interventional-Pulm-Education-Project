@@ -1,7 +1,5 @@
 import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../../engine/types'
-import { deriveEcmoCircuitPresentation } from '../../../content/circuitPresentation'
-import { EcmoCircuitMinimap } from '../EcmoCircuitMinimap'
 import { GuidedValue, TextEquivalent, styles } from '../shared'
 import {
   AfterCommitment,
@@ -81,9 +79,11 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
     },
     {
       label: 'Circuit and sensors',
+      // The state of the circuit domain as a reading — inspected or not — without the name of the
+      // walk, which is this drill's answer and is held for the verdict.
       reading: state.circuit.circuitInspected
-        ? 'Tip-to-tip inspection recorded on this circuit.'
-        : 'No tip-to-tip inspection recorded on this circuit.',
+        ? 'Circuit inspection recorded on this circuit.'
+        : 'No circuit inspection recorded on this circuit.',
       movement:
         'Flow-probe orientation, which pressure sits on which limb, connections and both cannulas are established by hand, not by the screen.',
     },
@@ -113,7 +113,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
     >
       <section className={styles.section} aria-labelledby="startup-stage-heading">
         <h3 id="startup-stage-heading" className={styles.heading}>
-          The state on screen right now
+          The circuit on screen right now
         </h3>
         <p className="mt-2 font-semibold" data-startup-stage={stage}>
           {stage === 'pre-use'
@@ -125,25 +125,12 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
         <p className="mt-1">{stageSummary}</p>
         {inspectionOutstanding ? (
           <p className="mt-2 text-muted-foreground" data-startup-inspection-outstanding>
-            The startup diagnostic and the tip-to-tip inspection are both still outstanding on this
+            The startup diagnostic and the circuit inspection are both still outstanding on this
             circuit — whether you have arrived here for the first time or come back to it after the
             demonstration.
           </p>
         ) : null}
       </section>
-
-      {/*
-        The circuit this console is attached to, with every channel flagged where it is taken.
-        Commitment-independent, and safe to be: this drill asks what has been established before
-        support starts rather than what has gone wrong, and the register directly below already
-        prints each of these locations beside its reading. What the map adds is the geometry — that
-        two of these sit either side of the pump and one spans the membrane — which is exactly the
-        thing a table of names cannot show and the reason a learner mistakes one for another.
-      */}
-      <EcmoCircuitMinimap
-        supportMode="vv"
-        presentation={deriveEcmoCircuitPresentation(state, { kind: 'drill-orientation-scaffold' })}
-      />
 
       <SignalRegister
         rows={[
@@ -210,7 +197,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
 
       <PatternReading
         rows={domains}
-        summary="Four domains, four different sources. Two of them have something on this console; two of them do not."
+        summary="Four sources of information, each read somewhere different. Two of them have something on this console; two of them do not."
       />
 
       <Discriminators

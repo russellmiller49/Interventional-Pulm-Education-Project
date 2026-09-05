@@ -2,7 +2,6 @@ import { useId } from 'react'
 
 import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation'
 import { resolveEcmoModeText } from '../../content/circuitSegments'
-import { evidenceById } from '../../content/evidence'
 import {
   ECMO_LOCALIZATION_FOOTER,
   ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY,
@@ -15,6 +14,7 @@ import {
   type EcmoLocalizationRowId,
 } from '../../content/localizationCards'
 import type { EcmoSimulationState, SupportMode } from '../../engine/types'
+import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { ModelBoundary, TextEquivalent, styles } from './shared'
 
 /**
@@ -87,40 +87,30 @@ function RowBlock({
   )
 }
 
+/**
+ * The row's sources, each beside the claim this row takes from it.
+ *
+ * Rendered through the shared source list, so the title, class badge, link and copy control are the
+ * ones every other citing surface shows. The claims are the row's own: a source supports several
+ * things, and the line under each title states the one this pattern rests on rather than all of
+ * them. Ids stay in data attributes, where a test can still find them and a learner never reads
+ * them; an id that no longer resolves throws outside production, because that is a registry defect
+ * rather than something to render around.
+ */
 function SourceSupport({ row }: { readonly row: EcmoLocalizationRow }) {
+  const claims = Object.fromEntries(
+    row.sourceSupport.map((support) => [support.evidenceId, support.claim]),
+  )
   return (
     <section className={styles.section} aria-label="Source support and limits">
-      <ul className="grid gap-2" data-localization-sources>
-        {row.sourceSupport.map((support) => {
-          const record = evidenceById.get(support.evidenceId)
-          /*
-           * A registered id that no longer resolves is a defect, not something to render around.
-           * Naming the row rather than the raw id keeps an implementation token out of the copy —
-           * the id stays in the data attribute, where a test can still find it.
-           */
-          if (!record) {
-            return (
-              <li key={support.evidenceId} data-evidence-id={support.evidenceId}>
-                A source this pattern relies on is not registered. Treat the pattern as unsupported
-                until it is.
-              </li>
-            )
-          }
-          return (
-            <li
-              key={support.evidenceId}
-              className="rounded-xl border px-3 py-2"
-              data-evidence-id={support.evidenceId}
-            >
-              <p className="font-semibold">{record.title}</p>
-              <p className="mt-1">{support.claim}</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Limit: {record.limitations}
-              </p>
-            </li>
-          )
-        })}
-      </ul>
+      <div data-localization-sources>
+        <EcmoSourceList
+          compact
+          showLimitations
+          evidenceIds={row.sourceSupport.map((support) => support.evidenceId)}
+          claims={claims}
+        />
+      </div>
     </section>
   )
 }
@@ -161,7 +151,7 @@ export function EcmoLocalizationCard(props: EcmoLocalizationCardProps) {
       {revealed ? null : (
         <p className="mt-3 text-xs leading-5 text-muted-foreground" data-localization-scaffold-note>
           These are directions and patterns, not a diagnosis. The circuit in front of you has no
-          injected problem, and the drills that work each pattern come later in the pathway.
+          problem introduced, and the drills that work each pattern come later in the pathway.
         </p>
       )}
 

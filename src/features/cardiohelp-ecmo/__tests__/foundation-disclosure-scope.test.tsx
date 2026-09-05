@@ -5,6 +5,7 @@ import {
   EcmoFoundationLessonActivity,
   foundationCircuitLocationDisclosure,
 } from '../components/EcmoFoundationLessonActivity'
+import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import {
   ecmoInteractiveFoundationSectionIds,
   isEcmoVaOnlyFoundationSectionId,
@@ -30,16 +31,23 @@ import type { SupportMode } from '../engine/types'
  * stops using the helper, or a `CircuitAndMonitors` that stops honouring the prop, fails the matrix.
  */
 
+const mockPush = jest.fn()
+
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string }
+    children: ReactNode
+  }) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...props}>
       {children}
     </a>
   ),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 jest.mock('../components/CardiohelpConsole', () => ({
   CardiohelpConsole: () => <div data-testid="cardiohelp-console" />,
@@ -91,11 +99,26 @@ function diagnosticSvg(): SVGSVGElement {
   return svg
 }
 
-function commitPrediction() {
-  fireEvent.click(screen.getByRole('button', { name: 'predict' }))
-  const choice = document.querySelector<HTMLElement>('#prediction-heading + div button')
+function currentStage(): string {
+  return document.querySelector('[data-ecmo-shell="learn"]')?.getAttribute('data-stage') ?? ''
+}
+
+/**
+ * Commit the prediction the way a learner does: the Now card's Continue into the Predict step,
+ * one option chosen by its id (the rendered order is rotated), then the Now card's primary. The
+ * stage stays on the Predict step: the disclosure follows the commitment, not the step.
+ */
+function commitPrediction(sectionId: EcmoInteractiveFoundationSectionId) {
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  expect(currentStage()).toBe(`${sectionId}-predict`)
+  const { prediction } = ecmoFoundationLearningItemsFor(sectionId)
+  const choice = document.querySelector<HTMLInputElement>(
+    `fieldset[data-prediction-choices] input[value="${prediction.choices[0].id}"]`,
+  )
   if (!choice) throw new Error('no prediction choice rendered')
   fireEvent.click(choice)
+  fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+  expect(currentStage()).toBe(`${sectionId}-predict`)
 }
 
 afterEach(cleanup)
@@ -130,7 +153,7 @@ describe('the composed activity renders that scope', () => {
     (track) => {
       mount(KEYED_SECTION, track)
       expect(renderedDisclosure()).toBe('withheld')
-      commitPrediction()
+      commitPrediction(KEYED_SECTION)
       expect(renderedDisclosure()).toBe('full')
     },
   )

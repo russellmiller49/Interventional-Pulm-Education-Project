@@ -1,25 +1,37 @@
 import { BookOpen, ExternalLink, FileWarning, FlaskConical, ShieldCheck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import {
   cardiohelpDeviceProfile,
   type CardiohelpEcmoPublicationStatus,
 } from '../content/deviceProfile'
-import { cardiohelpEvidence } from '../content/evidence'
+import {
+  ecmoEvidenceIdsBySourceClass,
+  ecmoSourceClassLabels,
+  ecmoSourceClasses,
+  type EcmoSourceClass,
+} from '../content/evidenceResolver'
 import styles from './cardiohelp-ecmo.module.css'
+import { EcmoSourceList } from './evidence/EcmoSourceList'
+import evidenceStyles from './evidence/evidence.module.css'
 
-const sourceLabels = {
-  manufacturer: 'Manufacturer behavior',
-  'clinical-guidance': 'ECMO clinical guidance',
-  textbook: 'Textbook teaching',
-  'educational-model': 'Simplified educational model',
-} as const
+/**
+ * The hub's evidence boundary: the device profile, the registry grouped by source class, and the
+ * reviewer checklist.
+ *
+ * The registry is rendered through the shared source list rather than a card grid of its own, so
+ * the title, badge, claim scope, link and copy control here are the same ones a learner meets beside
+ * a circuit-walk stop or a localization row. Grouping by source class keeps the boundary the panel's
+ * introduction draws — manual versus curriculum versus simplified model — visible in the structure
+ * and not only in the badges.
+ */
 
-const sourceIcons = {
+const sourceIcons: Readonly<Record<EcmoSourceClass, LucideIcon>> = {
   manufacturer: ShieldCheck,
   'clinical-guidance': ExternalLink,
   textbook: BookOpen,
   'educational-model': FlaskConical,
-} as const
+}
 
 export function SourcesPanel({
   publicationStatus,
@@ -79,50 +91,37 @@ export function SourcesPanel({
         <div>
           <dt>Publication</dt>
           <dd>
-            {published ? 'Reviewed release' : 'Unlisted draft; clinical + device review pending'}
+            {published ? 'Reviewed release' : 'Unlisted draft; clinical and device review pending'}
           </dd>
         </div>
       </dl>
 
-      <div className={styles.evidenceGrid}>
-        {cardiohelpEvidence.map((reference) => {
-          const Icon = sourceIcons[reference.sourceClass]
-          return (
-            <article
-              key={reference.id}
-              className={styles.evidenceCard}
-              data-source-class={reference.sourceClass}
-            >
-              <div className={styles.evidenceType}>
-                <Icon aria-hidden="true" /> {sourceLabels[reference.sourceClass]}
-              </div>
-              <h3>{reference.title}</h3>
-              <p>{reference.citation}</p>
-              {reference.pages ? (
-                <p>
-                  <strong>Relevant pages:</strong> {reference.pages}
-                </p>
-              ) : null}
-              <ul>
-                {reference.supports.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <p className={styles.evidenceLimitation}>
-                <strong>Boundary:</strong> {reference.limitations}
-              </p>
-              {reference.url ? (
-                <a href={reference.url} target="_blank" rel="noreferrer">
-                  Open source <ExternalLink aria-hidden="true" />
-                </a>
-              ) : null}
-            </article>
-          )
-        })}
-      </div>
+      {ecmoSourceClasses.map((sourceClass) => {
+        const Icon = sourceIcons[sourceClass]
+        const headingId = `sources-${sourceClass}`
+        return (
+          <section
+            key={sourceClass}
+            className={evidenceStyles.group}
+            aria-labelledby={headingId}
+            data-source-class={sourceClass}
+          >
+            <h3 id={headingId} className={evidenceStyles.groupHeading}>
+              <Icon aria-hidden="true" /> {ecmoSourceClassLabels[sourceClass]}
+            </h3>
+            <EcmoSourceList
+              evidenceIds={ecmoEvidenceIdsBySourceClass(sourceClass)}
+              labelledBy={headingId}
+              surface="shell"
+            />
+          </section>
+        )
+      })}
 
-      <div className={styles.reviewChecklist}>
-        <h3>Publication checklist</h3>
+      <details className={styles.reviewChecklist}>
+        <summary className={evidenceStyles.checklistSummary}>
+          <h3>Publication checklist</h3>
+        </summary>
         <ul>
           <li>
             <span aria-hidden="true">□</span> CARDIOHELP-trained reviewer verifies screen labels,
@@ -146,7 +145,7 @@ export function SourcesPanel({
             receive separate review before the English fallback is removed.
           </li>
         </ul>
-      </div>
+      </details>
     </section>
   )
 }

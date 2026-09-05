@@ -11,7 +11,7 @@ import {
   type VaConfigurationStrategy,
   type VaConfigurationStrategyId,
 } from '../components/teaching/VaConfigurationStrategyCard'
-import { validateEvidenceIds } from '../content/evidence'
+import { evidenceById, validateEvidenceIds } from '../content/evidence'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoFoundationLearningItems } from '../content/foundationLearningItems'
 import {
@@ -517,10 +517,14 @@ describe('configuration is taught as five distinct changes, not one lever', () =
   it('cites the dual-circulation and nomenclature sources, and every id resolves', () => {
     for (const detail of ['full', 'concise'] as const) {
       const { container, unmount } = render(<VaConfigurationStrategyCard detail={detail} />)
-      const sources =
-        container.querySelector('[data-configuration-card-sources]')?.textContent ?? ''
-      expect(sources).toContain('elso-dual-circulation-2024')
-      expect(sources).toContain('elso-maastricht-nomenclature-2019')
+      const sources = container.querySelector('[data-configuration-card-sources]')
+      // Both configuration sources are cited by resolved title; the registry id stays in the data
+      // attribute and never in anything a learner reads.
+      for (const id of ['elso-dual-circulation-2024', 'elso-maastricht-nomenclature-2019']) {
+        const entry = sources?.querySelector(`[data-evidence-id="${id}"]`)
+        expect(entry?.textContent).toContain(evidenceById.get(id)?.title)
+        expect(sources?.textContent).not.toContain(id)
+      }
       unmount()
     }
     for (const entry of VA_CONFIGURATION_STRATEGIES) {

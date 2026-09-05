@@ -163,7 +163,7 @@ export function EcmoDrillTeachingPanel({ state }: { readonly state: EcmoSimulati
               : 'The circuit on screen is running a case this panel does not recognise.'}{' '}
             {entry
               ? 'It has an authored panel, but for the other support configuration, so it is not shown against this circuit.'
-              : 'A live teaching panel has not been authored for it yet.'}
+              : 'A live teaching panel has not been written for it yet.'}
           </p>
           <p className="mt-2 text-muted-foreground">
             The lesson step, the guided task, and the console beside it are unaffected. Six drills

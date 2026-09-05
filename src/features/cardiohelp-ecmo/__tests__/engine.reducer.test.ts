@@ -72,9 +72,13 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     expect(state.scenario.activeFaults).toEqual(['startup-inspection'])
   })
 
-  it('models bounded VA differential oxygenation and clears only after reviewed escalation', () => {
+  it('models bounded VA differential oxygenation, and reviewing it does not treat it', () => {
+    // B6-006 (R4 I6): "assess and escalate" is recognition. It earns the case's cause credit and
+    // opens the reassessment, but the right arm is not oxygenated by naming the problem, so the
+    // fault stays in the model and the alarm stays on.
     let state = createInitialSimulationState('va-differential-hypoxemia')
-    expect(state.patient.rightRadialSpo2).toBeLessThan(88)
+    const rightRadialBefore = state.patient.rightRadialSpo2
+    expect(rightRadialBefore).toBeLessThan(88)
     expect(state.patient.femoralArterialSpo2).toBeGreaterThan(95)
     expect(state.trends.at(-1)?.spo2).toBe(state.patient.rightRadialSpo2)
     expect(state.alarms.some((alarm) => alarm.code === 'RIGHT_RADIAL_LOW')).toBe(true)
@@ -90,9 +94,13 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
       { type: 'SET_PAUSED', paused: false },
       { type: 'TICK', seconds: 12 },
     ])
-    expect(state.scenario.activeFaults).not.toContain('differential-hypoxemia')
-    expect(state.patient.rightRadialSpo2).toBeGreaterThan(88)
-    expect(state.patient.femoralArterialSpo2).toBeLessThanOrEqual(100)
+    expect(state.scenario.correctedFaults).toContain('differential-hypoxemia')
+    expect(state.scenario.credit.cause).toBe(true)
+    expect(state.scenario.activeFaults).toContain('differential-hypoxemia')
+    expect(state.patient.rightRadialSpo2).toBeLessThanOrEqual(rightRadialBefore + 0.5)
+    expect(state.alarms.some((alarm) => alarm.code === 'RIGHT_RADIAL_LOW' && alarm.active)).toBe(
+      true,
+    )
     expect(state.trends.at(-1)?.spo2).toBe(state.patient.rightRadialSpo2)
   })
 
@@ -113,9 +121,12 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
       { type: 'CORRECT_FAULT', fault: 'lv-loading' },
       { type: 'STEP' },
     ])
-    expect(state.patient.aorticValveOpening).toBe(true)
-    expect(state.patient.pulmonaryCongestion).toBe('mild')
-    expect(state.patient.pulsePressure).toBeGreaterThan(5)
+    // B6-006 (R4 I6): recognising a loading ventricle earns the case but does not unload it. The
+    // valve stays shut and the pulse stays flat until a treatment this module does not simulate.
+    expect(state.scenario.credit.cause).toBe(true)
+    expect(state.patient.aorticValveOpening).toBe(false)
+    expect(state.patient.pulmonaryCongestion).toBe('marked')
+    expect(state.patient.pulsePressure).toBeLessThan(10)
   })
 
   it('does not transfer the VV off-sweep work-of-breathing rule into VA', () => {
@@ -484,6 +495,18 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     expect(state.circuit.bubbleResetRequired).toBe(true)
     expect(state.scenario.criticalErrors).toContain('premature-bubble-reset')
 
+    // B6-002 (R4 I6): the source is corrected on an isolated patient. This test used to correct
+    // it with both clamps open, which is the bypass the scoring-honesty suite now excludes.
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: true,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+      closed: true,
+    })
     state = ecmoSimulationReducer(state, { type: 'CORRECT_FAULT', fault: 'arterial-bubble' })
     state = ecmoSimulationReducer(state, { type: 'RESET_BUBBLE' })
     expect(state.circuit.bubbleResetRequired).toBe(false)

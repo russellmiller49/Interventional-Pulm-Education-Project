@@ -58,8 +58,11 @@ const screenTabs: readonly { id: ConsoleScreen; label: string; short: string }[]
  * drainage limb, not a systemic mixed-venous estimate (IFU Rev 2.3: p39 probe description, p46
  * "Oxygen saturation in the measuring cell", p104 measuring-cell location).
  */
+// What to read this beside, not what moves it: this description reaches the BLOOD and START
+// screens before the recirculation drill's prediction, and the mechanism it used to name is that
+// drill's answer.
 const VENOUS_LINE_SATURATION_DESCRIPTION =
-  'Device-displayed venous-line saturation. During VV recirculation this may differ from the estimated systemic mixed-venous saturation.'
+  'Device-displayed venous-line saturation, read on the drainage limb. Compare it with the patient’s own saturation rather than reading it alone.'
 
 function formatTime(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600)

@@ -1,0 +1,404 @@
+/*
+ * Practice and Challenge on the lean ECMO shell.
+ *
+ * Two named scroll regions side by side — the case column (Now card, stage nav, one stage panel)
+ * and the simulator column (console, safety indicators, four surface disclosures). Nothing else
+ * scrolls. The retained case-column classes in `cardiohelp-ecmo.module.css` were written for a
+ * denser page; the type promotions at the bottom lift them onto the shell's floor without editing
+ * each rule. The console facsimile is the one exception, scaled as a device, not read as text.
+ */
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
+  gap: 0.75rem;
+  min-height: 0;
+  height: 100%;
+}
+
+@media (min-width: 1280px) {
+  .body {
+    grid-template-columns: minmax(380px, 440px) minmax(0, 1fr);
+  }
+}
+
+.caseColumn,
+.simulatorColumn {
+  /*
+   * `position: relative` is load-bearing: the surfaces contain absolutely positioned labels whose
+   * containing block would otherwise be the page, so they would escape this scroller's clip and
+   * give the whole document a scrollable overflow of two thousand pixels (measured 2026-09-04).
+   */
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  padding: 0 0.25rem 1rem 0;
+}
+
+.caseColumn:focus-visible,
+.simulatorColumn:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: -3px;
+}
+
+.caseColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nowCardHolder {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg, #0a1417);
+  padding-bottom: 0.25rem;
+}
+
+.stageNav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.stageNav[data-stages='4'] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stageButton {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.5rem 0.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--panel, #0f1f24);
+  color: var(--ink, #e5f4f6);
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  text-align: left;
+  cursor: pointer;
+}
+
+.stageButton[data-state='current'] {
+  border-color: var(--cyan-bright, #71e1e5);
+  box-shadow: inset 0 0 0 1px var(--cyan-bright, #71e1e5);
+}
+
+.stageButton[data-state='complete'] {
+  border-color: var(--success, #59c88f);
+}
+
+.stageButton[data-state='pending'] {
+  color: var(--muted, #9fb4b7);
+  cursor: default;
+}
+
+.stageButton[data-expanded='true'] {
+  background: var(--panel-raised, #143036);
+}
+
+.stageButton:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.stageButton span {
+  font-size: 0.75rem;
+  color: var(--muted, #9fb4b7);
+}
+
+.stageButton strong {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.stageButton small {
+  font-size: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stagePanel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reviewNote {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px dashed var(--line, #244148);
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.clockStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--panel, #0f1f24);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.clockStrip strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.clockStrip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line, #244148);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  cursor: pointer;
+}
+
+.clockStrip button:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.clockStrip svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.caseOptions {
+  position: relative;
+}
+
+.caseOptionsSummary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line, #244148);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+}
+
+.caseOptionsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.caseOptionsSummary:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.caseOptionsBody {
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 22rem;
+  margin-top: 0.35rem;
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--panel, #0f1f24);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.caseOptionsBody label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.caseOptionsBody select {
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--line, #244148);
+  background: var(--bg, #0a1417);
+  color: inherit;
+}
+
+.coachingToggle {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.coachingToggle > span {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+}
+
+.coachingToggle div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.coachingToggle button {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line, #244148);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  cursor: pointer;
+}
+
+.coachingToggle button[data-active='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--panel-raised, #143036);
+}
+
+.coachingToggle small {
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.caseData {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.4rem 0.75rem;
+  margin: 0.5rem 0 0;
+}
+
+.caseData div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  background: var(--panel, #0f1f24);
+}
+
+.caseData div[data-trend='warning'] {
+  box-shadow: inset 3px 0 0 var(--warning, #f5c451);
+}
+
+.caseData div[data-trend='critical'] {
+  box-shadow: inset 3px 0 0 var(--danger, #ff7a7a);
+}
+
+.caseData dt {
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.caseData dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+.helpClue {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line, #244148);
+}
+
+.helpClue ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.helpClue button {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line, #244148);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.helpClue button:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.helpClue svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.footerLine {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Type floor for the retained case-column classes
+ *
+ * The case column is a learner-read surface; the floor applies to every element inside it except
+ * the numeric kickers the stage buttons carry. The simulator column's console keeps its own scale.
+ * ------------------------------------------------------------------ */
+
+.caseColumn,
+.caseColumn p,
+.caseColumn li,
+.caseColumn label,
+.caseColumn span,
+.caseColumn small,
+.caseColumn em,
+.caseColumn button,
+.caseColumn select,
+.caseColumn legend,
+.caseColumn dt,
+.caseColumn dd,
+.caseColumn time {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.5;
+}
+
+.caseColumn p,
+.caseColumn li {
+  font-size: 0.9375rem;
+}
+
+.caseColumn h2,
+.caseColumn h3,
+.caseColumn h4 {
+  font-size: 1.0625rem;
+  line-height: 1.35;
+}
+
+.caseColumn :global(.text-xs),
+.caseColumn :global(.text-sm) {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+}
+
+@media (max-width: 1023px), (max-height: 699px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .caseColumn,
+  .simulatorColumn {
+    overflow: visible;
+  }
+
+  .nowCardHolder {
+    position: static;
+  }
+}

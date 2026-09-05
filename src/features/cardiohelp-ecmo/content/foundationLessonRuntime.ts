@@ -246,7 +246,7 @@ const referenceVariants = (supportMode: SupportMode): readonly EcmoFoundationSta
     setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
     label: supportMode === 'va' ? 'VA reference circuit' : 'VV reference circuit',
     modelBoundary:
-      'An authored teaching anchor for this simulation: a running circuit with no injected problem, settled before the lesson opens on it. It is not a set of bedside target values.',
+      'A teaching anchor set for this simulation: a running circuit with no problem introduced, settled before the lesson opens on it. It is not a set of bedside target values.',
   },
 ]
 
@@ -256,7 +256,7 @@ const vvReferenceVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
   label: 'VV reference circuit',
   modelBoundary:
-    'An authored teaching anchor for this simulation: a running VV circuit with no injected problem, settled before the lesson opens on it. It is not a set of bedside target values.',
+    'A teaching anchor set for this simulation: a running VV circuit with no problem introduced, settled before the lesson opens on it. It is not a set of bedside target values.',
 }
 
 const RESTORE: EcmoFoundationGuidedAction = {
@@ -392,7 +392,7 @@ const vaReferenceVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
   label: 'VA reference circuit',
   modelBoundary:
-    'An authored teaching anchor for this simulation: a running VA circuit with no injected problem, settled before the lesson opens on it. It is not a set of bedside target values.',
+    'A teaching anchor set for this simulation: a running VA circuit with no problem introduced, settled before the lesson opens on it. It is not a set of bedside target values.',
 }
 
 /**
@@ -493,7 +493,7 @@ const vaGasSourceAfterVariant: EcmoFoundationStateVariant = {
  *
  * | Lesson                        | Mapped phase → variant                  | Why the rest are unmapped |
  * | ----------------------------- | --------------------------------------- | ------------------------- |
- * | why-extracorporeal-support    | —                                       | Every phase reads the selected reference ledger; the only variant authored is that reference. |
+ * | why-extracorporeal-support    | —                                       | Every phase reads the selected reference circuit; the only variant authored is that reference. |
  * | circuit-flow-path             | —                                       | Same: one variant exists, and each phase reads the live circuit at a named location. |
  * | pump-and-pressure-zones       | —                                       | Its comparisons are bounded changes *from* the reference, applied by the learner; opening on a changed circuit would remove the baseline the phase asks them to compare with. |
  * | blood-flow-versus-sweep       | —                                       | Same reasoning; both comparisons restore the reference first by design. |
@@ -516,27 +516,29 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
-        objective: 'Separate the terms that make up oxygen delivery.',
+        objective: 'Separate what oxygen delivery is made of from what uses it.',
         requiredAction:
-          'Read the ledger and note which term each displayed value belongs to: content, flow, or consumption.',
+          'Note which part of the oxygen balance each displayed value belongs to: oxygen content, blood flow, or oxygen consumption.',
         teachingPoint:
-          'Delivery is a flow multiplied by a content. A saturation on its own is one part of one term.',
+          'Oxygen delivery is a blood flow carrying an oxygen content. A saturation on its own is one part of one component.',
       },
       predict: {
         objective: 'Decide whether a reassuring saturation settles the question.',
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
-          'A patient can arrive at inadequate delivery through flow, through content, or through demand, and those are not interchangeable.',
+          'A patient can arrive at impaired oxygen delivery through blood flow, through oxygen content, or through demand, and those are not interchangeable.',
       },
       act: {
-        objective: 'Attribute a proposed change to the term it acts on.',
-        requiredAction: 'Select the ledger term each candidate change would move first.',
+        objective: 'Name the part of the oxygen balance a proposed change acts on.',
+        requiredAction:
+          'For each proposed change, choose the part of the oxygen balance it acts on, then commit the set.',
         teachingPoint:
-          'Naming the term a change acts on is what makes the next observation interpretable.',
+          'Naming the component a change acts on is what makes the next measurement interpretable.',
       },
       observe: {
-        objective: 'Read the selected track’s ledger as it stands.',
-        requiredAction: 'Compare what the circuit contributes with what it does not.',
+        objective: 'Read the components of oxygen delivery as they stand on this circuit.',
+        requiredAction:
+          'Move a component and compare what the circuit contributes with what it does not.',
         teachingPoint:
           'In VV the circuit changes the content of blood returning to the right heart; in VA it also adds flow.',
       },
@@ -544,13 +546,13 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         objective: 'State what extracorporeal support does and does not do.',
         requiredAction: 'Review the lesson narrative.',
         teachingPoint:
-          'Support holds a physiologic variable while something treatable is treated. It is not a treatment for the cause.',
+          'Support holds the failing component while something treatable is treated. It is not a treatment for the cause.',
       },
       transfer: {
-        objective: 'Apply the ledger to a different failing term.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        objective: 'Apply the concept to a different cause of impaired oxygen delivery.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
-          'The same reasoning identifies a content problem as readily as a flow problem.',
+          'The same reasoning identifies an oxygen-content problem as readily as a blood-flow problem.',
       },
     },
     guidedActions: [RESTORE],
@@ -602,7 +604,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Localize a pressure pattern without a numeric cutoff.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'Direction and which zones move together localize the problem; a single number does not.',
       },
@@ -628,7 +630,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         teachingPoint: 'A comparison needs a baseline that the learner has actually seen.',
       },
       predict: {
-        objective: 'Predict the response to a bounded speed increase.',
+        objective: 'Predict the response to a small speed increase.',
         requiredAction: 'Commit a prediction, then read the verdict.',
         teachingPoint:
           'Speed is selected. Flow is what the circuit returns under the loading it currently has.',
@@ -653,7 +655,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Localize a new pattern, or decide there is not enough information.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           '"Not enough information" is a legitimate answer when the set does not discriminate.',
       },
@@ -737,9 +739,12 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
-        objective: 'Identify the blood control and the gas control.',
-        requiredAction: 'Locate pump speed and sweep, and the paths each one acts on.',
-        teachingPoint: 'Two controls, two paths, two principal effects.',
+        objective:
+          'Find the three things you can change on this circuit, and what is not a control.',
+        requiredAction:
+          'Find the three controls on the console and the blender, and the things beside them that are not controls.',
+        teachingPoint:
+          'Three controls, two axes: pump speed on the blood path; sweep and the oxygen fraction on the gas path. Everything else is monitoring.',
       },
       predict: {
         objective: 'Choose the control that principally moves CO₂ in this model.',
@@ -767,7 +772,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Recognize that a flow display does not prove gas delivery.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint: 'The blood path can look entirely normal while the gas path is interrupted.',
       },
     },
@@ -789,6 +794,28 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         variantId: REFERENCE_VARIANT_ID,
         resolve: (restored) => [
           { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 200 } as const,
+        ],
+        settleSeconds: 12,
+      },
+      // The two story problems (`content/storyProblems.ts`): the colleague's change, reproduced
+      // from the same clean reference so the learner reads the axis it moved and the one it did not.
+      {
+        id: 'double-sweep',
+        label: 'Double the sweep',
+        description: 'The story problem’s gas-side move, from the reference state.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        resolve: (restored) => [{ type: 'SET_SWEEP', sweep: restored.gas.sweepLpm * 2 } as const],
+        settleSeconds: 12,
+      },
+      {
+        id: 'increase-rpm-by-400',
+        label: 'Raise pump speed by 400 rpm',
+        description: 'The story problem’s blood-side move, from the reference state.',
+        kind: 'restore-and-apply',
+        variantId: REFERENCE_VARIANT_ID,
+        resolve: (restored) => [
+          { type: 'SET_RPM', rpm: restored.device.rpmSetpoint + 400 } as const,
         ],
         settleSeconds: 12,
       },
@@ -839,7 +866,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Separate a real increase in useful support from an increase in recirculation.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'The same displayed number can mean opposite things. What separates them is what happened to the patient and to the drainage saturation.',
       },
@@ -908,7 +935,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Recognize a stable baseline whose absolute values are unfamiliar.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'A steady relationship over time is stronger evidence than any single value being familiar.',
       },
@@ -971,7 +998,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         // and the commitment this section is built around is the one made in `predict`. Copy that
         // asked for a record here would be promising a control the phase does not have.
         requiredAction:
-          'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of ventilation, or of both. Nothing is entered at this step; the commitment comes in the next one.',
+          'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of ventilation, or of both. Nothing is entered at this step; the prediction comes in the next one.',
         teachingPoint:
           'The flow display is the one signal every explanation on the list is compatible with.',
       },
@@ -996,15 +1023,15 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'A change that moves carbon dioxide quickly while every circuit pressure stays put has already told you which path it is on.',
       },
       explain: {
-        objective: 'Work the whole differential against the hypothesis matrix.',
+        objective: 'Work the whole differential against what each explanation predicts.',
         requiredAction:
-          'Read the matrix, then open each mechanism preview one at a time. Each preview reloads cleanly, so two of them are never read compounded.',
+          'Read the comparison table, then open each mechanism preview one at a time. Each preview reloads cleanly, so two of them are never read compounded.',
         teachingPoint:
           'Each explanation predicts something different somewhere other than the flow display. That is what makes them separable.',
       },
       transfer: {
         objective: 'Apply the same discipline to a case with a different mechanism.',
-        requiredAction: 'Load the recirculation preview and answer the transfer item.',
+        requiredAction: 'Load the recirculation preview and answer the new case.',
         teachingPoint:
           'Here the displayed flow is not merely unchanged — it is higher, and higher for the reason that makes the patient worse.',
       },
@@ -1138,7 +1165,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Separate a loading problem from an oxygenation one.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'Both leave the circuit display alone. What separates them is pulsatility and the lungs on one side, and the difference between two sampling sites on the other.',
       },
@@ -1225,7 +1252,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Recognize a stable VA baseline whose absolute values are unfamiliar.',
-        requiredAction: 'Answer the transfer item and review the comparison.',
+        requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'A steady relationship over time is stronger evidence than any single value being familiar, and in VA the relationships include two that VV does not have.',
       },
@@ -1318,9 +1345,9 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'A mechanism you can load and look at is a hypothesis you can refute rather than one you can only assert.',
       },
       explain: {
-        objective: 'Work the whole differential against the hypothesis matrix.',
+        objective: 'Work the whole differential against what each explanation predicts.',
         requiredAction:
-          'Read the matrix row by row, and read the limitations beside the rows this simulation cannot demonstrate.',
+          'Read the comparison table row by row, and read the limitations beside the rows this simulation cannot demonstrate.',
         teachingPoint:
           'Two explanations on this list have no preview at all. Knowing which they are is part of knowing what the simulation is for.',
       },

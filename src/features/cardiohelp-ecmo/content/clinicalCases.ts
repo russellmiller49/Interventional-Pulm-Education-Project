@@ -35,6 +35,19 @@ const clinicalUnsafeActions: readonly UnsafeActionPenalty[] = [
     critical: true,
   },
   {
+    id: 'air-correction-before-isolation',
+    label:
+      'De-aired or corrected circuit air before both near-patient clamps had isolated the patient',
+    points: 50,
+    critical: true,
+  },
+  {
+    id: 'support-reduction-on-battery',
+    label: 'Reduced pump support on reserve power to stretch the battery time',
+    points: 50,
+    critical: true,
+  },
+  {
     id: 'rpm-during-recirculation',
     label: 'Increased speed against established recirculation',
     points: 50,
@@ -135,15 +148,16 @@ const vvInitiationCase: ClinicalCaseDefinition = {
   kind: 'initiation',
   sourceCase: 'New initiation case synthesized from the attached curriculum and adult VV guidance',
   setting: 'Medical ICU · refractory severe ARDS',
+  presentationTitle: 'Falling SpO₂ and rising PaCO₂ despite optimized conventional support',
   patientLabel: '48-year-old with refractory hypoxemic and hypercapnic respiratory failure',
   openingNarrative:
     'Despite optimized conventional support, oxygenation and ventilation are worsening. The multidisciplinary ECMO team has selected femoral-femoral VV support and supplied case-specific initiation orders.',
   decisionPrompt:
     'Complete readiness checks, configure the ordered console and gas settings, then initiate support and reassess gas exchange.',
   learningObjectives: [
-    'Verify circuit, sensors, gas, power, and team readiness with a tip-to-tip check before connecting VV support.',
-    'Configure the ordered RPM, sweep, and gas FiO₂ before establishing forward flow.',
-    'Judge initiation success from patient oxygenation, PaCO₂/pH, and circuit behavior rather than displayed flow alone.',
+    'Decide from the device self-check, a hand walk from drainage cannula to return cannula, the gas path and the bedside data whether the whole system is ready to connect or only the console is.',
+    'Decide from the written case orders, rather than a remembered default, what speed, sweep and oxygen fraction the console and blender should show before forward flow begins.',
+    'Decide from SpO₂, PaCO₂ and pH set against the displayed flow whether the new support is effective or only running.',
   ],
   initialSupportStatus: 'not-on-ecmo',
   initialTrajectory: 'critical',
@@ -169,7 +183,7 @@ const vvInitiationCase: ClinicalCaseDefinition = {
       label: 'Confirm cannulation and connect the prepared VV circuit',
       category: 'procedure',
       description:
-        'Represent completion of supervised cannulation and connection; this is not a cannulation trainer.',
+        'Stands in for completion of supervised cannulation and connection; this is not a cannulation trainer.',
       effect: 'supportive',
       response: 'Drainage and return limbs are connected with the circuit still stopped.',
       prerequisites: ['vv-readiness-check'],
@@ -206,15 +220,17 @@ const vaInitiationCase: ClinicalCaseDefinition = {
   kind: 'initiation',
   sourceCase: 'New initiation case synthesized from the attached curriculum and adult VA guidance',
   setting: 'Cardiac ICU · refractory cardiogenic shock',
+  presentationTitle:
+    'Critically low MAP, rising lactate and a narrow pulse pressure despite conventional resuscitation',
   patientLabel: '56-year-old with severe biventricular failure and progressive shock',
   openingNarrative:
     'MAP remains critically low despite conventional resuscitation, lactate is rising, and the shock team has selected peripheral femoral VA support with case-specific initiation orders.',
   decisionPrompt:
     'Complete readiness checks, configure the ordered support, start VA ECMO, and verify both perfusion and upper-body oxygenation.',
   learningObjectives: [
-    'Complete VA readiness verification, including the distal-limb perfusion plan, before connecting support.',
-    'Establish the ordered VA flow and confirm restored perfusion with MAP, lactate, and urine output.',
-    'Reassess mode-specific risks after initiation: upper-body oxygenation, pulsatility, and the cannulated limb.',
+    'Decide from MAP, lactate, pulse pressure and urine output whether the organs are short of blood because the pump is failing or because the vessels are, and which of those the selected support can take over.',
+    'Decide, before the pump turns, what has to be true of the device, the tubing, the arterial return, the leg below the cannula and the team, and why a device self-check alone does not establish any of it.',
+    'Decide from MAP, lactate and urine output set against right-arm saturation, pulsatility and the cannulated leg whether the support is doing what the orders intended or only moving the flow number.',
   ],
   initialSupportStatus: 'not-on-ecmo',
   initialTrajectory: 'critical',
@@ -350,15 +366,16 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'deterioration',
       sourceCase: 'Attached ECMO CASES.docx · scenario 3',
       setting: 'ECMO ICU · day 4 of VV support',
+      presentationTitle: 'New low flow, tachycardia and hypotension on day 4 of VV support',
       patientLabel: 'Patient with new low flow, tachycardia, and hypotension',
       openingNarrative:
         'Flow falls despite increasing pump demand. pVen becomes progressively negative, the drainage line chatters, CVP is low, and hemoglobin has fallen from 9.4 to 6.8 g/dL.',
       decisionPrompt:
         'Stabilize drainage while finding and controlling the source of blood loss. A temporary response is not the same as definitive treatment.',
       learningObjectives: [
-        'Recognize drainage insufficiency from falling flow, progressively negative pVen, and line chatter.',
-        'Distinguish hemorrhagic hypovolemia from circuit causes using CVP, the hemoglobin trend, and a structured bleeding search.',
-        'Sequence reduced pump demand and hemostatic resuscitation ahead of definitive source control instead of escalating RPM.',
+        'Decide from CVP, the hemoglobin trend and the behavior of the line whether falling flow is a circuit problem or a volume problem before choosing a first move.',
+        'Decide from a low CVP beside a falling hemoglobin whether a low-volume state is fluid depletion or ongoing blood loss, and where a hidden source can sit around a cannulated circuit.',
+        'Decide, when a pressor lifts MAP or a bolus steadies flow for a moment, whether the numbers improved because the cause was treated or only because it was masked.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
@@ -515,15 +532,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'deterioration',
       sourceCase: 'Attached ECMO CASES.docx · scenario 4',
       setting: 'ECMO ICU · sudden deterioration during lung-protective ventilation',
+      presentationTitle:
+        'Sudden low flow and hypotension with a high CVP during lung-protective ventilation on VV',
       patientLabel: 'VV ECMO patient with acute obstructive physiology',
       openingNarrative:
         'The patient becomes hypotensive as flow falls and the drainage line chatters. CVP rises to 18 mmHg, peak airway pressure rises, and right-sided lung sliding is absent.',
       decisionPrompt:
         'Treat the obstructive patient-level cause rather than repeatedly manipulating the circuit.',
       learningObjectives: [
-        'Recognize the obstructive pattern of high CVP with negative pVen, falling flow, and hypotension.',
-        'Integrate lung ultrasound and airway pressures to identify tension pneumothorax on VV support.',
-        'Prioritize immediate pleural decompression over volume, vasopressors, or circuit manipulation.',
+        'Decide from CVP set against pVen whether a fall in flow is starved of blood or blocked from filling before choosing a first move.',
+        'Decide from the airway-pressure trend and lung sliding on each side whether the block sits inside the chest or somewhere on the circuit.',
+        'Decide, once the block is located in the chest, whether fluid, a pressor or any change on the console addresses the cause or only buys minutes.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -568,7 +587,8 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           id: 'tension-decompress',
           label: 'Perform emergency pleural decompression',
           category: 'procedure',
-          description: 'Represent immediate decompression followed by definitive pleural drainage.',
+          description:
+            'Stands in for immediate decompression followed by definitive pleural drainage.',
           effect: 'definitive',
           response: 'Intrathoracic pressure falls; CVP, pVen, ECMO flow, and MAP begin to recover.',
           patch: { patient: { lungSliding: 'bilateral', airwayPressure: 25 } },
@@ -635,15 +655,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'deterioration',
       sourceCase: 'Attached ECMO CASES.docx · scenario 1',
       setting: 'ECMO ICU · after patient repositioning',
+      presentationTitle:
+        'Falling SpO₂ after repositioning while displayed flow and post-oxygenator saturation stay high',
       patientLabel: 'Stable VV patient with paradoxically worsening oxygenation',
       openingNarrative:
         'SpO₂ falls from 90% to 78%. Flow remains 4.5 L/min and post-oxygenator oxygenation is excellent. Drainage blood appears brighter, and increasing RPM makes systemic saturation worse.',
       decisionPrompt:
         'Differentiate recirculation from membrane-lung failure and correct the cannula relationship.',
       learningObjectives: [
-        'Differentiate recirculation from membrane-lung failure using patient, pre-, and post-oxygenator gases.',
-        'Explain why displayed flow overestimates effective support when the recirculated fraction rises.',
-        'Correct the cannula relationship under imaging guidance instead of escalating RPM, then reassess effective support.',
+        'Decide from patient SpO₂ set against the pre- and post-oxygenator saturations whether a fall in oxygenation sits at the oxygenator or between the two limbs inside the patient.',
+        'Decide from an unchanged displayed flow beside a rising drainage-side saturation whether the flow number still describes the support the patient actually receives.',
+        'Decide, when more speed makes systemic saturation worse rather than better, what that response says about where the returned blood is going before the console is touched again.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
@@ -767,15 +789,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'complication',
       sourceCase: 'Attached ECMO CASES.docx · scenario 2',
       setting: 'ECMO ICU · acute dyssynchrony and tachypnea',
+      presentationTitle:
+        'Abrupt rise in PaCO₂ and falling pH with RPM, flow and circuit pressures unchanged',
       patientLabel: 'VV patient with abrupt hypercapnic acidemia',
       openingNarrative:
         'PaCO₂ rises from 42 to 88 mmHg and pH falls to 7.12 while RPM, flow, and circuit pressures remain unchanged. SpO₂ initially remains near baseline.',
       decisionPrompt:
         'Find the gas-side failure, restore gas transfer, and avoid confusing sweep with blood flow.',
       learningObjectives: [
-        'Recognize rapid hypercapnia with unchanged flow and circuit pressures as a gas-side failure.',
-        'Trace the complete sweep pathway from source to oxygenator inlet before changing blood flow.',
-        'Restore and independently verify gas delivery, then trend PaCO₂ and pH through a controlled recovery.',
+        'Decide from a fast-rising PaCO₂ beside unchanged RPM, flow and circuit pressures whether the problem sits on the blood side or the gas side of the oxygenator.',
+        'Decide whether more blood flow or more gas flow is the lever for CO₂ when the two are separate controls in separate places.',
+        'Decide whether a number set on the blender or gas arriving at the oxygenator inlet is what proves delivery, and what the PaCO₂ trend should then do over time rather than at once.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -855,7 +879,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       ],
       requiredInterventionIds: ['gas-inspect-path', 'gas-reconnect', 'gas-set-sweep'],
       completionResponse:
-        'Sweep gas is restored and PaCO₂ begins improving over simulated time rather than instantly.',
+        'Sweep gas is restored and PaCO₂ begins improving over time rather than instantly.',
       deteriorationResponse:
         'Gas-side failure causes progressive hypercapnia, acidemia, respiratory distress, and later oxygenation decline.',
     },
@@ -907,6 +931,8 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'complication',
       sourceCase: 'Attached ECMO CASES.docx · scenarios 12 and 26',
       setting: 'ECMO ICU · progressive circuit dysfunction',
+      presentationTitle:
+        'Climbing Δp with visible fibrin, falling saturation leaving the circuit and increasing hemolysis markers',
       patientLabel:
         'VV patient with rising membrane resistance and falling post-oxygenator performance',
       openingNarrative:
@@ -914,9 +940,9 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       decisionPrompt:
         'Confirm membrane-lung dysfunction, protect the patient, and prepare definitive component exchange.',
       learningObjectives: [
-        'Recognize oxygenator thrombosis from the rising pressure gradient, visible fibrin, hemolysis markers, and failing post-oxygenator gas transfer.',
-        'Explain why RPM escalation against a resistant membrane lung adds hemolysis risk without restoring support.',
-        'Mobilize the exchange team early and execute the reviewed component-exchange pathway.',
+        'Decide from pInt set against pArt and the Δp trend whether flow is being held back between those two readings, beyond pArt or on the drainage side.',
+        'Decide from a climbing Δp beside the saturation leaving the circuit and the hemolysis markers whether one sensor has drifted or the component between pInt and pArt is itself failing.',
+        'Decide what asking the pump for more speed can and cannot do against a fixed obstruction, and whether the trend or a single number should set the moment to escalate.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
@@ -1014,7 +1040,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Exchange the failing component through the reviewed local process and reassess the patient and circuit.',
       ],
       safetyNotes: [
-        'This simulator deliberately does not encode a universal Δp alarm priority or exchange threshold.',
+        'This simulator deliberately does not set a universal Δp alarm priority or exchange threshold.',
       ],
     },
     evidenceIds: [
@@ -1031,22 +1057,24 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'vv',
     title: 'Air entrainment with emergency circuit isolation',
     summary:
-      'Air is entrained into the circuit during a bedside line exchange; the bubble intervention stops the pump. Isolate, de-air, and resume support in order.',
+      'Air is entrained into the circuit during a bedside line exchange; the bubble intervention stops the pump. Isolate, de-air, then resume support per the current IFU and approved local protocol.',
     clinicalPhase: 'maintenance',
     clinicalCase: {
       kind: 'complication',
       sourceCase:
         'New emergency case synthesized from the attached curriculum and ELSO circuit guidance',
       setting: 'ECMO ICU · VV support, bedside central-line exchange',
+      presentationTitle:
+        'Bubble alarm and pump stop with air visible in the drainage limb during a bedside line exchange on VV',
       patientLabel: 'VV patient with sudden circuit air and an automatic pump stop',
       openingNarrative:
         'During a central-line exchange, air is entrained into the drainage limb. The bubble intervention alarms, the pump stops, and visible air remains in the circuit.',
       decisionPrompt:
-        'Isolate the patient from the circuit, correct and clear the air, then re-establish support in the correct order.',
+        'Isolate the patient from the circuit, correct and clear the air, then resume support per the current IFU and approved local protocol.',
       learningObjectives: [
-        'Recognize a circuit-air emergency and treat the automatic pump stop as the start of isolation, not the endpoint.',
-        'Clamp near the patient to isolate the circuit before de-airing, and de-air before any resumption of flow.',
-        'Unclamp and resume support in a bounded, ordered sequence, then reassess device, circuit, and patient.',
+        'Decide from a bubble alarm with the pump stopped and both lines still open whether the stop itself has already made the bedside safe or has only paused the flow.',
+        'Decide, before anything is opened or restarted, in what order the two lines and the air source have to be dealt with, and what must be true of the tubing before flow is allowed back.',
+        'Decide what this simulation stands for and what it leaves out: it shows why the tubing must be clear before flow comes back, and it leaves how flow is resumed to the current IFU and approved local protocol.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1116,7 +1144,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Resume support per current IFU and approved local protocol',
           category: 'circuit',
           description:
-            'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+            'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
           effect: 'definitive',
           response:
             'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
@@ -1168,7 +1196,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     assessmentPolicy: { minimumObservationSeconds: 3 },
     debrief: {
       diagnosis:
-        'Circuit air embolism managed by isolation, de-airing, and protocol-governed resumption',
+        'Air entrained into the circuit with an automatic pump stop and a live risk of air reaching the patient',
       causalChain: [
         'Air entrainment triggers the bubble intervention and an automatic pump stop.',
         'The pump stop does not isolate the patient; the near-patient clamps do.',
@@ -1262,15 +1290,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'deterioration',
       sourceCase: 'Attached ECMO CASES.docx · scenario 8',
       setting: 'Cardiac ICU · peripheral VA support with recovering LV ejection',
+      presentationTitle:
+        'Right-hand SpO₂ falling as pulse pressure widens, while femoral and post-oxygenator samples stay reassuring',
       patientLabel: 'VA patient with new upper-body hypoxemia',
       openingNarrative:
         'Pulse pressure increases as native LV ejection recovers, but severe lung dysfunction persists. Femoral oxygenation is excellent while right-hand SpO₂ falls to 78%.',
       decisionPrompt:
         'Recognize mixed-circulation mismatch and protect cerebral and coronary oxygen delivery.',
       learningObjectives: [
-        'Recognize differential hypoxemia when recovering LV ejection coexists with severe lung dysfunction on peripheral VA support.',
-        'Monitor upper-body oxygenation with right-radial and cerebral data instead of relying on femoral samples.',
-        'Optimize native-lung gas exchange and escalate the support configuration when upper-body hypoxemia persists.',
+        'Decide from the upper-body SpO₂ set against femoral and post-oxygenator samples whether a fall belongs to the oxygenator, to the lungs or to where the two blood streams meet.',
+        'Decide from a widening pulse pressure beside the lung findings which stream is gaining ground in the aorta, and why a femoral sample cannot settle what the head and the coronaries are receiving.',
+        'Decide, when more pump speed leaves the upper body unchanged, whether the lungs, the configuration or the flow is the lever, and which of those this module can and cannot represent.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1401,15 +1431,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'deterioration',
       sourceCase: 'Attached ECMO CASES.docx · scenario 10',
       setting: 'Postcardiotomy ICU · peripheral VA support',
+      presentationTitle:
+        'Low VA flow, negative pVen, high CVP and an abrupt drop in chest-drain output after heart surgery',
       patientLabel: 'VA patient with obstructive low flow after cardiac surgery',
       openingNarrative:
         'VA flow falls as pVen becomes negative. CVP rises, MAP falls, and mediastinal-drain output abruptly decreases despite ongoing bleeding concern.',
       decisionPrompt:
         'Recognize obstructive cardiac physiology and activate definitive decompression.',
       learningObjectives: [
-        'Recognize postcardiotomy tamponade from low flow, negative pVen, high CVP, and abruptly decreased drain output.',
-        'Explain why volume and vasopressors only temporize a mechanical obstruction to cardiac filling.',
-        'Use focused echocardiography without delaying activation of the surgical decompression pathway.',
+        'Decide from CVP set against pVen whether a fall in VA flow is starved of blood or blocked from filling before choosing a first move.',
+        'Decide from an abrupt fall in chest-drain output after heart surgery, beside a high CVP and a narrow pulse pressure, whether the block sits around the heart, in the chest or in the tubing.',
+        'Decide what fluid and a pressor can and cannot do for a heart that cannot fill, and whether a focused echo should delay the call for help or run alongside it.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1517,15 +1549,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'deterioration',
       sourceCase: 'Attached ECMO CASES.docx · scenario 23',
       setting: 'Cardiac ICU · septic cardiomyopathy recovering on VA support',
+      presentationTitle:
+        'Warm hypotension and a climbing lactate with a full pulse pressure and steady VA flow',
       patientLabel: 'VA patient with warm shock despite recovered native ejection',
       openingNarrative:
         'EF has recovered to about 45%, the aortic valve opens each beat, pulse pressure is 25 mmHg, and VA flow is 4.5 L/min. MAP remains 50–55 mmHg with warm extremities and rising lactate.',
       decisionPrompt:
         'Distinguish vasoplegia from inadequate ECMO flow and treat vascular tone and the underlying septic process.',
       learningObjectives: [
-        'Distinguish persistent vasoplegia from inadequate circuit flow after native cardiac recovery.',
-        'Explain why RPM escalation can create drainage collapse without correcting distributive shock.',
-        'Treat vascular tone and the underlying septic process while trending MAP, lactate, and perfusion endpoints.',
+        'Decide from a steady VA flow, a full pulse pressure and an aortic valve that opens on every beat, set against a low MAP, whether the shortfall is too little flow or too little vascular tone before choosing a first move.',
+        'Decide from warm extremities, a climbing lactate and fever which shock physiology fits, and why the pump cannot supply what the vessels are failing to hold.',
+        'Decide what asking the pump for more speed does to pVen and the line when the heart is already ejecting, and which endpoints show the cause itself is being treated rather than the number.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
@@ -1652,15 +1686,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'complication',
       sourceCase: 'Attached ECMO CASES.docx · scenario 11',
       setting: 'Cardiac ICU · femoral arterial VA support',
+      presentationTitle:
+        'A cool, mottled leg beside the arterial cannula with falling limb NIRS while VA flow and MAP hold',
       patientLabel: 'VA patient with new cannulated-leg perfusion deficit',
       openingNarrative:
         'MAP, flow, and oxygenator function are adequate, but the cannulated leg becomes cool and mottled and unilateral limb NIRS falls.',
       decisionPrompt:
         'Recognize a regional perfusion emergency and restore distal flow without changing a functioning circuit blindly.',
       learningObjectives: [
-        'Recognize cannulated-limb ischemia despite adequate global VA flow, MAP, and oxygenator function.',
-        'Compare bilateral limb NIRS, examination, and Doppler signals and assess the distal-perfusion catheter.',
-        'Activate urgent vascular rescue to restore distal flow without blind changes to a functioning circuit.',
+        'Decide from a leg that is cool and mottled beside a normal MAP, flow and oxygenator whether the problem is global or regional before choosing a first move.',
+        'Decide from side-to-side NIRS, temperature, color and Doppler signals what one reading on one leg can and cannot establish about the blood supply below the arterial cannula.',
+        'Decide what raising total VA flow does and does not do for a leg starved below the cannula, and how the clock on threatened tissue should shape what happens next.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
@@ -1766,15 +1802,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       kind: 'complication',
       sourceCase: 'Attached ECMO CASES.docx · scenario 12',
       setting: 'Cardiac ICU · progressive VA circuit dysfunction',
+      presentationTitle:
+        'Climbing Δp and visible fibrin with flow constrained at the same RPM and a falling MAP on VA',
       patientLabel: 'VA patient with oxygenator resistance and worsening perfusion',
       openingNarrative:
         'The oxygenator gradient rises, post-oxygenator performance falls, and flow becomes constrained at the same RPM while MAP and right-arm oxygenation decline.',
       decisionPrompt:
         'Confirm the failing component and execute the reviewed exchange pathway before systemic support collapses.',
       learningObjectives: [
-        'Recognize failing membrane function on VA support as an immediate threat to systemic perfusion.',
-        'Prepare backup circulation and a primed replacement circuit before beginning the exchange.',
-        'Execute the reviewed exchange pathway and reassess MAP, flow, pressures, and oxygenation.',
+        'Decide from pInt set against pArt and the Δp trend whether VA flow is being held back between those two readings, beyond pArt or on the drainage side.',
+        'Decide from a climbing Δp beside a falling MAP, visible fibrin and a falling saturation leaving the circuit whether one sensor has drifted or the component between pInt and pArt is itself failing, and why on VA that is a circulation problem and not only a gas one.',
+        'Decide what a pressor buys and what it cannot fix while the component fails, and what has to be standing ready before a circulation-critical part is swapped.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1859,7 +1897,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Prepare backup circulation and a replacement circuit early.',
         'Execute the reviewed exchange process and reassess MAP, flow, pressures, and oxygenation.',
       ],
-      safetyNotes: ['No universal Δp exchange threshold is encoded.'],
+      safetyNotes: ['No universal Δp exchange threshold is set here.'],
     },
     evidenceIds: [
       'elso-circuit-2022',
@@ -1875,22 +1913,24 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'va',
     title: 'VA circuit air with emergency arterial isolation',
     summary:
-      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Isolate, de-air, then resume per protocol.',
+      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Isolate, de-air, then resume support per the current IFU and approved local protocol.',
     clinicalPhase: 'maintenance',
     clinicalCase: {
       kind: 'complication',
       sourceCase:
         'New emergency case synthesized from the attached curriculum and ELSO circuit guidance',
       setting: 'Cardiac ICU · peripheral VA support, connector loosened during repositioning',
+      presentationTitle:
+        'Bubble alarm and pump stop after a drainage connector loosens during repositioning on VA',
       patientLabel: 'VA patient with circuit air, pump stop, and interrupted circulatory support',
       openingNarrative:
         'A drainage-limb connector loosens during repositioning and entrains air. The bubble intervention stops the pump, interrupting VA circulatory support with visible air in the circuit.',
       decisionPrompt:
-        'Isolate the arterial circulation, support the patient conventionally, correct and clear the air, then re-establish VA support in the correct order.',
+        'Isolate the arterial circulation, support the patient conventionally, correct and clear the air, then resume VA support per the current IFU and approved local protocol.',
       learningObjectives: [
-        'Recognize VA circuit air as a direct arterial embolic threat and an immediate loss of circulatory support.',
-        'Clamp the arterial return limb first to isolate the patient before de-airing the circuit.',
-        'Resume VA support with ordered unclamping and reassess perfusion, right-arm oxygenation, and the circuit.',
+        'Decide from a bubble alarm with the pump stopped and both lines still open whether the stop itself has already made the bedside safe or has only paused a flow that was carrying the circulation.',
+        'Decide, before anything is opened or restarted, in what order the two lines and the air source have to be dealt with on a VA run, and what must be true of the tubing before flow is allowed back.',
+        'Decide what this simulation stands for and what it leaves out: it shows why the tubing must be clear before flow comes back, and it leaves how VA flow is resumed to the current IFU and approved local protocol.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1961,7 +2001,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Resume support per current IFU and approved local protocol',
           category: 'circuit',
           description:
-            'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This bounded simulation action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+            'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s approved ECMO air-emergency protocol. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
           effect: 'definitive',
           response:
             'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
@@ -2020,7 +2060,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     assessmentPolicy: { minimumObservationSeconds: 3 },
     debrief: {
       diagnosis:
-        'VA circuit air embolism managed by arterial isolation, de-airing, and protocol-governed resumption',
+        'Air entrained into the VA circuit with an automatic pump stop and a live risk of arterial air reaching the patient',
       causalChain: [
         'A loosened drainage connector entrains air and triggers the bubble intervention with a pump stop.',
         'On VA support, circuit air in the return limb threatens the arterial circulation directly.',

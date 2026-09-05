@@ -1,9 +1,6 @@
 import type { EcmoSimulationState, SupportMode } from '../engine/types'
 import {
-  ecmoBloodPathSegments,
   ecmoCircuitSegment,
-  ecmoGasPathSegments,
-  ecmoSensorSite,
   ecmoSensorSites,
   resolveEcmoModeText,
   type EcmoCircuitSegmentId,
@@ -63,13 +60,6 @@ export type EcmoCircuitPresentation =
       readonly stopId: string
       readonly segmentIds: readonly EcmoCircuitSegmentId[]
       readonly sensorSiteIds: readonly EcmoSensorSiteId[]
-      /**
-       * True when the stop reports readings but the walk is withholding their names until the
-       * learner commits the prediction. Without this the map's text equivalent said "no reading is
-       * taken at this place" about a place that does take readings — a false sentence produced by
-       * a true gate. The map draws the same either way; only the prose differs.
-       */
-      readonly readingsWithheld?: boolean
     }
 
 export type EcmoCircuitPresentationContext =
@@ -97,8 +87,6 @@ export type EcmoCircuitPresentationContext =
       readonly stopId: string
       readonly segmentIds: readonly EcmoCircuitSegmentId[]
       readonly sensorSiteIds: readonly EcmoSensorSiteId[]
-      /** See the presentation field of the same name. */
-      readonly readingsWithheld?: boolean
     }
 
 export function deriveEcmoCircuitPresentation(
@@ -116,7 +104,6 @@ export function deriveEcmoCircuitPresentation(
         stopId: context.stopId,
         segmentIds: context.segmentIds,
         sensorSiteIds: context.sensorSiteIds,
-        readingsWithheld: context.readingsWithheld,
       }
     case 'drill-reveal':
       return state.scenario.prediction.committed
@@ -237,56 +224,4 @@ export function ecmoMapWalkStopCaption(
   const list =
     names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`
   return `You are here: ${list}.`
-}
-
-/**
- * The map in prose, complete enough to replace looking at it.
- *
- * Order, both paths, the return the track actually uses, every flagged site with the name its
- * console prints, and — when the map is implicating something — the same sentence the caption
- * shows. A learner who never sees the picture should be able to answer the same questions from
- * this paragraph.
- */
-export function ecmoCircuitMapTextEquivalent(
-  supportMode: SupportMode,
-  presentation: EcmoCircuitPresentation,
-): string {
-  const bloodOrder = [
-    resolveEcmoModeText(ecmoCircuitSegment('patient').label, supportMode),
-    ...ecmoBloodPathSegments().map((segment) => resolveEcmoModeText(segment.label, supportMode)),
-    resolveEcmoModeText(ecmoCircuitSegment('patient').label, supportMode),
-  ].join(' → ')
-
-  const gasOrder = ecmoGasPathSegments()
-    .map((segment) => resolveEcmoModeText(segment.label, supportMode))
-    .join(' → ')
-
-  const sites = ecmoMapSensorSiteIds(presentation)
-    .map((siteId) => {
-      const site = ecmoSensorSite(siteId)
-      return `${site.plainName} (${site.deviceLabel}) at ${site.measuredAt.toLowerCase()}`
-    })
-    .join('; ')
-
-  const sentences = [
-    `A schematic of this circuit. The blood path is drawn as a solid line and runs ${bloodOrder}.`,
-    `The sweep-gas path is drawn dashed and runs ${gasOrder}, leaving as exhaust. It never joins the blood path, and no pressure channel sits in it.`,
-    // A walk stop can flag nothing for two different reasons, and they get different sentences: a
-    // place that reports no channel of its own (the pump), or readings the walk is withholding
-    // until the prediction is committed. The first version said "no reading is taken at this
-    // place" for both, which was false at every reporting stop before the commitment.
-    sites.length > 0
-      ? `Flagged on the map: ${sites}.`
-      : presentation.kind === 'walk-stop' && presentation.readingsWithheld
-        ? 'Nothing on the map is flagged yet: the readings taken here are named once you have committed your prediction.'
-        : 'Nothing on the map is flagged at this stop: no reading is taken at this place.',
-  ]
-
-  const walkCaption = ecmoMapWalkStopCaption(presentation, supportMode)
-  if (walkCaption) sentences.push(walkCaption)
-
-  const caption = ecmoMapImplicatedCaption(presentation, supportMode)
-  if (caption) sentences.push(caption)
-
-  return sentences.join(' ')
 }

@@ -71,8 +71,11 @@ function primaryCtaHref(container: HTMLElement): string | null {
   return container.querySelector('[data-ecmo-continue]')?.getAttribute('href') ?? null
 }
 
+/** The tertiary link to the pathway page, shown once the map is browsed; it carries the track. */
 function browseHref(): string | null {
-  return screen.getByRole('link', { name: /^Browse all \d+ sections$/ }).getAttribute('href')
+  const toggle = screen.getByRole('button', { name: /^Browse all \d+ sections$/ })
+  if (toggle.getAttribute('aria-expanded') !== 'true') fireEvent.click(toggle)
+  return screen.getByRole('link', { name: /Open the pathway page/ }).getAttribute('href')
 }
 
 function trackOf(href: string | null): string | null {

@@ -28,7 +28,7 @@
  * different content either side of it. A leak would appear here as mechanism text in a cell labelled
  * "before commitment".
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { createElement } from 'react'
@@ -78,11 +78,12 @@ import {
   ecmoDrillTeachingPanelScenarioIds,
 } from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoDrillTeachingPanel.tsx'
 import { requireEcmoLearnPrediction } from '../../src/features/cardiohelp-ecmo/content/learnPredictionItems.ts'
-import {
-  EcmoCircuitMinimap,
-  type EcmoCircuitMinimapLayoutId,
-} from '../../src/features/cardiohelp-ecmo/components/teaching/EcmoCircuitMinimap.tsx'
+import { CircuitSchematic } from '../../src/features/cardiohelp-ecmo/components/CircuitAndMonitors.tsx'
 import type { EcmoCircuitPresentation } from '../../src/features/cardiohelp-ecmo/content/circuitPresentation.ts'
+import {
+  ecmoCircuitWalkStops,
+  ecmoWalkStopSegmentIds,
+} from '../../src/features/cardiohelp-ecmo/content/circuitWalk.ts'
 import { ecmoLocalizationRowIds } from '../../src/features/cardiohelp-ecmo/content/localizationCards.ts'
 
 function advance(state: EcmoSimulationState, seconds: number): EcmoSimulationState {
@@ -640,8 +641,19 @@ const foundationCount = ecmoInteractiveFoundationSectionIds.length
  */
 const MAP_STATES: readonly (readonly [string, SupportMode, EcmoCircuitPresentation])[] = [
   ['neutral — before a commitment', 'vv', { kind: 'neutral' }],
-  ['scaffold · the circuit walk', 'vv', { kind: 'scaffold', emphasis: 'path-order' }],
-  ['scaffold · the console tour', 'vv', { kind: 'scaffold', emphasis: 'sensor-sites' }],
+  ...ecmoCircuitWalkStops.map(
+    (stop) =>
+      [
+        `walk stop · ${stop.id}`,
+        'vv',
+        {
+          kind: 'walk-stop',
+          stopId: stop.id,
+          segmentIds: ecmoWalkStopSegmentIds(stop),
+          sensorSiteIds: stop.sensorSiteIds,
+        },
+      ] as const,
+  ),
   ...ecmoLocalizationRowIds.map(
     (rowId) =>
       [
@@ -655,28 +667,49 @@ const MAP_STATES: readonly (readonly [string, SupportMode, EcmoCircuitPresentati
   ),
 ]
 
-const MAP_LAYOUTS: readonly (readonly [EcmoCircuitMinimapLayoutId, number])[] = [
-  ['compact', 280],
-  ['regular', 480],
-]
+/*
+ * The pressure-zone map, marked. Rendered the way the lesson stage renders it — the whole drawing
+ * fitted to its pane — at the width the stage gives it on a 1440px screen and at the pane's floor. The map's own stylesheet is not loaded here, so the halos are drawn from
+ * the attributes alone; what this page reviews is that every state marks the right places, at a
+ * size a learner can read, with the caption and the description saying the same thing.
+ */
+const MAP_WIDTHS: readonly number[] = [547, 340]
 
-const maps = MAP_LAYOUTS.map(
-  ([
-    layout,
-    width,
-  ]) => `<h2>Circuit map — ${layout} geometry <span class="scope">at a ${width}px pane</span></h2>
+const maps = MAP_WIDTHS.map(
+  (width) => `<h2>Circuit map, marked <span class="scope">fitted to a ${width}px pane</span></h2>
 <div class="matrix-drill">
 ${MAP_STATES.map(
   ([label, supportMode, presentation]) =>
     `<div class="cell" style="width:${width}px"><p class="cell-label">${label} · ${supportMode}</p>${renderToStaticMarkup(
-      createElement(EcmoCircuitMinimap, { supportMode, presentation, layout }),
+      createElement(CircuitSchematic, {
+        state: settled(supportMode === 'va' ? 'va-reference' : 'vv-reference'),
+        dispatch: () => {},
+        controlsEnabled: false,
+        circuitPresentation: presentation,
+        circuitFit: 'pane',
+        // The marking lives in the map tab; without the preference the static markup would show
+        // the bedside gate in front of it.
+        circuitViewPreference: { view: 'diagnostic', stepId: 'harness' },
+      }),
     )}</div>`,
 ).join('\n')}
 </div>`,
 ).join('\n')
 
+/*
+ * The map's own stylesheet, inlined. Every line, halo and label on the pressure-zone map is styled
+ * by class; without the sheet the page showed black fills where the halos should be. esbuild
+ * writes the bundled module CSS beside the bundle it produced this script from, with the same
+ * hashed class names the markup carries.
+ */
+const bundledCssPath = join(process.cwd(), 'node_modules/.cache/ecmo/render.css')
+const bundledCss = existsSync(bundledCssPath) ? readFileSync(bundledCssPath, 'utf8') : ''
+
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>ECMO teaching panels — foundation and drill</title>
+<style>
+${bundledCss}
+</style>
 <style>
   :root { color-scheme: light; }
   body { margin: 0; padding: 24px; font: 14px/1.5 system-ui, sans-serif; background: #f6f7f9; color: #111; }
@@ -724,13 +757,6 @@ const html = `<!doctype html>
   .max-w-\\[30rem\\] { max-width: 30rem; }
   .max-w-\\[18rem\\] { max-width: 18rem; }
   .leading-5 { line-height: 1.25rem; }
-  /*
-   * The circuit minimap draws itself entirely from presentation attributes and \`currentColor\`,
-   * which is what lets it appear in this stylesheet-free harness at all. The only thing it needs
-   * from CSS is its size, so a missing rule here shows up as a diagram at its intrinsic width
-   * rather than as a diagram in the wrong colours.
-   */
-  [data-circuit-minimap] svg { display: block; }
   [data-reference-kind] { display: inline-block; border: 1px solid #999; border-radius: 999px; padding: 1px 8px; font-size: 10px; }
   [data-model-boundary], [data-cell-limitation] { background: #fffbe6; }
   [data-hypothesis-matrix] td, [data-hypothesis-matrix] th { border-bottom: 1px solid #eee; }
@@ -748,8 +774,8 @@ const html = `<!doctype html>
 <h1>Drill panels — B4 pilot slice (${drillCount} panels, ${renderedDrillCells} states, ${PANE_WIDTHS.length} widths each)</h1>
 ${drills}
 
-<h1>Circuit map — both geometries (${MAP_STATES.length} states each)</h1>
-<p>The compact geometry is what a 280px teaching pane gets. Check that no label is smaller than the body text around it, that nothing overlaps, and that the implicated ticks and outline read without colour.</p>
+<h1>Circuit map, marked (${MAP_STATES.length} states at each width)</h1>
+<p>The pressure-zone map as the lesson stage renders it, the whole drawing fitted to its pane: every walk stop and every implicated row, at the width a 1440px screen gives the simulator pane and at the pane's floor. Check that each state marks the right places, that the halo sits on the thing it names and clears the labels beside it, and that the caption above the map and the description behind it say the same thing.</p>
 ${maps}
 
 <h1>Foundation panels (${foundationCount} sections, ${renderedCells} states)</h1>

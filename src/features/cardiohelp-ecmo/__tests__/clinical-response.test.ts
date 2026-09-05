@@ -112,6 +112,9 @@ describe('CARDIOHELP clinical Practice response engine', () => {
     expect(state.scenario.activeFaults).not.toContain('hemorrhagic-hypovolemia')
     expect(state.scenario.correctedFaults).toContain('hemorrhagic-hypovolemia')
     expect(state.scenario.clinical?.trajectory).toBe('improving')
+    // B6-012 (R4 I6): the patient's authored response lands with the next second, not at the
+    // instant the card is pressed.
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
     expect(state.patient.meanArterialPressure).toBeGreaterThanOrEqual(65)
     expect(state.patient.centralVenousPressure).toBeGreaterThanOrEqual(7)
     expect(state.circuit.drainageChatter).toBe(false)
@@ -170,6 +173,9 @@ describe('CARDIOHELP clinical Practice response engine', () => {
     expect(state.scenario.activeFaults).not.toContain('tension-pneumothorax')
     expect(state.scenario.correctedFaults).toContain('tension-pneumothorax')
     expect(state.scenario.clinical?.trajectory).toBe('improving')
+    // B6-012 (R4 I6): decompression is recorded at once; the lung re-expands on the next second.
+    expect(state.patient.lungSliding).toBe('absent-right')
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
     expect(state.patient.lungSliding).toBe('bilateral')
     expect(state.patient.airwayPressure).toBeLessThanOrEqual(25)
     expect(state.patient.centralVenousPressure).toBeLessThanOrEqual(10)
@@ -194,11 +200,15 @@ describe('CARDIOHELP clinical Practice response engine', () => {
 
   it('penalizes blind RPM escalation during recirculation without resolving the cause', () => {
     let state = commitExpectedPrediction('clinical-vv-recirculation-migration')
+    const spo2Before = state.patient.spo2
 
     state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 3900 })
 
     expect(state.device.rpmSetpoint).toBe(3900)
-    expect(state.patient.spo2).toBe(74)
+    // B6-012 (R4 I6): at the instant of the action the patient is unchanged; the harm shows on the
+    // clock, where the wider recirculating share costs saturation.
+    expect(state.patient.spo2).toBe(spo2Before)
+    expect(ecmoSimulationReducer(state, { type: 'STEP' }).patient.spo2).toBeLessThan(spo2Before)
     expect(state.scenario.activeFaults).toContain('recirculation')
     expect(state.scenario.correctedFaults).not.toContain('recirculation')
     expect(state.scenario.clinical?.trajectory).toBe('deteriorating')
