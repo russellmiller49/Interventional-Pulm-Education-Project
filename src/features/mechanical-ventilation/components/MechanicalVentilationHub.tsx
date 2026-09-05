@@ -141,7 +141,7 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
               the emptying — and a breath map keeps you oriented in every section.
             </li>
             <li>
-              <strong>Five knobs</strong>
+              <strong>Five controls</strong>
               {VENTILATION_CONTROL_PANEL.sentence} {VENTILATION_CONTROL_PANEL.monitoringSentence}
             </li>
             <li>

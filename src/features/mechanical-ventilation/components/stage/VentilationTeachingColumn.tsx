@@ -14,12 +14,14 @@ import {
   hasVentilationTeachingPanel,
 } from '../MechanicalVentilationTeachingPanel'
 import { VentilationProtectionReference } from '../VentilationLearningVisuals'
+import { VentilationStoryProblems } from './VentilationStoryProblems'
+import { ventilationStoryProblemsFor } from '../../content/storyProblems'
 import styles from './ventilation-stage.module.css'
 
 const KNOB_STATE_LABEL = {
-  this: 'This knob',
-  'not-this': 'Not this knob',
-  'no-knob': 'No knob',
+  this: 'This control',
+  'not-this': 'Not this control',
+  'no-knob': 'No control',
 } as const
 
 /**
@@ -229,7 +231,7 @@ export function VentilationTeachingColumn({
 
       <StageBlock
         kind="after-commitment"
-        heading="Which knob, if any"
+        heading="Which control, if any"
         visibility={revealVisibility}
       >
         <section className={styles.block} data-teaching-block="knob-strip">
@@ -266,6 +268,16 @@ export function VentilationTeachingColumn({
             <p className={styles.kicker}>Computed from the running patient</p>
             <MechanicalVentilationTeachingPanel lessonId={lesson.panelId} state={state} />
           </section>
+        </StageBlock>
+      ) : null}
+
+      {ventilationStoryProblemsFor(unit.id).length > 0 ? (
+        <StageBlock
+          kind="after-commitment"
+          heading="Two story problems"
+          visibility={revealVisibility}
+        >
+          <VentilationStoryProblems unitId={unit.id} />
         </StageBlock>
       ) : null}
 

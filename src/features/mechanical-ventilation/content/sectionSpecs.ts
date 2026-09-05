@@ -144,7 +144,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     stops: ['inspiration'],
     knobStrip: strip({
       mode: noKnob(
-        'No knob reaches this finding. The peak rose because the load changed; find the load.',
+        'No control reaches this finding. The peak rose because the load changed; find the load.',
       ),
       'breath-size': {
         state: 'not-this',
@@ -206,7 +206,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     stops: ['expiration'],
     knobStrip: strip({
       rate: thisKnob(
-        'The setting this section changes — and the one that made emptying harder. Fewer breaths give each expiration more time.',
+        'The setting this section changes, and the one that made emptying harder. Fewer breaths give each expiration more time.',
       ),
     }),
     shapingNote:
@@ -310,7 +310,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     stops: ['trigger', 'inspiration'],
     knobStrip: strip({
       mode: noKnob(
-        'No knob answers this one. The extra breaths come from the circuit, and the circuit is checked at the bedside.',
+        'No control answers this one. The extra breaths come from the circuit, and the circuit is checked at the bedside.',
       ),
     }),
     precommitDenyPatterns: [/fewer extra machine breaths/i, /circuit leak/i],
@@ -354,7 +354,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'This awake patient is distressed. Open the patient and circuit findings under the console and read them before touching any setting.',
     stops: [],
     knobStrip: strip({
-      mode: noKnob('No knob comes first here. The patient’s account and a reversible cause do.'),
+      mode: noKnob('No control comes first here. The patient’s account and a reversible cause do.'),
     }),
     precommitDenyPatterns: [
       /ask what is making breathing difficult/i,
@@ -374,7 +374,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     stops: ['inspiration', 'expiration'],
     knobStrip: strip({
       mode: noKnob(
-        'Measure before touching a knob. The hold tells you which load rose; the knob, if any, follows from that.',
+        'Measure before touching a control. The hold tells you which load rose; the control, if any, follows from that.',
       ),
     }),
     precommitDenyPatterns: [

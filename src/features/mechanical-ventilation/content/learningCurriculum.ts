@@ -109,7 +109,7 @@ const textbook = ['tobin-3e-setting-ventilator', 'tobin-3e-monitoring']
 const mechanics = ['tobin-3e-monitoring', 'tobin-3e-fighting-ventilator']
 const interaction = ['antonogiannaki-dyssynchrony-2017', 'tobin-3e-fighting-ventilator']
 const constructed =
-  'This is an authored teaching example. It teaches a relationship, not a setting for a real patient.'
+  'This is a teaching example set for this simulation. It teaches a relationship, not a setting for a real patient.'
 
 export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
@@ -509,7 +509,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
         'Choose the mechanism and then the reassessment, rather than a single number to chase.',
     },
     boundary:
-      'The simulator uses a bounded delayed gas-exchange response. Its clock is not a bedside blood-gas sampling schedule.',
+      'The simulator uses a simplified, delayed gas-exchange response. Its clock is not a bedside blood-gas sampling schedule.',
     evidenceIds: ['tobin-3e-setting-ventilator', 'tobin-3e-copd'],
     caseIds: ['MV-05', 'MV-06'],
     visual: 'existing',

@@ -187,7 +187,7 @@ const earlierCycle = round({
   seconds: 25,
   watch: ['ti', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
-    'The setting must cross the point where flow cycling, rather than the time cap, ends this breath. The response belongs to this authored patient; the cycle-off value used here is an authored comparison setting, not a universal prescription.',
+    'The setting must cross the point where flow cycling, rather than the time cap, ends this breath. The response belongs to this patient; the cycle-off value used here is set for this comparison, not a universal prescription.',
 })
 const flow = round({
   title: 'Move the gas faster',
@@ -356,7 +356,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'Reduce the size of the breath',
         setup: [set('vtMl', 600)],
         introduction:
-          'This authored passive adult has a predicted body weight of 70 kg. Compare breath size and pressure together.',
+          'This passive adult, set for this simulation, has a predicted body weight of 70 kg. Compare breath size and pressure together.',
         look: 'Read delivered volume relative to predicted body weight, then measure pressure during a hold.',
         prompt:
           'What should reducing volume at the same compliance do to the elastic pressure requirement?',
@@ -371,7 +371,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Elastic pressure depends on the delivered volume as well as compliance.',
           'A smaller passive volume requires less elastic pressure. Gas exchange still needs separate follow-up.',
         ],
-        task: 'Reduce volume to 420 mL, then perform an inspiratory hold. These values are authored for the comparison.',
+        task: 'Reduce volume to 420 mL, then perform an inspiratory hold. These values are set for this comparison.',
         goals: [c('vtMl', 420), hold],
         watch: ['volume', 'plateau', 'co2'],
         explanation:
@@ -412,7 +412,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         seconds: 20,
         watch: ['missed', 'rate', 'effort'],
         explanation:
-          'The useful result is capture without false triggering. The number is an authored experiment setting; assess the pattern after every adjustment.',
+          'The useful result is capture without false triggering. The number is set for this comparison; assess the pattern after every adjustment.',
       }),
       round({
         title: 'Help support last through inspiration',
@@ -449,7 +449,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'Test a pressure change in the original patient',
         caseId: 'MV-01',
         introduction:
-          'This patient is hypoxemic on a lung-protective volume breath. Make one bounded change and watch more than the saturation.',
+          'This patient is hypoxemic on a lung-protective volume breath. Make one small change and watch more than the saturation.',
         look: 'Keep SpO₂, airway pressure, and MAP together.',
         prompt:
           'Which response would make an oxygenation improvement incomplete evidence of benefit?',
@@ -469,7 +469,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         seconds: 45,
         watch: ['spo2', 'map', 'peak', 'volume'],
         explanation:
-          'This authored patient has a recruitment window. Compare the actual benefit and pressure/circulatory cost, then carry that tradeoff to the next patient.',
+          'This patient has aerated lung to gain. Compare the actual benefit and the pressure and circulatory cost, then carry that tradeoff to the next patient.',
       }),
       oxygen,
     ],
@@ -548,7 +548,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Look for fewer unsupported machine triggers and a rate closer to actual patient effort.',
           'Higher pressure does not by itself identify the triggering source.',
         ],
-        task: 'Inspect the circuit, then clear the observed condensate in this authored branch. Compare the rate.',
+        task: 'Inspect the circuit, then clear the observed condensate. Compare the rate.',
         goals: [action('inspect-circuit'), action('drain-condensate')],
         seconds: 25,
         watch: ['rate', 'effort', 'volume'],
@@ -632,7 +632,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
       round({
         title: 'Reassess a reversible contributor',
         caseId: 'MV-15',
-        introduction: 'Now address the documented pain in the same authored case.',
+        introduction: 'Now address the documented pain in the same patient.',
         look: 'Observe pain, dyspnea, and respiratory effort over time.',
         prompt: 'Which evidence best tests whether the modeled comfort intervention helped?',
         choices: [
@@ -651,7 +651,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         seconds: 150,
         watch: ['pain', 'dyspnea', 'effort', 'rate'],
         explanation:
-          'This is a bounded comfort response. In clinical care, treatment selection and dosing require current local guidance and supervision.',
+          'This is a simplified comfort response. In clinical care, treatment selection and dosing require current local guidance and supervision.',
       }),
     ],
   },

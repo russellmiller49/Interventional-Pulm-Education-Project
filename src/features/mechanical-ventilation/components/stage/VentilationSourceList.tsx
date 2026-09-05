@@ -11,7 +11,7 @@ const CLASS_LABEL: Readonly<Record<VentilationEvidenceReference['sourceClass'], 
   curriculum: 'Supplied curriculum',
   guideline: 'Clinical guideline',
   'clinical-reference': 'Clinical reference',
-  'educational-model': 'Authored teaching model',
+  'educational-model': 'Teaching model set for this simulation',
 }
 
 /**
