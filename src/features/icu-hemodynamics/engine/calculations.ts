@@ -7,6 +7,7 @@ import type {
   ValidityResult,
 } from './types'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
+import { requireDerivedMetric, type DerivedMetricId } from '../content/derivedMetrics'
 
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value))
@@ -88,6 +89,11 @@ export function checkFluidResponsivenessValidity(
   })
 }
 
+/** The canonical calculation for one metric, applied to already-validated inputs. */
+function calc(metricId: DerivedMetricId, inputs: Readonly<Record<string, number>>): number {
+  return requireDerivedMetric(metricId).calculate(inputs)
+}
+
 export function calculateDerivedHemodynamics(input: DerivedHemodynamicsInput): DerivedHemodynamics {
   const measurements = input.measurements
   const staleReason = input.inputsStale ? 'One or more source measurements are stale.' : null
@@ -103,14 +109,21 @@ export function calculateDerivedHemodynamics(input: DerivedHemodynamicsInput): D
 
   const cardiacIndexLMinM2 =
     finitePositive(co) && finitePositive(bsa)
-      ? available(co / bsa, 'L/min/m²', 1)
+      ? available(
+          calc('cardiacIndexLMinM2', { cardiacOutputLMin: co, bodySurfaceAreaM2: bsa }),
+          'L/min/m²',
+          1,
+        )
       : unavailable(
           'L/min/m²',
           staleReason ??
             'A current positive cardiac output and valid body-surface area are required.',
         )
   const flowReason = staleReason ?? 'A current positive cardiac output and heart rate are required.'
-  const sv = finitePositive(co) && finitePositive(hr) ? (co * 1000) / hr : null
+  const sv =
+    finitePositive(co) && finitePositive(hr)
+      ? calc('strokeVolumeMl', { cardiacOutputLMin: co, heartRateBpm: hr })
+      : null
   const strokeVolumeMl = sv === null ? unavailable('mL', flowReason) : available(sv, 'mL', 0)
   const strokeVolumeIndexMlM2 =
     sv === null || !finitePositive(bsa)
@@ -118,57 +131,108 @@ export function calculateDerivedHemodynamics(input: DerivedHemodynamicsInput): D
           'mL/m²',
           staleReason ?? 'Stroke volume and a valid body-surface area are required.',
         )
-      : available(sv / bsa, 'mL/m²', 0)
+      : available(
+          calc('strokeVolumeIndexMlM2', { strokeVolumeMl: sv, bodySurfaceAreaM2: bsa }),
+          'mL/m²',
+          0,
+        )
 
+  /**
+   * A gradient at or below zero is not treated as a missing input: the two pressures disagree, and
+   * the reason says so instead of implying a value was absent. Nothing is clamped.
+   */
+  const svrDiscordant = finitePositive(co) && finite(map) && finite(rap) && map <= rap
   const svr =
-    finitePositive(co) && finite(map) && finite(rap) && map > rap ? (80 * (map - rap)) / co : null
+    finitePositive(co) && finite(map) && finite(rap) && map > rap
+      ? calc('systemicVascularResistance', { mapMmHg: map, rapMmHg: rap, cardiacOutputLMin: co })
+      : null
   const systemicVascularResistance =
     svr === null
       ? unavailable(
           'dyn·s·cm⁻⁵',
-          staleReason ?? 'Current MAP, RAP, and positive cardiac output are required.',
+          staleReason ??
+            (svrDiscordant
+              ? `MAP (${map} mmHg) does not exceed RAP (${rap} mmHg). The gradient is zero or negative — a measurement conflict to reconcile, not a resistance to report.`
+              : 'Current MAP, RAP, and positive cardiac output are required.'),
         )
       : available(svr, 'dyn·s·cm⁻⁵', 0)
   const systemicVascularResistanceIndex =
     svr === null || !finitePositive(bsa)
       ? unavailable(
           'dyn·s·cm⁻⁵·m²',
-          staleReason ?? 'SVR and a valid body-surface area are required.',
+          staleReason ??
+            (svrDiscordant
+              ? 'SVR is withheld for a discordant MAP − RAP gradient, so its index is withheld with it.'
+              : 'SVR and a valid body-surface area are required.'),
         )
       : available(svr * bsa, 'dyn·s·cm⁻⁵·m²', 0)
 
+  const pvrDiscordant = finitePositive(co) && finite(meanPap) && finite(pawp) && meanPap <= pawp
   const pvr =
     finitePositive(co) && finite(meanPap) && finite(pawp) && meanPap > pawp
-      ? (meanPap - pawp) / co
+      ? calc('pulmonaryVascularResistance', {
+          meanPapMmHg: meanPap,
+          pawpMeanMmHg: pawp,
+          cardiacOutputLMin: co,
+        })
       : null
   const pulmonaryVascularResistance =
     pvr === null
       ? unavailable(
           'WU',
-          staleReason ?? 'A valid PAWP, mean PAP, and positive cardiac output are required.',
+          staleReason ??
+            (pvrDiscordant
+              ? `Mean PAP (${meanPap} mmHg) does not exceed PAWP (${pawp} mmHg). The transpulmonary gradient is zero or negative — evidence the two measurements disagree, preserved rather than clamped.`
+              : 'A valid PAWP, mean PAP, and positive cardiac output are required.'),
         )
       : available(pvr, 'WU', 1)
   const pulmonaryVascularResistanceIndex =
     pvr === null || !finitePositive(bsa)
-      ? unavailable('WU·m²', staleReason ?? 'PVR and a valid body-surface area are required.')
+      ? unavailable(
+          'WU·m²',
+          staleReason ??
+            (pvrDiscordant
+              ? 'PVR is withheld for a discordant mPAP − PAWP gradient, so its index is withheld with it.'
+              : 'PVR and a valid body-surface area are required.'),
+        )
       : available(pvr * bsa, 'WU·m²', 1)
 
   const cardiacPowerOutputW =
     finitePositive(co) && finitePositive(map)
-      ? available((map * co) / 451, 'W', 2)
+      ? available(calc('cardiacPowerOutputW', { mapMmHg: map, cardiacOutputLMin: co }), 'W', 2)
       : unavailable('W', staleReason ?? 'Current MAP and positive cardiac output are required.')
 
   const papPulse = finite(pasp) && finite(padp) ? pasp - padp : null
+  const papiDenominatorProblem = papPulse !== null && papPulse > 0 && finite(rap) && rap <= 0
   const pulmonaryArteryPulsatilityIndex =
     papPulse !== null && papPulse > 0 && finitePositive(rap)
-      ? available(papPulse / rap, '', 2)
+      ? available(
+          calc('pulmonaryArteryPulsatilityIndex', {
+            papSystolicMmHg: pasp as number,
+            papDiastolicMmHg: padp as number,
+            rapMmHg: rap,
+          }),
+          '',
+          2,
+        )
       : unavailable(
           '',
-          staleReason ?? 'Valid systolic/diastolic PAP and positive RAP are required.',
+          staleReason ??
+            (papiDenominatorProblem
+              ? `RAP is ${rap} mmHg. The PAPi denominator is zero or negative, so the ratio is undefined rather than extreme — no number is shown.`
+              : 'Valid systolic/diastolic PAP and positive RAP are required.'),
         )
   const pulmonaryArteryCompliance =
     sv !== null && papPulse !== null && papPulse > 0
-      ? available(sv / papPulse, 'mL/mmHg', 1)
+      ? available(
+          calc('pulmonaryArteryCompliance', {
+            strokeVolumeMl: sv,
+            papSystolicMmHg: pasp as number,
+            papDiastolicMmHg: padp as number,
+          }),
+          'mL/mmHg',
+          1,
+        )
       : unavailable(
           'mL/mmHg',
           staleReason ?? 'Stroke volume and a valid PA pulse pressure are required.',
@@ -191,7 +255,14 @@ export function calculateDerivedHemodynamics(input: DerivedHemodynamicsInput): D
               ? ppvValidity.reasons.join(' ')
               : 'Valid maximum and minimum pulse pressures are required.'),
         )
-      : available((100 * (ppMax - ppMin)) / meanPulse, '%', 0)
+      : available(
+          calc('pulsePressureVariationPercent', {
+            pulsePressureMaxMmHg: ppMax,
+            pulsePressureMinMmHg: ppMin,
+          }),
+          '%',
+          0,
+        )
 
   return {
     cardiacIndexLMinM2,
