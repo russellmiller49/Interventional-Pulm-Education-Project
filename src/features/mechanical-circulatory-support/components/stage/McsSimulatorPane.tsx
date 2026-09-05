@@ -168,7 +168,18 @@ export function McsSimulatorPane({
                 </button>
               </h3>
               <div id={panelId} className={styles.surfaceBody} hidden={!open}>
-                {surfaceBody(surface)}
+                {/*
+                  Two surfaces are not in the document until they are needed. The three-dimensional
+                  view is heavy and behind its own launch gate. The controls carry labels that name
+                  what a section asks the learner to predict — a pattern's own toggle, a placement
+                  state — so they are mounted only once the prediction is committed, and stay mounted
+                  after that so their ids hold while the learner opens and closes them.
+                */}
+                {surface === 'anatomy' && !open
+                  ? null
+                  : surface === 'controls' && !predictionCommitted
+                    ? null
+                    : surfaceBody(surface)}
               </div>
             </section>
           )

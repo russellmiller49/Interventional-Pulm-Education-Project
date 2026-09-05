@@ -7,6 +7,8 @@
  *
  * jsdom has no layout, so the mobile assertions are about semantics — `aria-pressed`, the surface's
  * visibility flag, and where focus lands — never about pixels.
+ *
+ * The workbench hosts Practice and Challenge; the Learn controls live on the lesson stage.
  */
 import { fireEvent, screen, within } from '@testing-library/react'
 
@@ -42,9 +44,6 @@ jest.mock('../components/ImpellaVariantPreview', () =>
 import { mcsPracticeScenarios } from '../content'
 import {
   advanceSimulation,
-  commitPredictionPhase,
-  completeRecognizePhase,
-  continueFromPhase,
   flushAnimationFrames,
   mockRouterPush,
   renderWorkbench,
@@ -224,23 +223,6 @@ describe('MCS M5 — IABP controls', () => {
       target: { value: '120' },
     })
     expect(metricTile('TIMING')).not.toBe(afterInflation)
-  })
-
-  it('highlights the one timing control a Learn section names, and no other', async () => {
-    const { container } = await renderWorkbench({
-      section: 'learn',
-      initialActivityId: 'iabp-timing-triggering',
-    })
-
-    // Walk to Act, where the section's control is presented.
-    completeRecognizePhase('iabp-timing-triggering')
-    continueFromPhase('recognize')
-    commitPredictionPhase('iabp-timing-triggering')
-    continueFromPhase('predict')
-
-    const highlighted = container.querySelectorAll('[data-mcs-control-highlighted="true"]')
-    expect(highlighted).toHaveLength(1)
-    expect(highlighted[0].getAttribute('data-mcs-control')).toBe('control:iabp-inflation')
   })
 
   it('closes the timing controls a case does not permit', async () => {
@@ -493,17 +475,6 @@ describe('MCS M5 — the synchronized monitor and anatomy surfaces', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
   })
 
-  it('offers the same way out of the Learn anatomy pane', async () => {
-    const width = window.innerWidth
-    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 800 })
-    await renderWorkbench({ section: 'learn', initialActivityId: 'impella-unloading-placement' })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save for later' }))
-
-    expect(mockRouterPush).toHaveBeenCalledWith('/mechanical-circulatory-support')
-    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
-  })
-
   it('states the alarm priority and the active alarm in text', async () => {
     await renderWorkbench({ section: 'practice' })
 
@@ -670,17 +641,6 @@ describe('MCS M5 — mobile surface semantics and phase focus', () => {
       'aria-pressed',
       'true',
     )
-  })
-
-  it('gives Learn the three-pane workspace instead of the four mobile surfaces', async () => {
-    await renderWorkbench({ section: 'learn' })
-
-    expect(
-      screen.queryByRole('group', { name: 'Choose mobile workspace surface' }),
-    ).not.toBeInTheDocument()
-    for (const pane of ['Live monitor panel', 'Teaching panel', 'Your turn panel']) {
-      expect(screen.getByRole('region', { name: pane })).toBeInTheDocument()
-    }
   })
 
   it('keeps every practice case reachable from the rail without a mobile surface change', async () => {

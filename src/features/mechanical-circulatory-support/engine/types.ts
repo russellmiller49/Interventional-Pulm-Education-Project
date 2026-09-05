@@ -347,3 +347,9 @@ export type McsAction =
   | { type: 'ESCALATE' }
   | { type: 'REASSESS' }
   | { type: 'COMPLETE' }
+  /**
+   * Forget which actions have been taken, and nothing else. A lesson's transfer patient is built
+   * with the same controls the learner is then asked to move, so the record of the build must not
+   * count as the learner's work. Learn-only; no scored surface dispatches it.
+   */
+  | { type: 'CLEAR_ACTION_LOG' }

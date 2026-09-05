@@ -132,33 +132,57 @@ export function ImpellaSuctionPurgeRvPanel({
 
   return (
     <div className={styles.panel} data-teaching-panel={contract.sectionId}>
-      <PanelSection title="Two pumps, in series, on one circulation" id="rv-pathways">
+      {/*
+        Where the right-sided pump returns its blood is this section's own identification, and
+        whether the two pump flows add is its prediction. Before the commitment the panel shows the
+        left-sided pathway that is in place and says a second pump is drawn on the map; the
+        right-sided pathway, the series relationship and the never-summed rule arrive with the
+        commitment.
+      */}
+      <PanelSection
+        title={
+          disclosed ? 'Two pumps, in series, on one circulation' : 'Two pumps on one circulation'
+        }
+        id="rv-pathways"
+      >
         <div className="grid gap-3">
-          <div data-pump-side="right">
-            <p className={styles.subheading}>Right-sided pump — a delivery to the lung</p>
-            <PathwayGraphic pathway={mcsComparisonPathways.impellaRight} />
-          </div>
+          {disclosed ? (
+            <div data-pump-side="right">
+              <p className={styles.subheading}>Right-sided pump — a delivery to the lung</p>
+              <PathwayGraphic pathway={mcsComparisonPathways.impellaRight} />
+            </div>
+          ) : (
+            <p className="text-xs leading-5" data-pump-side="right" data-withheld>
+              A right-sided pump can be started beside the left-sided one. Where it draws from and
+              where it returns are the question this section opens with; the map beside the monitor
+              is where it is answered.
+            </p>
+          )}
           <div data-pump-side="left">
             <p className={styles.subheading}>Left-sided pump — a delivery to the body</p>
             <PathwayGraphic pathway={mcsComparisonPathways.impellaLeft} />
           </div>
         </div>
-        <p className="mt-3 text-xs leading-5" data-serial-not-additive>
-          These pathways are in series. The right-sided pump delivers venous blood into the
-          pulmonary artery; that blood crosses the lungs, fills the left heart, and is then moved
-          onward by the left-sided pump. One stream, measured at two stages. Adding the two
-          displayed flows counts that blood twice, so they are never summed here — and the systemic
-          device-flow signal carries the left-sided pump only.
-        </p>
+        {disclosed ? (
+          <p className="mt-3 text-xs leading-5" data-serial-not-additive>
+            These pathways are in series. The right-sided pump delivers venous blood into the
+            pulmonary artery; that blood crosses the lungs, fills the left heart, and is then moved
+            onward by the left-sided pump. One stream, measured at two stages. Adding the two
+            displayed flows counts that blood twice, so they are never summed here — and the
+            systemic device-flow signal carries the left-sided pump only.
+          </p>
+        ) : null}
         <TextEquivalent>
-          {pathwaySentence(mcsComparisonPathways.impellaRight)}{' '}
-          {pathwaySentence(mcsComparisonPathways.impellaLeft)} The two are serial and their
-          displayed flows are never added.
+          {disclosed ? `${pathwaySentence(mcsComparisonPathways.impellaRight)} ` : ''}
+          {pathwaySentence(mcsComparisonPathways.impellaLeft)}
+          {disclosed ? ' The two are serial and their displayed flows are never added.' : ''}
         </TextEquivalent>
-        <FigureScope
-          establishes="Where each pump draws from, where each returns to, and why one of the two numbers has not reached the systemic circulation yet."
-          doesNotEstablish="Whether this patient needed a second pump. Biventricular support is a decision made with the responsible team, not a reading."
-        />
+        {disclosed ? (
+          <FigureScope
+            establishes="Where each pump draws from, where each returns to, and why one of the two numbers has not reached the systemic circulation yet."
+            doesNotEstablish="Whether this patient needed a second pump. Biventricular support is a decision made with the responsible team, not a reading."
+          />
+        ) : null}
       </PanelSection>
 
       <PanelSection title="The flow account, with the sides kept apart" id="rv-flow">
@@ -313,7 +337,7 @@ export function ImpellaSuctionPurgeRvPanel({
       </PanelSection>
 
       <PanelSection title="Active alarms" id="rv-alarms">
-        <AlarmBand alarms={alarms} />
+        <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
 
@@ -365,7 +389,7 @@ export function ImpellaSuctionPurgeRvPanel({
               />
             </div>
             <FlowAccount account={account} disclosed={disclosed} />
-            <AlarmBand alarms={alarms} />
+            <AlarmBand alarms={alarms} disclosed={disclosed} />
             <TextEquivalent>
               In the transfer patient preload is {reading(state.patient.preloadPercent, 0)} percent
               of reference, the left-sided performance level is {pump ? pump.leftLevel : '—'}, and

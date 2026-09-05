@@ -19,8 +19,6 @@ import {
   type McsSpineStopId,
 } from '../../content/supportSpine'
 import type { McsDerivedMetrics, McsSimulationState } from '../../engine/types'
-import { McsCommonModel } from '../McsCommonModel'
-import { McsSupportPathwayCards } from '../McsSupportPathwayCards'
 import { McsTeachingPanel } from '../teaching/McsTeachingPanel'
 import { mcsRevealStage } from '../teaching/revealStage'
 import styles from './mcs-stage.module.css'
@@ -82,9 +80,17 @@ export function McsTeachingColumn({
     : phase === 'act' || phase === 'observe' || explaining
       ? 'shown'
       : 'collapsed'
+  /*
+   * The stop cards are the walk's teaching, and a stop's own sentences can answer a later section's
+   * question about that place — the aorta stop says what the balloon does not do, which is the
+   * first section's prediction. So outside the walk they wait for the commitment, and fold.
+   */
   const stopsShown = walkStop ? [walkStop] : litStopIds.map((id) => mcsSpineStop(id))
-  const stopVisibility: StageBlockVisibility =
-    walkStop || phase === 'recognize' ? 'shown' : 'collapsed'
+  const stopVisibility: StageBlockVisibility = walkStop
+    ? 'shown'
+    : predictionCommitted
+      ? 'collapsed'
+      : 'hidden'
   const rows = mcsGrammarRowsFor(lesson.sectionId)
   const stripControls = mcsControlsForDevice(lesson.startingDevice).filter(
     (control) => spec.controlStrip[control.id] !== undefined,
@@ -214,9 +220,13 @@ export function McsTeachingColumn({
 
       {/* 6. The one table's rows for this section. */}
       {rows.length > 0 ? (
-        <StageBlock kind="after-commitment" heading="The one table" visibility={afterCommit}>
+        <StageBlock
+          kind="after-commitment"
+          heading="What moved, and where the constraint lives"
+          visibility={afterCommit}
+        >
           <section className={styles.block} data-teaching-block="grammar">
-            <h3>The one table: what moved, where the constraint lives</h3>
+            <h3>What moved, and where the constraint lives</h3>
             <p className={styles.kicker}>
               {rows.length === 1
                 ? 'The row this section highlights'
@@ -318,16 +328,6 @@ export function McsTeachingColumn({
           </p>
         </section>
       </StageBlock>
-
-      {/* 9. The common model, on the sections that build it, folded so it does not bury the step. */}
-      {spec.track === 'shared' && lesson.index < 2 ? (
-        <StageBlock kind="pattern" heading="The common model" visibility="collapsed">
-          <section className={styles.block} data-teaching-block="common-model">
-            <McsCommonModel state={state} />
-            {spec.walksTheLoop ? <McsSupportPathwayCards /> : null}
-          </section>
-        </StageBlock>
-      ) : null}
     </div>
   )
 }

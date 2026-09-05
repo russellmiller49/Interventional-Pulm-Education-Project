@@ -255,6 +255,9 @@ function McsStageSession({
     if (nextStep.interaction.kind === 'transfer' && !progression.transferLoaded) {
       dispatch({ type: 'OPEN_STUDIO', device: lesson.transfer.setupDevice })
       for (const action of lesson.transfer.setupActions) dispatch(action)
+      // The build is not the learner's work: a transfer patient set up with the very control the
+      // learner is then asked to move would otherwise arrive with that work already recorded.
+      dispatch({ type: 'CLEAR_ACTION_LOG' })
     }
     setProgression((current) => ({
       ...current,

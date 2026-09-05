@@ -59,7 +59,7 @@ export const MCS_DEVICE_INCREMENTS: readonly McsDeviceIncrement[] = Object.freez
     track: 'lvad',
     carrierSectionId: 'lvad-parameters-assessment',
     sentence:
-      'The durable pump is the transvalvular pump plus one new idea: the flow you read is computed from power and speed rather than measured, and the decision to use it is a different kind of decision.',
+      'The durable pump is the transvalvular pump plus one new idea: the flow number on its controller is a different kind of number, and the decision to use the pump is a different kind of decision.',
     ideas: [
       {
         id: 'computed-flow',

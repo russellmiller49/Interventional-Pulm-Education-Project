@@ -1,34 +1,26 @@
 /**
- * The shared harness the five M5 suites drive the workbench through.
+ * The shared harness the M5 suites drive the workbench through.
+ *
+ * The workbench hosts Practice and Challenge; Learn moved to the lesson stage, so nothing here
+ * mounts or walks a Learn section.
  *
  * Three rules shape everything here.
  *
  * 1. Nothing that carries MCS behaviour is faked. The reducer, the progress reader and writer, the
- *    section learning contracts, the scenario definitions, the lesson transfers and the reveal-stage
- *    function are all imported real. What is replaced lives in `mcsWorkbenchStubs` and is limited to
- *    navigation, WebGL, the two lazy previews, media queries and animation-frame scheduling.
- * 2. The helpers drive the *visible interface*. `satisfyLearnAction` moves the same slider, select or
- *    button a learner would, until the authored `isActionSatisfied` predicate is true — it never
- *    dispatches the contract's own action ids, because a test that replays the authoring data proves
- *    only that the data was replayed.
+ *    scenario definitions and the reveal-stage function are all imported real. What is replaced
+ *    lives in `mcsWorkbenchStubs` and is limited to navigation, WebGL, the two lazy previews, media
+ *    queries and animation-frame scheduling.
+ * 2. The helpers drive the *visible interface*. `inspectInCase` and `commitCasePrediction` press the
+ *    same buttons and choose the same radio a learner would; nothing here dispatches a scenario's
+ *    own action ids, because a test that replays the authoring data proves only that the data was
+ *    replayed.
  * 3. Analytics is read at the network boundary. Every event this module emits, aggregate or
  *    lifecycle, leaves through one `fetch('/api/analytics')` call, so that is where they are counted.
  */
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 
-import {
-  mcsLessonTransferByLessonId,
-  mcsSectionLearningContractById,
-  type McsLearnPhase,
-  type McsSectionLearningContract,
-} from '../content'
-import {
-  createDefaultMcsProgress,
-  type McsDeviceKind,
-  type McsModuleSection,
-  type McsProgressV1,
-} from '../engine'
-import { McsWorkbench } from '../components/McsWorkbench'
+import { createDefaultMcsProgress, type McsDeviceKind, type McsProgressV1 } from '../engine'
+import { McsWorkbench, type McsWorkbenchSection } from '../components/McsWorkbench'
 import { mockRouterPush } from './mcsWorkbenchStubs'
 
 export { mockRouterPush } from './mcsWorkbenchStubs'
@@ -208,7 +200,7 @@ export function storedMasteredCaseIds(): readonly string[] {
 /* ------------------------------------------------------------------ rendering */
 
 export interface RenderWorkbenchOptions {
-  readonly section: McsModuleSection
+  readonly section: McsWorkbenchSection
   readonly initialDevice?: McsDeviceKind
   readonly initialActivityId?: string
   readonly locale?: string
@@ -331,7 +323,7 @@ export function jumpToSharedPhase(label: string): void {
   fireEvent.click(screen.getByRole('button', { name: `Open ${label} phase` }))
 }
 
-/** The device tabs Practice and Challenge carry. Learn deliberately has none. */
+/** The device tabs Practice and Challenge carry. */
 export const DEVICE_TAB_NAMES: Readonly<Record<McsDeviceKind, RegExp>> = {
   iabp: /Intra-aortic balloon pump/,
   impella: /Impella CP \/ 5\.5 \/ RP/,
@@ -351,10 +343,6 @@ export function selectDeviceTrack(device: McsDeviceKind): void {
   fireEvent.click(deviceTab(device))
 }
 
-export function pathwayRail(): HTMLElement {
-  return screen.getByRole('navigation', { name: 'MCS learning pathway sections' })
-}
-
 export function practiceRail(): HTMLElement {
   return screen.getByRole('region', { name: 'Mechanism Studio and device cases' })
 }
@@ -368,229 +356,11 @@ export function practiceRailButton(shortTitle: string): HTMLElement {
   return match
 }
 
-/* ------------------------------------------------------------------ Learn helpers */
-
-export const LEARN_PHASE_LABELS: Readonly<Record<McsLearnPhase, string>> = {
-  recognize: 'Recognize',
-  predict: 'Predict',
-  act: 'Act',
-  observe: 'Observe',
-  explain: 'Explain',
-  transfer: 'Transfer',
-}
-
-const LEARN_PHASE_ORDER: readonly McsLearnPhase[] = [
-  'recognize',
-  'predict',
-  'act',
-  'observe',
-  'explain',
-  'transfer',
-]
-
-/** The Learn phase the action pane's own heading reports — `Observe — step 4 of 6`. */
-export function learnPhase(): McsLearnPhase {
-  const heading = screen.getByRole('heading', { name: /— step \d of 6$/ }).textContent ?? ''
-  const found = LEARN_PHASE_ORDER.find((phase) =>
-    heading.startsWith(`${LEARN_PHASE_LABELS[phase]} —`),
-  )
-  if (!found) throw new Error(`Could not read the Learn phase from heading: ${heading}`)
-  return found
-}
-
-export function learnContract(sectionId: string): McsSectionLearningContract {
-  const contract = mcsSectionLearningContractById.get(sectionId)
-  if (!contract) throw new Error(`No MCS section learning contract for ${sectionId}`)
-  return contract
-}
-
-export function learnTransfer(sectionId: string) {
-  const transfer = mcsLessonTransferByLessonId.get(sectionId)
-  if (!transfer) throw new Error(`No MCS lesson transfer for ${sectionId}`)
-  return transfer
-}
+/* ------------------------------------------------------------------ Practice / Challenge */
 
 function chooseRadio(label: string): void {
   fireEvent.click(screen.getByRole('radio', { name: label }))
 }
-
-/** Recognize: pick the authored correct option and record it. */
-export function completeRecognizePhase(sectionId: string): void {
-  const contract = learnContract(sectionId)
-  const correct = contract.recognizeOptions.find((option) => option.correct)
-  if (!correct) throw new Error(`${sectionId} has no correct recognize option`)
-  chooseRadio(correct.label)
-  fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
-}
-
-/** Predict: commit the authored best answer. Committing shows the verdict and advances nothing. */
-export function commitPredictionPhase(sectionId: string): void {
-  const contract = learnContract(sectionId)
-  const best =
-    contract.predictionItem.choices.find((choice) => choice.plausibility === 'best') ??
-    contract.predictionItem.choices[0]
-  chooseRadio(best.label)
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
-}
-
-/**
- * Act: drive the visible workspace until the section's own predicate is satisfied.
- *
- * One entry per authored action mode. The entries move a control a learner can see and reach; none
- * of them dispatches the action id the contract lists, because satisfying the predicate by
- * re-sending the authoring data would prove nothing about the interface.
- */
-const learnActionDrivers: Readonly<Record<string, () => void>> = {
-  'mcs-foundations-signals': () => {
-    for (const label of [
-      'Read the arterial pressure',
-      'Read the filling pressures and right-sided delivery',
-      'Read the device and effective flow',
-    ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
-    }
-  },
-  'mcs-foundations-mechanisms': () => {
-    for (const label of [
-      'Select the counterpulsation mechanism',
-      'Select the transvalvular pump mechanism',
-      'Select the durable continuous-flow mechanism',
-    ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
-    }
-  },
-  'iabp-timing-triggering': () => {
-    fireEvent.change(screen.getByRole('slider', { name: 'Inflation vs notch' }), {
-      target: { value: '0' },
-    })
-  },
-  'iabp-efficacy-limits': () => {
-    fireEvent.change(screen.getByRole('slider', { name: 'RV contractility' }), {
-      target: { value: '0.3' },
-    })
-  },
-  'impella-unloading-placement': () => {
-    fireEvent.change(screen.getByRole('combobox', { name: 'Placement state' }), {
-      target: { value: 'too-deep' },
-    })
-  },
-  'impella-suction-purge-rv': () => {
-    fireEvent.change(screen.getByRole('combobox', { name: 'Right-sided Impella configuration' }), {
-      target: { value: 'rp' },
-    })
-  },
-  'lvad-parameters-assessment': () => {
-    fireEvent.change(screen.getByRole('slider', { name: 'SVR' }), { target: { value: '2000' } })
-  },
-  'lvad-alarms-emergencies': () => {
-    fireEvent.click(screen.getByRole('checkbox', { name: /High-power \/ thrombosis pattern/ }))
-  },
-  'mcs-device-selection-integration': () => {
-    fireEvent.change(screen.getByRole('slider', { name: 'Performance level' }), {
-      target: { value: '8' },
-    })
-  },
-}
-
-export function satisfyLearnAction(sectionId: string): void {
-  const driver = learnActionDrivers[sectionId]
-  if (!driver) throw new Error(`No M5 action driver for section ${sectionId}`)
-  driver()
-}
-
-/** Transfer: work the required actions in the transfer patient, by their visible controls. */
-const learnTransferDrivers: Readonly<Record<string, () => void>> = {
-  'mcs-foundations-signals': () => {
-    for (const label of [
-      'Read the arterial pressure',
-      'Read the filling pressures and right-sided delivery',
-      'Read the device and effective flow',
-    ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
-    }
-  },
-  'mcs-foundations-mechanisms': () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Select the transvalvular pump mechanism' }))
-  },
-  'iabp-timing-triggering': () => {
-    fireEvent.change(screen.getByRole('combobox', { name: 'Trigger source' }), {
-      target: { value: 'pressure' },
-    })
-  },
-  'iabp-efficacy-limits': () => {
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Escalate to the shock / mechanical-support team' }),
-    )
-  },
-  'impella-unloading-placement': () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Read the device and effective flow' }))
-  },
-  'impella-suction-purge-rv': () => {
-    fireEvent.change(screen.getByRole('slider', { name: 'Performance level' }), {
-      target: { value: '5' },
-    })
-  },
-  'lvad-parameters-assessment': () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Read the device and effective flow' }))
-  },
-  'lvad-alarms-emergencies': () => {
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Escalate to the shock / mechanical-support team' }),
-    )
-  },
-  'mcs-device-selection-integration': () => {
-    for (const label of [
-      'Read the filling pressures and right-sided delivery',
-      'Read the device and effective flow',
-    ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
-    }
-  },
-}
-
-export function satisfyLearnTransferActions(sectionId: string): void {
-  const driver = learnTransferDrivers[sectionId]
-  if (!driver) throw new Error(`No M5 transfer driver for section ${sectionId}`)
-  driver()
-}
-
-/** Transfer: choose an authored answer and commit it. The commit is the section's last step. */
-export function commitTransferPhase(sectionId: string): void {
-  const transfer = learnTransfer(sectionId)
-  const best =
-    transfer.item.choices.find((choice) => choice.plausibility === 'best') ??
-    transfer.item.choices[0]
-  chooseRadio(best.label)
-  fireEvent.click(screen.getByRole('button', { name: 'Commit this transfer answer' }))
-}
-
-export function continueFromPhase(phase: McsLearnPhase): void {
-  const labels: Readonly<Record<McsLearnPhase, string>> = {
-    recognize: 'Continue to the prediction',
-    predict: 'Continue to the task',
-    act: 'Continue to what changed',
-    observe: 'Continue to the explanation',
-    explain: 'Continue to the transfer patient',
-    transfer: 'Continue',
-  }
-  fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${labels[phase]}`) }))
-}
-
-/** Walks one Learn section from Recognize to a committed transfer answer, through the interface. */
-export function workThroughLearnSection(sectionId: string): void {
-  completeRecognizePhase(sectionId)
-  continueFromPhase('recognize')
-  commitPredictionPhase(sectionId)
-  continueFromPhase('predict')
-  satisfyLearnAction(sectionId)
-  continueFromPhase('act')
-  continueFromPhase('observe')
-  continueFromPhase('explain')
-  satisfyLearnTransferActions(sectionId)
-  commitTransferPhase(sectionId)
-}
-
-/* ------------------------------------------------------------------ Practice / Challenge */
 
 export function caseWorkflow(): HTMLElement {
   return screen.getByRole('region', { name: /simulation workspace$/ })

@@ -3,14 +3,16 @@
  *
  * Every case here starts from a route the router can actually produce: a section with no deep link,
  * a section with an activity id, a section with a device hint, and the combinations of the two that
- * disagree. What is being proved is that the lesson title, the simulator topology, the selection
+ * disagree. What is being proved is that the case title, the simulator topology, the selection
  * record and the resume target all describe the same activity — the failure this file exists to
  * catch is a workbench showing one pathway's heading over another pathway's state.
+ *
+ * The workbench hosts Practice and Challenge; Learn resolves on the lesson stage and its route
+ * has its own tests.
  */
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 
 import { getCriticalCareResumeTarget } from '@/features/critical-care/progress'
-import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 
 jest.mock('@/i18n/navigation', () =>
   jest
@@ -41,16 +43,9 @@ jest.mock('../components/ImpellaVariantPreview', () =>
     .impellaPreviewModule(),
 )
 
-import {
-  mcsCapstoneScenarios,
-  mcsLessons,
-  mcsPracticeScenarios,
-  mcsSectionLearningContractById,
-} from '../content'
-import type { McsDeviceKind } from '../engine'
+import { mcsCapstoneScenarios, mcsPracticeScenarios } from '../content'
 import {
   deviceTab,
-  pathwayRail,
   practiceRail,
   practiceRailButton,
   readStoredProgressRaw,
@@ -61,75 +56,9 @@ import {
   teardownMcsWorkbenchEnvironment,
 } from '../test-support/mcsWorkbench'
 
-const pathway = criticalCareLearningPathway('mechanical-circulatory-support')
-
-/** The rail's own accessible name for a section, built from the pathway rather than retyped. */
-function railName(sectionId: string): string {
-  const index = pathway.sections.findIndex((section) => section.id === sectionId)
-  const section = pathway.sections[index]
-  return `${index + 1}. ${section.title}${section.stage === 'integration' ? ', integration capstone' : ''}`
-}
-
-/** Which section the rail reports as current, read from `aria-current` and the authored order. */
-function activeRailSectionId(): string {
-  const current = within(pathwayRail()).getAllByRole('button', { current: 'step' })
-  expect(current).toHaveLength(1)
-  const label = current[0].getAttribute('aria-label') ?? ''
-  const index = Number.parseInt(label, 10) - 1
-  const section = pathway.sections[index]
-  if (!section) throw new Error(`Rail reported an unknown section: "${label}"`)
-  return section.id
-}
-
-const firstLessonForDevice: Readonly<Record<McsDeviceKind, string>> = {
-  iabp: mcsLessons.find((lesson) => lesson.device === 'iabp')!.id,
-  impella: mcsLessons.find((lesson) => lesson.device === 'impella')!.id,
-  lvad: mcsLessons.find((lesson) => lesson.device === 'lvad')!.id,
-}
-
 describe('MCS M5 — workbench initialization and route resolution', () => {
   beforeEach(() => setupMcsWorkbenchEnvironment())
   afterEach(() => teardownMcsWorkbenchEnvironment())
-
-  it('opens the recommended first section when Learn carries no deep link', async () => {
-    await renderWorkbench({ section: 'learn' })
-
-    expect(activeRailSectionId()).toBe(mcsLessons[0].id)
-    expect(screen.getAllByRole('heading', { name: mcsLessons[0].title }).length).toBeGreaterThan(0)
-  })
-
-  it.each(mcsLessons.map((lesson) => [lesson.id, lesson.title] as const))(
-    'opens the exact section for the %s deep link',
-    async (lessonId, title) => {
-      await renderWorkbench({ section: 'learn', initialActivityId: lessonId })
-
-      expect(activeRailSectionId()).toBe(lessonId)
-      expect(screen.getByRole('button', { name: railName(lessonId) })).toHaveAttribute(
-        'aria-current',
-        'step',
-      )
-      expect(screen.getAllByRole('heading', { name: title }).length).toBeGreaterThan(0)
-    },
-  )
-
-  it.each(Object.entries(firstLessonForDevice) as [McsDeviceKind, string][])(
-    'opens the first authored %s section for a device deep link',
-    async (device, lessonId) => {
-      await renderWorkbench({ section: 'learn', initialDevice: device })
-
-      expect(activeRailSectionId()).toBe(lessonId)
-      expect(mcsSectionLearningContractById.get(lessonId)?.startingDevice).toBe(device)
-    },
-  )
-
-  it('replaces the Practice and Challenge device tabs with the ordered pathway rail in Learn', async () => {
-    await renderWorkbench({ section: 'learn' })
-
-    expect(
-      screen.queryByRole('navigation', { name: 'Choose device track' }),
-    ).not.toBeInTheDocument()
-    expect(within(pathwayRail()).getAllByRole('button')).toHaveLength(mcsLessons.length)
-  })
 
   it('opens Mechanism Studio when Practice carries no case', async () => {
     await renderWorkbench({ section: 'practice' })
@@ -165,13 +94,6 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
     },
   )
 
-  it('falls back to the first section when the lesson id is not one this module owns', async () => {
-    await renderWorkbench({ section: 'learn', initialActivityId: 'not-a-lesson' })
-
-    expect(activeRailSectionId()).toBe(mcsLessons[0].id)
-    expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
-  })
-
   it('falls back to Mechanism Studio when the practice case id is unknown', async () => {
     await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-99' })
 
@@ -193,23 +115,10 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
   })
 
   /*
-   * The precedence, pinned. An exact activity id and a device hint can disagree, and only one of
-   * them can decide the topology: if the hint won, the heading would name one pathway while the
+   * The precedence, pinned. An exact case id and a device hint can disagree, and only one of them
+   * can decide the topology: if the hint won, the heading would name one pathway while the
    * simulator ran another.
    */
-  it('lets an exact Learn activity id win over a disagreeing device hint', async () => {
-    await renderWorkbench({
-      section: 'learn',
-      initialActivityId: 'impella-unloading-placement',
-      initialDevice: 'lvad',
-    })
-
-    expect(activeRailSectionId()).toBe('impella-unloading-placement')
-    // The live context strip reads from the simulator, so it proves the topology, not the heading.
-    expect(screen.getAllByText(/Microaxial pump/).length).toBeGreaterThan(0)
-    expect(screen.queryAllByText(/Durable continuous flow — left ventricular apex/)).toHaveLength(0)
-  })
-
   it('lets an exact practice case id win over a disagreeing device hint', async () => {
     const scenario = mcsPracticeScenarios.find((candidate) => candidate.id === 'LVAD-01')!
     await renderWorkbench({
@@ -231,28 +140,11 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
     expect(screen.getByRole('button', { name: 'Return to case' })).toBeInTheDocument()
   })
 
-  it('names the Learn resume banner after the lesson rather than the case', async () => {
-    await renderWorkbench({ section: 'learn', initialActivityId: 'iabp-timing-triggering' })
-
-    expect(screen.getByText('Return to saved lesson')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Return to lesson' })).toBeInTheDocument()
-  })
-
   it('shows no resume banner when the learner arrived without a deep link', async () => {
     await renderWorkbench({ section: 'practice' })
 
     expect(screen.queryByText('Return to saved case')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Return to case' })).not.toBeInTheDocument()
-  })
-
-  it('writes the Learn selection record for a deep-linked section', async () => {
-    await renderWorkbench({ section: 'learn', initialActivityId: 'lvad-alarms-emergencies' })
-
-    await waitFor(() =>
-      expect(getCriticalCareResumeTarget(window.localStorage)?.href).toBe(
-        '/mechanical-circulatory-support/learn?lesson=lvad-alarms-emergencies',
-      ),
-    )
   })
 
   it('writes the Practice selection record for a deep-linked case', async () => {
@@ -271,15 +163,6 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
     expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
   })
 
-  it('keeps every Learn section reachable regardless of stored history', async () => {
-    seedStoredProgress({ completedLessonIds: [] })
-    await renderWorkbench({ section: 'learn' })
-
-    for (const button of within(pathwayRail()).getAllByRole('button')) {
-      expect(button).toBeEnabled()
-    }
-  })
-
   it('keeps every Challenge open regardless of stored history', async () => {
     seedStoredProgress({ completedLessonIds: [], masteredCaseIds: [] })
     await renderWorkbench({ section: 'assess' })
@@ -290,27 +173,15 @@ describe('MCS M5 — workbench initialization and route resolution', () => {
   })
 
   it('writes no progress merely from mounting a route', async () => {
-    await renderWorkbench({ section: 'learn', initialActivityId: 'iabp-efficacy-limits' })
+    await renderWorkbench({ section: 'practice', initialActivityId: 'IABP-02' })
 
     expect(readStoredProgressRaw()).toBeNull()
   })
 })
 
-describe('MCS M5 — device, section, and activity transitions', () => {
+describe('MCS M5 — device and activity transitions', () => {
   beforeEach(() => setupMcsWorkbenchEnvironment())
   afterEach(() => teardownMcsWorkbenchEnvironment())
-
-  it.each(Object.entries(firstLessonForDevice) as [McsDeviceKind, string][])(
-    'is reachable at the first %s section from the pathway rail',
-    async (device, lessonId) => {
-      await renderWorkbench({ section: 'learn' })
-
-      fireEvent.click(within(pathwayRail()).getByRole('button', { name: railName(lessonId) }))
-
-      await waitFor(() => expect(activeRailSectionId()).toBe(lessonId))
-      expect(mcsSectionLearningContractById.get(lessonId)?.startingDevice).toBe(device)
-    },
-  )
 
   it.each(['iabp', 'impella', 'lvad'] as const)(
     'opens Mechanism Studio for %s when the device tab changes in Practice',

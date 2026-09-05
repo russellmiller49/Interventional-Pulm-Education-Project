@@ -129,7 +129,13 @@ export function orderAnswerOptionsAlongPath(
 export function CirculationMap({ state, emphasis, answer }: CirculationMapProps) {
   const titleId = useId()
   const descriptionId = useId()
-  const pathways = pathwaysFor(state)
+  /*
+   * While a place is the question, a pathway that is drawn but not in place is not drawn at all:
+   * a dashed line ending at the answer is the answer. In-place pathways stay, because they are on
+   * the screen the learner is reading. Committing the answer restores the full drawing.
+   */
+  const answerPending = answer !== null && answer !== undefined && answer.committedOptionId === null
+  const pathways = pathwaysFor(state).filter((pathway) => pathway.inPlace || !answerPending)
   const lit = new Set(emphasis?.segmentIds ?? [])
   const orderedOptions = answer ? orderAnswerOptionsAlongPath(answer.options) : []
   const committed = answer?.committedOptionId ?? null
@@ -300,9 +306,11 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
           })}
         </svg>
 
-        {/* The same pins as clickable labels over the drawing, each a label for the row's radio. */}
-        {answer
-          ? orderedOptions.map((option) => {
+        {/* The same pins as clickable labels over the drawing, each a label for the row's radio.
+            They are part of the answer control, and marked as such for the pre-commitment scan. */}
+        {answer ? (
+          <div data-prediction-choices data-map-pin-targets>
+            {orderedOptions.map((option) => {
               const segment = circulationMapSegment(option.segmentIds[0] ?? 'venous-return')
               return (
                 <label
@@ -318,8 +326,9 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
                   <span className={styles.visuallyHidden}>{option.label}</span>
                 </label>
               )
-            })
-          : null}
+            })}
+          </div>
+        ) : null}
       </div>
 
       {answer ? <CirculationMapAnswerRows answer={answer} options={orderedOptions} /> : null}

@@ -65,21 +65,22 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'validate-patient-signal-device',
           label:
-            'Reassess the patient, validate the pressure signal, and reconcile filling, native flow, and device flow before changing support',
+            'Reassess the patient and validate the pressure signal before changing any support',
           rationale:
             'A plausible MAP does not prove perfusion or signal fidelity; the patient, measurement, and support circuit must be reconciled.',
           plausibility: 'best',
         },
         {
           id: 'increase-support-first',
-          label: 'Increase the device setting immediately because the displayed flow is lower',
+          label:
+            'Increase the device setting immediately, because the displayed flow is lower than before',
           rationale:
             'A setting change before validating preload, afterload, position, and measurement can worsen suction or obscure the cause.',
           plausibility: 'unsafe',
         },
         {
           id: 'accept-map',
-          label: 'Accept the MAP as proof that systemic perfusion is adequate',
+          label: 'Accept the mean pressure as proof that systemic perfusion is adequate for now',
           rationale:
             'Pressure can remain acceptable despite low effective flow and impaired end-organ perfusion.',
           plausibility: 'incorrect-mechanism',
@@ -127,7 +128,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'compare-direct-lv-unloading',
           label:
-            'Compare direct LV-to-aorta unloading while tracking PCWP, LV volume, native ejection, and effective systemic flow',
+            'Compare direct left-ventricular unloading while tracking wedge, volume, and effective flow',
           rationale:
             'This tests a distinct mechanism and preserves the need to reconcile loading and total effective flow.',
           plausibility: 'best',
@@ -135,14 +136,15 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'sum-device-native',
           label:
-            'Add the displayed pump flow directly to native flow and use the sum as cardiac output',
+            'Add the displayed pump flow directly to the native flow and use the sum as the cardiac output',
           rationale:
             'Displayed device flow and native flow are not universally additive; recirculation and serial flow pathways matter.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'ignore-rv',
-          label: 'Choose the highest-flow device without assessing RV delivery or filling',
+          label:
+            'Choose the device reporting the highest flow, without assessing right-sided delivery',
           rationale:
             'Left-sided support remains preload dependent and can expose or worsen RV-limited delivery.',
           plausibility: 'unsafe',
@@ -182,22 +184,23 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       choices: [
         {
           id: 'compare-trigger-to-waveform',
-          label:
-            'Select the most reliable available trigger and verify inflation and deflation beat by beat on the arterial waveform',
+          label: 'Select the most reliable trigger available and verify the timing on the trace',
           rationale:
             'Trigger choice is only useful when the resulting timing remains physiologically aligned across variable cycles.',
           plausibility: 'best',
         },
         {
           id: 'assume-ecg',
-          label: 'Keep ECG triggering because it is always superior to pressure triggering',
+          label:
+            'Keep ECG triggering, because it is always superior to pressure triggering in any rhythm',
           rationale:
             'Signal reliability depends on rhythm and signal quality; no source is universally superior.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'increase-ratio',
-          label: 'Increase assist frequency without checking the trigger or waveform timing',
+          label:
+            'Increase the assist frequency without checking the trigger or the waveform timing',
           rationale:
             'More assisted beats do not resolve mistiming and can reproduce the error more often.',
           plausibility: 'unsafe',
@@ -248,8 +251,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       choices: [
         {
           id: 'recognize-ceiling-escalate',
-          label:
-            'Recognize RV-limited delivery, reassess the full shock phenotype, and escalate the support strategy',
+          label: 'Recognize right-limited delivery and escalate the support strategy',
           rationale:
             'IABP depends on native ejection and does not replace failing RV-to-pulmonary delivery.',
           plausibility: 'best',
@@ -263,7 +265,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         },
         {
           id: 'accept-map-only',
-          label: 'Defer escalation if MAP is above a single numeric threshold',
+          label: 'Defer escalation while the mean pressure stays above a single numeric threshold',
           rationale: 'Pressure alone does not establish adequate flow or end-organ perfusion.',
           plausibility: 'unsafe',
         },
@@ -315,7 +317,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'pressure-gradient-dependent',
           label:
-            'The pump is pressure-gradient dependent; reconcile afterload, preload, position, native output, and effective flow',
+            'Reconcile afterload, preload, position, and native output before touching the level',
           rationale:
             'A higher outflow pressure can reduce microaxial pump flow despite an unchanged performance setting.',
           plausibility: 'best',
@@ -330,7 +332,8 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         },
         {
           id: 'advance-blindly',
-          label: 'Increase performance level without checking loading, position, or perfusion',
+          label:
+            'Increase the performance level without checking loading, position, or perfusion first',
           rationale:
             'Escalating without diagnosing the pressure-flow change can create suction or other harm.',
           plausibility: 'unsafe',
@@ -379,20 +382,22 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'reduce-and-diagnose',
           label:
-            'Reduce support temporarily, reassess preload, RV delivery, and position, and address the cause before re-escalating',
+            'Reduce support temporarily, reassess filling and position, and address the cause first',
           rationale:
             'This limits ongoing suction while preserving a structured patient–position–device evaluation.',
           plausibility: 'best',
         },
         {
           id: 'increase-through-suction',
-          label: 'Increase the performance level because the displayed flow is low',
+          label:
+            'Increase the performance level, because the displayed flow is the number that is low',
           rationale: 'Escalating through active suction can worsen underfilling and blood trauma.',
           plausibility: 'unsafe',
         },
         {
           id: 'purge-only',
-          label: 'Treat every low-flow pattern as a purge-system problem',
+          label:
+            'Treat every low-flow pattern on this pump as a purge-system problem until proven otherwise',
           rationale: 'Purge abnormalities are distinct from preload- or position-limited suction.',
           plausibility: 'incorrect-mechanism',
         },
@@ -438,7 +443,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'afterload-sensitive-assessment',
           label:
-            'Treat the controller value as an afterload-sensitive estimate and assess the patient, pressures, power, pulsatility, and filling together',
+            'Treat the value as an afterload-sensitive estimate and assess the patient as a whole',
           rationale:
             'Continuous-flow output depends on the pressure gradient and cannot be interpreted from estimated flow alone.',
           plausibility: 'best',
@@ -446,14 +451,15 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'speed-first',
           label:
-            'Increase speed before evaluating blood pressure, filling, or device-team authorization',
+            'Increase the speed before evaluating blood pressure, filling, or the device team’s authorization',
           rationale:
             'Reflexive speed changes can worsen suction, septal shift, RV failure, or aortic-valve closure.',
           plausibility: 'unsafe',
         },
         {
           id: 'flow-is-measured-output',
-          label: 'Assume the displayed flow is a direct measurement of total cardiac output',
+          label:
+            'Assume the displayed flow is a direct measurement of the patient’s total cardiac output',
           rationale:
             'Controller flow is an estimate and does not independently capture native output or systemic perfusion.',
           plausibility: 'incorrect-mechanism',
@@ -493,22 +499,22 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       choices: [
         {
           id: 'preserve-power-escalate',
-          label:
-            'Preserve verified power, reassess the patient and circuit, obtain focused imaging as available, and escalate urgently to the MCS team',
+          label: 'Preserve verified power, reassess the patient, and escalate to the support team',
           rationale:
             'High power with worsening perfusion may indicate a time-critical pump or flow-path problem that requires specialist evaluation.',
           plausibility: 'best',
         },
         {
           id: 'disconnect-power',
-          label: 'Disconnect power to see whether the alarm clears',
+          label: 'Disconnect the power briefly to see whether the alarm clears, then reconnect it',
           rationale:
             'Stopping a continuous-flow pump can cause immediate hemodynamic collapse and retrograde flow.',
           plausibility: 'unsafe',
         },
         {
           id: 'controller-only',
-          label: 'Treat the controller display as sufficient and defer examination or imaging',
+          label:
+            'Treat the controller display as sufficient and defer examination or imaging for now',
           rationale:
             'The bedside patient, flow path, power sources, controller trend, and focused imaging must be reconciled.',
           plausibility: 'reasonable-but-incomplete',
@@ -551,29 +557,29 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       choices: [
         {
           id: 'name-rv-limitation-first',
-          label:
-            'Name RV delivery as the limiting problem and evaluate right-sided support or RV optimization, because every left-sided device depends on the volume the RV delivers',
+          label: 'Name right-sided delivery as the limit and evaluate right-sided support',
           rationale:
             'A rising RAP with a falling PAPi and only modest LV filling pressure indicates a delivery problem upstream of the left heart rather than at LV unloading. Adding left-sided support to an RV-limited circulation raises the displayed number without raising effective systemic flow.',
           plausibility: 'best',
         },
         {
           id: 'escalate-left-support',
-          label: 'Escalate left-sided support further, since output is still low',
+          label:
+            'Escalate left-sided support further, since the output is still low on the current level',
           rationale:
             'Escalating LV unloading against an underfilled left heart increases suction risk and does not address the delivery problem upstream of it.',
           plausibility: 'unsafe',
         },
         {
           id: 'add-counterpulsation',
-          label: 'Add counterpulsation to improve coronary and systemic loading',
+          label: 'Add counterpulsation to improve coronary and systemic loading on top of the pump',
           rationale:
             'Counterpulsation modifies loading around a native beat; it does not address delivery of volume to the left heart, which is what this profile identifies.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'wait-for-lactate',
-          label: 'Continue current support and re-evaluate after the next lactate',
+          label: 'Continue the current support and re-evaluate after the next lactate result',
           rationale:
             'Trending perfusion markers is reasonable and belongs in the plan, but on its own it defers a selection the hemodynamic profile is already discriminating.',
           plausibility: 'reasonable-but-incomplete',

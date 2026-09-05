@@ -10,7 +10,7 @@ import type { McsRevealStage } from './revealStage'
  * pane, and a panel that could change the state it is explaining would be able to answer its own
  * section's question on the learner's behalf.
  *
- * `beforeMetrics` is the snapshot `McsLearnSection` already captures on entering the act phase,
+ * `beforeMetrics` is the snapshot the lesson stage already captures on entering the act phase,
  * passed down read-only. Panels do not capture a second baseline: two baselines taken at two moments
  * are two different stories about what the learner's action did.
  */

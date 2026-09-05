@@ -205,22 +205,21 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     recognizeOptions: [
       {
         id: 'driving-pressure',
-        label:
-          'Whether a driving pressure exists at the measured site, and the shape of the pulse there',
+        label: 'That a driving pressure exists where it is measured, and the shape of the pulse',
         correct: true,
         feedback:
           'That is the whole claim. A preserved or even augmented pressure can sit on top of a very small forward stroke volume, so how much blood is moving is still unknown — the flow account, covered for now, answers that.',
       },
       {
         id: 'blood-moving',
-        label: 'How much blood is moving forward',
+        label: 'How much blood is moving forward, and by which of the available routes',
         correct: false,
         feedback:
           'Pressure is the first level of the model and it answers only its own question. Flow is the second level, and nothing about a mean pressure reports it.',
       },
       {
         id: 'organs-perfused',
-        label: 'Whether the organs are being perfused',
+        label: 'Whether the organs are being perfused, judged from the pressure they are receiving',
         correct: false,
         feedback:
           'Organ response is the top of the ladder — mentation, urine output, skin, the lactate trajectory — and nothing on a pressure trace answers there.',
@@ -241,14 +240,15 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'native-only',
           label:
-            'A native contribution, an effective systemic delivery that matches it, and no device contribution at all',
+            'A native contribution, an effective delivery equal to it, and no device contribution',
           rationale:
             'This pathway moves no blood of its own, so effective systemic delivery is the native contribution and nothing else. There is no second line to add.',
           plausibility: 'best',
         },
         {
           id: 'device-tracks-pressure',
-          label: 'A device contribution roughly matching the rise in mean pressure',
+          label:
+            'A device contribution roughly matching the rise in mean pressure the balloon produces',
           rationale:
             'Augmented pressure is a change in the shape of a pressure wave, not a volume the balloon moved. No console reports a flow for this pathway.',
           plausibility: 'incorrect-mechanism',
@@ -375,21 +375,23 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       {
         id: 'nothing-enters',
         label:
-          'Nothing enters and nothing returns — the balloon displaces blood already in the aorta',
+          'Nothing enters and nothing returns; the balloon displaces blood already in the aorta',
         correct: true,
         feedback:
           'That is what makes this mechanism different in kind. It has no source compartment and no destination compartment, so the flow account has only one line that carries blood.',
       },
       {
         id: 'lv-to-aorta',
-        label: 'Blood enters from the left ventricle and returns to the aorta',
+        label:
+          'Blood enters from the left ventricle and returns to the aorta, so the balloon is a pump',
         correct: false,
         feedback:
           'That is the transvalvular pump’s pathway, and you will build it next. The balloon has no inlet and no outlet.',
       },
       {
         id: 'vein-to-artery',
-        label: 'Blood is drained from a vein and returned to an artery',
+        label:
+          'Blood is drained from a central vein and returned to an artery through an outside circuit',
         correct: false,
         feedback:
           'That is an extracorporeal pathway, compared on the pathway cards below but not simulated in this module.',
@@ -410,21 +412,23 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'flow-appears-pulsatility-falls',
           label:
-            'The device line stays empty for the balloon and appears for both pumps, while arterial pulsatility falls as more volume leaves through the pump instead of the aortic valve',
+            'The device line stays empty for the balloon, appears for both pumps, and pulsatility falls',
           rationale:
             'Only the two pumps have a pathway of their own to report a flow along. As pump flow rises, less volume leaves through the native outflow tract, so the pulse narrows — here that narrowing is a sign of unloading, not of deterioration.',
           plausibility: 'best',
         },
         {
           id: 'all-three-report-flow',
-          label: 'All three report a device flow, the balloon simply reporting a smaller one',
+          label:
+            'All three report a device flow, the balloon simply reporting the smallest of the three',
           rationale:
             'The balloon has no source and no destination compartment. There is no stream for it to report, so its device line is empty rather than small.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'pulsatility-rises',
-          label: 'Pulsatility rises with each pump because more blood is being moved',
+          label:
+            'Pulsatility rises with each pump, because more blood is being moved with every beat',
           rationale:
             'More total flow through a continuous pump means less pulsatile flow through the aortic valve. Total delivery and pulse width move in opposite directions here.',
           plausibility: 'incorrect-mechanism',
@@ -519,7 +523,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     clinicalQuestion:
       'The balloon is running and the console reports no fault. Is it inflating at the right moment?',
     startingContext:
-      'Counterpulsation at a one-to-one ratio with inflation set 120 ms early — before the aortic valve has closed. The early-inflation alarm is active and timing synchrony is well below its aligned value.',
+      'Counterpulsation at a one-to-one ratio with inflation set 120 ms early. The early-inflation alarm is active and timing synchrony is well below its aligned value.',
     patientProblem:
       'The same low-output circulation, now receiving counterpulsation that is technically running but mistimed.',
     supportPathway:
@@ -536,21 +540,22 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       {
         id: 'raises-impedance',
         label:
-          'It raises the pressure the ventricle has to open against, because the balloon is inflating before the aortic valve has closed',
+          'It raises the pressure the ventricle must open against, because the valve has not yet closed',
         correct: true,
         feedback:
           'Early inflation puts the balloon in the way of an ejection that is still happening. The mechanism that is supposed to reduce the load is adding to it.',
       },
       {
         id: 'loses-augmentation',
-        label: 'It loses diastolic augmentation, because inflation arrives after the useful window',
+        label:
+          'It loses diastolic augmentation, because inflation arrives after the useful window has passed',
         correct: false,
         feedback:
           'That is late inflation, the mirror error. Here inflation is arriving too soon, so the problem is added impedance rather than a missed window.',
       },
       {
         id: 'no-effect',
-        label: 'Nothing — the balloon inflates within the same beat either way',
+        label: 'Nothing, because the balloon inflates and deflates within the same beat either way',
         correct: false,
         feedback:
           'Timing is the whole mechanism. Within one beat, 120 ms is the difference between assisting ejection and obstructing it.',
@@ -571,28 +576,31 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'synchrony-and-modest-flow',
           label:
-            'Synchrony returns and mean pressure rises by several mm Hg, while effective systemic delivery improves only slightly',
+            'Synchrony returns and mean pressure rises by several mm Hg; delivery improves only slightly',
           rationale:
             'Removing added impedance lets the native ventricle eject more freely, so both pressure and flow improve — but the gain is bounded by what that ventricle can generate, because the balloon still moves no blood of its own.',
           plausibility: 'best',
         },
         {
           id: 'large-flow-gain',
-          label: 'Effective systemic delivery rises by one to two litres per minute',
+          label:
+            'Effective systemic delivery rises by one to two litres per minute once the timing is right',
           rationale:
             'A gain that size would mean the balloon had contributed a stream of its own. Timing changes what the ventricle works against; it does not add a second source of forward flow.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'device-line-appears',
-          label: 'A device flow appears on the display once the timing is aligned',
+          label:
+            'A device flow appears on the display once the timing is aligned, and adds to the native flow',
           rationale:
             'Aligned timing does not give this pathway a source and a destination. The device line stays empty however well the balloon is timed.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'raise-ratio-instead',
-          label: 'Nothing useful will change, so raise the assist ratio instead',
+          label:
+            'Nothing useful will change, so raise the assist ratio instead of adjusting the timing',
           rationale:
             'Assisting more beats without fixing the timing reproduces the same error more often. Mistiming is corrected before frequency is increased.',
           plausibility: 'unsafe',
@@ -659,7 +667,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'Recorded once inflation has been returned to within 20 ms of the notch, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
       whatYouAreSeeing:
-        'The live arterial trace for a patient on counterpulsation whose inflation is arriving before the aortic valve has closed.',
+        'The live arterial trace for a patient on counterpulsation whose inflation has been set early. Each assisted beat is banded on the trace, with the notch and the next upstroke marked.',
       whatTheTargetRepresents:
         'The shape and timing of the pressure wave. Inflation belongs at the dicrotic notch; deflation belongs immediately before the next upstroke.',
       howTheActionAffectsTheModel:
@@ -693,21 +701,21 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     recognizeOptions: [
       {
         id: 'rap-rising',
-        label: 'A rising right atrial pressure with a falling pulmonary pulsatility ratio',
+        label: 'Right atrial pressure rising while the pulmonary pulsatility ratio falls',
         correct: true,
         feedback:
           'A right ventricle that cannot deliver backs up behind itself. The right atrial pressure rises and the pulmonary pulse narrows, while left-sided filling stops being the constraint.',
       },
       {
         id: 'timing-quality',
-        label: 'A falling timing synchrony value',
+        label: 'The timing synchrony value falling as the balloon loses the beat',
         correct: false,
         feedback:
           'Timing synchrony reports the device against the cardiac cycle. It will sit at its aligned value throughout this section, which is exactly what makes the point.',
       },
       {
         id: 'wedge-rising',
-        label: 'A rising wedge pressure',
+        label: 'The wedge pressure rising as the left ventricle backs up',
         correct: false,
         feedback:
           'A wedge pressure that keeps rising points at the left side. When the right ventricle is the limitation, the left heart tends to be underfilled rather than congested.',
@@ -728,14 +736,15 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'timing-holds-flow-falls',
           label:
-            'Timing synchrony holds at its aligned value while effective systemic delivery, mean pressure and mixed venous saturation all fall',
+            'Synchrony holds while effective delivery, mean pressure and venous saturation all fall',
           rationale:
             'The device is doing exactly what it did before. What changed is the volume arriving at the left heart, and counterpulsation cannot replace delivery it never provided.',
           plausibility: 'best',
         },
         {
           id: 'timing-degrades',
-          label: 'Timing synchrony degrades, because the device is no longer effective',
+          label:
+            'Timing synchrony degrades, because the device is no longer effective for this patient',
           rationale:
             'Synchrony measures the device against the cardiac cycle, not against the adequacy of the circulation. It will not tell you the mechanism has reached its ceiling.',
           plausibility: 'incorrect-mechanism',
@@ -850,21 +859,22 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       {
         id: 'lv-relieved-aorta-loaded',
         label:
-          'The left ventricle is relieved directly, and the aorta receives the returned flow, so the pump ejects against systemic pressure',
+          'The left ventricle is relieved directly; the returned flow enters the aorta above the valve',
         correct: true,
         feedback:
           'Both halves matter. Volume is taken out of the ventricle, and it is put into a vessel whose pressure the pump then has to work against.',
       },
       {
         id: 'rv-relieved',
-        label: 'The right ventricle is relieved, because less blood returns to it',
+        label:
+          'The right ventricle is relieved, because less blood returns to it through the venous side',
         correct: false,
         feedback:
           'The right ventricle inherits the whole requirement instead: a left-sided pump can only move blood the right heart has already delivered through the lungs.',
       },
       {
         id: 'aorta-unloaded',
-        label: 'The aorta is unloaded, because the pump takes pressure out of it',
+        label: 'The aorta is unloaded, because the pump takes pressure out of it on every beat',
         correct: false,
         feedback:
           'The aorta is the destination, not the source. Returning blood into it raises the pressure the pump ejects against rather than lowering it.',
@@ -885,14 +895,14 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'flow-falls-chamber-refills',
           label:
-            'Displayed pump flow falls by about half, the ventricle refills, wedge pressure rises, and a placement alarm appears alongside a blood-trauma warning',
+            'Displayed flow falls by about half, the wedge pressure rises, and a placement alarm appears',
           rationale:
             'Support and unloading are both lost together, because both depended on the inlet drawing from inside the chamber. The blood-trauma risk rises because blood is being accelerated through a poorly aligned inlet.',
           plausibility: 'best',
         },
         {
           id: 'flow-holds',
-          label: 'Displayed pump flow holds, because the performance level has not changed',
+          label: 'Displayed pump flow holds, because the performance level has not been changed',
           rationale:
             'The performance level is a setting. What the pump delivers depends on where its inlet and outlet are sitting and on the pressures at both ends.',
           plausibility: 'incorrect-mechanism',
@@ -900,14 +910,14 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'unloading-continues',
           label:
-            'Flow falls but unloading continues, because the pump is still inside the left heart',
+            'Flow falls but unloading continues, because the pump is still inside the left heart somewhere',
           rationale:
             'Unloading is the removal of volume. If the pump is moving less blood out of the chamber, the chamber is being relieved less — the two cannot come apart.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'escalate-level',
-          label: 'Flow falls, so raise the performance level until it comes back',
+          label: 'Flow falls, so raise the performance level until the displayed number comes back',
           rationale:
             'Raising support against a malpositioned inlet increases blood trauma without restoring the relationship that was lost. Position is diagnosed before support is escalated.',
           plausibility: 'unsafe',
@@ -1046,7 +1056,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'left-flow-rises-not-additive',
           label:
-            'The suction clears and left-sided pump flow rises, while effective systemic delivery rises by much less than the two pump numbers added together',
+            'Suction clears, left-sided flow rises, and delivery rises by less than the two pump numbers added',
           rationale:
             'The right-sided pump fills the left heart, so the left-sided pump finally has something to draw. The two pumps handle the same blood one after the other, so adding their displayed flows counts that blood twice.',
           plausibility: 'best',
@@ -1054,7 +1064,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'flows-add',
           label:
-            'Effective systemic delivery becomes the left-sided flow plus the right-sided flow',
+            'Effective systemic delivery becomes the left-sided flow plus the right-sided flow, as one total',
           rationale:
             'These pathways are in series, not in parallel. One stream measured at two places along its journey is still one stream.',
           plausibility: 'incorrect-mechanism',
@@ -1062,14 +1072,15 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'no-left-change',
           label:
-            'Left-sided pump flow is unchanged, because nothing was done to the left-sided pump',
+            'Left-sided pump flow is unchanged, because nothing was done to the left-sided pump itself',
           rationale:
             'The left-sided pump was limited by filling, not by its setting. Restoring delivery to the left heart changes what it has available to move.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'raise-left-instead',
-          label: 'Raise the left-sided performance level instead, since its flow is the low one',
+          label:
+            'Raise the left-sided performance level instead, since its flow is the low one on the screen',
           rationale:
             'Escalating a pump that is already in suction worsens underfilling and blood trauma. The limitation is upstream, and it is where the intervention belongs.',
           plausibility: 'unsafe',
@@ -1181,21 +1192,21 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     recognizeOptions: [
       {
         id: 'from-power-and-speed',
-        label: 'It is computed from pump power and speed, together with assumptions about loading',
+        label: 'It is computed from pump power and speed, with assumptions about loading',
         correct: true,
         feedback:
           'That is why it is labelled an estimate. It inherits every assumption in that computation, and it drifts when those assumptions stop holding — which is exactly when the patient is changing.',
       },
       {
         id: 'from-a-probe',
-        label: 'It is measured by a flow probe on the outflow graft',
+        label: 'It is measured directly by a flow probe on the outflow graft',
         correct: false,
         feedback:
           'Nothing in this pathway puts a sensor in the bloodstream. A measured flow and an estimated flow look identical on a display and are not the same kind of number.',
       },
       {
         id: 'from-cardiac-output',
-        label: 'It is the patient’s total cardiac output',
+        label: 'It is the patient’s total cardiac output, native and pump together',
         correct: false,
         feedback:
           'It describes what the pump is moving along its own pathway. Whatever the native ventricle still ejects is a separate line, and the reconciled total is a third.',
@@ -1216,28 +1227,30 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'flow-falls-pressure-rises',
           label:
-            'Displayed flow and effective systemic delivery both fall while mean pressure rises sharply, and cardiac power rises even though forward flow is falling',
+            'Displayed flow and delivery both fall while mean pressure rises sharply, and cardiac power rises',
           rationale:
             'A continuous-flow pump works across a pressure gradient, so a higher outflow pressure lowers delivered flow at the same speed. Cardiac power is a pressure–flow product, and here the pressure term is moving far more than the flow term.',
           plausibility: 'best',
         },
         {
           id: 'flow-holds',
-          label: 'Displayed flow holds, because speed sets flow',
+          label: 'Displayed flow holds, because speed sets flow and the speed has not changed',
           rationale:
             'Speed sets how fast the impeller turns, not how much blood crosses it. What crosses depends on the pressures at both ends.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'power-surges',
-          label: 'Power surges, because the pump is working harder against the higher pressure',
+          label:
+            'Power surges, because the pump is working harder against the higher pressure it faces',
           rationale:
             'Power tracks the work the impeller is doing on the blood it is actually moving. When less blood crosses, power falls rather than surging — a surge belongs to an obstructed flow path.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'raise-speed',
-          label: 'Whatever happens, raise the speed until the displayed flow comes back',
+          label:
+            'Whatever happens, raise the speed until the displayed flow comes back to where it was',
           rationale:
             'Raising speed to chase a number can produce suction, septal shift and right ventricular failure, and speed changes belong to the prescribing team under current instructions.',
           plausibility: 'unsafe',
@@ -1372,14 +1385,15 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'power-rises-flow-static',
           label:
-            'Power rises substantially while the displayed flow barely moves, and a high-power alarm appears',
+            'Power rises substantially while the displayed flow barely moves, and an alarm appears',
           rationale:
             'The displayed flow is computed from power and speed under assumptions that this state breaks. Power and the flow it is supposed to imply come apart, and that separation is itself the signal.',
           plausibility: 'best',
         },
         {
           id: 'flow-falls-with-power',
-          label: 'Power rises and the displayed flow falls in proportion',
+          label:
+            'Power rises and the displayed flow falls in proportion, as it does against a stiff circulation',
           rationale:
             'That would be the relationship holding. What makes this pattern dangerous is that the computed value stops tracking the work the pump is doing.',
           plausibility: 'incorrect-mechanism',
@@ -1393,7 +1407,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         },
         {
           id: 'disconnect-to-check',
-          label: 'Disconnect the power source briefly to see whether the alarm clears',
+          label: 'Disconnect the power source briefly to see whether the alarm clears itself',
           rationale:
             'Stopping a continuous-flow pump can cause immediate collapse and retrograde flow. Power is preserved and the team is called.',
           plausibility: 'unsafe',
@@ -1499,22 +1513,23 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     recognizeOptions: [
       {
         id: 'right-sided',
-        label:
-          'The right side: right atrial pressure is high while the wedge pressure is only modestly raised',
+        label: 'The right side: a high right atrial pressure with only a modest wedge pressure',
         correct: true,
         feedback:
           'High pressure behind the right ventricle with an under-filled left heart is a delivery problem upstream of the left ventricle. Left-sided unloading is not what this profile is asking for.',
       },
       {
         id: 'left-sided',
-        label: 'The left side: the wedge pressure is elevated, so the left ventricle is congested',
+        label:
+          'The left side: an elevated wedge pressure, so the left ventricle is congested and needs unloading',
         correct: false,
         feedback:
           'A modest wedge pressure alongside a high right atrial pressure points the other way. In a left-limited profile the wedge pressure is the one that dominates.',
       },
       {
         id: 'afterload',
-        label: 'Neither: the limitation is the pressure the pump ejects against',
+        label:
+          'Neither: the limitation is the pressure the pump ejects against, downstream of the outlet',
         correct: false,
         feedback:
           'An afterload limitation shows as a falling flow with a rising arterial pressure. Here the arterial pressure is low and the pump is in suction, which is an inflow story.',
@@ -1534,8 +1549,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       choices: [
         {
           id: 'small-gain-suction-persists',
-          label:
-            'A small gain of a few tenths of a litre per minute, with the suction alarm still active and right atrial pressure unchanged',
+          label: 'A small gain of a few tenths of a litre, with the suction alarm still active',
           rationale:
             'The pump can only move blood that has reached the left ventricle. Raising the setting against an underfilled chamber buys very little and leaves the suction, and therefore the blood-trauma risk, in place.',
           plausibility: 'best',
@@ -1550,14 +1564,15 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'rap-falls',
           label:
-            'Right atrial pressure falls, because the left-sided pump decompresses the circuit',
+            'Right atrial pressure falls, because the left-sided pump decompresses the circulation',
           rationale:
             'A left-sided pump draws from the left ventricle. It does not relieve the chamber that is failing to deliver into the lungs.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'keep-escalating',
-          label: 'Whatever the gain, keep raising the level until the displayed flow is adequate',
+          label:
+            'Whatever the gain, keep raising the level until the displayed flow reads as adequate',
           rationale:
             'Escalating through active suction worsens underfilling and blood trauma, and drives a display upward while the patient does not improve.',
           plausibility: 'unsafe',

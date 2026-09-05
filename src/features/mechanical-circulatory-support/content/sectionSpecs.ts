@@ -115,13 +115,15 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'What can be set, and what is monitoring',
       transfer: 'A congested patient on a well-timed balloon',
     },
+    // The balloon's emptiness is the first section's answer, taught before this one, so the walk
+    // may say it; what this section withholds is the comparison across the three.
     precommitDenyPatterns: [
       /\bnothing enters\b/i,
       /\bnothing returns\b/i,
-      /\bdisplaces blood\b/i,
       /\bonly (two|one) of (the three|them)\b/i,
       /pulsatility (falls|drops)/i,
-      /\bmoves no blood\b/i,
+      /device line stays empty/i,
+      /appears for both pumps/i,
     ],
   },
   {
@@ -150,7 +152,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       /before the (aortic )?valve has closed/i,
       /synchrony returns/i,
       /mean pressure rises/i,
-      /\bearly inflation\b/i,
+      /impedance/i,
     ],
   },
   {
@@ -214,9 +216,9 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
   {
     sectionId: 'impella-suction-purge-rv',
     track: 'impella',
-    newConcept: 'pathways in series carry one stream twice',
+    newConcept: 'what two pump numbers on one screen do and do not add up to',
     objective:
-      'Decide whether a suction alarm is asking for more support or for more delivery to the inlet, and read two pump flows without adding them.',
+      'Decide whether a suction alarm is asking for more support or for more delivery to the inlet, and say what two displayed pump flows do and do not tell you together.',
     prerequisiteSectionIds: ['impella-unloading-placement'],
     stopIds: ['venous-return', 'right-heart'],
     walksTheLoop: false,
@@ -244,7 +246,8 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
   {
     sectionId: 'lvad-parameters-assessment',
     track: 'lvad',
-    newConcept: 'displayed flow on a durable pump is computed from power and speed',
+    newConcept:
+      'the durable pump’s flow number answers a different question from the one it seems to',
     objective:
       'Tell a pressure improvement from a perfusion improvement on a durable pump, and say what the displayed flow is made from.',
     prerequisiteSectionIds: ['mcs-foundations-mechanisms', 'impella-unloading-placement'],
@@ -266,7 +269,7 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       /computed from (pump )?power/i,
       /derived from (pump )?power/i,
       /displayed flow[^.]*\b(falls|fell|drops)\b/i,
-      /cardiac power[^.]*\brises\b/i,
+      /cardiac power rises/i,
       /pressure rises sharply/i,
     ],
   },
@@ -291,12 +294,14 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'The signal the flow display does not carry',
       transfer: 'Power rising while perfusion worsens',
     },
+    // The prediction's own stem names the pattern it switches on; what is withheld is what the
+    // pattern does to power and to the flow display.
     precommitDenyPatterns: [
-      /power (rises|climbs|climbed)/i,
-      /high-power/i,
+      /power (rises|climbs|climbed) (substantially|while|and)/i,
+      /raises power/i,
       /flow[^.]*\b(barely|did not|does not|hardly) move/i,
       /leaves (the )?delivered flow where it was/i,
-      /thrombosis/i,
+      /flow display (does not|will not) (carry|move)/i,
     ],
   },
   {
@@ -326,7 +331,6 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
     },
     precommitDenyPatterns: [
       /\bright side\b/i,
-      /right atrial pressure is high/i,
       /small gain/i,
       /few tenths/i,
       /suction (alarm )?(still|remains|persists)/i,
