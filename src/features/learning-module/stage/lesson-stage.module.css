@@ -1,0 +1,468 @@
+/*
+ * The lesson stage: the three-pane workspace, the step list, the Sections drawer and the task
+ * column's cards. Everything shared with a module's other activity surfaces lives in
+ * `lesson-shell.module.css`. Promoted from the Cardiohelp ECMO module's `EcmoLessonStage.module.css`.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Workspace frame and dark theme
+ * ------------------------------------------------------------------ */
+
+.workspaceFrame {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+@media (max-width: 1023px), (max-height: 699px) {
+  .workspaceFrame {
+    height: auto;
+  }
+}
+
+/* Tailwind is configured as `hsl(var(--token))`, so these are bare HSL triples. */
+.workspace {
+  --background: 194 44% 8%;
+  --foreground: 180 33% 94%;
+  --card: 191 41% 12%;
+  --card-foreground: 180 33% 94%;
+  --popover: 191 41% 12%;
+  --popover-foreground: 180 33% 94%;
+  --muted: 192 36% 16%;
+  --muted-foreground: 190 14% 74%;
+  --primary: 183 58% 67%;
+  --primary-foreground: 194 60% 8%;
+  --secondary: 192 36% 20%;
+  --secondary-foreground: 180 33% 94%;
+  --accent: 34 100% 69%;
+  --accent-foreground: 194 60% 8%;
+  --destructive: 356 100% 71%;
+  --destructive-foreground: 194 60% 8%;
+  --border: 187 25% 38%;
+  --input: 187 25% 38%;
+  --ring: 183 58% 67%;
+}
+
+/*
+ * Doubled for specificity: the shared `.workspace` rule in `teaching-workspace.module.css` paints
+ * a light surface at the same single-class specificity, and which of two equal rules wins would
+ * otherwise depend on stylesheet order.
+ */
+.workspace.workspace {
+  color: var(--ink, #eaf4f4);
+  color-scheme: dark;
+  background: #061519;
+}
+
+.workspace [data-scroll-pane] {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* ------------------------------------------------------------------ *
+ * Panes
+ * ------------------------------------------------------------------ */
+
+.simulatorPane,
+.teachingColumn,
+.taskColumn {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  align-content: start;
+  font-size: var(--stage-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+/*
+ * Teaching panels and the shared verdict components are written in `text-sm`/`text-xs`. Promoted
+ * here rather than in their JSX: several are shared and not a module's to edit, and the floor is
+ * a property of the surface they render into.
+ */
+.teachingColumn :global(.text-sm),
+.taskColumn :global(.text-sm) {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.teachingColumn :global(.text-xs),
+.taskColumn :global(.text-xs) {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.teachingColumn :global(.text-xs.uppercase),
+.taskColumn :global(.text-xs.uppercase) {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+}
+
+.teachingColumn :global(.leading-5),
+.taskColumn :global(.leading-5) {
+  line-height: 1.55;
+}
+
+.teachingColumn p,
+.teachingColumn li,
+.teachingColumn dd,
+.teachingColumn dt,
+.teachingColumn td,
+.teachingColumn th,
+.teachingColumn strong,
+.teachingColumn em,
+.taskColumn p,
+.taskColumn li,
+.taskColumn strong {
+  opacity: 1;
+}
+
+.teachingColumn :global(.overflow-x-auto) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.simulatorPane {
+  color: var(--ink, #eaf4f4);
+}
+
+/* ------------------------------------------------------------------ *
+ * Step list
+ * ------------------------------------------------------------------ */
+
+.stepList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepRow {
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  background: rgba(16, 46, 52, 0.35);
+}
+
+.stepRow[data-step-state='current'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.stepRow[data-step-state='locked'] {
+  opacity: 0.7;
+}
+
+.stepButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: inherit;
+  font-size: var(--stage-type-floor, 0.875rem);
+  text-align: left;
+  cursor: pointer;
+}
+
+.stepButton:disabled {
+  cursor: default;
+}
+
+.stepButton:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.stepOrdinal {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.stepOrdinal svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.stepRow[data-step-state='done'] .stepOrdinal {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.stepText {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.stepPhase {
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stepTitle {
+  font-weight: 600;
+}
+
+.stepRecap {
+  padding: 0 0.7rem 0.6rem 3.05rem;
+  color: var(--muted, #9fb4b7);
+}
+
+.stepRecap ul,
+.stepRecap p {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.stepRecap p {
+  padding-left: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Sections drawer
+ * ------------------------------------------------------------------ */
+
+.sectionsDrawer {
+  position: relative;
+}
+
+.sectionsSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  background: rgba(16, 46, 52, 0.72);
+  font-size: var(--stage-type-floor, 0.875rem);
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.sectionsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.sectionsSummary:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.sectionsPosition {
+  color: var(--muted, #9fb4b7);
+  font-weight: 600;
+}
+
+.sectionsPanel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  width: min(26rem, calc(100vw - 2rem));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  background: var(--panel, #10262b);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
+}
+
+/* ------------------------------------------------------------------ *
+ * Task column cards
+ * ------------------------------------------------------------------ */
+
+.objectives summary {
+  color: var(--muted, #9fb4b7);
+  cursor: pointer;
+}
+
+.objectives p {
+  margin: 0.35rem 0 0;
+}
+
+.completion {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--green, #76d69b);
+  border-radius: 1rem;
+}
+
+.completion h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.completion p {
+  margin: 0;
+}
+
+.completionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.choiceList {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.choiceList legend {
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.choice[data-selected='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.choice input {
+  margin-top: 0.25rem;
+}
+
+.taskInstruction {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+}
+
+.taskList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.taskList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+}
+
+.taskList li[data-met='true'] {
+  border-color: var(--green, #76d69b);
+}
+
+.taskList svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  margin-top: 0.2rem;
+}
+
+.progress {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.progress progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: var(--cyan-bright, #71e1e5);
+}
+
+.compareTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--stage-type-floor, 0.875rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.compareTable th,
+.compareTable td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  text-align: left;
+}
+
+.compareTable th {
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.compareTable td[data-direction='up']::after {
+  content: ' ↑';
+}
+
+.compareTable td[data-direction='down']::after {
+  content: ' ↓';
+}
+
+.boundaryNote {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+/* ------------------------------------------------------------------ *
+ * Scoped teaching blocks
+ * ------------------------------------------------------------------ */
+
+.teachingColumn details[data-stage-collapsed] {
+  min-width: 0;
+}
+
+.teachingColumn details[data-stage-collapsed] > summary {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teachingColumn details[data-stage-collapsed][open] > summary {
+  margin-bottom: 0.5rem;
+}

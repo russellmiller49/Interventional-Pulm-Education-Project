@@ -1,0 +1,579 @@
+/*
+ * The lean lesson shell.
+ *
+ * One stylesheet for the chrome every lesson-stage surface shares — the section header, the
+ * context strip, the Now card, the help dialog, the folded sources footer — so the type floor and
+ * the scroller rules are declared once. Promoted from the Cardiohelp ECMO module's
+ * `EcmoActivityShell.module.css`; a module's own device facsimile keeps its own intrinsic type,
+ * because it is a scaled surface rather than prose.
+ *
+ * `--stage-type-floor` is the smallest size any learner-read text in this shell uses. The only
+ * things below it are badges, units and uppercase kickers, which are labels rather than reading.
+ *
+ * Palette: the shell reads the module shell's tokens (`--ink`, `--muted`, `--panel`, `--panel-2`,
+ * `--line`, `--cyan-bright`, `--amber`, `--red`, `--green`) and falls back to the dark critical-care
+ * palette when a module does not set them.
+ */
+
+.shell {
+  --stage-type-floor: 0.875rem;
+  --stage-ink: var(--ink, #eaf4f4);
+  --stage-muted: var(--muted, #9fb4b7);
+  --stage-panel: var(--panel, #10262b);
+  --stage-panel-2: var(--panel-2, #17343a);
+  --stage-line: var(--line, rgba(163, 206, 209, 0.22));
+  --stage-accent: var(--cyan-bright, #71e1e5);
+  --stage-amber: var(--amber, #ffbf62);
+  --stage-red: var(--red, #ff6b73);
+  --stage-green: var(--green, #76d69b);
+
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  color: var(--stage-ink);
+  font-size: var(--stage-type-floor);
+  line-height: 1.55;
+}
+
+/* Below the fixed-workspace viewport the shell flows with the document and nothing is clipped. */
+@media (max-width: 1023px), (max-height: 699px) {
+  .shell {
+    height: auto;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Header
+ * ------------------------------------------------------------------ */
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  min-width: 0;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--stage-line);
+  background: color-mix(in srgb, var(--stage-panel) 88%, transparent);
+}
+
+.headerMain {
+  display: grid;
+  flex: 1 1 18rem;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--stage-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kicker a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.meta {
+  margin: 0;
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.headerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 0.65rem;
+  background: rgba(16, 46, 52, 0.72);
+  color: var(--stage-ink);
+  font-size: var(--stage-type-floor);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.headerButton[data-primary='true'] {
+  border-color: var(--stage-accent);
+  background: var(--stage-accent);
+  color: #04211f;
+}
+
+.headerButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.headerButton:focus-visible,
+.nowPrimary:focus-visible,
+.nowSecondary:focus-visible,
+.stripButton:focus-visible,
+.nowBack:focus-visible,
+.sourcesSummary:focus-visible {
+  outline: 3px solid var(--stage-accent);
+  outline-offset: 2px;
+}
+
+.resumedNote {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+}
+
+/* ------------------------------------------------------------------ *
+ * Context strip
+ * ------------------------------------------------------------------ */
+
+.strip {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.35rem 0.9rem;
+  border-bottom: 1px solid var(--stage-line);
+  background: rgba(6, 21, 25, 0.5);
+}
+
+.strip:empty {
+  display: none;
+}
+
+.stripLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 1rem;
+  font-size: var(--stage-type-floor);
+}
+
+.stripItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.stripItem small {
+  color: var(--stage-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.alarmChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.alarmChip[data-alarm-priority='high'] {
+  border-color: var(--stage-red);
+}
+
+.alarmChip[data-alarm-priority='medium'] {
+  border-color: var(--stage-amber);
+}
+
+.stripButton {
+  min-height: 2rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--stage-ink);
+  font-size: var(--stage-type-floor);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stripDetails summary {
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+  cursor: pointer;
+}
+
+.stripDetailsBody {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.35rem 1rem;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.stripDetailsBody dt {
+  color: var(--stage-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stripDetailsBody dd {
+  margin: 0;
+}
+
+.stripConstraints {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  font-size: var(--stage-type-floor);
+}
+
+/* ------------------------------------------------------------------ *
+ * Body and footer
+ * ------------------------------------------------------------------ */
+
+.body {
+  min-height: 0;
+  min-width: 0;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.35rem 0.9rem;
+  border-top: 1px solid var(--stage-line);
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+}
+
+.footer:empty {
+  display: none;
+}
+
+.footerLine {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Sources, in the footer, shut
+ * ------------------------------------------------------------------ */
+
+/*
+ * Anchored, not stacked. The shell gives the footer an `auto` row and the body the rest, so a list
+ * that opened in flow took its height straight out of the panes. Opened, it floats over the bottom
+ * of the body instead: the panes keep every pixel they had.
+ */
+.sources {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sourcesSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.9rem;
+  color: var(--stage-muted);
+  cursor: pointer;
+  font-size: var(--stage-type-floor);
+}
+
+.sourcesSummary:hover {
+  color: var(--stage-ink);
+}
+
+.sourcesCount {
+  padding: 0 0.35rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sourcesBody {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
+  z-index: 5;
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: min(50vh, 24rem);
+  overflow-y: auto;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 0.75rem;
+  background: var(--stage-panel);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.sourcesNote {
+  margin: 0.4rem 0 0;
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+}
+
+.sourcesList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sourcesList li {
+  display: grid;
+  gap: 0.15rem;
+  font-size: var(--stage-type-floor);
+  line-height: 1.5;
+}
+
+.sourcesList small {
+  color: var(--stage-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sourcesList a {
+  color: var(--stage-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.sourceClaims {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--stage-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Now card
+ * ------------------------------------------------------------------ */
+
+.now {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--stage-accent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--stage-panel-2) 92%, black);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.35);
+}
+
+.now[data-tone='safety'] {
+  border-color: var(--stage-red);
+}
+
+.nowKicker {
+  margin: 0;
+  color: var(--stage-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.now[data-tone='safety'] .nowKicker {
+  color: var(--stage-red);
+}
+
+.nowHeading {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.nowBody {
+  margin: 0;
+  font-size: var(--stage-type-floor);
+  line-height: 1.55;
+}
+
+.nowActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--stage-accent);
+  border-radius: 0.75rem;
+  background: var(--stage-accent);
+  color: #04211f;
+  font-size: var(--stage-type-floor);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nowPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nowPrimary svg,
+.nowSecondary svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.nowSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--stage-ink);
+  font-size: var(--stage-type-floor);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nowStatus {
+  margin: 0;
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+}
+
+.nowWhy summary {
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+  cursor: pointer;
+}
+
+.nowWhy p {
+  margin: 0.35rem 0 0;
+  font-size: var(--stage-type-floor);
+}
+
+/*
+ * Back to the previous step: under the kicker rather than in the actions row, so it never
+ * competes with the one primary action. Low emphasis, full touch target.
+ */
+.nowBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: start;
+  min-height: 32px;
+  margin: 0.1rem 0 0;
+  padding: 0.2rem 0.45rem 0.2rem 0.25rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--stage-muted);
+  font: inherit;
+  font-size: var(--stage-type-floor);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nowBack:hover {
+  color: var(--stage-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nowBack svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Help dialog
+ * ------------------------------------------------------------------ */
+
+.dialog {
+  width: min(40rem, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid var(--stage-line);
+  border-radius: 1rem;
+  background: var(--stage-panel);
+  color: var(--stage-ink);
+}
+
+.dialog::backdrop {
+  background: rgba(3, 12, 14, 0.7);
+}
+
+.dialogInner {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  font-size: var(--stage-type-floor);
+}
+
+.dialogInner p {
+  margin: 0;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+/* A label, not reading: the one sanctioned size under the floor. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--stage-line);
+  border-radius: 999px;
+  color: var(--stage-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now,
+  .headerButton {
+    transition: none;
+  }
+}
