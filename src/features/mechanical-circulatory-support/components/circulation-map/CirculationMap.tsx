@@ -365,7 +365,8 @@ function CirculationMapAnswerRows({
       data-prediction-choices
       data-map-answer
     >
-      <legend id={legendId} className={styles.answerLegend}>
+      {/* The group's name for assistive technology; the Now card already shows the prompt. */}
+      <legend id={legendId} className={styles.visuallyHidden}>
         {answer.prompt}
       </legend>
       {options.map((option, index) => {

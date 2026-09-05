@@ -69,37 +69,17 @@ export function McsSimulatorPane({
       : undefined
 
   /*
-   * On a step that opens the map, scroll this pane — not the document — to it once the pane has
-   * laid out. The document's sticky header would otherwise cover the caption.
+   * A step that opens the map leads with it: the map sits above the monitor, at the top of the
+   * pane, so the marked place is on screen without scrolling. Scrolling the pane to the map was
+   * tried first and could not be made to land — the monitor above it re-flows for seconds after a
+   * step is entered, and its alarm band changes height with the ticks — so the order of the
+   * surfaces carries the emphasis instead, the way the section contracts already say which surface
+   * leads. On every step the pane starts at its top.
    */
+  const mapLeads = mapPreference !== null
   useEffect(() => {
-    if (!mapPreference || !mapRef.current) return
-    const node = mapRef.current
-    const scroller = node.closest<HTMLElement>('[role="region"]')
-    if (!scroller) return
-    // The monitor above the map re-flows as the workspace settles its pane widths, so the
-    // measurement is repeated over the first second and stops as soon as the learner scrolls.
-    let interrupted = false
-    const interrupt = () => {
-      interrupted = true
-    }
-    scroller.addEventListener('wheel', interrupt, { passive: true })
-    scroller.addEventListener('touchstart', interrupt, { passive: true })
-    const timers = [80, 320, 800].map((delay) =>
-      window.setTimeout(() => {
-        if (interrupted) return
-        const top =
-          node.getBoundingClientRect().top -
-          scroller.getBoundingClientRect().top +
-          scroller.scrollTop
-        scroller.scrollTo({ top: Math.max(0, top - 8), behavior: 'auto' })
-      }, delay),
-    )
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer))
-      scroller.removeEventListener('wheel', interrupt)
-      scroller.removeEventListener('touchstart', interrupt)
-    }
+    const scroller = mapRef.current?.closest<HTMLElement>('[role="region"]')
+    scroller?.scrollTo({ top: 0 })
   }, [mapPreference])
 
   const surfaceBody = (surface: McsStageSurfaceId) => {
@@ -134,57 +114,66 @@ export function McsSimulatorPane({
     }
   }
 
+  const monitor = (
+    <McsMonitor
+      state={state}
+      highlightTarget={monitorTarget}
+      highlightNote={predictionCommitted}
+      revealCausality={predictionCommitted}
+      withheldNote="What produced this display appears once you have committed your prediction."
+      withholdFlowAccount={flowAccountWithheld}
+    />
+  )
+  const surfaceOrder: readonly McsStageSurfaceId[] = mapLeads
+    ? ['map', 'controls', 'anatomy']
+    : [...MCS_STAGE_SURFACES]
+
   return (
-    <div className={styles.simulator} data-simulator-surfaces>
-      <McsMonitor
-        state={state}
-        highlightTarget={monitorTarget}
-        highlightNote={predictionCommitted}
-        revealCausality={predictionCommitted}
-        withheldNote="What produced this display appears once you have committed your prediction."
-        withholdFlowAccount={flowAccountWithheld}
-      />
+    <div
+      className={styles.simulator}
+      data-simulator-surfaces
+      data-map-leads={mapLeads || undefined}
+    >
+      {mapLeads ? null : monitor}
       <div className={styles.surfaces}>
-        {MCS_STAGE_SURFACES.map((surface) => {
-          const open = openSurfaces.has(surface)
-          const panelId = `${baseId}-${surface}`
-          return (
-            <section
-              key={surface}
-              className={styles.surface}
-              data-surface={surface}
-              data-open={open}
-            >
-              <h3 className={styles.surfaceHeading}>
-                <button
-                  type="button"
-                  className={styles.surfaceToggle}
-                  aria-expanded={open}
-                  aria-controls={panelId}
-                  onClick={() => onToggleSurface(surface, !open)}
-                >
-                  {MCS_STAGE_SURFACE_LABELS[surface]}
-                  <span className={styles.surfaceToggleHint}>{open ? 'Hide' : 'Show'}</span>
-                </button>
-              </h3>
-              <div id={panelId} className={styles.surfaceBody} hidden={!open}>
-                {/*
-                  Two surfaces are not in the document until they are needed. The three-dimensional
-                  view is heavy and behind its own launch gate. The controls carry labels that name
-                  what a section asks the learner to predict — a pattern's own toggle, a placement
-                  state — so they are mounted only once the prediction is committed, and stay mounted
-                  after that so their ids hold while the learner opens and closes them.
+        {surfaceOrder
+          .filter((surface) => surface !== 'controls' || predictionCommitted)
+          .map((surface) => {
+            const open = openSurfaces.has(surface)
+            const panelId = `${baseId}-${surface}`
+            return (
+              <section
+                key={surface}
+                className={styles.surface}
+                data-surface={surface}
+                data-open={open}
+              >
+                <h3 className={styles.surfaceHeading}>
+                  <button
+                    type="button"
+                    className={styles.surfaceToggle}
+                    aria-expanded={open}
+                    aria-controls={panelId}
+                    onClick={() => onToggleSurface(surface, !open)}
+                  >
+                    {MCS_STAGE_SURFACE_LABELS[surface]}
+                    <span className={styles.surfaceToggleHint}>{open ? 'Hide' : 'Show'}</span>
+                  </button>
+                </h3>
+                <div id={panelId} className={styles.surfaceBody} hidden={!open}>
+                  {/*
+                  The three-dimensional view is the one surface unmounted while closed: it is heavy
+                  and behind its own launch gate. The controls surface is absent altogether until the
+                  prediction is committed (its labels name what sections ask the learner to predict),
+                  and stays mounted after that so its ids hold while it is opened and closed.
                 */}
-                {surface === 'anatomy' && !open
-                  ? null
-                  : surface === 'controls' && !predictionCommitted
-                    ? null
-                    : surfaceBody(surface)}
-              </div>
-            </section>
-          )
-        })}
+                  {surface === 'anatomy' && !open ? null : surfaceBody(surface)}
+                </div>
+              </section>
+            )
+          })}
       </div>
+      {mapLeads ? monitor : null}
       <p className={styles.boundaryNote} data-device-boundary>
         The monitor, the map and the controls are a simulation built for teaching. No product
         display is imitated and no alarm limit is reproduced.
