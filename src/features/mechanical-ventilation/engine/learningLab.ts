@@ -96,7 +96,12 @@ export interface LabEvidence {
   readonly confidence?: 'sure' | 'unsure'
   readonly baseline?: LabSnapshot
   readonly response?: LabSnapshot
+  /** Kept for saved records written before the reflection box was retired; never required. */
   readonly reflection?: string
+  /** The stop chosen on the breath map, for sections that ask where the problem lives first. */
+  readonly location?: string
+  /** The settings sort, committed as a set: row id → the origin chosen. */
+  readonly sort?: Readonly<Record<string, 'set' | 'reported'>>
   readonly completedAt?: string
 }
 export interface LabEvent {
@@ -258,8 +263,14 @@ export type LabAction =
   | { type: 'COMMIT'; choice: number; confidence: 'sure' | 'unsure' }
   | { type: 'COMPARE' }
   | { type: 'REFLECT'; text: string }
+  /** Where on the breath the learner placed the problem, committed once per round. */
+  | { type: 'LOCATE'; choiceId: string }
+  /** The settings sort, committed as a set once. */
+  | { type: 'SORT'; answers: Readonly<Record<string, 'set' | 'reported'>> }
   | { type: 'CONTINUE'; now: string }
   | { type: 'RESET' }
+  /** Start the section again from nothing: a fresh patient and no commitments. */
+  | { type: 'RESTART' }
   | { type: 'DEVICE'; device: VentilatorDeviceId }
 function setEvidence(session: LabSession, value: LabEvidence): readonly [LabEvidence, LabEvidence] {
   return session.round === 0 ? [value, session.evidence[1]] : [session.evidence[0], value]
@@ -268,6 +279,20 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
   const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   const evidence = session.evidence[session.round]
   if (action.type === 'DEVICE') return createLabSession(session.unitId, action.device)
+  if (action.type === 'RESTART') return createLabSession(session.unitId, session.device)
+  if (action.type === 'LOCATE' && evidence.location === undefined && action.choiceId.length > 0)
+    return {
+      ...session,
+      evidence: setEvidence(session, { ...evidence, location: action.choiceId.slice(0, 40) }),
+    }
+  if (action.type === 'SORT' && evidence.sort === undefined) {
+    const entries = Object.entries(action.answers).slice(0, 12)
+    if (entries.length === 0) return session
+    return {
+      ...session,
+      evidence: setEvidence(session, { ...evidence, sort: Object.fromEntries(entries) }),
+    }
+  }
   if (action.type === 'RESET') {
     const simulation = createLabSimulation(session.unitId, session.round, session.device)
     return {
@@ -327,11 +352,10 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       ...session,
       evidence: setEvidence(session, { ...evidence, reflection: action.text.slice(0, 1200) }),
     }
-  if (
-    action.type === 'CONTINUE' &&
-    session.phase === 'compare' &&
-    (evidence.reflection?.trim().length ?? 0) >= 12
-  ) {
+  // Finishing a round needs its reveal to have happened — a response snapshot exists only after
+  // COMPARE — and nothing else. The written reflection this once required was a text-length gate
+  // with no teaching in it, and it is gone.
+  if (action.type === 'CONTINUE' && session.phase === 'compare' && evidence.response) {
     const nextEvidence = setEvidence(session, { ...evidence, completedAt: action.now })
     if (session.round === 1)
       return { ...session, phase: 'complete', evidence: nextEvidence, completedAt: action.now }
@@ -411,6 +435,8 @@ const evidenceSchema = z.object({
   baseline: snapshotSchema.optional(),
   response: snapshotSchema.optional(),
   reflection: z.string().max(1200).optional(),
+  location: z.string().min(1).max(40).optional(),
+  sort: z.record(z.string().min(1).max(40), z.enum(['set', 'reported'])).optional(),
   completedAt: z.string().datetime().optional(),
 })
 const smallString = z.string().min(1).max(120)
@@ -482,12 +508,7 @@ export function parseLabProgress(raw: string | null): LabProgress {
       if (
         (p.phase === 'complete' || p.completedAt) &&
         !p.evidence.every(
-          (e) =>
-            e.prediction !== undefined &&
-            e.baseline &&
-            e.response &&
-            e.completedAt &&
-            (e.reflection?.trim().length ?? 0) >= 12,
+          (e) => e.prediction !== undefined && e.baseline && e.response && e.completedAt,
         )
       )
         continue

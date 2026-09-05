@@ -1,15 +1,16 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { MechanicalVentilationCourseHome } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseHome'
-import { MechanicalVentilationLearningActivity } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearningActivity'
 import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
+import { MechanicalVentilationLearnLanding } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLanding'
+import { MechanicalVentilationModuleFrame } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame'
+import { VentilationStageHost } from '@/features/mechanical-ventilation/components/stage/VentilationStageHost'
 import { ventilationUnitById } from '@/features/mechanical-ventilation/content/learningCurriculum'
 
 export const metadata: Metadata = {
   title: 'Learn · Mechanical Ventilation',
   description:
-    'Focused guided lessons in ventilator mechanics, modes, waveforms, timing, dyssynchrony, gas exchange, and safety.',
+    'Fourteen guided sections on a running simulated ventilator: the breath, the controls, then one mechanism at a time with a prediction, a change, and a watched response.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -26,24 +27,14 @@ export default async function MechanicalVentilationLearnPage({ params, searchPar
   const unit = activityId ? ventilationUnitById.get(activityId) : undefined
   setRequestLocale(locale)
 
-  if (unit)
-    return <MechanicalVentilationLearningActivity key={unit.id} unit={unit} locale={locale} />
+  if (unit) return <VentilationStageHost key={unit.id} unitId={unit.id} locale={locale} />
   if (query?.entry === 'placement' || query?.entry === 'review') {
-    return <MechanicalVentilationCourseCheck kind={query.entry} />
+    return (
+      <MechanicalVentilationModuleFrame locale={locale} activeHref="/mechanical-ventilation/learn">
+        <MechanicalVentilationCourseCheck kind={query.entry} />
+      </MechanicalVentilationModuleFrame>
+    )
   }
 
-  return (
-    <>
-      {activityId ? (
-        <div
-          className="mx-auto mt-8 w-[min(72rem,calc(100%-2rem))] rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"
-          role="status"
-        >
-          <strong>Unknown lesson.</strong> Your next experiment is open below. Choose another from
-          the learning map.
-        </div>
-      ) : null}
-      <MechanicalVentilationCourseHome locale={locale} />
-    </>
-  )
+  return <MechanicalVentilationLearnLanding locale={locale} unknownActivity={activityId} />
 }

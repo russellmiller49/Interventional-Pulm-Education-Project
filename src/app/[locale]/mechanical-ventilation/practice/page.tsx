@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { MechanicalVentilationCaseActivityLoader } from '@/features/mechanical-ventilation/components/MechanicalVentilationCaseActivityLoader'
-import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
-import { MechanicalVentilationCoursePractice } from '@/features/mechanical-ventilation/components/MechanicalVentilationCoursePractice'
+import { MechanicalVentilationPracticePicker } from '@/features/mechanical-ventilation/components/MechanicalVentilationPracticePicker'
 import { mechanicalVentilationCaseById } from '@/features/mechanical-ventilation/content'
 import {
   ventilatorDeviceIds,
@@ -14,7 +13,7 @@ import type { CriticalCareActivityMode } from '@/features/learning-module/activi
 export const metadata: Metadata = {
   title: 'Practice · Mechanical Ventilation',
   description:
-    'All fifteen preserved mechanical-ventilation cases with sequential device, support, and case setup.',
+    'Fifteen clinical mechanical-ventilation cases, each paired to the section that taught its mechanism, with console and prompting chosen once.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -63,17 +62,19 @@ export default async function MechanicalVentilationPracticePage({
     )
   }
 
-  const hadIncompleteQuery = Boolean(caseId || requestedDevice || requestedMode)
+  // A case named without a console or a prompting level opens the picker on that case rather than
+  // guessing either; anything else incomplete is said so.
+  const hadIncompleteQuery = Boolean((caseId && !validCase) || requestedDevice || requestedMode)
   return (
-    <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/practice">
-      <MechanicalVentilationCoursePractice
-        focus={single(query.focus)}
-        compatibilityNotice={
-          hadIncompleteQuery
-            ? 'The case, console, or support parameters were missing or incompatible. No simulator state was guessed.'
-            : undefined
-        }
-      />
-    </MechanicalVentilationModuleFrameV2>
+    <MechanicalVentilationPracticePicker
+      locale={locale}
+      requestedCaseId={validCase ? caseId : undefined}
+      focusUnitId={single(query.focus)}
+      compatibilityNotice={
+        hadIncompleteQuery
+          ? 'The case, console, or prompting parameters were missing or incompatible. No simulator state was guessed.'
+          : undefined
+      }
+    />
   )
 }

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
+import { MechanicalVentilationAssessSetupV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationAssessSetupV2'
 import { MechanicalVentilationCaseActivityLoader } from '@/features/mechanical-ventilation/components/MechanicalVentilationCaseActivityLoader'
-import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
+import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
+import { MechanicalVentilationModuleFrame } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame'
 import {
   MECHANICAL_VENTILATION_ASSESSMENT_ID,
   mechanicalVentilationCases,
@@ -15,9 +16,9 @@ import {
 } from '@/features/mechanical-ventilation/engine'
 
 export const metadata: Metadata = {
-  title: 'Final check · Mechanical Ventilation',
+  title: 'Assess · Mechanical Ventilation',
   description:
-    'An independent mixed knowledge check after the mechanical ventilation learning path.',
+    'An independent knowledge check after the mechanical ventilation pathway, and challenge cases with less prompting.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -70,9 +71,17 @@ export default async function MechanicalVentilationAssessPage({ params, searchPa
     )
   }
 
+  const hadIncompleteQuery = Boolean(assessmentId || seed || requestedDevice)
   return (
-    <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/assess">
+    <MechanicalVentilationModuleFrame locale={locale} activeHref="/mechanical-ventilation/assess">
       <MechanicalVentilationCourseCheck kind="final" />
-    </MechanicalVentilationModuleFrameV2>
+      <MechanicalVentilationAssessSetupV2
+        compatibilityNotice={
+          hadIncompleteQuery
+            ? 'The challenge parameters were missing or incompatible. Set up the challenge again below.'
+            : undefined
+        }
+      />
+    </MechanicalVentilationModuleFrame>
   )
 }

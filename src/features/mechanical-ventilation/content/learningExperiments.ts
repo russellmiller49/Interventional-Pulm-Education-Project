@@ -187,7 +187,7 @@ const earlierCycle = round({
   seconds: 25,
   watch: ['ti', 'expiratoryFlow', 'intrinsicPeep', 'volume'],
   explanation:
-    'The setting must cross the point where flow cycling, rather than the time cap, ends this breath. The response belongs to this authored patient; 50% is an experiment setting, not a universal prescription.',
+    'The setting must cross the point where flow cycling, rather than the time cap, ends this breath. The response belongs to this authored patient; the cycle-off value used here is an authored comparison setting, not a universal prescription.',
 })
 const flow = round({
   title: 'Move the gas faster',
@@ -553,7 +553,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         seconds: 25,
         watch: ['rate', 'effort', 'volume'],
         explanation:
-          'A waveform pattern raises a mechanism; patient and circuit findings test it. The modeled correction takes effect with elapsed simulation time.',
+          'A waveform pattern raises a mechanism; patient and circuit findings confirm or refute it. The modeled correction takes effect with elapsed simulation time.',
       }),
       round({
         ...flow,
@@ -674,7 +674,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         ],
         correct: 2,
         rationales: [
-          'A pressure that persists during no flow points toward the elastic/baseline contribution.',
+          'A pressure that persists during no flow indicates the elastic and baseline contribution.',
           'The hold does not select a new volume.',
           'A substantial fall after flow stops supports a large resistive contribution, if the patient is passive.',
         ],
