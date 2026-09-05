@@ -614,7 +614,7 @@ export function McsWorkbench({
   }
 
   return (
-    <McsModuleFrame locale={locale} activeHref={activeHref} activityMode>
+    <McsModuleFrame locale={locale} activeHref={activeHref} activityMode theme="light">
       <ActivityShell
         layout="native-workbench"
         activityId={lifecycleActivityId}

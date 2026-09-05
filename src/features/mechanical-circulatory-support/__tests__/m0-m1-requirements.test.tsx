@@ -117,9 +117,7 @@ describe('M0/M1 §5 — the module front door', () => {
       .getByRole('heading', { name: /Begin with the model/i })
       .closest('section')
     expect(startHere).not.toBeNull()
-    expect(
-      within(startHere!).getByText(/Validate the signal before the device/i),
-    ).toBeInTheDocument()
+    expect(within(startHere!).getByText(/A pressure that looks fine/i)).toBeInTheDocument()
     expect(within(startHere!).getByText(/Nothing here is locked/i)).toBeInTheDocument()
     expect(within(startHere!).getByText(/any order/i)).toBeInTheDocument()
 

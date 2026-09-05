@@ -184,7 +184,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 1 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'mcs-foundations-signals',
-    lessonTitle: 'Validate the signal before the device',
+    lessonTitle: 'A pressure that looks fine',
     lessonSequenceLabel: 'Section 1 of 9 · Foundations',
     clinicalQuestion:
       'The mean pressure on this monitor reads as acceptable. Is enough blood actually moving?',
@@ -201,28 +201,29 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     startingDevice: 'iabp',
     startingActions: [],
     recognizePrompt:
-      'Identify, in the highlighted flow account, which of the three flow lines this pathway leaves at zero.',
+      'Read the highlighted arterial pressure and identify which question it answers on its own.',
     recognizeOptions: [
       {
-        id: 'device-line-zero',
-        label: 'The displayed device contribution',
+        id: 'driving-pressure',
+        label:
+          'Whether a driving pressure exists at the measured site, and the shape of the pulse there',
         correct: true,
         feedback:
-          'The balloon displaces blood that is already inside the aorta. It moves nothing along a pathway of its own, so there is no device stream to report and the console reports none.',
+          'That is the whole claim. A preserved or even augmented pressure can sit on top of a very small forward stroke volume, so how much blood is moving is still unknown — the flow account, covered for now, answers that.',
       },
       {
-        id: 'native-line-zero',
-        label: 'The native contribution',
+        id: 'blood-moving',
+        label: 'How much blood is moving forward',
         correct: false,
         feedback:
-          'The native contribution is the only line carrying blood here. Everything the patient is receiving is being ejected by their own ventricle.',
+          'Pressure is the first level of the model and it answers only its own question. Flow is the second level, and nothing about a mean pressure reports it.',
       },
       {
-        id: 'effective-line-zero',
-        label: 'The effective systemic delivery',
+        id: 'organs-perfused',
+        label: 'Whether the organs are being perfused',
         correct: false,
         feedback:
-          'Effective systemic delivery is shown, and at this moment it equals the native contribution exactly — because there is no second stream to add to it or to compete with it.',
+          'Organ response is the top of the ladder — mentation, urine output, skin, the lactate trajectory — and nothing on a pressure trace answers there.',
       },
     ],
     predictionPrompt:
@@ -339,9 +340,9 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'Recorded once all three readings have been opened, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
       whatYouAreSeeing:
-        'A bedside monitor for a patient on counterpulsation. The highlighted block is the flow account: native contribution, displayed device contribution, and effective systemic delivery, side by side.',
+        'A bedside monitor for a patient on counterpulsation. The highlighted trace is the arterial pressure. The flow account beside it is covered until you have committed your prediction of what it will show.',
       whatTheTargetRepresents:
-        'Three quantities that share a unit and nothing else. Only the third is the one the patient experiences, and it is the only one no console anywhere displays as a measurement.',
+        'A pressure, measured at one site, with a shape that says when the balloon is inflating. It is the first level of the model, and it answers only its own question.',
       howTheActionAffectsTheModel:
         'The readings do not act on the model at all. They report the current state back in words, which is the point: this section separates looking from doing.',
       flowAccountNote:
@@ -352,7 +353,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 2 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'mcs-foundations-mechanisms',
-    lessonTitle: 'Unloading, augmentation, and total flow',
+    lessonTitle: 'Three devices called support',
     lessonSequenceLabel: 'Section 2 of 9 · Foundations',
     clinicalQuestion:
       'Three devices are described as "support". Which of them actually moves blood, and from where to where?',
@@ -513,7 +514,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 3 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'iabp-timing-triggering',
-    lessonTitle: 'IABP timing and triggering',
+    lessonTitle: 'Is the balloon inflating at the right moment?',
     lessonSequenceLabel: 'Section 3 of 9 · Counterpulsation',
     clinicalQuestion:
       'The balloon is running and the console reports no fault. Is it inflating at the right moment?',
@@ -671,7 +672,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 4 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'iabp-efficacy-limits',
-    lessonTitle: 'IABP efficacy, limits, and escalation',
+    lessonTitle: 'Timed correctly, still not perfusing',
     lessonSequenceLabel: 'Section 4 of 9 · Counterpulsation',
     clinicalQuestion:
       'The balloon is timed correctly and the patient is still not perfusing. Is that a timing problem?',
@@ -828,7 +829,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 5 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'impella-unloading-placement',
-    lessonTitle: 'Impella unloading and placement signals',
+    lessonTitle: 'Where is the inlet sitting?',
     lessonSequenceLabel: 'Section 5 of 9 · Transvalvular pump',
     clinicalQuestion:
       'The pump setting has not changed and the flow has fallen. Where is the inlet sitting?',
@@ -986,7 +987,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 6 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'impella-suction-purge-rv',
-    lessonTitle: 'Impella suction, purge, hemolysis, and RV delivery',
+    lessonTitle: 'A suction alarm at high support',
     lessonSequenceLabel: 'Section 6 of 9 · Transvalvular pump',
     clinicalQuestion:
       'A left-sided pump at high support is in suction. Is the answer more support, or more delivery to the left heart?',
@@ -1159,7 +1160,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 7 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'lvad-parameters-assessment',
-    lessonTitle: 'Durable LVAD parameters and ICU review',
+    lessonTitle: 'Speed unchanged, resistance rising',
     lessonSequenceLabel: 'Section 7 of 9 · Durable support',
     clinicalQuestion:
       'The speed has not changed and the displayed flow has fallen. What does that number actually measure?',
@@ -1315,7 +1316,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 8 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'lvad-alarms-emergencies',
-    lessonTitle: 'Durable LVAD low flow, high power, and power emergencies',
+    lessonTitle: 'An alarm at an unchanged speed',
     lessonSequenceLabel: 'Section 8 of 9 · Durable support',
     clinicalQuestion:
       'Power has climbed and the displayed flow has not moved. Which of those is the signal?',
@@ -1474,7 +1475,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 9 ──────────────────────────────────────────────────────────────────────
   {
     sectionId: 'mcs-device-selection-integration',
-    lessonTitle: 'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
+    lessonTitle: 'Low output on left-sided support',
     lessonSequenceLabel: 'Section 9 of 9 · Choosing between mechanisms',
     clinicalQuestion:
       'Output is low on left-sided support. Is the limiting problem the left ventricle, or what is reaching it?',

@@ -108,8 +108,8 @@ describe('Mechanical Circulatory Support learner interface', () => {
   // Learn shows the ordered pathway rail instead of the device tabs, so a device deep link is
   // expressed as the pathway section it opens.
   it.each([
-    ['impella', /^5\. Impella unloading and placement signals/i],
-    ['lvad', /^7\. Durable LVAD parameters and ICU review/i],
+    ['impella', /^5\. Where is the inlet sitting?/i],
+    ['lvad', /^7\. Speed unchanged, resistance rising/i],
   ] as const)('initializes the %s track at its first device section', (device, sectionName) => {
     render(<McsWorkbench section="learn" initialDevice={device} />)
 
@@ -384,12 +384,12 @@ describe('Mechanical Circulatory Support learner interface', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit this transfer answer' }))
 
     const continueButton = await screen.findByRole('button', {
-      name: /Continue to the next section: Impella suction, purge, hemolysis, and RV delivery/i,
+      name: /Continue to the next section: A suction alarm at high support/i,
     })
     fireEvent.click(continueButton)
     expect(
       screen.getAllByRole('heading', {
-        name: 'Impella suction, purge, hemolysis, and RV delivery',
+        name: 'A suction alarm at high support',
       }).length,
     ).toBeGreaterThan(0)
     expect(

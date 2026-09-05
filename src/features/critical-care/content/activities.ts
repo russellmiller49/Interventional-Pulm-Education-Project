@@ -668,30 +668,15 @@ const ventilationAssessSeeds: readonly ActivitySeed[] = [
  */
 const mcsLessonSeeds: readonly ActivitySeed[] = (
   [
-    ['mcs-foundations-signals', 'Validate the signal before the device', 'foundation', 1],
-    ['mcs-foundations-mechanisms', 'Unloading, augmentation, and total flow', 'foundation', 2],
-    ['iabp-timing-triggering', 'IABP timing and triggering', 'mechanism', 1],
-    ['iabp-efficacy-limits', 'IABP efficacy, limits, and escalation', 'application', 1],
-    ['impella-unloading-placement', 'Impella unloading and placement signals', 'mechanism', 2],
-    [
-      'impella-suction-purge-rv',
-      'Impella suction, purge, hemolysis, and RV delivery',
-      'application',
-      2,
-    ],
-    ['lvad-parameters-assessment', 'Durable LVAD parameters and ICU review', 'mechanism', 3],
-    [
-      'lvad-alarms-emergencies',
-      'Durable LVAD low flow, high power, and power emergencies',
-      'application',
-      3,
-    ],
-    [
-      'mcs-device-selection-integration',
-      'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
-      'integration',
-      1,
-    ],
+    ['mcs-foundations-signals', 'A pressure that looks fine', 'foundation', 1],
+    ['mcs-foundations-mechanisms', 'Three devices called support', 'foundation', 2],
+    ['iabp-timing-triggering', 'Is the balloon inflating at the right moment?', 'mechanism', 1],
+    ['iabp-efficacy-limits', 'Timed correctly, still not perfusing', 'application', 1],
+    ['impella-unloading-placement', 'Where is the inlet sitting?', 'mechanism', 2],
+    ['impella-suction-purge-rv', 'A suction alarm at high support', 'application', 2],
+    ['lvad-parameters-assessment', 'Speed unchanged, resistance rising', 'mechanism', 3],
+    ['lvad-alarms-emergencies', 'An alarm at an unchanged speed', 'application', 3],
+    ['mcs-device-selection-integration', 'Low output on left-sided support', 'integration', 1],
   ] as const
 ).map(([sourceId, title, curriculumStage, stageOrder]) => ({
   sourceId,
