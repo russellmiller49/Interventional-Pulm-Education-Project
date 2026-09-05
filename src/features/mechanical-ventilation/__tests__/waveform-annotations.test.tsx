@@ -4,7 +4,11 @@ import { join } from 'node:path'
 import { render, screen, within } from '@testing-library/react'
 
 import { MechanicalVentilatorConsole } from '../components/MechanicalVentilatorConsole'
-import { annotationChipLayout, type WaveformAnnotation } from '../components/WaveformStrip'
+import {
+  annotationChipLayout,
+  WaveformStrip,
+  type WaveformAnnotation,
+} from '../components/WaveformStrip'
 import { createInitialSimulationState, ventilationSimulationReducer } from '../engine'
 
 const componentStyles = readFileSync(
@@ -227,5 +231,56 @@ describe('paused-trace annotations', () => {
       const layer = container.querySelector('[data-mv-annotation-chip]')?.parentElement
       expect(layer).toHaveAttribute('aria-hidden', 'true')
     })
+  })
+})
+
+describe('the scale and the zero rule on every trace', () => {
+  it('marks zero on a trace whose range spans it, and prints the scale at the right edge', () => {
+    const { container, unmount } = render(
+      <WaveformStrip
+        samples={[]}
+        field="flowLMin"
+        label="Flow"
+        unit="l/min"
+        minimum={-100}
+        maximum={100}
+      />,
+    )
+    const zero = container.querySelector('[data-waveform-zero]')
+    expect(zero?.getAttribute('y1')).toBe('60')
+    const ticks = [...container.querySelectorAll('[data-axis-tick]')].map((tick) => [
+      tick.getAttribute('data-axis-tick'),
+      tick.textContent,
+    ])
+    expect(ticks).toEqual([
+      ['max', '100'],
+      ['zero', '0'],
+      ['min', '-100'],
+    ])
+    expect(container.querySelector('figcaption')?.textContent).toMatch(
+      /above the zero line is gas moving in, below it gas moving out/,
+    )
+    unmount()
+  })
+
+  it('runs the zero rule along the floor of a trace whose range starts at zero', () => {
+    const { container } = render(
+      <WaveformStrip
+        samples={[]}
+        field="pawCmH2O"
+        label="Paw"
+        unit="cmH₂O"
+        minimum={0}
+        maximum={50}
+      />,
+    )
+    expect(container.querySelector('[data-waveform-zero]')?.getAttribute('y1')).toBe('112')
+    expect([...container.querySelectorAll('[data-axis-tick]')].map((t) => t.textContent)).toEqual([
+      '50',
+      '0',
+    ])
+    // The middle grid rule sits at the plotted midpoint, where zero falls on a symmetric scale.
+    const rules = [...container.querySelectorAll('g line')].map((line) => line.getAttribute('y1'))
+    expect(rules).toContain('60')
   })
 })

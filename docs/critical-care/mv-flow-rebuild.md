@@ -147,6 +147,22 @@ with both mechanics rows highlighted in the one table and the strip reading no c
 control. The timed paths are also pinned by the component suites below, which run the same reducer
 under fake timers.
 
+## 6b. Owner review, first finding
+
+The owner opened section 1 and stopped at the prediction: "the answer is flow below zero but there
+are no numbers or zero line in the waveform." True on every device profile — the flow trace's
+range is symmetric (−100 to 100 L/min, or −80 to 80 on the AVEA), so zero was the exact midpoint
+of the trace, and nothing marked it; the generic grid drew two horizontal rules at fixed thirds of
+the box, one just above zero and one just below, and none on it.
+
+`WaveformStrip` now draws a solid zero rule on any trace whose range spans zero, and the same
+rule along the floor of a trace whose range starts at zero (pressure, volume); the horizontal grid
+sits at the quarter points of the plotted range, so the middle rule _is_ zero on a symmetric
+scale; and the scale's maximum, zero and minimum print at the right edge of every trace, as HTML
+so the numbers do not smear in the non-uniformly scaled SVG. The trace's text equivalent names the
+sign convention: above the zero line gas is moving in, below it gas is moving out. Both stroke and
+type use the screen's own tokens, so they flip with the Evita's white screen.
+
 ## 7. What the tests pin
 
 `npx jest src/features/mechanical-ventilation src/features/critical-care src/features/learning-module 'src/app/\[locale\]/mechanical-ventilation' --runInBand`:
