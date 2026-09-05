@@ -184,14 +184,11 @@ export function FlushDock({
     }
   }
 
+  /** The reading stays on screen after the repair; flushing again shows the settled line. */
   function repair() {
     dispatch({ type: 'SET_DAMPING', dampingRatio: 0.65 })
     dispatch({ type: 'SET_ARTIFACT', artifact: 'none' })
     dispatch({ type: 'VALIDATE_SIGNAL', check: DYNAMIC_RESPONSE_CORRECTED_CHECK })
-    setHasRun(false)
-    setObserved(null)
-    setClassification(null)
-    setRevealed(false)
   }
 
   return (
@@ -369,7 +366,7 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
             {occluding
               ? `Up for ${elapsed.toFixed(0)} s. The simulation releases it on its own after ${WEDGE_AUTO_DEFLATION_SECONDS} s — a rail of this model, not a clinical limit.`
               : catheter.position === 'pa'
-                ? 'Down. Inflate only from a confirmed artery tracing.'
+                ? 'Down. A deflated balloon does not by itself establish that the occlusion has ended: the artery tracing coming back does. Inflate only from a confirmed artery tracing.'
                 : 'Down. The tip must be in the pulmonary artery first.'}
           </small>
         </div>

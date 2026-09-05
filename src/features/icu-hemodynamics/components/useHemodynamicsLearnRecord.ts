@@ -1,41 +1,59 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 import {
   createEmptyLearnRecord,
   ICU_HEMODYNAMICS_LEARN_CHANGED_EVENT,
-  readLearnRecord,
+  ICU_HEMODYNAMICS_LEARN_STORAGE_KEY,
+  parseLearnRecord,
   type IcuHemodynamicsLearnRecord,
 } from '../engine/learnProgress'
 
 /**
- * The Learn record, hydration-safe.
+ * The Learn record, as an external store.
  *
- * The server pass and the first client render both see an empty record — which resolves to
- * section one, exactly what the server rendered — and the stored record arrives in an effect.
- * The record re-reads when the stage writes a completion, so a hub open in another tab follows.
+ * The server pass and the hydrating client render both read the empty record — which resolves to
+ * section one, exactly what the server rendered — and the stored record replaces it once React
+ * is subscribed. The snapshot is cached by the raw string it was parsed from, so an unchanged
+ * store yields the same object and nothing re-renders for nothing. The store re-reads when the
+ * stage writes a completion, so a hub open in another tab follows.
  */
+const EMPTY = createEmptyLearnRecord()
+let cachedRaw: string | null | undefined
+let cachedRecord: IcuHemodynamicsLearnRecord = EMPTY
+
+function readSnapshot(): IcuHemodynamicsLearnRecord {
+  let raw: string | null = null
+  try {
+    raw = window.localStorage.getItem(ICU_HEMODYNAMICS_LEARN_STORAGE_KEY)
+  } catch {
+    raw = null
+  }
+  if (raw !== cachedRaw) {
+    cachedRaw = raw
+    cachedRecord = parseLearnRecord(raw) ?? EMPTY
+  }
+  return cachedRecord
+}
+
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener(ICU_HEMODYNAMICS_LEARN_CHANGED_EVENT, onChange)
+  window.addEventListener('storage', onChange)
+  return () => {
+    window.removeEventListener(ICU_HEMODYNAMICS_LEARN_CHANGED_EVENT, onChange)
+    window.removeEventListener('storage', onChange)
+  }
+}
+
+function serverSnapshot(): IcuHemodynamicsLearnRecord {
+  return EMPTY
+}
+
 export function useHemodynamicsLearnRecord(): {
   readonly record: IcuHemodynamicsLearnRecord
   readonly hydrated: boolean
 } {
-  const [record, setRecord] = useState<IcuHemodynamicsLearnRecord>(createEmptyLearnRecord)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    const refresh = () => setRecord(readLearnRecord())
-    // Reading storage is the one thing this effect exists to do; the server pass has none.
-     
-    refresh()
-    setHydrated(true)
-    window.addEventListener(ICU_HEMODYNAMICS_LEARN_CHANGED_EVENT, refresh)
-    window.addEventListener('storage', refresh)
-    return () => {
-      window.removeEventListener(ICU_HEMODYNAMICS_LEARN_CHANGED_EVENT, refresh)
-      window.removeEventListener('storage', refresh)
-    }
-  }, [])
-
-  return { record, hydrated }
+  const record = useSyncExternalStore(subscribe, readSnapshot, serverSnapshot)
+  return { record, hydrated: typeof window !== 'undefined' }
 }

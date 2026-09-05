@@ -107,6 +107,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
       { type: 'SET_DAMPING', dampingRatio: 0.28 },
       { type: 'SET_ARTIFACT', artifact: 'underdamped' },
+      { type: 'FAST_FLUSH', lineType: 'pulmonary-artery' },
     ],
     move: [{ type: 'ZERO_TRANSDUCER' }, { type: 'FAST_FLUSH', lineType: 'pulmonary-artery' }],
     readings: ['papSystolic', 'papDiastolic', 'pulsePressure', 'flushFinding'],
@@ -162,6 +163,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       { type: 'ZERO_TRANSDUCER' },
       { type: 'SET_DAMPING', dampingRatio: 1.15 },
       { type: 'SET_ARTIFACT', artifact: 'overdamped' },
+      { type: 'FAST_FLUSH', lineType: 'pulmonary-artery' },
     ],
     move: [
       { type: 'SET_TRANSDUCER_LEVEL', levelCm: -8 },

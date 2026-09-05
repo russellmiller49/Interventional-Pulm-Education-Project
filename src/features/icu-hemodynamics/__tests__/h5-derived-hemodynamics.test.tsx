@@ -11,7 +11,6 @@ import {
   DerivedTransferComparison,
 } from '../components/DerivedHemodynamicsWorkbench'
 import { DerivedHemodynamicsTeachingPanel } from '../components/PacMeasurementTeaching'
-import { pacGuidedObjectiveComplete } from '../components/PacGuidedSkillActivity'
 import {
   cardiacOutputMethodById,
   derivedClaimVerifications,
@@ -52,6 +51,7 @@ import {
   icuHemodynamicsReducer,
   type HemodynamicSimulationState,
 } from '../engine'
+import { goalsMet, sectionRuntime } from '../engine/stageRuntime'
 
 /**
  * H5 — a derived hemodynamic value, traced back to its equation and its inputs.
@@ -691,24 +691,47 @@ describe('H5 threshold context', () => {
 
 describe('H5 completion contract', () => {
   it('cannot be completed by the formula reference or by viewing numbers', () => {
+    const { actGoals } = sectionRuntime('derived-hemodynamics')
     let state = derivedState()
-    expect(pacGuidedObjectiveComplete('derived-hemodynamics', state)).toBe(false)
+    expect(goalsMet(actGoals, state)).toBe(false)
+    // `derived-reviewed` was the one check the old formula reference set; it earns nothing here.
     state = icuHemodynamicsReducer(state, { type: 'VALIDATE_SIGNAL', check: 'derived-reviewed' })
-    expect(pacGuidedObjectiveComplete('derived-hemodynamics', state)).toBe(false)
+    expect(goalsMet(actGoals, state)).toBe(false)
+
+    // Nor does it complete the section, even with every other commitment already in hand: the
+    // four hands-on checks stay outstanding.
+    const completion = derivedHemodynamicsSectionCompletion({
+      signalValidationChecks: state.signalValidationChecks,
+      measuredCalculatedSeparated: true,
+      disagreementPreservedWithoutAveraging: true,
+      thresholdContextResolved: true,
+    })
+    expect(completion.complete).toBe(false)
+    expect(completion.outstanding).toHaveLength(4)
+    expect(completion.dependencyChainValidated).toBe(false)
+    expect(completion.withheldForValidity).toBe(false)
+    expect(completion.selectiveInvalidationPreserved).toBe(false)
+    expect(completion.flowMethodTraced).toBe(false)
   })
 
   it('requires all four hands-on checks for the objective', () => {
-    let state = derivedState()
+    const { actGoals } = sectionRuntime('derived-hemodynamics')
     const checks = Object.values(DERIVED_SECTION_CHECKS)
+    // The stage's goals and the completion contract's checks are one vocabulary, so the stage
+    // cannot call the work done while the contract still lists it as outstanding.
+    expect(actGoals).toHaveLength(checks.length)
+    for (const id of checks) expect(actGoals).toContainEqual({ type: 'check', id })
+
+    let state = derivedState()
     for (const check of checks.slice(0, -1)) {
       state = icuHemodynamicsReducer(state, { type: 'VALIDATE_SIGNAL', check })
-      expect(pacGuidedObjectiveComplete('derived-hemodynamics', state)).toBe(false)
+      expect(goalsMet(actGoals, state)).toBe(false)
     }
     state = icuHemodynamicsReducer(state, {
       type: 'VALIDATE_SIGNAL',
       check: checks[checks.length - 1],
     })
-    expect(pacGuidedObjectiveComplete('derived-hemodynamics', state)).toBe(true)
+    expect(goalsMet(actGoals, state)).toBe(true)
   })
 
   it('holds section completion to all seven evidence requirements', () => {
@@ -1283,19 +1306,21 @@ describe('H5 invalid-wedge mechanism', () => {
 })
 
 describe('H5 non-regression', () => {
-  it('keeps the pathway order and the derived station identity unchanged', () => {
-    expect(pacLearningPathwaySections.map((section) => section.id)).toEqual([
-      'pressure-system',
-      'waveform-interpretation',
-      'catheter-advancement',
-      'pawp-capture',
-      'thermodilution-series',
-      'derived-hemodynamics',
-      'pac-signal-validation',
-    ])
+  /**
+   * The flow rebuild (2026-09-05) renamed every section by its presentation and added two
+   * sections elsewhere on the pathway. The derived station's id, place after the cardiac-output
+   * station, route and completion contract are unchanged.
+   */
+  it('keeps the derived station identity unchanged inside the rebuilt pathway', () => {
+    const order = pacLearningPathwaySections.map((section) => section.id)
+    expect(order).toHaveLength(9)
+    expect(order.indexOf('derived-hemodynamics')).toBe(order.indexOf('thermodilution-series') + 1)
+    expect(order.indexOf('derived-hemodynamics')).toBe(order.indexOf('pac-signal-validation') - 1)
     const activity = criticalCareActivityById.get('hemodynamics:learn:derived-hemodynamics')
     expect(activity).toBeDefined()
-    expect(activity?.title).toBe('Derived hemodynamics and validity')
+    expect(activity?.title).toBe('Numbers made of numbers')
+    expect(activity?.query).toEqual({ activity: 'derived-hemodynamics' })
+    expect(activity?.curriculumStage).toBe('application')
   })
 
   it('leaves storage keys, progress versions, and the content version untouched', () => {

@@ -77,7 +77,7 @@ describe('CriticalCareHub', () => {
     // hemodynamics pathway. `__tests__/hub-pathway-start-alignment.test.ts` pins the two together.
     expect(await screen.findByRole('link', { name: 'Start here' })).toHaveAttribute(
       'href',
-      '/icu-hemodynamics/learn?activity=pressure-system',
+      '/icu-hemodynamics/learn?activity=why-measure',
     )
     expect(screen.getByRole('heading', { name: 'Quick launch a lab' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Browse all cases' })).toHaveAttribute(

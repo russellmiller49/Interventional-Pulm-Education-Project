@@ -176,10 +176,18 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
       sentence:
         'No control names a place. The shape does; the tip and the balloon only decide which shape you will see.',
     },
+    /*
+     * The walk names all four places before the prediction, on purpose: the prediction tests
+     * whether the learner can apply the four shapes to a tracing whose chamber the monitor is not
+     * naming. What must not appear is anything that names the place of the tracing on the screen —
+     * the monitor's own labels, or a sentence that says where the tip is.
+     */
     precommitDenyPatterns: [
-      /\bright ventric/i,
-      /\bventricular (contour|shape|tracing)/i,
-      /dips? (to|toward) the floor/i,
+      /PAC · RV/i,
+      /\bRVEDP\b/i,
+      /\bRVSP\b/i,
+      /(tip|catheter) (is|sits) in the (right )?ventric/i,
+      /this (tracing|trace) is (the |a )?(right )?ventric/i,
     ],
     modelBoundary:
       'The four shapes are drawn from one morphology model at one heart rate and one rhythm. Real tracings vary with rhythm, breathing and disease, which is why the reference is a starting point and not a template.',
@@ -244,7 +252,6 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
     },
     precommitDenyPatterns: [
       /\badvance, expecting/i,
-      /rapid systolic rise/i,
       /ectopy is common/i,
       /fear of the next chamber/i,
     ],
@@ -403,9 +410,9 @@ export const hemodynamicsSectionSpecs: readonly HemodynamicsSectionSpec[] = Obje
     precommitDenyPatterns: [
       /unconfirmed/i,
       /walk the line/i,
-      /before anything else/i,
       /measurement chain/i,
-      /artifact/i,
+      /doubt the (screen|numbers)/i,
+      /first suspect is the measurement/i,
     ],
     modelBoundary:
       'The case is one authored patient whose perfusion does not change while the screen does. Its faults are the ones this module has taught; a real screen can mislead in ways the model does not draw.',

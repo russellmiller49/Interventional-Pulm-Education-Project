@@ -11,7 +11,16 @@ import {
 
 import type { PacGuidedSkillId } from './pacGuidedSkills'
 
-export type PacLearningPathwaySectionId = PacGuidedSkillId | 'pac-signal-validation'
+/**
+ * Every section id on the pathway. The six guided ids from before the flow rebuild keep their
+ * items in `pacLearningItems`; the orientation, the second waveform section and the capstone
+ * are registered in `sectionSpecs` and `stageItems`.
+ */
+export type PacLearningPathwaySectionId =
+  | PacGuidedSkillId
+  | 'why-measure'
+  | 'waveform-components'
+  | 'pac-signal-validation'
 
 export type PacLearningPathwaySection = LearningPathwaySection
 
