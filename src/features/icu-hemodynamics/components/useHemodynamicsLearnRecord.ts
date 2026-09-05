@@ -50,10 +50,19 @@ function serverSnapshot(): IcuHemodynamicsLearnRecord {
   return EMPTY
 }
 
+const noSubscription = () => () => {}
+
 export function useHemodynamicsLearnRecord(): {
   readonly record: IcuHemodynamicsLearnRecord
   readonly hydrated: boolean
 } {
   const record = useSyncExternalStore(subscribe, readSnapshot, serverSnapshot)
-  return { record, hydrated: typeof window !== 'undefined' }
+  // False on the server and on the hydrating render, true once React has re-rendered on the
+  // client — the one way a client-only flag stays consistent with the server markup.
+  const hydrated = useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false,
+  )
+  return { record, hydrated }
 }
