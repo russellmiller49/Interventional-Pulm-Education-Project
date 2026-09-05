@@ -1,5 +1,13 @@
 # Mechanical ventilation: learn on the running ventilator
 
+> **Superseded on 2026-09-05.** The flow this document describes — both routes opening directly on
+> a running console, a four-phase loop per experiment, a learning-map dialog, a reflection gate —
+> was replaced by the lesson-stage rebuild recorded in
+> [`critical-care/mv-flow-rebuild-plan.md`](./critical-care/mv-flow-rebuild-plan.md) and
+> [`critical-care/mv-flow-rebuild.md`](./critical-care/mv-flow-rebuild.md). The curriculum, the
+> experiment rounds, the passive patient, the saved-record design and the provenance sections below
+> still describe what is on the stage; the interaction, completion and layout sections do not.
+
 Design/review date: September 5, 2026. Audience: mixed experience, with a guided beginner entry
 and an experience-based entry. Release status: existing tester preview.
 
