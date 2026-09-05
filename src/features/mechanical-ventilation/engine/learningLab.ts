@@ -285,12 +285,17 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
       ...session,
       evidence: setEvidence(session, { ...evidence, location: action.choiceId.slice(0, 40) }),
     }
-  if (action.type === 'SORT' && evidence.sort === undefined) {
+  // The sort belongs to the section, not to a round: it is asked between the first reveal and the
+  // transfer, so it is recorded with the first round's commitments whatever round the lab is in.
+  if (action.type === 'SORT' && session.evidence[0].sort === undefined) {
     const entries = Object.entries(action.answers).slice(0, 12)
     if (entries.length === 0) return session
     return {
       ...session,
-      evidence: setEvidence(session, { ...evidence, sort: Object.fromEntries(entries) }),
+      evidence: [
+        { ...session.evidence[0], sort: Object.fromEntries(entries) },
+        session.evidence[1],
+      ],
     }
   }
   if (action.type === 'RESET') {

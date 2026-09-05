@@ -136,7 +136,10 @@ function VentilationStageSession({
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
 
-  const progress = deriveStageProgress(lesson, session, walkDone)
+  const [readConfirmed, setReadConfirmed] = useState(() =>
+    saved ? saved.phase !== 'explore' || saved.round > 0 : false,
+  )
+  const progress = deriveStageProgress(lesson, session, { walkComplete: walkDone, readConfirmed })
   /*
    * The learner sees step k only after continuing from k−1. Committing a prediction moves the lab
    * on, but the verdict has to be read before the next step replaces it; meeting a step's goals
@@ -198,6 +201,7 @@ function VentilationStageSession({
   const now = () => new Date().toISOString()
 
   function continueFromRecognize() {
+    setReadConfirmed(true)
     if (session.phase === 'explore' && session.round === 0) lab({ type: 'PREDICT' })
     confirmThrough(activeIndex)
   }
@@ -282,6 +286,7 @@ function VentilationStageSession({
     setReview(null)
     setWalkStopIndex(0)
     setWalkDone(false)
+    setReadConfirmed(false)
     setPendingChoice({})
     setSortDraft({})
     setSpotlight(null)
@@ -890,6 +895,7 @@ function VentilationStageSession({
       stops={mapStops}
       mapCaption={mapCaption}
       mapAnswer={mapAnswer}
+      bedsideAvailable={interaction.kind !== 'locate' || locationCommitted}
     />
   )
 

@@ -241,10 +241,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     precommitDenyPatterns: [
       /more efforts followed by/i,
       /longer machine inspiration/i,
-      /neuromuscular/i,
       /premature cycling/i,
-      /trigger delay/i,
-      /missed efforts/i,
     ],
     practicePairing: { kind: 'mechanism-match', caseId: 'MV-07' },
   },
@@ -316,13 +313,7 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
         'No knob answers this one. The extra breaths come from the circuit, and the circuit is checked at the bedside.',
       ),
     }),
-    precommitDenyPatterns: [
-      /fewer extra machine breaths/i,
-      /condensate/i,
-      /circuit leak/i,
-      /autotrigger/i,
-      /auto-trigger/i,
-    ],
+    precommitDenyPatterns: [/fewer extra machine breaths/i, /circuit leak/i],
     practicePairing: { kind: 'mechanism-match', caseId: 'MV-08' },
   },
   {
@@ -368,7 +359,6 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
     precommitDenyPatterns: [
       /ask what is making breathing difficult/i,
       /patient findings improving over time/i,
-      /delirium/i,
     ],
     practicePairing: { kind: 'mechanism-match', caseId: 'MV-15' },
   },

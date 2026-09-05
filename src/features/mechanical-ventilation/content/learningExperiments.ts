@@ -268,7 +268,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'Catch one whole breath',
         introduction:
           'The ventilator is already running. Start with gas moving into this passive patient, then watch it leave.',
-        look: 'Find inward flow above zero, outward flow below zero, and the volume rising then falling.',
+        look: 'Watch a few breaths. The flow trace crosses zero twice in every breath, and the volume trace has a rise and a fall; decide which half of each belongs to gas leaving.',
         prompt: 'When you pause during expiration, which combination identifies gas leaving?',
         choices: [
           'Flow below zero with falling volume',
@@ -449,7 +449,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
         title: 'Test a pressure change in the original patient',
         caseId: 'MV-01',
         introduction:
-          'The original recruitment case is hypoxemic. Make one bounded change and watch more than the saturation.',
+          'This patient is hypoxemic on a lung-protective volume breath. Make one bounded change and watch more than the saturation.',
         look: 'Keep SpO₂, airway pressure, and MAP together.',
         prompt:
           'Which response would make an oxygenation improvement incomplete evidence of benefit?',

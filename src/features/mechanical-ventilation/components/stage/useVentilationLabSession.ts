@@ -88,7 +88,17 @@ export function useVentilationLabSession({
   }, [engine])
 
   const saveBucket = Math.floor(session.simulation.simulationTime / 5)
-  const evidence = session.evidence[session.round]
+  // Every commitment in either round, as one key, so a change to any of them saves at once.
+  const commitments = session.evidence
+    .map((evidence) =>
+      [
+        evidence.prediction ?? '',
+        evidence.location ?? '',
+        evidence.sort ? Object.keys(evidence.sort).length : '',
+        evidence.completedAt ?? '',
+      ].join(':'),
+    )
+    .join('|')
   useEffect(() => {
     save(labCheckpoint(sessionRef.current))
   }, [
@@ -99,9 +109,7 @@ export function useVentilationLabSession({
     session.events.length,
     session.device,
     session.readySince,
-    evidence.prediction,
-    evidence.location,
-    evidence.sort,
+    commitments,
     session.completedAt,
   ])
   useEffect(() => {

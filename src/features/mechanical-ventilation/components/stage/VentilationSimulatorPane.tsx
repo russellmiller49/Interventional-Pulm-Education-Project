@@ -89,6 +89,7 @@ export function VentilationSimulatorPane({
   stops,
   mapCaption,
   mapAnswer,
+  bedsideAvailable = true,
 }: {
   readonly session: LabSession
   readonly engine: Dispatch<VentilationAction>
@@ -108,6 +109,11 @@ export function VentilationSimulatorPane({
   readonly stops: readonly BreathStopId[]
   readonly mapCaption?: string
   readonly mapAnswer?: BreathMapAnswer
+  /**
+   * Whether the bedside findings may be opened. False while a section is asking where on the
+   * breath the problem lives: the findings name the finding, and the question is the finding.
+   */
+  readonly bedsideAvailable?: boolean
 }) {
   const state = session.simulation
   const controlGoals = goals.filter(
@@ -400,13 +406,20 @@ export function VentilationSimulatorPane({
 
       <BreathMap emphasis={stops} caption={mapCaption} answer={mapAnswer} />
 
-      <details className={styles.bedside} data-bedside-findings>
-        <summary>
-          Patient and circuit findings ·{' '}
-          {caseId === 'MV-LAB' ? 'passive teaching patient' : 'this patient'}
-        </summary>
-        <BedsidePanel state={state} definition={definition} compact />
-      </details>
+      {bedsideAvailable ? (
+        <details className={styles.bedside} data-bedside-findings>
+          <summary>
+            Patient and circuit findings ·{' '}
+            {caseId === 'MV-LAB' ? 'passive teaching patient' : 'this patient'}
+          </summary>
+          <BedsidePanel state={state} definition={definition} compact />
+        </details>
+      ) : (
+        <p className={styles.quickNote} data-bedside-withheld>
+          The patient and circuit findings open once you have said where on the breath the problem
+          lives.
+        </p>
+      )}
     </>
   )
 }

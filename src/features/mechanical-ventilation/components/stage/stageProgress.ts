@@ -45,8 +45,11 @@ export function goalsMet(
 export function deriveStageProgress(
   lesson: VentilationStageLesson,
   session: LabSession,
-  /** Stage-only commitments the lab does not hold: the walk's visited stops. */
-  walkComplete: boolean,
+  /**
+   * Stage-only state the lab does not hold: whether the walk has visited every stop, and whether
+   * the learner has pressed Continue on a first step that only asks to be read.
+   */
+  stageOnly: { readonly walkComplete: boolean; readonly readConfirmed: boolean },
 ): StageProgress {
   const recognize = 0
   const predict = lesson.predictionStepIndex
@@ -78,9 +81,9 @@ export function deriveStageProgress(
   const recognizeStep = lesson.steps[recognize]
   const recognizeDone =
     recognizeStep.interaction.kind === 'read'
-      ? true
+      ? stageOnly.readConfirmed
       : recognizeStep.interaction.kind === 'walk'
-        ? walkComplete
+        ? stageOnly.walkComplete
         : first.location !== undefined
 
   let liveIndex: number
@@ -142,11 +145,6 @@ export function deriveStageProgress(
   lesson.steps.forEach((step, index) => {
     if (index < liveIndex || (index === liveIndex && livePerformed)) performedIds.add(step.id)
   })
-  // The recognize step is performed by its own predicate even when the session has moved on
-  // without it (a reload before the walk finished): say so rather than pretend.
-  if (liveIndex > recognize && !recognizeDone && recognizeStep.interaction.kind !== 'read') {
-    performedIds.add(recognizeStep.id)
-  }
 
   return {
     liveIndex,
