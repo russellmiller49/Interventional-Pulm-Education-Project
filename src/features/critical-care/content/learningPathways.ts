@@ -17,75 +17,95 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   {
     moduleId: 'icu-hemodynamics',
     arcSentence:
-      'Trust the signal, read the waveform, advance the catheter, measure, and integrate',
+      'Ask why, trust the signal, read the waveform, advance the catheter, measure, and integrate',
     sections: [
+      {
+        id: 'why-measure',
+        shortTitle: 'Why measure',
+        title: 'Why put a line in at all?',
+        minutes: 6,
+        description:
+          'What a pressure measured inside the circulation adds to the bedside picture, and the questions it cannot answer on its own.',
+        stage: 'orientation',
+        activityId: 'hemodynamics:learn:why-measure',
+      },
       {
         id: 'pressure-system',
         shortTitle: 'Trust the signal',
-        title: 'Level, zero, and dynamic response',
+        title: 'Can this number be trusted?',
         minutes: 12,
         description:
-          'Start here: can I trust this pressure signal? Level and zero the system, then classify its fast-flush response before any number is read.',
+          'Walk the line from the tip to the number: level and zero the system, fit the scale, and read the fast-flush response before any pressure is interpreted.',
         stage: 'foundation',
         activityId: 'hemodynamics:learn:pressure-system',
       },
       {
         id: 'waveform-interpretation',
-        shortTitle: 'Read the waveform',
-        title: 'Interpret normal and abnormal waveforms',
-        minutes: 18,
+        shortTitle: 'Name the place',
+        title: 'Four places, four shapes',
+        minutes: 10,
         description:
-          'Build the normal RA, RV, PA, and wedge reference first, then read the wave components that carry a diagnosis.',
+          'Walk the four places the tip can sit — right atrium, right ventricle, pulmonary artery, the wedge — and learn to name each from its shape alone.',
         stage: 'mechanism',
         activityId: 'hemodynamics:learn:waveform-interpretation',
       },
       {
+        id: 'waveform-components',
+        shortTitle: 'Read the waves',
+        title: 'What the waves inside can say',
+        minutes: 10,
+        description:
+          'Inside a place you have named, a single wave component can carry a diagnosis — once the place and the signal have both been confirmed.',
+        stage: 'mechanism',
+        activityId: 'hemodynamics:learn:waveform-components',
+      },
+      {
         id: 'catheter-advancement',
         shortTitle: 'Advance',
-        title: 'Advance the PAC by waveform',
+        title: 'Where is the tip?',
         minutes: 15,
         description:
-          'With a trusted signal and a normal reference in hand, work from the introducer and confirm each RA, RV, and PA transition from morphology.',
+          'Work a simulated catheter from the introducer to the pulmonary artery, confirming each stop from the tracing rather than the depth, and stopping when the list says stop.',
         stage: 'foundation',
         activityId: 'hemodynamics:learn:catheter-advancement',
       },
       {
         id: 'pawp-capture',
         shortTitle: 'Wedge',
-        title: 'Brief end-expiratory PAWP capture',
+        title: 'Listening through a stopped branch',
         minutes: 15,
         description:
-          'From the confirmed PA position, capture and store at end expiration, then deflate promptly and confirm the PA waveform returns.',
+          'From a confirmed pulmonary-artery position, take a brief end-expiratory wedge, judge whether it is plausible, and prove the occlusion has ended.',
         stage: 'mechanism',
         activityId: 'hemodynamics:learn:pawp-capture',
       },
       {
         id: 'thermodilution-series',
-        shortTitle: 'Measure CO',
-        title: 'Cardiac output: thermodilution and Fick',
+        shortTitle: 'Measure flow',
+        title: 'How much is flowing?',
         minutes: 18,
         description:
-          'Learn what each method measures, then standardize and review a thermodilution series.',
+          'Measure flow with a thermodilution series and a Fick calculation, judging each curve and each input before its number.',
         stage: 'mechanism',
         activityId: 'hemodynamics:learn:thermodilution-series',
       },
       {
         id: 'derived-hemodynamics',
         shortTitle: 'Derive',
-        title: 'Derived hemodynamics and validity',
+        title: 'Numbers made of numbers',
         minutes: 15,
         description:
-          'Trace each formula back to its source measurements before interpreting the result.',
+          'Trace each calculated value back to its equation and its inputs, and withhold only what an invalid input actually touches.',
         stage: 'application',
         activityId: 'hemodynamics:learn:derived-hemodynamics',
       },
       {
         id: 'pac-signal-validation',
         shortTitle: 'Integrate',
-        title: 'PAC signal-validation capstone',
+        title: 'The screen that does not fit the patient',
         minutes: 20,
         description:
-          'Run the whole validity screen at once on a discordant case: setup, catheter position, curve quality, derived values, and reassessment.',
+          'One case where the numbers changed and the patient did not: walk the line, the tip, the series and the calculation before anything is treated.',
         stage: 'integration',
         activityId: 'hemodynamics:learn:pac-signal-validation',
       },

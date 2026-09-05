@@ -116,8 +116,10 @@ describe('critical-care catalogs', () => {
     // Seed order, and therefore what the shared hub recommends first, follows the hemodynamics
     // learning pathway (H1.1). See `__tests__/hub-pathway-start-alignment.test.ts`.
     expect(sourceIds('icu-hemodynamics', 'learn')).toEqual([
+      'why-measure',
       'pressure-system',
       'waveform-interpretation',
+      'waveform-components',
       'catheter-advancement',
       'pawp-capture',
       'thermodilution-series',
