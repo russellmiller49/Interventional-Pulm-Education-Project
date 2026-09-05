@@ -569,6 +569,9 @@ export function DrillStageHost({
             <AnswerVerdict
               item={item}
               choiceId={selectedChoiceId}
+              // This module's owner asked for the outcome in as many words; the other labs
+              // render the descriptive form until each of their owners has looked at it.
+              outcome="stated"
               timing="immediate-after-commit"
               theme="dark"
               onContinue={isLastStep ? undefined : advance}

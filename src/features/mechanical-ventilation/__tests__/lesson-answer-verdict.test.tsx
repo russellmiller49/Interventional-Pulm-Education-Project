@@ -1,7 +1,10 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
-import { flaggedGradingCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
+import {
+  flaggedGradingCopyTerms,
+  flaggedLearnerCopyTerms,
+} from '@/features/learning-module/activity/clinicalLearningItem'
 
 import { MechanicalVentilationLessonActivity } from '../components/MechanicalVentilationLessonActivity'
 import { mechanicalVentilationLessonItems, mechanicalVentilationLessons } from '../content'
@@ -194,7 +197,7 @@ describe('Mechanical Ventilation Learn verdict — what the shared component sta
     expect(verdictNode()).toHaveAttribute('aria-live', 'assertive')
   })
 
-  it('states the outcome explicitly while still dropping every examination term', async () => {
+  it('drops the grading vocabulary the module’s own learner-copy rule bans elsewhere', async () => {
     const item = items().prediction
 
     await openPredictionPhase()
@@ -202,22 +205,20 @@ describe('Mechanical Ventilation Learn verdict — what the shared component sta
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
 
     /*
-     * This assertion used to ban every term on the authored-copy review list, "correct" included,
-     * and the shared component's descriptive framings ("That read holds") existed to satisfy it.
-     * An owner review in September 2026 reversed that half of the rule: a card that describes the
-     * reasoning without saying whether the learner was right leaves them to infer the outcome from
-     * a colour, which is what was actually happening. The outcome is now stated first.
+     * The local verdict headed a best answer "Correct" — a term this project rejects in authored
+     * learner copy, and the reason the shared component words its framings the way it does.
      *
-     * What the rule still protects is the half that was never a teaching preference — this content
-     * is not credit-eligible, so a card may not talk about a score, a percentage, a pass or a
-     * mastery claim. `flaggedGradingCopyTerms` is that half, and it is what this now checks.
-     * Authored stems, choice labels and rationales are unchanged: `flaggedLearnerCopyTerms` still
-     * bans correctness words there, where they would be answer leakage.
+     * An owner review of the ECMO module in September 2026 asked for the outcome to be said in as
+     * many words, and the shared card can now do that — but only where a caller opts in with
+     * `outcome="stated"`. Mechanical ventilation has not, so this lab still reads exactly as it
+     * did and this contract still holds in full. The half of the rule that is not a teaching
+     * preference is checked separately by `flaggedGradingCopyTerms`: this content is not
+     * credit-eligible, so no card may talk about a score, a percentage, a pass or a mastery claim.
      */
     const heading = verdictNode().querySelector('p')?.textContent ?? ''
     expect(heading.length).toBeGreaterThan(0)
+    expect(flaggedLearnerCopyTerms(heading)).toEqual([])
     expect(flaggedGradingCopyTerms(heading)).toEqual([])
-    expect(heading).toMatch(/^(Correct|Partly correct|Not correct)\b/)
-    expect(verdictNode()).toHaveAttribute('data-verdict-outcome')
+    expect(verdictNode()).not.toHaveAttribute('data-verdict-outcome')
   })
 })

@@ -135,7 +135,12 @@ describe('AnswerVerdict timing policy', () => {
     ['raise-speed', 'unsafe', 'Not correct, and unsafe.'],
   ] as const)('states %s as %s once the verdict is told', (choiceId, outcome, label) => {
     const { container } = render(
-      <AnswerVerdict item={item} choiceId={choiceId} timing="immediate-after-commit" />,
+      <AnswerVerdict
+        item={item}
+        choiceId={choiceId}
+        outcome="stated"
+        timing="immediate-after-commit"
+      />,
     )
     const card = container.querySelector('[data-answer-verdict]')
     expect(card).toHaveAttribute('data-revealed', 'true')
@@ -147,12 +152,30 @@ describe('AnswerVerdict timing policy', () => {
     )
   })
 
+  it('describes the read and states no outcome unless the caller asks', () => {
+    /*
+     * The default is what every lab rendered before the September 2026 owner review, and it stays
+     * the default: the finding came from one owner looking at one module, so the label is offered
+     * to the other labs rather than applied to them. `outcome="stated"` is how a lab takes it.
+     */
+    const { container } = render(
+      <AnswerVerdict item={item} choiceId="drainage-limited" timing="immediate-after-commit" />,
+    )
+    const card = container.querySelector('[data-answer-verdict]')
+    expect(card).toHaveAttribute('data-revealed', 'true')
+    expect(card).not.toHaveAttribute('data-verdict-outcome')
+    expect(container.querySelector('[data-verdict-outcome-label]')).toBeNull()
+    // The framing that teaches is untouched, and still leads.
+    expect(container.querySelector('p')?.textContent).toBe('That read holds')
+  })
+
   it('leaks no outcome, in text or in an attribute, while the verdict is withheld', () => {
     for (const timing of ['after-action-response', 'debrief-only'] as const) {
       const { container, unmount } = render(
         <AnswerVerdict
           item={item}
           choiceId="membrane-clotting"
+          outcome="stated"
           timing={timing}
           actionObserved={false}
         />,

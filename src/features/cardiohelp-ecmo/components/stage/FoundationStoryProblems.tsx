@@ -117,6 +117,7 @@ export function FoundationStoryProblems({
               <div className="grid gap-3" data-story-verdict>
                 <ChoiceReasoningFeedback
                   choice={committedChoice}
+                  outcome="stated"
                   explanation={story.item.explanation}
                   evidenceIds={story.item.evidenceIds}
                 />

@@ -13,12 +13,12 @@ type ClinicalLearningChoice = ClinicalLearningItem['choices'][number]
 /**
  * The outcome first, then the reasoning.
  *
- * This card only ever renders after a commitment, so there is nothing to withhold: it says whether
- * the learner was right and then why. The explicit label was added on an owner review in September
- * 2026 — the card used to open with "The cues support this read", which never states the outcome —
- * and it matches the wording `AnswerVerdict` uses so a learner meeting both cards meets one
- * vocabulary. See `VerdictOutcome` there for why the descriptive sentence is kept rather than
- * replaced.
+ * This card only ever renders after a commitment, so there is nothing to withhold: where the caller
+ * asks for it, the card says whether the learner was right and then why. The explicit label was
+ * added on an owner review in September 2026 — the card used to open with "The cues support this
+ * read", which never states the outcome — and it matches the wording `AnswerVerdict` uses so a
+ * learner meeting both cards meets one vocabulary. It is opt-in for the same reason it is there:
+ * one owner asked for it about one module. See `AnswerVerdict` for the rest of the reasoning.
  */
 const plausibilityOutcome: Readonly<
   Record<
@@ -46,11 +46,14 @@ export function ChoiceReasoningFeedback({
   explanation,
   evidenceIds,
   conceptIds = [],
+  outcome = 'described',
 }: {
   readonly choice: ClinicalLearningChoice
   readonly explanation: string
   readonly evidenceIds: readonly string[]
   readonly conceptIds?: readonly string[]
+  /** See the prop of the same name on `AnswerVerdict`: `stated` opts in to the outcome label. */
+  readonly outcome?: 'described' | 'stated'
 }) {
   const evidence = resolveCriticalCareEvidence(evidenceIds)
   const concepts = conceptIds.flatMap((conceptId) => {
@@ -67,7 +70,9 @@ export function ChoiceReasoningFeedback({
       role={isUnsafe ? 'alert' : 'status'}
       aria-live="polite"
       data-plausibility={choice.plausibility}
-      data-verdict-outcome={plausibilityOutcome[choice.plausibility].outcome}
+      data-verdict-outcome={
+        outcome === 'stated' ? plausibilityOutcome[choice.plausibility].outcome : undefined
+      }
     >
       <div className="flex items-start gap-3">
         {isUnsafe ? (
@@ -77,7 +82,13 @@ export function ChoiceReasoningFeedback({
         )}
         <div>
           <p className="font-bold text-white">
-            <span data-verdict-outcome-label>{plausibilityOutcome[choice.plausibility].label}</span>{' '}
+            {outcome === 'stated' ? (
+              <>
+                <span data-verdict-outcome-label>
+                  {plausibilityOutcome[choice.plausibility].label}
+                </span>{' '}
+              </>
+            ) : null}
             {plausibilityFrame[choice.plausibility]}
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-100">{choice.rationale}</p>

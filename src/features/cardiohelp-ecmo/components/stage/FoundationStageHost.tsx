@@ -746,6 +746,7 @@ function FoundationStageSession({
             <div className="grid gap-3" data-verdict>
               <ChoiceReasoningFeedback
                 choice={committedChoice}
+                outcome="stated"
                 explanation={item.explanation}
                 evidenceIds={item.evidenceIds}
               />

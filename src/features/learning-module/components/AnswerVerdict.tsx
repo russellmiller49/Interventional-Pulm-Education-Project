@@ -60,8 +60,10 @@ export type VerdictTiming = 'immediate-after-commit' | 'after-action-response' |
  * These labels were deliberately absent until an owner review of the ECMO module in September 2026:
  * the card opened with "That read holds", which describes the reasoning without ever saying whether
  * the learner got it right. The owner's finding was blunt — "when a user gets a question right or
- * wrong it should more explicitly say if it was correct or not" — and it applies to every lab that
- * renders this card, so the label leads here rather than in one module's copy.
+ * wrong it should more explicitly say if it was correct or not".
+ *
+ * The reasoning applies to every lab that renders this card, but the finding came from one owner
+ * looking at one module, so it is offered rather than imposed: `outcome="stated"` opts in.
  *
  * The original sentence is kept after it. Saying only "Correct" would throw away the part that
  * teaches, which is the description of *what* holds; the outcome tells the learner where they stand
@@ -151,6 +153,7 @@ export function AnswerVerdict({
   actionObserved = false,
   inDebrief = false,
   theme = 'dark',
+  outcome = 'described',
   branchExplanation,
   onContinue,
   continueLabel = 'Continue',
@@ -161,6 +164,18 @@ export function AnswerVerdict({
   readonly actionObserved?: boolean
   readonly inDebrief?: boolean
   readonly theme?: 'light' | 'dark'
+  /**
+   * Whether the card says the outcome in as many words, or only describes the reasoning.
+   *
+   * `described` is what every lab did before, and it stays the default: the card opens with "That
+   * read holds" and leaves the learner to infer where they stand. `stated` puts "Correct." /
+   * "Partly correct." / "Not correct." in front of that sentence.
+   *
+   * A prop rather than a change to the card, because the finding behind it came from one owner
+   * reviewing one module. Each lab's owner can take it once they have looked at it; the ECMO stage
+   * is the only caller passing `stated` today, and nothing has moved under the other labs.
+   */
+  readonly outcome?: 'described' | 'stated'
   /**
    * What this particular branch produced, when the caller knows it — the response the learner just
    * watched, or why their action did or did not work. Shown instead of nothing in guided Practice,
@@ -198,17 +213,22 @@ export function AnswerVerdict({
       role={isUnsafe ? 'alert' : 'status'}
       aria-live={isUnsafe ? 'assertive' : 'polite'}
       data-answer-verdict
-      // Only once it is being told. See `withheldTone`. The outcome is gated the same way, for the
-      // same reason: an attribute is readable by a stylesheet and by anyone who opens the inspector.
+      // Only once it is being told, and the outcome only where the caller asked for it. See
+      // `withheldTone`: an attribute is readable by a stylesheet and by anyone with an inspector.
       data-plausibility={revealed ? chosen.plausibility : undefined}
-      data-verdict-outcome={revealed ? copy.outcome : undefined}
+      data-verdict-outcome={revealed && outcome === 'stated' ? copy.outcome : undefined}
       data-timing={timing}
       data-revealed={revealed}
     >
       <p className="font-semibold">
         {revealed ? (
           <>
-            <span data-verdict-outcome-label>{copy.outcomeLabel}</span> {copy.title}
+            {outcome === 'stated' ? (
+              <>
+                <span data-verdict-outcome-label>{copy.outcomeLabel}</span>{' '}
+              </>
+            ) : null}
+            {copy.title}
           </>
         ) : (
           'Answer recorded'

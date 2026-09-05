@@ -79,6 +79,7 @@ describe('ChoiceReasoningFeedback', () => {
     const { container } = render(
       <ChoiceReasoningFeedback
         choice={choice(plausibility)}
+        outcome="stated"
         explanation="Compare the expected waveform and patient response."
         evidenceIds={['esc-ers-ph-2022']}
       />,
@@ -94,6 +95,25 @@ describe('ChoiceReasoningFeedback', () => {
     expect((container.textContent ?? '').trimStart().startsWith(label)).toBe(true)
   })
 
+  it('describes the reasoning and states no outcome unless the caller asks', () => {
+    /*
+     * The default is what every lab rendered before the September 2026 owner review, and it stays
+     * the default: the finding came from one owner looking at one module, so the label is offered
+     * to the others rather than applied to them. `outcome="stated"` is how a lab takes it.
+     */
+    const { container } = render(
+      <ChoiceReasoningFeedback
+        choice={choice('best')}
+        explanation="Compare the expected waveform and patient response."
+        evidenceIds={['esc-ers-ph-2022']}
+      />,
+    )
+    expect(container.querySelector('[data-verdict-outcome]')).toBeNull()
+    expect(container.querySelector('[data-verdict-outcome-label]')).toBeNull()
+    // The framing that teaches is still there, and it still leads.
+    expect((container.textContent ?? '').trimStart()).toMatch(/^The cues support this read\./)
+  })
+
   it('never says a word about scoring while stating the outcome', () => {
     for (const plausibility of [
       'best',
@@ -104,6 +124,7 @@ describe('ChoiceReasoningFeedback', () => {
       const { container, unmount } = render(
         <ChoiceReasoningFeedback
           choice={choice(plausibility)}
+          outcome="stated"
           explanation="Compare the expected waveform and patient response."
           evidenceIds={['esc-ers-ph-2022']}
         />,
