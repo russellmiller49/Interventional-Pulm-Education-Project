@@ -40,6 +40,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-mcs",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3122", "--webpack"],
+      "port": 3122,
+      "autoPort": false
+    },
+    {
       "name": "claude-b-dev",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--port", "3121", "--webpack"],
