@@ -65,7 +65,7 @@ export interface HemodynamicsSectionSpec {
   /** "Section 3 adds one idea to section 2: …" — counted out loud. */
   readonly incrementSentence: string
   readonly prerequisiteSectionIds: readonly HemodynamicsSectionId[]
-  /** The stops the route map lights while this section runs. */
+  /** The stops the catheter map lights while this section runs. */
   readonly spineStops: readonly RouteStopId[]
   /** The rows of the one table this section highlights. */
   readonly grammarRowIds: readonly string[]

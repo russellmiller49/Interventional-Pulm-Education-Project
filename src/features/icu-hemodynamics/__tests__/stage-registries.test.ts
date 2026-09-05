@@ -24,3 +24,37 @@ describe('the stage registries validate at import', () => {
     expect(hemodynamicsSectionSpecs).toHaveLength(9)
   })
 })
+
+describe('the stage items, sort, stories and map answers validate at import', () => {
+  it('items', async () => {
+    const { validateHemodynamicsStageItems, hemodynamicsStageItems } =
+      await import('../content/stageItems')
+    expect(validateHemodynamicsStageItems()).toEqual([])
+    expect(Object.keys(hemodynamicsStageItems)).toHaveLength(9)
+  })
+  it('question sort', async () => {
+    const { validateQuestionSort } = await import('../content/questionSort')
+    expect(validateQuestionSort()).toEqual([])
+  })
+  it('story problems', async () => {
+    const { validateHemodynamicsStoryProblems, hemodynamicsStoryProblems } =
+      await import('../content/storyProblems')
+    expect(validateHemodynamicsStoryProblems()).toEqual([])
+    expect(hemodynamicsStoryProblems).toHaveLength(3)
+  })
+  it('map answers', async () => {
+    const { validateHemodynamicsMapAnswerTargets, hemodynamicsMapAnsweredItemIds } =
+      await import('../content/mapAnswerTargets')
+    expect(validateHemodynamicsMapAnswerTargets()).toEqual([])
+    expect(hemodynamicsMapAnsweredItemIds).toEqual(['hd-place-predict-1', 'hd-place-transfer-1'])
+  })
+})
+
+describe('the stage lessons validate at import', () => {
+  it('nine lessons, one prediction and one transfer each', async () => {
+    const { hemodynamicsStageLessons, validateHemodynamicsStageLessons } =
+      await import('../content/stageLessons')
+    expect(validateHemodynamicsStageLessons()).toEqual([])
+    expect(hemodynamicsStageLessons()).toHaveLength(9)
+  })
+})

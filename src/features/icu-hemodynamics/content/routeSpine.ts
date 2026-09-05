@@ -8,7 +8,7 @@ import { hemodynamicsSourceById } from './sources'
  * tip and the displayed number: the tubing, the flush bag, the transducer and the scale, which is
  * where a signal is made trustworthy or quietly ruined before any chamber is read.
  *
- * Every term, control and check in the module is introduced at its stop. The route map draws the
+ * Every term, control and check in the module is introduced at its stop. The catheter map draws the
  * stops as one schematic, lights the current one, and takes a location answer by pointing at it.
  * Ordinal 0 is the line because it is the first thing the pressure meets on the way out and the
  * first thing a learner checks on the way in; the anatomical stops keep the insertion order the
