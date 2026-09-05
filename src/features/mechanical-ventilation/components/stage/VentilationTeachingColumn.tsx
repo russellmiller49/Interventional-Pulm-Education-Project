@@ -6,6 +6,7 @@ import type { StageBlockVisibility } from '@/features/learning-module/stage/Stag
 import { breathStop, type BreathStopId } from '../../content/breathSpine'
 import { breathGrammarRows, breathGrammarRowsFor } from '../../content/breathGrammar'
 import { VENTILATION_CONTROL_PANEL } from '../../content/controlPanel'
+import { labMetricLabels } from '../../engine/learningLab'
 import { ventilationStages } from '../../content/learningCurriculum'
 import type { VentilationStageLesson, VentilationStageStep } from '../../content/stageLessons'
 import type { VentilationSimulationState } from '../../engine/types'
@@ -145,6 +146,50 @@ export function VentilationTeachingColumn({
           </StageBlock>
         )
       })}
+
+      {step.guide && focus === 'task' ? (
+        <section
+          className={styles.block}
+          data-teaching-block="guide"
+          data-maneuver={step.guide.maneuver}
+        >
+          <p className={styles.kicker}>While you do this</p>
+          <h3>
+            {step.guide.maneuver === 'pause'
+              ? 'You are freezing the display, not changing anything'
+              : step.guide.maneuver === 'hold'
+                ? 'You are taking a measurement, not changing a setting'
+                : 'You are changing what the patient receives'}
+          </h3>
+          <p>{step.guide.note}</p>
+          <p>
+            <strong>What to look at:</strong> {step.guide.look}
+          </p>
+          {step.guide.maneuver === 'pause' ? (
+            <dl>
+              <div>
+                <dt>Flow</dt>
+                <dd>{breathStop('expiration').look.flow}</dd>
+              </div>
+              <div>
+                <dt>Volume</dt>
+                <dd>{breathStop('expiration').look.volume}</dd>
+              </div>
+              <div>
+                <dt>Pressure</dt>
+                <dd>{breathStop('expiration').look.pressure}</dd>
+              </div>
+            </dl>
+          ) : null}
+          {step.guide.watch.length > 0 ? (
+            <p>
+              <strong>Readings that will move:</strong>{' '}
+              {step.guide.watch.map((metric) => labMetricLabels[metric].label).join(', ')}. They are
+              under the console, and the reveal compares them before and after.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {stops.length === 0 && focus !== 'reveal' && !spec.orientation ? (
         <section className={styles.block} data-teaching-block="whole-breath">

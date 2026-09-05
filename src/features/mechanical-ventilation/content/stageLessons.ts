@@ -77,11 +77,34 @@ export type VentilationStageInteraction =
   /** Sort screen values into what you set and what is reported, committed as a set. */
   | { readonly kind: 'sort'; readonly sort: VentilationSettingSort }
 
+/**
+ * What kind of thing a round asks the learner to do on the ventilator.
+ *
+ * `pause` freezes the display so the three traces can be read at one instant; `hold` closes the
+ * valves for a moment so a pressure can be read with flow stopped; `change` alters a setting, the
+ * patient's mechanics, or performs a bedside action, and the patient responds. The steps that
+ * carry a round say which, because "make the change" is the wrong sentence for a pause and the
+ * learner should never be left wondering what was supposed to have changed.
+ */
+export type VentilationManeuver = 'pause' | 'hold' | 'change'
+
+export interface VentilationStepGuide {
+  readonly maneuver: VentilationManeuver
+  /** What to look at while doing it: the round's own look line. */
+  readonly look: string
+  /** The readings the round compares before and after; empty for a pause. */
+  readonly watch: readonly LabMetric[]
+  /** What the maneuver does and does not do, in one or two sentences. */
+  readonly note: string
+}
+
 export interface VentilationStageStep extends StageStepBase<VentilationStageInteraction> {
   /** The stops lit on the breath map while this step is current; empty lights the whole breath. */
   readonly stops: readonly BreathStopId[]
   /** Which teaching blocks are this step's focus. */
   readonly teaching: 'framing' | 'stop' | 'task' | 'reveal' | 'transfer'
+  /** Present on the steps that carry a round's action: what is being done and what to look at. */
+  readonly guide?: VentilationStepGuide
 }
 
 export interface VentilationStageLesson extends StageLessonBase<VentilationStageStep> {
@@ -106,6 +129,107 @@ function intervalSentence(round: LabRound): string {
 
 function stepId(unitId: string, phase: StagePhase, ordinal: number): string {
   return `${unitId}:${ordinal}-${phase}`
+}
+
+export function roundManeuver(round: LabRound): VentilationManeuver {
+  if (round.goals.every((goal) => goal.type === 'pause-expiration')) return 'pause'
+  if (round.goals.every((goal) => goal.type === 'hold')) return 'hold'
+  return 'change'
+}
+
+const controlNames: Partial<Record<string, { name: string; unit: string }>> = {
+  vtMl: { name: 'the tidal volume', unit: 'mL' },
+  peakFlowLMin: { name: 'the inspiratory flow', unit: 'L/min' },
+  oxygenPercent: { name: 'the oxygen', unit: '%' },
+  peepCmH2O: { name: 'the PEEP', unit: 'cmH₂O' },
+  ratePerMin: { name: 'the rate', unit: '/min' },
+  triggerThreshold: { name: 'the flow trigger', unit: 'L/min' },
+  etsPercent: { name: 'the cycle-off', unit: '%' },
+  pRampMs: { name: 'the rise time', unit: 'ms' },
+}
+
+const interventionPhrases: Record<string, string> = {
+  'assess-patient': 'assess the patient',
+  'inspect-circuit': 'inspect the circuit',
+  'drain-condensate': 'clear the condensate',
+  'communication-board': 'establish communication',
+  'treat-pain': 'treat the pain',
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** "Narrow the airways, then perform an inspiratory hold" — the action, in the learner's words. */
+export function roundActionTitle(round: LabRound): string {
+  const maneuver = roundManeuver(round)
+  if (maneuver === 'pause') return 'Freeze the traces while gas is leaving'
+  const phrases: string[] = []
+  const holds: string[] = []
+  for (const goal of round.goals) {
+    if (goal.type === 'control') {
+      const control = controlNames[goal.key]
+      phrases.push(
+        control
+          ? `set ${control.name} to ${goal.value} ${control.unit}`
+          : `set ${goal.key} to ${goal.value}`,
+      )
+    } else if (goal.type === 'mechanics') {
+      if (goal.key === 'complianceScale')
+        phrases.push(goal.value < 1 ? 'make the lungs stiffer' : 'make the lungs more compliant')
+      else phrases.push(goal.value > 1 ? 'narrow the airways' : 'open the airways')
+    } else if (goal.type === 'intervention') {
+      phrases.push(interventionPhrases[goal.id] ?? goal.id)
+    } else if (goal.type === 'hold') {
+      holds.push(`perform an ${goal.hold} hold`)
+    }
+  }
+  const action = [...phrases, ...holds]
+  if (action.length === 0) return 'Perform the maneuver'
+  if (action.length === 1) return capitalize(action[0])
+  if (holds.length > 0 && phrases.length > 0) {
+    return `${capitalize(phrases.join(' and '))}, then ${holds.join(' and ')}`
+  }
+  return capitalize(`${action.slice(0, -1).join(', ')} and ${action.at(-1)}`)
+}
+
+function maneuverNote(maneuver: VentilationManeuver): string {
+  switch (maneuver) {
+    case 'pause':
+      return 'Pausing only freezes the display. No setting changes and the patient is not affected; the point is to read all three traces at one instant. Press Run to let the breath go on.'
+    case 'hold':
+      return 'A hold closes the valves for a moment at the end of the push, so flow stops and the pressure settles to what the filled lung is holding. No setting changes.'
+    default:
+      return 'This changes what the patient receives, so the patient responds — some readings at once, some over the next breaths or minutes.'
+  }
+}
+
+function guideFor(round: LabRound): VentilationStepGuide {
+  const maneuver = roundManeuver(round)
+  return {
+    maneuver,
+    look: round.look,
+    watch: maneuver === 'pause' ? [] : round.watch,
+    note: maneuverNote(maneuver),
+  }
+}
+
+function observeTitle(round: LabRound): string {
+  return roundManeuver(round) === 'pause' ? 'Read the frozen traces' : 'Watch the response'
+}
+
+function observeInstruction(round: LabRound): string {
+  if (roundManeuver(round) === 'pause') {
+    return 'With the traces frozen, read all three at the same instant: where the flow trace sits against its zero line, which way the volume trace is heading, and where the pressure trace is against its baseline. Then continue to the reading.'
+  }
+  if (round.seconds > 0) {
+    return `Let the patient run for ${round.seconds} simulated seconds and watch ${watchLabels(round.watch)}. Use the faster clock if you like; the comparison unlocks when the interval has elapsed.`
+  }
+  return `Look at ${watchLabels(round.watch)} now that the change has been made, then compare.`
+}
+
+function actInstruction(round: LabRound): string {
+  return `${round.task} ${maneuverNote(roundManeuver(round))}`
 }
 
 export function buildVentilationStageLesson(unitId: string): VentilationStageLesson {
@@ -156,34 +280,42 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     },
     {
       phase: 'act',
-      title: 'Make the change',
-      instruction: first.task,
+      title: roundActionTitle(first),
+      instruction: actInstruction(first),
       rationale:
-        'The change is yours to make, on the console or with the quick controls beneath it. The step is done once the patient is receiving it.',
+        roundManeuver(first) === 'change'
+          ? 'The change is yours to make, on the console or with the quick controls beneath it. The step is done once the patient is receiving it.'
+          : 'You are taking a measurement, not treating anything. The step is done once the maneuver has happened on the console.',
       actionLabel: 'Continue',
       interaction: { kind: 'simulator-task', round: 0, goals: first.goals, withObservation: false },
       gate: 'after-prediction',
       stops,
       teaching: 'task',
+      guide: guideFor(first),
     },
     {
       phase: 'observe',
-      title: 'Watch the response',
-      instruction:
-        first.seconds > 0
-          ? `Let the patient run for ${first.seconds} simulated seconds and watch ${watchLabels(first.watch)}. Use the faster clock if you like; the comparison unlocks when the interval has elapsed.`
-          : `Look at ${watchLabels(first.watch)} now that the change has been made.`,
-      actionLabel: 'Compare before and after',
-      interaction: { kind: 'observe', round: 0, watch: first.watch },
+      title: observeTitle(first),
+      instruction: observeInstruction(first),
+      actionLabel:
+        roundManeuver(first) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
+      interaction: {
+        kind: 'observe',
+        round: 0,
+        watch: roundManeuver(first) === 'pause' ? [] : first.watch,
+      },
       gate: 'after-prediction',
       stops,
       teaching: 'task',
+      guide: guideFor(first),
     },
     {
       phase: 'explain',
       title: first.title,
       instruction:
-        'Read the verdict on your prediction and what actually changed, then the explanation on the right.',
+        roundManeuver(first) === 'pause'
+          ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation on the right.'
+          : 'Read the verdict on your prediction and what actually changed, then the explanation on the right.',
       actionLabel: 'Continue to a new setup',
       interaction: { kind: 'explain', round: 0 },
       gate: 'after-prediction',
@@ -223,13 +355,15 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     },
     {
       phase: 'transfer',
-      title: 'Make the change and watch',
-      instruction: `${second.task}${intervalSentence(second)}`,
-      actionLabel: 'Compare before and after',
+      title: `${roundActionTitle(second)}, and watch`,
+      instruction: `${second.task}${intervalSentence(second)} ${maneuverNote(roundManeuver(second))}`,
+      actionLabel:
+        roundManeuver(second) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
       interaction: { kind: 'simulator-task', round: 1, goals: second.goals, withObservation: true },
       gate: 'after-prediction',
       stops,
       teaching: 'task',
+      guide: guideFor(second),
     },
     {
       phase: 'transfer',

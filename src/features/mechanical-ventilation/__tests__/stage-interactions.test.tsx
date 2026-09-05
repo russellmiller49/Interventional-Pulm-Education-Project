@@ -179,3 +179,63 @@ describe('the settings sort', () => {
     expect(stageId()).toBe(lesson.steps[lesson.transferPredictionStepIndex].id)
   })
 })
+
+describe('a round whose action is a pause', () => {
+  const unitId = 'breathing-with-support'
+
+  it('is named as a freeze, guides the reading while the traces are frozen, and reveals what they showed', () => {
+    const lesson = ventilationStageLesson(unitId)
+    const [first] = ventilationExperimentByUnit.get(unitId)!.rounds
+    const act = lesson.steps[2]
+    expect(act.title).toBe('Freeze the traces while gas is leaving')
+    expect(act.title).not.toMatch(/change/i)
+    expect(act.guide?.maneuver).toBe('pause')
+    expect(lesson.steps[3].title).toBe('Read the frozen traces')
+
+    render(<VentilationStageHost unitId={unitId} />)
+    boot()
+    fireEvent.click(primary()!) // Recognize → Predict
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
+    fireEvent.click(primary()!) // commit
+    fireEvent.click(primary()!) // → Act
+    expect(stageId()).toBe(act.id)
+    // The teaching pane opens a guide for the act rather than a stack of folded headings.
+    const guide = document.querySelector('[data-teaching-block="guide"]')!
+    expect(guide).not.toBeNull()
+    expect(guide.getAttribute('data-maneuver')).toBe('pause')
+    expect(guide.textContent).toMatch(/freezing the display, not changing anything/)
+    expect(guide.closest('details')).toBeNull()
+    // No readings panel for a pause — nothing is going to move.
+    expect(document.querySelector('[data-live-readings]')).toBeNull()
+    // The step list does not call Observe done before the learner has reached it.
+    expect(
+      document
+        .querySelector('[data-step-list] [data-step-id="' + lesson.steps[3].id + '"]')
+        ?.getAttribute('data-step-state'),
+    ).not.toBe('done')
+
+    // Let a breath pass, then pause while gas is leaving.
+    simulate(5)
+    const flowValue = () => {
+      const label = [...document.querySelectorAll('[data-ventilation-console] figure')].find(
+        (f) => f.querySelector('strong')?.textContent === 'Flow',
+      )
+      return Number(label?.querySelector('span')?.textContent?.split(' ')[0] ?? '0')
+    }
+    for (let tick = 0; tick < 60 && flowValue() > -1; tick += 1) simulate(0.1)
+    expect(flowValue()).toBeLessThan(-1)
+    fireEvent.click(screen.getByRole('button', { name: /^Pause$/ }))
+    expect(
+      within(nowCard()).getByText(/Done\. The traces are frozen with gas leaving/),
+    ).toBeInTheDocument()
+    fireEvent.click(primary()!) // → Observe
+    expect(stageId()).toBe(lesson.steps[3].id)
+    expect(primary()!.textContent).toMatch(/Continue to the reading/)
+    fireEvent.click(primary()!) // → Explain
+    const reading = document.querySelector('[data-frozen-reading]')!
+    expect(reading).not.toBeNull()
+    expect(reading.textContent).toMatch(/below zero — gas is leaving/)
+    expect(reading.textContent).toMatch(/falling/)
+    expect(document.querySelector('[data-before-after]')).toBeNull()
+  })
+})

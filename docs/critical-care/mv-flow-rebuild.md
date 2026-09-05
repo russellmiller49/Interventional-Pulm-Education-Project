@@ -163,6 +163,37 @@ so the numbers do not smear in the non-uniformly scaled SVG. The trace's text eq
 sign convention: above the zero line gas is moving in, below it gas is moving out. Both stroke and
 type use the screen's own tokens, so they flip with the Evita's white screen.
 
+## 6c. Owner review, second finding
+
+On the same section's Act step: "I don't understand what it is trying to replay here. It makes it
+sound like there is a setting that is being changed but it's just freezing the tracing and doesn't
+explain anything." Three things were wrong at once, and the screenshot showed a fourth.
+
+- **Generic step names.** Every Act step was titled "Make the change" and every Observe step
+  "Watch the response", whatever the round asked for. Section 1's round asks for a pause, which
+  changes nothing. Steps that carry a round now name the action in the learner's words
+  (`roundActionTitle`): "Freeze the traces while gas is leaving", "Narrow the airways, then perform
+  an inspiratory hold", "Set the rate to 26 /min". A round's maneuver — pause, hold or change — is
+  classified once (`roundManeuver`) and drives the titles, the instruction's closing note ("Pausing
+  only freezes the display. No setting changes…"), the waiting and done status lines, and the
+  Observe step, which for a pause becomes "Read the frozen traces".
+- **A teaching pane with nothing open.** At the Act step every block was folded to its heading.
+  Steps that carry a round now have a guide (`VentilationStepGuide`) and the pane opens it: what the
+  maneuver does and does not do, the round's own look line, the three-trace reading for a pause,
+  and the readings that will move for a change.
+- **A pause has no before and after.** The reveal compared three readings that a pause cannot
+  move. For a pause round the reveal now reads the frozen traces off the saved snapshot's last
+  sample — flow against its zero line, volume's direction, pressure against the PEEP baseline —
+  and no readings panel is shown while the learner acts.
+- **The step list ran ahead of the learner.** Observe showed as done while the Act step was on
+  screen, because a pause round's observation is complete the instant its act is and the list read
+  the lab's state. The list now calls done only the steps the learner has moved past, plus the
+  current one when its own work is finished.
+
+The round's task copy also told the learner to use "Advance one breath", which lands the display at
+a breath boundary where flow is back at zero and the pause does not count; it now says to press
+Pause while the flow trace is below its zero line, and to press Run and try again if missed.
+
 ## 7. What the tests pin
 
 `npx jest src/features/mechanical-ventilation src/features/critical-care src/features/learning-module 'src/app/\[locale\]/mechanical-ventilation' --runInBand`:

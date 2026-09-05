@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Check, Circle, LocateFixed, SlidersHorizontal } from 'lucide-react'
 
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
@@ -29,7 +29,11 @@ import { getVentilatorDeviceProfile } from '../../content/deviceProfiles'
 import { ventilationExperimentByUnit, type LabGoal } from '../../content/learningExperiments'
 import { ventilationPracticePairing } from '../../content/sectionSpecs'
 import { ventilationChoiceIndex } from '../../content/stageItems'
-import { ventilationStageLesson, type VentilationStageStep } from '../../content/stageLessons'
+import {
+  roundManeuver,
+  ventilationStageLesson,
+  type VentilationStageStep,
+} from '../../content/stageLessons'
 import { ventilationStageSources } from '../../content/stageSources'
 import {
   labGoalMet,
@@ -156,6 +160,23 @@ function VentilationStageSession({
   const isLastStep = activeIndex === lesson.steps.length - 1
   const stepPerformed = progress.performedIds.has(activeStep.id)
   const performedIds = progress.performedIds
+  /*
+   * What the step list may call done: everything before the step the learner is on, plus that step
+   * when its own work is finished. The lab can be further ahead — a pause round's observation is
+   * complete the instant its act is — but a row the learner has not reached is not done to them.
+   */
+  const shownPerformedIds = useMemo(
+    () =>
+      new Set(
+        lesson.steps
+          .filter(
+            (step, index) =>
+              index < heldIndex || (index === heldIndex && performedIds.has(step.id)),
+          )
+          .map((step) => step.id),
+      ),
+    [heldIndex, lesson.steps, performedIds],
+  )
   const predictionCommitted = progress.predictionCommitted
   const finished = progress.finished
   const evidence: LabEvidence = session.evidence[session.round]
@@ -191,12 +212,12 @@ function VentilationStageSession({
   /* ---------------------------------------------------------------- *
    * Progression
    * ---------------------------------------------------------------- */
-  const confirmThrough = useCallback((index: number) => {
+  function confirmThrough(index: number) {
     setConfirmed((current) => Math.max(current, index))
     setViewIndex(null)
     setReview(null)
     setSpotlight(null)
-  }, [])
+  }
 
   const now = () => new Date().toISOString()
 
@@ -280,7 +301,7 @@ function VentilationStageSession({
   }
 
   /** Back to nothing: a fresh patient, no commitments, and the view state cleared with it. */
-  const resetViewState = useCallback(() => {
+  function resetViewState() {
     setConfirmed(-1)
     setViewIndex(null)
     setReview(null)
@@ -291,7 +312,7 @@ function VentilationStageSession({
     setSortDraft({})
     setSpotlight(null)
     completionRecorded.current = false
-  }, [])
+  }
 
   function restartSection() {
     lab({ type: 'RESTART' })
@@ -321,14 +342,20 @@ function VentilationStageSession({
       ? 0
       : Math.max(0, session.simulation.simulationTime - session.readySince)
   const ready = labReadyToCompare(session)
+  const activeRound = 'round' in interaction ? experiment.rounds[interaction.round] : null
+  const activeManeuver = activeRound ? roundManeuver(activeRound) : null
+  const waitingStatus =
+    activeManeuver === 'pause'
+      ? 'Waiting for the pause. Let at least one full breath pass, then press Pause while the flow trace is below its zero line.'
+      : activeManeuver === 'hold'
+        ? 'Waiting for the hold. Use the hold control under the console; it happens at the next breath boundary.'
+        : 'Waiting for the change on the ventilator. This step is done once the patient is receiving it.'
+  // The readings shown under the console: a change's before-and-after set; nothing for a pause.
   const watch =
-    interaction.kind === 'observe'
-      ? interaction.watch
-      : interaction.kind === 'simulator-task'
-        ? experiment.rounds[interaction.round].watch
-        : interaction.kind === 'explain'
-          ? experiment.rounds[interaction.round].watch
-          : []
+    activeStep.guide?.watch ??
+    (interaction.kind === 'explain' && activeManeuver !== 'pause'
+      ? experiment.rounds[interaction.round].watch
+      : [])
   const controlsEnabled = session.phase !== 'predict'
   const mechanicsVisible =
     unitId !== 'high-peak-pressure-integration' ||
@@ -546,7 +573,12 @@ function VentilationStageSession({
           if (allMet) {
             return {
               ...base,
-              status: 'Done. The patient is receiving the change.',
+              status:
+                activeManeuver === 'pause'
+                  ? 'Done. The traces are frozen with gas leaving.'
+                  : activeManeuver === 'hold'
+                    ? 'Done. The hold has been performed.'
+                    : 'Done. The patient is receiving the change.',
               primary: {
                 label: 'Continue',
                 onActivate: () => confirmThrough(activeIndex),
@@ -556,8 +588,7 @@ function VentilationStageSession({
           }
           return {
             ...base,
-            status:
-              'Waiting for the change on the ventilator. This step is done once the patient is receiving it.',
+            status: waitingStatus,
             secondary: showWhereAction,
           }
         }
@@ -576,7 +607,7 @@ function VentilationStageSession({
           ...base,
           status: allMet
             ? `Watching… ${Math.min(round.seconds, Math.floor(waited))} of ${round.seconds} simulated seconds.`
-            : 'Waiting for the change on the ventilator.',
+            : waitingStatus,
           secondary: showWhereAction,
         }
       }
@@ -793,7 +824,13 @@ function VentilationStageSession({
                 predicted: {chosen.label}.
               </p>
             ) : null}
-            {stepEvidence.baseline && stepEvidence.response ? (
+            {stepEvidence.response &&
+            roundManeuver(experiment.rounds[interaction.round]) === 'pause' ? (
+              <FrozenTraceReading
+                response={stepEvidence.response}
+                peep={session.simulation.ventilator.settings.peepCmH2O}
+              />
+            ) : stepEvidence.baseline && stepEvidence.response ? (
               <BeforeAfter
                 before={stepEvidence.baseline}
                 after={stepEvidence.response}
@@ -952,7 +989,7 @@ function VentilationStageSession({
         lesson={lesson}
         currentIndex={activeIndex}
         furthestPerformedIndex={progress.furthestPerformedIndex}
-        performedStepIds={performedIds}
+        performedStepIds={shownPerformedIds}
         predictionCommitted={predictionCommitted}
         reviewIndex={review}
         recapFor={(index) => recapLines(lesson.steps[index], session)}
@@ -1170,6 +1207,73 @@ function StepRecap({
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * What the frozen traces showed, for a round whose action is a pause: the three traces at the
+ * instant the display froze, each read against its own reference — flow against zero, volume
+ * against where it was heading, pressure against the PEEP baseline. Read off the saved response
+ * snapshot, whose last sample is the pause.
+ */
+function FrozenTraceReading({
+  response,
+  peep,
+}: {
+  readonly response: NonNullable<LabEvidence['response']>
+  readonly peep: number
+}) {
+  const samples = response.waveforms
+  const last = samples.at(-1)
+  const previous = samples.at(-2)
+  if (!last) return null
+  const flowWord =
+    last.flowLMin < -0.5
+      ? 'below zero — gas is leaving'
+      : last.flowLMin > 0.5
+        ? 'above zero — gas is going in'
+        : 'at zero — nothing is moving'
+  const volumeWord = previous
+    ? last.volumeMl < previous.volumeMl - 0.5
+      ? 'falling'
+      : last.volumeMl > previous.volumeMl + 0.5
+        ? 'rising'
+        : 'level'
+    : 'read at the pause'
+  const pressureWord =
+    Math.abs(last.pawCmH2O - peep) < 1.5
+      ? 'at the PEEP baseline'
+      : last.pawCmH2O > peep
+        ? 'above the baseline'
+        : 'below the baseline'
+  return (
+    <table className={stageStyles.compareTable} data-frozen-reading>
+      <caption className={shellStyles.kicker}>What the frozen traces showed</caption>
+      <thead>
+        <tr>
+          <th scope="col">Trace</th>
+          <th scope="col">At the pause</th>
+          <th scope="col">Read as</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Flow (L/min)</th>
+          <td>{last.flowLMin.toFixed(1)}</td>
+          <td>{flowWord}</td>
+        </tr>
+        <tr>
+          <th scope="row">Volume (mL)</th>
+          <td>{last.volumeMl.toFixed(0)}</td>
+          <td>{volumeWord}</td>
+        </tr>
+        <tr>
+          <th scope="row">Pressure (cmH₂O)</th>
+          <td>{last.pawCmH2O.toFixed(1)}</td>
+          <td>{pressureWord}</td>
+        </tr>
+      </tbody>
+    </table>
   )
 }
 

@@ -281,7 +281,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'That combination describes inspiration.',
           'Continuing inward flow adds volume, so those two signals would not fit.',
         ],
-        task: 'Let a full breath pass, then pause during expiration. Use “Advance one breath” if you want another look.',
+        task: 'Let a full breath pass, then press Pause while the flow trace is below its zero line. If you miss it, press Run and try again on the next breath.',
         goals: [{ type: 'pause-expiration' }],
         seconds: 0,
         watch: ['volume', 'rate', 'peak'],
