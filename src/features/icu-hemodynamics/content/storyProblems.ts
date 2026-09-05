@@ -3,7 +3,8 @@ import {
   type ClinicalLearningItem,
 } from '@/features/learning-module/activity'
 
-import type { HemodynamicAction } from '../engine/types'
+import { freshTeachingState, reduceAll } from '../engine/stageRuntime'
+import type { HemodynamicAction, HemodynamicSimulationState } from '../engine/types'
 import { hemodynamicsLearnerCopyErrors } from './controlPanel'
 import type { HemodynamicsSectionId } from './sectionSpecs'
 
@@ -214,9 +215,14 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       reviewStatus: 'draft',
     }),
     setup: [
+      { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
+      { type: 'ZERO_TRANSDUCER' },
       { type: 'SET_CATHETER_POSITION', position: 'pa' },
       { type: 'SET_ARTIFACT', artifact: 'false-wedge' },
       { type: 'START_WEDGE' },
+      { type: 'TICK', seconds: 8 },
+      { type: 'PLACE_WEDGE_CURSOR' },
+      { type: 'STORE_WEDGE' },
     ],
     move: [{ type: 'START_WEDGE' }],
     readings: ['storedWedge', 'papDiastolicFloor', 'safety'],
@@ -224,6 +230,60 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       'The balloon is the control, and more of it is the harmful reflex: the simulation refuses the second inflation and records it.',
   },
 ])
+
+export type StoryReadingValue = number | string | null
+
+export interface StoryRun {
+  readonly before: Readonly<Record<StoryReading, StoryReadingValue>>
+  readonly after: Readonly<Record<StoryReading, StoryReadingValue>>
+}
+
+export function storyReading(
+  reading: StoryReading,
+  state: HemodynamicSimulationState,
+): StoryReadingValue {
+  switch (reading) {
+    case 'papSystolic':
+      return state.measurements.papSystolicMmHg
+    case 'papDiastolic':
+    case 'papDiastolicFloor':
+      return state.measurements.papDiastolicMmHg
+    case 'pulsePressure':
+      return state.measurements.papSystolicMmHg - state.measurements.papDiastolicMmHg
+    case 'flushFinding':
+      return state.measurementSystem.lastFastFlushFinding ?? 'No flush run yet'
+    case 'storedWedge':
+      return state.catheter.storedWedgeMmHg
+    case 'safety':
+      return state.criticalErrors.includes('overwedge-balloon-reinflation')
+        ? 'Refused, and recorded as unsafe'
+        : state.criticalErrors.length > 0
+          ? 'Recorded as unsafe'
+          : 'Allowed'
+    default:
+      return null
+  }
+}
+
+/**
+ * Run a story on the engine: the setup, a reading, the move, a reading.
+ *
+ * Every story opens on the teaching patient as authored — level, not yet zeroed, well damped —
+ * and never on the learner's own patient, so a story about a line that has never been zeroed
+ * is not run on a line the learner zeroed a minute ago.
+ */
+export function runHemodynamicsStory(
+  story: HemodynamicsStoryProblem,
+  base: HemodynamicSimulationState = freshTeachingState(),
+): StoryRun {
+  const opening = reduceAll(base, story.setup)
+  const closing = reduceAll(opening, story.move)
+  const read = (state: HemodynamicSimulationState) =>
+    Object.fromEntries(
+      story.readings.map((reading) => [reading, storyReading(reading, state)]),
+    ) as Record<StoryReading, StoryReadingValue>
+  return { before: read(opening), after: read(closing) }
+}
 
 export function hemodynamicsStoryProblemsFor(
   sectionId: HemodynamicsSectionId,

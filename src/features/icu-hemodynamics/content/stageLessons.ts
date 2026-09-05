@@ -6,7 +6,11 @@ import type {
 } from '@/features/learning-module/stage/stageModel'
 
 import { sectionRuntime, type SectionRuntime, type StageGoal } from '../engine/stageRuntime'
-import type { CatheterPosition, HemodynamicSimulationState } from '../engine/types'
+import type {
+  CatheterPosition,
+  FastFlushLineType,
+  HemodynamicSimulationState,
+} from '../engine/types'
 import { hemodynamicsLearnerCopyErrors } from './controlPanel'
 import { hemodynamicsMapAnswerTargets, type HemodynamicsMapAnswerTarget } from './mapAnswerTargets'
 import { hemodynamicsPathwaySections } from './pathwayResolver'
@@ -80,6 +84,8 @@ export interface HemodynamicsStageStep extends StageStepBase<HemodynamicsStageIn
   readonly entryState?: () => HemodynamicSimulationState
   /** Whether the monitor may name the chamber while this step is current. */
   readonly chamberLabel: 'shown' | 'withheld'
+  /** Which line a flush check on this step runs on. */
+  readonly flushLine: FastFlushLineType
 }
 
 export interface HemodynamicsStageLesson extends StageLessonBase<HemodynamicsStageStep> {
@@ -101,6 +107,7 @@ interface StepInput {
   readonly stops?: readonly RouteStopId[]
   readonly entryState?: () => HemodynamicSimulationState
   readonly chamberLabel?: 'shown' | 'withheld'
+  readonly flushLine?: FastFlushLineType
   readonly expectedResponse?: readonly string[]
 }
 
@@ -126,6 +133,7 @@ function buildSteps(
     stops: input.stops ?? defaultStops,
     entryState: input.entryState,
     chamberLabel: input.chamberLabel ?? 'shown',
+    flushLine: input.flushLine ?? 'pulmonary-artery',
     expectedResponse: input.expectedResponse,
   }))
 }
@@ -655,7 +663,7 @@ function thermodilutionSteps(runtime: SectionRuntime): readonly StepInput[] {
   ]
 }
 
-function derivedSteps(runtime: SectionRuntime): readonly StepInput[] {
+function derivedSteps(): readonly StepInput[] {
   const items = hemodynamicsSectionItems('derived-hemodynamics')
   return [
     {
@@ -790,6 +798,7 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
       interaction: prediction(items.transfer, 1),
       entryState: runtime.transferEntry ?? undefined,
       surface: 'flush',
+      flushLine: 'systemic-arterial',
     },
     {
       phase: 'transfer',
@@ -799,6 +808,7 @@ function capstoneSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.transferGoals, round: 1 },
       surface: 'flush',
+      flushLine: 'systemic-arterial',
     },
     {
       phase: 'transfer',
@@ -822,7 +832,7 @@ const builders: Readonly<
   'catheter-advancement': catheterAdvancementSteps,
   'pawp-capture': pawpCaptureSteps,
   'thermodilution-series': thermodilutionSteps,
-  'derived-hemodynamics': derivedSteps,
+  'derived-hemodynamics': () => derivedSteps(),
   'pac-signal-validation': capstoneSteps,
 }
 

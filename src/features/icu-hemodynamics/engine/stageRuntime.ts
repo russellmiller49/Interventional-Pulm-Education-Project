@@ -1,4 +1,4 @@
-import { hemodynamicCaseById } from '../content/cases'
+import { hemodynamicCaseById, normalCirculationParameters } from '../content/cases'
 import type { HemodynamicsSectionId } from '../content/sectionSpecs'
 import { icuHemodynamicsReducer } from './reducer'
 import { createInitialHemodynamicState } from './simulation'
@@ -6,6 +6,7 @@ import { thermodilutionAcceptedAverage } from './thermodilution'
 import type {
   CatheterPosition,
   HemodynamicAction,
+  HemodynamicCaseDefinition,
   HemodynamicSimulationState,
   ThermodilutionTechnique,
 } from './types'
@@ -150,7 +151,20 @@ function requireCase(caseId: string) {
   return definition
 }
 
-const teachingCase = requireCase('HD-01')
+/**
+ * The teaching patient: the module's first case with a quiet, normal circulation in place of its
+ * shock. Every Learn section but the capstone runs on it, so a learner meets the normal state
+ * before any fault is put in front of it; the capstone runs on the authored HD-08.
+ */
+const teachingCase: HemodynamicCaseDefinition = {
+  ...requireCase('HD-01'),
+  title: 'A quiet circulation on a monitored bed',
+  shortTitle: 'Teaching patient',
+  presentation:
+    'An adult on a monitored bed with a quiet, unremarkable circulation, a pulmonary-artery catheter in place, and an arterial line. Nothing about this patient is in question; the line and the catheter are.',
+  initialParameters: normalCirculationParameters,
+  initialMeasurementSystem: { zeroed: false },
+}
 const capstoneCase = requireCase('HD-08')
 
 export function reduceAll(
@@ -158,6 +172,11 @@ export function reduceAll(
   actions: readonly HemodynamicAction[],
 ): HemodynamicSimulationState {
   return actions.reduce((current, action) => icuHemodynamicsReducer(current, action), state)
+}
+
+/** The teaching patient exactly as authored: level, unzeroed, well damped, tip in the artery. */
+export function freshTeachingState(seed = 700): HemodynamicSimulationState {
+  return createInitialHemodynamicState(teachingCase, 'learn', seed)
 }
 
 /** A clean, trusted line on the teaching patient with the tip in the artery. */
