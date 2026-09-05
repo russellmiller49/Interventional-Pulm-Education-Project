@@ -1,30 +1,41 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { ventilationLearningUnits } from '../src/features/mechanical-ventilation/content/learningCurriculum'
+import { ventilationExperimentByUnit } from '../src/features/mechanical-ventilation/content/learningExperiments'
+import { ventilationFinalQuestions } from '../src/features/mechanical-ventilation/content/learningQuestions'
 import {
-  unitQuestion,
-  ventilationFinalQuestions,
-  ventilationPlacementQuestions,
-  type VentilationQuestion,
-} from '../src/features/mechanical-ventilation/content/learningQuestions'
-import {
-  VENTILATION_LEARNING_STORAGE_KEY,
-  type VentilationLearningProgress,
-} from '../src/features/mechanical-ventilation/engine/learningProgress'
+  labCheckpoint,
+  VENTILATION_LAB_STORAGE_KEY,
+} from '../src/features/mechanical-ventilation/engine/learningLab'
+import { completeLabUnit } from '../src/features/mechanical-ventilation/test-support/live-learning'
 
-// This now verifies the staged course that replaced the three-pane default Learn workspace.
 const url = (id: string) => `/en/mechanical-ventilation/learn?activity=${id}`
-async function commit(page: Page, question: VentilationQuestion, choiceId = question.correctId) {
-  const option = question.choices.find((choice) => choice.id === choiceId)!
-  await page.getByRole('radio', { name: option.label, exact: true }).check()
-  await page.getByRole('button', { name: 'I can explain why', exact: true }).click()
-  await page.getByRole('button', { name: 'Commit answer', exact: true }).click()
-}
 async function noOverflow(page: Page) {
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     ),
   ).toBeLessThanOrEqual(1)
+}
+async function moveSlider(slider: Locator, target: number) {
+  const bounds = await slider.evaluate((node: HTMLInputElement) => ({
+    min: Number(node.min),
+    step: Number(node.step),
+  }))
+  await slider.press('Home')
+  for (let i = 0; i < Math.round((target - bounds.min) / bounds.step); i++)
+    await slider.press('ArrowRight')
+  await expect(slider).toHaveValue(String(target))
+}
+async function predict(page: Page, id: string, round: 0 | 1 = 0, answer?: number) {
+  const experiment = ventilationExperimentByUnit.get(id)!.rounds[round]
+  await page.getByRole('button', { name: 'Try the experiment', exact: true }).click()
+  await expect(page.getByRole('button', { name: /Commit prediction/ })).toBeDisabled()
+  for (const rationale of experiment.rationales)
+    await expect(page.getByText(rationale, { exact: true })).toHaveCount(0)
+  await page
+    .getByRole('radio', { name: experiment.choices[answer ?? experiment.correct], exact: true })
+    .check()
+  await page.getByRole('button', { name: /Commit prediction/ }).click()
 }
 
 for (const viewport of [
@@ -33,171 +44,194 @@ for (const viewport of [
   { width: 390, height: 844 },
   { width: 320, height: 740 },
 ]) {
-  test(`one clear beginning, readable breath, and reachable action at ${viewport.width}px`, async ({
+  test(`running entry, visible tracings, and usable controls at ${viewport.width}px`, async ({
     page,
-  }) => {
+  }, testInfo) => {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.setViewportSize(viewport)
     await page.goto('/en/mechanical-ventilation')
-    const start = page.getByRole('link', { name: 'Start — The whole breath', exact: true })
-    await expect(start).toBeVisible()
+    const console = page.getByTestId('live-learning-console')
+    await expect(console).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Pause simulation' })).toBeVisible()
+    await expect(console.locator('figure')).toHaveCount(3)
     await noOverflow(page)
-    await start.click()
-    await expect(page.getByText('Unit 1 of 14', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Explore the breath', exact: true }).click()
-    await expect(page.getByRole('img', { name: /Three traces share a time axis/ })).toBeVisible()
-    await page.getByRole('button', { name: 'Empty', exact: true }).click()
-    await expect(page.locator('figcaption').filter({ hasText: /Gas moves outward/ })).toBeVisible()
+    if (viewport.width >= 851) {
+      const trace = await console.locator('figure').first().boundingBox()
+      const slider = await page.getByRole('slider', { name: /Patient compliance/ }).boundingBox()
+      expect(trace!.y).toBeGreaterThan(80)
+      expect(trace!.y + trace!.height).toBeLessThan(viewport.height)
+      expect(slider!.y + slider!.height).toBeLessThan(viewport.height)
+    }
+    await page.getByRole('button', { name: /Learning map/ }).click()
+    const map = page.getByRole('dialog', { name: 'Learning map' })
+    await expect(map.getByRole('link')).toHaveCount(17)
+    await page.keyboard.press('Escape')
+    await expect(map).not.toBeVisible()
+    await expect(page.getByRole('button', { name: /Learning map/ })).toBeFocused()
+    await console.evaluate((node) => node.setAttribute('data-retained', 'yes'))
+    await page.getByRole('button', { name: 'Try the experiment', exact: true }).click()
+    await expect(console).toHaveAttribute('data-retained', 'yes')
+    await expect(page.getByRole('slider', { name: /Patient compliance/ })).toBeDisabled()
+    await expect(page.getByText('Explain the physiology on this ventilator')).toHaveCount(0)
+    await expect(console.locator('figure')).toHaveCount(3)
     await noOverflow(page)
-    await page.getByRole('button', { name: 'See a worked example', exact: true }).click()
-    await page.getByRole('button', { name: 'Now make a decision', exact: true }).click()
-    const question = unitQuestion(ventilationLearningUnits[0].id, 'check')
-    await expect(page.getByRole('button', { name: 'Commit answer' })).toBeDisabled()
-    for (const choice of question.choices)
-      await expect(page.getByText(choice.rationale, { exact: true })).toHaveCount(0)
-    await expect(
-      page.getByText(ventilationLearningUnits[0].example.conclusion, { exact: true }),
-    ).toHaveCount(0)
-    await expect(page.locator('svg[aria-label*="Three traces"]')).toHaveCount(0)
-    await commit(page, question)
-    await expect(
-      page.getByText(
-        question.choices.find((choice) => choice.id === question.correctId)!.rationale,
-        { exact: true },
-      ),
-    ).toBeVisible()
-    await noOverflow(page)
-    await page.reload()
-    await expect(page.getByRole('button', { name: 'Try the transfer case' })).toBeVisible()
-    await expect(
-      page.getByRole('radio', {
-        name: question.choices.find((choice) => choice.id === question.correctId)!.label,
-      }),
-    ).toBeChecked()
+    await page.screenshot({
+      path: testInfo.outputPath(`live-prediction-${viewport.width}.png`),
+      fullPage: true,
+    })
     expect(errors).toEqual([])
   })
 }
 
-test('works through the whole path, preserves first choices, and unlocks the final check', async ({
+test('uses actual control changes and holds, restores evidence, and transfers to a changed lung', async ({
   page,
 }) => {
-  test.setTimeout(240000)
-  for (const [index, unit] of ventilationLearningUnits.entries()) {
-    await page.goto(url(unit.id))
-    await expect(
-      page.getByText(`Unit ${index + 1} of ${ventilationLearningUnits.length}`, { exact: true }),
-    ).toBeVisible()
-    if (unit.recallUnit) {
-      await commit(page, unitQuestion(unit.recallUnit, 'transfer'))
-      await page.getByRole('button', { name: 'Build on this idea' }).click()
-    } else await page.getByRole('button', { name: 'Explore the breath', exact: true }).click()
-    await expect(page.getByRole('heading', { name: unit.title, exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'See a worked example' }).click()
-    await page.getByRole('button', { name: 'Now make a decision' }).click()
-    const check = unitQuestion(unit.id, 'check')
-    // One deliberate miss should remain a miss after its feedback has been reviewed.
-    await commit(
-      page,
-      check,
-      index === 0
-        ? check.choices.find((choice) => choice.id !== check.correctId)!.id
-        : check.correctId,
-    )
-    await page.getByRole('button', { name: 'Try the transfer case' }).click()
-    await commit(page, unitQuestion(unit.id, 'transfer'))
-    await page.getByRole('button', { name: 'See your takeaways' }).click()
-    await page.getByRole('button', { name: 'Complete this unit' }).click()
-    await expect(page.getByRole('heading', { name: 'Your next step is ready.' })).toBeVisible()
-    await noOverflow(page)
-  }
-  await page.goto('/en/mechanical-ventilation/assess')
-  await page.getByRole('button', { name: 'Start final check' }).click()
-  for (const [index, question] of ventilationFinalQuestions.entries()) {
-    await commit(page, question)
-    for (const choice of question.choices)
-      await expect(page.getByText(choice.rationale, { exact: true })).toHaveCount(0)
-    await page
-      .getByRole('button', {
-        name:
-          index === ventilationFinalQuestions.length - 1 ? 'See your feedback' : 'Next question',
-      })
-      .click()
-  }
-  await expect(page.getByRole('heading', { name: 'Final check passed.' })).toBeVisible()
-  const record = await page.evaluate(
-    (key) => JSON.parse(localStorage.getItem(key)!),
-    VENTILATION_LEARNING_STORAGE_KEY,
+  const id = 'mechanics-load-and-pressure'
+  await page.goto(url(id))
+  await predict(page, id, 0, 1)
+  const compare = page.getByRole('button', { name: 'Compare the response', exact: true })
+  await expect(compare).toBeDisabled()
+  await moveSlider(page.getByRole('slider', { name: /Patient resistance/ }), 2)
+  await expect(compare).toBeDisabled()
+  await page.getByRole('button', { name: 'Perform inspiratory hold', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Simulation speed' }).selectOption('5')
+  await expect(compare).toBeEnabled({ timeout: 15000 })
+  await compare.click()
+  await expect(page.getByText('Update your prediction with what you observed.')).toBeVisible()
+  const table = page.getByRole('table', { name: 'Recorded response from your experiment' })
+  const peak = table.getByRole('row').filter({ hasText: 'Peak pressure' })
+  const values = await peak.locator('td').allTextContents()
+  expect(Number(values[1])).toBeGreaterThan(Number(values[0]) + 4)
+  await page
+    .getByRole('textbox')
+    .fill('Peak pressure increased; the plateau changed very little after flow stopped.')
+  await page.reload()
+  await expect(
+    page.getByRole('table', { name: 'Recorded response from your experiment' }),
+  ).toBeVisible()
+  await expect(page.getByRole('textbox')).toHaveValue(
+    'Peak pressure increased; the plateau changed very little after flow stopped.',
   )
-  expect(
-    Object.values((record as VentilationLearningProgress).units).filter(
-      (value) => value.completedAt,
-    ),
-  ).toHaveLength(ventilationLearningUnits.length)
-  expect(
-    record.units[ventilationLearningUnits[0].id].answers[`${ventilationLearningUnits[0].id}:check`]
-      .choiceId,
-  ).not.toBe(unitQuestion(ventilationLearningUnits[0].id, 'check').correctId)
-  expect(record.finalHistory).toHaveLength(1)
-  await page.goto('/en/mechanical-ventilation')
-  await expect(page.getByText('14 of 14 units completed', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Run simulation' })).toBeVisible()
+  await page.getByText('Compare saved tracings', { exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Before your change' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'After your change' })).toBeVisible()
+  await page
+    .getByRole('button', { name: 'Test the relationship in the next setup', exact: true })
+    .click()
+  await expect(
+    page.getByRole('heading', { name: 'Separate stiffness from resistance' }),
+  ).toBeVisible()
+  await predict(page, id, 1)
+  await moveSlider(page.getByRole('slider', { name: /Patient compliance/ }), 0.5)
+  await page.getByRole('button', { name: 'Perform inspiratory hold', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Simulation speed' }).selectOption('5')
+  await expect(compare).toBeEnabled({ timeout: 15000 })
+  await compare.click()
+  await page
+    .getByRole('textbox')
+    .fill('The plateau increased when compliance fell, unlike the resistance experiment.')
+  await page.getByRole('button', { name: 'Finish these experiments', exact: true }).click()
+  await expect(page.getByText('Two experiments. One relationship to carry forward.')).toBeVisible()
+  const saved = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key)!),
+    VENTILATION_LAB_STORAGE_KEY,
+  )
+  expect(saved.units[id].evidence[0].prediction).toBe(1)
+  expect(saved.units[id].completedAt).toBeTruthy()
+  await noOverflow(page)
 })
 
-test('placement fades the example without marking any unit complete', async ({ page }) => {
-  await page.goto('/en/mechanical-ventilation/learn?entry=placement')
-  await page.getByRole('button', { name: 'Start placement check' }).click()
-  for (const [index, question] of ventilationPlacementQuestions.entries()) {
-    await commit(page, question)
-    await page
-      .getByRole('button', {
-        name:
-          index === ventilationPlacementQuestions.length - 1
-            ? 'See your feedback'
-            : 'Next question',
-      })
-      .click()
+test('keeps all four original consoles selectable and the original case route usable', async ({
+  page,
+}) => {
+  await page.goto(url('waveform-anatomy'))
+  await page.getByRole('button', { name: /Learning map/ }).click()
+  const device = page.getByRole('combobox', { name: /Training device/ })
+  await expect(device.locator('option')).toHaveCount(4)
+  for (const id of [
+    'drager-evita-v800-v600',
+    'puritan-bennett-980',
+    'carefusion-avea',
+    'hamilton-c6',
+  ]) {
+    await device.selectOption(id)
+    await expect(
+      page.getByTestId('live-learning-console').locator('section[data-device]'),
+    ).toHaveAttribute('data-device', id)
   }
-  await expect(page.getByRole('heading', { name: 'Your guidance is ready.' })).toBeVisible()
-  await page.getByRole('link', { name: 'Continue — The whole breath' }).click()
-  await page.getByRole('button', { name: 'Begin with a decision' }).click()
-  await expect(page.getByRole('heading', { name: 'Make your next decision.' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.goto('/en/mechanical-ventilation/practice?case=MV-01&device=hamilton-c6&mode=guided')
+  await expect(page.locator('[data-device="hamilton-c6"]')).toBeVisible()
+  await expect(page.locator('figure').first()).toBeVisible()
+})
+
+test('unlocks the independent knowledge check only after all live units and preserves question feedback boundaries', async ({
+  page,
+}) => {
   await page.goto('/en/mechanical-ventilation/assess')
   await expect(page.getByRole('heading', { name: 'Finish the learning path first.' })).toBeVisible()
-  await expect(
-    page.getByRole('link', { name: 'Follow one supported breath', exact: true }),
-  ).toBeVisible()
+  const units = Object.fromEntries(
+    ventilationLearningUnits.map((unit) => [unit.id, labCheckpoint(completeLabUnit(unit.id))]),
+  )
+  await page.evaluate(
+    ({ key, units }) => localStorage.setItem(key, JSON.stringify({ version: 1, units })),
+    { key: VENTILATION_LAB_STORAGE_KEY, units },
+  )
+  await page.reload()
+  await page.getByRole('button', { name: 'Start final check', exact: true }).click()
+  for (const q of ventilationFinalQuestions) {
+    const answer = q.choices.find((c) => c.id === q.correctId)!
+    for (const option of q.choices)
+      await expect(page.getByText(option.rationale, { exact: true })).toHaveCount(0)
+    await page.getByRole('radio', { name: answer.label, exact: true }).check()
+    await page.getByRole('button', { name: 'Commit answer', exact: true }).click()
+    await expect(page.getByText(answer.rationale, { exact: true })).toHaveCount(0)
+    await page.getByRole('button', { name: /Next question|See your feedback/ }).click()
+  }
+  await expect(page.getByRole('heading', { name: 'Final check passed.' })).toBeVisible()
 })
 
-test('retains the live mechanics diagram and console as an explicit worked experiment', async ({
+test('keeps the live workspace keyboard accessible without serious accessibility violations', async ({
   page,
 }) => {
-  const unit = ventilationLearningUnits.find((entry) => entry.id === 'mechanics-load-and-pressure')!
-  await page.goto(url(unit.id))
-  await commit(page, unitQuestion(unit.recallUnit!, 'transfer'))
-  await page.getByRole('button', { name: 'Build on this idea' }).click()
-  await page.getByRole('button', { name: 'See a worked example' }).click()
-  await page.getByText('Explore the existing diagram and ventilator', { exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'What peak pressure is made of' })).toBeVisible()
-  await page.getByRole('button', { name: 'Advance one breath', exact: true }).click()
-  await page.getByRole('button', { name: 'Run example', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Pause example', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Pause example', exact: true }).click()
-  await page.getByRole('button', { name: 'Now make a decision', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'What peak pressure is made of' })).toHaveCount(0)
-  await noOverflow(page)
+  await page.goto(url('mechanics-load-and-pressure'))
+  await page.getByTestId('live-learning-console').waitFor()
+  await page.addScriptTag({ path: require.resolve('axe-core') })
+  const violations = await page.evaluate(async () => {
+    const axe = (
+      window as unknown as {
+        axe: {
+          run: (
+            context: unknown,
+            options: unknown,
+          ) => Promise<{ violations: Array<{ id: string; impact: string; nodes: unknown[] }> }>
+        }
+      }
+    ).axe
+    const result = await axe.run('[data-ventilation-learning-unit]', {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] },
+    })
+    return result.violations
+      .filter((v) => ['serious', 'critical'].includes(v.impact))
+      .map((v) => ({ id: v.id, nodes: v.nodes }))
+  })
+  expect(violations).toEqual([])
 })
 
-test('offers matched cases without losing the full case library', async ({ page }) => {
-  await page.goto('/en/mechanical-ventilation/practice?focus=expiration-and-air-trapping')
-  await expect(page.getByText('Browse 3 matched cases', { exact: true })).toBeVisible()
-  const start = page.getByRole('link', { name: 'Start guided case', exact: true })
-  await expect(start).toHaveAttribute('href', /case=MV-05&device=hamilton-c6&mode=guided/)
-  await page
-    .getByRole('combobox', { name: 'Training console', exact: true })
-    .selectOption('puritan-bennett-980')
-  await expect(start).toHaveAttribute('href', /device=puritan-bennett-980/)
-  await page.getByRole('link', { name: 'Show the full case library' }).click()
-  await page.getByText('Browse all 15 cases', { exact: true }).click()
-  await expect(page.getByRole('link', { name: 'Open case', exact: true })).toHaveCount(15)
-  await noOverflow(page)
+test('offers a paused, step-through patient when reduced motion is requested', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(url('waveform-anatomy'))
+  await expect(page.getByRole('button', { name: 'Run simulation' })).toBeVisible()
+  const initial = await page
+    .getByTestId('live-learning-console')
+    .locator('figure')
+    .first()
+    .innerText()
+  await page.getByRole('button', { name: 'Advance one breath', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Run simulation' })).toBeVisible()
+  expect(
+    await page.getByTestId('live-learning-console').locator('figure').first().innerText(),
+  ).not.toBe(initial)
 })

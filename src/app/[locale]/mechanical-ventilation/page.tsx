@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
-import { MechanicalVentilationOverviewV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationOverviewV2'
+import { MechanicalVentilationCourseHome } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseHome'
 import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ventilation/content/deviceProfiles'
 
 export const metadata: Metadata = {
@@ -27,9 +26,5 @@ interface PageProps {
 export default async function MechanicalVentilationPage({ params }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
-  return (
-    <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation">
-      <MechanicalVentilationOverviewV2 />
-    </MechanicalVentilationModuleFrameV2>
-  )
+  return <MechanicalVentilationCourseHome locale={locale} />
 }

@@ -443,6 +443,7 @@ export type StationId =
   | 'deterioration-whole-patient'
 
 export type PhenotypeId =
+  | 'normal-supported-breath'
   | 'ards-recruitment'
   | 'flow-starvation'
   | 'double-triggering'

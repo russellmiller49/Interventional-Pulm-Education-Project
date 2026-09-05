@@ -20,13 +20,11 @@ jest.mock(
     ),
   }),
 )
-jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationOverviewV2', () => ({
-  MechanicalVentilationOverviewV2: () => <div data-testid="ventilation-overview" />,
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationCourseHome', () => ({
+  MechanicalVentilationCourseHome: ({ locale }: { locale: string }) => (
+    <div data-testid="ventilation-live-entry" data-locale={locale} />
+  ),
 }))
-jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLandingV2',
-  () => ({ MechanicalVentilationLearnLandingV2: () => <div data-testid="ventilation-learn" /> }),
-)
 jest.mock(
   '@/features/mechanical-ventilation/components/MechanicalVentilationLearningActivity',
   () => ({
@@ -97,11 +95,7 @@ describe('mechanical ventilation route family', () => {
   it.each(['en', 'es', 'zh-CN'])('renders the localized overview for %s', async (locale) => {
     render(await MechanicalVentilationPage({ params: Promise.resolve({ locale }) }))
     expect(localeMock).toHaveBeenCalledWith(locale)
-    expect(screen.getByTestId('ventilation-frame')).toHaveAttribute(
-      'data-active',
-      '/mechanical-ventilation',
-    )
-    expect(screen.getByTestId('ventilation-overview')).toBeInTheDocument()
+    expect(screen.getByTestId('ventilation-live-entry')).toHaveAttribute('data-locale', locale)
   })
 
   it('opens a known focused lesson and safely falls back for an unknown lesson', async () => {
@@ -123,7 +117,7 @@ describe('mechanical ventilation route family', () => {
         searchParams: Promise.resolve({ activity: 'unknown' }),
       }),
     )
-    expect(screen.getByTestId('ventilation-learn')).toBeInTheDocument()
+    expect(screen.getByTestId('ventilation-live-entry')).toBeInTheDocument()
     expect(screen.getByText(/Unknown lesson/i)).toBeInTheDocument()
   })
 

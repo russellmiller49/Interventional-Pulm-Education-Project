@@ -1,6 +1,6 @@
 import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
 
-import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content/runtimeCases'
+import { resolveVentilationSimulationCase } from '../content/learningPatient'
 import {
   adaptInitialSettingsForDevice,
   createDefaultMechanicalVentilationSettings,
@@ -203,7 +203,7 @@ export function createInitialSimulationState(
   attempt = 1,
   deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
 ): VentilationSimulationState {
-  const definition = mechanicalVentilationCaseById.get(caseId) ?? mechanicalVentilationCases[0]
+  const definition = resolveVentilationSimulationCase(caseId)
   const initial = baseState(definition, experience, attempt, deviceId)
   const primed = advanceSimulation({ ...initial, paused: false }, 4, definition)
   return {
@@ -879,10 +879,7 @@ export function advanceSimulation(
   seconds: number,
   suppliedDefinition?: VentilationCaseDefinition,
 ): VentilationSimulationState {
-  const definition =
-    suppliedDefinition ??
-    mechanicalVentilationCaseById.get(state.caseId) ??
-    mechanicalVentilationCases[0]
+  const definition = suppliedDefinition ?? resolveVentilationSimulationCase(state.caseId)
   const steps = Math.max(1, Math.ceil(seconds / WAVEFORM_STEP_SECONDS))
   const actualStep = seconds / steps
   let time = state.simulationTime
@@ -1062,10 +1059,7 @@ export function selectCaseOutcome(
   state: VentilationSimulationState,
   suppliedDefinition?: VentilationCaseDefinition,
 ): CaseOutcome {
-  const definition =
-    suppliedDefinition ??
-    mechanicalVentilationCaseById.get(state.caseId) ??
-    mechanicalVentilationCases[0]
+  const definition = suppliedDefinition ?? resolveVentilationSimulationCase(state.caseId)
   const performed = new Set(state.interventions.map((record) => record.interventionId))
   const resolved = isCaseResolved(state, definition)
   const requiredActionsComplete = definition.requiredInterventionIds.every((id) =>

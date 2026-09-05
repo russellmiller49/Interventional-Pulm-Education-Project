@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { MechanicalVentilationLearnLandingV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLandingV2'
+import { MechanicalVentilationCourseHome } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseHome'
 import { MechanicalVentilationLearningActivity } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearningActivity'
 import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
-import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
 import { ventilationUnitById } from '@/features/mechanical-ventilation/content/learningCurriculum'
 
 export const metadata: Metadata = {
@@ -34,16 +33,17 @@ export default async function MechanicalVentilationLearnPage({ params, searchPar
   }
 
   return (
-    <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/learn">
+    <>
       {activityId ? (
         <div
           className="mx-auto mt-8 w-[min(72rem,calc(100%-2rem))] rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"
           role="status"
         >
-          <strong>Unknown lesson.</strong> Choose a unit from the learning path below.
+          <strong>Unknown lesson.</strong> Your next experiment is open below. Choose another from
+          the learning map.
         </div>
       ) : null}
-      <MechanicalVentilationLearnLandingV2 />
-    </MechanicalVentilationModuleFrameV2>
+      <MechanicalVentilationCourseHome locale={locale} />
+    </>
   )
 }

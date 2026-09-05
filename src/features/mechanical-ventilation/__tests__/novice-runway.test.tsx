@@ -30,19 +30,17 @@ jest.mock('@/i18n/navigation', () => ({
  * learner is explicitly put down again later rather than left standing as an absolute.
  */
 describe('mechanical ventilation novice runway', () => {
-  it('replaces the untracked primer with a traversable foundation and keeps every unit reachable', () => {
-    render(<MechanicalVentilationLearnLandingV2 />)
-    expect(screen.queryByRole('heading', { name: /New to ventilators/i })).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'From a breath to a bedside decision.' }),
-    ).toBeInTheDocument()
-    for (const unit of ventilationLearningUnits) {
-      const link = screen.getByRole('link', {
-        name: new RegExp(unit.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
-      })
-      expect(link).toHaveAttribute('href', `/mechanical-ventilation/learn?activity=${unit.id}`)
-      expect(link).not.toHaveAttribute('aria-disabled', 'true')
+  it('starts the foundation on a running patient with a reachable learning map', async () => {
+    HTMLDialogElement.prototype.close = function () {
+      this.removeAttribute('open')
     }
+    render(<MechanicalVentilationLearnLandingV2 />)
+    expect(await screen.findByTestId('live-learning-console')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: ventilationLearningUnits[0].title }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Learning map/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Pause simulation' })).toBeInTheDocument()
   })
 
   it('places the normal breath and core measurements before modes', () => {

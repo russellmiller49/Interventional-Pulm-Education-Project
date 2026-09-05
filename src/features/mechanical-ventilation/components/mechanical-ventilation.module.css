@@ -3954,3 +3954,49 @@ line.waveformAnnotation {
   dd {
   color: #a8620a;
 }
+
+/* Live course: keep the native monitor and the adjacent experiment controls in one laptop view. */
+[data-live-learning='true'] .consoleShell {
+  padding: 8px;
+}
+[data-live-learning='true'] .consoleHeader {
+  min-height: 36px;
+  padding-block: 7px;
+}
+[data-live-learning='true'] .alarmBar {
+  min-height: 30px;
+  padding-block: 6px;
+}
+[data-live-learning='true'] .monitoringScreen {
+  height: 345px;
+  min-height: 345px;
+}
+[data-live-learning='true'] .waveformStack,
+[data-live-learning='true'] .mmpPanel {
+  min-height: 0;
+}
+[data-live-learning='true'] .mmpValues > div {
+  padding-block: 3px;
+  line-height: 1.15;
+}
+[data-live-learning='true'] .mmpPanel[data-layout='left-column'] strong {
+  font-size: 23px;
+  line-height: 1.2;
+}
+[data-live-learning='true'] .waveformLabel {
+  padding-top: 7px;
+}
+[data-live-learning='true'] .physicalControls > button {
+  min-height: 44px;
+}
+[data-live-learning='true'] .rotaryKnob {
+  min-height: 48px;
+}
+[data-live-learning='true'] .consoleNav button {
+  min-height: 44px;
+}
+@media (max-width: 850px) {
+  [data-live-learning='true'] .monitoringScreen {
+    height: 345px;
+  }
+}

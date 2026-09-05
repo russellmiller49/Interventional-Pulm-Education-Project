@@ -6,6 +6,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import {
   ventilationObjectives,
+  ventilationLearningUnits,
   ventilationUnitById,
   ventilationUnitHref,
 } from '../content/learningCurriculum'
@@ -17,13 +18,12 @@ import {
 import {
   commitVentilationAnswer,
   hasFocusedGuidance,
-  missingVentilationUnits,
-  nextVentilationUnit,
   scoreVentilationQuestions,
-  ventilationReviewQueue,
   type VentilationAnswer,
 } from '../engine/learningProgress'
 import { useVentilationLearningProgress } from './useVentilationLearningProgress'
+import { useVentilationLabProgress } from './useVentilationLabProgress'
+import { ventilationLiveReviewQueue } from '../engine/learningReview'
 import {
   VentilationLearningQuestion,
   VentilationQuestionFeedback,
@@ -37,6 +37,7 @@ export function MechanicalVentilationCourseCheck({
   readonly kind: 'placement' | 'final' | 'review'
 }) {
   const { progress, ready, storageAvailable, update } = useVentilationLearningProgress()
+  const lab = useVentilationLabProgress()
   const [started, setStarted] = useState(false)
   const [reviewQuestions, setReviewQuestions] = useState<readonly VentilationQuestion[] | null>(
     null,
@@ -45,13 +46,15 @@ export function MechanicalVentilationCourseCheck({
     {},
   )
   const top = useRef<HTMLHeadingElement>(null)
-  const missing = missingVentilationUnits(progress)
+  const missing = ventilationLearningUnits.filter(
+    (unit) => !lab.progress.units[unit.id]?.completedAt,
+  )
   const questions =
     kind === 'placement'
       ? ventilationPlacementQuestions
       : kind === 'final'
         ? ventilationFinalQuestions
-        : (reviewQuestions ?? ventilationReviewQueue(progress))
+        : (reviewQuestions ?? ventilationLiveReviewQueue(lab.progress, progress))
   const answers =
     kind === 'placement'
       ? progress.placement
@@ -62,7 +65,7 @@ export function MechanicalVentilationCourseCheck({
   const complete = questions.length > 0 && index < 0
   const question = index >= 0 ? questions[index] : undefined
   const score = scoreVentilationQuestions(questions, answers)
-  const next = nextVentilationUnit(progress)
+  const next = missing[0]
   const inProgress = started || (kind !== 'review' && questions.some((item) => answers[item.id]))
   const title =
     kind === 'placement'
@@ -138,7 +141,7 @@ export function MechanicalVentilationCourseCheck({
         ? 'Independent mixed check'
         : 'Spaced review'
 
-  if (!ready)
+  if (!ready || !lab.ready)
     return (
       <div className={styles.course}>
         <div className={styles.lessonShell}>
@@ -192,8 +195,9 @@ export function MechanicalVentilationCourseCheck({
           <section className={`${styles.card} ${styles.reading}`}>
             <h2>Finish the learning path first.</h2>
             <p className={styles.muted}>
-              Complete each unit’s decisions and review its feedback. A placement check adjusts
-              guidance; it does not grant unit completion.
+              Complete both live experiments in each unit: make the change, observe the patient, and
+              record your explanation. The starting-level check adjusts guidance; it does not grant
+              completion of the experiments.
             </p>
             <div className={styles.actions}>
               <Link className={styles.primary} href={ventilationUnitHref(missing[0].id) as Route}>
