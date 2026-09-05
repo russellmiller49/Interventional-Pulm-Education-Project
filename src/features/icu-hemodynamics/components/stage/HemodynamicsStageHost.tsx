@@ -47,6 +47,7 @@ import {
   stageWatchValue,
   type StageWatch,
 } from '../../engine/stageRuntime'
+import { derivedHemodynamicsSectionCompletion } from '../../engine/derivedEvaluation'
 import type { CatheterPosition, HemodynamicSimulationState } from '../../engine/types'
 import { CARDIAC_OUTPUT_PROVENANCE_CHOICES } from '../CardiacOutputMethodModel'
 import { CardiacOutputDisagreementLab } from '../CardiacOutputDisagreementLab'
@@ -747,6 +748,50 @@ function HemodynamicsStageSession({
           </fieldset>
         )
       }
+      case 'derived-workbench': {
+        const completion = derivedHemodynamicsSectionCompletion({
+          signalValidationChecks: state.signalValidationChecks,
+          measuredCalculatedSeparated: commitments.derivedSeparated,
+          disagreementPreservedWithoutAveraging: commitments.derivedDisagreementPreserved,
+          thresholdContextResolved: commitments.derivedThresholdResolved,
+        })
+        const rows: readonly { readonly label: string; readonly met: boolean }[] = [
+          {
+            label: 'Name every input one calculation depends on',
+            met: completion.dependencyChainValidated,
+          },
+          {
+            label: 'Withhold a value for the input that makes it unreadable',
+            met: completion.withheldForValidity,
+          },
+          {
+            label: 'Keep the values that input does not touch',
+            met: completion.selectiveInvalidationPreserved,
+          },
+          {
+            label: 'Trace a flow-dependent value to the method that produced it',
+            met: completion.flowMethodTraced,
+          },
+          {
+            label: 'Keep a two-method disagreement without averaging it',
+            met: completion.disagreementPreservedWithoutAveraging,
+          },
+          {
+            label: 'Read a boundary inside its context, not as a universal number',
+            met: completion.thresholdContextResolved,
+          },
+        ]
+        return (
+          <ul className={stageStyles.taskList} data-step-goals aria-label="What to do">
+            {rows.map((row) => (
+              <li key={row.label} data-met={row.met}>
+                {row.met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+                <span>{row.label}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      }
       case 'sort':
         return (
           <QuestionSortControl
@@ -783,6 +828,9 @@ function HemodynamicsStageSession({
                 {placeNote}
               </p>
             ) : null}
+            {interaction.kind === 'observe' && lesson.runtime.comparison === 'ventricle-artery' ? (
+              <VentricleArtery state={state} />
+            ) : null}
             {wedgeCommitments.includes('plausibility') ? (
               <CommitmentBlock
                 title="Is the stored value plausible?"
@@ -795,6 +843,30 @@ function HemodynamicsStageSession({
                   commitChoice(activeStep, `${activeStep.id}:${WEDGE_PLAUSIBILITY_KEY}`)
                 }
                 disabled={lookingBack}
+              />
+            ) : null}
+            {goals.some((goal) => goal.type === 'reassessed') ? (
+              <div className={styles.returnCheck} data-reassess>
+                <p>
+                  <strong>Reassess.</strong> Read the corrected pressures, the series and the
+                  bedside picture together, as one set, before anything on the screen is believed
+                  again.
+                </p>
+                <button
+                  type="button"
+                  className={shellStyles.nowSecondary}
+                  disabled={state.reassessed}
+                  onClick={() => dispatch({ type: 'REASSESS' })}
+                >
+                  {state.reassessed ? 'Reassessed' : 'Reassess the screen against the patient'}
+                </button>
+              </div>
+            ) : null}
+            {interaction.kind === 'simulator-task' &&
+            goals.some((goal) => goal.type === 'check' && goal.id === PA_RETURN_CHECK) ? (
+              <ReturnCheck
+                state={state}
+                onConfirm={() => dispatch({ type: 'VALIDATE_SIGNAL', check: PA_RETURN_CHECK })}
               />
             ) : null}
             {wedgeCommitments.includes('return') ? (
@@ -868,7 +940,9 @@ function HemodynamicsStageSession({
                 predicted: {chosen.label}
               </p>
             ) : null}
-            {before && after && lesson.runtime.watch.length > 0 ? (
+            {lesson.runtime.comparison === 'ventricle-artery' ? (
+              <VentricleArtery state={state} />
+            ) : before && after && lesson.runtime.watch.length > 0 ? (
               <BeforeAfter before={before} after={after} watch={lesson.runtime.watch} />
             ) : null}
             {round === 0 ? <HemodynamicsStoryProblems sectionId={lesson.sectionId} /> : null}
@@ -1241,6 +1315,37 @@ function CommitmentBlock({
   )
 }
 
+function ReturnCheck({
+  state,
+  onConfirm,
+}: {
+  readonly state: HemodynamicSimulationState
+  readonly onConfirm: () => void
+}) {
+  const confirmed = state.signalValidationChecks.includes(PA_RETURN_CHECK)
+  return (
+    <div className={styles.returnCheck} data-return-check>
+      <p>
+        <strong>Has the pulmonary-artery tracing come back?</strong> Look at the monitor: the notch,
+        the diastolic run-off, the pulsatility.
+      </p>
+      <button
+        type="button"
+        className={shellStyles.nowSecondary}
+        disabled={
+          confirmed ||
+          state.catheter.position !== 'pa' ||
+          state.catheter.balloonInflated ||
+          state.catheter.forcedSafetyRecovery
+        }
+        onClick={onConfirm}
+      >
+        {confirmed ? 'The artery is back — confirmed' : 'The artery is back'}
+      </button>
+    </div>
+  )
+}
+
 function ProvenanceCommitment({
   resolved,
   onResolved,
@@ -1306,6 +1411,46 @@ function ProvenanceCommitment({
         </button>
       ) : null}
     </section>
+  )
+}
+
+/**
+ * The ventricle and the artery, side by side: the same peak, a floor that steps up, and a notch
+ * that appears — read from the engine, which models no systolic gradient across the pulmonic
+ * valve unless there is one.
+ */
+function VentricleArtery({ state }: { readonly state: HemodynamicSimulationState }) {
+  const m = state.measurements
+  const rows: readonly { readonly label: string; readonly rv: string; readonly pa: string }[] = [
+    { label: 'Systolic peak (mmHg)', rv: String(m.rvSystolicMmHg), pa: String(m.papSystolicMmHg) },
+    {
+      label: 'Diastolic floor (mmHg)',
+      rv: String(m.rvDiastolicMmHg),
+      pa: String(m.papDiastolicMmHg),
+    },
+    { label: 'Notch on the way down', rv: 'none', pa: 'present' },
+    { label: 'Diastole', rv: 'dips low, then climbs', pa: 'runs off, never to the floor' },
+  ]
+  return (
+    <table className={stageStyles.compareTable} data-ventricle-artery>
+      <caption className={shellStyles.kicker}>The ventricle and the artery, side by side</caption>
+      <thead>
+        <tr>
+          <th scope="col">Reading</th>
+          <th scope="col">Right ventricle</th>
+          <th scope="col">Pulmonary artery</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.label}>
+            <th scope="row">{row.label}</th>
+            <td>{row.rv}</td>
+            <td data-direction={row.rv === row.pa ? 'same' : 'changed'}>{row.pa}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 

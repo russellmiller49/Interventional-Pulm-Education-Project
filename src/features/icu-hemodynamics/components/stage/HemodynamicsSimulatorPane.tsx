@@ -69,6 +69,13 @@ export function HemodynamicsSimulatorPane({
             <FlushDock {...props} lineType={flushLine} />
           </>
         )
+      case 'flush-then-tip':
+        return (
+          <>
+            <FlushDock {...props} lineType={flushLine} />
+            <TipDock {...props} />
+          </>
+        )
       case 'tip':
         return <TipDock {...props} />
       case 'wedge':
@@ -80,7 +87,10 @@ export function HemodynamicsSimulatorPane({
       case 'recognition':
         return (
           <div className={styles.surfaceCard} data-surface="recognition">
-            <WaveformRecognitionDrill dispatch={controlsEnabled ? dispatch : undefined} />
+            <WaveformRecognitionDrill
+              dispatch={controlsEnabled ? dispatch : undefined}
+              questionSet="places"
+            />
           </div>
         )
       case 'capstone':

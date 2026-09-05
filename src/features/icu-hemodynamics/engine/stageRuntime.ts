@@ -36,6 +36,7 @@ export type StageGoal =
   | { readonly type: 'level' }
   | { readonly type: 'zeroed' }
   | { readonly type: 'check'; readonly id: string }
+  /** The tip has reached this stop — or gone past it, which means it was reached on the way. */
   | { readonly type: 'position'; readonly position: CatheterPosition }
   | { readonly type: 'balloon-down' }
   | { readonly type: 'wedge-stored' }
@@ -54,8 +55,11 @@ export function stageGoalMet(goal: StageGoal, state: HemodynamicSimulationState)
       return state.measurementSystem.zeroed
     case 'check':
       return checks.has(goal.id)
-    case 'position':
-      return state.catheter.position === goal.position && state.catheter.targetPosition === null
+    case 'position': {
+      if (state.catheter.targetPosition !== null) return false
+      const route: readonly CatheterPosition[] = ['introducer', 'ra', 'rv', 'pa', 'wedge']
+      return route.indexOf(state.catheter.position) >= route.indexOf(goal.position)
+    }
     case 'balloon-down':
       return (
         state.catheter.position === 'pa' &&
@@ -361,6 +365,11 @@ export interface SectionRuntime {
   readonly transferGoals: readonly StageGoal[]
   /** The readings compared before and after the hands-on work. */
   readonly watch: readonly StageWatch[]
+  /**
+   * What the Explain step compares: the readings before and after the work, or — for the section
+   * whose work is moving the tip — the ventricle against the artery, side by side.
+   */
+  readonly comparison?: 'before-after' | 'ventricle-artery'
   /** The catheter positions the route map walks, when the section walks. */
   readonly walkPositions?: readonly CatheterPosition[]
 }
@@ -437,6 +446,7 @@ const runtimes: Readonly<Record<HemodynamicsSectionId, SectionRuntime>> = {
       { type: 'check', id: 'waveform-confirmed-rv' },
     ],
     watch: ['rvSystolic', 'rvDiastolic', 'papSystolic', 'papDiastolic', 'position'],
+    comparison: 'ventricle-artery',
   },
   'pawp-capture': {
     sectionId: 'pawp-capture',

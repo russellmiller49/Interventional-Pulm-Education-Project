@@ -38,6 +38,7 @@ export type StageSurface =
   | 'none'
   | 'line'
   | 'flush'
+  | 'flush-then-tip'
   | 'tip'
   | 'wedge'
   | 'thermodilution'
@@ -483,7 +484,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
         'Do it: run the flush, read it, repair the line — and only then advance to the ventricle and confirm it.',
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.transferGoals, round: 1 },
-      surface: 'tip',
+      surface: 'flush-then-tip',
     },
     {
       phase: 'transfer',
