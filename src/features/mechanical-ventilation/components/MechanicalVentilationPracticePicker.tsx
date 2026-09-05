@@ -15,6 +15,7 @@ import {
   ventilationUnitById,
 } from '../content/learningCurriculum'
 import { ventilationPathwayGroups } from '../content/pathwayResolver'
+import { ventilationSectionSpecs } from '../content/sectionSpecs'
 import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import {
   createDefaultProgress,
@@ -76,14 +77,21 @@ export function MechanicalVentilationPracticePicker({
   function remember() {
     writeProgress(setLastDevice(readProgress(), device))
   }
+  // The section whose mechanism this case applies: the one that pairs it, else the first that lists it.
   const teachingUnitFor = (caseId: string) =>
+    ventilationLearningUnits.find(
+      (unit) =>
+        ventilationSectionSpecs.find((spec) => spec.unitId === unit.id)?.practicePairing?.caseId ===
+          caseId &&
+        ventilationSectionSpecs.find((spec) => spec.unitId === unit.id)?.practicePairing?.kind ===
+          'mechanism-match',
+    ) ??
     ventilationLearningUnits.find(
       (unit) =>
         unit.caseIds.includes(caseId) &&
         unit.stage !== 'orientation' &&
         unit.stage !== 'foundation',
     )
-
   return (
     <MechanicalVentilationModuleFrame
       locale={locale}

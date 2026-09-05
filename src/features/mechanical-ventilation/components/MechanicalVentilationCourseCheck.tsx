@@ -159,7 +159,7 @@ export function MechanicalVentilationCourseCheck({
             <span>{titleForActive}</span>
           </nav>
           <Link className={styles.textLink} href={'/mechanical-ventilation/learn' as Route}>
-            Learning path
+            Learn
           </Link>
         </div>
         {!storageAvailable && (
@@ -176,7 +176,7 @@ export function MechanicalVentilationCourseCheck({
                 : kind === 'review'
                   ? 'Your review is complete.'
                   : score.passed
-                    ? 'Final check passed.'
+                    ? 'Knowledge check met.'
                     : 'Use this result to guide your review.'
               : inProgress
                 ? `Question ${index + 1} of ${questions.length}`
@@ -193,11 +193,11 @@ export function MechanicalVentilationCourseCheck({
         </header>
         {kind === 'final' && missing.length > 0 ? (
           <section className={`${styles.card} ${styles.reading}`}>
-            <h2>Finish the learning path first.</h2>
+            <h2>Work through the fourteen sections first.</h2>
             <p className={styles.muted}>
-              Complete both live experiments in each unit: make the change, observe the patient, and
-              record your explanation. The starting-level check adjusts guidance; it does not grant
-              completion of the experiments.
+              Each section asks for a prediction, a change on the running patient and a watched
+              response, twice. This check opens once every section has been worked through; the
+              starting-level check only adjusts how much guidance the sections give.
             </p>
             <div className={styles.actions}>
               <Link className={styles.primary} href={ventilationUnitHref(missing[0].id) as Route}>
@@ -206,7 +206,7 @@ export function MechanicalVentilationCourseCheck({
               </Link>
             </div>
             <details className={styles.details} open>
-              <summary>Units still to complete</summary>
+              <summary>Sections still to work through</summary>
               <ul>
                 {missing.map((unit) => (
                   <li key={unit.id}>
@@ -330,7 +330,7 @@ export function MechanicalVentilationCourseCheck({
                     ? `Continue — ${next.shortTitle}`
                     : kind === 'final' && score.passed
                       ? 'Apply it in case practice'
-                      : 'Return to the learning path'}
+                      : 'Return to Learn'}
                   <ArrowRight size={16} />
                 </Link>
               </div>
