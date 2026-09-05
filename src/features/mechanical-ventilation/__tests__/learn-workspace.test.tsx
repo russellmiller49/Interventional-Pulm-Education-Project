@@ -1,3 +1,4 @@
+import { ventilationLearningUnits } from '../content/learningCurriculum'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
@@ -218,9 +219,11 @@ describe('the mechanical ventilation Learn workspace', () => {
     await renderLesson()
 
     // The rail still offers every authored section, by its authored id.
-    for (const lesson of mechanicalVentilationLessons) {
+    for (const lesson of ventilationLearningUnits) {
       expect(
-        screen.getByRole('button', { name: new RegExp(`\\d+\\. ${lesson.title}`) }),
+        screen.getByRole('button', {
+          name: `${ventilationLearningUnits.indexOf(lesson) + 1}. ${lesson.title}${lesson.stage === 'integration' ? ', integration capstone' : ''}`,
+        }),
       ).toBeInTheDocument()
     }
     expect(screen.getByText(/Checkpoint: lesson-recognize · MV-01/)).toBeInTheDocument()

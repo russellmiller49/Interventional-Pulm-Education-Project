@@ -3,7 +3,7 @@ import { setRequestLocale } from 'next-intl/server'
 
 import { MechanicalVentilationCaseActivityLoader } from '@/features/mechanical-ventilation/components/MechanicalVentilationCaseActivityLoader'
 import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
-import { MechanicalVentilationPracticeSetupV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationPracticeSetupV2'
+import { MechanicalVentilationCoursePractice } from '@/features/mechanical-ventilation/components/MechanicalVentilationCoursePractice'
 import { mechanicalVentilationCaseById } from '@/features/mechanical-ventilation/content'
 import {
   ventilatorDeviceIds,
@@ -24,6 +24,7 @@ interface PageProps {
     case?: string | string[]
     device?: string | string[]
     mode?: string | string[]
+    focus?: string | string[]
   }>
 }
 
@@ -65,7 +66,8 @@ export default async function MechanicalVentilationPracticePage({
   const hadIncompleteQuery = Boolean(caseId || requestedDevice || requestedMode)
   return (
     <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/practice">
-      <MechanicalVentilationPracticeSetupV2
+      <MechanicalVentilationCoursePractice
+        focus={single(query.focus)}
         compatibilityNotice={
           hadIncompleteQuery
             ? 'The case, console, or support parameters were missing or incompatible. No simulator state was guessed.'

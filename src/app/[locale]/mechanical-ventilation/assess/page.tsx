@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { MechanicalVentilationAssessSetupV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationAssessSetupV2'
+import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
 import { MechanicalVentilationCaseActivityLoader } from '@/features/mechanical-ventilation/components/MechanicalVentilationCaseActivityLoader'
 import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
 import {
@@ -15,8 +15,9 @@ import {
 } from '@/features/mechanical-ventilation/engine'
 
 export const metadata: Metadata = {
-  title: 'Challenge · Mechanical Ventilation',
-  description: 'A harder, locally varied mechanical-ventilation case with a causal debrief.',
+  title: 'Final check · Mechanical Ventilation',
+  description:
+    'An independent mixed knowledge check after the mechanical ventilation learning path.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -69,16 +70,9 @@ export default async function MechanicalVentilationAssessPage({ params, searchPa
     )
   }
 
-  const hadIncompleteQuery = Boolean(assessmentId || seed || requestedDevice)
   return (
     <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/assess">
-      <MechanicalVentilationAssessSetupV2
-        compatibilityNotice={
-          hadIncompleteQuery
-            ? 'The challenge seed or console was missing or incompatible. Open a new case from setup.'
-            : undefined
-        }
-      />
+      <MechanicalVentilationCourseCheck kind="final" />
     </MechanicalVentilationModuleFrameV2>
   )
 }

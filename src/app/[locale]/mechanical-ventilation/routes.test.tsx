@@ -28,37 +28,32 @@ jest.mock(
   () => ({ MechanicalVentilationLearnLandingV2: () => <div data-testid="ventilation-learn" /> }),
 )
 jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationLessonActivity',
+  '@/features/mechanical-ventilation/components/MechanicalVentilationLearningActivity',
   () => ({
-    MechanicalVentilationLessonActivity: ({
-      lesson,
+    MechanicalVentilationLearningActivity: ({
+      unit,
       locale,
     }: {
-      lesson: { id: string }
+      unit: { id: string }
       locale: string
-    }) => <div data-testid="ventilation-lesson" data-id={lesson.id} data-locale={locale} />,
+    }) => <div data-testid="ventilation-lesson" data-id={unit.id} data-locale={locale} />,
   }),
 )
 jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationPracticeSetupV2',
+  '@/features/mechanical-ventilation/components/MechanicalVentilationCoursePractice',
   () => ({
-    MechanicalVentilationPracticeSetupV2: ({
+    MechanicalVentilationCoursePractice: ({
       compatibilityNotice,
     }: {
       compatibilityNotice?: string
     }) => <div data-testid="ventilation-practice-setup">{compatibilityNotice}</div>,
   }),
 )
-jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationAssessSetupV2',
-  () => ({
-    MechanicalVentilationAssessSetupV2: ({
-      compatibilityNotice,
-    }: {
-      compatibilityNotice?: string
-    }) => <div data-testid="ventilation-assess-setup">{compatibilityNotice}</div>,
-  }),
-)
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck', () => ({
+  MechanicalVentilationCourseCheck: ({ compatibilityNotice }: { compatibilityNotice?: string }) => (
+    <div data-testid="ventilation-assess-setup">{compatibilityNotice}</div>
+  ),
+}))
 jest.mock(
   '@/features/mechanical-ventilation/components/MechanicalVentilationCaseActivityLoader',
   () => ({
@@ -185,9 +180,7 @@ describe('mechanical ventilation route family', () => {
         searchParams: Promise.resolve({ case: 'MV-01', seed: 'bad seed', device: 'hamilton-c6' }),
       }),
     )
-    expect(screen.getByTestId('ventilation-assess-setup')).toHaveTextContent(
-      /missing or incompatible/i,
-    )
+    expect(screen.getByTestId('ventilation-assess-setup')).toBeInTheDocument()
   })
 
   it('turns every ventilation Practice catalog entry into an actionable safe-default route', async () => {

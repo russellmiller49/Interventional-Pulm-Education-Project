@@ -10,10 +10,9 @@ export const MECHANICAL_VENTILATION_NAV_BASE = mechanicalVentilationNavBase
 
 export const MECHANICAL_VENTILATION_SAFETY_NOTICE = (
   <>
-    <strong>Educational simulation—not a clinical device or treatment recommendation.</strong>{' '}
-    Synthetic values, waveforms, alarms, and responses must not guide care for a real patient. Use
-    bedside evaluation, the applicable operator manual, current institutional protocols, and
-    qualified clinical supervision.
+    <strong>For supervised clinical learning.</strong> Cases, waveforms, and responses are
+    synthetic. Use current clinical guidance, device manuals, local protocols, and qualified
+    supervision for patient care.
   </>
 )
 
@@ -24,19 +23,19 @@ export const mechanicalVentilationModuleNavItems: readonly ModuleNavItem[] = [
     description: 'Outcomes and orientation',
   },
   {
-    title: 'Learn',
+    title: 'Learning path',
     href: `${MECHANICAL_VENTILATION_NAV_BASE}/learn`,
-    description: 'Focused guided lessons',
+    description: 'A staged path from the normal breath to clinical reasoning',
   },
   {
     title: 'Practice',
     href: `${MECHANICAL_VENTILATION_NAV_BASE}/practice`,
-    description: 'Fifteen preserved cases',
+    description: 'Apply the learning in a clinical teaching case',
   },
   {
-    title: 'Challenge',
+    title: 'Final check',
     href: `${MECHANICAL_VENTILATION_NAV_BASE}/assess`,
-    description: 'Harder seeded case',
+    description: 'Independent mixed knowledge check',
   },
 ]
 
@@ -58,13 +57,13 @@ export function MechanicalVentilationModuleFrameV2({
     <ModuleFrameV2
       eyebrow="Critical care · Respiratory support"
       title="Mechanical Ventilation"
-      subtitle="Mechanics, waveforms, patient–ventilator interaction, troubleshooting, and reassessment"
+      subtitle="Read the breath. Explain the change. Reassess the patient."
       releaseLabel={releaseLabel}
       activeHref={activeHref}
       navItems={mechanicalVentilationModuleNavItems}
       navAriaLabel="Mechanical ventilation sections"
       safetyNotice={MECHANICAL_VENTILATION_SAFETY_NOTICE}
-      theme="dark"
+      theme="light"
     >
       {children}
     </ModuleFrameV2>

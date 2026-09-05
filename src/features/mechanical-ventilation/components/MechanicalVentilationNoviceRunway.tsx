@@ -194,7 +194,7 @@ const SAMPLE_COUNT = 140
  * term and then ramps as the lung fills. Deliberately generic — no case, no patient, no numbers
  * printed against it.
  */
-function normalBreath(): readonly WaveformSample[] {
+export function normalBreath(): readonly WaveformSample[] {
   const complianceLPerCmH2O = 0.05
   const resistanceCmH2OPerLps = 10
   const peep = 5

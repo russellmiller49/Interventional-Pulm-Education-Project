@@ -2,9 +2,10 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { MechanicalVentilationLearnLandingV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLandingV2'
-import { MechanicalVentilationLessonActivity } from '@/features/mechanical-ventilation/components/MechanicalVentilationLessonActivity'
+import { MechanicalVentilationLearningActivity } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearningActivity'
+import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
 import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
-import { mechanicalVentilationLessonById } from '@/features/mechanical-ventilation/content'
+import { ventilationUnitById } from '@/features/mechanical-ventilation/content/learningCurriculum'
 
 export const metadata: Metadata = {
   title: 'Learn · Mechanical Ventilation',
@@ -15,17 +16,22 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ activity?: string | string[] }>
+  searchParams?: Promise<{ activity?: string | string[]; entry?: string | string[] }>
 }
 
 export default async function MechanicalVentilationLearnPage({ params, searchParams }: PageProps) {
   const { locale } = await params
-  const activity = (await searchParams)?.activity
+  const query = await searchParams
+  const activity = query?.activity
   const activityId = typeof activity === 'string' ? activity : undefined
-  const lesson = activityId ? mechanicalVentilationLessonById.get(activityId) : undefined
+  const unit = activityId ? ventilationUnitById.get(activityId) : undefined
   setRequestLocale(locale)
 
-  if (lesson) return <MechanicalVentilationLessonActivity lesson={lesson} locale={locale} />
+  if (unit)
+    return <MechanicalVentilationLearningActivity key={unit.id} unit={unit} locale={locale} />
+  if (query?.entry === 'placement' || query?.entry === 'review') {
+    return <MechanicalVentilationCourseCheck kind={query.entry} />
+  }
 
   return (
     <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/learn">
@@ -34,8 +40,7 @@ export default async function MechanicalVentilationLearnPage({ params, searchPar
           className="mx-auto mt-8 w-[min(72rem,calc(100%-2rem))] rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"
           role="status"
         >
-          <strong>Unknown lesson.</strong> The requested activity is not in this reviewed content
-          version. Choose one of the focused lessons below.
+          <strong>Unknown lesson.</strong> Choose a unit from the learning path below.
         </div>
       ) : null}
       <MechanicalVentilationLearnLandingV2 />

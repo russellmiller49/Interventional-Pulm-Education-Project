@@ -31,10 +31,11 @@ import { criticalCareActivityDefinitionSchema } from '@/features/learning-module
 import { allMcsScenarios } from '@/features/mechanical-circulatory-support/content/scenarios'
 import { mcsLessons } from '@/features/mechanical-circulatory-support/content/lessons'
 import { mechanicalVentilationCases } from '@/features/mechanical-ventilation/content/runtimeCases'
+import { MECHANICAL_VENTILATION_ASSESSMENT_ID } from '@/features/mechanical-ventilation/content/lessons'
 import {
-  MECHANICAL_VENTILATION_ASSESSMENT_ID,
-  mechanicalVentilationLessonIds,
-} from '@/features/mechanical-ventilation/content/lessons'
+  VENTILATION_FINAL_CHECK_ID,
+  ventilationLearningUnits,
+} from '@/features/mechanical-ventilation/content/learningCurriculum'
 import type { CriticalCareActivityDefinition } from '@/features/learning-module/activity'
 
 function sourceIds(moduleId: string, section: 'learn' | 'practice' | 'assess'): string[] {
@@ -99,7 +100,7 @@ describe('critical-care catalogs', () => {
         activity.moduleId === 'mechanical-ventilation' && activity.id.includes(':learn:'),
     )
 
-    expect(lessons).toHaveLength(mechanicalVentilationLessonIds.length)
+    expect(lessons).toHaveLength(ventilationLearningUnits.length)
     expect(
       lessons.every(
         (activity) =>
@@ -112,7 +113,7 @@ describe('critical-care catalogs', () => {
     expect(lessons.every((activity) => activity.competencyIds.length < 5)).toBe(true)
   })
 
-  it('covers every requested source registry without importing those registries in production', () => {
+  it('keeps the hub aligned with every requested source registry', () => {
     // Seed order, and therefore what the shared hub recommends first, follows the hemodynamics
     // learning pathway (H1.1). See `__tests__/hub-pathway-start-alignment.test.ts`.
     expect(sourceIds('icu-hemodynamics', 'learn')).toEqual([
@@ -128,11 +129,14 @@ describe('critical-care catalogs', () => {
       hemodynamicCases.map((definition) => definition.id),
     )
     expect(sourceIds('icu-hemodynamics', 'assess')).toEqual(['masked-seeded'])
-    expect(sourceIds('mechanical-ventilation', 'learn')).toEqual(mechanicalVentilationLessonIds)
+    expect(sourceIds('mechanical-ventilation', 'learn')).toEqual(
+      ventilationLearningUnits.map((unit) => unit.id),
+    )
     expect(sourceIds('mechanical-ventilation', 'practice')).toEqual(
       mechanicalVentilationCases.map((definition) => definition.id),
     )
     expect(sourceIds('mechanical-ventilation', 'assess')).toEqual([
+      VENTILATION_FINAL_CHECK_ID,
       MECHANICAL_VENTILATION_ASSESSMENT_ID,
     ])
     expect(sourceIds('mechanical-circulatory-support', 'learn')).toEqual(
@@ -214,6 +218,18 @@ describe('critical-care catalogs', () => {
       seed: 'catalog-challenge-v1',
       device: 'hamilton-c6',
     })
+    const finalCheck = criticalCareActivities.find(
+      (activity) => activity.id === `ventilation:assess:${VENTILATION_FINAL_CHECK_ID}`,
+    )
+    expect(finalCheck).toMatchObject({
+      pathname: '/mechanical-ventilation/assess',
+      creditPolicy: 'non-credit',
+      completionEvidenceAuthority: 'none',
+      prerequisiteActivityIds: ventilationLearningUnits.map(
+        (unit) => `ventilation:learn:${unit.id}`,
+      ),
+    })
+    expect(finalCheck?.query).toBeUndefined()
   })
 
   it('parses the documented asset inventory and enforces lightweight heavy-asset alternatives', () => {

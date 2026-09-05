@@ -6,6 +6,7 @@ import { MechanicalVentilationNoviceRunway } from '../components/MechanicalVenti
 import { MechanicalVentilationTeachingPanel } from '../components/MechanicalVentilationTeachingPanel'
 import { ventilatorDeviceProfiles } from '../content'
 import { createInitialSimulationState } from '../engine'
+import { ventilationLearningUnits } from '../content/learningCurriculum'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -29,32 +30,30 @@ jest.mock('@/i18n/navigation', () => ({
  * learner is explicitly put down again later rather than left standing as an absolute.
  */
 describe('mechanical ventilation novice runway', () => {
-  it('renders above the pathway section list, and gates nothing', () => {
+  it('replaces the untracked primer with a traversable foundation and keeps every unit reachable', () => {
     render(<MechanicalVentilationLearnLandingV2 />)
-
-    const runway = screen.getByRole('heading', { name: /New to ventilators/i })
-    const sectionsHeading = screen.getByRole('heading', { name: /Choose where to begin/i })
-
-    // Node.DOCUMENT_POSITION_FOLLOWING === 4: the section list comes after the runway.
-    expect(runway.compareDocumentPosition(sectionsHeading) & 4).toBeTruthy()
-
-    // Every section stays directly reachable — the runway is recommended, not a prerequisite.
-    const links = screen.getAllByRole('link')
-    const sectionLinks = links.filter((link) =>
-      (link.getAttribute('href') ?? '').includes('/mechanical-ventilation/learn?activity='),
-    )
-    expect(sectionLinks.length).toBeGreaterThanOrEqual(10)
-    for (const link of sectionLinks) {
+    expect(screen.queryByRole('heading', { name: /New to ventilators/i })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'From a breath to a bedside decision.' }),
+    ).toBeInTheDocument()
+    for (const unit of ventilationLearningUnits) {
+      const link = screen.getByRole('link', {
+        name: new RegExp(unit.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+      })
+      expect(link).toHaveAttribute('href', `/mechanical-ventilation/learn?activity=${unit.id}`)
       expect(link).not.toHaveAttribute('aria-disabled', 'true')
-      expect(link).not.toHaveAttribute('disabled')
     }
-    expect(screen.getByText(/recommended, not required/i)).toBeInTheDocument()
   })
 
-  it('describes Modes as fourth, matching the authored order', () => {
-    render(<MechanicalVentilationLearnLandingV2 />)
-    expect(screen.getByText(/Modes sit fourth on purpose/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Modes sit third/i)).not.toBeInTheDocument()
+  it('places the normal breath and core measurements before modes', () => {
+    const ids = ventilationLearningUnits.map((unit) => unit.id)
+    expect(ids[0]).toBe('breathing-with-support')
+    expect(ids.indexOf('modes-and-breath-delivery')).toBeGreaterThan(
+      ids.indexOf('mechanics-load-and-pressure'),
+    )
+    expect(ids.indexOf('expiration-and-air-trapping')).toBeLessThan(
+      ids.indexOf('dyssynchrony-mechanisms'),
+    )
   })
 
   describe('the controls', () => {
