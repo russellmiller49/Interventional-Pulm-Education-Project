@@ -2,7 +2,6 @@ import {
   hasVentilationLessonEvidence,
   mechanicalVentilationCaseById,
   mechanicalVentilationLessons,
-  ventilationEvidenceById,
   ventilationCaseTransferById,
   ventilationLessonActionEvidence,
   ventilationLessonRuntimes,
