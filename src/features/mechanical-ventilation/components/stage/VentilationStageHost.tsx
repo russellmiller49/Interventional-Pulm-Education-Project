@@ -337,12 +337,24 @@ function VentilationStageSession({
 
   const walkStop: BreathStopId | null =
     interaction.kind === 'walk' && !walkDone ? (interaction.stops[walkStopIndex] ?? null) : null
-  const mapStops: readonly BreathStopId[] = walkStop ? [walkStop] : activeStep.stops
+  const locationCommitted = interaction.kind === 'locate' && evidence.location !== undefined
+  /*
+   * While a section is asking where on the breath the problem lives, the map lights nothing: the
+   * section's own stops are the candidates, and marking them would hand over the answer. Once the
+   * answer is committed the map lights the keyed stop, which is the verdict drawn.
+   */
+  const mapStops: readonly BreathStopId[] = walkStop
+    ? [walkStop]
+    : interaction.kind === 'locate'
+      ? locationCommitted
+        ? [interaction.targets[interaction.item.correctChoiceIds[0]]]
+        : []
+      : activeStep.stops
   const mapCaption = walkStop
     ? `You are here: ${breathStop(walkStop).title}. Stop ${walkStopIndex + 1} of ${interaction.kind === 'walk' ? interaction.stops.length : 4}.`
-    : breathMapCaption(mapStops)
-
-  const locationCommitted = interaction.kind === 'locate' && evidence.location !== undefined
+    : interaction.kind === 'locate' && !locationCommitted
+      ? 'Where on this breath does the problem live? Choose a stop below.'
+      : breathMapCaption(mapStops)
   const mapAnswer: BreathMapAnswer | undefined =
     interaction.kind === 'locate'
       ? {
@@ -891,6 +903,7 @@ function VentilationStageSession({
       watch={watch}
       goals={interaction.kind === 'simulator-task' || interaction.kind === 'observe' ? goals : []}
       mechanicsVisible={mechanicsVisible}
+      exploring={interaction.kind === 'explain'}
       spotlightKey={spotlightKey}
       stops={mapStops}
       mapCaption={mapCaption}
@@ -908,7 +921,7 @@ function VentilationStageSession({
         step={activeStep}
         state={session.simulation}
         predictionCommitted={predictionCommitted}
-        walkStop={walkStop}
+        stops={mapStops}
       />
     </StageTeachingScope>
   )

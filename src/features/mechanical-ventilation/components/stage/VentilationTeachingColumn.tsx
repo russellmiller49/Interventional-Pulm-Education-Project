@@ -38,14 +38,14 @@ export function VentilationTeachingColumn({
   step,
   state,
   predictionCommitted,
-  walkStop,
+  stops,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
   readonly state: VentilationSimulationState
   readonly predictionCommitted: boolean
-  /** During the walk, the stop the learner is standing at. */
-  readonly walkStop: BreathStopId | null
+  /** The stops the breath map is lighting for this step: the walk's current stop, or the step's. */
+  readonly stops: readonly BreathStopId[]
 }) {
   const { unit, spec } = lesson
   const stage = ventilationStages.find((entry) => entry.id === unit.stage)
@@ -67,7 +67,6 @@ export function VentilationTeachingColumn({
       ? 'shown'
       : 'collapsed'
 
-  const stops: readonly BreathStopId[] = walkStop ? [walkStop] : step.stops
   const rows = breathGrammarRowsFor(unit.id)
   const highlighted = new Set(rows.map((row) => row.id))
 

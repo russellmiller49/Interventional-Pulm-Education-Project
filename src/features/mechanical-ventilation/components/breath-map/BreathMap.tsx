@@ -153,8 +153,8 @@ export function BreathMap({
                   height={VIEW_HEIGHT - 26}
                   rx={6}
                 />
-                <text className={styles.segmentLabel} data-lit={isLit} x={x + width / 2} y={12}>
-                  {stopNumber(stopId)}. {breathStop(stopId).title.split(' — ')[0]}
+                <text className={styles.segmentLabel} data-lit={isLit} x={x + width / 2} y={13}>
+                  {stopNumber(stopId)}
                 </text>
               </g>
             )
@@ -232,6 +232,18 @@ export function BreathMap({
             })
           : null}
       </div>
+      {!answer ? (
+        <ol className={styles.legend} aria-label="The four stops">
+          {breathStopIds.map((stopId) => (
+            <li key={stopId} data-lit={lit.has(stopId)}>
+              <span className={styles.number} aria-hidden="true">
+                {stopNumber(stopId)}
+              </span>
+              {breathStop(stopId).title}
+            </li>
+          ))}
+        </ol>
+      ) : null}
       {answer ? (
         <fieldset
           className={styles.answer}

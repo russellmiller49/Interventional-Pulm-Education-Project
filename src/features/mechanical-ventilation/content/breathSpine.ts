@@ -183,10 +183,10 @@ export function breathStopForUnit(
 export const breathMapSegments: Readonly<
   Record<BreathStopId, { readonly from: number; readonly to: number }>
 > = {
-  trigger: { from: 0, to: 0.06 },
-  inspiration: { from: 0.06, to: 0.36 },
-  cycling: { from: 0.36, to: 0.42 },
-  expiration: { from: 0.42, to: 1 },
+  trigger: { from: 0, to: 0.08 },
+  inspiration: { from: 0.08, to: 0.38 },
+  cycling: { from: 0.38, to: 0.45 },
+  expiration: { from: 0.45, to: 1 },
 }
 
 /**

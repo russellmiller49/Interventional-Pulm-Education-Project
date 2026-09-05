@@ -86,6 +86,7 @@ export function VentilationSimulatorPane({
   goals,
   mechanicsVisible,
   spotlightKey,
+  exploring = false,
   stops,
   mapCaption,
   mapAnswer,
@@ -106,6 +107,8 @@ export function VentilationSimulatorPane({
   readonly mechanicsVisible: boolean
   /** A quick control to draw attention to, after "Show me where". */
   readonly spotlightKey: string | null
+  /** On a reveal step the patient sliders are offered for free exploration of what was just shown. */
+  readonly exploring?: boolean
   readonly stops: readonly BreathStopId[]
   readonly mapCaption?: string
   readonly mapAnswer?: BreathMapAnswer
@@ -128,7 +131,7 @@ export function VentilationSimulatorPane({
   const interventionGoals = goals.filter(
     (goal): goal is Extract<LabGoal, { type: 'intervention' }> => goal.type === 'intervention',
   )
-  const showMechanics = mechanicsVisible && (mechanicsGoals.length > 0 || goals.length === 0)
+  const showMechanics = mechanicsVisible && (mechanicsGoals.length > 0 || exploring)
   const hasQuick =
     controlGoals.length > 0 || showMechanics || holdGoals.length > 0 || interventionGoals.length > 0
   const round = session.round

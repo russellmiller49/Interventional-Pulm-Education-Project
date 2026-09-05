@@ -152,6 +152,37 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Legend
+ * ------------------------------------------------------------------ */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted, #9fb4b7);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend li[data-lit='true'] {
+  color: var(--ink, #eaf4f4);
+  font-weight: 700;
+}
+
+.legend li[data-lit='true'] .number {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+/* ------------------------------------------------------------------ *
  * Answering on the map
  * ------------------------------------------------------------------ */
 
