@@ -12,7 +12,7 @@ jest.mock('@/i18n/navigation', () => ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & {
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
     href: string | { pathname: string }
     children: ReactNode
   }) => (
