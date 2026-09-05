@@ -138,8 +138,13 @@ trigger stop lit and the row marked "your answer · correct", the bedside findin
 then; Practice with every case named by presentation; Assess with the knowledge check gated on the
 fourteen sections.
 
-The preview pane reports the tab hidden, so its clock is throttled and the timed steps could not be
-driven there; those paths are pinned by the component suites below, which run the same reducer
+The preview pane reports the tab hidden, so its clock is throttled to about one tick a second.
+"Advance one breath" steps the engine a breath at a time regardless, which is how section 4 was
+driven to its Explain step in the browser: resistance to 2× and an inspiratory hold at the Act
+step, three breaths, Continue, five more breaths, "Compare before and after", and the reveal read
+peak 20.2 → 25.8, plateau 13.5 → 13.8, exhaled volume 427 → 427 — the resistive-load row's claim,
+with both mechanics rows highlighted in the one table and the strip reading no control / not this
+control. The timed paths are also pinned by the component suites below, which run the same reducer
 under fake timers.
 
 ## 7. What the tests pin
