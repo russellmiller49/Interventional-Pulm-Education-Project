@@ -1,0 +1,167 @@
+/*
+ * The hub surfaces: the continue call to action and the pathway accordion the Overview and the
+ * Learn landing share. Light theme, on the module frame's own tokens.
+ */
+
+.continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 0.9rem;
+  background: var(--lm-v2-accent, #0369a1);
+  color: var(--lm-v2-accent-contrast, #f8fafc);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.continue span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.continue small {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.continue svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.continue:focus-visible,
+.chip:focus-visible,
+.groupSummary:focus-visible {
+  outline: 3px solid var(--lm-v2-accent, #0369a1);
+  outline-offset: 2px;
+}
+
+.composition {
+  margin: 0;
+  color: var(--lm-v2-muted, #64748b);
+  font-size: 0.875rem;
+}
+
+.groupList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.groupCard {
+  border: 1px solid var(--lm-v2-border, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--lm-v2-panel, #fff);
+}
+
+.groupCard[data-stage='integration'] {
+  border-style: dashed;
+}
+
+.groupSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.groupSummary::-webkit-details-marker {
+  display: none;
+}
+
+.groupSummary > span[aria-hidden='true'] {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--lm-v2-accent, #0369a1) 12%, transparent);
+  color: var(--lm-v2-accent, #0369a1);
+  font-weight: 800;
+}
+
+.groupSummaryText {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.groupSummaryText strong {
+  font-size: 1rem;
+}
+
+.groupSummaryText small {
+  color: var(--lm-v2-muted, #64748b);
+}
+
+.groupBody {
+  margin: 0;
+  padding: 0 1rem 0.5rem;
+  color: var(--lm-v2-muted, #64748b);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 1rem 1rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--lm-v2-border, #e2e8f0);
+  border-radius: 999px;
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.chip svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+}
+
+.chip:hover {
+  border-color: var(--lm-v2-accent, #0369a1);
+}
+
+.chip[data-complete='true'] {
+  border-color: #16a34a;
+}
+
+.chip[data-recommended='true'] {
+  border-color: var(--lm-v2-accent, #0369a1);
+  background: color-mix(in srgb, var(--lm-v2-accent, #0369a1) 10%, transparent);
+}
+
+.chip em {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--lm-v2-accent, #0369a1);
+  color: var(--lm-v2-accent-contrast, #f8fafc);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chip[data-kind='case'] {
+  border-style: dashed;
+}

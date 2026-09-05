@@ -23,7 +23,9 @@ import {
 } from '../../content/signalGrammar'
 import type { HemodynamicsStageLesson, HemodynamicsStageStep } from '../../content/stageLessons'
 import { CardiacOutputMethodModel } from '../CardiacOutputMethodModel'
+import { FickMethodWorkbench } from '../FickMethodWorkbench'
 import { NormalWaveformReference } from '../NormalWaveformReference'
+import { NormalWaveformValidityChallenges } from '../NormalWaveformValidityChallenges'
 import { DerivedHemodynamicsTeachingPanel } from '../PacMeasurementTeaching'
 import { WaveformAtlasPanel } from '../WaveformAtlasPanel'
 import { WedgeValidityPanel } from '../WedgeValidityPanel'
@@ -238,11 +240,18 @@ function DeeperReference({
       )
     case 'waveform-interpretation':
       return (
-        <StageBlock kind="after-commitment" heading="The normal reference, in full">
-          <div data-teaching-block="normal-reference">
-            <NormalWaveformReference />
-          </div>
-        </StageBlock>
+        <>
+          <StageBlock kind="after-commitment" heading="The normal reference, in full">
+            <div data-teaching-block="normal-reference">
+              <NormalWaveformReference />
+            </div>
+          </StageBlock>
+          <StageBlock kind="after-commitment" heading="When a fault makes the place unnameable">
+            <div data-teaching-block="validity-challenges">
+              <NormalWaveformValidityChallenges />
+            </div>
+          </StageBlock>
+        </>
       )
     case 'waveform-components':
       return (
@@ -301,11 +310,18 @@ function DeeperReference({
       )
     case 'thermodilution-series':
       return (
-        <StageBlock kind="after-commitment" heading="The three ways to a flow number">
-          <div data-teaching-block="method-model">
-            <CardiacOutputMethodModel provenanceResolved={provenanceResolved} />
-          </div>
-        </StageBlock>
+        <>
+          <StageBlock kind="after-commitment" heading="The three ways to a flow number">
+            <div data-teaching-block="method-model">
+              <CardiacOutputMethodModel provenanceResolved={provenanceResolved} />
+            </div>
+          </StageBlock>
+          <StageBlock kind="after-commitment" heading="Fick, input by input">
+            <div data-teaching-block="fick-episodes">
+              <FickMethodWorkbench />
+            </div>
+          </StageBlock>
+        </>
       )
     case 'derived-hemodynamics':
       return (

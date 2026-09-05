@@ -55,7 +55,10 @@ export function IcuHemodynamicsModuleFrameV2({
   readonly children: ReactNode
 }) {
   return (
-    <div className={styles.moduleShell} data-activity-mode={activityMode || undefined}>
+    <div
+      className={activityMode ? styles.moduleShell : undefined}
+      data-activity-mode={activityMode || undefined}
+    >
       <ModuleFrameV2
         eyebrow="Critical care · Hemodynamic reasoning"
         title="ICU Hemodynamics Lab"
@@ -65,7 +68,7 @@ export function IcuHemodynamicsModuleFrameV2({
         navItems={icuHemodynamicsModuleNavItems}
         navAriaLabel="ICU hemodynamics sections"
         safetyNotice={ICU_HEMODYNAMICS_SAFETY_NOTICE}
-        theme="dark"
+        theme={activityMode ? 'dark' : 'light'}
         activityMode={activityMode}
       >
         {locale !== 'en' ? (
