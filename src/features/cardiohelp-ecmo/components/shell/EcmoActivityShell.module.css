@@ -420,6 +420,21 @@
   cursor: pointer;
 }
 
+/*
+ * The step's location line: quieter than the instruction it follows, louder than a caption.
+ * The pane names inside it are the emphasised half, because the pane name is what the learner is
+ * matching against the caption printed on the pane.
+ */
+.nowWhere {
+  margin: 0;
+  color: var(--ecmo-shell-muted);
+  font-size: var(--ecmo-type-floor);
+}
+
+.nowWhere strong {
+  color: var(--ecmo-shell-ink);
+}
+
 .nowStatus {
   margin: 0;
   color: var(--ecmo-shell-muted);

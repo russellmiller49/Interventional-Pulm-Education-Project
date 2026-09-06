@@ -52,6 +52,7 @@ import { FitWidthSurface } from '../FitWidthSurface'
 import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContextStrip'
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
+import { EcmoLookInLine } from '../shell/EcmoLookInLine'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
 import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
@@ -457,6 +458,17 @@ function FoundationStageSession({
    * ---------------------------------------------------------------- */
 
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+
+  /*
+   * Where this step's work is done, said in the same words the pane carries.
+   *
+   * One line, under the instruction, on every step. It exists because a learner review in September
+   * 2026 found four steps on which the only way to know which of three panes was meant was to try
+   * them: "I'm guessing I should read the middle panel, but not sure." `StageLayout` prints the
+   * matching caption on the pane itself, and `foundationLessonRuntime` refuses at import to author a
+   * phase without a location, so the two cannot drift apart.
+   */
+  const lookInLine = activeStep.lookIn ? <EcmoLookInLine location={activeStep.lookIn} /> : undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
   const lookingBack = activeIndex < progression.furthestEntered
@@ -475,6 +487,7 @@ function FoundationStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
+      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
@@ -590,6 +603,21 @@ function FoundationStageSession({
             })),
         }
       : null
+  /*
+   * Which pane a compact viewport opens on for this step.
+   *
+   * A map-answered step's only answer control is the set of places on the circuit map, in the
+   * simulator pane, and at a compact width exactly one pane is on screen — so that step has to open
+   * there whatever its authored location says. Everything else follows the location the Now card
+   * prints, so the pane the learner is sent to is the pane they are shown.
+   */
+  const compactPane = mapAnswer
+    ? 'tertiary'
+    : activeStep.lookIn?.pane === 'teaching'
+      ? 'secondary'
+      : activeStep.lookIn?.pane === 'simulator'
+        ? 'tertiary'
+        : 'primary'
 
   function choiceFieldset(
     item: {
@@ -1120,6 +1148,7 @@ function FoundationStageSession({
         <strong>{activeStep.title}</strong>
       </p>
       <p>{activeStep.instruction}</p>
+      {lookInLine ? <p>{lookInLine}</p> : null}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
     </EcmoHelpDialog>
   )
@@ -1141,6 +1170,7 @@ function FoundationStageSession({
           simulator={simulator}
           teaching={teaching}
           task={task}
+          compactPane={compactPane}
           footer={
             <>
               <p className={styles.footerLine}>

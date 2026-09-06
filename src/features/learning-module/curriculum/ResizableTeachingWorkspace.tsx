@@ -32,6 +32,28 @@ export interface TeachingWorkspacePaneLabels {
   readonly tertiary: string
 }
 
+/**
+ * How wide each pane opens, and how narrow it may be dragged.
+ *
+ * Both are per-caller because the slots are positional and the content is not: this workspace was
+ * generalized from a layout whose widest pane happened to be the first one, and a module that puts
+ * its instruction column first still needs its device pane to be the widest. ECMO does exactly
+ * that. Omitted, both fall back to the values every caller had before the options existed, so a
+ * caller that passes neither behaves identically to the version that had no options.
+ */
+export interface TeachingWorkspaceWidthFractions {
+  /** Fraction of the usable width the primary pane opens at. */
+  readonly primary: number
+  readonly secondary: number
+}
+
+export interface TeachingWorkspacePaneMinimums {
+  /** Pixels below which the pane may not be dragged, before compact scaling. */
+  readonly primary: number
+  readonly secondary: number
+  readonly tertiary: number
+}
+
 interface ResizableTeachingWorkspaceProps {
   /** Live device or bedside surface. */
   readonly primary: ReactNode
@@ -43,48 +65,70 @@ interface ResizableTeachingWorkspaceProps {
   readonly workspaceLabel: string
   /** Force a single pane, e.g. when a parent already owns the pane switcher. */
   readonly activePane?: WorkspacePane
+  /**
+   * Which pane the compact, one-pane view should show — followed, not forced.
+   *
+   * Below the compact threshold only one pane is on screen. Which one should depend on where the
+   * current step's work is: a step answered by clicking a place on a diagram in the device pane is
+   * unanswerable if the compact view is parked on the instruction, and vice versa. Changing this
+   * moves the learner; they can still switch panes themselves afterwards, which is why it is a
+   * preference rather than `activePane`. Omitted, the view opens on `primary` and stays wherever
+   * the learner puts it, which is what every caller did before this existed.
+   */
+  readonly preferredCompactPane?: WorkspacePane
+  /** Opening widths, as fractions of the usable width. Defaults to 43% / 29% / the rest. */
+  readonly defaultWidthFractions?: TeachingWorkspaceWidthFractions
+  /** Drag floors in pixels. Defaults to 340 / 280 / 300. */
+  readonly paneMinimums?: TeachingWorkspacePaneMinimums
   readonly className?: string
 }
 
-const preferredMinimums = {
+const preferredMinimums: TeachingWorkspacePaneMinimums = {
   primary: 340,
   secondary: 280,
   tertiary: 300,
-} as const
+}
 
-const COMPACT_WORKSPACE_THRESHOLD_PX =
-  preferredMinimums.primary + preferredMinimums.secondary + preferredMinimums.tertiary + 40
+const defaultWidthFractions: TeachingWorkspaceWidthFractions = { primary: 0.43, secondary: 0.29 }
+
+function compactThreshold(minimums: TeachingWorkspacePaneMinimums): number {
+  return minimums.primary + minimums.secondary + minimums.tertiary + 40
+}
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value))
 }
 
-function scaledMinimums(usableWidth: number) {
-  const preferredTotal =
-    preferredMinimums.primary + preferredMinimums.secondary + preferredMinimums.tertiary
+function scaledMinimums(usableWidth: number, minimums: TeachingWorkspacePaneMinimums) {
+  const preferredTotal = minimums.primary + minimums.secondary + minimums.tertiary
   // Below the preferred total, reserve part of the width as draggable range. Scaling the minimums
   // to exactly 100% makes the separators look interactive while leaving them nowhere to move.
   const scale = Math.min(1, (usableWidth / preferredTotal) * 0.78)
   return {
-    primary: preferredMinimums.primary * scale,
-    secondary: preferredMinimums.secondary * scale,
-    tertiary: preferredMinimums.tertiary * scale,
+    primary: minimums.primary * scale,
+    secondary: minimums.secondary * scale,
+    tertiary: minimums.tertiary * scale,
   }
 }
 
-function normalizeWidths(usableWidth: number, preferred?: PaneWidths): PaneWidths {
-  const minimums = scaledMinimums(usableWidth)
-  const desiredPrimary = preferred?.primary ?? usableWidth * 0.43
-  const desiredSecondary = preferred?.secondary ?? usableWidth * 0.29
+function normalizeWidths(
+  usableWidth: number,
+  minimums: TeachingWorkspacePaneMinimums,
+  fractions: TeachingWorkspaceWidthFractions,
+  preferred?: PaneWidths,
+): PaneWidths {
+  const floors = scaledMinimums(usableWidth, minimums)
+  const desiredPrimary = preferred?.primary ?? usableWidth * fractions.primary
+  const desiredSecondary = preferred?.secondary ?? usableWidth * fractions.secondary
   const primary = clamp(
     desiredPrimary,
-    minimums.primary,
-    usableWidth - minimums.secondary - minimums.tertiary,
+    floors.primary,
+    usableWidth - floors.secondary - floors.tertiary,
   )
   const secondary = clamp(
     desiredSecondary,
-    minimums.secondary,
-    usableWidth - primary - minimums.tertiary,
+    floors.secondary,
+    usableWidth - primary - floors.tertiary,
   )
   return { primary, secondary }
 }
@@ -117,6 +161,9 @@ export function ResizableTeachingWorkspace({
   paneLabels,
   workspaceLabel,
   activePane,
+  preferredCompactPane,
+  defaultWidthFractions: widthFractions = defaultWidthFractions,
+  paneMinimums: minimums = preferredMinimums,
   className,
 }: ResizableTeachingWorkspaceProps) {
   const workspaceRef = useRef<HTMLElement>(null)
@@ -129,11 +176,36 @@ export function ResizableTeachingWorkspace({
   const [widths, setWidths] = useState<PaneWidths | null>(null)
   const [availableWidth, setAvailableWidth] = useState(0)
   const [activeBoundary, setActiveBoundary] = useState<ResizeBoundary | null>(null)
-  const [compactPane, setCompactPane] = useState<WorkspacePane>('primary')
+  const [compactPane, setCompactPane] = useState<WorkspacePane>(preferredCompactPane ?? 'primary')
+  /*
+   * Follow the caller's preference when it changes, and only then.
+   *
+   * React's adjust-state-while-rendering pattern rather than an effect: writing it on every render
+   * would undo a learner's own pane choice on the next clock tick, and an effect would render the
+   * wrong pane once before correcting it. This moves them exactly when the thing they are being
+   * asked to do moves, and leaves them where they put themselves in between.
+   */
+  const [followedCompactPane, setFollowedCompactPane] = useState(preferredCompactPane)
+  if (preferredCompactPane !== followedCompactPane) {
+    setFollowedCompactPane(preferredCompactPane)
+    if (preferredCompactPane) setCompactPane(preferredCompactPane)
+  }
   const primaryId = useId()
   const secondaryId = useId()
   const tertiaryId = useId()
   const instructionsId = useId()
+
+  /*
+   * The layout options, reachable from the mount-once effect without re-running it.
+   *
+   * Callers pass object literals, so putting them in the dependency array would tear down and
+   * rebuild the ResizeObserver on every render. They are static per caller in practice; the ref is
+   * what makes that safe rather than assumed.
+   */
+  const layoutRef = useRef({ minimums, widthFractions })
+  useEffect(() => {
+    layoutRef.current = { minimums, widthFractions }
+  })
 
   useEffect(() => {
     function fitToWorkspace() {
@@ -142,7 +214,14 @@ export function ResizableTeachingWorkspace({
       const geometry = geometryFor(workspace)
       if (!geometry || geometry.usableWidth <= 0) return
       setAvailableWidth(geometry.usableWidth)
-      setWidths((current) => normalizeWidths(geometry.usableWidth, current ?? undefined))
+      setWidths((current) =>
+        normalizeWidths(
+          geometry.usableWidth,
+          layoutRef.current.minimums,
+          layoutRef.current.widthFractions,
+          current ?? undefined,
+        ),
+      )
     }
 
     const timer = window.setTimeout(fitToWorkspace, 0)
@@ -164,15 +243,20 @@ export function ResizableTeachingWorkspace({
     if (!geometry || geometry.usableWidth <= 0) return
     setAvailableWidth(geometry.usableWidth)
     setWidths((current) => {
-      const normalized = normalizeWidths(geometry.usableWidth, current ?? undefined)
-      const minimums = scaledMinimums(geometry.usableWidth)
+      const normalized = normalizeWidths(
+        geometry.usableWidth,
+        minimums,
+        widthFractions,
+        current ?? undefined,
+      )
+      const floors = scaledMinimums(geometry.usableWidth, minimums)
       if (boundary === 'primary-secondary') {
         return {
           ...normalized,
           primary: clamp(
             clientX - geometry.originX,
-            minimums.primary,
-            geometry.usableWidth - normalized.secondary - minimums.tertiary,
+            floors.primary,
+            geometry.usableWidth - normalized.secondary - floors.tertiary,
           ),
         }
       }
@@ -180,8 +264,8 @@ export function ResizableTeachingWorkspace({
         ...normalized,
         secondary: clamp(
           clientX - geometry.originX - normalized.primary,
-          minimums.secondary,
-          geometry.usableWidth - normalized.primary - minimums.tertiary,
+          floors.secondary,
+          geometry.usableWidth - normalized.primary - floors.tertiary,
         ),
       }
     })
@@ -221,41 +305,57 @@ export function ResizableTeachingWorkspace({
     event.preventDefault()
     setAvailableWidth(geometry.usableWidth)
     setWidths((current) => {
-      const normalized = normalizeWidths(geometry.usableWidth, current ?? undefined)
-      const minimums = scaledMinimums(geometry.usableWidth)
+      const normalized = normalizeWidths(
+        geometry.usableWidth,
+        minimums,
+        widthFractions,
+        current ?? undefined,
+      )
+      const floors = scaledMinimums(geometry.usableWidth, minimums)
       const direction = event.key === 'ArrowLeft' ? -24 : 24
       if (boundary === 'primary-secondary') {
-        const maximum = geometry.usableWidth - normalized.secondary - minimums.tertiary
+        const maximum = geometry.usableWidth - normalized.secondary - floors.tertiary
         const next =
           event.key === 'Home'
-            ? minimums.primary
+            ? floors.primary
             : event.key === 'End'
               ? maximum
               : normalized.primary + direction
-        return { ...normalized, primary: clamp(next, minimums.primary, maximum) }
+        return { ...normalized, primary: clamp(next, floors.primary, maximum) }
       }
-      const maximum = geometry.usableWidth - normalized.primary - minimums.tertiary
+      const maximum = geometry.usableWidth - normalized.primary - floors.tertiary
       const next =
         event.key === 'Home'
-          ? minimums.secondary
+          ? floors.secondary
           : event.key === 'End'
             ? maximum
             : normalized.secondary + direction
-      return { ...normalized, secondary: clamp(next, minimums.secondary, maximum) }
+      return { ...normalized, secondary: clamp(next, floors.secondary, maximum) }
     })
   }
 
+  /*
+   * Before the first measurement the caller's own fractions are published as percentages.
+   *
+   * The stylesheet's `var(--tw-primary-width, 43%)` fallback is the whole-workspace default, so a
+   * caller that opens at a different split used to paint one frame at 43/29 and then jump. That
+   * frame is not cosmetic here: `FitWidthSurface` measures the pane it is in during exactly that
+   * window to scale the device console to it.
+   */
   const workspaceStyle = widths
     ? ({
         '--tw-primary-width': `${widths.primary}px`,
         '--tw-secondary-width': `${widths.secondary}px`,
       } as CSSProperties)
-    : undefined
+    : ({
+        '--tw-primary-width': `${widthFractions.primary * 100}%`,
+        '--tw-secondary-width': `${widthFractions.secondary * 100}%`,
+      } as CSSProperties)
   const tertiaryWidth =
     widths && availableWidth > 0
       ? Math.max(0, availableWidth - widths.primary - widths.secondary)
       : 0
-  const compact = availableWidth > 0 && availableWidth < COMPACT_WORKSPACE_THRESHOLD_PX
+  const compact = availableWidth > 0 && availableWidth < compactThreshold(minimums)
   const visiblePane = activePane ?? compactPane
 
   /**

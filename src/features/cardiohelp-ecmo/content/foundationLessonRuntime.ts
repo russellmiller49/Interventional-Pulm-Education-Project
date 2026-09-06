@@ -180,10 +180,44 @@ export interface EcmoFoundationGuidedAction {
   readonly capturesSnapshot?: boolean
 }
 
+/**
+ * The three panes of the lesson stage, named the way they are named on screen.
+ *
+ * A learner review in September 2026 reported guessing which pane four separate steps meant — "I'm
+ * guessing I should read the middle panel, but not sure" — because no step named one and, at the
+ * time, no pane carried a visible name either. Both halves are fixed together: `StageLayout` prints
+ * the name on the pane, and every phase declares which pane its work is done in. The nouns here are
+ * the pane labels verbatim, so the sentence and the caption cannot drift apart.
+ */
+export type EcmoStagePane = 'steps' | 'teaching' | 'simulator'
+
+export const ECMO_STAGE_PANE_NAMES: Readonly<Record<EcmoStagePane, string>> = {
+  steps: 'Steps panel',
+  teaching: 'Teaching panel',
+  simulator: 'Simulator panel',
+}
+
+/**
+ * Where a step's work is done: the pane, and the thing inside it.
+ *
+ * `landmark` names a heading, control group or device surface the learner can actually see at that
+ * step — not a description of it. Two panes are allowed, and only where the step genuinely needs
+ * both; a step that lists all three is a step that has not been thought through.
+ */
+export interface EcmoPhaseLocation {
+  readonly pane: EcmoStagePane
+  readonly landmark: string
+  /** A second pane, where the step is genuinely worked across two. */
+  readonly alsoPane?: EcmoStagePane
+  readonly alsoLandmark?: string
+}
+
 export interface EcmoFoundationPhaseCopy {
   readonly objective: string
   readonly requiredAction: string
   readonly teachingPoint: string
+  /** Which pane this step is worked in, and what to look for there. */
+  readonly lookIn: EcmoPhaseLocation
 }
 
 export interface EcmoFoundationLessonRuntime {
@@ -521,12 +555,20 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Note which part of the oxygen balance each displayed value belongs to: oxygen content, blood flow, or oxygen consumption.',
         teachingPoint:
           'Oxygen delivery is a blood flow carrying an oxygen content. A saturation on its own is one part of one component.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Oxygen delivery, component by component',
+        },
       },
       predict: {
         objective: 'Decide whether a reassuring saturation settles the question.',
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
           'A patient can arrive at impaired oxygen delivery through blood flow, through oxygen content, or through demand, and those are not interchangeable.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Name the part of the oxygen balance a proposed change acts on.',
@@ -534,6 +576,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'For each proposed change, choose the part of the oxygen balance it acts on, then commit the set.',
         teachingPoint:
           'Naming the component a change acts on is what makes the next measurement interpretable.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the changes to attribute below',
+        },
       },
       observe: {
         objective: 'Read the components of oxygen delivery as they stand on this circuit.',
@@ -541,18 +587,30 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Move a component and compare what the circuit contributes with what it does not.',
         teachingPoint:
           'In VV the circuit changes the content of blood returning to the right heart; in VA it also adds flow.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Move one component and watch the rest',
+        },
       },
       explain: {
         objective: 'State what extracorporeal support does and does not do.',
         requiredAction: 'Review the lesson narrative.',
         teachingPoint:
           'Support holds the failing component while something treatable is treated. It is not a treatment for the cause.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Apply the concept to a different cause of impaired oxygen delivery.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'The same reasoning identifies an oxygen-content problem as readily as a blood-flow problem.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [RESTORE],
@@ -569,12 +627,22 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         requiredAction: 'Step through the circuit segments in order.',
         teachingPoint:
           'Every signal on the console belongs to a place. The place comes before the value.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Circuit walk',
+        },
       },
       predict: {
         objective: 'Place a named signal before seeing the answer.',
         requiredAction: 'Commit a prediction, then read the verdict.',
         teachingPoint:
           'Drainage, pump, membrane, and return are four different questions, and each pressure answers only one.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the numbered places on the pressure-zone map',
+          alsoPane: 'steps',
+          alsoLandmark: 'the question above them',
+        },
       },
       act: {
         objective: 'Inspect each pressure at its own location.',
@@ -588,6 +656,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Find pVen, pInt, pArt, and ΔP on the circuit map, and confirm where each one is taken.',
         teachingPoint:
           'Reading a pressure without its location is how a drainage problem gets treated as a membrane problem.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the pressure-zone map',
+        },
       },
       observe: {
         objective: 'Read the live values at each location.',
@@ -595,18 +667,34 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Note which channels report a number and which report the unavailable indication.',
         teachingPoint:
           'A channel that is not reporting is information too, and the reason it is not reporting matters.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the console',
+          alsoPane: 'teaching',
+          alsoLandmark: 'The paths this circuit runs, and the channels that describe them',
+        },
       },
       explain: {
         objective: 'Connect each zone to what limits it.',
         requiredAction: 'Review the lesson narrative.',
         teachingPoint:
           'Drainage availability, pump function, membrane resistance, and return resistance are separate limits on the same flow.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Localize a pressure pattern without a numeric cutoff.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'Direction and which zones move together localize the problem; a single number does not.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the numbered places on the pressure-zone map',
+          alsoPane: 'steps',
+          alsoLandmark: 'the question above them',
+        },
       },
     },
     guidedActions: [RESTORE],
@@ -628,36 +716,64 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         objective: 'Record the reference speed, flow, and pressure pattern.',
         requiredAction: 'Note the reference values before changing anything.',
         teachingPoint: 'A comparison needs a baseline that the learner has actually seen.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the console, and the pressure-zone map below it',
+        },
       },
       predict: {
         objective: 'Predict the response to a small speed increase.',
         requiredAction: 'Commit a prediction, then read the verdict.',
         teachingPoint:
           'Speed is selected. Flow is what the circuit returns under the loading it currently has.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Change the speed and let the circuit respond.',
         requiredAction: 'Adjust the pump speed, then restore the reference state.',
         teachingPoint:
           'The same speed produces different flows under different loading conditions.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Read the change against the reference baseline.',
         requiredAction: 'Compare each zone with its own reference value.',
         teachingPoint:
           'Pressures are read as a set. One zone moving alone means something different from two moving together.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the pressure-zone map',
+          alsoPane: 'teaching',
+          alsoLandmark: 'Circuit walk',
+        },
       },
       explain: {
         objective: 'Attach each pressure pattern to a mechanism.',
         requiredAction: 'Review the mechanism previews and the lesson narrative.',
         teachingPoint:
           'Preload limitation, return resistance, and membrane resistance each leave a different signature.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Localize a new pattern, or decide there is not enough information.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           '"Not enough information" is a legitimate answer when the set does not discriminate.',
+        lookIn: {
+          pane: 'simulator',
+          landmark: 'the numbered places on the pressure-zone map',
+          alsoPane: 'steps',
+          alsoLandmark: 'the question above them',
+        },
       },
     },
     guidedActions: [
@@ -742,15 +858,23 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         objective:
           'Find the three things you can change on this circuit, and what is not a control.',
         requiredAction:
-          'Find the three controls on the console and the blender, and the things beside them that are not controls.',
+          'Name the three things this circuit lets you change, and the things beside them that only report.',
         teachingPoint:
           'Three controls, two axes: pump speed on the blood path; sweep and the oxygen fraction on the gas path. Everything else is monitoring.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The control panel: three things you can change',
+        },
       },
       predict: {
         objective: 'Choose the control that principally moves CO₂ in this model.',
         requiredAction: 'Commit a prediction, then read the verdict.',
         teachingPoint:
           'Carbon dioxide removal is governed mostly by the gradient maintained on the gas side.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Run each comparison separately from the same baseline.',
@@ -758,22 +882,40 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Change sweep and observe; restore the reference; then change speed and observe.',
         teachingPoint:
           'Each comparison restores the reference first, so the second result is not the sum of two changes.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Compare the direction of response on each path.',
         requiredAction: 'Read the change in PaCO₂, pH, SpO₂, and circuit flow after each action.',
         teachingPoint: 'The magnitudes here are this model’s, not a bedside dose-response.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The blood path and the gas path',
+          alsoPane: 'simulator',
+          alsoLandmark: 'the console',
+        },
       },
       explain: {
         objective: 'State why the two controls are not interchangeable.',
         requiredAction: 'Review the lesson narrative.',
         teachingPoint:
           'CO₂ is far more diffusible than oxygen, which is why the gas side dominates its clearance.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Recognize that a flow display does not prove gas delivery.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint: 'The blood path can look entirely normal while the gas path is interrupted.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -837,19 +979,31 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Follow systemic venous return into drainage, out of the oxygenator back into the venous system, through the right heart and the native lung, and onward from the left heart.',
         teachingPoint:
           'The pump displays the blood it moves. It cannot tell blood that reached the tissues from blood it just returned and drained again.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The circuit in series with the patient',
+        },
       },
       predict: {
         objective: 'Decide what a higher displayed flow with a worsening patient means.',
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
           'A rising venous-line saturation alongside worsening systemic oxygenation points at where the returned blood is going.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Load the recirculation preview and read it beside the reference.',
         requiredAction:
-          'Open the preview, then restore the VV reference when you want the comparison again. Nothing here is recorded against the drill.',
+          'Select "Load the recirculation preview", then "Restore VV reference" when you want the comparison again. Nothing here is recorded against the drill.',
         teachingPoint:
           'The preview is the existing recirculation case loaded to be read, not a drill to be worked.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Compare the two states signal by signal.',
@@ -857,18 +1011,32 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Read displayed circuit flow, recirculation fraction, recirculation-adjusted circuit flow, the venous-line saturation, the systemic estimate, and patient SpO₂ in both states.',
         teachingPoint:
           'The displayed flow rises while the adjusted flow falls. Those are two different quantities, and only one of them is on the console.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Two flows, two saturations — read separately',
+          alsoPane: 'simulator',
+          alsoLandmark: 'the console',
+        },
       },
       explain: {
         objective: 'State what VV support does and does not do for the circulation.',
         requiredAction: 'Review the lesson narrative and the mixture relationship.',
         teachingPoint:
           'Native cardiac output is the systemic pump in VV. The circuit changes the content of blood entering the right heart and adds no circulatory support.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Separate a real increase in useful support from an increase in recirculation.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'The same displayed number can mean opposite things. What separates them is what happened to the patient and to the drainage saturation.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -903,15 +1071,23 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       recognize: {
         objective: 'Decide which signals belong in a baseline review.',
         requiredAction:
-          'Walk the drainage and load group, the membrane and return group, the gas side, and the patient, and note what each one reports.',
+          'Read the drainage and load group, the membrane and return group, the gas side, and the patient, and note what each one reports.',
         teachingPoint:
           'A baseline review is a list of relationships, not a list of numbers to approve.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Where this circuit sits, in one paragraph',
+        },
       },
       predict: {
         objective: 'Decide what a single unfamiliar absolute value establishes.',
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
           'Cannula size and position, patient size, temperature, hemoglobin, and the device configuration all move these numbers without anything having gone wrong.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Capture this circuit’s own starting values and watch them over a window.',
@@ -919,6 +1095,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Capture the reference snapshot, run twenty modeled seconds, then compare with the snapshot. Restore the VV reference whenever you want to start again.',
         teachingPoint:
           'The comparison that transfers is this circuit against itself, not this circuit against a published number.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Read the raw change in each signal over the observed window.',
@@ -926,18 +1106,30 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Compare the current value, the snapshot value, and the direction of change in each group.',
         teachingPoint:
           'What matters is that the relationship among the signals is holding, and by how much each one has moved.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The observed window, sample by sample',
+        },
       },
       explain: {
         objective: 'State what belongs to a stable run beyond the circuit display.',
         requiredAction: 'Review the lesson narrative.',
         teachingPoint:
           'The native lungs still contribute, native cardiac output still does the systemic work, and sedation, volume state, temperature and hemoglobin all sit inside the picture.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Recognize a stable baseline whose absolute values are unfamiliar.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'A steady relationship over time is stronger evidence than any single value being familiar.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -1001,6 +1193,12 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of ventilation, or of both. Nothing is entered at this step; the prediction comes in the next one.',
         teachingPoint:
           'The flow display is the one signal every explanation on the list is compatible with.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The one signal that cannot settle this',
+          alsoPane: 'simulator',
+          alsoLandmark: 'the console',
+        },
       },
       predict: {
         objective: 'Commit to one of the four explanations before looking further.',
@@ -1008,6 +1206,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Commit a prediction and name the finding that would support it, then read the comparison. The state does not advance when you commit.',
         teachingPoint:
           'Committing first is what lets the next measurement contradict you instead of confirming you.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Gather the findings that separate the four explanations.',
@@ -1015,12 +1217,20 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Inspect the gas-source connection, compare the venous-line and post-oxygenator saturations, review pInt, pArt and the gradient, and review the bedside and ventilator findings.',
         teachingPoint:
           'Correcting the problem is not required here. The section is about what you look at and in what order.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Reveal how the case has evolved and read it against your prediction.',
         requiredAction: 'Load the evolved state and compare each signal with the earlier reading.',
         teachingPoint:
           'A change that moves carbon dioxide quickly while every circuit pressure stays put has already told you which path it is on.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'What each explanation predicts, and what this case shows',
+        },
       },
       explain: {
         objective: 'Work the whole differential against what each explanation predicts.',
@@ -1028,12 +1238,20 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Read the comparison table, then open each mechanism preview one at a time. Each preview reloads cleanly, so two of them are never read compounded.',
         teachingPoint:
           'Each explanation predicts something different somewhere other than the flow display. That is what makes them separable.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Apply the same discipline to a case with a different mechanism.',
         requiredAction: 'Load the recirculation preview and answer the new case.',
         teachingPoint:
           'Here the displayed flow is not merely unchanged — it is higher, and higher for the reason that makes the patient worse.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -1134,6 +1352,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Follow circuit blood from drainage, through the membrane, into the arterial system, and then follow blood the native heart ejects. Note where the two streams meet and which body regions each one supplies.',
         teachingPoint:
           'In parallel the circuit and the heart both fill the same aorta. Where their streams meet is a place, and that place moves.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The circuit in parallel with the patient',
+        },
       },
       predict: {
         objective:
@@ -1141,6 +1363,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
           'Recovering native function and worsening native lungs can produce the same upper-body reading, and neither of them disturbs the circuit.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Load the two consequences of parallelism and read each beside the reference.',
@@ -1148,6 +1374,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Open the differential-oxygenation preview, then the loading preview, restoring the VA reference between them. Nothing here is recorded against either drill.',
         teachingPoint:
           'Each preview reloads cleanly from its own source, so two mechanisms are never read compounded.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective:
@@ -1156,18 +1386,32 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Read the right radial saturation, the femoral arterial saturation, the pulse pressure, aortic-valve opening, and pulmonary congestion in all three states.',
         teachingPoint:
           'Two saturations from one patient are not a duplicate measurement. The gap between them is the finding.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'What parallel circulation adds — none of it on the console',
+          alsoPane: 'simulator',
+          alsoLandmark: 'Bedside monitor and blood gas',
+        },
       },
       explain: {
         objective: 'State what parallel circulation adds and what it costs.',
-        requiredAction: 'Review the lesson narrative and the two mechanism panels.',
+        requiredAction: 'Review the lesson narrative and the two mechanism sections.',
         teachingPoint:
           'VA adds circulatory support. The price is a ventricle ejecting against arterial return, and a circulation with two sources of blood at different saturations.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Separate a loading problem from an oxygenation one.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'Both leave the circuit display alone. What separates them is pulsatility and the lungs on one side, and the difference between two sampling sites on the other.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -1220,15 +1464,23 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       recognize: {
         objective: 'Decide which signals belong in a VA baseline review.',
         requiredAction:
-          'Walk the drainage and load group, the membrane and return group, the gas side, and then the group that exists only because the circulations are in parallel.',
+          'Read the drainage and load group, the membrane and return group, the gas side, and then the group that exists only because the circulations are in parallel.',
         teachingPoint:
           'A VA baseline review is the VV one plus everything parallel circulation adds, and the added part is not on the console.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Where this circuit sits, in one paragraph',
+        },
       },
       predict: {
         objective: 'Decide what an unremarkable circuit display establishes about a VA run.',
         requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
         teachingPoint:
           'Pulsatility, valve opening, the difference between two sampling sites, and the cannulated limb are all outside the circuit display.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Capture this circuit’s own starting values and watch them over a window.',
@@ -1236,6 +1488,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Capture the reference snapshot, run twenty modeled seconds, then compare with the snapshot. Restore the VA reference whenever you want to start again.',
         teachingPoint:
           'The comparison that transfers is this circuit against itself, not this circuit against a published number.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Read the raw change in each signal over the observed window.',
@@ -1243,18 +1499,30 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Compare the current value, the snapshot value, and the direction of change in each group, including the parallel-circulation group.',
         teachingPoint:
           'A steady circuit beside a falling pulse pressure is not a steady state; it is a circuit that has not noticed yet.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The observed window, sample by sample',
+        },
       },
       explain: {
         objective: 'State what belongs to a stable VA run beyond the circuit display.',
         requiredAction: 'Review the lesson narrative.',
         teachingPoint:
           'Native pulsatility, an opening aortic valve, a deliberately chosen upper-body sampling site, and a limb that is being looked at all belong to the normal state.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Recognize a stable VA baseline whose absolute values are unfamiliar.',
         requiredAction: 'Answer the new case and review the comparison.',
         teachingPoint:
           'A steady relationship over time is stronger evidence than any single value being familiar, and in VA the relationships include two that VV does not have.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -1322,6 +1590,12 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Read the case as it stands and settle whether what is in front of you is a problem of oxygenation, of the circulation, or of both. Nothing is entered at this step; the commitment comes in the next one.',
         teachingPoint:
           'In VA the flow display is joined by a second reassuring number: an arterial pressure the circuit is generating on the patient’s behalf.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'The two signals that cannot settle this',
+          alsoPane: 'simulator',
+          alsoLandmark: 'the console',
+        },
       },
       predict: {
         objective: 'Commit to one of the explanations before looking further.',
@@ -1329,6 +1603,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Commit a prediction and name the finding that would support it, then read the comparison. The state does not advance when you commit.',
         teachingPoint:
           'Committing first is what lets the next measurement contradict you instead of confirming you.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
       act: {
         objective: 'Gather the findings that separate the explanations.',
@@ -1336,6 +1614,10 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Compare the right radial and femoral saturations, read the pulse pressure and whether the aortic valve is opening, review pInt, pArt and the gradient, inspect the gas-source connection, and review the bedside findings including the cannulated limb.',
         teachingPoint:
           'Every explanation on this list predicts something outside the circuit display. That is what makes them separable.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'Actions you can take',
+        },
       },
       observe: {
         objective: 'Read each mechanism preview against the case in front of you.',
@@ -1343,6 +1625,11 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Load each mechanism preview one at a time and compare it with the presenting case. Each preview reloads cleanly, so two of them are never read compounded.',
         teachingPoint:
           'A mechanism you can load and look at is a hypothesis you can refute rather than one you can only assert.',
+        lookIn: {
+          pane: 'teaching',
+          landmark:
+            'Selected high-yield explanations for deterioration with unchanged displayed flow',
+        },
       },
       explain: {
         objective: 'Work the whole differential against what each explanation predicts.',
@@ -1350,12 +1637,20 @@ export const ecmoFoundationLessonRuntimes: Readonly<
           'Read the comparison table row by row, and read the limitations beside the rows this simulation cannot demonstrate.',
         teachingPoint:
           'Two explanations on this list have no preview at all. Knowing which they are is part of knowing what the simulation is for.',
+        lookIn: {
+          pane: 'teaching',
+          landmark: 'Lesson narrative',
+        },
       },
       transfer: {
         objective: 'Apply the same discipline to a mechanism the circuit does report.',
         requiredAction: 'Load the gas-source preview and answer the transfer item.',
         teachingPoint:
           'The gas path is the one explanation here whose consequence arrives quickly and is unmistakable once it is looked for.',
+        lookIn: {
+          pane: 'steps',
+          landmark: 'the answer choices below',
+        },
       },
     },
     guidedActions: [
@@ -1549,6 +1844,39 @@ export function validateEcmoFoundationRuntimes(
     // A section claimed by both track-fixed lists would resolve to whichever guard ran first.
     if (isEcmoVvOnlyFoundationSectionId(sectionId) && isEcmoVaOnlyFoundationSectionId(sectionId)) {
       errors.push(`section is declared both VV-only and VA-only: ${sectionId}`)
+    }
+    /*
+     * Every phase says where its work is done.
+     *
+     * Checked at import rather than in a test, because a phase that quietly loses its location is
+     * a step that goes back to saying "read the middle panel" with nothing on screen called that.
+     * The landmark is required to be non-empty and not to be the pane's own name — "Teaching panel"
+     * as a landmark inside the Teaching panel points at nothing.
+     */
+    for (const phase of criticalCareActivityPhases) {
+      const copy = runtime.phases[phase]
+      if (!copy) continue
+      const location = copy.lookIn
+      if (!location) {
+        errors.push(`${sectionId}: ${phase} does not say which pane its work is done in`)
+        continue
+      }
+      if (!location.landmark.trim()) {
+        errors.push(`${sectionId}: ${phase} names a pane with nothing in it to look at`)
+      }
+      const paneNames = Object.values(ECMO_STAGE_PANE_NAMES)
+      if (
+        paneNames.includes(location.landmark) ||
+        paneNames.includes(location.alsoLandmark ?? '')
+      ) {
+        errors.push(`${sectionId}: ${phase} uses a pane name as a landmark inside that pane`)
+      }
+      if (location.alsoPane && location.alsoPane === location.pane) {
+        errors.push(`${sectionId}: ${phase} names the same pane twice`)
+      }
+      if ((location.alsoPane === undefined) !== (location.alsoLandmark === undefined)) {
+        errors.push(`${sectionId}: ${phase} declares half of a second location`)
+      }
     }
     /*
      * The phase-to-clean-state mapping, checked once per lesson.

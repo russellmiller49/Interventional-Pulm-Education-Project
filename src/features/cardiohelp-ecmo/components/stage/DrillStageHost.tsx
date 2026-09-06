@@ -383,6 +383,17 @@ export function DrillStageHost({
     return () => window.clearTimeout(timer)
   }, [guidedControlId, helpCount])
 
+  /*
+   * Which pane a compact viewport opens on for this step.
+   *
+   * A drill step is mostly worked on the device, and "Show me where" focuses and scrolls a console
+   * control — which is a silent no-op if that pane is the hidden one. So a step that aims at a
+   * simulator surface opens there, a task-pane step opens on the steps, and asking where a control
+   * is moves the learner to the pane holding it.
+   */
+  const compactPane: 'primary' | 'tertiary' =
+    activeStep.focusTarget || helpCount > 0 ? 'tertiary' : 'primary'
+
   function showWhere() {
     if (!helpControlId) return
     const surface = surfaceForControl(helpControlId)
@@ -843,6 +854,7 @@ export function DrillStageHost({
           contextStrip={<EcmoContextStrip line={contextLine} badge="Simulated values" />}
           simulator={simulator}
           teaching={teaching}
+          compactPane={compactPane}
           task={task}
           footer={
             <>
