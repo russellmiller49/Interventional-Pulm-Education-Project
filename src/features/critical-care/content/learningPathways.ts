@@ -199,8 +199,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
     sections: [
       {
         id: 'mcs-foundations-signals',
-        shortTitle: 'Validate',
-        title: 'Validate the signal before the device',
+        shortTitle: 'Pressure and flow',
+        title: 'A pressure that looks fine',
         minutes: 12,
         description:
           'Build a pressure–flow baseline and separate patient, measurement, and device problems.',
@@ -209,8 +209,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'mcs-foundations-mechanisms',
-        shortTitle: 'Separate',
-        title: 'Unloading, augmentation, and total flow',
+        shortTitle: 'Three devices',
+        title: 'Three devices called support',
         minutes: 12,
         description:
           'Distinguish what each mechanism changes before meeting the device that delivers it.',
@@ -220,7 +220,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'iabp-timing-triggering',
         shortTitle: 'IABP timing',
-        title: 'IABP timing and triggering',
+        title: 'Is the balloon inflating at the right moment?',
         minutes: 12,
         description:
           'Place inflation and deflation against the native beat, and match the trigger to signal quality.',
@@ -230,27 +230,27 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'iabp-efficacy-limits',
         shortTitle: 'IABP limits',
-        title: 'IABP efficacy, limits, and escalation',
+        title: 'Timed correctly, still not perfusing',
         minutes: 12,
         description:
-          'Read the assisted beat against the whole circulation and recognize the support ceiling.',
+          'Read the assisted beat against the whole circulation, and decide whether the balloon is the problem.',
         stage: 'application',
         activityId: 'mcs:learn:iabp-efficacy-limits',
       },
       {
         id: 'impella-unloading-placement',
-        shortTitle: 'Impella unloading',
-        title: 'Impella unloading and placement signals',
+        shortTitle: 'Impella flow',
+        title: 'Where is the inlet sitting?',
         minutes: 12,
         description:
-          'Relate performance level and transvalvular position to flow and actual LV unloading.',
+          'The setting has not changed and the flow has fallen: decide what the readings say before any setting is touched.',
         stage: 'mechanism',
         activityId: 'mcs:learn:impella-unloading-placement',
       },
       {
         id: 'impella-suction-purge-rv',
-        shortTitle: 'Impella limits',
-        title: 'Impella suction, purge, hemolysis, and RV delivery',
+        shortTitle: 'Impella suction',
+        title: 'A suction alarm at high support',
         minutes: 12,
         description: 'Work the conditions in which more support produces less effective flow.',
         stage: 'application',
@@ -258,8 +258,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'lvad-parameters-assessment',
-        shortTitle: 'LVAD review',
-        title: 'Durable LVAD parameters and ICU review',
+        shortTitle: 'LVAD flow',
+        title: 'Speed unchanged, resistance rising',
         minutes: 12,
         description: 'Read speed, flow, power, and pulsatility index as one interdependent set.',
         stage: 'mechanism',
@@ -268,17 +268,17 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'lvad-alarms-emergencies',
         shortTitle: 'LVAD alarms',
-        title: 'Durable LVAD low flow, high power, and power emergencies',
+        title: 'An alarm at an unchanged speed',
         minutes: 12,
         description:
-          'Separate opposite loading causes of one low-flow display, and act on power emergencies.',
+          'Decide which of the controller’s readings is the signal when the speed has not changed.',
         stage: 'application',
         activityId: 'mcs:learn:lvad-alarms-emergencies',
       },
       {
         id: 'mcs-device-selection-integration',
         shortTitle: 'Choose',
-        title: 'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
+        title: 'Low output on left-sided support',
         minutes: 18,
         description:
           'Hold all three mechanisms against one phenotype and let the limiting problem select the device.',

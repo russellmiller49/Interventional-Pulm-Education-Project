@@ -7,6 +7,9 @@
  *
  * The exact-once assertions all advance the simulation afterwards, because "emitted once" and
  * "emitted on every tick and therefore also once" are indistinguishable without that.
+ *
+ * The workbench hosts Practice and Challenge; a Learn section's one persisted record and its
+ * lifecycle events are the lesson stage's, and are proved in its own suite.
  */
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 
@@ -49,10 +52,6 @@ import {
   everyInstalledIntervalCleared,
   challengeFeedbackToggle,
   commitCasePrediction,
-  commitPredictionPhase,
-  commitTransferPhase,
-  completeRecognizePhase,
-  continueFromPhase,
   countLifecycleInteraction,
   flushAnimationFrames,
   inspectInCase,
@@ -68,15 +67,12 @@ import {
   renderWorkbench,
   renderWorkbenchOnFakeTimers,
   renderWorkbenchWithoutSettling,
-  satisfyLearnAction,
-  satisfyLearnTransferActions,
   seedStoredProgress,
   selectDeviceTrack,
   setupMcsWorkbenchEnvironment,
   storedCompletedCaseIds,
   storedLessonIds,
   teardownMcsWorkbenchEnvironment,
-  workThroughLearnSection,
   writeMalformedStoredProgress,
   MCS_PROGRESS_KEY,
 } from '../test-support/mcsWorkbench'
@@ -111,14 +107,6 @@ describe('MCS M5 — loading, writing, and leaving stored progress', () => {
     expect(window.localStorage.getItem(MCS_PROGRESS_KEY)).toBe('{ this is not json')
   })
 
-  it('reflects a lesson recorded before this package', async () => {
-    seedStoredProgress({ completedLessonIds: ['mcs-foundations-signals'] })
-    await renderWorkbench({ section: 'learn', initialActivityId: 'mcs-foundations-signals' })
-
-    const recommended = await screen.findByRole('link', { name: /^Next recommended/ })
-    expect(recommended.getAttribute('href')).not.toContain('mcs-foundations-signals')
-  })
-
   it('reflects a mastered case and a stored capstone record after loading', async () => {
     seedStoredProgress({
       masteredCaseIds: ['IABP-02'],
@@ -131,8 +119,9 @@ describe('MCS M5 — loading, writing, and leaving stored progress', () => {
     expect(readStoredProgressRaw()?.completedCapstoneIds).toEqual(['CAP-IABP-01'])
   })
 
-  it('writes nothing merely from mounting, on any route', async () => {
-    for (const section of ['learn', 'practice', 'assess'] as const) {
+  it('writes nothing merely from mounting, on any workbench route', async () => {
+    // Practice and Challenge: the workbench's two sections.
+    for (const section of ['practice', 'assess'] as const) {
       const view = await renderWorkbench({ section })
       expect(progressWriteCount()).toBe(0)
       view.unmount()
@@ -178,13 +167,19 @@ describe('MCS M5 — loading, writing, and leaving stored progress', () => {
   })
 
   it('discards no historical id it does not recognize', async () => {
+    // The write that records a case result goes through the same envelope as every other write,
+    // so a section id from an earlier release has to survive it untouched.
     seedStoredProgress({ completedLessonIds: ['a-section-from-an-earlier-release'] })
-    await renderWorkbench({ section: 'learn', initialActivityId: 'mcs-foundations-signals' })
+    const scenario = mcsPracticeScenarios[0]
+    await renderWorkbench({ section: 'practice', initialActivityId: scenario.id })
 
-    workThroughLearnSection('mcs-foundations-signals')
+    inspectInCase('inspect:arterial')
+    commitCasePrediction(scenario.predictionOptions[0].label)
+    reassessCase()
+    openCausalDebrief()
 
-    await waitFor(() => expect(storedLessonIds()).toContain('mcs-foundations-signals'))
-    expect(storedLessonIds()).toContain('a-section-from-an-earlier-release')
+    await waitFor(() => expect(storedCompletedCaseIds()).toContain(scenario.id))
+    expect(storedLessonIds()).toEqual(['a-section-from-an-earlier-release'])
   })
 })
 
@@ -436,36 +431,6 @@ describe('MCS M5 — every lifecycle event is emitted once', () => {
 
     expect(progressWriteCount()).toBe(writes)
   })
-
-  it('reports a Learn section completion once, and not again on later ticks', async () => {
-    await renderWorkbenchOnFakeTimers({
-      section: 'learn',
-      initialActivityId: 'mcs-foundations-signals',
-    })
-
-    completeRecognizePhase('mcs-foundations-signals')
-    continueFromPhase('recognize')
-    commitPredictionPhase('mcs-foundations-signals')
-    continueFromPhase('predict')
-    satisfyLearnAction('mcs-foundations-signals')
-    continueFromPhase('act')
-    continueFromPhase('observe')
-    continueFromPhase('explain')
-    satisfyLearnTransferActions('mcs-foundations-signals')
-    commitTransferPhase('mcs-foundations-signals')
-    advanceSimulation(3_000)
-
-    expect(
-      countLifecycleInteraction('critical_care_activity_completed', {
-        activityId: 'mcs:learn:mcs-foundations-signals',
-      }),
-    ).toBe(1)
-    expect(
-      countLifecycleInteraction('critical_care_goal_met', {
-        activityId: 'mcs:learn:mcs-foundations-signals',
-      }),
-    ).toBe(1)
-  })
 })
 
 describe('MCS M5 — lifecycle identity and the privacy boundary', () => {
@@ -473,7 +438,6 @@ describe('MCS M5 — lifecycle identity and the privacy boundary', () => {
   afterEach(() => teardownMcsWorkbenchEnvironment())
 
   it.each([
-    ['learn', 'mcs-foundations-signals', 'mcs:learn:mcs-foundations-signals', 'guided'],
     ['practice', 'IMP-02', 'mcs:practice:IMP-02', 'practice'],
     ['assess', 'CAP-LVAD-01', 'mcs:assess:CAP-LVAD-01', 'challenge'],
   ] as const)(
@@ -499,20 +463,6 @@ describe('MCS M5 — lifecycle identity and the privacy boundary', () => {
       activityId: 'mcs:practice:studio-lvad',
       mode: 'practice',
     })
-  })
-
-  it('reports the phase the learner can see', async () => {
-    await renderWorkbench({ section: 'learn', initialActivityId: 'mcs-foundations-signals' })
-
-    completeRecognizePhase('mcs-foundations-signals')
-    continueFromPhase('recognize')
-    commitPredictionPhase('mcs-foundations-signals')
-    continueFromPhase('predict')
-
-    const completedPhases = lifecycleAnalyticsPayloads()
-      .filter((payload) => payload.interaction === 'critical_care_phase_completed')
-      .map((payload) => payload.phase)
-    expect(completedPhases).toEqual(['recognize', 'predict'])
   })
 
   it('sends only the device track, the station, and a coarse completion state', async () => {
