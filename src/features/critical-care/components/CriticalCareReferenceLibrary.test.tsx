@@ -102,7 +102,7 @@ describe('critical-care reference and notebook', () => {
       name: 'Save to notebook: PAC signal-validation sequence',
     })
     expect(
-      screen.getAllByRole('link', { name: 'PAC signal-validation capstone' })[0],
+      screen.getAllByRole('link', { name: 'The screen that does not fit the patient' })[0],
     ).toHaveAttribute('href', '/icu-hemodynamics/learn?activity=pac-signal-validation')
     fireEvent.click(save)
     expect(window.localStorage.getItem(CRITICAL_CARE_NOTEBOOK_STORAGE_KEY)).toContain(

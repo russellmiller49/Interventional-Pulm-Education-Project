@@ -60,12 +60,16 @@ function firstRecommendationFor(moduleId: string): string | undefined {
 }
 
 describe('Critical Care hub start agrees with the hemodynamics pathway', () => {
-  it('recommends the pressure system as a new learner’s first activity', () => {
+  /**
+   * The flow rebuild (2026-09-05) put one orientation section — why a pressure line is placed at
+   * all — ahead of the pressure system. The hub's start moves with the pathway's first section.
+   */
+  it('recommends the orientation section as a new learner’s first activity', () => {
     const model = derivePublicCriticalCareDashboard(catalog, NEW_LEARNER)
 
     expect(model.audienceState).toBe('new')
-    expect(model.recommendation?.activity.id).toBe('hemodynamics:learn:pressure-system')
-    expect(model.recommendation?.href).toBe('/icu-hemodynamics/learn?activity=pressure-system')
+    expect(model.recommendation?.activity.id).toBe('hemodynamics:learn:why-measure')
+    expect(model.recommendation?.href).toBe('/icu-hemodynamics/learn?activity=why-measure')
     expect(model.recommendation?.activity.moduleId).toBe('icu-hemodynamics')
   })
 
@@ -158,7 +162,9 @@ describe('what H1.1 must not have moved', () => {
       'hemodynamics:learn:pawp-capture',
       'hemodynamics:learn:pressure-system',
       'hemodynamics:learn:thermodilution-series',
+      'hemodynamics:learn:waveform-components',
       'hemodynamics:learn:waveform-interpretation',
+      'hemodynamics:learn:why-measure',
       'hemodynamics:practice:HD-01',
       'hemodynamics:practice:HD-02',
       'hemodynamics:practice:HD-03',
@@ -189,6 +195,11 @@ describe('what H1.1 must not have moved', () => {
       })),
     ).toEqual([
       {
+        id: 'hemodynamics:learn:why-measure',
+        pathname: '/icu-hemodynamics/learn',
+        query: { activity: 'why-measure' },
+      },
+      {
         id: 'hemodynamics:learn:pressure-system',
         pathname: '/icu-hemodynamics/learn',
         query: { activity: 'pressure-system' },
@@ -197,6 +208,11 @@ describe('what H1.1 must not have moved', () => {
         id: 'hemodynamics:learn:waveform-interpretation',
         pathname: '/icu-hemodynamics/learn',
         query: { activity: 'waveform-interpretation' },
+      },
+      {
+        id: 'hemodynamics:learn:waveform-components',
+        pathname: '/icu-hemodynamics/learn',
+        query: { activity: 'waveform-components' },
       },
       {
         id: 'hemodynamics:learn:catheter-advancement',
