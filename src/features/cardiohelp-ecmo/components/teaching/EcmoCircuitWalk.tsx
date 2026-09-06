@@ -96,6 +96,7 @@ export function EcmoCircuitWalk({
 }: EcmoCircuitWalkProps) {
   const sourcesCollectedElsewhere = useStageSourcesCollected()
   const headingId = useId()
+  const checklistId = useId()
   const headingRef = useRef<HTMLHeadingElement>(null)
   const mountedStopRef = useRef<EcmoCircuitWalkStopId | null>(null)
 
@@ -164,7 +165,23 @@ export function EcmoCircuitWalk({
         </p>
       ) : null}
 
-      <ul className="mt-3 grid gap-1" data-walk-checklist>
+      {/*
+        The short list, with the label that says what kind of list it is.
+
+        It used to render as four bare lines with the marker reset away, directly under the analogy
+        — so a learner read "A kinked limb / A clotted limb / The volume available / Cannula
+        position" as four more sentences of prose and asked what they were doing there. The label is
+        authored per stop because the six lists are three different kinds of thing, and the same
+        string heads the accessible text equivalent, which is visible on this card too.
+      */}
+      <p id={checklistId} className="mt-3 text-xs uppercase tracking-wide text-muted-foreground">
+        {resolveEcmoModeText(stop.checklistLabel, supportMode)}
+      </p>
+      <ul
+        className="mt-1 grid list-disc gap-1 pl-5"
+        aria-labelledby={checklistId}
+        data-walk-checklist
+      >
         {stop.checklist.map((item) => {
           const text = resolveEcmoModeText(item, supportMode)
           return (
@@ -294,10 +311,25 @@ export function EcmoCircuitWalk({
         >
           Next
         </button>
+        {/*
+          Where this section sits in a walk that is longer than it.
+
+          The six stops run continuously across two sections — four here, two in the next — which is
+          deliberate, so that "stop five of six" reads as nearly finished rather than as a second
+          counter starting. What was missing was any sentence saying so: a learner who reached the
+          end of this section's four stops saw a disabled Next and nothing else, then opened the
+          next section on a card headed "stop 5 of 6" beside a step list reading "Step 1 of 6" and
+          reported it as out of order.
+        */}
         <span className="text-xs text-muted-foreground">
           {previous
             ? `Back: ${resolveEcmoModeText(previous.title, supportMode)}`
-            : 'This is the first stop in this section.'}
+            : stop.ordinal === 1
+              ? 'This is the first stop in this section.'
+              : 'This walk began in the previous section of the lesson and carries on here.'}
+          {!next && stop.ordinal < walkLength
+            ? ' This is the last stop in this section; the walk carries on in the next one.'
+            : ''}
         </span>
       </nav>
 
@@ -310,7 +342,10 @@ export function EcmoCircuitWalk({
         beside them.
       */}
       <p className="sr-only" role="status" data-walk-status>
-        Stop {stop.ordinal} of {walkLength}. {title}. On the circuit:{' '}
+        Stop {stop.ordinal} of {walkLength}
+        {stop.ordinal > 1 && !previous ? ', carried on from the previous section' : ''}
+        {!next && stop.ordinal < walkLength ? ', the last stop in this section' : ''}. {title}. On
+        the circuit:{' '}
         {places
           .map((segmentId) => resolveEcmoModeText(ecmoCircuitSegment(segmentId).label, supportMode))
           .join(', ')}

@@ -87,6 +87,19 @@ export interface EcmoCircuitWalkStop {
   readonly title: EcmoModeText
   /** The concrete image, before the precise statement. One per stop; competing images are worse than none. */
   readonly analogy: EcmoModeText
+  /**
+   * The heading printed above the short list, authored per stop.
+   *
+   * One label does not fit six stops, and the card shipped with none: a learner review in September
+   * 2026 read the four bare lines under the drainage analogy as four more sentences of prose and
+   * asked for "a bulleted list labeled 'what to check for at this position' or something like
+   * that". That label is right for the two limb stops and wrong for the other four — stop two's
+   * list is four facts about the pump, and telling a learner to go and check that "The speed is
+   * chosen" would be nonsense. So the label is authored beside the list it heads. The text
+   * equivalent hardcoded "What to check here:" for all six and was already wrong for four of them;
+   * it reads this field now, so the two surfaces cannot disagree.
+   */
+  readonly checklistLabel: EcmoModeText
   /** At most four. A longer list is not carried to a bedside. */
   readonly checklist: readonly EcmoModeText[]
   readonly primarySegmentId: EcmoCircuitSegmentId
@@ -135,6 +148,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     title: 'Where blood leaves the patient',
     analogy:
       'Drinking through a straw. The pump can only move what actually reaches it, and it has to pull to get it.',
+    checklistLabel: 'What to check at this place',
     checklist: ['A kinked limb', 'A clotted limb', 'The volume available', 'Cannula position'],
     primarySegmentId: 'drainage',
     // Not `patient`. The terminus resolves to both access sites in the bedside scene, so naming it
@@ -156,6 +170,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     title: 'The pump',
     analogy:
       'A spinning cone, not a syringe. It moves what arrives at its inlet; it does not create volume.',
+    checklistLabel: 'How this place is read',
     checklist: [
       'The speed is chosen',
       'The flow is what comes back',
@@ -181,6 +196,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     title: 'The membrane lung',
     analogy:
       'Thousands of hollow fibres. Blood weaves around the outside, sweep gas blows through the inside, and diffusion does the rest.',
+    checklistLabel: 'What this place does',
     checklist: [
       'Gas exchange happens here',
       'It has a resistance of its own',
@@ -204,6 +220,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     kind: 'instructional',
     title: 'Back to the patient',
     analogy: 'Pushing the drink back down the straw, against whatever is waiting at the far end.',
+    checklistLabel: 'What to check at this place',
     checklist: [
       'A kinked limb',
       'A clotted limb',
@@ -235,6 +252,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     // section is built around.
     analogy:
       'A hand on the straw. There is what you choose to do, and there is what the straw gives back, and they are not the same reading.',
+    checklistLabel: 'How to read this change',
     checklist: [
       'The speed is a setting',
       'The flow is a result',
@@ -262,6 +280,7 @@ export const ecmoCircuitWalkStops: readonly EcmoCircuitWalkStop[] = Object.freez
     title: 'What the circuit is pushing against',
     analogy:
       'The same straw with a thumb over the far end. The effort shows where you are pushing from, not where the obstruction is.',
+    checklistLabel: 'What the comparison shows',
     checklist: [
       'Both post-pump readings move together',
       // A direction, not a stability claim. The drainage pressure does move here — it becomes less
@@ -379,7 +398,7 @@ export function ecmoWalkStopTextEquivalent(
     `Stop ${stop.ordinal}. ${resolveEcmoModeText(stop.title, supportMode)}.`,
     `On the circuit: ${places}.`,
     `${resolveEcmoModeText(stop.analogy, supportMode)}`,
-    `What to check here: ${stop.checklist
+    `${resolveEcmoModeText(stop.checklistLabel, supportMode)}: ${stop.checklist
       .map((item) => resolveEcmoModeText(item, supportMode))
       .join('; ')}.`,
   ]
@@ -442,6 +461,7 @@ export function validateEcmoCircuitWalk(): readonly string[] {
       const texts: readonly EcmoModeText[] = [
         stop.title,
         stop.analogy,
+        stop.checklistLabel,
         stop.takeaway,
         stop.modelBoundary,
         ...stop.checklist,
@@ -509,6 +529,8 @@ export function validateEcmoCircuitWalk(): readonly string[] {
       resolveEcmoModeText(stop.title, 'va'),
       resolveEcmoModeText(stop.analogy, 'vv'),
       resolveEcmoModeText(stop.analogy, 'va'),
+      resolveEcmoModeText(stop.checklistLabel, 'vv'),
+      resolveEcmoModeText(stop.checklistLabel, 'va'),
       resolveEcmoModeText(stop.takeaway, 'vv'),
       resolveEcmoModeText(stop.takeaway, 'va'),
       resolveEcmoModeText(stop.modelBoundary, 'vv'),

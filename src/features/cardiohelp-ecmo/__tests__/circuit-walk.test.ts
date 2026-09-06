@@ -314,6 +314,7 @@ describe('the walk is authored so both tracks read the same lesson', () => {
     for (const stop of ecmoCircuitWalkStops) {
       expect(resolveEcmoModeText(stop.title, mode).length).toBeGreaterThan(0)
       expect(resolveEcmoModeText(stop.analogy, mode).length).toBeGreaterThan(0)
+      expect(resolveEcmoModeText(stop.checklistLabel, mode).length).toBeGreaterThan(0)
       expect(resolveEcmoModeText(stop.takeaway, mode).length).toBeGreaterThan(0)
       expect(resolveEcmoModeText(stop.modelBoundary, mode).length).toBeGreaterThan(0)
       for (const item of stop.checklist) {
@@ -327,6 +328,7 @@ describe('the walk is authored so both tracks read the same lesson', () => {
       const shared = [
         stop.title,
         stop.analogy,
+        stop.checklistLabel,
         stop.takeaway,
         stop.modelBoundary,
         ...stop.checklist,
@@ -355,6 +357,7 @@ describe('the walk carries no authored quantity', () => {
       const strings = [
         resolveEcmoModeText(stop.title, mode),
         resolveEcmoModeText(stop.analogy, mode),
+        resolveEcmoModeText(stop.checklistLabel, mode),
         resolveEcmoModeText(stop.takeaway, mode),
         resolveEcmoModeText(stop.modelBoundary, mode),
         ...stop.checklist.map((item) => resolveEcmoModeText(item, mode)),
@@ -471,6 +474,7 @@ describe('no stop states its own section’s answer before the section asks for 
     return [
       resolveEcmoModeText(stop.title, mode),
       resolveEcmoModeText(stop.analogy, mode),
+      resolveEcmoModeText(stop.checklistLabel, mode),
       ...stop.checklist.map((item) => resolveEcmoModeText(item, mode)),
       ...(takeawayShown ? [resolveEcmoModeText(stop.takeaway, mode)] : []),
       ...(stop.comparison ?? []).flatMap((beat) => [beat.label, beat.readThis]),
@@ -528,6 +532,8 @@ describe('the text equivalent replaces looking at the stop', () => {
       const prose = ecmoWalkStopTextEquivalent(stop, mode)
       expect(prose).toContain(resolveEcmoModeText(stop.title, mode))
       expect(prose).toContain(resolveEcmoModeText(stop.analogy, mode))
+      // The label the card prints above the list is the stem the prose uses for it, per stop.
+      expect(prose).toContain(`${resolveEcmoModeText(stop.checklistLabel, mode)}:`)
       for (const item of stop.checklist) {
         expect(prose).toContain(resolveEcmoModeText(item, mode))
       }
