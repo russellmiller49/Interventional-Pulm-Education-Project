@@ -604,7 +604,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       transfer: {
         objective: 'Apply the concept to a different cause of impaired oxygen delivery.',
-        requiredAction: 'Answer the new case and review the comparison.',
+        requiredAction:
+          'Answer the new case, then open why the other answers do not fit and read it against the patient this section opened with.',
         teachingPoint:
           'The same reasoning identifies an oxygen-content problem as readily as a blood-flow problem.',
         lookIn: {

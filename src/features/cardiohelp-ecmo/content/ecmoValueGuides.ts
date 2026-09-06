@@ -253,14 +253,23 @@ const oxygenConsumption: CriticalCareDerivedValueGuide = {
   label: 'Oxygen consumption (model input)',
   unit: 'mL/min',
   liveValueType: 'configured',
+  /*
+   * The physiology first, the boundary second.
+   *
+   * This read "A setting this simulation is given so its oxygen balance closes", which explains the
+   * number's role in the software and not its role in the patient — so a learner met three
+   * statements of what the number is not and none of what oxygen consumption is. The boundary is
+   * unchanged and still the second sentence; `doNotInfer`, the kind badge and the applies-when line
+   * are all still below it.
+   */
   interpretation:
-    'A setting this simulation is given so its oxygen balance closes. It is set per reference profile, not observed.',
+    'What the tissues take out of the blood each minute — the other side of the oxygen balance from delivery. In this simulation it is a fixed setting rather than something measured.',
   references: [
     {
       id: 'ecmo.vo2.authored-input',
       kind: 'educational-model-boundary',
       statement:
-        'The reference circuits author 150 mL/min so the module’s own baseline is internally consistent.',
+        'This simulation holds consumption at the same value in both reference circuits so its own oxygen balance stays consistent.',
       appliesWhen:
         'Inside this simulation only. It makes no claim about any patient’s metabolic rate.',
       evidenceIds: ['bounded-educational-model'],

@@ -81,36 +81,42 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         itemType: 'transfer-case',
         transferVariantId: 'ecmo.foundation.why.transfer-variant',
         contextRequirement: 'context-independent',
-        stem: 'A different patient has an oxygen saturation of 99 and a normal cardiac output, but a hemoglobin of 4.9 g/dL after ongoing bleeding. Which component of oxygen delivery is impaired, and why can the oxygen saturation still appear normal?',
+        stem: 'A different patient has an oxygen saturation of 99 and a cardiac output at the upper end of normal, but a hemoglobin of 4.9 g/dL after ongoing bleeding. Which part of the oxygen balance is impaired, and why can the oxygen saturation still appear normal?',
         choices: [
           {
             id: 'content-via-hemoglobin',
-            label:
-              'Oxygen content — the amount of hemoglobin available to carry oxygen is markedly reduced. Oxygen saturation only reflects the percentage of available hemoglobin that is bound to oxygen.',
+            label: 'Oxygen content — there is very little carrier left to be saturated.',
             plausibility: 'best',
             rationale:
-              'Saturation is a ratio. It stays high while the quantity being saturated falls, which is exactly why it reads as reassuring in profound anemia.',
+              'A saturation is a ratio: it reports the share of the hemoglobin present that is carrying oxygen, and says nothing about how much hemoglobin is present. It stays high while the quantity being saturated falls, which is exactly why it reads as reassuring in profound anemia.',
           },
           {
             id: 'flow-term',
-            label:
-              'Blood flow — severe bleeding necessarily causes inadequate cardiac output, while the saturation remains normal because the lungs can still oxygenate the blood that reaches them.',
+            label: 'Blood flow — less blood is reaching the tissues each minute after the loss.',
             plausibility: 'incorrect-mechanism',
             rationale:
-              'Cardiac output is stated to be normal here, and can be maintained or even raised in anemia.',
+              'The volume of blood moved per minute is stated here, and it is not the reduced term. Anemia is characteristically hyperdynamic: cardiac output is maintained or raised, which is part of why the delivered oxygen falls less steeply than the hemoglobin does.',
           },
           {
             id: 'consumption-term',
             label:
-              'Oxygen consumption — ongoing bleeding primarily increases metabolic demand, while the saturation remains normal because oxygen supply is preserved.',
+              'Oxygen consumption — the tissues are drawing a larger share of what arrives than they were.',
             plausibility: 'reasonable-but-incomplete',
             rationale:
-              'Demand can certainly rise, but the component that is unambiguously impaired in this description is the carrier itself.',
+              'Extraction does rise here, and it is what holds consumption steady while delivery falls. But that is the consequence of the impaired term rather than the impaired term itself: consumption draws on delivery, and this question is about what delivery is made of.',
+          },
+          {
+            id: 'raise-inspired-oxygen',
+            label:
+              'Oxygen saturation — raising the inspired oxygen is what would move the delivered amount here.',
+            plausibility: 'unsafe',
+            rationale:
+              'The saturation is already at the top of its range, so there is almost nothing to gain there, and acting on it leaves a carrier this depleted untreated while the bleeding continues.',
           },
         ],
         correctChoiceIds: ['content-via-hemoglobin'],
         explanation:
-          'The same reasoning reaches a different answer. In the earlier situation blood flow and oxygen content were both reduced; here flow is intact and the carrier is depleted. An oxygen saturation behaves identically in both, which is the reason it cannot be used alone.',
+          'This section opened with a patient whose blood flow and oxygen content were both reduced, and the answer there was that the saturation settled nothing. Here the flow is not the reduced term and the carrier is depleted, so the impaired part of the balance can be named. In both patients the saturation reads reassuring, which is the reason it cannot be read on its own.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },

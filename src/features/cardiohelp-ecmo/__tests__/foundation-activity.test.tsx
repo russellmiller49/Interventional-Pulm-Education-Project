@@ -670,6 +670,38 @@ describe('bounded actions', () => {
     expect(document.querySelector('[data-phase-lock-note]')).toBeNull()
   })
 
+  /*
+   * The instruction promises the other answers, so the card has to carry them.
+   *
+   * Five sections say "Commit a prediction, then read why the other answers do not fit" and the
+   * card showed only the chosen option's rationale, so a learner who went looking for the
+   * comparison found nothing. Asserted against the authored item rather than against fixed text, so
+   * it keeps holding when the item is rewritten, and asserted absent before the commitment because
+   * the whole set of rationales names every mechanism the prediction is asking about.
+   */
+  it('carries the other answers’ reasoning once the prediction is committed, and not before', () => {
+    mount('why-extracorporeal-support')
+    const { prediction } = ecmoFoundationLearningItemsFor('why-extracorporeal-support')
+
+    continueTo('predict')
+    expect(document.querySelector('[data-other-answers-panel]')).toBeNull()
+
+    fireEvent.click(predictionChoice('why-extracorporeal-support'))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+
+    const chosen = prediction.choices[0]
+    const panel = document.querySelector('[data-other-answers-panel]')
+    expect(panel).not.toBeNull()
+    expect(document.querySelector(`[data-other-answer="${chosen.id}"]`)).toBeNull()
+    for (const choice of prediction.choices.filter((option) => option.id !== chosen.id)) {
+      const row = document.querySelector(`[data-other-answer="${choice.id}"]`)
+      expect(`${choice.id}: ${row ? 'given a reason' : 'silent'}`).toBe(
+        `${choice.id}: given a reason`,
+      )
+      expect(row).toHaveTextContent(choice.rationale)
+    }
+  })
+
   it('records what was looked at, and clears it when the state is reloaded', () => {
     mount('vv-integration-capstone')
     commitAndContinue('vv-integration-capstone')

@@ -53,6 +53,7 @@ import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContex
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
 import { EcmoLookInLine } from '../shell/EcmoLookInLine'
+import { EcmoOtherAnswers } from '../shell/EcmoOtherAnswers'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
 import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
@@ -833,6 +834,17 @@ function FoundationStageSession({
                 explanation={item.explanation}
                 evidenceIds={item.evidenceIds}
               />
+              {/*
+                Why the other answers do not fit.
+
+                Five foundation sections tell the learner, one pane to the left, to "commit a
+                prediction, then read why the other answers do not fit" — and this card showed only
+                the chosen option's rationale, so there was nothing to read. The drill half of the
+                same pathway has offered exactly this disclosure all along; the shared card the
+                foundations render does not, and is four other modules' as well. So the foundations
+                render it themselves, in the wording their own instruction already uses.
+              */}
+              <EcmoOtherAnswers item={item} committedChoiceId={committedChoice.id} />
               {interaction.kind === 'prediction' ? (
                 <button type="button" className={shellStyles.nowPrimary} onClick={advance}>
                   Continue
@@ -950,6 +962,40 @@ function FoundationStageSession({
   const teachingPreview =
     !predictionCommitted && (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
   const teachingExpanded = teachingPreview && progression.expandedTeachingStepId === activeStep.id
+  const narrative =
+    section && prose !== 'none' ? (
+      <section className={teachingStyles.section} aria-labelledby="lesson-narrative-heading">
+        <h3 id="lesson-narrative-heading" className={teachingStyles.heading}>
+          Lesson narrative
+        </h3>
+        <p className="mt-2">{section.summary}</p>
+        {prose === 'full' ? (
+          <>
+            <div className="mt-3 grid gap-3" data-lesson-paragraphs>
+              {section.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+            {section.bullets ? (
+              <ul className="mt-3 grid gap-2" data-lesson-bullets>
+                {section.bullets.map((bullet) => (
+                  <li key={bullet} className="rounded-xl border px-3 py-2">
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
+          </>
+        ) : null}
+        {/*
+          The narrative's own source list used to sit here, at every prose level. An owner
+          review moved every stage list into one folded block in the footer, so this pane
+          carries the lesson and the footer carries what it rests on.
+        */}
+      </section>
+    ) : null
+
   const teaching = (
     <div
       className={styles.teachingColumn}
@@ -977,6 +1023,19 @@ function FoundationStageSession({
       <StageTeachingScope
         value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
       >
+        {/*
+          At Explain the narrative comes first.
+
+          The Explain step's instruction is "review the lesson narrative", and the narrative was
+          rendered after the whole teaching panel — roughly the tenth block down a pane that scrolls
+          on its own and is never scrolled for the learner, under a first line reading "Circuit walk
+          · stop N of 6". A learner review in September 2026: "it tells me to read the lesson
+          narrative, which I'm guessing is the middle panel, although it's not labeled 'lesson
+          narrative' it's labeled 'circuit walk'." At every other step the narrative is a summary or
+          absent, and the panel is what the step is about, so the order only flips where the step
+          asks for the narrative by name.
+        */}
+        {prose === 'full' ? narrative : null}
         <EcmoFoundationTeachingPanel
           sectionId={sectionId}
           state={simulation}
@@ -989,38 +1048,7 @@ function FoundationStageSession({
             pastPrediction: predictionCommitted,
           }}
         />
-        {section && prose !== 'none' ? (
-          <section className={teachingStyles.section} aria-labelledby="lesson-narrative-heading">
-            <h3 id="lesson-narrative-heading" className={teachingStyles.heading}>
-              Lesson narrative
-            </h3>
-            <p className="mt-2">{section.summary}</p>
-            {prose === 'full' ? (
-              <>
-                <div className="mt-3 grid gap-3" data-lesson-paragraphs>
-                  {section.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-                {section.bullets ? (
-                  <ul className="mt-3 grid gap-2" data-lesson-bullets>
-                    {section.bullets.map((bullet) => (
-                      <li key={bullet} className="rounded-xl border px-3 py-2">
-                        {bullet}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
-              </>
-            ) : null}
-            {/*
-              The narrative's own source list used to sit here, at every prose level. An owner
-              review moved every stage list into one folded block in the footer, so this pane
-              carries the lesson and the footer carries what it rests on.
-            */}
-          </section>
-        ) : null}
+        {prose === 'full' ? null : narrative}
         {conflict && prose === 'full' ? (
           <HeldDisagreement conflict={conflict} headingLevel={3} />
         ) : null}
