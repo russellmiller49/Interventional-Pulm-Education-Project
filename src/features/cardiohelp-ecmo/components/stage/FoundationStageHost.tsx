@@ -660,6 +660,60 @@ function FoundationStageSession({
     )
   }
 
+  /*
+   * Every step after the commitment can load a state. Transfer needs it too: the VV capstone's
+   * transfer answer is "load the re-drainage preview and read it", which cannot happen if the
+   * actions vanish when the transfer item appears.
+   *
+   * Open on Act and on Observe, folded elsewhere. Observe was folded until a learner review in
+   * September 2026: four sections tell the learner at that step to compare a value "after each
+   * action" or "in both states", and the buttons those sentences mean were behind a closed
+   * disclosure on a step where the console is not operable either.
+   *
+   * On the Act step this whole block is handed to the Now card as its interaction body rather than
+   * rendered after it, which is what the card's own contract has always said should happen with it.
+   * Before that it sat below the card, in the same flat outlined box as a radio option, beside a
+   * bright "Continue" that advanced the step without any action having been run — so the only
+   * control that looked like a control was the one that skipped the work.
+   */
+  const boundedActions =
+    predictionCommitted && activeStep.phase !== 'recognize' && activeStep.phase !== 'predict' ? (
+      <details
+        className={styles.boundedActionsPanel}
+        open={activeStep.phase === 'act' || activeStep.phase === 'observe'}
+        data-bounded-actions
+      >
+        <summary>Actions you can take</summary>
+        <div className={styles.boundedActions}>
+          {runtime.guidedActions.map((guided) => (
+            <button
+              key={guided.id}
+              type="button"
+              className={styles.boundedAction}
+              data-guided-action={guided.id}
+              data-guided-action-kind={guided.kind}
+              onClick={() => runGuidedAction(guided)}
+            >
+              <span className="font-semibold">{guided.label}</span>
+              <small>{guided.description}</small>
+            </button>
+          ))}
+          {session.interactionsSinceRestore.length > 0 ? (
+            <div data-interaction-evidence>
+              <p className={shellStyles.kicker}>Looked at since this circuit was loaded</p>
+              <ul className="mt-1 grid gap-1">
+                {session.interactionsSinceRestore.map((id) => (
+                  <li key={id} data-interaction={id}>
+                    {runtime.guidedActions.find((guided) => guided.id === id)?.label ?? id}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </details>
+    ) : null
+
   const nowBody = (() => {
     const { interaction } = activeStep
     if (interaction.kind === 'attribution') {
@@ -739,6 +793,7 @@ function FoundationStageSession({
         </div>
       )
     }
+    if (interaction.kind === 'bounded-actions') return boundedActions
     if (interaction.kind === 'prediction' || interaction.kind === 'transfer-item') {
       const { item } = interaction
       const committedId =
@@ -790,49 +845,6 @@ function FoundationStageSession({
     }
     return null
   })()
-
-  /*
-   * Every step after the commitment can load a state. Transfer needs it too: the VV capstone's
-   * transfer answer is "load the re-drainage preview and read it", which cannot happen if the
-   * actions vanish when the transfer item appears. Open on the Act step, folded elsewhere.
-   */
-  const boundedActions =
-    predictionCommitted && activeStep.phase !== 'recognize' && activeStep.phase !== 'predict' ? (
-      <details
-        className={styles.boundedActionsPanel}
-        open={activeStep.interaction.kind === 'bounded-actions'}
-        data-bounded-actions
-      >
-        <summary>Actions you can take</summary>
-        <div className={styles.boundedActions}>
-          {runtime.guidedActions.map((guided) => (
-            <button
-              key={guided.id}
-              type="button"
-              className={styles.boundedAction}
-              data-guided-action={guided.id}
-              data-guided-action-kind={guided.kind}
-              onClick={() => runGuidedAction(guided)}
-            >
-              <span className="font-semibold">{guided.label}</span>
-              <small>{guided.description}</small>
-            </button>
-          ))}
-          {session.interactionsSinceRestore.length > 0 ? (
-            <div data-interaction-evidence>
-              <p className={shellStyles.kicker}>Looked at since this circuit was loaded</p>
-              <ul className="mt-1 grid gap-1">
-                {session.interactionsSinceRestore.map((id) => (
-                  <li key={id} data-interaction={id}>
-                    {runtime.guidedActions.find((guided) => guided.id === id)?.label ?? id}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      </details>
-    ) : null
 
   /* ---------------------------------------------------------------- *
    * Panes
@@ -1022,7 +1034,8 @@ function FoundationStageSession({
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <EcmoNowCard model={nowModel}>{nowBody}</EcmoNowCard>
       </div>
-      {boundedActions}
+      {/* On the Act step the card carries these; rendering them here too would duplicate every id. */}
+      {activeStep.interaction.kind === 'bounded-actions' ? null : boundedActions}
       {predictionCommitted &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
       storyProblems.length > 0 ? (

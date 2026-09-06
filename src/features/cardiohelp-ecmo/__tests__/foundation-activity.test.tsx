@@ -616,19 +616,34 @@ describe('bounded actions', () => {
     expect(document.querySelector('#transfer-heading')).not.toBeNull()
   })
 
-  it('opens the action list on the Act step and folds it afterwards, still reachable', () => {
+  /*
+   * Open on Act and Observe, folded from Explain on, and inside the Now card on Act.
+   *
+   * Observe used to be folded. A learner review in September 2026 found four sections whose Observe
+   * instruction says to compare a value "after each action" or "in both states" while the buttons
+   * those sentences mean sat behind a closed disclosure, on a step where the console is not
+   * operable either. On the Act step the block is the Now card's interaction body, so the card's
+   * "Continue" reads as "I have done this" rather than as the only control on offer.
+   */
+  it('opens the action list on the Act and Observe steps and folds it afterwards, still reachable', () => {
     mount('vv-integration-capstone')
     commitAndContinue('vv-integration-capstone')
 
     const onAct = document.querySelector<HTMLDetailsElement>('details[data-bounded-actions]')
     expect(onAct?.open).toBe(true)
+    expect(document.querySelector('[data-now-card]')).toContainElement(onAct)
     for (const guided of ecmoFoundationLessonRuntime('vv-integration-capstone').guidedActions) {
       expect(guidedAction(guided.id)).toHaveAttribute('data-guided-action-kind', guided.kind)
     }
 
     continueTo('observe')
     const onObserve = document.querySelector<HTMLDetailsElement>('details[data-bounded-actions]')
-    expect(onObserve?.open).toBe(false)
+    expect(onObserve?.open).toBe(true)
+    expect(guidedAction('reveal-evolved-state')).toBeInTheDocument()
+
+    continueTo('explain')
+    const onExplain = document.querySelector<HTMLDetailsElement>('details[data-bounded-actions]')
+    expect(onExplain?.open).toBe(false)
     expect(guidedAction('reveal-evolved-state')).toBeInTheDocument()
   })
 
