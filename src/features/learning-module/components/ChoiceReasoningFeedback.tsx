@@ -32,6 +32,20 @@ const plausibilityOutcome: Readonly<
   unsafe: { outcome: 'unsafe', label: 'Not correct, and unsafe.' },
 }
 
+/**
+ * The sentence after the outcome, and the option to say it differently.
+ *
+ * These were written for `signal-recognition` items, where a pattern is on the screen and "the cues
+ * support this read" names something the learner can point at. On a prose vignette there are no
+ * cues, and "read" as a noun is vocabulary a module has to have taught. A learner review of the
+ * ECMO module in September 2026 stopped on exactly that sentence, under a three-number bedside
+ * story with no console pattern in it.
+ *
+ * `frames` is how a caller says its own; omitted, every caller keeps the wording it has. ECMO takes
+ * `AnswerVerdict`'s titles, which is what this component's doc comment has always said it wants —
+ * one vocabulary for a learner who meets both cards in one pathway — and which was true of the
+ * outcome labels and never of these.
+ */
 const plausibilityFrame: Readonly<Record<ClinicalLearningChoice['plausibility'], string>> = {
   best: 'The cues support this read.',
   'reasonable-but-incomplete':
@@ -47,6 +61,7 @@ export function ChoiceReasoningFeedback({
   evidenceIds,
   conceptIds = [],
   outcome = 'described',
+  frames,
 }: {
   readonly choice: ClinicalLearningChoice
   readonly explanation: string
@@ -54,6 +69,8 @@ export function ChoiceReasoningFeedback({
   readonly conceptIds?: readonly string[]
   /** See the prop of the same name on `AnswerVerdict`: `stated` opts in to the outcome label. */
   readonly outcome?: 'described' | 'stated'
+  /** Per-caller replacements for the sentence after the outcome. Omitted, the defaults stand. */
+  readonly frames?: Partial<Record<ClinicalLearningChoice['plausibility'], string>>
 }) {
   const evidence = resolveCriticalCareEvidence(evidenceIds)
   const concepts = conceptIds.flatMap((conceptId) => {
@@ -89,7 +106,7 @@ export function ChoiceReasoningFeedback({
                 </span>{' '}
               </>
             ) : null}
-            {plausibilityFrame[choice.plausibility]}
+            {frames?.[choice.plausibility] ?? plausibilityFrame[choice.plausibility]}
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-100">{choice.rationale}</p>
         </div>

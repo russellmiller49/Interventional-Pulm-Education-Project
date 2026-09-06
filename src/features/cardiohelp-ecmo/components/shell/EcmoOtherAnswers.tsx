@@ -5,6 +5,21 @@ import type { ClinicalLearningItem } from '@/features/learning-module/activity/c
 import styles from '../stage/EcmoLessonStage.module.css'
 
 /**
+ * ECMO's verdict framing, shared by every card in the module that renders one.
+ *
+ * The default sentences were written for items with a console pattern on screen — "the cues support
+ * this read" — and this module asks a good many of its questions as prose vignettes with no cues in
+ * them. These are `AnswerVerdict`'s own titles, which the drill half of the same pathway already
+ * shows, so a learner who meets both cards meets one vocabulary.
+ */
+export const ECMO_VERDICT_FRAMES = {
+  best: 'That read holds.',
+  'reasonable-but-incomplete': 'Defensible, but not the whole picture.',
+  'incorrect-mechanism': 'That mechanism predicts a different pattern.',
+  unsafe: 'Stopping here — this could harm a real patient.',
+} as const
+
+/**
  * The rationales for the answers the learner did not take, folded, after the commitment.
  *
  * Five foundation sections instruct "commit a prediction, then read why the other answers do not

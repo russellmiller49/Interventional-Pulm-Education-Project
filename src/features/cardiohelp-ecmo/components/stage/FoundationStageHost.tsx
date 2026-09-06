@@ -53,7 +53,7 @@ import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContex
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
 import { EcmoLookInLine } from '../shell/EcmoLookInLine'
-import { EcmoOtherAnswers } from '../shell/EcmoOtherAnswers'
+import { EcmoOtherAnswers, ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
 import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
@@ -831,6 +831,7 @@ function FoundationStageSession({
               <ChoiceReasoningFeedback
                 choice={committedChoice}
                 outcome="stated"
+                frames={ECMO_VERDICT_FRAMES}
                 explanation={item.explanation}
                 evidenceIds={item.evidenceIds}
               />

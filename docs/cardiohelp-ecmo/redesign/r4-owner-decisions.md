@@ -189,6 +189,12 @@ Quoted: "We should replace the hand drawn schematic with the … pump flow anima
 hidden, enhance it. I'm not sure if moving to center panel or making the module highlight it in the
 left panel is better though."
 
+> **Amended 2026-09-06 by R5-OD-1.** The pane moved to the right of the row, because a learner
+> review asked for the prompts and questions on the left. What this decision was protecting is
+> intact — one circuit drawing, in the simulator pane, in the widest pane, driven by the step — and
+> the width was re-validated at all four modes. See
+> [`r5-learner-review-record.md`](./r5-learner-review-record.md).
+
 Two decisions, taken on the recommendation and confirmed by the owner on 2026-09-04:
 
 - **Left panel, highlighted.** The animated pressure-zone map stays in the simulator pane and the
