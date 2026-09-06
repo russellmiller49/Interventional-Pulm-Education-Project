@@ -426,9 +426,19 @@
   background: rgba(113, 225, 229, 0.05);
   color: inherit;
   font-size: var(--ecmo-type-floor, 0.875rem);
-  font-weight: 700;
   text-align: left;
   cursor: pointer;
+}
+
+/*
+ * The weight goes on the label, not on the button.
+ *
+ * A `font-weight` on the button itself computes to 400 here — something more specific than this
+ * rule reaches it — and it would style no visible text anyway, since everything inside is either
+ * this label or the `<small>` under it. Measured in the browser rather than assumed.
+ */
+.boundedAction > span {
+  font-weight: 700;
 }
 
 /* The chevron is the affordance a flat outlined box was missing. Decorative: the label carries. */
