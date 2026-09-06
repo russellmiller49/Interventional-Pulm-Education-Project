@@ -178,15 +178,15 @@ section redirects to the track's first section.
 Dev server on :3122, an emulated 1440×900 viewport (the Browser pane was hidden, so the numbers
 are DOM reads, not screenshots), section 1 at its first step, then section 6 at its first step.
 
-| Measure                   | Section 1, step 1                           | Section 6, step 1                                                                                        |
-| ------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Visible controls          | 30 (none on the monitor)                    | 35                                                                                                       |
-| Visible words             | 812 (569 outside the monitor)               | 739 (721 outside the monitor)                                                                            |
-| Words under 13 px outside | 127 (kickers, badges, units, map labels)    | 134                                                                                                      |
-| Visible headings          | 3                                           | —                                                                                                        |
-| Document scroll           | none (body overflow hidden; 17 px residual) | none                                                                                                     |
-| Internal scrollers        | Simulator 650/1101, Steps 650/903           | Simulator 650/1880, Steps 650/795                                                                        |
-| The map                   | —                                           | 567 px wide, labels 15 px, three pins, nothing lit, the right-sided pathway not drawn, first in the pane |
+| Measure                   | Section 1, step 1                        | Section 6, step 1                                                                                        |
+| ------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Visible controls          | 30 (none on the monitor)                 | 35                                                                                                       |
+| Visible words             | 812 (569 outside the monitor)            | 739 (721 outside the monitor)                                                                            |
+| Words under 13 px outside | 127 (kickers, badges, units, map labels) | 134                                                                                                      |
+| Visible headings          | 3                                        | —                                                                                                        |
+| Document scroll           | none (17 px residual, closed by #127)    | none                                                                                                     |
+| Internal scrollers        | Simulator 650/1101, Steps 650/903        | Simulator 650/1880, Steps 650/795                                                                        |
+| The map                   | —                                        | 567 px wide, labels 15 px, three pins, nothing lit, the right-sided pathway not drawn, first in the pane |
 
 For comparison the old Learn at the same section opened on a phase stepper, an eight-item patient
 context bar printing the congestion pattern, and three panes with the whole common model in the
@@ -201,8 +201,10 @@ it; the placement control highlighted and the position change enabling Continue;
 patient loading; the hub's Continue resolving to section 2 once section 1 was worked, the group
 holding it open.
 
-The 17 px residual is the module header rendering 81 px against the 64 px the shared rule
-reserves, the same as ECMO's; it is recorded, not papered over. Scrolling the simulator pane to
+The 17 px residual was the module header rendering 81 px against the 64 px the shared rule
+reserved, the same as ECMO's. It is **closed by PR #127** (the mechanical-ventilation rebuild),
+which sizes the activity shells to a real `--site-header-height` token instead of a hardcoded
+`4rem`; measured again on a test merge of that main, the document does not scroll at all. Scrolling the simulator pane to
 the map, the ECMO approach, could not be made to land here: the monitor above it re-flows for
 seconds after a step is entered and its alarm band changes height with the ticks, so a step that
 opens the map now leads with it — the map above the monitor, at the top of the pane — and the
