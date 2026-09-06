@@ -1460,6 +1460,7 @@ export function MechanicalVentilatorConsole({
             <button
               type="button"
               key={item.id}
+              aria-label={item.label}
               aria-current={screen === item.id ? 'page' : undefined}
               onClick={() => dispatch({ type: 'SET_SCREEN', screen: item.id })}
             >

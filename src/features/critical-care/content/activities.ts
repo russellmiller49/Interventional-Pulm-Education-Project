@@ -1,4 +1,8 @@
 import {
+  VENTILATION_FINAL_CHECK_ID,
+  ventilationLearningUnits,
+} from '@/features/mechanical-ventilation/content/learningCurriculum'
+import {
   criticalCareActivityDefinitionSchema,
   type CriticalCareActivityDefinition,
   type CriticalCareActivityMode,
@@ -139,6 +143,7 @@ function activityQuery(
     return section === 'learn' ? { lesson: seed.sourceId } : { case: seed.sourceId }
   }
   if (moduleId === 'mechanical-ventilation' && section === 'assess') {
+    if (seed.sourceId === VENTILATION_FINAL_CHECK_ID) return undefined
     return {
       case: seed.sourceId,
       seed: 'catalog-challenge-v1',
@@ -552,129 +557,76 @@ const ventilationCaseSeeds: readonly ActivitySeed[] = [
     ? 'advanced'
     : 'intermediate') as CriticalCareDifficulty,
   curriculumStage: 'application' as const,
-  stageOrder: index + 2,
+  stageOrder:
+    index + ventilationLearningUnits.filter((unit) => unit.stage === 'application').length + 1,
   competencyIds: competencyIds as readonly string[],
   pathwayIds: ['acute-respiratory-failure'],
   evidenceIds: ['mechanical-ventilation-source-boundary'],
 }))
 
 /**
- * Ordered per WP10 §5.4: mechanics and a repeatable waveform-reading sequence are the causal
- * model; modes are device-facing and follow the physiology they operate on.
+ * The ventilation curriculum owns order, prerequisites, stage labels, and minutes.
+ * Project it here so the shared catalog and course never develop competing pathways.
  */
-const ventilationLearnSeeds: readonly ActivitySeed[] = [
+const ventilationLearnSeeds: readonly ActivitySeed[] = ventilationLearningUnits.map(
+  (unit, index) => ({
+    sourceId: unit.id,
+    title: unit.title,
+    description: unit.outcome,
+    competencyIds:
+      unit.objective === 'breath'
+        ? ['ventilator-setup', 'ventilator-waveform-interpretation']
+        : unit.objective === 'mechanics'
+          ? ['ventilator-mechanics']
+          : unit.objective === 'interaction'
+            ? ['ventilator-waveform-interpretation', 'ventilator-troubleshooting']
+            : unit.objective === 'gas-exchange'
+              ? ['ventilator-setup', 'ventilator-safety']
+              : ['ventilator-troubleshooting', 'ventilator-safety'],
+    difficulty:
+      unit.stage === 'orientation' || unit.stage === 'foundation'
+        ? ('foundation' as const)
+        : unit.stage === 'integration'
+          ? ('advanced' as const)
+          : ('intermediate' as const),
+    curriculumStage: unit.stage,
+    stageOrder: ventilationLearningUnits
+      .slice(0, index + 1)
+      .filter((entry) => entry.stage === unit.stage).length,
+    estimatedMinutes: unit.minutes,
+    prerequisiteActivityIds: unit.prerequisites.map((id) => `ventilation:learn:${id}`),
+    pathwayIds: ['acute-respiratory-failure'],
+    evidenceIds: ['mechanical-ventilation-source-boundary'],
+    reviewStatus: 'draft' as const,
+    creditPolicy: 'non-credit' as const,
+    completionEvidenceAuthority: 'none' as const,
+  }),
+)
+
+const ventilationAssessSeeds: readonly ActivitySeed[] = [
   {
-    // Opens the pathway: what the three traces are, and how a volume-targeted breath differs from
-    // a pressure-targeted one. Everything after this assumes the learner can read a breath.
-    sourceId: 'waveform-anatomy',
-    title: 'Waveform anatomy: three traces, one breath',
-    competencyIds: ['ventilator-waveform-interpretation'],
-    difficulty: 'foundation' as const,
-    curriculumStage: 'orientation' as const,
-    stageOrder: 1,
-  },
-  {
-    sourceId: 'mechanics-load-and-pressure',
-    title: 'Mechanics: load, pressure, and volume',
-    competencyIds: ['ventilator-mechanics'],
-    difficulty: 'foundation' as const,
-    curriculumStage: 'foundation' as const,
-    stageOrder: 1,
-  },
-  {
-    sourceId: 'waveform-reading-sequence',
-    title: 'Waveforms: a repeatable reading sequence',
-    competencyIds: ['ventilator-waveform-interpretation'],
-    difficulty: 'foundation' as const,
-    curriculumStage: 'foundation' as const,
-    stageOrder: 2,
-  },
-  {
-    sourceId: 'modes-and-breath-delivery',
-    title: 'Modes: trigger, target, cycle, and expiration',
-    competencyIds: ['ventilator-setup'],
-    difficulty: 'foundation' as const,
-    curriculumStage: 'orientation' as const,
-    stageOrder: 2,
-  },
-  {
-    sourceId: 'triggering-and-cycling',
-    title: 'Triggering and cycling',
-    competencyIds: ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
-    difficulty: 'intermediate' as const,
-    curriculumStage: 'mechanism' as const,
-    stageOrder: 1,
-  },
-  {
-    sourceId: 'dyssynchrony-mechanisms',
-    title: 'Dyssynchrony: mechanism before label',
-    competencyIds: ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
-    difficulty: 'intermediate' as const,
-    curriculumStage: 'mechanism' as const,
-    stageOrder: 2,
-  },
-  {
-    sourceId: 'oxygenation-response',
-    title: 'Oxygenation: action and consequence',
-    competencyIds: ['ventilator-setup', 'ventilator-safety'],
-    difficulty: 'intermediate' as const,
-    curriculumStage: 'mechanism' as const,
-    stageOrder: 3,
-  },
-  {
-    sourceId: 'ventilation-and-co2',
-    title: 'Ventilation: measured response over time',
-    competencyIds: ['ventilator-mechanics', 'ventilator-safety'],
-    difficulty: 'intermediate' as const,
-    curriculumStage: 'mechanism' as const,
-    stageOrder: 4,
-  },
-  {
-    sourceId: 'safety-reassessment-and-human-factors',
-    title: 'Safety, reassessment, and the whole patient',
-    competencyIds: ['ventilator-troubleshooting', 'ventilator-safety'],
-    difficulty: 'intermediate' as const,
-    curriculumStage: 'application' as const,
-    stageOrder: 1,
-  },
-  {
-    sourceId: 'high-peak-pressure-integration',
-    title: 'High peak pressure: resistance, compliance, auto-PEEP, or patient effort?',
+    sourceId: VENTILATION_FINAL_CHECK_ID,
+    title: 'Final mixed knowledge check',
     description:
-      'Separate the four mechanisms behind one high-pressure alarm using the peak-to-plateau split, the expiratory limb, and the patient.',
+      'Bring the learning path together in new short cases. Commit every answer before explanations and targeted review appear.',
     competencyIds: [
+      'ventilator-setup',
       'ventilator-mechanics',
       'ventilator-waveform-interpretation',
       'ventilator-troubleshooting',
       'ventilator-safety',
     ],
-    difficulty: 'advanced' as const,
-    curriculumStage: 'integration' as const,
-    stageOrder: 1,
-    estimatedMinutes: 14,
-    prerequisiteActivityIds: [
-      'ventilation:learn:waveform-anatomy',
-      'ventilation:learn:mechanics-load-and-pressure',
-      'ventilation:learn:waveform-reading-sequence',
-      'ventilation:learn:modes-and-breath-delivery',
-      'ventilation:learn:triggering-and-cycling',
-      'ventilation:learn:dyssynchrony-mechanisms',
-      'ventilation:learn:oxygenation-response',
-      'ventilation:learn:ventilation-and-co2',
-      'ventilation:learn:safety-reassessment-and-human-factors',
-    ],
+    pathwayIds: ['acute-respiratory-failure'],
+    evidenceIds: ['mechanical-ventilation-source-boundary'],
+    prerequisiteActivityIds: ventilationLearningUnits.map((unit) => `ventilation:learn:${unit.id}`),
+    estimatedMinutes: 12,
+    difficulty: 'advanced',
+    curriculumStage: 'integration',
+    stageOrder: 2,
+    reviewStatus: 'draft',
+    creditPolicy: 'non-credit',
+    completionEvidenceAuthority: 'none',
   },
-].map((seed) => ({
-  estimatedMinutes: 8,
-  ...seed,
-  pathwayIds: ['acute-respiratory-failure'],
-  evidenceIds: ['mechanical-ventilation-source-boundary'],
-  reviewStatus: 'draft' as const,
-  creditPolicy: 'non-credit' as const,
-  completionEvidenceAuthority: 'none' as const,
-}))
-
-const ventilationAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'masked-seeded',
     title: 'Seeded ventilation challenge',
@@ -692,7 +644,7 @@ const ventilationAssessSeeds: readonly ActivitySeed[] = [
     estimatedMinutes: 25,
     difficulty: 'advanced',
     curriculumStage: 'integration',
-    stageOrder: 2,
+    stageOrder: 3,
   },
 ]
 
@@ -702,30 +654,15 @@ const ventilationAssessSeeds: readonly ActivitySeed[] = [
  */
 const mcsLessonSeeds: readonly ActivitySeed[] = (
   [
-    ['mcs-foundations-signals', 'Validate the signal before the device', 'foundation', 1],
-    ['mcs-foundations-mechanisms', 'Unloading, augmentation, and total flow', 'foundation', 2],
-    ['iabp-timing-triggering', 'IABP timing and triggering', 'mechanism', 1],
-    ['iabp-efficacy-limits', 'IABP efficacy, limits, and escalation', 'application', 1],
-    ['impella-unloading-placement', 'Impella unloading and placement signals', 'mechanism', 2],
-    [
-      'impella-suction-purge-rv',
-      'Impella suction, purge, hemolysis, and RV delivery',
-      'application',
-      2,
-    ],
-    ['lvad-parameters-assessment', 'Durable LVAD parameters and ICU review', 'mechanism', 3],
-    [
-      'lvad-alarms-emergencies',
-      'Durable LVAD low flow, high power, and power emergencies',
-      'application',
-      3,
-    ],
-    [
-      'mcs-device-selection-integration',
-      'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
-      'integration',
-      1,
-    ],
+    ['mcs-foundations-signals', 'A pressure that looks fine', 'foundation', 1],
+    ['mcs-foundations-mechanisms', 'Three devices called support', 'foundation', 2],
+    ['iabp-timing-triggering', 'Is the balloon inflating at the right moment?', 'mechanism', 1],
+    ['iabp-efficacy-limits', 'Timed correctly, still not perfusing', 'application', 1],
+    ['impella-unloading-placement', 'Where is the inlet sitting?', 'mechanism', 2],
+    ['impella-suction-purge-rv', 'A suction alarm at high support', 'application', 2],
+    ['lvad-parameters-assessment', 'Speed unchanged, resistance rising', 'mechanism', 3],
+    ['lvad-alarms-emergencies', 'An alarm at an unchanged speed', 'application', 3],
+    ['mcs-device-selection-integration', 'Low output on left-sided support', 'integration', 1],
   ] as const
 ).map(([sourceId, title, curriculumStage, stageOrder]) => ({
   sourceId,

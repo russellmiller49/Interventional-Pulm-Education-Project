@@ -207,7 +207,7 @@ export function LvadAlarmsEmergenciesPanel({
   return (
     <div className={styles.panel} data-teaching-panel={contract.sectionId}>
       <PanelSection title="Active alarms, with their priority in words" id="alarms-band">
-        <AlarmBand alarms={alarms} />
+        <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
         <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
           <LiveSetting
@@ -324,57 +324,74 @@ export function LvadAlarmsEmergenciesPanel({
         />
       </PanelSection>
 
-      <PanelSection
-        title="What a high-power pattern does here, and does not"
-        id="alarms-high-power"
-      >
-        <p className="mt-3 text-sm leading-6" data-high-power-claim>
-          {highPower
-            ? `A suspected high-power pattern is present. Pump power reads ${reading(metrics.pumpPowerW, 1)} W and the displayed flow reads ${reading(metrics.deviceFlowLMin, 1)} L/min, with an effective systemic delivery of ${reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.`
-            : 'No high-power pattern is present in this state.'}{' '}
-          The word this module uses is <em>suspected</em>. A power signature is a pattern, and pump
-          thrombosis is a diagnosis reached from clinical status, power and flow trends, device logs
-          where available, hemolysis evaluation, focused imaging, and evaluation for loading and
-          inflow/outflow causes — never from a power value alone.
-        </p>
-        <ul className="mt-3 grid gap-2 text-xs leading-5" data-high-power-boundaries>
-          <li data-high-power-boundary="flow-unchanged">
-            <span className="font-semibold">
-              In this model the pattern raises power and leaves the delivered flow where it
-              was.{' '}
-            </span>
-            That separation is the signal. This module does not teach the converse. In this model
-            the modeled pattern leaves delivery unchanged, so nothing on this screen establishes any
-            fall in what the patient is receiving.
-          </li>
-          <li data-high-power-boundary="hemolysis">
-            <span className="font-semibold">Hemolysis is not modeled. </span>No value on this screen
-            rises or falls with red-cell destruction, and its absence here is a limit of the model
-            rather than a statement about the state.
-          </li>
-          <li data-high-power-boundary="obstruction">
-            <span className="font-semibold">
-              Physical collapse or progressive obstruction of a flow path is not modeled.{' '}
-            </span>
-            Nothing narrows over time in this simulation, so an unchanging screen is not evidence
-            that a flow path is intact.
-          </li>
-          <li data-high-power-boundary="escalation">
-            <span className="font-semibold">The boundary of this module. </span>Preserve the power
-            path, examine the patient, and bring the mechanical-support team and imaging to the
-            bedside under the current instructions for the implanted device and local protocol.
-            Controller exchange, driveline repair, and device-specific emergency operation are not
-            taught here.
-          </li>
-        </ul>
-        <TextEquivalent>
-          A high-power pattern is {highPower ? 'present' : 'not present'} in this state. In this
-          model it raises the power signature and does not change delivered flow. Hemolysis is not
-          modeled. Physical collapse or progressive obstruction of a flow path is not modeled. The
-          pattern is a reason to preserve power and call the mechanical-support team, not a
-          diagnosis.
-        </TextEquivalent>
-      </PanelSection>
+      {/*
+        What the pattern does to power and to the flow display is this section's prediction, so the
+        whole account waits for the commitment. Before it, the section says only what the word
+        "suspected" means and where the module stops.
+      */}
+      {disclosed ? (
+        <PanelSection
+          title="What a high-power pattern does here, and does not"
+          id="alarms-high-power"
+        >
+          <p className="mt-3 text-sm leading-6" data-high-power-claim>
+            {highPower
+              ? `A suspected high-power pattern is present. Pump power reads ${reading(metrics.pumpPowerW, 1)} W and the displayed flow reads ${reading(metrics.deviceFlowLMin, 1)} L/min, with an effective systemic delivery of ${reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.`
+              : 'No high-power pattern is present in this state.'}{' '}
+            The word this module uses is <em>suspected</em>. A power signature is a pattern, and
+            pump thrombosis is a diagnosis reached from clinical status, power and flow trends,
+            device logs where available, hemolysis evaluation, focused imaging, and evaluation for
+            loading and inflow/outflow causes — never from a power value alone.
+          </p>
+          <ul className="mt-3 grid gap-2 text-xs leading-5" data-high-power-boundaries>
+            <li data-high-power-boundary="flow-unchanged">
+              <span className="font-semibold">
+                In this model the pattern raises power and leaves the delivered flow where it
+                was.{' '}
+              </span>
+              That separation is the signal. This module does not teach the converse. In this model
+              the modeled pattern leaves delivery unchanged, so nothing on this screen establishes
+              any fall in what the patient is receiving.
+            </li>
+            <li data-high-power-boundary="hemolysis">
+              <span className="font-semibold">Hemolysis is not modeled. </span>No value on this
+              screen rises or falls with red-cell destruction, and its absence here is a limit of
+              the model rather than a statement about the state.
+            </li>
+            <li data-high-power-boundary="obstruction">
+              <span className="font-semibold">
+                Physical collapse or progressive obstruction of a flow path is not modeled.{' '}
+              </span>
+              Nothing narrows over time in this simulation, so an unchanging screen is not evidence
+              that a flow path is intact.
+            </li>
+            <li data-high-power-boundary="escalation">
+              <span className="font-semibold">The boundary of this module. </span>Preserve the power
+              path, examine the patient, and bring the mechanical-support team and imaging to the
+              bedside under the current instructions for the implanted device and local protocol.
+              Controller exchange, driveline repair, and device-specific emergency operation are not
+              taught here.
+            </li>
+          </ul>
+          <TextEquivalent>
+            A high-power pattern is {highPower ? 'present' : 'not present'} in this state. In this
+            model it raises the power signature and does not change delivered flow. Hemolysis is not
+            modeled. Physical collapse or progressive obstruction of a flow path is not modeled. The
+            pattern is a reason to preserve power and call the mechanical-support team, not a
+            diagnosis.
+          </TextEquivalent>
+        </PanelSection>
+      ) : (
+        <PanelSection title="What an alarm on this pathway is, and is not" id="alarms-high-power">
+          <p className="mt-3 text-sm leading-6" data-high-power-claim="withheld">
+            The word this module uses for any pattern on this controller is <em>suspected</em>. A
+            signature is a pattern; a diagnosis is reached from clinical status, trends, device logs
+            where available, focused imaging, and evaluation for loading and flow-path causes —
+            never from one value alone. What a pattern does to the readings here is what this
+            section asks you to predict.
+          </p>
+        </PanelSection>
+      )}
 
       {mcsComparesAgainstActionBaseline(reveal) ? (
         <PanelSection title="Before the pattern, and now" id="alarms-before-after">
@@ -411,7 +428,7 @@ export function LvadAlarmsEmergenciesPanel({
                 kind="reasoned"
               />
             </div>
-            <AlarmBand alarms={alarms} />
+            <AlarmBand alarms={alarms} disclosed={disclosed} />
             <TextEquivalent>
               In the transfer patient the external power path is{' '}
               {controller?.powerConnected ? 'connected' : 'not connected'}, pump power reads{' '}

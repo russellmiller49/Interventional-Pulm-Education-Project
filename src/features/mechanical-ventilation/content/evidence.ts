@@ -5,7 +5,13 @@ import type { VentilatorDeviceId } from '../engine/types'
 export interface VentilationEvidenceReference {
   id: string
   deviceId?: VentilatorDeviceId
-  sourceClass: 'manufacturer' | 'curriculum' | 'clinical-reference' | 'educational-model'
+  sourceClass:
+    | 'manufacturer'
+    | 'curriculum'
+    | 'clinical-reference'
+    | 'educational-model'
+    | 'guideline'
+  reviewedAt?: string
   title: string
   citation: string
   sourceUrl?: string
@@ -15,6 +21,35 @@ export interface VentilationEvidenceReference {
 }
 
 export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
+  {
+    id: 'aarc-assessment-2024',
+    sourceClass: 'guideline',
+    reviewedAt: '2026-09-05',
+    title: 'AARC Clinical Practice Guideline: Patient–Ventilator Assessment (2024)',
+    citation: 'Goodfellow LT, et al. Respir Care. 2024;69:1042–1054. doi:10.4187/respcare.12007.',
+    sourceUrl:
+      'https://www.aarc.org/wp-content/uploads/2024/10/patient-ventilator-assessment-aarc-cpg.pdf',
+    supports: [
+      'Assessment of delivered tidal volume using predicted body weight, plateau pressure, PEEP, and auto-PEEP',
+      'Direct bedside patient–ventilator assessment',
+    ],
+    limitations:
+      'General adult assessment guidance; individual settings and emergency care require clinical assessment and current local protocols. Source check is not independent clinical sign-off.',
+  },
+  {
+    id: 'ats-ards-2024',
+    sourceClass: 'guideline',
+    reviewedAt: '2026-09-05',
+    title: 'ATS guideline: Management of Adult Patients with ARDS (2024)',
+    citation:
+      'Qadir N, et al. Am J Respir Crit Care Med. 2024;209:24–36. doi:10.1164/rccm.202311-2011ST.',
+    sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10870893/',
+    supports: [
+      'Adult ARDS: tidal volume 4–8 mL/kg predicted body weight and plateau pressure below 30 cmH₂O',
+    ],
+    limitations:
+      'These exact limits are ARDS-scoped guideline recommendations, not a full ventilator prescription or a guarantee against injury. Source check is not independent clinical sign-off.',
+  },
   ...ventilatorDeviceSources.map((source) => ({
     id: source.id,
     deviceId: source.deviceId,

@@ -9,6 +9,9 @@
  *
  * These tests are the demonstration, and they were written to fail against the workbench as it stood.
  * Each one names the accepted M0–M4 contract it is holding the bar to.
+ *
+ * The workbench hosts Practice and Challenge; the Learn context strip is the lesson stage's, and
+ * the same flow-account claims are held there by its own suites.
  */
 import { fireEvent, screen, within } from '@testing-library/react'
 
@@ -69,7 +72,7 @@ const BALANCE_LABEL = 'Modeled balance and pressure–flow summary'
  * The monitor's flow account: the native, device and effective tiles, as one block of text.
  *
  * Scoped by the authored target rather than by position, so the assertions are about the region a
- * Learn section can point at rather than about which tile happens to be third.
+ * section can point at rather than about which tile happens to be third.
  */
 function monitorFlowAccountText(container: HTMLElement): string {
   const tiles = [...container.querySelectorAll('[data-monitor-target="monitor:flow-account"]')]
@@ -229,33 +232,6 @@ describe('MCS M5 — the patient-context bar reports device flow as the model do
   })
 
   /*
-   * The Learn primary pane carries its own one-line flow summary, above the flow account and the
-   * teaching panel that both say counterpulsation reports nothing. Found in the browser walkthrough,
-   * not in the coverage map: it is the same claim as the context bar's, on a third surface.
-   */
-  it('reports no displayed device contribution in the Learn context strip on counterpulsation', async () => {
-    const { container } = await renderWorkbench({
-      section: 'learn',
-      initialActivityId: 'iabp-timing-triggering',
-    })
-
-    const strip = container.querySelector('[data-learn-context]')?.textContent ?? ''
-    expect(strip).toMatch(/displayed device none reported/)
-    expect(strip).not.toMatch(/displayed device 0\.0/)
-  })
-
-  it('reports the left-sided pump flow in the Learn context strip on a transvalvular pump', async () => {
-    const { container } = await renderWorkbench({
-      section: 'learn',
-      initialActivityId: 'impella-unloading-placement',
-    })
-
-    const strip = container.querySelector('[data-learn-context]')?.textContent ?? ''
-    expect(strip).toMatch(/displayed device \d\.\d L\/min/)
-    expect(strip).not.toMatch(/none reported/)
-  })
-
-  /*
    * The monitor was the last surface still printing the arithmetic zero as a reading. A tile headed
    * DEVICE FLOW showing `0.0 L/min` claims a pump-flow channel that reports nothing, which is the
    * one thing the module says counterpulsation does not have — and it said it directly beside a
@@ -272,10 +248,10 @@ describe('MCS M5 — the patient-context bar reports device flow as the model do
     expect(account).not.toMatch(/DEVICE FLOW[^|]*L\/min/)
   })
 
-  it('reports the same absence on an IABP Learn section, not only on a bare monitor', async () => {
+  it('reports the same absence on an IABP case, not only on the bare studio monitor', async () => {
     const { container } = await renderWorkbench({
-      section: 'learn',
-      initialActivityId: 'iabp-timing-triggering',
+      section: 'practice',
+      initialActivityId: 'IABP-01',
     })
 
     const account = monitorFlowAccountText(container)
@@ -311,17 +287,6 @@ describe('MCS M5 — the patient-context bar reports device flow as the model do
     expect(account).not.toContain('DEVICE FLOW')
     expect(account).not.toContain('NONE REPORTED')
     expect(account).toMatch(/EFFECTIVE FLOW\s*\d+\.\d\s*L\/min/)
-  })
-
-  it('keeps the durable displayed flow marked as an estimate on the section that teaches it', async () => {
-    const { container } = await renderWorkbench({
-      section: 'learn',
-      initialActivityId: 'lvad-parameters-assessment',
-    })
-
-    expect(
-      container.querySelector('[data-flow-line="device"]')?.getAttribute('data-flow-line-kind'),
-    ).toBe('estimated')
   })
 })
 

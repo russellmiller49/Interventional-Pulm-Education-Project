@@ -604,9 +604,15 @@ export function pathwaySentence(pathway: McsPathwayView): string {
 export function AlarmBand({
   alarms,
   emptyLabel = 'No modeled alarm is active in this state.',
+  disclosed = true,
 }: {
   readonly alarms: readonly McsAlarm[]
   readonly emptyLabel?: string
+  /**
+   * Whether each alarm's explanation is printed. An alarm's label is on the monitor already; its
+   * explanation names the mechanism behind it, which before the commitment is the section's answer.
+   */
+  readonly disclosed?: boolean
 }) {
   if (alarms.length === 0) {
     return (
@@ -626,7 +632,7 @@ export function AlarmBand({
         >
           <span className="font-semibold">{alarm.label} — </span>
           <span data-alarm-priority-words>{mcsAlarmPriorityWords[alarm.priority]}</span>.{' '}
-          {alarm.explanation}
+          {disclosed ? alarm.explanation : null}
         </li>
       ))}
     </ul>

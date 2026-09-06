@@ -1,3 +1,4 @@
+import { ventilationLearningUnits } from '@/features/mechanical-ventilation/content/learningCurriculum'
 import type { CriticalCareActivityDefinition } from '@/features/learning-module/activity/types'
 import type { LearningPathway } from '@/features/learning-module/curriculum/types'
 
@@ -218,8 +219,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
     sections: [
       {
         id: 'mcs-foundations-signals',
-        shortTitle: 'Validate',
-        title: 'Validate the signal before the device',
+        shortTitle: 'Pressure and flow',
+        title: 'A pressure that looks fine',
         minutes: 12,
         description:
           'Build a pressure–flow baseline and separate patient, measurement, and device problems.',
@@ -228,8 +229,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'mcs-foundations-mechanisms',
-        shortTitle: 'Separate',
-        title: 'Unloading, augmentation, and total flow',
+        shortTitle: 'Three devices',
+        title: 'Three devices called support',
         minutes: 12,
         description:
           'Distinguish what each mechanism changes before meeting the device that delivers it.',
@@ -239,7 +240,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'iabp-timing-triggering',
         shortTitle: 'IABP timing',
-        title: 'IABP timing and triggering',
+        title: 'Is the balloon inflating at the right moment?',
         minutes: 12,
         description:
           'Place inflation and deflation against the native beat, and match the trigger to signal quality.',
@@ -249,27 +250,27 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'iabp-efficacy-limits',
         shortTitle: 'IABP limits',
-        title: 'IABP efficacy, limits, and escalation',
+        title: 'Timed correctly, still not perfusing',
         minutes: 12,
         description:
-          'Read the assisted beat against the whole circulation and recognize the support ceiling.',
+          'Read the assisted beat against the whole circulation, and decide whether the balloon is the problem.',
         stage: 'application',
         activityId: 'mcs:learn:iabp-efficacy-limits',
       },
       {
         id: 'impella-unloading-placement',
-        shortTitle: 'Impella unloading',
-        title: 'Impella unloading and placement signals',
+        shortTitle: 'Impella flow',
+        title: 'Where is the inlet sitting?',
         minutes: 12,
         description:
-          'Relate performance level and transvalvular position to flow and actual LV unloading.',
+          'The setting has not changed and the flow has fallen: decide what the readings say before any setting is touched.',
         stage: 'mechanism',
         activityId: 'mcs:learn:impella-unloading-placement',
       },
       {
         id: 'impella-suction-purge-rv',
-        shortTitle: 'Impella limits',
-        title: 'Impella suction, purge, hemolysis, and RV delivery',
+        shortTitle: 'Impella suction',
+        title: 'A suction alarm at high support',
         minutes: 12,
         description: 'Work the conditions in which more support produces less effective flow.',
         stage: 'application',
@@ -277,8 +278,8 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       },
       {
         id: 'lvad-parameters-assessment',
-        shortTitle: 'LVAD review',
-        title: 'Durable LVAD parameters and ICU review',
+        shortTitle: 'LVAD flow',
+        title: 'Speed unchanged, resistance rising',
         minutes: 12,
         description: 'Read speed, flow, power, and pulsatility index as one interdependent set.',
         stage: 'mechanism',
@@ -287,17 +288,17 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'lvad-alarms-emergencies',
         shortTitle: 'LVAD alarms',
-        title: 'Durable LVAD low flow, high power, and power emergencies',
+        title: 'An alarm at an unchanged speed',
         minutes: 12,
         description:
-          'Separate opposite loading causes of one low-flow display, and act on power emergencies.',
+          'Decide which of the controller’s readings is the signal when the speed has not changed.',
         stage: 'application',
         activityId: 'mcs:learn:lvad-alarms-emergencies',
       },
       {
         id: 'mcs-device-selection-integration',
         shortTitle: 'Choose',
-        title: 'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
+        title: 'Low output on left-sided support',
         minutes: 18,
         description:
           'Hold all three mechanisms against one phenotype and let the limiting problem select the device.',
@@ -308,110 +309,16 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   },
   {
     moduleId: 'mechanical-ventilation',
-    arcSentence:
-      'Learn to read a breath, then the mechanics behind it, then what the machine and the patient do to each other',
-    sections: [
-      {
-        id: 'waveform-anatomy',
-        shortTitle: 'Anatomy',
-        title: 'Waveform anatomy: three traces, one breath',
-        minutes: 8,
-        description:
-          'What pressure, flow, and volume each plot, what sets the shape of each — and why a volume-targeted breath and a pressure-targeted one look nothing alike.',
-        stage: 'orientation',
-        activityId: 'ventilation:learn:waveform-anatomy',
-      },
-      {
-        id: 'mechanics-load-and-pressure',
-        shortTitle: 'Mechanics',
-        title: 'Mechanics: load, pressure, and volume',
-        minutes: 8,
-        description:
-          'Separate the pressure spent moving gas from the pressure spent distending the respiratory system.',
-        stage: 'foundation',
-        activityId: 'ventilation:learn:mechanics-load-and-pressure',
-      },
-      {
-        id: 'waveform-reading-sequence',
-        shortTitle: 'Waveforms',
-        title: 'Waveforms: a repeatable reading sequence',
-        minutes: 8,
-        description:
-          'Read pressure, flow, volume, and patient effort in a fixed order before naming any pattern.',
-        stage: 'foundation',
-        activityId: 'ventilation:learn:waveform-reading-sequence',
-      },
-      {
-        id: 'modes-and-breath-delivery',
-        shortTitle: 'Modes',
-        title: 'Modes: trigger, target, cycle, and expiration',
-        minutes: 8,
-        description:
-          'Meet the device-facing controls after the physiology they act on, and read a mode by its four variables rather than its name.',
-        stage: 'orientation',
-        activityId: 'ventilation:learn:modes-and-breath-delivery',
-      },
-      {
-        id: 'triggering-and-cycling',
-        shortTitle: 'Timing',
-        title: 'Triggering and cycling',
-        minutes: 8,
-        description:
-          'Localize a timing problem to the start or the end of the breath before labelling it.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:triggering-and-cycling',
-      },
-      {
-        id: 'dyssynchrony-mechanisms',
-        shortTitle: 'Dyssynchrony',
-        title: 'Dyssynchrony: mechanism before label',
-        minutes: 8,
-        description:
-          'State the mechanism and the expected response before applying a dyssynchrony name.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:dyssynchrony-mechanisms',
-      },
-      {
-        id: 'oxygenation-response',
-        shortTitle: 'Oxygenation',
-        title: 'Oxygenation: action and consequence',
-        minutes: 8,
-        description:
-          'Predict the pressure and hemodynamic consequence of an oxygenation change, not only the saturation.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:oxygenation-response',
-      },
-      {
-        id: 'ventilation-and-co2',
-        shortTitle: 'Ventilation',
-        title: 'Ventilation: measured response over time',
-        minutes: 8,
-        description:
-          'Separate what changes immediately at the ventilator from what changes later in the measurement.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:ventilation-and-co2',
-      },
-      {
-        id: 'safety-reassessment-and-human-factors',
-        shortTitle: 'Safety',
-        title: 'Safety, reassessment, and the whole patient',
-        minutes: 8,
-        description:
-          'Keep alarms, examination, communication, comfort, and explicit reassessment inside the action loop.',
-        stage: 'application',
-        activityId: 'ventilation:learn:safety-reassessment-and-human-factors',
-      },
-      {
-        id: 'high-peak-pressure-integration',
-        shortTitle: 'Localize',
-        title: 'High peak pressure: resistance, compliance, auto-PEEP, or patient effort?',
-        minutes: 14,
-        description:
-          'One alarm, four mechanisms: use the peak-to-plateau split, the expiratory limb, and the patient to separate them.',
-        stage: 'integration',
-        activityId: 'ventilation:learn:high-peak-pressure-integration',
-      },
-    ],
+    arcSentence: 'Follow a normal breath, build the mechanisms, then reason from the whole patient',
+    sections: ventilationLearningUnits.map((unit) => ({
+      id: unit.id,
+      shortTitle: unit.shortTitle,
+      title: unit.title,
+      minutes: unit.minutes,
+      description: unit.outcome,
+      stage: unit.stage,
+      activityId: `ventilation:learn:${unit.id}`,
+    })),
   },
   {
     moduleId: 'icu-simulation',

@@ -12,11 +12,13 @@ import styles from './mechanical-ventilation.module.css'
 const sourceLabels = {
   manufacturer: 'Manufacturer source',
   curriculum: 'Supplied curriculum',
+  guideline: 'Clinical guideline',
   'clinical-reference': 'Casebook clinical source',
   'educational-model': 'Educational model',
 } as const
 
 const sourceIcons = {
+  guideline: FileCheck2,
   manufacturer: ShieldCheck,
   curriculum: BookOpen,
   'clinical-reference': FileCheck2,

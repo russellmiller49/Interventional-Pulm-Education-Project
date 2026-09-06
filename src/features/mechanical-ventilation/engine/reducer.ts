@@ -3,7 +3,7 @@ import {
   createDefaultMechanicalVentilationSettings,
   getVentilatorDeviceProfile,
 } from '../content/deviceProfiles'
-import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content/runtimeCases'
+import { resolveVentilationSimulationCase } from '../content/learningPatient'
 import {
   clamp,
   deriveEffectivePatient,
@@ -24,7 +24,7 @@ import type {
 import { canonicalModeForVentilatorMode, cloneMechanicalVentilationSettings } from './modes'
 
 function caseDefinition(state: VentilationSimulationState): VentilationCaseDefinition {
-  return mechanicalVentilationCaseById.get(state.caseId) ?? mechanicalVentilationCases[0]
+  return resolveVentilationSimulationCase(state.caseId)
 }
 
 function numeric(value: number | string | boolean, fallback: number): number {

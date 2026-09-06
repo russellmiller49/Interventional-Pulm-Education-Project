@@ -22,7 +22,7 @@
 
 @media (min-width: 1024px) and (min-height: 700px) {
   .moduleShell[data-activity-mode='true'] {
-    height: calc(100dvh - 4rem);
+    height: calc(100dvh - var(--site-header-height, 4rem));
     min-height: 0;
     overflow: hidden;
     padding: 0;

@@ -155,9 +155,11 @@ function PressureVolumeLoop({ samples }: { samples: readonly McsWaveformSample[]
 function TrendPlot({
   state,
   targetProps,
+  withholdFlow = false,
 }: {
   state: McsSimulationState
   targetProps?: Record<string, string>
+  withholdFlow?: boolean
 }) {
   const recent = state.trends.slice(-160)
   const mapPath = linePath(
@@ -204,30 +206,34 @@ function TrendPlot({
       >
         <path d="M0 30 H640 M0 75 H640 M0 120 H640" className={styles.monitorGridLine} />
         <path data-series="map" d={mapPath} fill="none" stroke="#ff7185" strokeWidth="2.5" />
-        <path
-          data-series="effective-flow"
-          d={flowPath}
-          fill="none"
-          stroke="#6ee7f2"
-          strokeWidth="2.5"
-          strokeDasharray="12 3"
-        />
-        <path
-          data-series="left-pump"
-          d={leftDevicePath}
-          fill="none"
-          stroke="#f4c66e"
-          strokeWidth="2"
-          strokeDasharray="6 5"
-        />
-        <path
-          data-series="right-pump"
-          d={rightDevicePath}
-          fill="none"
-          stroke="#b788ff"
-          strokeWidth="2"
-          strokeDasharray="3 4"
-        />
+        {withholdFlow ? null : (
+          <>
+            <path
+              data-series="effective-flow"
+              d={flowPath}
+              fill="none"
+              stroke="#6ee7f2"
+              strokeWidth="2.5"
+              strokeDasharray="12 3"
+            />
+            <path
+              data-series="left-pump"
+              d={leftDevicePath}
+              fill="none"
+              stroke="#f4c66e"
+              strokeWidth="2"
+              strokeDasharray="6 5"
+            />
+            <path
+              data-series="right-pump"
+              d={rightDevicePath}
+              fill="none"
+              stroke="#b788ff"
+              strokeWidth="2"
+              strokeDasharray="3 4"
+            />
+          </>
+        )}
       </svg>
     </figure>
   )
@@ -241,11 +247,27 @@ export function McsMonitor({
   state,
   revealCausality = true,
   highlightTarget,
+  highlightNote = true,
+  withheldNote,
+  withholdFlowAccount = false,
 }: {
   state: McsSimulationState
   revealCausality?: boolean
   /** The authored Learn target to emphasize, when this monitor is a section's primary surface. */
   highlightTarget?: McsMonitorTargetId
+  /**
+   * Whether the highlighted target's text equivalent is printed. The lesson stage highlights the
+   * region before the prediction but prints its words only after: several equivalents state what
+   * the reading is made from, which is the answer a section is asking for.
+   */
+  highlightNote?: boolean
+  /** What the causal callout says while causality is withheld; the case-workflow wording otherwise. */
+  withheldNote?: string
+  /**
+   * Cover the three flow lines — native, device and effective — and their trend. A section whose
+   * prediction is "what will the flow account show" cannot have the account on screen while it asks.
+   */
+  withholdFlowAccount?: boolean
 }) {
   const metrics = state.metrics
   const activeAlarms = state.alarms.filter((alarm) => alarm.active)
@@ -277,7 +299,7 @@ export function McsMonitor({
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>
-      {highlighted ? (
+      {highlighted && highlightNote ? (
         <p className={styles.surfaceHighlightNote} data-monitor-highlight-note>
           <strong>Look here now:</strong> {highlighted.label}. {highlighted.textEquivalent}
         </p>
@@ -340,13 +362,31 @@ export function McsMonitor({
             targetProps={target('monitor:filling-pressures', highlightTarget)}
           />
         </div>
-        <div className={styles.metricGrid} aria-label="Current hemodynamic values" role="group">
-          <div data-color="native" {...target('monitor:flow-account', highlightTarget)}>
-            <span>NATIVE FLOW</span>
-            <strong>{metric(metrics.nativeFlowLMin, 1)}</strong>
-            <small>L/min</small>
-          </div>
-          {state.device.kind === 'impella' ? (
+        <div
+          className={styles.metricGrid}
+          aria-label="Current hemodynamic values"
+          role="group"
+          data-flow-account-withheld={withholdFlowAccount || undefined}
+        >
+          {withholdFlowAccount ? (
+            <div
+              data-color="native"
+              data-withheld
+              {...target('monitor:flow-account', highlightTarget)}
+            >
+              <span>FLOW ACCOUNT</span>
+              <strong>—</strong>
+              <small>covered until you have committed your prediction</small>
+            </div>
+          ) : null}
+          {withholdFlowAccount ? null : (
+            <div data-color="native" {...target('monitor:flow-account', highlightTarget)}>
+              <span>NATIVE FLOW</span>
+              <strong>{metric(metrics.nativeFlowLMin, 1)}</strong>
+              <small>L/min</small>
+            </div>
+          )}
+          {withholdFlowAccount ? null : state.device.kind === 'impella' ? (
             <>
               <div data-color="left-device" {...target('monitor:flow-account', highlightTarget)}>
                 <span>LV PUMP FLOW</span>
@@ -390,11 +430,13 @@ export function McsMonitor({
               </small>
             </div>
           )}
-          <div data-color="effective" {...target('monitor:flow-account', highlightTarget)}>
-            <span>EFFECTIVE FLOW</span>
-            <strong>{metric(metrics.effectiveSystemicFlowLMin, 1)}</strong>
-            <small>L/min</small>
-          </div>
+          {withholdFlowAccount ? null : (
+            <div data-color="effective" {...target('monitor:flow-account', highlightTarget)}>
+              <span>EFFECTIVE FLOW</span>
+              <strong>{metric(metrics.effectiveSystemicFlowLMin, 1)}</strong>
+              <small>L/min</small>
+            </div>
+          )}
           <div>
             <span>MAP / PP</span>
             <strong>
@@ -481,13 +523,23 @@ export function McsMonitor({
       </section>
       <div className={styles.chartGrid}>
         <PressureVolumeLoop samples={state.waveforms} />
-        <TrendPlot state={state} targetProps={target('monitor:response-trend', highlightTarget)} />
+        <TrendPlot
+          state={state}
+          targetProps={target('monitor:response-trend', highlightTarget)}
+          withholdFlow={withholdFlowAccount}
+        />
       </div>
       <p className={styles.causalCallout}>
-        <strong>{revealCausality ? 'Why the display changed:' : 'Challenge mode:'}</strong>{' '}
+        <strong>
+          {revealCausality
+            ? 'Why the display changed:'
+            : withheldNote
+              ? 'Withheld for now:'
+              : 'Challenge mode:'}
+        </strong>{' '}
         {revealCausality
           ? state.causalExplanation
-          : 'Causal coaching is withheld until you complete the reassessment.'}
+          : (withheldNote ?? 'Causal coaching is withheld until you complete the reassessment.')}
       </p>
       {revealCausality && activeAlarms.length > 0 ? (
         <div className={styles.alarmExplanations} {...target('monitor:alarms', highlightTarget)}>

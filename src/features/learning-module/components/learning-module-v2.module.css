@@ -197,7 +197,7 @@
   --lm-v2-accent: #0369a1;
   --lm-v2-accent-contrast: #f8fafc;
   display: grid;
-  min-height: calc(100dvh - 4rem);
+  min-height: calc(100dvh - var(--site-header-height, 4rem));
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
@@ -606,7 +606,7 @@
 
 .activityShell[data-layout='didactic-lesson'] {
   height: auto;
-  min-height: calc(100dvh - 4rem);
+  min-height: calc(100dvh - var(--site-header-height, 4rem));
   overflow: visible;
 }
 

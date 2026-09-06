@@ -4,51 +4,63 @@ import { setRequestLocale } from 'next-intl/server'
 import { criticalCareActivities } from '@/features/critical-care/content/activities'
 import { criticalCareCatalogActivityHref } from '@/features/critical-care/content/activityRoutes'
 
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame', () => ({
+  MechanicalVentilationModuleFrame: ({
+    activeHref,
+    children,
+  }: {
+    activeHref: string
+    children: React.ReactNode
+  }) => (
+    <div data-testid="ventilation-frame" data-active={activeHref}>
+      {children}
+    </div>
+  ),
+}))
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationHub', () => ({
+  MechanicalVentilationHub: ({ locale }: { locale: string }) => (
+    <div data-testid="ventilation-hub" data-locale={locale} />
+  ),
+}))
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationLearnLanding', () => ({
+  MechanicalVentilationLearnLanding: ({
+    locale,
+    unknownActivity,
+  }: {
+    locale: string
+    unknownActivity?: string
+  }) => (
+    <div data-testid="ventilation-learn-landing" data-locale={locale}>
+      {unknownActivity ? 'Unknown section' : null}
+    </div>
+  ),
+}))
+jest.mock('@/features/mechanical-ventilation/components/stage/VentilationStageHost', () => ({
+  VentilationStageHost: ({ unitId, locale }: { unitId: string; locale: string }) => (
+    <div data-testid="ventilation-lesson" data-id={unitId} data-locale={locale} />
+  ),
+}))
 jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2',
+  '@/features/mechanical-ventilation/components/MechanicalVentilationPracticePicker',
   () => ({
-    MechanicalVentilationModuleFrameV2: ({
-      activeHref,
-      children,
+    MechanicalVentilationPracticePicker: ({
+      compatibilityNotice,
+      requestedCaseId,
     }: {
-      activeHref: string
-      children: React.ReactNode
+      compatibilityNotice?: string
+      requestedCaseId?: string
     }) => (
-      <div data-testid="ventilation-frame" data-active={activeHref}>
-        {children}
+      <div data-testid="ventilation-practice-setup" data-case={requestedCaseId}>
+        {compatibilityNotice}
       </div>
     ),
   }),
 )
-jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationOverviewV2', () => ({
-  MechanicalVentilationOverviewV2: () => <div data-testid="ventilation-overview" />,
+jest.mock('@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck', () => ({
+  MechanicalVentilationCourseCheck: ({ kind }: { kind: string }) => (
+    <div data-testid="ventilation-assess-setup" data-kind={kind} />
+  ),
 }))
-jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLandingV2',
-  () => ({ MechanicalVentilationLearnLandingV2: () => <div data-testid="ventilation-learn" /> }),
-)
-jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationLessonActivity',
-  () => ({
-    MechanicalVentilationLessonActivity: ({
-      lesson,
-      locale,
-    }: {
-      lesson: { id: string }
-      locale: string
-    }) => <div data-testid="ventilation-lesson" data-id={lesson.id} data-locale={locale} />,
-  }),
-)
-jest.mock(
-  '@/features/mechanical-ventilation/components/MechanicalVentilationPracticeSetupV2',
-  () => ({
-    MechanicalVentilationPracticeSetupV2: ({
-      compatibilityNotice,
-    }: {
-      compatibilityNotice?: string
-    }) => <div data-testid="ventilation-practice-setup">{compatibilityNotice}</div>,
-  }),
-)
 jest.mock(
   '@/features/mechanical-ventilation/components/MechanicalVentilationAssessSetupV2',
   () => ({
@@ -56,7 +68,7 @@ jest.mock(
       compatibilityNotice,
     }: {
       compatibilityNotice?: string
-    }) => <div data-testid="ventilation-assess-setup">{compatibilityNotice}</div>,
+    }) => <div data-testid="ventilation-challenge-setup">{compatibilityNotice}</div>,
   }),
 )
 jest.mock(
@@ -102,11 +114,7 @@ describe('mechanical ventilation route family', () => {
   it.each(['en', 'es', 'zh-CN'])('renders the localized overview for %s', async (locale) => {
     render(await MechanicalVentilationPage({ params: Promise.resolve({ locale }) }))
     expect(localeMock).toHaveBeenCalledWith(locale)
-    expect(screen.getByTestId('ventilation-frame')).toHaveAttribute(
-      'data-active',
-      '/mechanical-ventilation',
-    )
-    expect(screen.getByTestId('ventilation-overview')).toBeInTheDocument()
+    expect(screen.getByTestId('ventilation-hub')).toHaveAttribute('data-locale', locale)
   })
 
   it('opens a known focused lesson and safely falls back for an unknown lesson', async () => {
@@ -128,8 +136,8 @@ describe('mechanical ventilation route family', () => {
         searchParams: Promise.resolve({ activity: 'unknown' }),
       }),
     )
-    expect(screen.getByTestId('ventilation-learn')).toBeInTheDocument()
-    expect(screen.getByText(/Unknown lesson/i)).toBeInTheDocument()
+    expect(screen.getByTestId('ventilation-learn-landing')).toBeInTheDocument()
+    expect(screen.getByText(/Unknown section/i)).toBeInTheDocument()
   })
 
   it('loads a validated fixed-device practice case and rejects incomplete deep links', async () => {
@@ -185,7 +193,8 @@ describe('mechanical ventilation route family', () => {
         searchParams: Promise.resolve({ case: 'MV-01', seed: 'bad seed', device: 'hamilton-c6' }),
       }),
     )
-    expect(screen.getByTestId('ventilation-assess-setup')).toHaveTextContent(
+    expect(screen.getByTestId('ventilation-assess-setup')).toHaveAttribute('data-kind', 'final')
+    expect(screen.getByTestId('ventilation-challenge-setup')).toHaveTextContent(
       /missing or incompatible/i,
     )
   })

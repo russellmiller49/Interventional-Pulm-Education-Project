@@ -2,7 +2,13 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { getCriticalCareResumeTarget } from '@/features/critical-care/progress'
-import { mcsCapstoneScenarios, mcsSources } from '../content'
+import {
+  MCS_RECOMMENDED_FIRST_SECTION_ID,
+  mcsCapstoneScenarios,
+  mcsDeviceProfiles,
+  mcsSources,
+  mcsSupportPathwayCards,
+} from '../content'
 
 const mockRouterPush = jest.fn()
 
@@ -20,8 +26,8 @@ jest.mock('@/i18n/navigation', () => ({
 }))
 /*
  * The WebGL canvas is stubbed, but the authored pathway summary is not: it carries the anatomy
- * highlight targets a Learn section points at, and stubbing it away would let a section point at a
- * region that does not render.
+ * highlight targets a case points at, and stubbing it away would let a case point at a region that
+ * does not render.
  */
 jest.mock('../components/McsAnatomy3D', () => {
   const { McsAnatomyPathwaySummary } = jest.requireActual<
@@ -56,8 +62,18 @@ import { McsWorkbench } from '../components/McsWorkbench'
 
 const progressKey = 'interventionalpulm:mcs-progress:v1'
 
-function savedLessonIds(): readonly string[] {
-  return JSON.parse(window.localStorage.getItem(progressKey) ?? '{}').completedLessonIds ?? []
+/**
+ * Renders the hub and lets its deferred reads land.
+ *
+ * The Continue call to action and the pathway accordion read stored progress in a `setTimeout(0)`,
+ * so a resolved promise is not enough: the macrotask has to run before the CTA is resolved.
+ */
+async function renderHub() {
+  const view = render(<McsHub />)
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 5))
+  })
+  return view
 }
 
 describe('Mechanical Circulatory Support learner interface', () => {
@@ -82,44 +98,20 @@ describe('Mechanical Circulatory Support learner interface', () => {
 
   afterEach(() => jest.useRealTimers())
 
-  it('links each home-page card to its matching learning track', async () => {
-    await act(async () => {
-      render(<McsHub />)
-    })
-    const tracks = screen
-      .getByRole('heading', { name: /See what the device moves/i })
-      .closest('section')
-    expect(tracks).not.toBeNull()
+  it('links each device reference card to that device track, which opens on its first section', async () => {
+    const { container } = await renderHub()
+    const devices = container.querySelector('[data-reference="devices"]')
+    expect(devices).not.toBeNull()
 
-    for (const [heading, device] of [
-      ['Intra-aortic balloon pump', 'iabp'],
-      ['Impella CP, 5.5, and RP support', 'impella'],
-      ['Durable continuous-flow LVAD', 'lvad'],
-    ] as const) {
-      const card = within(tracks!).getByRole('heading', { name: heading }).closest('article')
+    for (const profile of mcsDeviceProfiles) {
+      const card = within(devices as HTMLElement)
+        .getByRole('heading', { name: profile.displayName })
+        .closest('article')
       expect(card).not.toBeNull()
-      expect(within(card!).getByRole('link', { name: /Enter track/i })).toHaveAttribute(
-        'href',
-        `/mechanical-circulatory-support/learn?device=${device}`,
-      )
+      expect(
+        within(card!).getByRole('link', { name: /Open the first section on this device/i }),
+      ).toHaveAttribute('href', `/mechanical-circulatory-support/learn?device=${profile.kind}`)
     }
-  })
-
-  // Learn shows the ordered pathway rail instead of the device tabs, so a device deep link is
-  // expressed as the pathway section it opens.
-  it.each([
-    ['impella', /^5\. Impella unloading and placement signals/i],
-    ['lvad', /^7\. Durable LVAD parameters and ICU review/i],
-  ] as const)('initializes the %s track at its first device section', (device, sectionName) => {
-    render(<McsWorkbench section="learn" initialDevice={device} />)
-
-    expect(
-      screen.queryByRole('navigation', { name: /Choose device track/i }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: sectionName })).toHaveAttribute(
-      'aria-current',
-      'step',
-    )
   })
 
   it('opens an exact practice deep link and exposes it through global Continue', async () => {
@@ -292,111 +284,6 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(lifecycleInteractions).not.toContain('critical_care_transfer_completed')
   })
 
-  it('walks a Learn section through all six phases before it is recorded', async () => {
-    render(<McsWorkbench section="learn" />)
-    const rail = screen.getByRole('navigation', { name: /MCS learning pathway sections/i })
-    // Eight device sections plus the cross-device integration capstone (WP10 §5.3).
-    expect(within(rail).getAllByRole('button')).toHaveLength(9)
-    expect(screen.queryByRole('button', { name: /Mark lesson complete/i })).not.toBeInTheDocument()
-
-    // Recognize.
-    fireEvent.click(screen.getByRole('radio', { name: /The displayed device contribution/i }))
-    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
-    expect(savedLessonIds()).toEqual([])
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
-
-    // Predict: committing shows the verdict and does not advance on its own.
-    fireEvent.click(
-      screen.getByRole('radio', { name: /A native contribution, an effective systemic delivery/i }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
-    expect(screen.getByText(/That read holds/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /^Predict — step 2 of 6$/ })).toBeInTheDocument()
-    expect(savedLessonIds()).toEqual([])
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the task/i }))
-
-    // Act: this section is inspect-only and says so.
-    expect(screen.getByText(/No adjustment is expected in this section/i)).toBeInTheDocument()
-    for (const label of [
-      'Read the arterial pressure',
-      'Read the filling pressures and right-sided delivery',
-      'Read the device and effective flow',
-    ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
-    }
-    expect(savedLessonIds()).toEqual([])
-    fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
-
-    // Observe reads from the resulting live state. The learner-action pane's own comparison, which
-    // is the one this phase is built around — the teaching pane now carries a second, richer
-    // comparison of its own, so the query names the table it means.
-    const beforeAfter = document.querySelector<HTMLElement>('[data-before-after]')!
-    expect(beforeAfter).not.toBeNull()
-    expect(within(beforeAfter).getByText('Effective systemic delivery')).toBeInTheDocument()
-    expect(within(beforeAfter).getByText('Displayed device contribution')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the explanation/i }))
-
-    // Explain connects the ladder and names what the section does not establish.
-    expect(screen.getByText('This does not establish')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the transfer patient/i }))
-
-    // Transfer: a response and the paired live work are both required.
-    expect(savedLessonIds()).toEqual([])
-    fireEvent.click(
-      screen.getByRole('radio', { name: /Reassess the patient, validate the pressure signal/i }),
-    )
-    expect(screen.getByRole('button', { name: 'Commit this transfer answer' })).toBeDisabled()
-    for (const label of [
-      'Read the arterial pressure',
-      'Read the filling pressures and right-sided delivery',
-      'Read the device and effective flow',
-    ]) {
-      fireEvent.click(screen.getByRole('button', { name: label }))
-    }
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this transfer answer' }))
-
-    await waitFor(() => expect(savedLessonIds()).toContain('mcs-foundations-signals'))
-    expect(screen.getByRole('region', { name: 'Section worked through' })).toBeInTheDocument()
-    expect(screen.getByText(/records participation in an educational module/i)).toBeInTheDocument()
-  })
-
-  it('continues from a worked-through Impella section to the next Impella section', async () => {
-    render(<McsWorkbench section="learn" initialDevice="impella" />)
-
-    fireEvent.click(screen.getByRole('radio', { name: /The left ventricle is relieved directly/i }))
-    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
-    fireEvent.click(screen.getByRole('radio', { name: /Displayed pump flow falls by about half/i }))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the task/i }))
-
-    // The adjustment phase points at one real control, and Continue waits for it.
-    expect(screen.getByRole('button', { name: /Continue to what changed/i })).toBeDisabled()
-    fireEvent.change(screen.getByRole('combobox', { name: 'Placement state' }), {
-      target: { value: 'too-deep' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /Continue to what changed/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the explanation/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the transfer patient/i }))
-
-    fireEvent.click(screen.getByRole('radio', { name: /The pump is pressure-gradient dependent/i }))
-    fireEvent.click(screen.getByRole('button', { name: 'Read the device and effective flow' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this transfer answer' }))
-
-    const continueButton = await screen.findByRole('button', {
-      name: /Continue to the next section: Impella suction, purge, hemolysis, and RV delivery/i,
-    })
-    fireEvent.click(continueButton)
-    expect(
-      screen.getAllByRole('heading', {
-        name: 'Impella suction, purge, hemolysis, and RV delivery',
-      }).length,
-    ).toBeGreaterThan(0)
-    expect(
-      screen.getAllByText(/where a right-sided pump returns the blood it draws/i).length,
-    ).toBeGreaterThan(0)
-  })
-
   it('keeps capstones open, named, and source-visible regardless of local history', async () => {
     const baseProgress = {
       version: 1,
@@ -452,83 +339,69 @@ describe('Mechanical Circulatory Support learner interface', () => {
   })
 
   it('shows the reviewed-English fallback on non-English routes', () => {
-    render(<McsWorkbench section="learn" locale="es" />)
+    render(<McsWorkbench section="practice" locale="es" />)
     expect(screen.getByText(/Reviewed-English fallback/i)).toBeInTheDocument()
   })
 
-  describe('the common model comes before the device-specific controls (M0/M1)', () => {
+  describe('the module front door (M0/M1)', () => {
     function precedesInDocument(first: Element, second: Element): boolean {
       return Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
     }
 
-    it('carries the model in the teaching pane, after the live surface and before the task', () => {
-      const { container } = render(<McsWorkbench section="learn" />)
-
-      const model = container.querySelector('[data-mcs-common-model="root"]')
-      expect(model).not.toBeNull()
-
-      // Pane order is primary surface → teaching → learner action, and the model sits in the
-      // teaching pane rather than above a simulator that no longer exists on this surface.
-      const primary = screen.getByRole('region', { name: /Live monitor panel/i })
-      const teaching = screen.getByRole('region', { name: /Teaching panel/i })
-      const action = screen.getByRole('region', { name: /Your turn panel/i })
-      expect(precedesInDocument(primary, teaching)).toBe(true)
-      expect(precedesInDocument(teaching, action)).toBe(true)
-      expect(teaching.contains(model)).toBe(true)
-
-      // The device-specific controls are not on this surface at all until the act phase asks for
-      // them, so the model cannot be buried beneath them.
+    it('opens on one Continue that resolves to the recommended first section, and locks nothing', async () => {
+      const { container } = await renderHub()
+      const cta = container.querySelector('[data-mcs-continue]')
+      expect(cta).toHaveAttribute('data-mcs-continue', 'resolved')
+      expect(cta).toHaveAttribute(
+        'href',
+        `/mechanical-circulatory-support/learn?lesson=${MCS_RECOMMENDED_FIRST_SECTION_ID}`,
+      )
+      expect(container.querySelectorAll('[data-mcs-continue]')).toHaveLength(1)
+      // Every section is its own link from the map, and no gate exists anywhere on the door.
       expect(
-        screen.queryByRole('region', { name: /Patient and mechanical-support controls/i }),
-      ).not.toBeInTheDocument()
+        container.querySelectorAll('[data-pathway-accordion] [data-kind="section"] a'),
+      ).toHaveLength(9)
+      expect(container.querySelector('[data-locked="true"]')).toBeNull()
+      expect(container.querySelectorAll('a[aria-disabled="true"]')).toHaveLength(0)
     })
 
-    it('shows all four levels, all three flow lines, and the additivity warning', () => {
-      const { container } = render(<McsWorkbench section="learn" />)
+    it('keeps the common model ahead of the device cards in the reference block', async () => {
+      const { container } = await renderHub()
+      const model = container.querySelector('[data-reference="common-model"]')
+      const devices = container.querySelector('[data-reference="devices"]')
+      expect(model).not.toBeNull()
+      expect(devices).not.toBeNull()
+      expect(model!.querySelector('[data-mcs-common-model="root"]')).not.toBeNull()
+      expect(precedesInDocument(model!, devices!)).toBe(true)
+    })
+
+    it('carries all four levels, all three flow lines, and the additivity warning in the model', async () => {
+      const { container } = await renderHub()
+      const model = container.querySelector('[data-reference="common-model"]') as HTMLElement
 
       for (const level of ['Pressure', 'Flow', 'Oxygen delivery', 'Organ response']) {
         expect(
           within(
-            container.querySelector('[data-mcs-common-model="causal-ladder"]') as HTMLElement,
+            model.querySelector('[data-mcs-common-model="causal-ladder"]') as HTMLElement,
           ).getByText(level),
         ).toBeInTheDocument()
       }
-      const account = container.querySelector(
-        '[data-mcs-common-model="flow-account"]',
-      ) as HTMLElement
+      const account = model.querySelector('[data-mcs-common-model="flow-account"]') as HTMLElement
       for (const line of ['native', 'device-displayed', 'effective-systemic']) {
         expect(account.querySelector(`[data-flow-line="${line}"]`)).not.toBeNull()
       }
-      expect(container.querySelector('[data-mcs-common-model="additivity-warning"]')).not.toBeNull()
-      // Counterpulsation reports no flow, so the displayed-device line must not be labelled an
-      // estimate — that would give a number that does not exist a provenance it cannot have.
-      expect(
-        account
-          .querySelector('[data-flow-line="device-displayed"] [data-value-type]')
-          ?.getAttribute('data-value-type'),
-      ).toBe('no device flow reported')
-      expect(
-        account
-          .querySelector('[data-flow-line="effective-systemic"] [data-value-type]')
-          ?.getAttribute('data-value-type'),
-      ).toBe('inferred')
-      expect(screen.getByText(/not automatically additive/i)).toBeInTheDocument()
+      expect(model.querySelector('[data-mcs-common-model="additivity-warning"]')).not.toBeNull()
+      expect(within(model).getByText(/not automatically additive/i)).toBeInTheDocument()
       // Seven questions, in order, before anything device-specific.
       expect(
-        container.querySelectorAll('[data-mcs-common-model="questions"] [data-question-order]'),
+        model.querySelectorAll('[data-mcs-common-model="questions"] [data-question-order]'),
       ).toHaveLength(7)
     })
 
-    it('carries the standardized pathway cards on the mechanisms section only', () => {
-      const { container, unmount } = render(<McsWorkbench section="learn" />)
-      expect(container.querySelector('[data-mcs-pathway-cards]')).toBeNull()
-      unmount()
-
-      const mechanisms = render(
-        <McsWorkbench section="learn" initialActivityId="mcs-foundations-mechanisms" />,
-      )
-      const cards = mechanisms.container.querySelectorAll('[data-pathway-id]')
-      expect(cards).toHaveLength(8)
+    it('carries the standardized pathway cards, every field on every card', async () => {
+      const { container } = await renderHub()
+      const cards = container.querySelectorAll('[data-reference="pathways"] [data-pathway-id]')
+      expect(cards).toHaveLength(mcsSupportPathwayCards.length)
       // Every card answers the same fields, so the same field markers appear on each one.
       for (const card of Array.from(cards)) {
         for (const field of [
@@ -551,54 +424,10 @@ describe('Mechanical Circulatory Support learner interface', () => {
         }
         expect(card.querySelector('[data-not-a-target]')).not.toBeNull()
       }
-      mechanisms.unmount()
-    })
-
-    it('leaves the model out of the device-specific sections', () => {
-      const { container } = render(
-        <McsWorkbench section="learn" initialActivityId="iabp-timing-triggering" />,
-      )
-      expect(container.querySelector('[data-mcs-common-model="root"]')).toBeNull()
-      expect(container.querySelector('[data-mcs-pathway-cards]')).toBeNull()
-    })
-  })
-
-  describe('the module front door (M0/M1)', () => {
-    it('states the recommended first section without locking any other', async () => {
-      await act(async () => {
-        render(<McsHub />)
-      })
-      expect(
-        screen.getByRole('link', { name: /Open the recommended first section/i }),
-      ).toHaveAttribute(
-        'href',
-        '/mechanical-circulatory-support/learn?lesson=mcs-foundations-signals',
-      )
-      // Every device track link stays open from the front door.
-      expect(screen.getAllByRole('link', { name: /Enter track/i })).toHaveLength(3)
-    })
-
-    it('puts the common model before the product tracks', async () => {
-      let container!: HTMLElement
-      await act(async () => {
-        container = render(<McsHub />).container
-      })
-      const model = container.querySelector('[data-mcs-common-model="root"]')
-      const tracks = screen
-        .getByRole('heading', { name: /See what the device moves/i })
-        .closest('section')
-      expect(model).not.toBeNull()
-      expect(tracks).not.toBeNull()
-      expect(
-        Boolean(model!.compareDocumentPosition(tracks!) & Node.DOCUMENT_POSITION_FOLLOWING),
-      ).toBe(true)
     })
 
     it('keeps the release checklist behind a reviewer layer and the preview warning in front', async () => {
-      let container!: HTMLElement
-      await act(async () => {
-        container = render(<McsHub />).container
-      })
+      const { container } = await renderHub()
       const governance = container.querySelector('[data-review-governance]')
       expect(governance).not.toBeNull()
       // The warning a learner must see is not inside the collapsed layer.
@@ -613,17 +442,6 @@ describe('Mechanical Circulatory Support learner interface', () => {
       expect(
         within(reviewerLayer as HTMLElement).getByText(/Publication awaits review/i),
       ).toBeInTheDocument()
-    })
-
-    it('derives the track counts instead of writing them down', async () => {
-      await act(async () => {
-        render(<McsHub />)
-      })
-      // Two device sections, three practice cases, one harder case per track — derived, so the
-      // hand-written "2 device lessons" cannot drift from the arrays again.
-      expect(screen.getAllByText('2 device sections')).toHaveLength(3)
-      expect(screen.getAllByText('3 cases')).toHaveLength(3)
-      expect(screen.getAllByText('1 harder case')).toHaveLength(3)
     })
   })
 })

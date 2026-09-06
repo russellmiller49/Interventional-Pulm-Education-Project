@@ -270,7 +270,11 @@ export function IabpTimingTriggeringPanel({
           value of it.
         </ModelBoundary>
 
-        <AlarmBand alarms={alarms} emptyLabel="No modeled timing alarm is active." />
+        <AlarmBand
+          alarms={alarms}
+          disclosed={disclosed}
+          emptyLabel="No modeled timing alarm is active."
+        />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
 
@@ -383,7 +387,11 @@ export function IabpTimingTriggeringPanel({
                 kind="displayed"
               />
             </div>
-            <AlarmBand alarms={alarms} emptyLabel="No modeled timing alarm is active." />
+            <AlarmBand
+              alarms={alarms}
+              disclosed={disclosed}
+              emptyLabel="No modeled timing alarm is active."
+            />
             <TextEquivalent>
               In the transfer patient the rhythm is {state.patient.rhythm}, the trigger is{' '}
               {timing.triggerSource}, the assist ratio is {timing.assistRatio}, and timing synchrony

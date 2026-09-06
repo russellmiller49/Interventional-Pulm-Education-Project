@@ -1,26 +1,26 @@
 import { act, render, screen, within } from '@testing-library/react'
-import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-const mockRouterPush = jest.fn()
-
-jest.mock('@/i18n/navigation', () => ({
-  Link: ({
-    href,
-    children,
-    ...rest
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-  useRouter: () => ({ push: mockRouterPush }),
-}))
-jest.mock('../components/EcmoCannulationPreview', () => ({
-  EcmoCannulationPreview: () => <div>ECMO preview</div>,
-}))
-jest.mock('../components/ImpellaVariantPreview', () => ({
-  ImpellaVariantPreview: () => <div>Impella preview</div>,
-}))
+jest.mock('@/i18n/navigation', () =>
+  jest
+    .requireActual<
+      typeof import('../test-support/mcsWorkbenchStubs')
+    >('../test-support/mcsWorkbenchStubs')
+    .navigationModule(),
+)
+jest.mock('../components/EcmoCannulationPreview', () =>
+  jest
+    .requireActual<
+      typeof import('../test-support/mcsWorkbenchStubs')
+    >('../test-support/mcsWorkbenchStubs')
+    .ecmoPreviewModule(),
+)
+jest.mock('../components/ImpellaVariantPreview', () =>
+  jest
+    .requireActual<
+      typeof import('../test-support/mcsWorkbenchStubs')
+    >('../test-support/mcsWorkbenchStubs')
+    .impellaPreviewModule(),
+)
 
 import { McsHub } from '../components/McsHub'
 import {
@@ -37,18 +37,26 @@ import {
  * The other suites prove the model and the cards are correct as *data*. This one proves the
  * requirements a reviewer signs off on are true of what a learner actually sees, so the checklist
  * can be read straight off the test names rather than reassembled from three files.
+ *
+ * The hub is one door and one map now: the common model and the pathway cards are still rendered,
+ * folded under the reference heading, and the recommended first section is where the one Continue
+ * resolves for a learner with no history.
  */
 
+/**
+ * Renders the hub and lets its deferred reads land. The Continue call to action and the accordion
+ * read stored progress in a `setTimeout(0)`, so a resolved promise alone would leave the CTA
+ * pending.
+ */
 async function renderHub(): Promise<HTMLElement> {
-  let container!: HTMLElement
+  const { container } = render(<McsHub />)
   await act(async () => {
-    container = render(<McsHub />).container
+    await new Promise((resolve) => setTimeout(resolve, 5))
   })
   return container
 }
 
 beforeEach(() => {
-  mockRouterPush.mockReset()
   window.localStorage.clear()
   Object.defineProperty(global, 'fetch', {
     configurable: true,
@@ -57,11 +65,13 @@ beforeEach(() => {
   })
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
-    value: jest.fn().mockReturnValue({
+    writable: true,
+    value: jest.fn().mockImplementation((query: string) => ({
       matches: false,
+      media: query,
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
-    }),
+    })),
   })
 })
 
@@ -113,22 +123,24 @@ describe('M0/M1 §5 — the module front door', () => {
   it('states the recommended first section without gating any other', async () => {
     const container = await renderHub()
 
-    const startHere = screen
-      .getByRole('heading', { name: /Begin with the model/i })
-      .closest('section')
-    expect(startHere).not.toBeNull()
-    expect(
-      within(startHere!).getByText(/Validate the signal before the device/i),
-    ).toBeInTheDocument()
-    expect(within(startHere!).getByText(/Nothing here is locked/i)).toBeInTheDocument()
-    expect(within(startHere!).getByText(/any order/i)).toBeInTheDocument()
-
-    expect(
-      screen.getByRole('link', { name: /Open the recommended first section/i }),
-    ).toHaveAttribute(
+    // The one Continue, resolved for a learner with no history, is the recommended first section.
+    const cta = container.querySelector('[data-mcs-continue]')
+    expect(cta).not.toBeNull()
+    expect(cta).toHaveAttribute('data-mcs-continue', 'resolved')
+    expect(cta).toHaveAttribute('data-mcs-continue-section', MCS_RECOMMENDED_FIRST_SECTION_ID)
+    expect(cta).toHaveAttribute(
       'href',
       `/mechanical-circulatory-support/learn?lesson=${MCS_RECOMMENDED_FIRST_SECTION_ID}`,
     )
+    expect(cta!.textContent).toMatch(/A pressure that looks fine/i)
+    expect(container.querySelectorAll('[data-mcs-continue]')).toHaveLength(1)
+
+    // The order is said to be a recommendation, and the map says so beside it.
+    const pathway = screen
+      .getByRole('heading', { name: /Nine sections, in one order/i })
+      .closest('section')
+    expect(pathway).not.toBeNull()
+    expect(within(pathway!).getByText(/not a lock/i)).toBeInTheDocument()
 
     // Recommending is not gating: no gating mechanism exists on the front door.
     expect(container.querySelectorAll('a[aria-disabled="true"]')).toHaveLength(0)
@@ -136,14 +148,20 @@ describe('M0/M1 §5 — the module front door', () => {
     expect(container.querySelector('[data-locked="true"]')).toBeNull()
     expect(container.querySelector('[aria-describedby*="prerequisite"]')).toBeNull()
 
-    // The only place the page says "locked" is the sentence denying that anything is.
+    // The only place the page says "lock" is the sentence denying that the order is one.
     const lockMentions = Array.from(container.querySelectorAll('p, li, span, strong'))
       .map((node) => node.textContent ?? '')
       .filter((text) => /\block(ed|s)?\b/i.test(text))
-    expect(lockMentions.every((text) => /Nothing here is locked/i.test(text))).toBe(true)
+    expect(lockMentions.length).toBeGreaterThan(0)
+    expect(lockMentions.every((text) => /not a lock/i.test(text))).toBe(true)
 
-    // Every device track is reachable directly.
-    expect(screen.getAllByRole('link', { name: /Enter track/i })).toHaveLength(3)
+    // Every section is reachable directly from the map, and every device track from its card.
+    expect(
+      container.querySelectorAll('[data-pathway-accordion] [data-kind="section"] a'),
+    ).toHaveLength(9)
+    expect(
+      screen.getAllByRole('link', { name: /Open the first section on this device/i }),
+    ).toHaveLength(3)
   })
 
   it('states that working through the module does not make anyone ready to run a device', async () => {
