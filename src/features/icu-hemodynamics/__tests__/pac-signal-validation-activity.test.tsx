@@ -450,23 +450,23 @@ describe('PAC signal-validation vertical slice', () => {
     expect(screen.getAllByRole('separator')).toHaveLength(2)
   })
 
-  it('makes the derived-value dependency teaching visible beside the live formulas', async () => {
+  it('opens the derived station on the metric model and the provenance drill', async () => {
     render(<PacGuidedSkillActivity skillId="derived-hemodynamics" />)
 
+    // H5 §6/§14. The canonical metric records stay on screen while Recognize asks the learner to
+    // separate measured quantities from calculated ones — before any episode is judged.
     expect(
       await screen.findByRole('heading', {
         name: 'Derived hemodynamics are equations, not new measurements',
       }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'PVR = (mPAP − PAWP) ÷ CO' })).toBeInTheDocument()
-    expect(screen.getByText(/Which input is the denominator/)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'PVR' })).toBeInTheDocument()
+    expect(screen.getByText('PVR = (mPAP − mean PAWP) / CO')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Which of these is actually a measurement?' }),
+    ).toBeInTheDocument()
 
-    fireEvent.click(
-      screen.getByText('Derived hemodynamics and interpretation limits', {
-        selector: 'summary',
-      }),
-    )
-    expect(screen.getByText('CI')).toBeInTheDocument()
-    expect(screen.getByText('CO / BSA')).toBeInTheDocument()
+    // The formula reference no longer carries a completion action of any kind.
+    expect(screen.queryByText(/interpretation limits reviewed/i)).not.toBeInTheDocument()
   })
 })

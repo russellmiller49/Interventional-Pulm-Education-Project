@@ -38,6 +38,8 @@ import {
 } from '../content'
 import {
   createInitialHemodynamicState,
+  derivedHemodynamicsSectionCompletion,
+  DERIVED_SECTION_CHECKS,
   icuHemodynamicsReducer,
   thermodilutionAcceptedAverage,
   thermodilutionSectionCompletion,
@@ -47,8 +49,12 @@ import {
 import { BedsideMonitor } from './BedsideMonitor'
 import { CardiacOutputDisagreementLab } from './CardiacOutputDisagreementLab'
 import { CardiacOutputMethodModel } from './CardiacOutputMethodModel'
+import {
+  DerivedEpisodeWorkbench,
+  DerivedProvenanceDrill,
+  DerivedTransferComparison,
+} from './DerivedHemodynamicsWorkbench'
 import { FickMethodWorkbench } from './FickMethodWorkbench'
-import { FormulaDrawer } from './FormulaDrawer'
 import { NormalWaveformReference } from './NormalWaveformReference'
 import { NormalWaveformValidityChallenges } from './NormalWaveformValidityChallenges'
 import { PacActionDock } from './PacActionDock'
@@ -206,16 +212,16 @@ const skillSpecs: Readonly<Record<PacGuidedSkillId, PacGuidedSkillSpec>> = {
   'derived-hemodynamics': {
     title: 'Derived hemodynamics and validity',
     objective:
-      'Trace calculated values back to their source measurements and validity requirements.',
+      'Trace every calculated value back to its equation, its inputs, their provenance, and one coherent measurement episode.',
     requiredAction:
-      'Review the dependency teaching, then open the formula panel and inspect the explicit not-interpretable states.',
+      'Separate measured from calculated, validate a dependency chain, withhold and preserve selectively in the invalid-wedge episode, and trace a result to its cardiac-output method.',
     explanation: [
-      'Derived values are equations, not independent measurements; they inherit the timing, calibration, artifact, and sampling limitations of every input.',
-      'Resistance is a pressure gradient divided by flow, so error in either pressure or cardiac output can move the result substantially.',
-      'PPV remains unavailable outside the modeled rhythm, ventilation, effort, chest, waveform, and RV conditions.',
+      'A derived value is an equation over measurements. It is not a new independent measurement, and it cannot be more valid than its inputs.',
+      'One invalid input withholds only what depends on it: the branch that failed is named, and the branches that survive stay available.',
+      'Every flow-dependent value carries its cardiac-output method — and when two acceptable methods disagree, there are two labeled result sets, never an average.',
     ],
     transfer:
-      'Withhold precise derived interpretation whenever a source measurement is stale or invalid.',
+      'Choose between a plausible result set with unknown provenance and a surprising one from a coherent episode — without selecting by expectation.',
   },
 }
 
@@ -334,17 +340,13 @@ function transferSkillState(
     })
   }
   if (skillId === 'derived-hemodynamics') {
-    const invalidPpvVariant = {
-      ...baseCase,
-      initialParameters: {
-        ...baseCase.initialParameters,
-        rhythmRegularity: 0.72,
-        spontaneousBreathingFraction: 0.25,
-      },
-    }
-    let state = createInitialHemodynamicState(invalidPpvVariant, 'learn', 615)
-    state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
-    return icuHemodynamicsReducer(state, { type: 'SET_ARTIFACT', artifact: 'none' })
+    /**
+     * H5 §14. Like the cardiac-output station, this transfer keeps the current state: the four
+     * hands-on checks the workbench recorded live in `signalValidationChecks`, and resetting here
+     * would delete the evidence the completion contract is about to ask for. The transfer surface
+     * itself works over its own two authored episodes, not the live simulation.
+     */
+    return current
   }
   return createInitialHemodynamicState(baseCase, 'learn', 616)
 }
@@ -414,7 +416,27 @@ function objectiveComplete(skillId: PacGuidedSkillId, state: HemodynamicSimulati
      */
     return thermodilutionAcceptedAverage(state.thermodilutionTrials) !== null
   }
-  return state.signalValidationChecks.includes('derived-reviewed')
+  /**
+   * H5 §15. The predicate this replaces was `derived-reviewed` — one check set by one button under
+   * the formula reference, satisfiable without tracing, withholding, preserving, or naming a
+   * method. The four checks here are each earned by a separate graded interaction in the episode
+   * workbench, and the section's *completion* is the wider `derivedHemodynamicsSectionCompletion`
+   * contract, which additionally requires the recognize drill, the method disagreement, and the
+   * threshold context.
+   */
+  return (
+    state.signalValidationChecks.includes(DERIVED_SECTION_CHECKS.dependencyChain) &&
+    state.signalValidationChecks.includes(DERIVED_SECTION_CHECKS.withheldForValidity) &&
+    state.signalValidationChecks.includes(DERIVED_SECTION_CHECKS.selectivePreserved) &&
+    state.signalValidationChecks.includes(DERIVED_SECTION_CHECKS.methodTraced)
+  )
+}
+
+/** The three learner commitments the derived station holds outside the simulation state. */
+export interface DerivedStationEvidence {
+  readonly measuredCalculatedSeparated: boolean
+  readonly disagreementPreservedWithoutAveraging: boolean
+  readonly thresholdContextResolved: boolean
 }
 
 function SkillSurface({
@@ -424,6 +446,8 @@ function SkillSurface({
   dispatch,
   advancementUnlocked,
   onDisagreementResolved,
+  derivedEvidence,
+  onDerivedEvidence,
 }: {
   readonly skillId: PacGuidedSkillId
   readonly phase: CriticalCareActivityPhase
@@ -431,6 +455,8 @@ function SkillSurface({
   readonly dispatch: (action: HemodynamicAction) => void
   readonly advancementUnlocked: boolean
   readonly onDisagreementResolved?: () => void
+  readonly derivedEvidence?: DerivedStationEvidence
+  readonly onDerivedEvidence?: (update: Partial<DerivedStationEvidence>) => void
 }) {
   if (skillId === 'pressure-system') {
     return (
@@ -498,7 +524,34 @@ function SkillSurface({
     }
     return <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
   }
-  return <FormulaDrawer state={state} dispatch={dispatch} />
+  /**
+   * H5 §14. Recognize opens on the provenance drill, because the distinction the rest of the
+   * station depends on is measured-versus-calculated. The episode workbench runs through Predict,
+   * Act, and Observe, and Transfer becomes the two-episode comparison.
+   */
+  if (phase === 'recognize') {
+    return (
+      <DerivedProvenanceDrill
+        separated={derivedEvidence?.measuredCalculatedSeparated ?? false}
+        onSeparated={() => onDerivedEvidence?.({ measuredCalculatedSeparated: true })}
+      />
+    )
+  }
+  if (phase === 'transfer') {
+    return <DerivedTransferComparison />
+  }
+  return (
+    <DerivedEpisodeWorkbench
+      dispatch={dispatch}
+      checks={state.signalValidationChecks}
+      disagreementPreserved={derivedEvidence?.disagreementPreservedWithoutAveraging ?? false}
+      onDisagreementPreserved={() =>
+        onDerivedEvidence?.({ disagreementPreservedWithoutAveraging: true })
+      }
+      thresholdContextResolved={derivedEvidence?.thresholdContextResolved ?? false}
+      onThresholdContextResolved={() => onDerivedEvidence?.({ thresholdContextResolved: true })}
+    />
+  )
 }
 
 export function PacGuidedSkillActivity({
@@ -538,6 +591,17 @@ export function PacGuidedSkillActivity({
    */
   const [methodProvenanceResolved, setMethodProvenanceResolved] = useState(false)
   const [disagreementResolved, setDisagreementResolved] = useState(false)
+  /**
+   * H5 §15. The derived station's three commitments that live outside the simulation state, held
+   * here for the same reason as the two cardiac-output booleans above: the simulation is swapped
+   * between phases, and a learner who separated measured from calculated in Recognize has not
+   * un-separated it by walking into Act.
+   */
+  const [derivedEvidence, setDerivedEvidence] = useState<DerivedStationEvidence>({
+    measuredCalculatedSeparated: false,
+    disagreementPreservedWithoutAveraging: false,
+    thresholdContextResolved: false,
+  })
   const [message, setMessage] = useState<string | null>(null)
   const attempt = useRef(1)
   const recordedSafetyEvents = useRef(new Set<string>())
@@ -704,6 +768,11 @@ export function PacGuidedSkillActivity({
     setTransferChoiceId(null)
     setMethodProvenanceResolved(false)
     setDisagreementResolved(false)
+    setDerivedEvidence({
+      measuredCalculatedSeparated: false,
+      disagreementPreservedWithoutAveraging: false,
+      thresholdContextResolved: false,
+    })
     setCompleted(false)
     setMessage('Activity reset to its authored setup.')
   }
@@ -774,6 +843,15 @@ export function PacGuidedSkillActivity({
       setMessage(sectionCompletion.outstanding.join(' '))
       return
     }
+    /**
+     * H5 §15. The derived station has the same shape: the hands-on checks alone are not the
+     * section. Completion additionally requires the recognize-phase separation, the preserved
+     * method disagreement, and the threshold read in context.
+     */
+    if (skillId === 'derived-hemodynamics' && !derivedCompletion.complete) {
+      setMessage(derivedCompletion.outstanding.join(' '))
+      return
+    }
     setCompleted(true)
     persist(true, false, 'transfer')
     lifecycleAnalytics.recordTransferCompleted()
@@ -789,6 +867,10 @@ export function PacGuidedSkillActivity({
     trials: state.thermodilutionTrials,
     methodProvenanceResolved,
     disagreementResolvedWithoutAveraging: disagreementResolved,
+  })
+  const derivedCompletion = derivedHemodynamicsSectionCompletion({
+    signalValidationChecks: state.signalValidationChecks,
+    ...derivedEvidence,
   })
   const predictionCorrect =
     predictionChoiceId !== null &&
@@ -955,13 +1037,21 @@ export function PacGuidedSkillActivity({
           ))}
         </ul>
       ) : null}
+      {skillId === 'derived-hemodynamics' && derivedCompletion.outstanding.length > 0 ? (
+        <ul className="grid gap-1 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-5">
+          {derivedCompletion.outstanding.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
       <button
         type="button"
         disabled={
           completed ||
           transferChoiceId === null ||
           !isObjectiveComplete ||
-          (skillId === 'thermodilution-series' && !sectionCompletion.complete)
+          (skillId === 'thermodilution-series' && !sectionCompletion.complete) ||
+          (skillId === 'derived-hemodynamics' && !derivedCompletion.complete)
         }
         className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         onClick={completeTransfer}
@@ -1040,6 +1130,10 @@ export function PacGuidedSkillActivity({
             dispatch={dispatch}
             advancementUnlocked={advancementUnlocked}
             onDisagreementResolved={() => setDisagreementResolved(true)}
+            derivedEvidence={derivedEvidence}
+            onDerivedEvidence={(update) =>
+              setDerivedEvidence((current) => ({ ...current, ...update }))
+            }
           />
         }
       />

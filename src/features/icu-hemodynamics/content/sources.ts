@@ -125,6 +125,18 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     limitation: `Small, single-center cohort. The ${sharedThresholds.pulmonaryArteryPulsatilityIndex.acuteRvInfarctionHighRiskMax} cut point is phenotype-specific and is not a universal definition of RV failure.`,
   },
   {
+    id: 'papi-lvad-rvf-2016',
+    version: '2016.1',
+    title: 'PAPi and right ventricular failure after LVAD implantation',
+    citation:
+      'Morine KJ, Kiernan MS, Pham DT, Paruchuri V, Denofrio D, Kapur NK. Pulmonary artery pulsatility index is associated with right ventricular failure after left ventricular assist device surgery. J Card Fail. 2016;22(2):110–116. doi:10.1016/j.cardfail.2015.10.019.',
+    year: 2016,
+    sourceType: 'original-research',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/26564619/',
+    intendedUse: `Population-specific interpretation of PAPi in durable continuous-flow LVAD candidates, including the ${sharedThresholds.pulmonaryArteryPulsatilityIndex.advancedHeartFailureTeachingMax} receiver-operating-characteristic cut point for postoperative right ventricular failure.`,
+    limitation: `Single-center retrospective cohort of 132 continuous-flow LVAD recipients. The ${sharedThresholds.pulmonaryArteryPulsatilityIndex.advancedHeartFailureTeachingMax} cut point is specific to that surgical population and that study's definition of postoperative RV failure; it is neither a general advanced-heart-failure threshold nor a treatment target.`,
+  },
+  {
     id: 'cpo-acute-cardiac-2007',
     version: '2007.1',
     title: 'Cardiac power output and acute cardiac mortality',
