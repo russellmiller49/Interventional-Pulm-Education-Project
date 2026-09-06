@@ -1,14 +1,7 @@
 import {
-  clinicalLearningItemSchema,
-  flaggedLearnerCopyTerms,
-} from '@/features/learning-module/activity'
-
-import {
   hasVentilationLessonEvidence,
   mechanicalVentilationCaseById,
-  mechanicalVentilationLessonItems,
   mechanicalVentilationLessons,
-  ventilationEvidenceById,
   ventilationCaseTransferById,
   ventilationLessonActionEvidence,
   ventilationLessonRuntimes,
@@ -23,18 +16,6 @@ describe('mechanical-ventilation lesson recovery contracts', () => {
       expect(transferCaseId).toBeDefined()
       expect(transferCaseId).not.toBe(caseId)
       expect(mechanicalVentilationCaseById.has(transferCaseId!)).toBe(true)
-    }
-  })
-
-  // The suite previously iterated the learning-item map instead of indexing it per lesson, so a
-  // lesson added without items stayed green here and crashed the Learn route at render.
-  it('provides prediction and transfer items for every authored lesson', () => {
-    for (const lesson of mechanicalVentilationLessons) {
-      const items =
-        mechanicalVentilationLessonItems[lesson.id as keyof typeof mechanicalVentilationLessonItems]
-      expect(items).toBeDefined()
-      expect(items.prediction.activityId).toBe(`ventilation:learn:${lesson.id}`)
-      expect(items.transfer.activityId).toBe(`ventilation:learn:${lesson.id}`)
     }
   })
 
@@ -77,36 +58,4 @@ describe('mechanical-ventilation lesson recovery contracts', () => {
       expect(hasVentilationLessonEvidence(evidence, definition.requiredEvidence)).toBe(true)
     },
   )
-
-  it('keeps all prediction and transfer items source-bound, distinct, and review-gated', () => {
-    const allItems = Object.values(mechanicalVentilationLessonItems).flatMap((items) => [
-      items.prediction,
-      items.transfer,
-    ])
-    expect(allItems).toHaveLength(mechanicalVentilationLessons.length * 2)
-    expect(new Set(allItems.map((item) => item.id)).size).toBe(allItems.length)
-
-    const transferVariantIds = allItems.flatMap((item) =>
-      item.transferVariantId ? [item.transferVariantId] : [],
-    )
-    expect(transferVariantIds).toHaveLength(mechanicalVentilationLessons.length)
-    expect(new Set(transferVariantIds).size).toBe(transferVariantIds.length)
-
-    for (const learningItem of allItems) {
-      expect(clinicalLearningItemSchema.safeParse(learningItem).success).toBe(true)
-      expect(learningItem.reviewStatus).toBe('sme-review')
-      expect(learningItem.choices).toHaveLength(3)
-      expect(
-        learningItem.evidenceIds.every((evidenceId) => ventilationEvidenceById.has(evidenceId)),
-      ).toBe(true)
-
-      const learnerCopy = [learningItem.stem, ...learningItem.choices.map((choice) => choice.label)]
-        .join(' ')
-        .toLowerCase()
-      expect(flaggedLearnerCopyTerms(learnerCopy)).toEqual([])
-      expect(learnerCopy).not.toMatch(
-        /\b(i have reviewed|i would|mark (the )?(lesson )?complete|self[- ]attest)\b/i,
-      )
-    }
-  })
 })

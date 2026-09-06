@@ -506,6 +506,22 @@ body:has([data-learning-module-v2-theme-root][data-theme='dark']) {
   }
 }
 
+/*
+ * The site header's height, for anything that sizes itself to the viewport beneath it. The header
+ * in `components/layout/Layout.tsx` is `h-16 md:h-20` with a one-pixel bottom border; the activity
+ * shells used to assume a flat 4rem, which on a desktop left 17px of every lesson stage under the
+ * sticky header. Keep these two declarations in step with the header's classes.
+ */
+:root {
+  --site-header-height: calc(4rem + 1px);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --site-header-height: calc(5rem + 1px);
+  }
+}
+
 /* Active desktop simulations are application workspaces. At accessible reflow widths/heights the
    normal document flow is restored by the component's responsive styles. */
 @media (min-width: 1024px) and (min-height: 700px) {

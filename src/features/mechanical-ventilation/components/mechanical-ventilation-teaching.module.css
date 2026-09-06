@@ -237,7 +237,11 @@
 }
 
 .readouts > div[data-state='unavailable'] dd {
-  color: #86999d;
+  color: #536b71;
+}
+
+.readouts > div[data-state='unavailable'] small {
+  opacity: 1;
 }
 
 /* Reading sequence */

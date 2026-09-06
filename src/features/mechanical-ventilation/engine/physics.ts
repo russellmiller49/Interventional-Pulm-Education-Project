@@ -1069,6 +1069,8 @@ export function isCaseResolved(
   // Case criteria read the relaxed pressures throughout: they are claims about the lung, and the
   // displayed plateau can be pulled down by a patient who is simply working hard.
   switch (definition.phenotype) {
+    case 'normal-supported-breath':
+      return false // Exploratory fixture: its learning task, not a clinical outcome, defines completion.
     case 'ards-recruitment':
       return (
         settings.peepCmH2O >= 8 && settings.peepCmH2O <= 12 && m.relaxedPlateauPressureCmH2O <= 30

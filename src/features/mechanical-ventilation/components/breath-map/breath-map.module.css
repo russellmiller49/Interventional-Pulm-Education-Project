@@ -1,0 +1,305 @@
+/*
+ * The breath map: one schematic breath on three traces, with the current stop lit.
+ *
+ * The map is the module's persistent "you are here". It sits under the live console in the
+ * simulator pane and draws one idealized passive volume-controlled breath — a teaching schematic,
+ * badged as one — with the four stops of the spine marked across all three traces. The real traces
+ * are on the console above it; this is the shape a learner carries between sections.
+ */
+
+.map {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  background: rgba(16, 46, 52, 0.35);
+  color: var(--ink, #eaf4f4);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 0.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 999px;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.caption {
+  margin: 0;
+  font-weight: 600;
+}
+
+.caption[data-empty='true'] {
+  color: var(--muted, #9fb4b7);
+  font-weight: 500;
+}
+
+/* The drawing keeps its aspect so HTML pins can sit on it by percentage. */
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 640 / 330;
+  min-width: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rowLabel {
+  fill: var(--muted, #9fb4b7);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.segmentLabel {
+  fill: var(--muted, #9fb4b7);
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.segmentLabel[data-lit='true'] {
+  fill: var(--ink, #eaf4f4);
+}
+
+.band {
+  fill: rgba(113, 225, 229, 0.05);
+  stroke: rgba(163, 206, 209, 0.16);
+  stroke-width: 1;
+}
+
+.band[data-lit='true'] {
+  fill: rgba(113, 225, 229, 0.16);
+  stroke: var(--cyan-bright, #71e1e5);
+  stroke-width: 2;
+}
+
+.map[data-emphasis='some'] .band:not([data-lit='true']) {
+  fill: rgba(113, 225, 229, 0.02);
+}
+
+.zeroLine {
+  stroke: rgba(163, 206, 209, 0.28);
+  stroke-dasharray: 3 4;
+  stroke-width: 1;
+}
+
+.baselineLabel {
+  fill: var(--muted, #9fb4b7);
+  font-size: 10px;
+}
+
+.trace {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tracePressure {
+  stroke: #f2d675;
+}
+
+.traceFlow {
+  stroke: #ff8fb1;
+}
+
+.traceVolume {
+  stroke: #7ee0a5;
+}
+
+.map[data-emphasis='some'] .trace {
+  opacity: 0.55;
+}
+
+.map[data-emphasis='some'] .traceLit {
+  opacity: 1;
+  stroke-width: 3;
+}
+
+.marker {
+  fill: none;
+  stroke: var(--cyan-bright, #71e1e5);
+  stroke-width: 2;
+}
+
+/* ------------------------------------------------------------------ *
+ * Legend
+ * ------------------------------------------------------------------ */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted, #9fb4b7);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend li[data-lit='true'] {
+  color: var(--ink, #eaf4f4);
+  font-weight: 700;
+}
+
+.legend li[data-lit='true'] .number {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+/* ------------------------------------------------------------------ *
+ * Answering on the map
+ * ------------------------------------------------------------------ */
+
+.answer {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.answer legend {
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.option[data-selected='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.option[data-outcome='correct'] {
+  border-color: var(--green, #76d69b);
+}
+
+.option[data-outcome='chosen'] {
+  border-color: var(--amber, #ffbf62);
+}
+
+.option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.option:has(input:focus-visible) {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.number {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 999px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.option[data-selected='true'] .number {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.outcome {
+  margin-left: auto;
+  color: var(--muted, #9fb4b7);
+  font-weight: 700;
+}
+
+.pin {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--cyan-bright, #71e1e5);
+  border-radius: 999px;
+  background: var(--panel, #10262b);
+  color: var(--ink, #eaf4f4);
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pin[data-selected='true'] {
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.pin[data-disabled='true'] {
+  cursor: default;
+}
+
+.equivalent {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

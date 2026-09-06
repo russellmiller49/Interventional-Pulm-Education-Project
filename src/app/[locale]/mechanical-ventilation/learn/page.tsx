@@ -1,44 +1,40 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { MechanicalVentilationLearnLandingV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLandingV2'
-import { MechanicalVentilationLessonActivity } from '@/features/mechanical-ventilation/components/MechanicalVentilationLessonActivity'
-import { MechanicalVentilationModuleFrameV2 } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrameV2'
-import { mechanicalVentilationLessonById } from '@/features/mechanical-ventilation/content'
+import { MechanicalVentilationCourseCheck } from '@/features/mechanical-ventilation/components/MechanicalVentilationCourseCheck'
+import { MechanicalVentilationLearnLanding } from '@/features/mechanical-ventilation/components/MechanicalVentilationLearnLanding'
+import { MechanicalVentilationModuleFrame } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame'
+import { VentilationStageHost } from '@/features/mechanical-ventilation/components/stage/VentilationStageHost'
+import { ventilationUnitById } from '@/features/mechanical-ventilation/content/learningCurriculum'
 
 export const metadata: Metadata = {
   title: 'Learn · Mechanical Ventilation',
   description:
-    'Focused guided lessons in ventilator mechanics, modes, waveforms, timing, dyssynchrony, gas exchange, and safety.',
+    'Fourteen guided sections on a running simulated ventilator: the breath, the controls, then one mechanism at a time with a prediction, a change, and a watched response.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ activity?: string | string[] }>
+  searchParams?: Promise<{ activity?: string | string[]; entry?: string | string[] }>
 }
 
 export default async function MechanicalVentilationLearnPage({ params, searchParams }: PageProps) {
   const { locale } = await params
-  const activity = (await searchParams)?.activity
+  const query = await searchParams
+  const activity = query?.activity
   const activityId = typeof activity === 'string' ? activity : undefined
-  const lesson = activityId ? mechanicalVentilationLessonById.get(activityId) : undefined
+  const unit = activityId ? ventilationUnitById.get(activityId) : undefined
   setRequestLocale(locale)
 
-  if (lesson) return <MechanicalVentilationLessonActivity lesson={lesson} locale={locale} />
+  if (unit) return <VentilationStageHost key={unit.id} unitId={unit.id} locale={locale} />
+  if (query?.entry === 'placement' || query?.entry === 'review') {
+    return (
+      <MechanicalVentilationModuleFrame locale={locale} activeHref="/mechanical-ventilation/learn">
+        <MechanicalVentilationCourseCheck kind={query.entry} />
+      </MechanicalVentilationModuleFrame>
+    )
+  }
 
-  return (
-    <MechanicalVentilationModuleFrameV2 activeHref="/mechanical-ventilation/learn">
-      {activityId ? (
-        <div
-          className="mx-auto mt-8 w-[min(72rem,calc(100%-2rem))] rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"
-          role="status"
-        >
-          <strong>Unknown lesson.</strong> The requested activity is not in this reviewed content
-          version. Choose one of the focused lessons below.
-        </div>
-      ) : null}
-      <MechanicalVentilationLearnLandingV2 />
-    </MechanicalVentilationModuleFrameV2>
-  )
+  return <MechanicalVentilationLearnLanding locale={locale} unknownActivity={activityId} />
 }

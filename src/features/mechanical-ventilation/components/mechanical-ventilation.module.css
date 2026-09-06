@@ -852,6 +852,38 @@
   stroke-width: 1;
 }
 
+/* The zero rule: solid and a shade brighter than the grid, and it flips with the screen palette. */
+.waveformZero {
+  stroke: var(--screen-text);
+  stroke-opacity: 0.5;
+  stroke-width: 1.25;
+}
+
+/*
+ * The scale, as HTML at the right edge of the trace: maximum at the top, zero where the zero rule
+ * runs, minimum at the floor. HTML rather than SVG text for the same reason the annotation chips
+ * are — this viewBox is `preserveAspectRatio="none"`, and glyphs drawn inside it smear.
+ */
+.waveformAxis {
+  position: relative;
+  z-index: 1;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.waveformAxisTick {
+  position: absolute;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  color: var(--screen-text);
+  opacity: 0.72;
+  font-size: var(--wave-annotation-size);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
 .waveformPrimary,
 .waveformPmus,
 .loopPrimary,
@@ -3953,4 +3985,50 @@ line.waveformAnnotation {
   > div[data-unreliable='true']
   dd {
   color: #a8620a;
+}
+
+/* Live course: keep the native monitor and the adjacent experiment controls in one laptop view. */
+[data-live-learning='true'] .consoleShell {
+  padding: 8px;
+}
+[data-live-learning='true'] .consoleHeader {
+  min-height: 36px;
+  padding-block: 7px;
+}
+[data-live-learning='true'] .alarmBar {
+  min-height: 30px;
+  padding-block: 6px;
+}
+[data-live-learning='true'] .monitoringScreen {
+  height: 345px;
+  min-height: 345px;
+}
+[data-live-learning='true'] .waveformStack,
+[data-live-learning='true'] .mmpPanel {
+  min-height: 0;
+}
+[data-live-learning='true'] .mmpValues > div {
+  padding-block: 3px;
+  line-height: 1.15;
+}
+[data-live-learning='true'] .mmpPanel[data-layout='left-column'] strong {
+  font-size: 23px;
+  line-height: 1.2;
+}
+[data-live-learning='true'] .waveformLabel {
+  padding-top: 7px;
+}
+[data-live-learning='true'] .physicalControls > button {
+  min-height: 44px;
+}
+[data-live-learning='true'] .rotaryKnob {
+  min-height: 48px;
+}
+[data-live-learning='true'] .consoleNav button {
+  min-height: 44px;
+}
+@media (max-width: 850px) {
+  [data-live-learning='true'] .monitoringScreen {
+    height: 345px;
+  }
 }

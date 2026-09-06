@@ -1,3 +1,4 @@
+import { ventilationLearningUnits } from '@/features/mechanical-ventilation/content/learningCurriculum'
 import type { CriticalCareActivityDefinition } from '@/features/learning-module/activity/types'
 import type { LearningPathway } from '@/features/learning-module/curriculum/types'
 
@@ -288,110 +289,16 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
   },
   {
     moduleId: 'mechanical-ventilation',
-    arcSentence:
-      'Learn to read a breath, then the mechanics behind it, then what the machine and the patient do to each other',
-    sections: [
-      {
-        id: 'waveform-anatomy',
-        shortTitle: 'Anatomy',
-        title: 'Waveform anatomy: three traces, one breath',
-        minutes: 8,
-        description:
-          'What pressure, flow, and volume each plot, what sets the shape of each — and why a volume-targeted breath and a pressure-targeted one look nothing alike.',
-        stage: 'orientation',
-        activityId: 'ventilation:learn:waveform-anatomy',
-      },
-      {
-        id: 'mechanics-load-and-pressure',
-        shortTitle: 'Mechanics',
-        title: 'Mechanics: load, pressure, and volume',
-        minutes: 8,
-        description:
-          'Separate the pressure spent moving gas from the pressure spent distending the respiratory system.',
-        stage: 'foundation',
-        activityId: 'ventilation:learn:mechanics-load-and-pressure',
-      },
-      {
-        id: 'waveform-reading-sequence',
-        shortTitle: 'Waveforms',
-        title: 'Waveforms: a repeatable reading sequence',
-        minutes: 8,
-        description:
-          'Read pressure, flow, volume, and patient effort in a fixed order before naming any pattern.',
-        stage: 'foundation',
-        activityId: 'ventilation:learn:waveform-reading-sequence',
-      },
-      {
-        id: 'modes-and-breath-delivery',
-        shortTitle: 'Modes',
-        title: 'Modes: trigger, target, cycle, and expiration',
-        minutes: 8,
-        description:
-          'Meet the device-facing controls after the physiology they act on, and read a mode by its four variables rather than its name.',
-        stage: 'orientation',
-        activityId: 'ventilation:learn:modes-and-breath-delivery',
-      },
-      {
-        id: 'triggering-and-cycling',
-        shortTitle: 'Timing',
-        title: 'Triggering and cycling',
-        minutes: 8,
-        description:
-          'Localize a timing problem to the start or the end of the breath before labelling it.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:triggering-and-cycling',
-      },
-      {
-        id: 'dyssynchrony-mechanisms',
-        shortTitle: 'Dyssynchrony',
-        title: 'Dyssynchrony: mechanism before label',
-        minutes: 8,
-        description:
-          'State the mechanism and the expected response before applying a dyssynchrony name.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:dyssynchrony-mechanisms',
-      },
-      {
-        id: 'oxygenation-response',
-        shortTitle: 'Oxygenation',
-        title: 'Oxygenation: action and consequence',
-        minutes: 8,
-        description:
-          'Predict the pressure and hemodynamic consequence of an oxygenation change, not only the saturation.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:oxygenation-response',
-      },
-      {
-        id: 'ventilation-and-co2',
-        shortTitle: 'Ventilation',
-        title: 'Ventilation: measured response over time',
-        minutes: 8,
-        description:
-          'Separate what changes immediately at the ventilator from what changes later in the measurement.',
-        stage: 'mechanism',
-        activityId: 'ventilation:learn:ventilation-and-co2',
-      },
-      {
-        id: 'safety-reassessment-and-human-factors',
-        shortTitle: 'Safety',
-        title: 'Safety, reassessment, and the whole patient',
-        minutes: 8,
-        description:
-          'Keep alarms, examination, communication, comfort, and explicit reassessment inside the action loop.',
-        stage: 'application',
-        activityId: 'ventilation:learn:safety-reassessment-and-human-factors',
-      },
-      {
-        id: 'high-peak-pressure-integration',
-        shortTitle: 'Localize',
-        title: 'High peak pressure: resistance, compliance, auto-PEEP, or patient effort?',
-        minutes: 14,
-        description:
-          'One alarm, four mechanisms: use the peak-to-plateau split, the expiratory limb, and the patient to separate them.',
-        stage: 'integration',
-        activityId: 'ventilation:learn:high-peak-pressure-integration',
-      },
-    ],
+    arcSentence: 'Follow a normal breath, build the mechanisms, then reason from the whole patient',
+    sections: ventilationLearningUnits.map((unit) => ({
+      id: unit.id,
+      shortTitle: unit.shortTitle,
+      title: unit.title,
+      minutes: unit.minutes,
+      description: unit.outcome,
+      stage: unit.stage,
+      activityId: `ventilation:learn:${unit.id}`,
+    })),
   },
   {
     moduleId: 'icu-simulation',

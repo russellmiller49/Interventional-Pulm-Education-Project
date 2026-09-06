@@ -166,6 +166,17 @@ export function WaveformStrip({
     () => (annotations ? annotationChipLayout(annotations, minimum, maximum) : []),
     [annotations, maximum, minimum],
   )
+  const spansZero = minimum < 0 && maximum > 0
+  const zeroY = spansZero ? 112 - ((0 - minimum) / (maximum - minimum)) * 104 : 112
+  const axisTicks = [
+    { key: 'max', value: maximum, percent: (8 / 120) * 100 },
+    ...(spansZero ? [{ key: 'zero', value: 0, percent: (zeroY / 120) * 100 }] : []),
+    { key: 'min', value: minimum, percent: (112 / 120) * 100 },
+  ]
+  const signNote =
+    field === 'flowLMin'
+      ? ' Zero flow is marked; the trace above the zero line is gas moving in, below it gas moving out.'
+      : ''
 
   return (
     <figure
@@ -200,15 +211,41 @@ export function WaveformStrip({
         aria-label={`${label} waveform. Current ${current.toFixed(1)} ${unit}; observed range ${observedMin.toFixed(1)} to ${observedMax.toFixed(1)} ${unit}.`}
       >
         <title>{`${label} waveform over the most recent 12 simulated seconds`}</title>
-        <desc>{`Current ${current.toFixed(1)} ${unit}. Minimum ${observedMin.toFixed(1)} and maximum ${observedMax.toFixed(1)} ${unit} in the visible buffer.`}</desc>
+        <desc>{`Current ${current.toFixed(1)} ${unit}. Minimum ${observedMin.toFixed(1)} and maximum ${observedMax.toFixed(1)} ${unit} in the visible buffer. Scale ${minimum} to ${maximum} ${unit}.${signNote}`}</desc>
         <g className={styles.waveformGrid} aria-hidden="true">
           {[0, 1, 2, 3, 4, 5].map((tick) => (
             <line key={`vertical-${tick}`} x1={tick * 200} y1="0" x2={tick * 200} y2="120" />
           ))}
-          {[0, 1, 2, 3].map((tick) => (
-            <line key={`horizontal-${tick}`} x1="0" y1={tick * 40} x2="1000" y2={tick * 40} />
+          {/*
+           * Horizontal rules at the quarter points of the plotted range (the trace maps its range
+           * onto y = 8…112), so on a symmetric flow scale the middle rule is zero and the others
+           * are ±half. The rules used to sit at fixed thirds of the viewBox, which on the flow
+           * trace put a line just above and just below zero and none on it.
+           */}
+          {[1, 2, 3].map((tick) => (
+            <line
+              key={`horizontal-${tick}`}
+              x1="0"
+              y1={8 + tick * 26}
+              x2="1000"
+              y2={8 + tick * 26}
+            />
           ))}
         </g>
+        {/*
+         * Where zero is. A trace whose range spans zero — flow — gets a solid rule at zero, because
+         * the sign of flow is the whole reading (above the line gas is going in, below it gas is
+         * coming out). A trace whose range starts at zero gets the same rule along its floor.
+         */}
+        <line
+          className={styles.waveformZero}
+          data-waveform-zero
+          x1="0"
+          y1={zeroY}
+          x2="1000"
+          y2={zeroY}
+          vectorEffect="non-scaling-stroke"
+        />
         <polyline
           className={styles.waveformPrimary}
           points={points}
@@ -241,6 +278,18 @@ export function WaveformStrip({
             ))
           : null}
       </svg>
+      <div className={styles.waveformAxis} aria-hidden="true" data-waveform-axis>
+        {axisTicks.map((tick) => (
+          <span
+            key={tick.key}
+            className={styles.waveformAxisTick}
+            data-axis-tick={tick.key}
+            style={{ top: `${tick.percent}%` }}
+          >
+            {tick.value}
+          </span>
+        ))}
+      </div>
       {annotationsVisible && placements.length > 0 ? (
         <div className={styles.waveformAnnotationLayer} aria-hidden="true">
           {placements.map((placement) => (
@@ -257,7 +306,7 @@ export function WaveformStrip({
       ) : null}
       <figcaption className={styles.srOnly}>
         {label}: current {current.toFixed(1)} {unit}; minimum {observedMin.toFixed(1)}; maximum{' '}
-        {observedMax.toFixed(1)}.{' '}
+        {observedMax.toFixed(1)}. Scale {minimum} to {maximum} {unit}.{signNote}{' '}
         {readouts && readouts.length > 0
           ? `Derived values: ${readouts
               .map(
