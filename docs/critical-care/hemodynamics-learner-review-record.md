@@ -166,16 +166,17 @@ the palette's muted colour as `--stage-muted`; the shared stage stylesheet, this
 map's read that now. **The same read is in the MV, MCS and ECMO stage stylesheets** (11, 13 and 11
 uses) and is theirs to fix; ECMO's shell names its token differently.
 
-## Asked for by the owner: the 3D heart on the wedge section
+## Asked for by the owner: the 3D heart on the advancement and wedge sections
 
 The flow rebuild left the 3D heart off the stage (§8: "the map is where answers go"). The owner
-asked for it back on section 6. It sits beneath the docks on every step of `pawp-capture`, as a
-teaching model with the catheter's course, its balloon and the transducer in step with the engine
-— never an answer surface; the catheter map stays the only place an answer goes. It is authored as
-a step field (`anatomy: 'heart'`), so the eight wedge steps carry it and no other section does, and
-it is loaded with `next/dynamic`, so three.js arrives with that section and not with the other
-eight. Without WebGL it renders its text fallback. Section 5, where the tip travels the chambers,
-is the other natural home; one field per step turns it on.
+asked for it back on sections 5 and 6. It sits beneath the docks on every step of
+`catheter-advancement` and `pawp-capture`, as a teaching model with the catheter's course, its
+balloon and the transducer in step with the engine — the tip travelling the chambers on one, the
+balloon inflating in a distal branch on the other — and never as an answer surface; the catheter
+map stays the only place an answer goes. It is authored as a step field (`anatomy: 'heart'`), so
+those sixteen steps carry it and no other section does, and it is loaded with `next/dynamic`, so
+three.js arrives with those sections and not with the other seven. Without WebGL it renders its
+text fallback.
 
 ## Left for the next round
 

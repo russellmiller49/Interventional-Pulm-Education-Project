@@ -56,8 +56,9 @@ export type WedgeCommitmentKind = 'plausibility' | 'return'
  *
  * `heart` is the 3D heart with the catheter's course, its balloon and the transducer, in step with
  * the engine. The flow rebuild left it off the stage because the catheter map is where answers go;
- * the owner asked for it back on the wedge section, where the thing the docks change — a balloon
- * inflating in a distal branch — is the thing a drawing cannot show and a model can.
+ * the owner asked for it back on the two sections where the thing the docks change is a thing in
+ * the heart — the tip travelling the chambers, and a balloon inflating in a distal branch — which
+ * a drawing cannot show and a model can.
  */
 export type StageAnatomy = 'none' | 'heart'
 
@@ -548,6 +549,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       actionLabel: CONTINUE,
       interaction: { kind: 'read' },
       surface: 'tip',
+      anatomy: 'heart',
     },
     {
       phase: 'predict',
@@ -559,6 +561,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       interaction: prediction(items.prediction, 0),
       entryState: runtime.predictionEntry,
       surface: 'tip',
+      anatomy: 'heart',
     },
     {
       phase: 'act',
@@ -572,6 +575,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
       surface: 'tip',
+      anatomy: 'heart',
     },
     {
       phase: 'observe',
@@ -587,6 +591,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       actionLabel: 'Compare the two',
       interaction: { kind: 'observe', goals: [], commitments: [], provenance: false },
       surface: 'tip',
+      anatomy: 'heart',
     },
     {
       phase: 'explain',
@@ -597,6 +602,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
       surface: 'tip',
+      anatomy: 'heart',
     },
     {
       phase: 'transfer',
@@ -608,6 +614,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       interaction: prediction(items.transfer, 1),
       entryState: runtime.transferEntry ?? undefined,
       surface: 'flush',
+      anatomy: 'heart',
     },
     {
       phase: 'transfer',
@@ -621,6 +628,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.transferGoals, round: 1 },
       surface: 'flush-then-tip',
+      anatomy: 'heart',
     },
     {
       phase: 'transfer',
@@ -631,6 +639,7 @@ function catheterAdvancementSteps(runtime: SectionRuntime): readonly StepInput[]
       actionLabel: 'Finish the section',
       interaction: { kind: 'explain', round: 1 },
       surface: 'tip',
+      anatomy: 'heart',
     },
   ]
 }

@@ -204,11 +204,12 @@ describe('the verdict is framed for the kind of item it heads', () => {
   })
 })
 
-describe('the 3D heart, on the wedge section', () => {
-  it('sits beneath the docks on every wedge step, and on no other section', () => {
+describe('the 3D heart, on the advancement and wedge sections', () => {
+  it('sits beneath the docks on every step of those two sections, and on no other', () => {
+    const withHeart = new Set(['catheter-advancement', 'pawp-capture'])
     for (const sectionId of hemodynamicsSectionIds) {
       const lesson = hemodynamicsStageLesson(sectionId)
-      const expected = sectionId === 'pawp-capture'
+      const expected = withHeart.has(sectionId)
       expect(`${sectionId}: ${lesson.steps.every((step) => step.anatomy === 'heart')}`).toBe(
         `${sectionId}: ${expected}`,
       )
@@ -223,6 +224,9 @@ describe('the 3D heart, on the wedge section', () => {
     expect(card?.nextElementSibling?.hasAttribute('data-catheter-map')).toBe(true)
     cleanup()
     mountSection('catheter-advancement')
+    expect(document.querySelector('[data-surface="heart-3d"]')).not.toBeNull()
+    cleanup()
+    mountSection('thermodilution-series')
     expect(document.querySelector('[data-surface="heart-3d"]')).toBeNull()
   })
 })
