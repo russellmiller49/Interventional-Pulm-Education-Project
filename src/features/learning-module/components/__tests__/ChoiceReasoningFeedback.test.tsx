@@ -152,3 +152,51 @@ describe('ChoiceReasoningFeedback', () => {
     expect(screen.getByText(/Humbert M, et al. 2022 ESC\/ERS Guidelines/i)).toBeInTheDocument()
   })
 })
+
+/**
+ * The other answers, folded under the verdict.
+ *
+ * `AnswerVerdict` has always offered why the alternatives do not fit; this card, which three
+ * modules render for its concept links and citations, never did. A caller that passes the item's
+ * choices gets the same folded disclosure; a caller that passes nothing renders exactly as before.
+ */
+describe('ChoiceReasoningFeedback other answers', () => {
+  const choices: readonly Choice[] = [
+    { ...choice('best'), id: 'best-read', label: 'The best read' },
+    { ...choice('incorrect-mechanism'), id: 'other-mechanism', label: 'Another mechanism' },
+    { ...choice('unsafe'), id: 'harmful-move', label: 'A harmful move' },
+  ]
+
+  it('renders no disclosure unless the caller passes the choices', () => {
+    const { container } = render(
+      <ChoiceReasoningFeedback
+        choice={choices[0]}
+        explanation="Compare the expected waveform and patient response."
+        evidenceIds={['esc-ers-ph-2022']}
+      />,
+    )
+    expect(container.querySelector('[data-other-answers-panel]')).toBeNull()
+  })
+
+  it('folds every choice but the chosen one, each with its rationale', () => {
+    const { container } = render(
+      <ChoiceReasoningFeedback
+        choice={choices[1]}
+        outcome="stated"
+        explanation="Compare the expected waveform and patient response."
+        evidenceIds={['esc-ers-ph-2022']}
+        alternatives={choices}
+      />,
+    )
+    const panel = container.querySelector<HTMLDetailsElement>('[data-other-answers-panel]')
+    expect(panel).not.toBeNull()
+    expect(panel?.open).toBe(false)
+    expect(panel?.querySelector('summary')?.textContent).toBe('Why the other answers do not fit')
+    expect(container.querySelector('[data-other-answer="other-mechanism"]')).toBeNull()
+    for (const other of choices.filter((candidate) => candidate.id !== 'other-mechanism')) {
+      const row = container.querySelector(`[data-other-answer="${other.id}"]`)
+      expect(row?.textContent).toContain(other.label)
+      expect(row?.textContent).toContain(other.rationale)
+    }
+  })
+})

@@ -62,6 +62,7 @@ export function ChoiceReasoningFeedback({
   conceptIds = [],
   outcome = 'described',
   frames,
+  alternatives,
 }: {
   readonly choice: ClinicalLearningChoice
   readonly explanation: string
@@ -71,6 +72,17 @@ export function ChoiceReasoningFeedback({
   readonly outcome?: 'described' | 'stated'
   /** Per-caller replacements for the sentence after the outcome. Omitted, the defaults stand. */
   readonly frames?: Partial<Record<ClinicalLearningChoice['plausibility'], string>>
+  /**
+   * The item's whole choice set, when the card should also say why the other answers do not fit.
+   *
+   * `AnswerVerdict` has carried that disclosure since it was promoted, and the activity contract
+   * describes the verdict as offering it; this card never did, so the three surfaces that render
+   * it for the concept links and citations could not keep a step's promise to "read why the other
+   * answers do not fit". The ECMO round put a module-local copy beside this card. Passing the
+   * choices here is the shared answer: the card folds every choice but the chosen one under the
+   * same summary `AnswerVerdict` uses. Omitted, the card renders exactly as before.
+   */
+  readonly alternatives?: readonly ClinicalLearningChoice[]
 }) {
   const evidence = resolveCriticalCareEvidence(evidenceIds)
   const concepts = conceptIds.flatMap((conceptId) => {
@@ -78,6 +90,7 @@ export function ChoiceReasoningFeedback({
     return concept ? [concept] : []
   })
   const isUnsafe = choice.plausibility === 'unsafe'
+  const others = alternatives?.filter((candidate) => candidate.id !== choice.id) ?? []
 
   return (
     <article
@@ -116,6 +129,25 @@ export function ChoiceReasoningFeedback({
         <strong className="text-white">How to distinguish it</strong>
         <p className="mt-1 text-slate-200">{explanation}</p>
       </div>
+
+      {others.length > 0 ? (
+        <details
+          className="mt-3 rounded-xl border border-white/15 bg-black/10 p-3 text-sm leading-6"
+          data-other-answers-panel
+        >
+          <summary className="min-h-9 cursor-pointer font-semibold text-white">
+            Why the other answers do not fit
+          </summary>
+          <ul className="mt-2 grid gap-2 text-slate-200" data-other-answers>
+            {others.map((candidate) => (
+              <li key={candidate.id} data-other-answer={candidate.id}>
+                <span className="font-semibold text-white">{candidate.label}</span> —{' '}
+                {candidate.rationale}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
 
       {concepts.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2" aria-label="Related concepts">
