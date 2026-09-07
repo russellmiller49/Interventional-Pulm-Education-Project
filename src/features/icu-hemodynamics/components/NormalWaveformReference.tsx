@@ -254,7 +254,7 @@ export function NormalWaveformReference() {
         </section>
 
         <details className={styles.referenceTextEquivalent}>
-          <summary>Read this state as text</summary>
+          <summary>Read this display as text</summary>
           <p>{normalWaveformReferenceTextEquivalent(entry, scale)}</p>
         </details>
       </div>

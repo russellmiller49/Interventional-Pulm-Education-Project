@@ -275,6 +275,12 @@
   outline-offset: 2px;
 }
 
+/* Under the pointer, a row and a pin say they can be chosen; a settled answer does not. */
+.answer:not(:disabled) .option:hover {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.08);
+}
+
 .number {
   display: inline-flex;
   flex: none;
@@ -320,6 +326,10 @@
 .pin[data-selected='true'] {
   background: var(--cyan-bright, #71e1e5);
   color: #04211f;
+}
+
+.pin:hover:not([data-disabled='true']) {
+  box-shadow: 0 0 0 4px rgba(113, 225, 229, 0.3);
 }
 
 .pin[data-disabled='true'] {

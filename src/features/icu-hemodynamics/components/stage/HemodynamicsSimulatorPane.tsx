@@ -37,6 +37,7 @@ export function HemodynamicsSimulatorPane({
   flushLine,
   controlsEnabled,
   lockedReason,
+  pausedReason,
   chamberLabel,
   stops,
   mapCaption,
@@ -49,7 +50,10 @@ export function HemodynamicsSimulatorPane({
   readonly surface: StageSurface
   readonly flushLine: FastFlushLineType
   readonly controlsEnabled: boolean
+  /** Why the docks are off while the learner decides; printed on the simulator. */
   readonly lockedReason?: string
+  /** Why the docks are off while the learner looks back; printed on the simulator. */
+  readonly pausedReason?: string
   readonly chamberLabel: 'shown' | 'withheld'
   readonly stops: readonly RouteStopId[]
   readonly mapCaption?: string
@@ -121,6 +125,11 @@ export function HemodynamicsSimulatorPane({
       {lockedReason ? (
         <p className={styles.lockedNote} role="status" data-controls-locked>
           {lockedReason}
+        </p>
+      ) : null}
+      {pausedReason ? (
+        <p className={styles.lockedNote} role="status" data-controls-paused>
+          {pausedReason}
         </p>
       ) : null}
       {dock ? <div className={styles.docks}>{dock}</div> : null}

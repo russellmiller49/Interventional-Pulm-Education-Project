@@ -147,6 +147,45 @@
   cursor: not-allowed;
 }
 
+/*
+ * A control looks like one under the pointer and under the finger. The docks shipped with a rest
+ * state, a focus ring and a disabled state and nothing between: no hover, no pressed state. The
+ * same three states go on the Now card's actions and the commitment buttons below, scoped to this
+ * module because the shell's button classes are four modules' to change.
+ */
+.dockButton:hover:not(:disabled) {
+  background: rgba(113, 225, 229, 0.24);
+}
+
+.dockButton:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.36);
+}
+
+.moduleShell [data-now-primary]:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.moduleShell [data-now-primary]:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.moduleShell [data-now-secondary]:hover:not(:disabled),
+.commitment > button:hover:not(:disabled),
+.returnCheck button:hover:not(:disabled),
+.surfaceCard > button:hover:not(:disabled),
+.story > button:hover:not(:disabled) {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.moduleShell [data-now-secondary]:active:not(:disabled),
+.commitment > button:active:not(:disabled),
+.returnCheck button:active:not(:disabled),
+.surfaceCard > button:active:not(:disabled),
+.story > button:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.22);
+}
+
 .dockButton[data-holding='true'] {
   background: var(--cyan-bright, #71e1e5);
   color: #04211f;
@@ -261,9 +300,11 @@
   text-transform: uppercase;
 }
 
+/* A real list: Tailwind's preflight resets the marker, and a markerless list reads as prose. */
 .walk ul {
   margin: 0;
   padding-left: 1.1rem;
+  list-style: disc;
 }
 
 .kicker {
@@ -441,6 +482,8 @@
 }
 
 .increment {
+  display: grid;
+  gap: 0.25rem;
   padding: 0.5rem 0.75rem;
   border: 1px dashed var(--cyan-bright, #71e1e5);
   border-radius: 0.65rem;
@@ -452,6 +495,7 @@
   gap: 0.25rem;
   margin: 0;
   padding-left: 1.15rem;
+  list-style: disc;
 }
 
 .sequence {

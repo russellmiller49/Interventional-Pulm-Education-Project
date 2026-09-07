@@ -4749,6 +4749,12 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.drillControls button:hover:not(:disabled) {
+  background: #124f49;
+}
+.drillControls button:active:not(:disabled) {
+  background: #0d3c37;
+}
 .drillFeedback {
   padding: 0.65rem 0.75rem;
   border: 1px solid #cfe0dc;
@@ -4769,14 +4775,21 @@
   font-size: 0.79rem;
   line-height: 1.5;
 }
+.drillFeedback h4 {
+  margin: 0.5rem 0 0;
+  color: var(--navy);
+  font-size: 0.79rem;
+  font-weight: 750;
+}
 .drillFeedback ul {
-  margin: 0.4rem 0 0;
+  margin: 0.3rem 0 0;
   padding-left: 1.05rem;
   display: grid;
   gap: 0.25rem;
   color: var(--ink);
   font-size: 0.77rem;
   line-height: 1.45;
+  list-style: disc;
 }
 .drillPitfall {
   margin-top: 0.5rem;
