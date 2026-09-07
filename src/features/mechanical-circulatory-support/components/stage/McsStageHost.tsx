@@ -467,7 +467,12 @@ function McsStageSession({
       advance()
       return
     }
-    setProgression((current) => ({ ...current, walkStopIndex: current.walkStopIndex + 1 }))
+    // Clamped: two clicks inside one frame used to push the index past the last stop, and the
+    // card fell back to the step's title for a render.
+    setProgression((current) => ({
+      ...current,
+      walkStopIndex: Math.min(current.walkStopIndex + 1, MCS_SUPPORT_SPINE.stops.length - 1),
+    }))
   }
 
   /* ---------------------------------------------------------------- *
