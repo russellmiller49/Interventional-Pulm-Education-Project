@@ -64,6 +64,17 @@ Two things to know about them:
 prop: per-caller replacements for the sentence after the outcome label ("The cues support this
 read."), defaulted so every existing caller is untouched.
 
+Which module renders which verdict card decides how much of F10 and F12 it has. `AnswerVerdict`
+already carries a "why the other answers do not fit" disclosure; `ChoiceReasoningFeedback` does not:
+
+| Module       | Renders                                | Consequence                                              |
+| ------------ | -------------------------------------- | -------------------------------------------------------- |
+| MV           | `AnswerVerdict` only                   | F10 already handled; F12 is the frame wording only       |
+| MCS          | **both**                               | has ECMO's exact two-vocabularies-in-one-pathway problem |
+| Hemodynamics | `AnswerVerdict` only (five call sites) | F10 already handled                                      |
+| CRRT         | `ChoiceReasoningFeedback` only         | F10 and F12 both live                                    |
+| ICU sim      | neither — it authors no items          | F10/F11/F12 do not apply as stated                       |
+
 ## The findings, stated so they transfer
 
 Work through these in order. F1–F3 are one job and should land as one change; doing either half
@@ -119,6 +130,32 @@ proposition per option; the key must not be the only option that agrees with the
 
 **F12 · Verdict framing written for a different item type.** Shared feedback wording carries the
 vocabulary of whichever module built it. Pass `frames`.
+
+### Two contract questions this raised, for the owner rather than a session
+
+**The "other answers" disclosure is specified for one component and three surfaces use the other.**
+`docs/critical-care/activity-contract.md:44-47` says the verdict "offers a disclosure covering why
+the other answers do not fit" — written about `AnswerVerdict`, which has it. `:66-68` names
+`ChoiceReasoningFeedback` as a separate component with an additive purpose (concept links and
+citations), and ECMO foundation, the MCS workbench and CRRT Learn all render _that_ one, which does
+not have the disclosure. ECMO fixed it module-side. The question is whether the contract should name
+which component carries it, or whether `ChoiceReasoningFeedback` should simply carry it too — at
+which point ECMO's module-local version should be retired into it.
+
+**The prediction-answerability clause is being violated in at least two modules.**
+`activity-contract.md:70-73`: a prediction step "may not name the expected goal, control or
+direction in its title, instruction, rationale, expected response, help text, highlighted control or
+button label". Two live instances found by this audit, both airtight:
+
+- MV, `content/learningExperiments.ts:176-179` — the stem is "If a higher cycling threshold ends
+  machine inspiration **earlier**, which immediate change should you look for?" and the key is
+  "Shorter machine inspiration". The direction is in the stem.
+- ICU simulation — the scenario title prints directly above the "Working shock mechanism" select
+  (`IcuClinicalPanels.tsx:463`, and again in the always-visible context bar at
+  `IcuSimulatorLab.tsx:846`), which is the module's only committed item.
+
+Neither is a layout defect and neither is what the learner reported; both were found by auditing
+against the contract while looking for something else. They are worth their own pass.
 
 ### Also worth checking, found in ECMO and not fixed there
 
@@ -193,8 +230,12 @@ What is already known about this module's shape:
   (recognizeInstruction, introduction, look, task) rather than authored per phase, so F2's
   "author the location as data on the step" means adding it where those steps are built, and
   auditing each generated sentence for whether it names a surface.
-- Pane order is pinned by __tests__/learn-workspace.test.tsx ("preserves the live, teaching, action
-  pane order"). Treat that test as a decision to be amended deliberately, not worked around.
+- Nothing pins MV's pane order any more. The rebuild deleted the old learn-workspace test that
+  asserted "the live, teaching, action pane order", and no current test reads `data-pane` in this
+  module — the only trace of the order is the workspaceLabel string at
+  components/stage/VentilationStageHost.tsx:1115 and the shared StageLayout's own markup. So the
+  order is changeable without breaking anything, which means it is your judgement to make and to
+  record, not a test's.
 
 Then fix, one commit per finding cluster, MV's full suite green at each, and re-measure the widths
 D2 validated. Amend the D2 record in the same change if you move any of them.
