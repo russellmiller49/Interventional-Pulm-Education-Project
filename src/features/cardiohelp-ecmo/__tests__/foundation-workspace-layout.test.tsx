@@ -397,27 +397,54 @@ describe('stage layout', () => {
     }
   })
 
+  /*
+   * Steps first, simulator last.
+   *
+   * A learner review in September 2026 asked for the prompts and the questions on the left "for a
+   * more natural read". The order is pinned here rather than left to the layout because it is also
+   * what decides which pane a compact viewport opens on, and because the simulator has to stay the
+   * widest pane whatever position it sits in — see the width assertions below.
+   */
   it('renders exactly three panes, each in its own labelled region of the shared workspace', () => {
     mountLesson()
 
     expect(panes().map((pane) => pane.getAttribute('data-pane'))).toEqual([
-      'simulator',
-      'teaching',
       'task',
+      'teaching',
+      'simulator',
     ])
     const workspace = screen.getByRole('region', {
-      name: 'ECMO lesson workspace: simulator, teaching, and steps',
+      name: 'ECMO lesson workspace: steps, teaching, and simulator',
     })
     expect(workspace.className).toContain('workspace')
     expect(shell().querySelector('[data-ecmo-stage-frame]')).toContainElement(workspace)
     for (const [pane, label] of [
-      ['simulator', 'Simulator panel'],
-      ['teaching', 'Teaching panel'],
       ['task', 'Steps panel'],
+      ['teaching', 'Teaching panel'],
+      ['simulator', 'Simulator panel'],
     ] as const) {
       const region = screen.getByRole('region', { name: label })
       expect(region.querySelector(`[data-pane="${pane}"]`)).not.toBeNull()
     }
+  })
+
+  /*
+   * The pane's name is on the pane, not only in its accessible name.
+   *
+   * Every step now says which pane its work is done in ("Where to look: Teaching panel — Circuit
+   * walk"), which is only findable if the pane says the same word on screen. The two halves are
+   * asserted together so neither can be removed on its own.
+   */
+  it("prints each pane's own name on it, in the words the step copy uses", () => {
+    mountLesson()
+
+    expect(
+      Array.from(document.querySelectorAll('[data-pane-label]')).map((label) => label.textContent),
+    ).toEqual([
+      'Steps panel · what to do',
+      'Teaching panel · what to read',
+      'Simulator panel · what to look at',
+    ])
   })
 
   it('mounts the console once, scaled to fit the simulator pane', () => {

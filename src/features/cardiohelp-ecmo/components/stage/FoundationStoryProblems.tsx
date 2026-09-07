@@ -5,6 +5,8 @@ import { Play } from 'lucide-react'
 
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
 
+import { ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
+
 import { orderChoices } from '../../content/choiceOrder'
 import type { EcmoStoryProblem } from '../../content/storyProblems'
 import type { EcmoSimulationState } from '../../engine/types'
@@ -118,6 +120,7 @@ export function FoundationStoryProblems({
                 <ChoiceReasoningFeedback
                   choice={committedChoice}
                   outcome="stated"
+                  frames={ECMO_VERDICT_FRAMES}
                   explanation={story.item.explanation}
                   evidenceIds={story.item.evidenceIds}
                 />

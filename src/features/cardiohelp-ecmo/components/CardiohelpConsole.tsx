@@ -560,6 +560,24 @@ export function CardiohelpConsole({
         <span className={styles.simulatedBadge}>SIMULATED VALUES</span>
       </div>
 
+      {/*
+        Whether this console can be operated, said on the console.
+
+        A learner review in September 2026 read the disabled state as a defect — "none of the
+        buttons actually work at this phase… I was confused on whether I should be interacting with
+        it". The foundation sections teach from bounded, restorable states and hand the learner
+        their changes as named actions in the Steps panel; the drills hand them the console itself.
+        Driven by the prop that decides it rather than by a second flag, so it cannot drift, and
+        worded to stay true: the screen and menu controls are live either way.
+      */}
+      {controlsEnabled ? null : (
+        <p className={styles.readingOnlyNote} data-console-reading-only>
+          <strong>Reading only in this section.</strong> The pump, sweep and alarm controls are off
+          here; the changes this lesson offers are named in the Steps panel. You can still move
+          between the screens.
+        </p>
+      )}
+
       <div className={styles.deviceShell}>
         <div className={styles.deviceBrandRow}>
           <span>CARDIOHELP-i</span>

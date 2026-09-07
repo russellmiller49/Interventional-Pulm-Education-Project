@@ -71,6 +71,32 @@
  * Panes
  * ------------------------------------------------------------------ */
 
+/*
+ * The pane's own name, printed on it.
+ *
+ * Sticky, so the answer to "which panel is this?" is on screen wherever the pane is scrolled to —
+ * which is the state a learner is in when a step tells them to read something and they are three
+ * screens down. Quiet enough not to compete with the pane's first heading.
+ */
+.paneLabel {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 0.3rem 0.1rem 0.35rem;
+  border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  background: #061519;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.paneLabel span {
+  color: var(--ink, #eaf4f4);
+}
+
 .simulatorPane,
 .teachingColumn,
 .taskColumn {
@@ -377,21 +403,112 @@
   gap: 0.4rem;
 }
 
+/*
+ * A bounded action is a button, and has to look like one.
+ *
+ * It used to be a box byte-for-byte identical to `.choice` — the label wrapper around a radio
+ * option a few rows up the same column — with no hover, no focus ring and no pressed state, so the
+ * only thing distinguishing "this changes the circuit" from "this is one of four answers" was the
+ * missing radio dot. A learner review in September 2026 reported working through a whole Act step
+ * without realising these were clickable at all. The treatment is the module's own secondary
+ * button (`.nowSecondary` in the shell stylesheet) plus the accent border this module already uses
+ * to mean "engaged", and the same focus ring every other control in the stage carries.
+ */
 .boundedAction {
-  padding: 0.5rem 0.65rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.1rem 0.55rem;
+  align-items: baseline;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
-  border-radius: 0.65rem;
-  background: transparent;
+  border-radius: 0.75rem;
+  background: rgba(113, 225, 229, 0.05);
   color: inherit;
   font-size: var(--ecmo-type-floor, 0.875rem);
   text-align: left;
   cursor: pointer;
 }
 
+/*
+ * The weight goes on the label, not on the button.
+ *
+ * A `font-weight` on the button itself computes to 400 here — something more specific than this
+ * rule reaches it — and it would style no visible text anyway, since everything inside is either
+ * this label or the `<small>` under it. Measured in the browser rather than assumed.
+ */
+.boundedAction > span {
+  font-weight: 700;
+}
+
+/* The chevron is the affordance a flat outlined box was missing. Decorative: the label carries. */
+.boundedAction::before {
+  grid-row: 1 / span 2;
+  color: var(--cyan-bright, #71e1e5);
+  content: '▸';
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+.boundedAction:hover {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.boundedAction:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.boundedAction:active {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.2);
+}
+
 .boundedAction small {
   display: block;
+  grid-column: 2;
   color: var(--muted, #9fb4b7);
   font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 400;
+}
+
+/*
+ * "Why the other answers do not fit" — folded, because the learner's own answer is what they came
+ * for and the rest is the check on it. Styled as the module's other folded blocks are.
+ */
+.otherAnswers > summary {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.otherAnswers > summary:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.otherAnswers[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.otherAnswers ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+}
+
+.otherAnswers li {
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.55;
+}
+
+.otherAnswers li span {
+  font-weight: 700;
 }
 
 .footerLine {

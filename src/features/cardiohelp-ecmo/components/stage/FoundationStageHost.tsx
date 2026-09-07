@@ -52,6 +52,8 @@ import { FitWidthSurface } from '../FitWidthSurface'
 import { EcmoContextStrip, type EcmoContextStripLine } from '../shell/EcmoContextStrip'
 import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
+import { EcmoLookInLine } from '../shell/EcmoLookInLine'
+import { EcmoOtherAnswers, ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
 import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
@@ -457,6 +459,17 @@ function FoundationStageSession({
    * ---------------------------------------------------------------- */
 
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+
+  /*
+   * Where this step's work is done, said in the same words the pane carries.
+   *
+   * One line, under the instruction, on every step. It exists because a learner review in September
+   * 2026 found four steps on which the only way to know which of three panes was meant was to try
+   * them: "I'm guessing I should read the middle panel, but not sure." `StageLayout` prints the
+   * matching caption on the pane itself, and `foundationLessonRuntime` refuses at import to author a
+   * phase without a location, so the two cannot drift apart.
+   */
+  const lookInLine = activeStep.lookIn ? <EcmoLookInLine location={activeStep.lookIn} /> : undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
   const lookingBack = activeIndex < progression.furthestEntered
@@ -475,6 +488,7 @@ function FoundationStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
+      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
@@ -590,6 +604,21 @@ function FoundationStageSession({
             })),
         }
       : null
+  /*
+   * Which pane a compact viewport opens on for this step.
+   *
+   * A map-answered step's only answer control is the set of places on the circuit map, in the
+   * simulator pane, and at a compact width exactly one pane is on screen — so that step has to open
+   * there whatever its authored location says. Everything else follows the location the Now card
+   * prints, so the pane the learner is sent to is the pane they are shown.
+   */
+  const compactPane = mapAnswer
+    ? 'tertiary'
+    : activeStep.lookIn?.pane === 'teaching'
+      ? 'secondary'
+      : activeStep.lookIn?.pane === 'simulator'
+        ? 'tertiary'
+        : 'primary'
 
   function choiceFieldset(
     item: {
@@ -631,6 +660,60 @@ function FoundationStageSession({
       </fieldset>
     )
   }
+
+  /*
+   * Every step after the commitment can load a state. Transfer needs it too: the VV capstone's
+   * transfer answer is "load the re-drainage preview and read it", which cannot happen if the
+   * actions vanish when the transfer item appears.
+   *
+   * Open on Act and on Observe, folded elsewhere. Observe was folded until a learner review in
+   * September 2026: four sections tell the learner at that step to compare a value "after each
+   * action" or "in both states", and the buttons those sentences mean were behind a closed
+   * disclosure on a step where the console is not operable either.
+   *
+   * On the Act step this whole block is handed to the Now card as its interaction body rather than
+   * rendered after it, which is what the card's own contract has always said should happen with it.
+   * Before that it sat below the card, in the same flat outlined box as a radio option, beside a
+   * bright "Continue" that advanced the step without any action having been run — so the only
+   * control that looked like a control was the one that skipped the work.
+   */
+  const boundedActions =
+    predictionCommitted && activeStep.phase !== 'recognize' && activeStep.phase !== 'predict' ? (
+      <details
+        className={styles.boundedActionsPanel}
+        open={activeStep.phase === 'act' || activeStep.phase === 'observe'}
+        data-bounded-actions
+      >
+        <summary>Actions you can take</summary>
+        <div className={styles.boundedActions}>
+          {runtime.guidedActions.map((guided) => (
+            <button
+              key={guided.id}
+              type="button"
+              className={styles.boundedAction}
+              data-guided-action={guided.id}
+              data-guided-action-kind={guided.kind}
+              onClick={() => runGuidedAction(guided)}
+            >
+              <span className="font-semibold">{guided.label}</span>
+              <small>{guided.description}</small>
+            </button>
+          ))}
+          {session.interactionsSinceRestore.length > 0 ? (
+            <div data-interaction-evidence>
+              <p className={shellStyles.kicker}>Looked at since this circuit was loaded</p>
+              <ul className="mt-1 grid gap-1">
+                {session.interactionsSinceRestore.map((id) => (
+                  <li key={id} data-interaction={id}>
+                    {runtime.guidedActions.find((guided) => guided.id === id)?.label ?? id}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </details>
+    ) : null
 
   const nowBody = (() => {
     const { interaction } = activeStep
@@ -711,6 +794,7 @@ function FoundationStageSession({
         </div>
       )
     }
+    if (interaction.kind === 'bounded-actions') return boundedActions
     if (interaction.kind === 'prediction' || interaction.kind === 'transfer-item') {
       const { item } = interaction
       const committedId =
@@ -747,9 +831,21 @@ function FoundationStageSession({
               <ChoiceReasoningFeedback
                 choice={committedChoice}
                 outcome="stated"
+                frames={ECMO_VERDICT_FRAMES}
                 explanation={item.explanation}
                 evidenceIds={item.evidenceIds}
               />
+              {/*
+                Why the other answers do not fit.
+
+                Five foundation sections tell the learner, one pane to the left, to "commit a
+                prediction, then read why the other answers do not fit" — and this card showed only
+                the chosen option's rationale, so there was nothing to read. The drill half of the
+                same pathway has offered exactly this disclosure all along; the shared card the
+                foundations render does not, and is four other modules' as well. So the foundations
+                render it themselves, in the wording their own instruction already uses.
+              */}
+              <EcmoOtherAnswers item={item} committedChoiceId={committedChoice.id} />
               {interaction.kind === 'prediction' ? (
                 <button type="button" className={shellStyles.nowPrimary} onClick={advance}>
                   Continue
@@ -762,49 +858,6 @@ function FoundationStageSession({
     }
     return null
   })()
-
-  /*
-   * Every step after the commitment can load a state. Transfer needs it too: the VV capstone's
-   * transfer answer is "load the re-drainage preview and read it", which cannot happen if the
-   * actions vanish when the transfer item appears. Open on the Act step, folded elsewhere.
-   */
-  const boundedActions =
-    predictionCommitted && activeStep.phase !== 'recognize' && activeStep.phase !== 'predict' ? (
-      <details
-        className={styles.boundedActionsPanel}
-        open={activeStep.interaction.kind === 'bounded-actions'}
-        data-bounded-actions
-      >
-        <summary>Actions you can take</summary>
-        <div className={styles.boundedActions}>
-          {runtime.guidedActions.map((guided) => (
-            <button
-              key={guided.id}
-              type="button"
-              className={styles.boundedAction}
-              data-guided-action={guided.id}
-              data-guided-action-kind={guided.kind}
-              onClick={() => runGuidedAction(guided)}
-            >
-              <span className="font-semibold">{guided.label}</span>
-              <small>{guided.description}</small>
-            </button>
-          ))}
-          {session.interactionsSinceRestore.length > 0 ? (
-            <div data-interaction-evidence>
-              <p className={shellStyles.kicker}>Looked at since this circuit was loaded</p>
-              <ul className="mt-1 grid gap-1">
-                {session.interactionsSinceRestore.map((id) => (
-                  <li key={id} data-interaction={id}>
-                    {runtime.guidedActions.find((guided) => guided.id === id)?.label ?? id}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      </details>
-    ) : null
 
   /* ---------------------------------------------------------------- *
    * Panes
@@ -910,6 +963,40 @@ function FoundationStageSession({
   const teachingPreview =
     !predictionCommitted && (activeStep.phase === 'recognize' || activeStep.phase === 'predict')
   const teachingExpanded = teachingPreview && progression.expandedTeachingStepId === activeStep.id
+  const narrative =
+    section && prose !== 'none' ? (
+      <section className={teachingStyles.section} aria-labelledby="lesson-narrative-heading">
+        <h3 id="lesson-narrative-heading" className={teachingStyles.heading}>
+          Lesson narrative
+        </h3>
+        <p className="mt-2">{section.summary}</p>
+        {prose === 'full' ? (
+          <>
+            <div className="mt-3 grid gap-3" data-lesson-paragraphs>
+              {section.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+            {section.bullets ? (
+              <ul className="mt-3 grid gap-2" data-lesson-bullets>
+                {section.bullets.map((bullet) => (
+                  <li key={bullet} className="rounded-xl border px-3 py-2">
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
+          </>
+        ) : null}
+        {/*
+          The narrative's own source list used to sit here, at every prose level. An owner
+          review moved every stage list into one folded block in the footer, so this pane
+          carries the lesson and the footer carries what it rests on.
+        */}
+      </section>
+    ) : null
+
   const teaching = (
     <div
       className={styles.teachingColumn}
@@ -937,6 +1024,19 @@ function FoundationStageSession({
       <StageTeachingScope
         value={{ phase: activeStep.phase, predictionCommitted, stepId: activeStep.id }}
       >
+        {/*
+          At Explain the narrative comes first.
+
+          The Explain step's instruction is "review the lesson narrative", and the narrative was
+          rendered after the whole teaching panel — roughly the tenth block down a pane that scrolls
+          on its own and is never scrolled for the learner, under a first line reading "Circuit walk
+          · stop N of 6". A learner review in September 2026: "it tells me to read the lesson
+          narrative, which I'm guessing is the middle panel, although it's not labeled 'lesson
+          narrative' it's labeled 'circuit walk'." At every other step the narrative is a summary or
+          absent, and the panel is what the step is about, so the order only flips where the step
+          asks for the narrative by name.
+        */}
+        {prose === 'full' ? narrative : null}
         <EcmoFoundationTeachingPanel
           sectionId={sectionId}
           state={simulation}
@@ -949,38 +1049,7 @@ function FoundationStageSession({
             pastPrediction: predictionCommitted,
           }}
         />
-        {section && prose !== 'none' ? (
-          <section className={teachingStyles.section} aria-labelledby="lesson-narrative-heading">
-            <h3 id="lesson-narrative-heading" className={teachingStyles.heading}>
-              Lesson narrative
-            </h3>
-            <p className="mt-2">{section.summary}</p>
-            {prose === 'full' ? (
-              <>
-                <div className="mt-3 grid gap-3" data-lesson-paragraphs>
-                  {section.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-                {section.bullets ? (
-                  <ul className="mt-3 grid gap-2" data-lesson-bullets>
-                    {section.bullets.map((bullet) => (
-                      <li key={bullet} className="rounded-xl border px-3 py-2">
-                        {bullet}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
-              </>
-            ) : null}
-            {/*
-              The narrative's own source list used to sit here, at every prose level. An owner
-              review moved every stage list into one folded block in the footer, so this pane
-              carries the lesson and the footer carries what it rests on.
-            */}
-          </section>
-        ) : null}
+        {prose === 'full' ? null : narrative}
         {conflict && prose === 'full' ? (
           <HeldDisagreement conflict={conflict} headingLevel={3} />
         ) : null}
@@ -994,7 +1063,8 @@ function FoundationStageSession({
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <EcmoNowCard model={nowModel}>{nowBody}</EcmoNowCard>
       </div>
-      {boundedActions}
+      {/* On the Act step the card carries these; rendering them here too would duplicate every id. */}
+      {activeStep.interaction.kind === 'bounded-actions' ? null : boundedActions}
       {predictionCommitted &&
       (activeStep.phase === 'observe' || activeStep.phase === 'explain') &&
       storyProblems.length > 0 ? (
@@ -1120,6 +1190,7 @@ function FoundationStageSession({
         <strong>{activeStep.title}</strong>
       </p>
       <p>{activeStep.instruction}</p>
+      {lookInLine ? <p>{lookInLine}</p> : null}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
     </EcmoHelpDialog>
   )
@@ -1141,6 +1212,7 @@ function FoundationStageSession({
           simulator={simulator}
           teaching={teaching}
           task={task}
+          compactPane={compactPane}
           footer={
             <>
               <p className={styles.footerLine}>

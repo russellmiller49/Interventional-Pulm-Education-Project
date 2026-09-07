@@ -84,6 +84,7 @@ export function buildFoundationStageLesson(
       phase,
       title: copy.objective,
       instruction: copy.requiredAction,
+      lookIn: copy.lookIn,
       rationale: copy.teachingPoint,
       focusTarget: null,
       surfaces: SURFACES_BY_PHASE[phase],

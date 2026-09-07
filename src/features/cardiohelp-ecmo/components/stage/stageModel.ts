@@ -2,7 +2,10 @@ import type { ClinicalLearningItem } from '@/features/learning-module/activity/c
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity/types'
 
 import type { EcmoDeliveryAttribution } from '../../content/deliveryAttribution'
-import type { EcmoFoundationGuidedAction } from '../../content/foundationLessonRuntime'
+import type {
+  EcmoFoundationGuidedAction,
+  EcmoPhaseLocation,
+} from '../../content/foundationLessonRuntime'
 import type { EcmoLearnPredictionCommitment } from '../../content/learnPredictionItems'
 import type {
   CircuitViewPreference,
@@ -112,6 +115,15 @@ export interface StageStep {
   readonly title: string
   /** The Now card's instruction: what to do, in one or two sentences. */
   readonly instruction: string
+  /**
+   * Which pane the step is worked in, and what to look for there.
+   *
+   * Authored per phase by the foundation runtime. A learner review in September 2026 found four
+   * steps whose instruction named no pane on a three-pane stage whose panes had no visible names,
+   * so "read the middle panel" was a guess. Optional because a drill step says where it is worked
+   * in its own instruction, which the drill host already prints as "Do this on the simulator."
+   */
+  readonly lookIn?: EcmoPhaseLocation
   /** Why this step matters; disclosed on request, never in the leak-scanned default view. */
   readonly rationale?: string
   /** The single primary action's label. */

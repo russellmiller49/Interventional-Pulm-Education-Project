@@ -176,11 +176,25 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
         </section>
       </PhaseBlock>
 
-      <GuidedValue
-        guide={ecmoDerivedValueGuides.oxygenConsumption}
-        value={consumption}
-        headingLevel={3}
-      />
+      {/*
+        The one block in this panel that was not phase-scoped.
+
+        It stayed fully expanded on all six steps — including the transfer step, whose question is
+        about oxygen content, where the bottom of the pane was a card about oxygen consumption
+        carrying six separate statements that the number is not real. Folded to its heading
+        elsewhere, open where consumption is the subject; nothing already read becomes unreachable,
+        which is the same contract every other block in this panel keeps.
+      */}
+      <PhaseBlock
+        focusAt={['recognize', 'observe']}
+        heading="Oxygen consumption, and what this number is"
+      >
+        <GuidedValue
+          guide={ecmoDerivedValueGuides.oxygenConsumption}
+          value={consumption}
+          headingLevel={3}
+        />
+      </PhaseBlock>
     </div>
   )
 }

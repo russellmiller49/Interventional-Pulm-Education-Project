@@ -348,9 +348,18 @@ describe('answering on the circuit', () => {
       const first = document.querySelector<HTMLInputElement>('[data-prediction-choices] input')
       fireEvent.click(first as HTMLInputElement)
       fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
+      /*
+       * Skip the bounded actions when looking for the way forward.
+       *
+       * They sit inside the Now card on the Act step now, and one of them is labelled "Read the
+       * same speed against a resisted return" — which this matcher reached before the card's own
+       * Continue, leaving the walk parked on the Act step.
+       */
       for (let step = 0; step < 4; step += 1) {
-        const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
-          /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
+        const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
+          (button) =>
+            !button.hasAttribute('data-guided-action') &&
+            /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
         )
         if (!next || next.disabled) break
         fireEvent.click(next)
@@ -384,8 +393,10 @@ describe('answering on the circuit', () => {
     fireEvent.click(radio('between-pump-and-membrane'))
     fireEvent.click(screen.getByRole('button', { name: 'Commit this prediction' }))
     for (let step = 0; step < 4; step += 1) {
-      const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find((button) =>
-        /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
+      const next = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
+        (button) =>
+          !button.hasAttribute('data-guided-action') &&
+          /^(Continue|I have read|Read )/i.test(button.textContent ?? ''),
       )
       if (!next || next.disabled) break
       fireEvent.click(next)

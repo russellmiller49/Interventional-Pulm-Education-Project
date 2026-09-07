@@ -2151,6 +2151,27 @@
   text-transform: uppercase;
 }
 
+/*
+ * "Reading only in this section." — the console saying whether it can be operated.
+ *
+ * Dashed rather than solid so it reads as a note about the device rather than as another control
+ * on it, and placed above the device shell so it is met before the first dead button rather than
+ * after a minute of clicking one.
+ */
+.readingOnlyNote {
+  margin: 0 0 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px dashed var(--line, #244148);
+  border-radius: 0.65rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--ecmo-type-floor, 0.875rem);
+  line-height: 1.5;
+}
+
+.readingOnlyNote strong {
+  color: var(--ink, #eaf4f4);
+}
+
 .simulatedBadge {
   color: #051a1d;
   border: 0;
