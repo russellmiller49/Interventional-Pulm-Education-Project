@@ -2024,6 +2024,105 @@
   line-height: 1.55;
 }
 
+/*
+ * The debrief's interior.
+ *
+ * Seven of the twelve classes this panel's markup asks for had no rule at all — `planComparison`,
+ * `domainComparison`, `debriefTimeline`, `consequenceList`, `conceptList`, `debriefBlock` and
+ * `debriefActions` — so `styles.x` resolved to `undefined`, the class attribute came out empty, and
+ * the whole debrief rendered as browser-default markup. That is why a learner reported it in
+ * September 2026 as "the text is narrow and there's just blocks of it, which can make it difficult
+ * to read", and why the plan comparison ran two sentences together into
+ * "…acute hypercapnic acidemiaExpected in this case:" — two adjacent inline spans with nothing
+ * between them.
+ *
+ * Nothing here is new design; it is the panel's own idiom applied to the markup that was already
+ * written for it.
+ */
+.debriefBlock {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.debriefBlock h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.planComparison,
+.domainComparison,
+.debriefTimeline,
+.consequenceList,
+.conceptList {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.planComparison > div,
+.consequenceList li,
+.conceptList li,
+.domainComparison > li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+/* Whether the committed plan matched is carried by the border, and by the words inside it. */
+.planComparison > div[data-matched='true'] {
+  border-left: 3px solid var(--cyan-bright);
+}
+
+.planComparison > div[data-matched='false'] {
+  border-left: 3px solid var(--amber);
+}
+
+.planComparison dt {
+  font-weight: 700;
+}
+
+/*
+ * The grid is what keeps "You committed:" and "Expected in this case:" on separate lines. They are
+ * two inline spans in the markup, so any inline formatting context runs them together.
+ */
+.planComparison dd {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.planComparison dd span + span,
+.consequenceList li span,
+.conceptList li span {
+  color: var(--muted);
+}
+
+.debriefTimeline li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(16, 46, 52, 0.45);
+}
+
+.debriefTimeline time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.debriefActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
 .debriefScore {
   display: grid;
   grid-template-columns: 1fr auto;
