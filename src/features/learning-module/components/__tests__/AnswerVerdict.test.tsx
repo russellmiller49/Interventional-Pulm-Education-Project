@@ -151,6 +151,35 @@ describe('AnswerVerdict per-caller frames', () => {
   })
 })
 
+describe('AnswerVerdict explanation heading', () => {
+  /*
+   * "How to distinguish it" is a heading for a signal read. A caller whose instruction promises
+   * "the explanation" can say so on the card; a caller that passes nothing keeps the heading.
+   */
+  it('keeps its own heading when none is passed', () => {
+    const { container } = render(
+      <AnswerVerdict item={item} choiceId="drainage-limited" timing="immediate-after-commit" />,
+    )
+    expect(container.querySelector('[data-how-to-distinguish] strong')?.textContent).toBe(
+      'How to distinguish it',
+    )
+  })
+
+  it('prints the heading a caller passes over the same explanation', () => {
+    const { container } = render(
+      <AnswerVerdict
+        item={item}
+        choiceId="drainage-limited"
+        timing="immediate-after-commit"
+        explanationHeading="The explanation"
+      />,
+    )
+    const block = container.querySelector('[data-how-to-distinguish]')
+    expect(block?.querySelector('strong')?.textContent).toBe('The explanation')
+    expect(block?.textContent).toContain(item.explanation)
+  })
+})
+
 describe('AnswerVerdict timing policy', () => {
   it('reveals immediately in Learn', () => {
     const { container } = render(
