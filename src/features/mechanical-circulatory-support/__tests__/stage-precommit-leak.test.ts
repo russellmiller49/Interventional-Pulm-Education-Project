@@ -63,6 +63,8 @@ describe('pre-commitment surfaces, from the registries', () => {
             [
               [`step.${step.id}.title`, step.title],
               [`step.${step.id}.instruction`, step.instruction],
+              [`step.${step.id}.lookIn`, step.lookIn?.landmark ?? ''],
+              [`step.${step.id}.lookIn.also`, step.lookIn?.alsoLandmark ?? ''],
             ] as [string, string][],
         ),
         ...(stage.increment

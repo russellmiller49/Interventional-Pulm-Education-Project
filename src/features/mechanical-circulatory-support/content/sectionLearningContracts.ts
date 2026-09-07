@@ -370,7 +370,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     startingDevice: 'iabp',
     startingActions: [],
     recognizePrompt:
-      'Trace the pathway drawn beneath the model and identify where blood enters and where it returns for the mechanism currently selected.',
+      'Trace the pathway drawn on the Circulation map and identify where blood enters and where it returns for the mechanism currently selected.',
     recognizeOptions: [
       {
         id: 'nothing-enters',
@@ -452,7 +452,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'The prediction is about the shape of the change, not its size. If you expect a device line to appear for two of the three and the pulse to narrow rather than widen, you are reading the pathway rather than the display.',
     actionMode: 'sequence',
     actionInstruction:
-      'Select each mechanism in turn — counterpulsation, then the transvalvular pump, then durable continuous flow — and watch the pathway summary beneath the model change with each one.',
+      'Select each mechanism in turn — counterpulsation, then the transvalvular pump, then durable continuous flow — and watch the pathway drawn on the Circulation map change with each one.',
     targetControl: 'control:select-impella',
     allowedActions: ['control:select-iabp', 'control:select-impella', 'control:select-lvad'],
     isActionSatisfied: (state) =>
@@ -500,7 +500,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'A patient stays congested despite well-timed counterpulsation: the wedge pressure is high and the ventricle is distended.',
     transferPrompt:
-      'Choose the comparison that tests a different mechanism against that problem, then build it in the workspace.',
+      'Choose the comparison that tests a different mechanism against that problem, then select that mechanism with the button under the answer.',
     completionCondition:
       'Recorded once all three mechanisms have been selected, the prediction and its verdict have been worked through, the comparison has been seen, and a transfer answer has been committed.',
     teaching: {
@@ -662,7 +662,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'The rhythm becomes atrial fibrillation with variable cycle lengths, and some assisted beats land in the wrong place.',
     transferPrompt:
-      'Decide how to evaluate a trigger change with an irregular rhythm, then change the trigger in the workspace.',
+      'Decide how to evaluate a trigger change with an irregular rhythm, then change the trigger source in the Controls under the monitor.',
     completionCondition:
       'Recorded once inflation has been returned to within 20 ms of the notch, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
@@ -820,7 +820,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'A patient with high right atrial pressure, a low pulmonary pulsatility ratio and limited left-heart filling remains poorly perfused despite acceptable timing.',
     transferPrompt:
-      'Decide the best next step for that patient, then record the escalation in the workspace.',
+      'Decide the best next step for that patient, then record the escalation with the button under the answer.',
     completionCondition:
       'Recorded once right ventricular contractility has been lowered into its limited range, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
@@ -854,7 +854,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     startingDevice: 'impella',
     startingActions: [],
     recognizePrompt:
-      'Look at the highlighted inlet and outlet in the anatomy pane and identify which chamber this pump is relieving, and which structure inherits the returned flow.',
+      'Read the pump’s path on the Circulation map — from the left ventricle, across the valve, into the aorta — and identify which chamber this pump is relieving, and which structure inherits the returned flow.',
     recognizeOptions: [
       {
         id: 'lv-relieved-aorta-loaded',
@@ -933,7 +933,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'Predicting the direction of the wedge pressure is what separates a guess from a mechanism. If flow falls because the pump stopped removing volume, the chamber behind it has to refill.',
     actionMode: 'adjust',
     actionInstruction:
-      'Change the highlighted placement state from aligned to too deep, then watch the inlet relationship in the anatomy pane and the alarms that follow.',
+      'Change the highlighted placement state from aligned to too deep, then watch the alarm band on the monitor and the displayed pump flow beside it.',
     targetControl: 'control:impella-left-position',
     allowedActions: ['control:impella-left-position'],
     isActionSatisfied: (state) =>
@@ -1017,7 +1017,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       { type: 'SET_IMPELLA_CONTROL', side: 'left', control: 'performanceLevel', value: 7 },
     ],
     recognizePrompt:
-      'Identify, from the highlighted pathway, where a right-sided pump returns the blood it draws.',
+      'Identify on the Circulation map where a right-sided pump returns the blood it draws; the candidates are pinned on it.',
     recognizeOptions: [
       {
         id: 'returns-to-pa',
@@ -1096,7 +1096,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'The arithmetic half of this prediction is the part that transfers. A learner who adds a right-sided pump flow to a left-sided one will also add an extracorporeal flow to a native cardiac output.',
     actionMode: 'select',
     actionInstruction:
-      'Switch the highlighted right-sided support control on, then trace the second pathway that appears in the anatomy pane before you look at any number.',
+      'Switch the highlighted right-sided support control on, then trace the second pathway that appears on the Circulation map before you look at any number.',
     targetControl: 'control:impella-right-enable',
     allowedActions: ['control:impella-right-enable'],
     isActionSatisfied: (state) => state.device.kind === 'impella' && state.device.right.enabled,
@@ -1153,7 +1153,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'A left-sided pump is running at a high level when preload falls abruptly and a suction pattern appears with a lower effective flow.',
     transferPrompt:
-      'Choose the safest immediate response, then make that pump-level change in the workspace.',
+      'Choose the safest immediate response, then make that change to the performance level in the Controls under the monitor.',
     completionCondition:
       'Recorded once right-sided support has been started, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
@@ -1471,7 +1471,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     transferContext:
       'Power rises while effective flow and perfusion worsen together, and the concern is an obstructed flow path.',
     transferPrompt:
-      'Choose the response that respects both the emergency and the device boundary, then record the escalation in the workspace.',
+      'Choose the response that respects both the emergency and the device boundary, then record the escalation with the button under the answer.',
     completionCondition:
       'Recorded once the high-power pattern has been switched on, the prediction and its verdict have been worked through, the before-and-after comparison has been seen, and a transfer answer has been committed.',
     teaching: {
@@ -1509,7 +1509,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       { type: 'SET_PATIENT_CONTROL', control: 'preloadPercent', value: 88 },
     ],
     recognizePrompt:
-      'Read the highlighted filling pressures and identify which side of the heart this profile says is limiting delivery.',
+      'Read the highlighted filling pressures and identify which side of the heart this profile says is limiting delivery; the two sides are pinned on the Circulation map.',
     recognizeOptions: [
       {
         id: 'right-sided',

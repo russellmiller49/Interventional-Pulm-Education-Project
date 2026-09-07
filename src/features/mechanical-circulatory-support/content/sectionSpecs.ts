@@ -1,3 +1,8 @@
+import {
+  stageStepLocationErrors,
+  type StageStepLocation,
+} from '@/features/learning-module/stage/stageModel'
+
 import type { McsDeviceKind } from '../engine/types'
 import { MCS_CONTROL_PANEL, type McsControlId, type McsControlStripState } from './controlPanel'
 import { MCS_DEVICE_INCREMENTS } from './deviceIncrements'
@@ -21,6 +26,15 @@ import { mcsSpineStopIds, type McsSpineStopId } from './supportSpine'
  */
 
 export type McsStagePhaseKey = 'recognize' | 'predict' | 'act' | 'observe' | 'explain' | 'transfer'
+
+const MCS_STAGE_PHASE_KEYS: readonly McsStagePhaseKey[] = [
+  'recognize',
+  'predict',
+  'act',
+  'observe',
+  'explain',
+  'transfer',
+]
 
 export interface McsPracticePairing {
   readonly caseId: string
@@ -53,12 +67,61 @@ export interface McsSectionSpec {
   /** One title per step, shown only once the step is reached. */
   readonly stepTitles: Readonly<Record<McsStagePhaseKey, string>>
   /**
+   * Where each step's work is done: the pane, and the thing inside it, in the words the pane
+   * caption and the surface carry on screen at that step. Authored per step rather than derived,
+   * because a derivation is a guess about content and would be wrong on the step that matters.
+   * The Now card prints it under the instruction; the validator below refuses a missing one, a
+   * pane's own name as a landmark, a number, and a pre-commit landmark that matches a deny pattern.
+   */
+  readonly stepLocations: Readonly<Record<McsStagePhaseKey, StageStepLocation>>
+  /**
+   * Whether the Act step opens the circulation map and leads the simulator pane with it. Authored
+   * where the step's instruction is about what the map draws — the mechanism's pathway changing
+   * as each is selected, a second pathway appearing — so the thing the step names is open at that
+   * step. The validator holds it to the Act location naming the map.
+   */
+  readonly actOpensMap?: true
+  /**
    * What no pre-commitment surface of this section may say: the mechanism, the best action or
    * its direction, and the identifying findings. The leak scans hold every pre-commit surface to
    * these.
    */
   readonly precommitDenyPatterns: readonly RegExp[]
 }
+
+/*
+ * The landmarks a step points at, in the words the surface carries.
+ *
+ * The ones used on more than one step are named once here so a rename on the surface is a rename
+ * in one place: the Now card's own bodies, the disclosures of the simulator pane, and the
+ * headings of the teaching column.
+ */
+const IN_STEPS = {
+  choices: { pane: 'steps', landmark: 'the answer choices below' },
+  account: { pane: 'steps', landmark: 'the before-and-after account and the table below' },
+  accountAndStories: {
+    pane: 'steps',
+    landmark: 'the before-and-after account, the table and the story problems below',
+  },
+} as const satisfies Record<string, StageStepLocation>
+
+const IN_TEACHING = {
+  why: { pane: 'teaching', landmark: 'Why it moved' },
+} as const satisfies Record<string, StageStepLocation>
+
+const ON_SIMULATOR = {
+  map: 'the Circulation map',
+  pins: 'the pins on the Circulation map',
+  controls: 'in the Controls under the monitor',
+} as const
+
+const ALSO_ON_SIMULATOR = (landmark: string) =>
+  ({ alsoPane: 'simulator', alsoLandmark: landmark }) as const
+const ALSO_IN_STEPS = (landmark: string) => ({ alsoPane: 'steps', alsoLandmark: landmark }) as const
+const ALSO_IN_TEACHING = (landmark: string) =>
+  ({ alsoPane: 'teaching', alsoLandmark: landmark }) as const
+/** An identification answered by pointing at the map still commits on the card. */
+const COMMIT_ON_CARD = ALSO_IN_STEPS('Commit this answer, on this card')
 
 export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
   {
@@ -81,6 +144,24 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       observe: 'Compare the readings you opened',
       explain: 'Four questions, four separate answers',
       transfer: 'The same patient, back from imaging',
+    },
+    stepLocations: {
+      recognize: {
+        ...IN_STEPS.choices,
+        ...ALSO_ON_SIMULATOR('the arterial pressure trace on the monitor'),
+      },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'steps',
+        landmark: 'the three Read buttons below',
+        ...ALSO_ON_SIMULATOR('the monitor'),
+      },
+      observe: IN_STEPS.account,
+      explain: IN_TEACHING.why,
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the three Read buttons under them',
+      },
     },
     precommitDenyPatterns: [
       /device (contribution|line|flow)[^.]*\b(zero|empty|none|nothing)\b/i,
@@ -115,6 +196,22 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'What can be set, and what is monitoring',
       transfer: 'A congested patient on a well-timed balloon',
     },
+    stepLocations: {
+      recognize: { ...IN_STEPS.choices, ...ALSO_ON_SIMULATOR(ON_SIMULATOR.map) },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'steps',
+        landmark: 'the three Select buttons below',
+        ...ALSO_ON_SIMULATOR(ON_SIMULATOR.map),
+      },
+      observe: IN_STEPS.account,
+      explain: { pane: 'steps', landmark: 'the sort below', ...ALSO_IN_TEACHING('Why it moved') },
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the Select button under them',
+      },
+    },
+    actOpensMap: true,
     // The balloon's emptiness is the first section's answer, taught before this one, so the walk
     // may say it; what this section withholds is the comparison across the three.
     precommitDenyPatterns: [
@@ -147,6 +244,23 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'Timing decides how much is available',
       transfer: 'The same balloon in atrial fibrillation',
     },
+    stepLocations: {
+      recognize: {
+        ...IN_STEPS.choices,
+        ...ALSO_ON_SIMULATOR('the arterial pressure trace on the monitor'),
+      },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `Inflation vs notch, ${ON_SIMULATOR.controls}, and the arterial pressure trace above it`,
+      },
+      observe: { ...IN_STEPS.account, ...ALSO_ON_SIMULATOR('the alarm band on the monitor') },
+      explain: IN_TEACHING.why,
+      transfer: {
+        ...IN_STEPS.choices,
+        ...ALSO_ON_SIMULATOR(`Trigger source, ${ON_SIMULATOR.controls}`),
+      },
+    },
     precommitDenyPatterns: [
       /raises? the pressure the ventricle/i,
       /before the (aortic )?valve has closed/i,
@@ -177,6 +291,20 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'Right, and insufficient',
       transfer: 'High right atrial pressure, limited left-heart filling',
     },
+    stepLocations: {
+      recognize: { ...IN_STEPS.choices, ...ALSO_ON_SIMULATOR('the response trend on the monitor') },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `RV contractility, ${ON_SIMULATOR.controls}, and the response trend above it`,
+      },
+      observe: { ...IN_STEPS.account, ...ALSO_ON_SIMULATOR('the response trend on the monitor') },
+      explain: IN_TEACHING.why,
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the Escalate button under them',
+      },
+    },
     precommitDenyPatterns: [
       /right atrial pressure[^.]*\b(rises|rising|climbs)\b/i,
       /synchrony holds/i,
@@ -204,6 +332,20 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       observe: "Compare the pump's account with the ventricle's",
       explain: 'A pump in two chambers',
       transfer: 'Position acceptable, pressures high, flow falling',
+    },
+    stepLocations: {
+      recognize: { ...IN_STEPS.choices, ...ALSO_ON_SIMULATOR(ON_SIMULATOR.map) },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `Placement state, ${ON_SIMULATOR.controls}, and the alarm band above it`,
+      },
+      observe: IN_STEPS.account,
+      explain: IN_TEACHING.why,
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the Read button under them',
+      },
     },
     precommitDenyPatterns: [
       /flow falls by (about )?half/i,
@@ -234,6 +376,25 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'One stream, measured twice',
       transfer: 'A sudden fall in preload, the same alarm',
     },
+    stepLocations: {
+      recognize: { pane: 'simulator', landmark: ON_SIMULATOR.pins, ...COMMIT_ON_CARD },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `Right-sided support, ${ON_SIMULATOR.controls}, and the Circulation map above it`,
+      },
+      observe: IN_STEPS.accountAndStories,
+      explain: {
+        pane: 'steps',
+        landmark: 'the story problems below',
+        ...ALSO_IN_TEACHING('Why it moved'),
+      },
+      transfer: {
+        ...IN_STEPS.choices,
+        ...ALSO_ON_SIMULATOR(`Performance level, ${ON_SIMULATOR.controls}`),
+      },
+    },
+    actOpensMap: true,
     precommitDenyPatterns: [
       /suction clears/i,
       /\bin series\b/i,
@@ -265,6 +426,27 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       explain: 'A pressure improvement that is not a perfusion improvement',
       transfer: 'The same rise in resistance, overnight',
     },
+    stepLocations: {
+      recognize: {
+        ...IN_STEPS.choices,
+        ...ALSO_ON_SIMULATOR('the controller readout on the monitor'),
+      },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `SVR, ${ON_SIMULATOR.controls}, and the controller readout above it`,
+      },
+      observe: IN_STEPS.accountAndStories,
+      explain: {
+        pane: 'steps',
+        landmark: 'the story problems below',
+        ...ALSO_IN_TEACHING('Why it moved'),
+      },
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the Read button under them',
+      },
+    },
     precommitDenyPatterns: [
       /computed from (pump )?power/i,
       /derived from (pump )?power/i,
@@ -293,6 +475,23 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       observe: 'Compare power with the flow display',
       explain: 'The signal the flow display does not carry',
       transfer: 'Power rising while perfusion worsens',
+    },
+    stepLocations: {
+      recognize: { ...IN_STEPS.choices, ...ALSO_ON_SIMULATOR('the alarm band on the monitor') },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `High-power / thrombosis pattern, ${ON_SIMULATOR.controls}, and the controller readout above it`,
+      },
+      observe: {
+        ...IN_STEPS.account,
+        ...ALSO_ON_SIMULATOR('the alarm band on the monitor and the interpretation beneath it'),
+      },
+      explain: IN_TEACHING.why,
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the Escalate button under them',
+      },
     },
     // The prediction's own stem names the pattern it switches on; what is withheld is what the
     // pattern does to power and to the flow display.
@@ -328,6 +527,24 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       observe: 'Compare the gain with the levels added',
       explain: 'The limiting problem selects',
       transfer: 'The same low output, right atrial pressure rising',
+    },
+    stepLocations: {
+      recognize: {
+        pane: 'simulator',
+        landmark: `the filling pressures on the monitor, and ${ON_SIMULATOR.pins}`,
+        ...COMMIT_ON_CARD,
+      },
+      predict: IN_STEPS.choices,
+      act: {
+        pane: 'simulator',
+        landmark: `Performance level, ${ON_SIMULATOR.controls}, and the filling pressures above it`,
+      },
+      observe: IN_STEPS.account,
+      explain: IN_TEACHING.why,
+      transfer: {
+        pane: 'steps',
+        landmark: 'the answer choices below, then the two Read buttons under them',
+      },
     },
     precommitDenyPatterns: [
       /\bright side\b/i,
@@ -410,6 +627,33 @@ export function validateMcsSectionSpecs(
     }
     if (spec.precommitDenyPatterns.length === 0) {
       errors.push(`${where}: no deny patterns, so nothing is withheld`)
+    }
+
+    // Every step says where it is worked, in words the panes carry, and a pre-commit location
+    // can no more name an answer than a title can.
+    for (const phase of MCS_STAGE_PHASE_KEYS) {
+      const location = spec.stepLocations?.[phase]
+      const label = `${where}.stepLocations.${phase}`
+      errors.push(...stageStepLocationErrors(label, location))
+      if (!location) continue
+      for (const landmark of [location.landmark, location.alsoLandmark ?? '']) {
+        if (!landmark) continue
+        errors.push(...mcsLearnerCopyErrors(label, landmark))
+        if (phase === 'recognize' || phase === 'predict') {
+          for (const pattern of spec.precommitDenyPatterns) {
+            if (pattern.test(landmark)) {
+              errors.push(`${label}: the location matches its own deny pattern ${pattern}`)
+            }
+          }
+        }
+      }
+    }
+    if (spec.actOpensMap) {
+      const act = spec.stepLocations?.act
+      const names = `${act?.landmark ?? ''} ${act?.alsoLandmark ?? ''}`
+      if (!/circulation map/i.test(names)) {
+        errors.push(`${where}: the Act step opens the map, but its location does not name it`)
+      }
     }
 
     // Prerequisites: distinct, not self, spec'd, and taught earlier on the one pathway.

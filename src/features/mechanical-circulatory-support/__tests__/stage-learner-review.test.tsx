@@ -29,6 +29,7 @@ jest.mock('../components/McsAnatomy3D', () =>
 import { McsStageHost } from '../components/stage/McsStageHost'
 import { mcsLessonTransferByLessonId } from '../content/lessonTransfers'
 import { mcsSectionLearningContractById } from '../content/sectionLearningContracts'
+import { buildMcsStageLesson, mcsStageLessonIds } from '../content/stageLessons'
 import { mcsSpineStop } from '../content/supportSpine'
 import {
   answerIdentification,
@@ -71,6 +72,58 @@ describe('the panes say what they are', () => {
     ])
     for (const name of ['Steps panel', 'Teaching panel', 'Simulator panel']) {
       expect(screen.getByRole('region', { name })).toBeInTheDocument()
+    }
+  })
+})
+
+describe('every step says where it is worked', () => {
+  it('authors a location on every step of every section, in words the panes carry', () => {
+    for (const sectionId of mcsStageLessonIds) {
+      for (const step of buildMcsStageLesson(sectionId).steps) {
+        expect(`${step.id}: ${step.lookIn?.pane ?? 'none'}`).toMatch(
+          /: (steps|teaching|simulator)$/,
+        )
+        expect(step.lookIn?.landmark.trim().length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('prints the location under the instruction, naming a pane whose caption says the same word', () => {
+    mountSection('mcs-foundations-mechanisms')
+    const where = document.querySelector('[data-now-card] [data-now-where]')
+    expect(where?.textContent).toBe(
+      'Where to look: Steps panel — this card, one stop at a time, and Simulator panel — the Circulation map, where each stop lights.',
+    )
+    const captions = [...document.querySelectorAll('[data-pane-label]')].map(
+      (label) => label.textContent ?? '',
+    )
+    for (const named of where?.querySelectorAll('strong') ?? []) {
+      expect(captions.some((caption) => caption.startsWith(named.textContent ?? '∅'))).toBe(true)
+    }
+    walkTheLoop()
+    expect(currentStepId()).toBe('mcs-foundations-mechanisms-recognize')
+    expect(document.querySelector('[data-now-card] [data-now-where]')?.textContent).toBe(
+      'Where to look: Steps panel — the answer choices below, and Simulator panel — the Circulation map.',
+    )
+  })
+
+  it('repeats the location in the help dialog', () => {
+    mountSection('iabp-timing-triggering')
+    fireEvent.click(screen.getByRole('button', { name: /What do I do now/ }))
+    expect(document.querySelector('dialog')?.textContent).toMatch(
+      /Where to look: Steps panel — the answer choices below, and Simulator panel — the arterial pressure trace on the monitor\./,
+    )
+  })
+
+  it('opens the map on the Act step whose instruction is about what the map draws', () => {
+    for (const [sectionId, opens] of [
+      ['mcs-foundations-mechanisms', true],
+      ['impella-suction-purge-rv', true],
+      ['impella-unloading-placement', false],
+      ['lvad-parameters-assessment', false],
+    ] as const) {
+      const act = buildMcsStageLesson(sectionId).steps.find((step) => step.phase === 'act')!
+      expect(`${sectionId}: ${act.surfaces.includes('map')}`).toBe(`${sectionId}: ${opens}`)
     }
   })
 })
@@ -243,7 +296,8 @@ describe('the compact viewport opens on the pane the step is worked in', () => {
     })
     expect(visiblePane()).toBe('task')
     walkTheLoop()
-    // The identification that follows is answered on the map.
+    // The identification that follows is read on the map and answered on the card, so the card
+    // is the pane a compact viewport shows; the map is the second place the location names.
     expect(document.querySelector('[data-map-answer-prompt]')).toBeNull()
     expect(visiblePane()).toBe('task')
   })
