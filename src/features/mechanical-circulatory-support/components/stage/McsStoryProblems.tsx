@@ -13,6 +13,7 @@ import {
   runMcsStory,
   type McsStoryProblem,
 } from '../../content/storyProblems'
+import { mcsVerdictFrames } from './McsStageHost'
 import styles from './mcs-stage.module.css'
 
 /**
@@ -118,6 +119,8 @@ function StoryCard({
           <ChoiceReasoningFeedback
             choice={committedChoice}
             outcome="stated"
+            frames={mcsVerdictFrames(story.item)}
+            alternatives={story.item.choices}
             explanation={story.item.explanation}
             evidenceIds={story.item.evidenceIds}
           />

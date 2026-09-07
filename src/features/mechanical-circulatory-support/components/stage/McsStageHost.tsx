@@ -11,6 +11,7 @@ import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { ContextStrip, type ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
@@ -18,6 +19,8 @@ import { StageLayout } from '@/features/learning-module/stage/StageLayout'
 import {
   STAGE_PHASE_LABELS,
   canEnterStep,
+  compactPaneForLocation,
+  type StagePaneId,
   type StagePhase,
 } from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
@@ -51,6 +54,7 @@ import {
   writeMcsProgress,
 } from '../../engine'
 import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../../engine/types'
+import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import type {
   CirculationMapAnswer,
   CirculationMapEmphasis,
@@ -78,6 +82,59 @@ import styles from './mcs-stage.module.css'
 
 const LOOKING_BACK =
   'You are looking back at an earlier step; nothing you have worked through is lost.'
+
+/*
+ * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
+ * for, and the simulator kept the widest of the three.
+ *
+ * The stage was adopted with the simulator first and the steps last, and with no visible pane
+ * names at all. A learner review of the ECMO module in September 2026 asked for the prompts and
+ * questions on the left "for a more natural read" and reported guessing which of three unnamed
+ * panes each instruction meant; this module had the same shape, and one more cost: a compact
+ * viewport opens on the first pane, which was the monitor while every answer control but two sat
+ * in the pane it could not show. The monitor and the map are never scaled, so the fractions keep
+ * the simulator the widest pane whatever end of the row it sits at. Recorded in the module's
+ * learner-review record, which amends the flow-rebuild record's measured order.
+ */
+const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
+const PANE_CAPTIONS = {
+  steps: 'what to do',
+  teaching: 'what to read',
+  simulator: 'the monitor, the map and the controls',
+} as const
+const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
+const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
+
+/*
+ * The sentence after the outcome, in this module's own words.
+ *
+ * The shared card's defaults were written for signal-recognition items: "The cues support this
+ * read", and for a partly-correct answer "One more cue changes the working frame", which is the
+ * hemodynamics module's vocabulary. Every prediction here asks what the circulation will do, and
+ * every transfer asks for a response — the best first response, the safest immediate response,
+ * the reasoning that selects the next mechanism — so the card says which of those it is judging.
+ * The stories are predictions too. The unsafe frame under a prediction says that acting on the
+ * expectation is the harm, because after the learner-review round no prediction option is a move.
+ */
+const PREDICTION_FRAMES = {
+  best: 'That is what the circulation does.',
+  'reasonable-but-incomplete':
+    'Defensible as far as it goes, and it leaves the limiting problem unnamed.',
+  'incorrect-mechanism': 'That mechanism would move the readings differently.',
+  unsafe: 'Stopping here — acting on that expectation could harm a real patient.',
+} as const
+
+const RESPONSE_FRAMES = {
+  best: 'That is the response this pattern calls for.',
+  'reasonable-but-incomplete': 'Defensible as far as it goes, and it leaves a step out.',
+  'incorrect-mechanism': 'That response answers a different problem.',
+} as const
+
+export function mcsVerdictFrames(item: ClinicalLearningItem) {
+  return item.itemType === 'transfer-case' || item.itemType === 'management-decision'
+    ? RESPONSE_FRAMES
+    : PREDICTION_FRAMES
+}
 
 const GUIDED_ACTION_IDS: Readonly<Record<string, McsAction>> = {
   'inspect:arterial': { type: 'INSPECT', id: 'arterial' },
@@ -446,6 +503,18 @@ function McsStageSession({
         }
       : null
 
+  /*
+   * Which pane a compact viewport opens on for this step.
+   *
+   * A map-answered identification's only answer control is the set of pins on the circulation
+   * map, in the simulator pane, and at a compact width exactly one pane is on screen — so that
+   * step opens there whatever its authored location says. Everything else follows the location
+   * the Now card prints, so the pane the learner is sent to is the pane they are shown.
+   */
+  const compactPane: StagePaneId = identifyOnMap
+    ? 'simulator'
+    : compactPaneForLocation(activeStep.lookIn)
+
   const litStopIds: readonly McsSpineStopId[] =
     walking && walkStop ? [walkStop.id] : activeStep.stopIds
   const emphasis: CirculationMapEmphasis | null = (() => {
@@ -465,6 +534,14 @@ function McsStageSession({
    * ---------------------------------------------------------------- */
 
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+  /*
+   * Where this step's work is done, said in the same words the pane caption carries.
+   *
+   * One line, under the instruction, on every step; the help dialog repeats it. The lessons
+   * registry refuses at import to author a step without a location, so the caption on the pane
+   * and the line on the card cannot drift apart.
+   */
+  const lookInLine = activeStep.lookIn ? <LookInLine location={activeStep.lookIn} /> : undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id)
   const withLookingBack = (own: string) => (lookingBack ? `${own} ${LOOKING_BACK}` : own)
@@ -483,6 +560,7 @@ function McsStageSession({
           ? `Stop ${walkStop.ordinal} of ${MCS_SUPPORT_SPINE.stops.length}: ${walkStop.plainName}`
           : activeStep.title,
       body: walking && walkStop ? walkStop.whereYouAre : activeStep.instruction,
+      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
@@ -775,6 +853,8 @@ function McsStageSession({
                 <ChoiceReasoningFeedback
                   choice={committedChoice}
                   outcome="stated"
+                  frames={mcsVerdictFrames(interaction.item)}
+                  alternatives={interaction.item.choices}
                   explanation={interaction.item.explanation}
                   evidenceIds={interaction.item.evidenceIds}
                 />
@@ -806,8 +886,8 @@ function McsStageSession({
               <p data-target-control={target.id}>
                 <strong>{target.label}.</strong>{' '}
                 {target.location === 'guided-actions'
-                  ? 'Use the control below.'
-                  : `Open the controls beside the monitor; it is the highlighted one.`}
+                  ? 'Use the button below.'
+                  : 'It is in the Controls under the monitor, in the Simulator panel, and it is highlighted.'}
               </p>
             ) : null}
             {guidedActionButtons(
@@ -823,51 +903,84 @@ function McsStageSession({
         )
       }
       case 'observe':
+        /*
+         * The authored account first, the numbers second.
+         *
+         * The contract authors three sentences for what the learner had before the change and
+         * three for what they have now, validated at import — and until the learner-review round
+         * nothing rendered them: the step carried them and the card showed only the table. They
+         * are the prose the numbers are read against, and on the second section they are the
+         * three-mechanism account the numbers alone cannot carry.
+         */
         return (
-          <table className={stageStyles.compareTable} data-before-after>
-            <caption className={styles.visuallyHidden}>
-              Readings before and after the change
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Reading</th>
-                <th scope="col">Before</th>
-                <th scope="col">Now</th>
-              </tr>
-            </thead>
-            <tbody>
-              {interaction.signals.map((signal) => {
-                const before = progression.beforeMetrics?.[signal.key] ?? null
-                const now = state.metrics[signal.key]
-                const format = (value: number | boolean | null) =>
-                  value === null
-                    ? 'not captured'
-                    : typeof value === 'boolean'
-                      ? value
-                        ? 'yes'
-                        : 'no'
-                      : value.toFixed(signal.digits)
-                const direction =
-                  typeof before === 'number' && typeof now === 'number'
-                    ? now - before > 10 ** -signal.digits / 2
-                      ? 'up'
-                      : before - now > 10 ** -signal.digits / 2
-                        ? 'down'
-                        : 'flat'
-                    : undefined
-                return (
-                  <tr key={signal.key} data-signal={signal.key} data-level={signal.level}>
-                    <th scope="row">
-                      {signal.label}
-                      {signal.unit ? <small> {signal.unit}</small> : null}
-                    </th>
-                    <td>{format(before)}</td>
-                    <td data-direction={direction}>{format(now)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <>
+            <div className={styles.beforeAfter} data-before-after-labels>
+              <div>
+                <p className={styles.kicker} id="before-labels-heading">
+                  What you had before
+                </p>
+                <ul aria-labelledby="before-labels-heading" data-before-labels>
+                  {interaction.beforeLabels.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className={styles.kicker} id="after-labels-heading">
+                  What you have now
+                </p>
+                <ul aria-labelledby="after-labels-heading" data-after-labels>
+                  {interaction.afterLabels.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <table className={stageStyles.compareTable} data-before-after>
+              <caption className={styles.visuallyHidden}>
+                Readings before and after the change
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Reading</th>
+                  <th scope="col">Before</th>
+                  <th scope="col">Now</th>
+                </tr>
+              </thead>
+              <tbody>
+                {interaction.signals.map((signal) => {
+                  const before = progression.beforeMetrics?.[signal.key] ?? null
+                  const now = state.metrics[signal.key]
+                  const format = (value: number | boolean | null) =>
+                    value === null
+                      ? 'not captured'
+                      : typeof value === 'boolean'
+                        ? value
+                          ? 'yes'
+                          : 'no'
+                        : value.toFixed(signal.digits)
+                  const direction =
+                    typeof before === 'number' && typeof now === 'number'
+                      ? now - before > 10 ** -signal.digits / 2
+                        ? 'up'
+                        : before - now > 10 ** -signal.digits / 2
+                          ? 'down'
+                          : 'flat'
+                      : undefined
+                  return (
+                    <tr key={signal.key} data-signal={signal.key} data-level={signal.level}>
+                      <th scope="row">
+                        {signal.label}
+                        {signal.unit ? <small> {signal.unit}</small> : null}
+                      </th>
+                      <td>{format(before)}</td>
+                      <td data-direction={direction}>{format(now)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </>
         )
       case 'explain': {
         const sort = interaction.sort
@@ -969,6 +1082,8 @@ function McsStageSession({
                 <ChoiceReasoningFeedback
                   choice={committedChoice}
                   outcome="stated"
+                  frames={mcsVerdictFrames(transfer.item)}
+                  alternatives={transfer.item.choices}
                   explanation={transfer.item.explanation}
                   evidenceIds={transfer.item.evidenceIds}
                 />
@@ -980,7 +1095,10 @@ function McsStageSession({
               </p>
               {guidedActionButtons(transfer.requiredActionIds)}
               {needsControls ? (
-                <p>Open the controls beside the monitor; the one to use is highlighted.</p>
+                <p>
+                  The control to use is in the Controls under the monitor, in the Simulator panel,
+                  and it is highlighted.
+                </p>
               ) : null}
               <p role="status" aria-live="polite" data-transfer-work-status>
                 {transferWorkDone ? 'Done in the new patient.' : 'Not yet done in the new patient.'}
@@ -1229,6 +1347,7 @@ function McsStageSession({
         <strong>{activeStep.title}</strong>
       </p>
       <p>{activeStep.instruction}</p>
+      {lookInLine ? <p>{lookInLine}</p> : null}
       {activeStep.rationale && predictionCommitted ? <p>{activeStep.rationale}</p> : null}
     </HelpDialog>
   )
@@ -1245,7 +1364,7 @@ function McsStageSession({
             stageId={activeStep.id}
             label="Mechanical circulatory support section"
             module="mechanical-circulatory-support"
-            workspaceLabel="Mechanical circulatory support lesson workspace: simulator, teaching, and steps"
+            workspaceLabel="Mechanical circulatory support lesson workspace: steps, teaching, and simulator"
             header={header}
             contextStrip={
               <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
@@ -1253,6 +1372,11 @@ function McsStageSession({
             simulator={simulator}
             teaching={teaching}
             task={task}
+            paneOrder={PANE_ORDER}
+            paneCaptions={PANE_CAPTIONS}
+            defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+            paneMinimums={PANE_MINIMUMS}
+            compactPane={compactPane}
             footer={
               <>
                 <p className={stageStyles.footerLine}>

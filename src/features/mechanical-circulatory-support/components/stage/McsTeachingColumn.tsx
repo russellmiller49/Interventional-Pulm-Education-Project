@@ -148,10 +148,17 @@ export function McsTeachingColumn({
             <p>{stop.whereYouAre}</p>
             <p>{stop.whatADeviceDoesHere}</p>
             <p className={styles.analogy}>{stop.analogy}</p>
-            <p>
-              <strong>Check here:</strong>
+            {/*
+              The short list, with the label that says what kind of list it is and the markers
+              that say it is a list. It rendered as a bold "Check here:" over three bare lines
+              with the marker reset away, and read as more prose. One label fits all five stops
+              here — each list is the few things to check at that place — so it is not authored
+              per stop the way the hemodynamics spine's is.
+            */}
+            <p className={styles.kicker} id={`stop-checklist-${stop.id}`} data-stop-checklist-label>
+              What to check at this stop
             </p>
-            <ul>
+            <ul aria-labelledby={`stop-checklist-${stop.id}`} data-stop-checklist>
               {stop.checklist.map((line) => (
                 <li key={line}>{line}</li>
               ))}
