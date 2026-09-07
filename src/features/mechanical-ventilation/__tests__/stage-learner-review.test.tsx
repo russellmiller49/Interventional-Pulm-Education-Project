@@ -3,7 +3,11 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 
 import { STAGE_PANE_NAMES } from '@/features/learning-module/stage/stageModel'
 
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
+import { BREATH_STOP_CHECKLIST_LABEL, breathStopIds } from '../content/breathSpine'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import { ventilationExperimentByUnit } from '../content/learningExperiments'
 import { ventilationStageLesson, ventilationStageLessonErrors } from '../content/stageLessons'
@@ -206,5 +210,135 @@ describe('every step says where it is worked', () => {
         { name: 'The picture and the checklist' },
       ),
     ).toBeInTheDocument()
+  })
+})
+
+describe('the simulator says when it cannot be operated', () => {
+  it('names the lock while the learner decides, and the pause while they look back', () => {
+    const unitId = 'mechanics-load-and-pressure'
+    const lesson = mount(unitId)
+    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[1].id)
+    expect(document.querySelector('[data-controls-locked-note]')?.textContent).toMatch(
+      /locked while you decide/,
+    )
+    expect(document.querySelector('[data-controls-paused-note]')).toBeNull()
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
+    fireEvent.click(primary()!)
+    expect(document.querySelector('[data-controls-locked-note]')).toBeNull()
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[2].id)
+    expect(document.querySelector('[data-quick-controls-note]')?.textContent).toBe(
+      'The same settings as on the console.',
+    )
+
+    // Meet the goals, move on to Observe, then look back at Act — where the quick controls are.
+    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
+      target: { value: '2' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
+    simulate(6)
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[3].id)
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(stageId()).toBe(lesson.steps[2].id)
+    expect(document.querySelector('[data-now-status]')?.textContent).toMatch(/looking back/)
+    expect(
+      document.querySelector('[data-ventilation-console]')?.getAttribute('data-controls-locked'),
+    ).toBe('true')
+    expect(document.querySelector('[data-controls-locked-note]')).toBeNull()
+    expect(document.querySelector('[data-controls-paused-note]')?.textContent).toMatch(
+      /paused while you look back/,
+    )
+    expect(document.querySelector('[data-quick-controls-note]')?.textContent).toBe(
+      'Paused while you look back.',
+    )
+    // The transport stays live in both states, and neither note claims otherwise.
+    expect(screen.getByRole('button', { name: /Advance one breath/ })).toBeEnabled()
+  })
+})
+
+describe('Reset patient says what it does', () => {
+  it('waits while the learner decides, is paused on a look-back, and says what it clears once there is something to clear', () => {
+    const unitId = 'mechanics-load-and-pressure'
+    const lesson = mount(unitId)
+    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
+    const reset = () => screen.getByRole('button', { name: /Reset patient/ })
+    expect(reset()).toBeEnabled()
+    expect(reset().getAttribute('title')).toMatch(/Your prediction is kept/)
+    expect(document.querySelector('[data-reset-note]')).toBeNull()
+
+    // Deciding: a reset would only send the learner back a step, so it waits and says so.
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[1].id)
+    expect(reset()).toBeDisabled()
+    expect(reset().getAttribute('title')).toMatch(/while you decide/)
+
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
+    fireEvent.click(primary()!)
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[2].id)
+    expect(reset()).toBeEnabled()
+    expect(document.querySelector('[data-reset-note]')).toBeNull()
+
+    // A change has been made: the surface says what a reset would undo.
+    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
+      target: { value: '2' },
+    })
+    expect(document.querySelector('[data-reset-note]')?.textContent).toMatch(
+      /clears the change, hold or observation you have made\. Your prediction is kept\./,
+    )
+    expect(reset().getAttribute('aria-describedby')).toBe(
+      document.querySelector('[data-reset-note]')?.getAttribute('id'),
+    )
+
+    // Looking back: paused with the other controls.
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(reset()).toBeDisabled()
+    expect(reset().getAttribute('title')).toMatch(/Return to the live step/)
+    expect(document.querySelector('[data-reset-note]')).toBeNull()
+  })
+})
+
+describe('the short list says what kind of list it is', () => {
+  const stageStyles = readFileSync(
+    join(
+      process.cwd(),
+      'src/features/mechanical-ventilation/components/stage/ventilation-stage.module.css',
+    ),
+    'utf8',
+  )
+
+  it('labels the walk card checklist and the teaching stop checklist with one label, and marks them', () => {
+    mount('waveform-anatomy')
+    for (const stopId of breathStopIds) {
+      const card = document.querySelector(`[data-walk-stop="${stopId}"]`) as HTMLElement
+      const label = card.querySelector('[data-walk-checklist-label]')
+      expect(label?.textContent).toBe(BREATH_STOP_CHECKLIST_LABEL)
+      const list = card.querySelector('[data-walk-checklist]')
+      expect(list?.getAttribute('aria-labelledby')).toBe(label?.getAttribute('id'))
+      expect(list?.querySelectorAll('li').length).toBeGreaterThan(0)
+      const teaching = document.querySelector(
+        `[data-teaching-block="stop"][data-stop="${stopId}"]`,
+      ) as HTMLElement
+      const teachingList = teaching.querySelector('[data-stop-checklist]')
+      expect(
+        document.getElementById(teachingList?.getAttribute('aria-labelledby') ?? '')?.textContent,
+      ).toBe(BREATH_STOP_CHECKLIST_LABEL)
+      fireEvent.click(primary()!)
+    }
+    // The base stylesheet resets every list's marker; these two put it back.
+    expect(stageStyles).toMatch(/\.walk ul {[^}]*list-style: disc;/)
+    expect(stageStyles).toMatch(/\.block ul {[^}]*list-style: disc;/)
+    expect(stageStyles).toMatch(/\.block ol {[^}]*list-style: decimal;/)
+  })
+
+  it('reads the muted colour from the shell token, never from the Tailwind triple', () => {
+    // Inside the shared workspace `--muted` is an HSL triple, invalid as a colour, so every read
+    // of it silently inherited the ink. Only the comment that says so may mention it.
+    const reads = stageStyles.match(/var\(--muted[,)]/g) ?? []
+    expect(reads).toEqual([])
+    expect(stageStyles).toMatch(/var\(--stage-muted, #9fb4b7\)/)
   })
 })

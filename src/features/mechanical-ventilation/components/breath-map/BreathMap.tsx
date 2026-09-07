@@ -303,7 +303,6 @@ export function BreathMap({
           })}
         </fieldset>
       ) : null}
-      <p className={styles.equivalent}>{description}</p>
     </section>
   )
 }

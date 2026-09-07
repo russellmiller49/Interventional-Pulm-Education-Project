@@ -3,7 +3,11 @@
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import type { StageBlockVisibility } from '@/features/learning-module/stage/StageTeachingScope'
 
-import { breathStop, type BreathStopId } from '../../content/breathSpine'
+import {
+  BREATH_STOP_CHECKLIST_LABEL,
+  breathStop,
+  type BreathStopId,
+} from '../../content/breathSpine'
 import { breathGrammarRows, breathGrammarRowsFor } from '../../content/breathGrammar'
 import { VENTILATION_CONTROL_PANEL } from '../../content/controlPanel'
 import { labMetricLabels } from '../../engine/learningLab'
@@ -137,7 +141,10 @@ export function VentilationTeachingColumn({
                   <dd>{stop.look.volume}</dd>
                 </div>
               </dl>
-              <ul>
+              <p className={styles.kicker} id={`teaching-stop-${stopId}-checklist`}>
+                {BREATH_STOP_CHECKLIST_LABEL}
+              </p>
+              <ul aria-labelledby={`teaching-stop-${stopId}-checklist`} data-stop-checklist>
                 {stop.checklist.map((line) => (
                   <li key={line}>{line}</li>
                 ))}

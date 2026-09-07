@@ -18,6 +18,16 @@ import type { VentilationLearningUnit } from './learningCurriculum'
 
 export type BreathStopId = 'trigger' | 'inspiration' | 'cycling' | 'expiration'
 
+/**
+ * The label over every stop's checklist, on the walk card and in the teaching column.
+ *
+ * One label rather than one per stop, because every item on every stop's list is a question to
+ * ask of the running breath — "Who started this breath: the patient or the timer?" — so the same
+ * words are true at all four. The list rendered with no label and no markers, directly under a
+ * definition list, and read as four more lines of prose.
+ */
+export const BREATH_STOP_CHECKLIST_LABEL = 'Questions to ask at this stop'
+
 export const breathStopIds: readonly BreathStopId[] = [
   'trigger',
   'inspiration',

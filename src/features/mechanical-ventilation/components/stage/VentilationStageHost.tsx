@@ -29,7 +29,12 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
 import { useRouter } from '@/i18n/navigation'
 
-import { breathStop, breathStopIds, type BreathStopId } from '../../content/breathSpine'
+import {
+  BREATH_STOP_CHECKLIST_LABEL,
+  breathStop,
+  breathStopIds,
+  type BreathStopId,
+} from '../../content/breathSpine'
 import { getVentilatorDeviceProfile } from '../../content/deviceProfiles'
 import { ventilationExperimentByUnit, type LabGoal } from '../../content/learningExperiments'
 import { ventilationPracticePairing } from '../../content/sectionSpecs'
@@ -376,7 +381,39 @@ function VentilationStageSession({
     (interaction.kind === 'explain' && activeManeuver !== 'pause'
       ? experiment.rounds[interaction.round].watch
       : [])
-  const controlsEnabled = session.phase !== 'predict'
+  /*
+   * Whether the console and the quick controls can be operated, and the line on the simulator that
+   * says why not. Both notes derive from the same two predicates that disable them, so the
+   * simulator cannot go dead without saying so; the transport toolbar stays live in both states
+   * and neither note claims otherwise. The note used to cover the locked prediction and not the
+   * look-back, so Back met greyed controls and a caption reading "Commit your prediction first".
+   */
+  const deciding = session.phase === 'predict'
+  const controlsEnabled = !deciding
+  const lockedReason = deciding
+    ? 'The settings are locked while you decide. Commit your prediction to take the controls.'
+    : undefined
+  const pausedReason =
+    !deciding && lookingBack
+      ? 'The console and the quick controls are paused while you look back at an earlier step. Return to the live step to take them.'
+      : undefined
+  const controlsNote = deciding
+    ? 'Commit your prediction first.'
+    : lookingBack
+      ? 'Paused while you look back.'
+      : 'The same settings as on the console.'
+  /*
+   * Reset patient rebuilds this round's patient and clears the change, the hold, the intervention
+   * and the timed observation the lab has recorded — the prediction stays. It is a control, so it
+   * is paused with the others; and while a prediction is being decided it would only send the
+   * learner back a step, so it waits.
+   */
+  const resetWouldErase = session.events.length > 0 || session.observedHolds.length > 0
+  const resetDisabledReason = deciding
+    ? 'Nothing to reset while you decide. Commit your prediction first.'
+    : lookingBack
+      ? 'Return to the live step to reset the patient.'
+      : undefined
   const mechanicsVisible =
     unitId !== 'high-peak-pressure-integration' ||
     session.phase === 'compare' ||
@@ -739,7 +776,19 @@ function VentilationStageSession({
                 </dd>
               </div>
             </dl>
-            <ul>
+            {/*
+              The short list, with the label that says what kind of list it is. It rendered as
+              bare lines with the marker reset away, under a definition list whose two entries are
+              labelled, so it read as more prose.
+            */}
+            <p
+              className={styles.kicker}
+              id={`${activeStep.id}-walk-checklist`}
+              data-walk-checklist-label
+            >
+              {BREATH_STOP_CHECKLIST_LABEL}
+            </p>
+            <ul aria-labelledby={`${activeStep.id}-walk-checklist`} data-walk-checklist>
               {stop.checklist.map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -969,12 +1018,12 @@ function VentilationStageSession({
       session={session}
       engine={engine}
       controlsEnabled={controlsEnabled && !lookingBack}
-      lockedReason={
-        session.phase === 'predict'
-          ? 'The settings are locked while you decide. Commit your prediction to take the controls.'
-          : undefined
-      }
+      lockedReason={lockedReason}
+      pausedReason={pausedReason}
+      controlsNote={controlsNote}
       onResetPatient={() => lab({ type: 'RESET' })}
+      resetDisabledReason={resetDisabledReason}
+      resetWouldErase={resetWouldErase}
       onSelectDevice={selectDevice}
       deviceLocked={predictionCommitted}
       watch={watch}
