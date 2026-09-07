@@ -69,6 +69,20 @@
   background: color-mix(in srgb, var(--stage-panel) 94%, black);
 }
 
+/*
+ * Inside the fixed workspace the module frame is `overflow: hidden` and starts directly under the
+ * site header, and an overflow-hidden ancestor is the scrollport a sticky offset resolves against —
+ * scrolled or not. `top: var(--site-header-height)` there pinned the row a full site-header height
+ * below the frame's top edge, over the context strip and the head of the panes, in every adopter.
+ * The frame's top is already the site header's bottom, so the offset is zero; the document-flow
+ * value above is for the viewports where the stage scrolls with the page under a sticky site header.
+ */
+@media (min-width: 1024px) and (min-height: 700px) {
+  .header {
+    top: 0;
+  }
+}
+
 .headerMain {
   display: grid;
   flex: 1 1 18rem;
