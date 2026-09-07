@@ -180,6 +180,19 @@ function signal(
   return { key, label, unit, digits, level }
 }
 
+/*
+ * The keyed option is authored first in every identification and prediction below, and in every
+ * transfer beside them. That is an authoring convention, not what the learner sees: the stage
+ * rotates every choice list through `orderChoices` before it renders, so "pick the first" scores
+ * at chance, and `stage-registries.test.ts` holds it there. Read the order here as "key, then the
+ * distractors", never as the order on screen.
+ *
+ * Every prediction offers one option graded `unsafe`. Since the September 2026 learner-review
+ * round each of those is itself a forecast — what the learner expects the circulation to do — and
+ * not a move: a prediction item whose fourth option was "raise the level instead" was asking two
+ * questions, and a learner could pick the option out by its shape alone. The unsafe grade says
+ * that acting on that expectation is the harm; the rationale beside it says why.
+ */
 const authoredContracts: readonly AuthoredSectionContract[] = [
   // ── 1 ──────────────────────────────────────────────────────────────────────
   {
@@ -436,7 +449,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'more-is-better',
           label:
-            'The mechanism reporting the largest device flow is the one this patient should be receiving',
+            'The mechanism reporting the largest device flow will also deliver the most to this patient',
           rationale:
             'Ranking mechanisms by the size of the number on their display is the selection error this module exists to prevent. The mechanism follows the limiting problem, not the largest figure.',
           plausibility: 'unsafe',
@@ -446,7 +459,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'Source, active component, destination. The balloon has no source and no destination, so it changes pressure without moving blood along a path. Both pumps draw from the left ventricle and return to the aorta, so both report a flow — and both narrow the arterial pulse as they take volume away from the native outflow tract.',
       evidenceIds: [...bedside, 'ishlt-durable-mcs-2023'],
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'The prediction is about the shape of the change, not its size. If you expect a device line to appear for two of the three and the pulse to narrow rather than widen, you are reading the pathway rather than the display.',
@@ -600,7 +613,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'raise-ratio-instead',
           label:
-            'Nothing useful will change, so raise the assist ratio instead of adjusting the timing',
+            'Nothing useful will change, because the assist ratio rather than the timing decides what the balloon offers',
           rationale:
             'Assisting more beats without fixing the timing reproduces the same error more often. Mistiming is corrected before frequency is increased.',
           plausibility: 'unsafe',
@@ -610,7 +623,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'Timing determines how much of this mechanism is available, and correcting it recovers what was being lost. It does not change the kind of thing the mechanism is: a bounded improvement in loading around a beat the patient is still generating.',
       evidenceIds: iabpEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'A prediction that names both the direction and the rough size is the useful one here, because it is the size that separates "the balloon is working properly" from "the balloon is doing the work".',
@@ -759,7 +772,8 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         },
         {
           id: 'retime-again',
-          label: 'Whatever happens, re-time inflation and deflation until perfusion improves',
+          label:
+            'Perfusion will recover once inflation and deflation are re-timed, since the balloon is the device in place',
           rationale:
             'Retiming a device that is already aligned delays recognition of a mechanism mismatch, and delay is the harm in this phenotype.',
           plausibility: 'unsafe',
@@ -769,7 +783,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'Every left-sided device inherits the right ventricle. When the limitation moves upstream, a technically perfect device below it goes on reporting that it is technically perfect while the patient deteriorates — which is why the device display is a poor place to look for a mechanism mismatch.',
       evidenceIds: iabpEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'The valuable half of this prediction is the part about timing synchrony. If you expect it to stay where it is, you already understand that a device can report success and mismatch at the same time.',
@@ -917,7 +931,8 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         },
         {
           id: 'escalate-level',
-          label: 'Flow falls, so raise the performance level until the displayed number comes back',
+          label:
+            'Flow falls, and the displayed number comes back once the performance level is raised',
           rationale:
             'Raising support against a malpositioned inlet increases blood trauma without restoring the relationship that was lost. Position is diagnosed before support is escalated.',
           plausibility: 'unsafe',
@@ -927,7 +942,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'A microaxial pump works by sitting in two compartments at once. Lose that and you lose the flow, the unloading, and the safety margin together — which is why a falling flow is a position question before it is a settings question.',
       evidenceIds: impellaEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'Predicting the direction of the wedge pressure is what separates a guess from a mechanism. If flow falls because the pump stopped removing volume, the chamber behind it has to refill.',
@@ -1080,7 +1095,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'raise-left-instead',
           label:
-            'Raise the left-sided performance level instead, since its flow is the low one on the screen',
+            'Left-sided flow will rise more if its own level is raised, since that is the low number on the screen',
           rationale:
             'Escalating a pump that is already in suction worsens underfilling and blood trauma. The limitation is upstream, and it is where the intervention belongs.',
           plausibility: 'unsafe',
@@ -1090,7 +1105,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'Serial pathways handle the same blood in sequence. The right-sided pump is a delivery to the lung; the left-sided pump is a delivery to the body; and the systemic flow signal on the display carries the left-sided pump only, on purpose.',
       evidenceIds: rightImpellaEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'The arithmetic half of this prediction is the part that transfers. A learner who adds a right-sided pump flow to a left-sided one will also add an extracorporeal flow to a native cardiac output.',
@@ -1250,7 +1265,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'raise-speed',
           label:
-            'Whatever happens, raise the speed until the displayed flow comes back to where it was',
+            'The displayed flow will come back to where it was once the speed is raised to chase it',
           rationale:
             'Raising speed to chase a number can produce suction, septal shift and right ventricular failure, and speed changes belong to the prescribing team under current instructions.',
           plausibility: 'unsafe',
@@ -1260,7 +1275,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'This is the clearest case in the module of a pressure improvement that is not a perfusion improvement: mean pressure rises by tens of mm Hg, forward flow falls by nearly a litre per minute, and a summary value that multiplies the two goes up.',
       evidenceIds: lvadEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'The part of this prediction worth arguing about is the power line. If you expect power to fall rather than surge, you have separated "working against a higher pressure" from "working on more blood".',
@@ -1407,7 +1422,8 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         },
         {
           id: 'disconnect-to-check',
-          label: 'Disconnect the power source briefly to see whether the alarm clears itself',
+          label:
+            'The alarm will clear by itself if the power source is disconnected briefly and reconnected',
           rationale:
             'Stopping a continuous-flow pump can cause immediate collapse and retrograde flow. Power is preserved and the team is called.',
           plausibility: 'unsafe',
@@ -1417,7 +1433,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'An estimate is only as good as the relationship it was derived from. In this pattern the power rises and the computed flow does not follow, which is why the two values have to be read together and why a normal-looking flow display is not reassurance.',
       evidenceIds: lvadEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'Committing to "the flow display will not move" is the useful commitment. It is the prediction that makes an unchanged number alarming instead of reassuring.',
@@ -1572,7 +1588,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         {
           id: 'keep-escalating',
           label:
-            'Whatever the gain, keep raising the level until the displayed flow reads as adequate',
+            'The displayed flow will read as adequate once the level has been raised far enough',
           rationale:
             'Escalating through active suction worsens underfilling and blood trauma, and drives a display upward while the patient does not improve.',
           plausibility: 'unsafe',
@@ -1582,7 +1598,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       explanation:
         'Device selection is a statement about which part of the circulation is failing. Adding left-sided support to a right-limited circulation raises the displayed number more than it raises effective systemic delivery, and leaves the limitation exactly where it was.',
       evidenceIds: [...bedside, 'ishlt-durable-mcs-2023'],
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     predictionReasoning:
       'Naming the expected size in advance is what makes the result usable. A gain of a couple of tenths and a gain of a litre lead to different decisions, and only one of them was predictable from the filling pressures.',

@@ -27,8 +27,11 @@ jest.mock('../components/McsAnatomy3D', () =>
 )
 
 import { McsStageHost } from '../components/stage/McsStageHost'
-import { mcsLessonTransferByLessonId } from '../content/lessonTransfers'
-import { mcsSectionLearningContractById } from '../content/sectionLearningContracts'
+import { mcsLessonTransferByLessonId, mcsLessonTransfers } from '../content/lessonTransfers'
+import {
+  mcsSectionLearningContractById,
+  mcsSectionLearningContracts,
+} from '../content/sectionLearningContracts'
 import { buildMcsStageLesson, mcsStageLessonIds } from '../content/stageLessons'
 import { mcsSpineStop } from '../content/supportSpine'
 import {
@@ -300,5 +303,87 @@ describe('the compact viewport opens on the pane the step is worked in', () => {
     // is the pane a compact viewport shows; the map is the second place the location names.
     expect(document.querySelector('[data-map-answer-prompt]')).toBeNull()
     expect(visiblePane()).toBe('task')
+  })
+})
+
+/**
+ * The item sweep, pinned.
+ *
+ * Eight predictions offered an unsafe option that was a move — "raise the level instead",
+ * "disconnect the power source briefly" — in an item whose stem asks what the circulation will do,
+ * so a learner could pick it out by its shape alone. Each is a forecast now, still graded unsafe
+ * because acting on it is the harm. Two transfers graded the section's own misreading partly
+ * correct; three carried an absolute a learner eliminates on sight. Every edited item is draft
+ * again until the owner has read it.
+ */
+describe('the items ask one kind of question', () => {
+  const DRAFT_PREDICTIONS = [
+    'mcs-foundations-mechanisms-predict-1',
+    'mcs-iabp-timing-predict-1',
+    'mcs-iabp-limits-predict-1',
+    'mcs-impella-placement-predict-1',
+    'mcs-impella-bipella-predict-1',
+    'mcs-lvad-afterload-predict-1',
+    'mcs-lvad-high-power-predict-1',
+    'mcs-integration-predict-1',
+  ]
+  const DRAFT_TRANSFERS = [
+    'mcs-iabp-trigger-transfer-1',
+    'mcs-iabp-limits-transfer-1',
+    'mcs-impella-afterload-transfer-1',
+    'mcs-impella-suction-transfer-1',
+    'mcs-lvad-emergency-transfer-1',
+  ]
+  const MOVE =
+    /^(raise|lower|keep|disconnect|increase|reduce|give|switch|re-time|retime|whatever)\b/i
+
+  it('offers no prediction option that is a move rather than a forecast', () => {
+    for (const contract of mcsSectionLearningContracts) {
+      for (const choice of contract.predictionItem.choices) {
+        expect(`${contract.predictionItem.id}/${choice.id}: ${choice.label}`).not.toMatch(
+          new RegExp(`: ${MOVE.source.slice(1)}`, 'i'),
+        )
+        expect(choice.label).not.toMatch(/\binstead\b/i)
+      }
+    }
+  })
+
+  it('grades no transfer option that restates the section’s own misreading as partly correct', () => {
+    const limits = mcsLessonTransferByLessonId.get('iabp-efficacy-limits')!
+    const emergency = mcsLessonTransferByLessonId.get('lvad-alarms-emergencies')!
+    expect(limits.item.choices.find((c) => c.id === 'retime-normal')?.plausibility).toBe(
+      'incorrect-mechanism',
+    )
+    expect(emergency.item.choices.find((c) => c.id === 'controller-only')?.plausibility).toBe(
+      'incorrect-mechanism',
+    )
+  })
+
+  it('carries no eliminable absolute in a transfer distractor', () => {
+    for (const transfer of mcsLessonTransfers) {
+      for (const choice of transfer.item.choices) {
+        if (choice.plausibility === 'best') continue
+        expect(`${transfer.item.id}/${choice.id}: ${choice.label}`).not.toMatch(
+          /\b(always|never|in any rhythm|in every|every low-flow|until proven otherwise)\b/i,
+        )
+      }
+    }
+  })
+
+  it('marks exactly the edited items draft, and leaves the rest as reviewed', () => {
+    for (const contract of mcsSectionLearningContracts) {
+      const expected = DRAFT_PREDICTIONS.includes(contract.predictionItem.id)
+        ? 'draft'
+        : 'sme-review'
+      expect(`${contract.predictionItem.id}: ${contract.predictionItem.reviewStatus}`).toBe(
+        `${contract.predictionItem.id}: ${expected}`,
+      )
+    }
+    for (const transfer of mcsLessonTransfers) {
+      const expected = DRAFT_TRANSFERS.includes(transfer.item.id) ? 'draft' : 'sme-review'
+      expect(`${transfer.item.id}: ${transfer.item.reviewStatus}`).toBe(
+        `${transfer.item.id}: ${expected}`,
+      )
+    }
   })
 })
