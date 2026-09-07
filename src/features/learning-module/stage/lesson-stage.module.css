@@ -21,7 +21,12 @@
   }
 }
 
-/* Tailwind is configured as `hsl(var(--token))`, so these are bare HSL triples. */
+/*
+ * Tailwind is configured as `hsl(var(--token))`, so these are bare HSL triples — which is why no
+ * rule inside the workspace may read `var(--muted)` as a colour: from here down it is `192 36% 16%`,
+ * an invalid colour, so an SVG fill falls to black and a text colour silently inherits. The shell
+ * publishes the module palette's muted colour as `--stage-muted`; read that.
+ */
 .workspace {
   --background: 194 44% 8%;
   --foreground: 180 33% 94%;
@@ -84,7 +89,7 @@
   padding: 0.3rem 0.1rem 0.35rem;
   border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
   background: #061519;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -241,7 +246,7 @@
 }
 
 .stepPhase {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -254,7 +259,7 @@
 
 .stepRecap {
   padding: 0 0.7rem 0.6rem 3.05rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .stepRecap ul,
@@ -300,7 +305,7 @@
 }
 
 .sectionsPosition {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-weight: 600;
 }
 
@@ -324,7 +329,7 @@
  * ------------------------------------------------------------------ */
 
 .objectives summary {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   cursor: pointer;
 }
 
@@ -448,7 +453,7 @@
 }
 
 .compareTable th {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -468,7 +473,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.75rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -484,7 +489,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.75rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
   font-weight: 700;
   cursor: pointer;

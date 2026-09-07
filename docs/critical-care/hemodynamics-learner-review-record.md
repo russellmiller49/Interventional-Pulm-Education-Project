@@ -157,6 +157,15 @@ header on a 1846 × 702 window. Two causes, both fixed in the same commit:
   The shared shell's header is sticky beneath the site header now, in every adopter. Measured at
   1846 × 690: scrolled 285px, the row stays at 81px, the site header's own height.
 
+The catheter map's part labels — monitor, transducer, SVC, RA, RV, PA — rendered black on the
+dark schematic. The shared workspace redefines `--muted` as a Tailwind HSL triple (`192 36% 16%`)
+for `hsl(var(--token))`, so every `var(--muted, …)` read as a colour inside it is invalid: an SVG
+fill falls to black, and a text colour silently inherits the ink — which is why no kicker, step
+phase or pane caption on the stage was ever the muted grey it declared. The shell already publishes
+the palette's muted colour as `--stage-muted`; the shared stage stylesheet, this module's and the
+map's read that now. **The same read is in the MV, MCS and ECMO stage stylesheets** (11, 13 and 11
+uses) and is theirs to fix; ECMO's shell names its token differently.
+
 ## Left for the next round
 
 Confirmed in the code or measured in the browser, and out of scope here:

@@ -65,7 +65,7 @@
 
 .dock > legend {
   padding: 0 0.35rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -91,7 +91,7 @@
 }
 
 .dockRow small {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .dockRow select {
@@ -207,7 +207,7 @@
 
 .dockNote {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .dockNote[role='alert'] {
@@ -261,7 +261,7 @@
 }
 
 .choiceGroup label small {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .trialGrid {
@@ -293,7 +293,7 @@
 }
 
 .walk dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -309,7 +309,7 @@
 
 .kicker {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -372,7 +372,7 @@
 
 .sortOrigins dd {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -507,7 +507,7 @@
 
 .sequence small {
   display: block;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .stopFacts {
@@ -516,7 +516,7 @@
 }
 
 .stopFacts dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -538,7 +538,7 @@
 }
 
 .grammarTable thead th {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -550,11 +550,11 @@
 }
 
 .grammarTable small {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .trendRule {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-style: italic;
 }
 
@@ -592,7 +592,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.65rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
