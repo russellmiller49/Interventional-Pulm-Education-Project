@@ -1147,9 +1147,11 @@ export function precommitAuthoredSurfaces(
     )
     if (step.rationale)
       surfaces.push({ where: `step ${step.ordinal} rationale`, text: step.rationale })
-    surfaces.push({ where: `step ${step.ordinal} look-in`, text: step.lookIn.landmark })
-    if (step.lookIn.alsoLandmark) {
-      surfaces.push({ where: `step ${step.ordinal} look-in`, text: step.lookIn.alsoLandmark })
+    if (step.lookIn) {
+      surfaces.push({ where: `step ${step.ordinal} look-in`, text: step.lookIn.landmark })
+      if (step.lookIn.alsoLandmark) {
+        surfaces.push({ where: `step ${step.ordinal} look-in`, text: step.lookIn.alsoLandmark })
+      }
     }
     if (step.interaction.kind === 'prediction') {
       surfaces.push({ where: `step ${step.ordinal} stem`, text: step.interaction.item.stem })
@@ -1185,11 +1187,13 @@ export function validateHemodynamicsStageLessons(): readonly string[] {
        * instruction passes, plus the shared location rules — a pane's own name is not a landmark.
        */
       errors.push(...stageStepLocationErrors(stepWhere, step.lookIn))
-      errors.push(...hemodynamicsLearnerCopyErrors(`${stepWhere} look-in`, step.lookIn.landmark))
-      if (step.lookIn.alsoLandmark) {
-        errors.push(
-          ...hemodynamicsLearnerCopyErrors(`${stepWhere} look-in`, step.lookIn.alsoLandmark),
-        )
+      if (step.lookIn) {
+        errors.push(...hemodynamicsLearnerCopyErrors(`${stepWhere} look-in`, step.lookIn.landmark))
+        if (step.lookIn.alsoLandmark) {
+          errors.push(
+            ...hemodynamicsLearnerCopyErrors(`${stepWhere} look-in`, step.lookIn.alsoLandmark),
+          )
+        }
       }
       const expectedGate = index > lesson.predictionStepIndex ? 'after-prediction' : 'open'
       if (step.gate !== expectedGate) errors.push(`${stepWhere} has the wrong gate.`)
