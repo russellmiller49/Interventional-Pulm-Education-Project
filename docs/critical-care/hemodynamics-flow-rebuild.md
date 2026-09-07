@@ -8,6 +8,11 @@ Branch `claude/hemodynmaics-9-5`, cut from `origin/main` at `119a3d08` (the merg
 rebuild) with the open H5 derived-hemodynamics branch merged in first (`fc91c4c5`) so the derive
 section is built on the canonical metric model rather than forking it. Dated 2026-09-05.
 
+**Amended 2026-09-07** by [`hemodynamics-learner-review-record.md`](./hemodynamics-learner-review-record.md):
+HLR-OD-1 reorders the panes to Steps, Teaching, Simulator (§2 describes three panes without an
+order; §6 measured Simulator, Teaching, Steps as the surface stood), and HLR-OD-4 edits eight of
+the H0–H5 items §5 says are used as authored, which are `draft` until reviewed again.
+
 ---
 
 ## 1. What changed, by commit
