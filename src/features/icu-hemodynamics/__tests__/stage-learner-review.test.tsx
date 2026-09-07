@@ -184,6 +184,26 @@ describe('the card keeps the promise the step makes', () => {
   })
 })
 
+describe('the verdict is framed for the kind of item it heads', () => {
+  it('frames a management decision as a move, and a signal read as a read', () => {
+    mountSection('pac-signal-validation')
+    clickPrimary()
+    commitChoice(/Repeat the thermodilution series/)
+    expect(document.querySelector('[data-now-card] [data-answer-verdict] p')?.textContent).toBe(
+      'Partly correct. Defensible, but it leaves a step out',
+    )
+    cleanup()
+
+    mountSection('pressure-system')
+    clickPrimary()
+    clickPrimary()
+    commitChoice(/off level, not zeroed, and underdamped/)
+    expect(document.querySelector('[data-now-card] [data-answer-verdict] p')?.textContent).toBe(
+      'Correct. That read holds',
+    )
+  })
+})
+
 describe('one place, one number', () => {
   it('numbers the walk card by the map, and says the walk position in words', () => {
     mountSection('pressure-system')

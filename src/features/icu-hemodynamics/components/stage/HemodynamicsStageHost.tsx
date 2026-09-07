@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
 
-import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
+import {
+  useCriticalCareActivityAnalytics,
+  type ClinicalLearningItem,
+} from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
@@ -147,6 +150,35 @@ const PANE_CAPTIONS = {
 } as const
 const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
 const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
+
+/**
+ * The verdict's title, for the items that ask for a decision rather than a read.
+ *
+ * The shared card's titles were written for signal-recognition items — "That read holds", "That
+ * mechanism predicts a different pattern" — and most of this module's items are reads. Its
+ * management decisions are not: which move comes first, which sequence, whether to accept a curve.
+ * Under those, "that mechanism predicts a different pattern" heads a verdict about a move, so the
+ * decision-shaped items carry their own titles. An unsafe choice keeps the card's own words.
+ */
+const DECISION_FRAMES = {
+  best: 'That is the move to make first',
+  'reasonable-but-incomplete': 'Defensible, but it leaves a step out',
+  'incorrect-mechanism': 'That move answers a different problem',
+} as const
+
+/** Transfer items whose stem asks for a move rather than a read; the type says only "transfer". */
+const DECISION_SHAPED_TRANSFERS: ReadonlySet<string> = new Set([
+  'hd-capstone-transfer-1',
+  'hd-advance-transfer-1',
+  'pac-pawp-transfer-1',
+  'pac-td-transfer-1',
+])
+
+function verdictFrames(item: ClinicalLearningItem) {
+  return item.itemType === 'management-decision' || DECISION_SHAPED_TRANSFERS.has(item.id)
+    ? DECISION_FRAMES
+    : undefined
+}
 
 const POSITION_WORDS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'] as const
 const COUNT_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'] as const
@@ -750,6 +782,7 @@ function HemodynamicsStageSession({
             outcome="stated"
             timing="immediate-after-commit"
             theme="dark"
+            frames={verdictFrames(interaction.item)}
           />
         )
       }
@@ -808,6 +841,7 @@ function HemodynamicsStageSession({
               outcome="stated"
               timing="immediate-after-commit"
               theme="dark"
+              frames={verdictFrames(interaction.item)}
             />
           )
         }
@@ -1044,6 +1078,7 @@ function HemodynamicsStageSession({
                   outcome="stated"
                   timing="immediate-after-commit"
                   theme="dark"
+                  frames={verdictFrames(predictionItem)}
                 />
               </div>
             ) : null}
@@ -1403,6 +1438,7 @@ function CommitmentBlock({
           outcome="stated"
           timing="immediate-after-commit"
           theme="dark"
+          frames={verdictFrames(item)}
         />
       ) : (
         <>
