@@ -353,14 +353,44 @@ Where a false claim is graded partly correct, the card tells a learner the false
 From a read-only audit of all five, adversarially verified. `●` applies · `○` already handled ·
 `—` does not apply. Effort is the auditor's estimate for that module alone.
 
+**Two statuses in this matrix are the verifier's, not the auditor's**, and both were originally
+reported the cheap way round — as "no problem here" when there is one.
+
+Hemodynamics `F6` is the clear one: the audit's own prose says "the second half DOES apply" and
+supplies a fix, then labels the row already-handled.
+
+MCS `F4` is the interesting one, and neither the auditor nor the verifier had it right. I read it.
+The LVAD "Pump speed" slider at `McsControls.tsx:554-564` is indeed `disabled` until
+`state.device.speedChangeAuthorized`, which the default device leaves false — so the auditor's
+"nothing is dead on the Learn surface" is wrong. But it is not ECMO's silently-dead console either:
+the control that enables it is a labelled checkbox **immediately above it**, "Authorized-personnel
+order · Simulation authorization only". The defect is milder and more precise than either report —
+the gate is present and adjacent, and simply does not say what it gates. Marked `●` on that basis,
+and the fix is a clause on the checkbox, not a new disclosure.
+
+Two more scope corrections worth carrying into any session that uses this:
+
+- Hemodynamics `F11` covers more than the thirteen items in `content/pacLearningItems.ts` that the
+  entry below counts. Three further authored item sets were never looked at —
+  `pacAdvancementReasoning.ts` (28 plausibility entries), `normalWaveformValidityChallenges.ts` (21)
+  and `pawpCaptureSequence.ts` (7).
+- Hemodynamics `F5` is real but the proposed CSS-module fix cannot reach the module's main
+  progression controls: there are 31 `bg-primary` Tailwind buttons across its components and zero
+  `hover:` utilities. The focus half needs nothing — `src/app/globals.css:34-36` already rings every
+  focusable element globally.
+
+And one caution about provenance: the MV entry's `F9` quoted two on-screen strings ("Section 2 of
+17") that **do not exist** — MV has fourteen units and the template reads `of ${lesson.total}`. The
+status was still right. Check a quote before you act on it.
+
 | Finding | MV  | MCS | Hemo | CRRT | ICU sim |
 | ------- | --- | --- | ---- | ---- | ------- |
 | `F1`    | ●   | ●   | ●    | ●    | ●       |
 | `F2`    | ●   | ●   | ●    | ●    | —       |
 | `F3`    | ●   | ●   | ●    | ●    | ●       |
-| `F4`    | ○   | —   | —    | —    | ●       |
+| `F4`    | ○   | ●   | —    | —    | ●       |
 | `F5`    | ●   | ○   | ●    | ●    | ○       |
-| `F6`    | —   | ○   | ○    | —    | ●       |
+| `F6`    | —   | ○   | ●    | —    | ●       |
 | `F7`    | ●   | —   | ●    | ●    | ●       |
 | `F8`    | ●   | ●   | ●    | ○    | ●       |
 | `F9`    | —   | —   | ●    | ●    | —       |
