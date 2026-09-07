@@ -75,6 +75,11 @@ describe('the fourteen stage lessons', () => {
         surfaces.push({ where: `${step.id} title`, text: step.title })
         surfaces.push({ where: `${step.id} instruction`, text: step.instruction })
         if (step.rationale) surfaces.push({ where: `${step.id} rationale`, text: step.rationale })
+        // The location line is printed under the instruction, so it is a pre-commit surface too.
+        surfaces.push({
+          where: `${step.id} look-in`,
+          text: `${step.lookIn.landmark} ${step.lookIn.alsoLandmark ?? ''}`,
+        })
       }
       for (const stopId of spec.stops) {
         const stop = breathStop(stopId)

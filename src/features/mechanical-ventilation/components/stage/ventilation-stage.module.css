@@ -109,6 +109,12 @@
  * Live readings
  * ------------------------------------------------------------------ */
 
+.readingsBlock {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
 .readings {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));

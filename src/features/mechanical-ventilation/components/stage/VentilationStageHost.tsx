@@ -11,11 +11,16 @@ import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleR
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { ContextStrip, type ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
-import { StageLayout } from '@/features/learning-module/stage/StageLayout'
-import { STAGE_PHASE_LABELS } from '@/features/learning-module/stage/stageModel'
+import { StageLayout, type StagePaneCaptions } from '@/features/learning-module/stage/StageLayout'
+import {
+  STAGE_PHASE_LABELS,
+  compactPaneForLocation,
+  type StagePaneId,
+} from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
 import { StageSourcesScope } from '@/features/learning-module/stage/StageSourcesScope'
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -59,6 +64,21 @@ import { VentilationTeachingColumn } from './VentilationTeachingColumn'
 import styles from './ventilation-stage.module.css'
 
 const CHOICE_IDS = ['a', 'b', 'c'] as const
+
+/*
+ * What each pane is for, printed on it after its name: "Simulator panel · the live ventilator…".
+ *
+ * The order stays the one D2 recorded — the ventilator first, the steps last — and is pinned again
+ * by `stage-learner-review.test.tsx`, since the test D2 named for it was retired with the flow
+ * rebuild. What changed is that the panes say what they are: a learner review of the ECMO module
+ * in September 2026 reported guessing which of three unnamed panes each instruction meant, and
+ * every step here now names the pane it is worked in, in these words.
+ */
+const PANE_CAPTIONS: StagePaneCaptions = {
+  simulator: 'the live ventilator, the quick controls and the breath map',
+  teaching: 'what to read',
+  steps: 'what to do',
+}
 
 /**
  * One section of the ventilation pathway on the lesson stage.
@@ -435,10 +455,29 @@ function VentilationStageSession({
     }))
   }
 
+  /*
+   * Which pane a one-pane compact viewport shows for this step — followed, not forced.
+   *
+   * The step's authored location, until the step's own work is done: then the next action is the
+   * Now card's primary, so the view follows to the Steps pane. Looking back is read on the card
+   * too. Without this the compact view opened on the simulator and stayed there, with the answer
+   * choices in the pane it could not show.
+   */
+  const compactPane: StagePaneId =
+    lookingBack || (stepPerformed && !finished)
+      ? 'steps'
+      : compactPaneForLocation(activeStep.lookIn, 'steps')
+
   /* ---------------------------------------------------------------- *
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+  /*
+   * Where this step's work is done, in the words the pane captions carry. One line under the
+   * instruction on every step, and again in the help dialog; the lesson builder refuses at import
+   * to make a step without one, so the caption on the pane and the line on the card cannot drift.
+   */
+  const lookInLine = <LookInLine location={activeStep.lookIn} />
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
   const showWhereAction =
@@ -455,6 +494,7 @@ function VentilationStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
+      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
@@ -1085,6 +1125,7 @@ function VentilationStageSession({
         <strong>{activeStep.title}</strong>
       </p>
       <p>{activeStep.instruction}</p>
+      <p>{lookInLine}</p>
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       {showWhereAction ? (
         <button
@@ -1120,6 +1161,8 @@ function VentilationStageSession({
           simulator={simulator}
           teaching={teaching}
           task={task}
+          paneCaptions={PANE_CAPTIONS}
+          compactPane={compactPane}
           footer={
             <>
               <p className={shellStyles.footerLine}>

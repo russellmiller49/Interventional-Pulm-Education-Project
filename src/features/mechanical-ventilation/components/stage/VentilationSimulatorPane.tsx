@@ -1,6 +1,6 @@
 'use client'
 
-import type { Dispatch } from 'react'
+import { useId, type Dispatch } from 'react'
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 
 import type { BreathStopId } from '../../content/breathSpine'
@@ -137,6 +137,7 @@ export function VentilationSimulatorPane({
   const round = session.round
   const caseId = state.caseId
   const definition = resolveVentilationSimulationCase(caseId)
+  const readingsId = useId()
 
   return (
     <>
@@ -232,22 +233,32 @@ export function VentilationSimulatorPane({
       </div>
 
       {watch.length > 0 ? (
-        <dl className={styles.readings} aria-label="Readings to watch" data-live-readings>
-          {watch.map((metric) => (
-            <div key={metric} className={styles.reading} data-metric={metric}>
-              <dt>{labMetricLabels[metric].label}</dt>
-              <dd>
-                {formatMetric(session, metric)}
-                <small>{labMetricLabels[metric].unit}</small>
-              </dd>
-            </div>
-          ))}
+        /*
+         * The readings a step asks the learner to watch, under a printed label: the steps say
+         * "Readings to watch, under the console", so the words have to be on the surface and not
+         * only in an accessible name.
+         */
+        <section className={styles.readingsBlock} aria-labelledby={readingsId} data-live-readings>
+          <p className={styles.kicker} id={readingsId}>
+            Readings to watch
+          </p>
+          <dl className={styles.readings}>
+            {watch.map((metric) => (
+              <div key={metric} className={styles.reading} data-metric={metric}>
+                <dt>{labMetricLabels[metric].label}</dt>
+                <dd>
+                  {formatMetric(session, metric)}
+                  <small>{labMetricLabels[metric].unit}</small>
+                </dd>
+              </div>
+            ))}
+          </dl>
           {watch.includes('plateau') && !labSnapshot(state).plateauValid ? (
-            <p className={styles.quickNote} style={{ gridColumn: '1 / -1' }}>
+            <p className={styles.quickNote}>
               * Recent effort keeps this plateau from standing for passive mechanics.
             </p>
           ) : null}
-        </dl>
+        </section>
       ) : null}
 
       {hasQuick ? (

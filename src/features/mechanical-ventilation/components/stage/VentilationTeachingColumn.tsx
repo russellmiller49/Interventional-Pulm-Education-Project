@@ -208,6 +208,8 @@ export function VentilationTeachingColumn({
       >
         <section className={styles.block} data-teaching-block="method">
           <p className={styles.kicker}>Hold it this way</p>
+          {/* The heading the Explain step points at, printed whether the block is open or folded. */}
+          <h3>The picture and the checklist</h3>
           <p className={styles.analogy}>{unit.analogy}</p>
           <p>{unit.explanation}</p>
           <ol>
