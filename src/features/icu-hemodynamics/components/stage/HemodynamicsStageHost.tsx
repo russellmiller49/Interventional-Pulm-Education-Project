@@ -945,8 +945,8 @@ function HemodynamicsStageSession({
             {goals.some((goal) => goal.type === 'reassessed') ? (
               <div className={styles.returnCheck} data-reassess>
                 <p>
-                  <strong>Reassess.</strong> Read the corrected pressures, the series and the
-                  bedside picture together, as one set, before anything on the screen is believed
+                  <strong>Reassess.</strong> Read the corrected pressures and the series against a
+                  patient who has not changed, as one set, before anything on the screen is believed
                   again.
                 </p>
                 <button

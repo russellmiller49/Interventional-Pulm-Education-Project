@@ -2,6 +2,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import { HemodynamicsStageHost } from '../components/stage/HemodynamicsStageHost'
 import { routeStop, routeStopNumber } from '../content/routeSpine'
+import { hemodynamicsSectionIds } from '../content/sectionSpecs'
+import { hemodynamicsStageLesson } from '../content/stageLessons'
 import {
   clickPrimary,
   commitChoice,
@@ -70,6 +72,47 @@ describe('the panes say what they are', () => {
     for (const name of ['Steps panel', 'Teaching panel', 'Simulator panel']) {
       expect(screen.getByRole('region', { name })).toBeInTheDocument()
     }
+  })
+})
+
+describe('every step says where it is worked', () => {
+  it('authors a location on every step of every section, in words the panes carry', () => {
+    for (const sectionId of hemodynamicsSectionIds) {
+      for (const step of hemodynamicsStageLesson(sectionId).steps) {
+        expect(`${sectionId} ${step.id}: ${step.lookIn?.pane ?? 'none'}`).toMatch(
+          /: (steps|teaching|simulator)$/,
+        )
+        expect(step.lookIn?.landmark.trim().length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('prints the location under the instruction, naming a pane whose caption says the same word', () => {
+    const { lesson } = mountSection('pressure-system')
+    const where = document.querySelector('[data-now-card] [data-now-where]')
+    expect(where?.textContent).toBe(
+      'Where to look: Steps panel — the walk card below, and Simulator panel — The line, the dock under the monitor.',
+    )
+    const captions = [...document.querySelectorAll('[data-pane-label]')].map(
+      (label) => label.textContent ?? '',
+    )
+    for (const named of where?.querySelectorAll('strong') ?? []) {
+      expect(captions.some((caption) => caption.startsWith(named.textContent ?? '∅'))).toBe(true)
+    }
+    clickPrimary()
+    clickPrimary()
+    expect(currentStepId()).toBe(lesson.steps[1].id)
+    expect(document.querySelector('[data-now-card] [data-now-where]')?.textContent).toBe(
+      'Where to look: Steps panel — the answer choices below.',
+    )
+  })
+
+  it('repeats the location in the help dialog', () => {
+    mountSection('pressure-system')
+    fireEvent.click(document.querySelector('[data-stage-help]')!)
+    expect(document.querySelector('[data-stage-help-dialog]')?.textContent).toMatch(
+      /Where to look: Steps panel — the walk card below/,
+    )
   })
 })
 
@@ -241,6 +284,23 @@ describe('the compact viewport opens on the pane the step is worked in', () => {
     expect(visible).toHaveLength(1)
     return visible[0].querySelector('[data-pane]')?.getAttribute('data-pane') ?? ''
   }
+
+  it('follows a step whose work is in the teaching pane', () => {
+    window.history.replaceState(null, '', '/icu-hemodynamics/learn?activity=waveform-components')
+    render(<HemodynamicsStageHost sectionId="waveform-components" />)
+    act(() => {
+      jest.runOnlyPendingTimers()
+    })
+    expect(hemodynamicsStageLesson('waveform-components').steps[0].lookIn?.pane).toBe('teaching')
+    expect(visiblePane()).toBe('teaching')
+    // The learner may still switch panes themselves; the preference is followed, not forced.
+    fireEvent.click(
+      [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
+        (tab) => tab.textContent === 'Steps',
+      )!,
+    )
+    expect(visiblePane()).toBe('task')
+  })
 
   it('shows the steps for a prediction answered on the card, and the simulator for one answered on the map', () => {
     window.history.replaceState(
