@@ -155,6 +155,7 @@ export function AnswerVerdict({
   theme = 'dark',
   outcome = 'described',
   branchExplanation,
+  frames,
   onContinue,
   continueLabel = 'Continue',
 }: {
@@ -182,6 +183,17 @@ export function AnswerVerdict({
    * where the general explanation is still being withheld.
    */
   readonly branchExplanation?: ReactNode
+  /**
+   * Per-caller replacements for the title after the outcome label. Omitted, the defaults stand.
+   *
+   * The titles were written for signal-recognition items: "That mechanism predicts a different
+   * pattern" names something on a screen with a pattern on it. Under a management decision — which
+   * move comes first, which sequence — there is no pattern to predict, and a learner review of the
+   * ECMO module in September 2026 stopped on exactly that kind of sentence. This is the same option
+   * `ChoiceReasoningFeedback` took for its frames: the caller says its own, and a caller that
+   * passes nothing keeps every word it had.
+   */
+  readonly frames?: Partial<Record<Plausibility, string>>
   /**
    * Advancing is the caller's job, and only on this control. A verdict that advanced by itself
    * would replace the question before the learner had read the answer — the defect this component
@@ -228,7 +240,7 @@ export function AnswerVerdict({
                 <span data-verdict-outcome-label>{copy.outcomeLabel}</span>{' '}
               </>
             ) : null}
-            {copy.title}
+            {frames?.[chosen.plausibility] ?? copy.title}
           </>
         ) : (
           'Answer recorded'
