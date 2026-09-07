@@ -251,8 +251,9 @@ describe('deterministic critical-care recommendations', () => {
   it('gives a new learner one stable first activity', () => {
     // Ties break on catalog index, so this is the first hemodynamics Learn seed — kept equal to the
     // pathway's opening section by `critical-care/__tests__/hub-pathway-start-alignment.test.ts`.
+    // Since the hemodynamics flow rebuild (2026-09-05) that section is the orientation.
     expect(getCriticalCareRecommendation(criticalCareActivities, empty)).toMatchObject({
-      activity: { id: 'hemodynamics:learn:pressure-system' },
+      activity: { id: 'hemodynamics:learn:why-measure' },
       reason: 'next-unblocked',
     })
   })

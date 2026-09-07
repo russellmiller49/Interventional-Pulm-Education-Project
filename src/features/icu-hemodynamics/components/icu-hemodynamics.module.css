@@ -6347,7 +6347,16 @@
   grid-area: label;
 }
 
+/*
+ * A dependency can accept more than one provenance — a wedge pressure is legitimate whether it was
+ * read off the trace or drawn from a stored sample. Those chips are two separate facts, so they need
+ * a gap: abutting inline chips read as one word ("MeasuredSampled") both on screen and in the text
+ * the panel exposes to assistive technology.
+ */
 .methodProvenanceTable > div > dd:first-of-type {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   grid-area: chip;
 }
 
@@ -6635,4 +6644,192 @@
   display: grid;
   gap: 0.6rem;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+/* Derived-hemodynamics station (H5) -------------------------------- */
+
+.derivedDrillRow {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid #dbe8e5;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.derivedDrillRow label {
+  color: #17595c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.derivedDrillRow select {
+  min-height: 2.5rem;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #bfd2ce;
+  border-radius: 0.5rem;
+  color: var(--ink);
+  background: #fff;
+  font-size: 0.7rem;
+}
+
+.derivedCommitButton {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #3c8f88;
+  border-radius: 0.6rem;
+  color: #effffb;
+  background: linear-gradient(135deg, #167b77, #0d5f62);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.derivedCommitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.derivedResultGrid {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.derivedResultCard {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid #dbe8e5;
+  border-left-width: 4px;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.derivedResultCard[data-status='available'] {
+  border-left-color: #3c8f88;
+}
+
+.derivedResultCard[data-status='available-with-caution'] {
+  border-left-color: #d9ab5e;
+}
+
+.derivedResultCard[data-status='withheld'] {
+  border-left-color: #b04a63;
+}
+
+.derivedResultCard header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.derivedResultCard h5 {
+  margin: 0;
+  min-width: 0;
+  color: #123b43;
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.derivedResultCard details > summary {
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+  color: #23575a;
+  cursor: pointer;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.derivedStatusWord {
+  margin: 0;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #9fc2bd;
+  border-radius: 999px;
+  color: #17595c;
+  background: #e6f3f0;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.derivedStatusWord[data-status='available-with-caution'] {
+  border-color: #d9ab5e;
+  color: #6d5420;
+  background: #fff2d8;
+}
+
+.derivedStatusWord[data-status='withheld'] {
+  border-color: #d99aa9;
+  color: #7c2a3d;
+  background: #ffe9ee;
+}
+
+.derivedReasonBlock {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.45rem 0.55rem;
+  border-left: 3px solid #b04a63;
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: #fdf1f4;
+}
+
+.derivedReasonBlock[data-kind='caution'] {
+  border-left-color: #d9ab5e;
+  background: #fdf7ea;
+}
+
+.derivedReasonBlock h6 {
+  margin: 0;
+  color: #7c2a3d;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.derivedReasonBlock[data-kind='caution'] h6 {
+  color: #6d5420;
+}
+
+.derivedReasonBlock ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1rem;
+  color: #4c3a40;
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.derivedReasonBlock[data-kind='caution'] ul {
+  color: #57482a;
+}
+
+.derivedEpisodeLedger {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.derivedEpisodeLedger > summary {
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+  color: #123b43;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.derivedFlowAccounts {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
 }

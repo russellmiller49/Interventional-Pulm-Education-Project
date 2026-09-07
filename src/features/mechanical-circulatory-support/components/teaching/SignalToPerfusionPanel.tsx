@@ -40,6 +40,7 @@ export function SignalToPerfusionPanel({
   state,
   reveal,
   beforeMetrics,
+  withholdFlowAccount = false,
 }: McsTeachingPanelProps) {
   const disclosed = mcsMechanismDisclosed(reveal)
   const metrics = state.metrics
@@ -108,7 +109,13 @@ export function SignalToPerfusionPanel({
 
           <li className="min-w-0 rounded-xl border-l-4 border-solid p-3" data-ladder-rung="flow">
             <p className="text-sm font-semibold">2. Flow — three separate lines</p>
-            <FlowAccount account={account} disclosed={disclosed} />
+            {withholdFlowAccount ? (
+              <p className="mt-2 text-xs leading-5" data-flow-account-withheld>
+                Covered until you have committed your prediction of what this account will show.
+              </p>
+            ) : (
+              <FlowAccount account={account} disclosed={disclosed} />
+            )}
             <p className="mt-2 text-xs leading-5">
               <span className="font-semibold">This rung can establish: </span>how much blood is
               moving, and along which path each number describes it moving.
@@ -168,8 +175,11 @@ export function SignalToPerfusionPanel({
           saturation, and it does not model organ response. Pressure: {reading(metrics.mapMmHg, 0)}{' '}
           mm Hg mean arterial pressure, with a wedge pressure of {reading(metrics.pcwpMmHg, 0)} and
           a right atrial pressure of {reading(metrics.rapMmHg, 0)} mm Hg. Flow:{' '}
-          {flowAccountSentence(account, disclosed)} The modeled balance signal reads{' '}
-          {reading(metrics.svo2Percent, 0)} percent. Organ response: nothing at all.
+          {withholdFlowAccount
+            ? 'covered until the prediction is committed.'
+            : flowAccountSentence(account, disclosed)}{' '}
+          The modeled balance signal reads {reading(metrics.svo2Percent, 0)} percent. Organ
+          response: nothing at all.
         </TextEquivalent>
 
         <ModelBoundary>

@@ -1,0 +1,327 @@
+/*
+ * The circulation map. Palette from the stage tokens, with the dark fallbacks the stage uses, so
+ * the drawing reads the same on the stage and in the offline harness.
+ */
+
+.map {
+  --map-ink: var(--ink, #eaf4f4);
+  --map-muted: var(--muted, #9fb4b7);
+  --map-line: var(--line, rgba(163, 206, 209, 0.22));
+  --map-accent: var(--cyan-bright, #71e1e5);
+  --map-amber: var(--amber, #ffbf62);
+  --map-red: var(--red, #ff6b73);
+  --map-green: var(--green, #76d69b);
+  --map-vessel: #c9384a;
+  --map-vessel-venous: #4c79c9;
+  --map-chamber: rgba(255, 255, 255, 0.06);
+
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--map-ink);
+}
+
+.caption {
+  margin: 0;
+  font-weight: 700;
+}
+
+.stage {
+  position: relative;
+  min-width: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--font-sans, Arial, sans-serif);
+}
+
+.vessel {
+  fill: none;
+  stroke: var(--map-vessel);
+  stroke-width: 26;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The venous limb is the left side and the bottom: everything before the lungs. */
+[data-map-segment='venous-return'] .vessel,
+[data-map-segment='pulmonary-artery'] .vessel {
+  stroke: var(--map-vessel-venous);
+}
+
+.flow {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 10 22;
+  animation: flow 1.6s linear infinite;
+}
+
+.chamber {
+  fill: var(--map-chamber);
+  stroke: var(--map-ink);
+  stroke-width: 3;
+}
+
+[data-map-segment='venous-return'] .chamber,
+[data-map-segment='right-atrium'] .chamber,
+[data-map-segment='right-ventricle'] .chamber {
+  stroke: var(--map-vessel-venous);
+}
+
+[data-map-segment='left-atrium'] .chamber,
+[data-map-segment='left-ventricle'] .chamber {
+  stroke: var(--map-vessel);
+}
+
+.label {
+  fill: var(--map-ink);
+  font-size: 22px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(6, 21, 25, 0.85);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+
+.halo {
+  fill: rgba(113, 225, 229, 0.28);
+  stroke: var(--map-accent);
+  stroke-width: 46;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-map-emphasis-tone='implicated'] .halo {
+  fill: rgba(255, 191, 98, 0.26);
+  stroke: var(--map-amber);
+}
+
+.pathway {
+  transition: opacity 200ms ease;
+}
+
+.pathway[data-map-pathway-in-place='false'] {
+  opacity: 0.55;
+}
+
+.deviceLine {
+  fill: none;
+  stroke: var(--map-ink);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pathway[data-map-pathway-in-place='false'] .deviceLine {
+  stroke-dasharray: 12 12;
+}
+
+.deviceFlow {
+  fill: none;
+  stroke: var(--map-accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 8 16;
+  animation: flow 0.9s linear infinite;
+}
+
+.component {
+  fill: #0b2a30;
+  stroke: var(--map-ink);
+  stroke-width: 3;
+}
+
+.balloon {
+  fill: rgba(255, 255, 255, 0.85);
+  stroke: var(--map-ink);
+  stroke-width: 3;
+}
+
+.inlet {
+  fill: var(--map-vessel-venous);
+  stroke: var(--map-ink);
+  stroke-width: 2;
+}
+
+.outlet {
+  fill: var(--map-vessel);
+  stroke: var(--map-ink);
+  stroke-width: 2;
+}
+
+.pathwayLabel {
+  fill: var(--map-ink);
+  font-size: 18px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(6, 21, 25, 0.85);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+
+/* ------------------------------------------------------------------ *
+ * Answer pins
+ * ------------------------------------------------------------------ */
+
+.pin .pinDisc {
+  fill: #0b2a30;
+  stroke: var(--map-ink);
+  stroke-width: 3;
+}
+
+.pin[data-map-pin-selected='true'] .pinDisc {
+  fill: var(--map-accent);
+}
+
+.pin[data-map-pin-marking='correct'] .pinDisc,
+.pin[data-map-pin-marking='your-answer-correct'] .pinDisc {
+  fill: var(--map-green);
+}
+
+.pin[data-map-pin-marking='your-answer'] .pinDisc {
+  fill: var(--map-amber);
+}
+
+.pinNumber {
+  fill: var(--map-ink);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.pin[data-map-pin-selected='true'] .pinNumber,
+.pin[data-map-pin-marking] .pinNumber {
+  fill: #061519;
+}
+
+.pinTarget {
+  position: absolute;
+  width: 4.4%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pinTarget:focus-within {
+  outline: 3px solid var(--map-accent);
+  outline-offset: 2px;
+}
+
+.answerRows {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.answerLegend {
+  padding: 0;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.answerRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--map-line);
+  border-radius: 0.7rem;
+  cursor: pointer;
+}
+
+.answerRow[data-selected='true'] {
+  border-color: var(--map-accent);
+  background: rgba(113, 225, 229, 0.08);
+}
+
+.answerRow[data-map-answer-marking='correct'],
+.answerRow[data-map-answer-marking='your-answer-correct'] {
+  border-color: var(--map-green);
+}
+
+.answerRow[data-map-answer-marking='your-answer'] {
+  border-color: var(--map-amber);
+}
+
+.answerRow input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.answerRow:focus-within {
+  outline: 3px solid var(--map-accent);
+  outline-offset: 2px;
+}
+
+.answerNumber {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--map-ink);
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.answerRow[data-selected='true'] .answerNumber {
+  background: var(--map-accent);
+  border-color: var(--map-accent);
+  color: #061519;
+}
+
+.answerText {
+  min-width: 0;
+}
+
+.answerMarking {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--map-muted);
+}
+
+.footnote {
+  margin: 0;
+  color: var(--map-muted);
+  font-size: 0.8125rem;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow,
+  .deviceFlow {
+    animation: none;
+  }
+}

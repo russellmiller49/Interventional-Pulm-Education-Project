@@ -505,7 +505,7 @@ export function DeviceSelectionIntegrationPanel({
           {pathways.map((pathway) => pathwaySentence(pathway)).join(' ')}{' '}
           {flowAccountSentence(account, disclosed)}
         </TextEquivalent>
-        <AlarmBand alarms={alarms} />
+        <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
 

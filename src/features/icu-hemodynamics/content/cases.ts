@@ -23,7 +23,11 @@ const sharedSources = [
   'icu-hemodynamics-model-v1',
 ] as const
 
-const baseParameters: CirculationParameters = {
+/**
+ * A quiet, normal adult circulation — the point every case departs from, and the patient the
+ * Learn sections run on: a learner meets the normal state before any fault is put in front of it.
+ */
+export const normalCirculationParameters: CirculationParameters = {
   heartRateBpm: 82,
   respiratoryRateBpm: 18,
   bodySurfaceAreaM2: 1.9,
@@ -339,7 +343,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Reassess stroke volume and congestion after each bounded volume step.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 116,
       referenceCardiacOutputLMin: 6,
       circulatingVolumeFraction: 0.72,
@@ -385,7 +389,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Use dynamic evaluation and serial perfusion review rather than reflex fluid.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 112,
       referenceCardiacOutputLMin: 7.2,
       circulatingVolumeFraction: 0.9,
@@ -425,7 +429,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Balance inotropic flow support with decongestion and pressure.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 104,
       referenceCardiacOutputLMin: 5,
       circulatingVolumeFraction: 1.12,
@@ -477,7 +481,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Use a selective bridge while activating definitive PE treatment.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 122,
       referenceCardiacOutputLMin: 5.5,
       pulmonaryVascularResistanceWU: 7,
@@ -531,7 +535,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Support RV flow while reducing afterload and avoiding systemic hypotension.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 110,
       referenceCardiacOutputLMin: 5,
       circulatingVolumeFraction: 1.04,
@@ -585,7 +589,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Reassess filling pressure and flow after decongestion and PEEP changes.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 96,
       referenceCardiacOutputLMin: 5.2,
       circulatingVolumeFraction: 1.16,
@@ -638,7 +642,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Prioritize urgent definitive escalation rather than normalizing a single number.',
     ],
     initialParameters: {
-      ...baseParameters,
+      ...normalCirculationParameters,
       heartRateBpm: 118,
       referenceCardiacOutputLMin: 5.5,
       circulatingVolumeFraction: 0.95,
@@ -689,7 +693,11 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Recognize hydrostatic, damping, catheter-position, and injectate artifacts.',
       'Restore the measurement chain before changing management.',
     ],
-    initialParameters: { ...baseParameters, heartRateBpm: 88, referenceCardiacOutputLMin: 5.6 },
+    initialParameters: {
+      ...normalCirculationParameters,
+      heartRateBpm: 88,
+      referenceCardiacOutputLMin: 5.6,
+    },
     initialMeasurementSystem: {
       zeroed: false,
       transducerLevelCm: 10,

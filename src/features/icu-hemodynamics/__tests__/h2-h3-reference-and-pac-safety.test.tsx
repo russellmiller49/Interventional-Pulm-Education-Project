@@ -8,12 +8,6 @@ import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity'
 import { NORMAL_WAVEFORM_ANATOMY_POSITION_LABELS } from '../components/NormalWaveformAnatomyFigure'
 import { NormalWaveformReference } from '../components/NormalWaveformReference'
 import { NormalWaveformValidityChallenges } from '../components/NormalWaveformValidityChallenges'
-import { PacAdvancementReasoningPanel } from '../components/PacAdvancementReasoningPanel'
-import {
-  PacGuidedSkillActivity,
-  pacGuidedObjectiveComplete,
-} from '../components/PacGuidedSkillActivity'
-import { PA_RETURN_CHECK, PawpSafetySequencePanel } from '../components/PawpSafetySequencePanel'
 import {
   NORMAL_WAVEFORM_DETAIL_SCALE_MAX_MMHG,
   NORMAL_WAVEFORM_INTERPRETATION_WITHHELD,
@@ -31,6 +25,7 @@ import {
   normalWaveformScaleOption,
   normalWaveformValidityChallenges,
   pacAdvancementScenarios,
+  pacAdvancementStopReasonLabels,
   pacLearningPathwaySections,
   pawpCaptureSteps,
   pawpOcclusionOutcomes,
@@ -39,7 +34,6 @@ import {
   pawpRecoveryOutcomes,
   safeAdvancementCommitments,
   waveformAtlasById,
-  type PacLearningPathwaySectionId,
 } from '../content'
 import {
   ICU_HEMODYNAMICS_LEGACY_PROGRESS_STORAGE_KEY,
@@ -50,12 +44,13 @@ import {
   icuHemodynamicsReducer,
   wedgeCaptureDelaySeconds,
   WEDGE_AUTO_DEFLATION_SECONDS,
-  type HemodynamicSimulationState,
 } from '../engine'
+import { PA_RETURN_CHECK, goalsMet, sectionRuntime } from '../engine/stageRuntime'
 import {
   ICU_HEMODYNAMICS_CONTENT_VERSION,
   ICU_HEMODYNAMICS_RELEASE_STAGE,
 } from '../content/release'
+import { hemodynamicsSectionIds, type HemodynamicsSectionId } from '../content/sectionSpecs'
 
 /**
  * H2/H3 — one canonical normal reference, and PAC work that reasons about safety continuously.
@@ -66,8 +61,12 @@ import {
  * PAWP finished when the balloon is down.
  *
  * These pin both, and they pin them at the level where they can actually be broken: the derivation
- * that decides whether advancing is safe, the predicate that decides whether the wedge station is
- * complete, and the rendered surfaces that have to agree with them.
+ * that decides whether advancing is safe, the goals that decide whether the wedge section is
+ * complete, and the rendered reference surfaces that have to agree with them.
+ *
+ * The guided-skill stations and the two safety panels this package once rendered were retired when
+ * every section moved onto the shared lesson stage (2026-09-05). Their content records survive and
+ * are pinned here; the stage's own suites pin how that content is shown.
  */
 
 const push = jest.fn()
@@ -85,9 +84,11 @@ jest.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push }),
 }))
 
-const EXPECTED_ORDER: readonly PacLearningPathwaySectionId[] = [
+const EXPECTED_ORDER: readonly HemodynamicsSectionId[] = [
+  'why-measure',
   'pressure-system',
   'waveform-interpretation',
+  'waveform-components',
   'catheter-advancement',
   'pawp-capture',
   'thermodilution-series',
@@ -190,23 +191,6 @@ function atlasWedgeAndVentricleCopy(): readonly string[] {
       ...entry.annotations.map((annotation) => annotation.description),
     ]
   })
-}
-
-function pawpState(
-  overrides: Partial<HemodynamicSimulationState['catheter']> = {},
-  checks: readonly string[] = [],
-): HemodynamicSimulationState {
-  const definition = hemodynamicCaseById.get('HD-01')
-  if (!definition) throw new Error('HD-01 is required for the wedge station.')
-  const base = icuHemodynamicsReducer(createInitialHemodynamicState(definition, 'learn', 7), {
-    type: 'SET_CATHETER_POSITION',
-    position: 'pa',
-  })
-  return {
-    ...base,
-    catheter: { ...base.catheter, storedWedgeMmHg: 11, ...overrides },
-    signalValidationChecks: checks,
-  }
 }
 
 describe('H2 canonical normal waveform reference', () => {
@@ -346,17 +330,6 @@ describe('H2 canonical normal waveform reference', () => {
     expect(referenceIndex).toBeGreaterThanOrEqual(0)
     expect(referenceIndex).toBeLessThan(advancementIndex)
   })
-
-  it('opens the waveform station on the reference rather than on an abnormality', async () => {
-    const { container } = render(<PacGuidedSkillActivity skillId="waveform-interpretation" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Interpret normal and abnormal waveforms' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: /What each chamber is supposed to look like/i }),
-    ).toBeInTheDocument()
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
-  })
 })
 
 describe('H2 signal validity prevents a confident interpretation', () => {
@@ -416,6 +389,7 @@ describe('H2 signal validity prevents a confident interpretation', () => {
 
   it('does not gate the route: every station stays reachable and the merged order is unchanged', () => {
     expect(pacLearningPathwaySections.map((section) => section.id)).toEqual(EXPECTED_ORDER)
+    expect([...hemodynamicsSectionIds]).toEqual(EXPECTED_ORDER)
     for (const section of pacLearningPathwaySections) {
       const activity = criticalCareActivityById.get(`hemodynamics:learn:${section.id}`)
       expect(activity).toBeDefined()
@@ -482,84 +456,25 @@ describe('H3 advancement reasons about safety continuously', () => {
     expect(resistance!.commitment.correctChoiceIds).toEqual(['escalate'])
   })
 
-  it('withholds the reasoning until the learner commits, and continues only on a separate action', () => {
-    render(<PacAdvancementReasoningPanel />)
-    const scenario = pacAdvancementScenarios[0]!
-
-    expect(screen.queryByText(scenario.observed)).not.toBeInTheDocument()
-    expect(screen.queryByText(scenario.justification)).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: /Continue to the next situation/i }),
-    ).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getAllByRole('radio')[0]!)
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this decision' }))
-
-    expect(screen.getByText(scenario.observed)).toBeInTheDocument()
-    expect(screen.getByText(scenario.justification)).toBeInTheDocument()
-    // Committing revealed the reasoning and moved nothing.
-    expect(screen.getByText(/Situation 1 of/i)).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /Continue to the next situation/i }),
-    ).toBeInTheDocument()
-  })
-
   it('says in words that a matching waveform changes nothing when something says stop', () => {
-    render(<PacAdvancementReasoningPanel />)
-    const index = pacAdvancementScenarios.findIndex(
-      (scenario) => scenario.id === 'rv-ectopy-despite-textbook-waveform',
+    const scenario = pacAdvancementScenarios.find(
+      (candidate) => candidate.id === 'rv-ectopy-despite-textbook-waveform',
     )
-    expect(index).toBeGreaterThan(-1)
+    expect(scenario).toBeDefined()
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: new RegExp(pacAdvancementScenarios[index]!.title),
-      }),
+    // The tracing matches the chamber, and the rhythm alone says stop.
+    expect(scenario!.currentTracing.matchesPosition).not.toBeNull()
+    expect(scenario!.currentTracing.concerning).toBe(false)
+    expect(advancementStopReasons(scenario!)).toEqual(['rhythm-concern'])
+    expect(pacAdvancementStopReasonLabels['rhythm-concern']).toMatch(/rhythm needs attention/i)
+    expect(advancementMayContinue(scenario!)).toBe(false)
+
+    // And the words the learner reads after committing say exactly that.
+    expect(scenario!.justification).toMatch(
+      /Continuing is not safe\. A stop condition outranks a matching waveform every time/i,
     )
-    fireEvent.click(screen.getAllByRole('radio')[0]!)
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this decision' }))
-
-    expect(
-      screen.getByText(
-        /Continuing is not safe\. A stop condition outranks a matching waveform every time/i,
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/A waveform confirms which chamber the tip is in/i)).toBeInTheDocument()
-    const reasons = screen.getByRole('list', { name: 'Reasons to stop here' })
-    expect(within(reasons).getByText(/rhythm needs attention/i)).toBeInTheDocument()
-  })
-
-  it('keeps the supervised-simulation and non-competency boundary visible', () => {
-    render(<PacAdvancementReasoningPanel />)
-    const note = screen.getByRole('note')
-    expect(note).toHaveTextContent(/Supervised simulation/i)
-    expect(note).toHaveTextContent(/does not establish the ability to place or manage/i)
-    expect(note).toHaveTextContent(/manufacturer instructions/i)
-    expect(note).toHaveTextContent(/direct supervision/i)
-  })
-
-  it('keeps the prebrief acknowledgement ahead of the manipulation controls', async () => {
-    render(<PacGuidedSkillActivity skillId="catheter-advancement" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Advance the PAC by waveform' }),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByRole('heading', { name: /What this section is, and what it is not/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Orient to this skill station' })).toBeDisabled()
-    expect(
-      screen.getByText(
-        /simulated advancement controls open once you have read the safety prebrief/i,
-      ),
-    ).toBeInTheDocument()
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'I have read the prebrief — open the simulated advancement',
-      }),
-    )
-    expect(screen.getByRole('button', { name: 'Orient to this skill station' })).toBeEnabled()
+    expect(scenario!.commitment.explanation).toMatch(/confirms which chamber the tip is in/i)
+    expect(scenario!.commitment.correctChoiceIds).toEqual(['escalate'])
   })
 })
 
@@ -584,19 +499,6 @@ describe('H3 PAWP acquisition closes its safety loop', () => {
     }
   })
 
-  it('shows the balloon state as words in the interface', () => {
-    const inflated = pawpState({ balloonInflated: true, position: 'wedge' })
-    const { rerender } = render(
-      <PawpSafetySequencePanel state={inflated} onRecoveryConfirmed={jest.fn()} />,
-    )
-    expect(screen.getByText(/Occlusion balloon INFLATED/i)).toBeInTheDocument()
-
-    rerender(<PawpSafetySequencePanel state={pawpState()} onRecoveryConfirmed={jest.fn()} />)
-    expect(
-      screen.getByText(/Balloon DEFLATED\. No balloon inflation accounts for/i),
-    ).toBeInTheDocument()
-  })
-
   it('refuses to let a wedge-like shape alone establish a valid PAWP', () => {
     const best = pawpPlausibilityCommitment.choices.find((choice) => choice.plausibility === 'best')
     expect(pawpPlausibilityCommitment.correctChoiceIds).toEqual([best!.id])
@@ -615,19 +517,6 @@ describe('H3 PAWP acquisition closes its safety loop', () => {
     expect(wedgeEntry?.cannotEstablish).toMatch(/does not establish a valid PAWP/i)
   })
 
-  it('does not caption a post-deflation tracing with the state it was authored for', () => {
-    render(<PawpSafetySequencePanel state={pawpState()} onRecoveryConfirmed={jest.fn()} />)
-
-    // Both recovery cards reuse an atlas trace for its shape. The wedge entry's own caption says the
-    // balloon is inflated at the pulmonary-artery position, which sat directly beneath this card's
-    // "balloon deflated" label and contradicted it.
-    for (const outcome of pawpRecoveryOutcomes) {
-      const card = screen.getByText(outcome.label).closest('li') as HTMLElement
-      expect(within(card).getByText(/Balloon DEFLATED · depth unchanged/i)).toBeInTheDocument()
-      expect(card.textContent ?? '').not.toMatch(/Balloon inflated at the pulmonary artery/i)
-    }
-  })
-
   it('never permits continuation from a state where the PA waveform did not return', () => {
     const missing = pawpRecoveryOutcomes.find((outcome) => !outcome.paWaveformReturned)
     expect(missing).toBeDefined()
@@ -635,58 +524,13 @@ describe('H3 PAWP acquisition closes its safety loop', () => {
     expect(missing!.requiredResponse).toMatch(/escalate/i)
     expect(pawpRecoveryCommitment.correctChoiceIds).toEqual(['treat-as-unsafe-and-escalate'])
   })
-
-  it('records the return only after the learner assesses both post-deflation states', () => {
-    const onRecoveryConfirmed = jest.fn()
-    render(
-      <PawpSafetySequencePanel state={pawpState()} onRecoveryConfirmed={onRecoveryConfirmed} />,
-    )
-
-    expect(
-      screen.getByText(/Return of the pulmonary-artery waveform has not been assessed yet/i),
-    ).toBeInTheDocument()
-    expect(onRecoveryConfirmed).not.toHaveBeenCalled()
-
-    const returns = screen.getByText(/pulsatility and the notch return/i).closest('li')!
-    const persists = screen.getByText(/occlusion morphology persists/i).closest('li')!
-    fireEvent.click(within(returns).getByRole('radio', { name: /Yes —/i }))
-    fireEvent.click(within(persists).getByRole('radio', { name: /No —/i }))
-
-    // Both observations are in, and the sequence still is not finished: what follows has to be
-    // committed to as well.
-    expect(onRecoveryConfirmed).not.toHaveBeenCalled()
-
-    fireEvent.click(
-      screen.getByRole('radio', { name: /Treat the signal and the catheter position as unsafe/i }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Commit what follows' }))
-
-    expect(onRecoveryConfirmed).toHaveBeenCalled()
-    expect(
-      screen.getByText(/has been assessed in both states. This station will accept completion/i),
-    ).toBeInTheDocument()
-  })
-
-  it('withholds the objective until the return is assessed, and after a forced recovery', () => {
-    // Stored, deflated, back at PA — everything the station used to count as finished.
-    expect(pacGuidedObjectiveComplete('pawp-capture', pawpState())).toBe(false)
-
-    // The prolonged-inflation recovery reaches exactly that state on its own, so it must not count.
-    expect(
-      pacGuidedObjectiveComplete(
-        'pawp-capture',
-        pawpState({ forcedSafetyRecovery: true }, [PA_RETURN_CHECK]),
-      ),
-    ).toBe(false)
-
-    expect(pacGuidedObjectiveComplete('pawp-capture', pawpState({}, [PA_RETURN_CHECK]))).toBe(true)
-  })
 })
 
 describe('H2/H3 non-regression', () => {
   it('leaves the merged pathway order, ids, and routes untouched', () => {
     expect(pacLearningPathwaySections.map((section) => section.id)).toEqual(EXPECTED_ORDER)
-    expect(pacLearningPathwaySections[0]?.id).toBe('pressure-system')
+    expect(pacLearningPathwaySections[0]?.id).toBe('why-measure')
+    expect(pacLearningPathwaySections[1]?.id).toBe('pressure-system')
     expect(pacLearningPathwaySections.at(-1)?.id).toBe('pac-signal-validation')
 
     const ids = pacLearningPathwaySections.map((section) => section.id)
@@ -855,19 +699,6 @@ describe('clinical-copy corrections', () => {
     expect(waveformAtlasById.get('rv-normal')!.summary).toMatch(/may climb gradually/i)
   })
 
-  it('does not describe a deflated balloon as proving that nothing is occluding', () => {
-    render(<PawpSafetySequencePanel state={pawpState()} onRecoveryConfirmed={jest.fn()} />)
-    const balloon = screen.getByText(/Balloon DEFLATED\./i)
-    expect(balloon).not.toHaveTextContent(/Nothing is occluding/i)
-    expect(balloon).toHaveTextContent(/No balloon inflation accounts for an occlusion waveform/i)
-    expect(balloon).toHaveTextContent(
-      /Persistent occlusion morphology after deflation is abnormal and requires reassessment/i,
-    )
-    expect(balloon).toHaveTextContent(
-      /does not by itself establish that distal occlusion has ended/i,
-    )
-  })
-
   it('introduces no universal balloon volume or inflation duration, and says why', () => {
     const volume = /\b\d+(\.\d+)?\s*(ml\b|millilit|cc\b)/i
     const duration =
@@ -908,10 +739,14 @@ describe('clinical-copy corrections', () => {
     expect(state.catheter.balloonInflated).toBe(false)
     expect(state.catheter.position).toBe('pa')
     expect(state.criticalErrors).toContain('wedge-prolonged-inflation')
-    // And that path still cannot finish the station, with or without the learner's own assessment.
-    expect(pacGuidedObjectiveComplete('pawp-capture', state)).toBe(false)
+    // And that path still cannot finish the section, with or without the learner's own assessment:
+    // the wedge section's goals are pure predicates over this same state.
+    const wedge = sectionRuntime('pawp-capture')
+    const goals = [...wedge.actGoals, ...wedge.observeGoals]
+    expect(goals).toContainEqual({ type: 'check', id: PA_RETURN_CHECK })
+    expect(goalsMet(goals, state)).toBe(false)
     expect(
-      pacGuidedObjectiveComplete('pawp-capture', {
+      goalsMet(goals, {
         ...state,
         signalValidationChecks: [...state.signalValidationChecks, PA_RETURN_CHECK],
       }),

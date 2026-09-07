@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
@@ -8,26 +8,34 @@ import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-s
 import { IcuHemodynamicsLearnLandingV2 } from '../components/IcuHemodynamicsLearnLandingV2'
 import { IcuHemodynamicsOverviewV2 } from '../components/IcuHemodynamicsOverviewV2'
 import { NormalWaveformReference } from '../components/NormalWaveformReference'
-import { PacGuidedSkillActivity } from '../components/PacGuidedSkillActivity'
 import {
+  hemodynamicsSourceById,
   normalWaveformReference,
   pacGuidedLearningItems,
   pacLearningPathwaySections,
+  pacPrebriefBeforeYouStart,
   pacPrebriefNotCoveredHere,
+  pacPrebriefNotCoveredNotice,
+  pacPrebriefScope,
   pacPrebriefStopConditions,
-  pacSectionReadiness,
   pressureSystemValiditySteps,
-  recommendedPriorSection,
-  type PacLearningPathwaySectionId,
 } from '../content'
+import { hemodynamicsPathwaySections } from '../content/pathwayResolver'
+import { hemodynamicsSectionIds, type HemodynamicsSectionId } from '../content/sectionSpecs'
 
 /**
  * H0/H1 — signal validity before catheter manipulation.
  *
  * The module used to open by advancing a catheter and finish with the integrated signal-validation
  * capstone. That is backwards for a novice: the first thing a fellow needs is a way to decide
- * whether the tracing in front of them means anything at all. These pin the new runway — and,
- * equally, pin that reordering it did not gate anything or move an identifier.
+ * whether the tracing in front of them means anything at all. These pin the runway — and, equally,
+ * pin that reordering it did not gate anything or move an identifier.
+ *
+ * The flow rebuild (2026-09-05) put one orientation section — why a pressure line is placed at
+ * all — ahead of the pressure system, and added a section on the waves inside a named place. The
+ * readiness cards and the guided-skill stations those cards opened are gone; every section now
+ * runs on the shared lesson stage, so what is pinned here is the content and the two entry
+ * surfaces, not the retired station components.
  */
 
 const push = jest.fn()
@@ -37,17 +45,32 @@ jest.mock('@/i18n/navigation', () => ({
     href,
     children,
     ...props
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string; query?: Record<string, string> }
+    children: ReactNode
+  }) => {
+    const resolved =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}${
+            href.query && Object.keys(href.query).length > 0
+              ? `?${new URLSearchParams(href.query).toString()}`
+              : ''
+          }`
+    return (
+      <a href={resolved} {...props}>
+        {children}
+      </a>
+    )
+  },
   useRouter: () => ({ push }),
 }))
 
-const EXPECTED_ORDER: readonly PacLearningPathwaySectionId[] = [
+const EXPECTED_ORDER: readonly HemodynamicsSectionId[] = [
+  'why-measure',
   'pressure-system',
   'waveform-interpretation',
+  'waveform-components',
   'catheter-advancement',
   'pawp-capture',
   'thermodilution-series',
@@ -55,9 +78,30 @@ const EXPECTED_ORDER: readonly PacLearningPathwaySectionId[] = [
   'pac-signal-validation',
 ]
 
+/**
+ * The primary call to action of whichever entry surface was just rendered. Both surfaces mark it
+ * with the same attribute, so the test asks each the same question in the same way.
+ */
+function primaryCta(container: HTMLElement): HTMLElement {
+  const found = container.querySelectorAll('[data-hemodynamics-continue]')
+  if (found.length !== 1) {
+    throw new Error(`expected exactly one primary call to action, found ${found.length}`)
+  }
+  return found[0] as HTMLElement
+}
+
+beforeEach(() => {
+  window.localStorage.clear()
+})
+
 describe('H0/H1 pathway order and identity', () => {
-  it('opens on the pressure system and keeps the capstone last', () => {
+  it('opens on the orientation question, then the pressure system, and keeps the capstone last', () => {
     expect(pacLearningPathwaySections.map((section) => section.id)).toEqual(EXPECTED_ORDER)
+    // The stage's own ladder and the pathway are the same order, declared once each.
+    expect([...hemodynamicsSectionIds]).toEqual(EXPECTED_ORDER)
+    expect(pacLearningPathwaySections[0]?.id).toBe('why-measure')
+    expect(pacLearningPathwaySections[0]?.stage).toBe('orientation')
+    expect(pacLearningPathwaySections[1]?.id).toBe('pressure-system')
   })
 
   /**
@@ -78,6 +122,9 @@ describe('H0/H1 pathway order and identity', () => {
     expect(pacLearningPathwaySections.map((section) => section.id)).not.toEqual(previousOrder)
     // Specifically: the first station is no longer catheter manipulation.
     expect(pacLearningPathwaySections[0]?.id).not.toBe('catheter-advancement')
+    // And the pressure system still comes before the first simulated manipulation.
+    const ids = pacLearningPathwaySections.map((section) => section.id)
+    expect(ids.indexOf('pressure-system')).toBeLessThan(ids.indexOf('catheter-advancement'))
   })
 
   it('keeps every section id and activity id unchanged and unique', () => {
@@ -104,21 +151,26 @@ describe('H0/H1 pathway order and identity', () => {
     expect(pacLearningPathwaySections.at(-1)?.id).toBe('pac-signal-validation')
   })
 
-  it('leads the arc sentence with validity rather than advancement', () => {
+  it('leads the arc sentence with the question and the signal rather than advancement', () => {
     const { arcSentence } = criticalCareLearningPathway('icu-hemodynamics')
-    expect(arcSentence).toMatch(/^Trust the signal/i)
+    expect(arcSentence).toMatch(/^Ask why, trust the signal/i)
     expect(arcSentence).not.toMatch(/^Advance/i)
   })
 })
 
 describe('H0/H1 module entry', () => {
-  it('sends a first-year fellow to the pressure system, not the introducer', () => {
-    render(<IcuHemodynamicsOverviewV2 />)
+  it('sends a first-year fellow to the first section, not the introducer', () => {
+    const { container } = render(<IcuHemodynamicsOverviewV2 />)
 
-    const start = screen.getByRole('link', {
-      name: /Start here: can I trust this pressure signal\?/i,
-    })
-    expect(start).toHaveAttribute('href', '/icu-hemodynamics/learn?activity=pressure-system')
+    const first = hemodynamicsPathwaySections[0]!
+    const start = primaryCta(container)
+    // The stored record is read in an effect; with nothing stored it resolves to section one.
+    expect(start).toHaveAttribute('data-hemodynamics-continue', 'resolved')
+    expect(start).toHaveAttribute('data-next-section', first.id)
+    expect(start).toHaveAttribute('href', `/icu-hemodynamics/learn?activity=${first.id}`)
+    expect(start).toHaveTextContent(`Start — ${first.title}`)
+    expect(start.getAttribute('href')).not.toContain('catheter-advancement')
+
     expect(screen.queryByText(/Begin at the introducer/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Start at the introducer/i })).not.toBeInTheDocument()
   })
@@ -126,7 +178,12 @@ describe('H0/H1 module entry', () => {
   it('answers the five orientation questions a novice arrives with', () => {
     const { container } = render(<IcuHemodynamicsOverviewV2 />)
 
-    expect(screen.getByText(/Where a first-year fellow should begin/i)).toBeInTheDocument()
+    const begin = screen.getByText(/Where a first-year fellow should begin/i)
+    expect(begin).toBeInTheDocument()
+    // And the answer names the pathway's own first section rather than a hard-coded one.
+    expect(begin.nextElementSibling).toHaveTextContent(
+      `At the first section — ${hemodynamicsPathwaySections[0]!.title}`,
+    )
     expect(screen.getByText(/What is assumed beforehand/i)).toBeInTheDocument()
     expect(screen.getByText(/What you will actually practice/i)).toBeInTheDocument()
     expect(
@@ -145,66 +202,44 @@ describe('H0/H1 module entry', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders the readiness facts for every section on the Learn landing', () => {
+  it('names all nine sections, in order, on the Overview and the Learn landing', () => {
+    for (const Surface of [IcuHemodynamicsOverviewV2, IcuHemodynamicsLearnLandingV2]) {
+      const { container, unmount } = render(<Surface />)
+
+      const composition = container.querySelector('[data-pathway-composition]')
+      expect(composition).toHaveTextContent(/^9 sections\b/)
+
+      const accordion = container.querySelector('[data-pathway-accordion]') as HTMLElement
+      expect(accordion).not.toBeNull()
+      const chips = Array.from(
+        accordion.querySelectorAll<HTMLAnchorElement>('a[data-kind="section"]'),
+      )
+      // Flattening the stage groups reproduces the canonical order — one map, not a second order.
+      expect(chips.map((chip) => chip.getAttribute('href'))).toEqual(
+        EXPECTED_ORDER.map((id) => `/icu-hemodynamics/learn?activity=${id}`),
+      )
+      for (const section of pacLearningPathwaySections) {
+        expect(within(accordion).getAllByText(section.title).length).toBeGreaterThan(0)
+      }
+
+      unmount()
+    }
+  })
+
+  it('says on the Learn landing that nothing is gated, and every section still links out', () => {
     const { container } = render(<IcuHemodynamicsLearnLandingV2 />)
 
-    expect(
-      screen.getByRole('heading', { name: /Where to start, and what each section assumes/i }),
-    ).toBeInTheDocument()
-    for (const section of pacLearningPathwaySections) {
-      expect(screen.getAllByText(section.title).length).toBeGreaterThan(0)
-    }
-    // Nothing gates: the landing says so, and every section still links out.
-    expect(screen.getByText(/Nothing is locked/i)).toBeInTheDocument()
+    expect(screen.getByText(/nothing is gated/i)).toBeInTheDocument()
+    expect(screen.getByText(/not a claim about clinical readiness/i)).toBeInTheDocument()
+    expect(primaryCta(container)).toHaveAttribute(
+      'data-next-section',
+      hemodynamicsPathwaySections[0]!.id,
+    )
+    // Every section is reachable from the map, whatever the record says.
+    expect(container.querySelectorAll('a[data-kind="section"]')).toHaveLength(
+      pacLearningPathwaySections.length,
+    )
     assertNoUniversalTargetLanguage(container.textContent ?? '')
-  })
-})
-
-describe('H0/H1 per-section readiness', () => {
-  it('derives the recommended prior section from the pathway, not the catalog prerequisites', () => {
-    expect(recommendedPriorSection('pressure-system')).toBeNull()
-
-    for (const [index, section] of pacLearningPathwaySections.entries()) {
-      const prior = recommendedPriorSection(section.id as PacLearningPathwaySectionId)
-      if (index === 0) {
-        expect(prior).toBeNull()
-        continue
-      }
-      expect(prior?.id).toBe(pacLearningPathwaySections[index - 1]?.id)
-    }
-
-    // The catalog prerequisite for the *first* section is empty, but the point of deriving from the
-    // pathway is that the display stays right even when the two diverge.
-    expect(recommendedPriorSection('waveform-interpretation')?.id).toBe('pressure-system')
-    expect(recommendedPriorSection('catheter-advancement')?.id).toBe('waveform-interpretation')
-  })
-
-  it('authors readiness facts for every section, marking the simulated-procedure ones', () => {
-    for (const section of pacLearningPathwaySections) {
-      const readiness = pacSectionReadiness[section.id as PacLearningPathwaySectionId]
-      expect(readiness).toBeDefined()
-      expect(readiness.level.length).toBeGreaterThan(0)
-      expect(readiness.beforeStarting.length).toBeGreaterThan(0)
-      expect(readiness.whatYouWillPractice.length).toBeGreaterThan(0)
-    }
-    expect(pacSectionReadiness['catheter-advancement'].boundary).toBe('simulated-procedure')
-    expect(pacSectionReadiness['pawp-capture'].boundary).toBe('simulated-procedure')
-    expect(pacSectionReadiness['pressure-system'].boundary).toBe('signal-interpretation')
-  })
-
-  it('shows the readiness card before the learner opens a station', async () => {
-    render(<PacGuidedSkillActivity skillId="pressure-system" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Level, zero, and dynamic response' }),
-    ).toBeInTheDocument()
-
-    const card = screen.getByLabelText(/Before you start: Level, zero, and dynamic response/i)
-    expect(
-      within(card).getByText(/Start here — no earlier section is assumed/i),
-    ).toBeInTheDocument()
-    expect(
-      within(card).getByText(/This is the recommended first section of the module/i),
-    ).toBeInTheDocument()
   })
 })
 
@@ -235,44 +270,14 @@ describe('H0/H1 pressure-system validity sequence', () => {
     }
   })
 
-  it('renders the sequence in order in the first station', async () => {
-    const { container } = render(<PacGuidedSkillActivity skillId="pressure-system" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Level, zero, and dynamic response' }),
-    ).toBeInTheDocument()
-
-    const sequence = screen.getByLabelText('Pressure-system validity sequence')
-    const rendered = within(sequence)
-      .getAllByRole('heading', { level: 3 })
-      .map((heading) => heading.textContent)
-    expect(rendered).toEqual(pressureSystemValiditySteps.map((step) => step.shortLabel))
-
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
-  })
-
-  it('withholds the reasoning until the learner commits', async () => {
-    render(<PacGuidedSkillActivity skillId="pressure-system" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Level, zero, and dynamic response' }),
-    ).toBeInTheDocument()
-
+  it('authors a validity commitment for the pressure system with its reasoning on the record', () => {
     const commitment = pacGuidedLearningItems['pressure-system'].validityCommitment
     expect(commitment).toBeDefined()
-
-    // Before commitment the explanation is nowhere on the page.
-    expect(screen.queryByText(commitment!.explanation)).not.toBeInTheDocument()
-
-    const commit = screen.getByRole('button', { name: 'Commit this reading' })
-    expect(commit).toBeDisabled()
-
-    fireEvent.click(
-      screen.getByRole('radio', {
-        name: /Read the mean with caution/i,
-      }),
+    expect(commitment!.activityId).toBe('hemodynamics:learn:pressure-system')
+    expect(commitment!.explanation.length).toBeGreaterThan(0)
+    expect(commitment!.choices.map((choice) => choice.label).join(' ')).toMatch(
+      /Read the mean with caution/i,
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this reading' }))
-
-    expect(screen.getByText(commitment!.explanation)).toBeInTheDocument()
   })
 })
 
@@ -314,79 +319,52 @@ describe('H0/H1 normal waveform reference', () => {
     assertNoUniversalTargetLanguage(container.textContent ?? '')
   })
 
-  it('establishes the normal reference before the recognition drill', async () => {
-    render(<PacGuidedSkillActivity skillId="waveform-interpretation" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Interpret normal and abnormal waveforms' }),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByRole('heading', { name: /What each chamber is supposed to look like/i }),
-    ).toBeInTheDocument()
+  it('keeps the normal reference ahead of the first simulated manipulation in the pathway', () => {
+    const ids = pacLearningPathwaySections.map((section) => section.id)
+    expect(ids.indexOf('waveform-interpretation')).toBeGreaterThanOrEqual(0)
+    expect(ids.indexOf('waveform-interpretation')).toBeLessThan(ids.indexOf('catheter-advancement'))
   })
 })
 
 describe('H0/H1 advancement safety prebrief', () => {
-  it('appears before the manipulation controls and gates nothing else', async () => {
-    render(<PacGuidedSkillActivity skillId="catheter-advancement" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Advance the PAC by waveform' }),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByRole('heading', { name: /What this section is, and what it is not/i }),
-    ).toBeInTheDocument()
-    // The orientation control stays out of reach until the prebrief is acknowledged.
-    expect(screen.getByRole('button', { name: 'Orient to this skill station' })).toBeDisabled()
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'I have read the prebrief — open the simulated advancement',
-      }),
+  it('separates waveform recognition from procedural ability', () => {
+    expect(pacPrebriefScope.doesNotTeach).toMatch(
+      /Placing or manipulating a pulmonary-artery catheter in a patient/i,
     )
-    expect(screen.getByRole('button', { name: 'Orient to this skill station' })).toBeEnabled()
+    expect(pacPrebriefScope.doesNotTeach).toMatch(/idealized waveforms are easier to read/i)
+    expect(pacPrebriefScope.supervision).toMatch(/under qualified supervision/i)
   })
 
-  it('separates waveform recognition from procedural ability', async () => {
-    render(<PacGuidedSkillActivity skillId="catheter-advancement" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Advance the PAC by waveform' }),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByText(/Placing or manipulating a pulmonary-artery catheter in a patient/i),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/idealized waveforms are easier to read/i)).toBeInTheDocument()
-    expect(screen.getByText(/under qualified supervision/i)).toBeInTheDocument()
-  })
-
-  it('names every authored stop condition and continuous rhythm monitoring', async () => {
-    const { container } = render(<PacGuidedSkillActivity skillId="catheter-advancement" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Advance the PAC by waveform' }),
-    ).toBeInTheDocument()
-
+  it('names every authored stop condition and continuous rhythm monitoring', () => {
+    expect(pacPrebriefStopConditions.length).toBeGreaterThan(0)
     for (const condition of pacPrebriefStopConditions) {
-      expect(screen.getByText(condition.trigger)).toBeInTheDocument()
-      expect(screen.getByText(condition.response)).toBeInTheDocument()
+      expect(condition.trigger.length).toBeGreaterThan(0)
+      expect(condition.response.length).toBeGreaterThan(0)
       expect(condition.sourceIds.length).toBeGreaterThan(0)
+      for (const sourceId of condition.sourceIds) {
+        expect(hemodynamicsSourceById.has(sourceId)).toBe(true)
+      }
     }
-    expect(
-      screen.getByText(/Continuous rhythm monitoring, watched throughout/i),
-    ).toBeInTheDocument()
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
+    expect(pacPrebriefBeforeYouStart.join(' ')).toMatch(
+      /Continuous rhythm monitoring, watched throughout/i,
+    )
+    assertNoUniversalTargetLanguage(
+      [
+        ...Object.values(pacPrebriefScope),
+        ...pacPrebriefBeforeYouStart,
+        ...pacPrebriefStopConditions.flatMap((condition) => [
+          condition.trigger,
+          condition.response,
+        ]),
+        ...pacPrebriefNotCoveredHere,
+        pacPrebriefNotCoveredNotice,
+      ].join(' '),
+    )
   })
 
-  it('flags the stop conditions no source in this module supports instead of inventing them', async () => {
-    render(<PacGuidedSkillActivity skillId="catheter-advancement" />)
-    expect(
-      await screen.findByRole('heading', { name: 'Advance the PAC by waveform' }),
-    ).toBeInTheDocument()
-
-    for (const gap of pacPrebriefNotCoveredHere) {
-      expect(screen.getByText(gap)).toBeInTheDocument()
-    }
-    expect(screen.getByText(/no reviewed source for them yet/i)).toBeInTheDocument()
+  it('flags the stop conditions no source in this module supports instead of inventing them', () => {
+    expect(pacPrebriefNotCoveredHere.length).toBeGreaterThan(0)
+    expect(pacPrebriefNotCoveredNotice).toMatch(/no reviewed source for them yet/i)
     // Resistance and knotting are named as gaps, never asserted as rules.
     expect(pacPrebriefNotCoveredHere.join(' ')).toMatch(/resistance/i)
     expect(pacPrebriefNotCoveredHere.join(' ')).toMatch(/knotting/i)

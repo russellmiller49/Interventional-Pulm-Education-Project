@@ -15,7 +15,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.1.0',
     curriculumStage: 'foundation',
     device: 'shared',
-    title: 'Validate the signal before the device',
+    title: 'A pressure that looks fine',
     summary:
       'Work the questions that come before any device control, and keep pressure, flow, oxygen delivery, and organ response as four separate answers.',
     objectives: [
@@ -63,7 +63,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.1.0',
     curriculumStage: 'foundation',
     device: 'shared',
-    title: 'Unloading, augmentation, and total flow',
+    title: 'Three devices called support',
     summary:
       'Trace source, active component, and destination for three mechanisms, and separate a device that changes timing from one that moves blood.',
     objectives: [
@@ -112,7 +112,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'mechanism',
     device: 'iabp',
-    title: 'IABP timing and triggering',
+    title: 'Is the balloon inflating at the right moment?',
     summary:
       'Match inflation to aortic-valve closure and complete deflation before the next ejection.',
     objectives: [
@@ -150,7 +150,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'application',
     device: 'iabp',
-    title: 'IABP efficacy, limits, and escalation',
+    title: 'Timed correctly, still not perfusing',
     summary:
       'Recognize when technically correct counterpulsation cannot rescue the underlying physiology.',
     objectives: [
@@ -189,7 +189,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'mechanism',
     device: 'impella',
-    title: 'Impella unloading and placement signals',
+    title: 'Where is the inlet sitting?',
     summary: 'Relate performance level and transvalvular position to flow and unloading.',
     objectives: [
       'Compare CP and 5.5 at the same modeled loading and performance level.',
@@ -243,7 +243,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'application',
     device: 'impella',
-    title: 'Impella suction, purge, hemolysis, and RV delivery',
+    title: 'A suction alarm at high support',
     summary:
       'Treat low flow as a patient–position–device problem, not an automatic request for more support.',
     objectives: [
@@ -300,7 +300,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'mechanism',
     device: 'lvad',
-    title: 'Durable LVAD parameters and ICU review',
+    title: 'Speed unchanged, resistance rising',
     summary: 'Interpret flow, speed, power, PI, MAP, pulsatility, and RV filling as one system.',
     objectives: [
       'Explain why displayed flow is an estimate.',
@@ -337,7 +337,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'application',
     device: 'lvad',
-    title: 'Durable LVAD low flow, high power, and power emergencies',
+    title: 'An alarm at an unchanged speed',
     summary:
       'Use competing diagnoses and immediate safety checks before treating a controller number.',
     objectives: [
@@ -377,7 +377,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     version: '1.0.0',
     curriculumStage: 'integration',
     device: 'shared',
-    title: 'Choosing among IABP, Impella, and durable LVAD for a shock phenotype',
+    title: 'Low output on left-sided support',
     summary:
       'Compare the three mechanisms against one phenotype, and let the limiting problem select the device.',
     objectives: [

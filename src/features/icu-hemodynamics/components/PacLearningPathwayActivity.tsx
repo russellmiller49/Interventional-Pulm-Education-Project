@@ -1,60 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { HemodynamicsStageHost } from './stage/HemodynamicsStageHost'
 
-import {
-  firstPacLearningPathwaySectionId,
-  isPacLearningPathwaySectionId,
-  type PacLearningPathwaySectionId,
-} from '../content'
-import { PacGuidedSkillActivity } from './PacGuidedSkillActivity'
-import { PacSignalValidationActivity } from './PacSignalValidationActivity'
-
-interface PacLearningPathwayActivityProps {
-  readonly initialSectionId: PacLearningPathwaySectionId
-  readonly locale?: string
-}
-
-function sectionFromCurrentUrl(): PacLearningPathwaySectionId {
-  const activity = new URL(window.location.href).searchParams.get('activity')
-  return isPacLearningPathwaySectionId(activity) ? activity : firstPacLearningPathwaySectionId
-}
-
+/**
+ * The Learn route's entry for one section of the pathway.
+ *
+ * Kept under its original name and props so the route and its test are undisturbed; everything
+ * it used to do — a client-side section switch, two different activity components, a phase bar —
+ * is now the lesson stage, which renders one section at a time and moves between sections by URL.
+ */
 export function PacLearningPathwayActivity({
   initialSectionId,
   locale = 'en',
-}: PacLearningPathwayActivityProps) {
-  const [activeSectionId, setActiveSectionId] = useState(initialSectionId)
-
-  useEffect(() => {
-    setActiveSectionId(initialSectionId)
-  }, [initialSectionId])
-
-  useEffect(() => {
-    const restoreUrlSection = () => setActiveSectionId(sectionFromCurrentUrl())
-    window.addEventListener('popstate', restoreUrlSection)
-    return () => window.removeEventListener('popstate', restoreUrlSection)
-  }, [])
-
-  function selectSection(sectionId: PacLearningPathwaySectionId) {
-    const url = new URL(window.location.href)
-    url.searchParams.set('activity', sectionId)
-    window.history.pushState({}, '', `${url.pathname}${url.search}${url.hash}`)
-    setActiveSectionId(sectionId)
-  }
-
-  return activeSectionId === 'pac-signal-validation' ? (
-    <PacSignalValidationActivity
-      key={activeSectionId}
-      locale={locale}
-      onPathwaySectionChange={selectSection}
-    />
-  ) : (
-    <PacGuidedSkillActivity
-      key={activeSectionId}
-      skillId={activeSectionId}
-      locale={locale}
-      onPathwaySectionChange={selectSection}
-    />
-  )
+}: {
+  readonly initialSectionId: string
+  readonly locale?: string
+}) {
+  return <HemodynamicsStageHost sectionId={initialSectionId} locale={locale} />
 }

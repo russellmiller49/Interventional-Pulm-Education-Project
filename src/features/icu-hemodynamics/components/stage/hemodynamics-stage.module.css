@@ -1,0 +1,602 @@
+/*
+ * What only the hemodynamics stage has: the monitor frame, the docks a step opens beneath it, the
+ * walk card, the question sort, the story problems, the teaching cards, the one table and the
+ * control strip. Everything shared with the other lesson stages lives in
+ * `learning-module/stage/*.module.css`.
+ */
+
+.simulator {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.monitorFrame {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.lockedNote {
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border: 1px dashed var(--amber, #ffbf62);
+  border-radius: 0.65rem;
+  color: var(--amber, #ffbf62);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.docks {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.surfaceCard {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  background: rgba(16, 46, 52, 0.35);
+  color: var(--ink, #eaf4f4);
+}
+
+/* ------------------------------------------------------------------ *
+ * Docks
+ * ------------------------------------------------------------------ */
+
+.dock {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border: 1px solid var(--cyan-bright, #71e1e5);
+  border-radius: 0.9rem;
+  background: rgba(16, 46, 52, 0.35);
+  color: var(--ink, #eaf4f4);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.dock:disabled {
+  opacity: 0.6;
+}
+
+.dock > legend {
+  padding: 0 0.35rem;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dockRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+.dockRow > label,
+.dockRow > div:first-child {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.dockRow span {
+  font-weight: 700;
+}
+
+.dockRow small {
+  color: var(--muted, #9fb4b7);
+}
+
+.dockRow select {
+  min-height: 2.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.5rem;
+  background: var(--panel, #10262b);
+  color: inherit;
+  font: inherit;
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.slider {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 9rem;
+}
+
+.slider input {
+  width: 100%;
+  accent-color: var(--cyan-bright, #71e1e5);
+}
+
+.slider output {
+  min-width: 3.5rem;
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dockButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--cyan-bright, #71e1e5);
+  border-radius: 0.6rem;
+  background: rgba(113, 225, 229, 0.12);
+  color: var(--ink, #eaf4f4);
+  font: inherit;
+  font-size: var(--stage-type-floor, 0.875rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dockButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dockButton[data-holding='true'] {
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.dockButton:focus-visible,
+.slider input:focus-visible,
+.dockRow select:focus-visible,
+.sortSelect:focus-visible {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.buttonPair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dockNote {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+}
+
+.dockNote[role='alert'] {
+  color: var(--amber, #ffbf62);
+}
+
+.dockVerdict {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid var(--cyan-bright, #71e1e5);
+}
+
+.dockVerdict[data-flush-outcome='correct'] {
+  border-left-color: var(--green, #76d69b);
+}
+
+.dockVerdict[data-flush-outcome='not-correct'] {
+  border-left-color: var(--amber, #ffbf62);
+}
+
+.choiceGroup {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choiceGroup > legend {
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.choiceGroup label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
+.choiceGroup label[data-selected='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.choiceGroup label span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.choiceGroup label small {
+  color: var(--muted, #9fb4b7);
+}
+
+.trialGrid {
+  display: grid;
+  gap: 0.6rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Walk card, commitments, return check
+ * ------------------------------------------------------------------ */
+
+.walk {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+}
+
+.walk p,
+.walk dd {
+  margin: 0;
+}
+
+.walk dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.walk dt {
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.walk ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analogy {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--cyan-bright, #71e1e5);
+  font-style: italic;
+}
+
+.commitment {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+}
+
+.returnCheck {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+}
+
+.returnCheck p {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Question sort
+ * ------------------------------------------------------------------ */
+
+.sort {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sortPrompt {
+  margin: 0;
+  font-weight: 600;
+}
+
+.sortOrigins {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+}
+
+.sortOrigins dt {
+  font-weight: 700;
+}
+
+.sortOrigins dd {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.sortRow {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+}
+
+.sortRow[data-outcome='correct'] {
+  border-color: var(--green, #76d69b);
+}
+
+.sortRow[data-outcome='not-correct'] {
+  border-color: var(--amber, #ffbf62);
+}
+
+.sortRow label {
+  font-weight: 600;
+}
+
+.sortSelect {
+  min-height: 2.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.5rem;
+  background: var(--panel, #10262b);
+  color: inherit;
+  font: inherit;
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.sortVerdict {
+  margin: 0;
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+/* ------------------------------------------------------------------ *
+ * Story problems
+ * ------------------------------------------------------------------ */
+
+.stories {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.stories h3,
+.stories p {
+  margin: 0;
+}
+
+.stories h3 {
+  font-size: 1rem;
+}
+
+.story {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+}
+
+.story h4 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.axisVerdict {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--cyan-bright, #71e1e5);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ *
+ * Teaching column
+ * ------------------------------------------------------------------ */
+
+.teaching {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.teachingCard {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  background: rgba(16, 46, 52, 0.35);
+}
+
+.teachingCard p,
+.teachingCard li,
+.teachingCard dd {
+  margin: 0;
+}
+
+.teachingCard dl {
+  margin: 0;
+}
+
+.increment {
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--cyan-bright, #71e1e5);
+  border-radius: 0.65rem;
+  font-weight: 600;
+}
+
+.checklist {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.sequence {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.sequence small {
+  display: block;
+  color: var(--muted, #9fb4b7);
+}
+
+.stopFacts {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.stopFacts dt {
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grammarTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.grammarTable th,
+.grammarTable td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  text-align: left;
+  vertical-align: top;
+}
+
+.grammarTable thead th {
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grammarTable tbody th {
+  font-weight: 600;
+}
+
+.grammarTable small {
+  color: var(--muted, #9fb4b7);
+}
+
+.trendRule {
+  color: var(--muted, #9fb4b7);
+  font-style: italic;
+}
+
+.controlStrip {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.controlStrip li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.6rem;
+}
+
+.controlStrip li[data-state='this-one'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.controlStrip li[data-state='harmful-reflex'] {
+  border-color: var(--amber, #ffbf62);
+}
+
+.controlStrip strong {
+  white-space: nowrap;
+}
+
+.readBefore {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  color: var(--muted, #9fb4b7);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+/* ------------------------------------------------------------------ *
+ * The module shell around the stage: dark tokens and the activity-mode rule
+ * ------------------------------------------------------------------ */
+
+.moduleShell {
+  --ink: #eaf4f4;
+  --muted: #9fb4b7;
+  --panel: #10262b;
+  --panel-2: #17343a;
+  --panel-3: #1f4249;
+  --line: rgba(163, 206, 209, 0.22);
+  --cyan: #36c3ca;
+  --cyan-bright: #71e1e5;
+  --navy: #07191d;
+  --amber: #ffbf62;
+  --red: #ff6b73;
+  --green: #76d69b;
+  min-height: 100vh;
+  color: var(--ink);
+  background: #061519;
+}
+
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-activity-mode='true'] {
+    height: calc(100dvh - 4rem);
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+}
+
+.englishFallback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.englishFallback svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}

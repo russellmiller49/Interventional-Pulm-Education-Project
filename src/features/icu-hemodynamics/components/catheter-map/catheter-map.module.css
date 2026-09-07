@@ -1,0 +1,337 @@
+/*
+ * The catheter map: the pressure's path from the tip to the number, with the current stop lit.
+ *
+ * The map is the module's persistent "you are here". It sits under the live bedside monitor in
+ * the simulator pane: the right-heart schematic the normal-waveform reference draws, with the line
+ * — tubing, stopcock, flush bag, transducer, monitor — continued to its left. A teaching schematic,
+ * badged as one; the live tracings are on the monitor above it.
+ */
+
+.map {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  background: rgba(16, 46, 52, 0.35);
+  color: var(--ink, #eaf4f4);
+  font-size: var(--stage-type-floor, 0.875rem);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 0.75rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 999px;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.caption {
+  margin: 0;
+  font-weight: 600;
+}
+
+.caption[data-empty='true'] {
+  color: var(--muted, #9fb4b7);
+  font-weight: 500;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 520 / 190;
+  min-width: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.label {
+  fill: var(--muted, #9fb4b7);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-anchor: middle;
+}
+
+.monitor {
+  fill: rgba(8, 24, 28, 0.9);
+  stroke: rgba(163, 206, 209, 0.45);
+  stroke-width: 1.5;
+}
+
+.monitorTrace {
+  fill: none;
+  stroke: #7ee0a5;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.cable {
+  fill: none;
+  stroke: rgba(163, 206, 209, 0.5);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 3;
+}
+
+.transducer {
+  fill: rgba(113, 225, 229, 0.18);
+  stroke: var(--cyan-bright, #71e1e5);
+  stroke-width: 1.5;
+}
+
+.flushBag {
+  fill: rgba(163, 206, 209, 0.12);
+  stroke: rgba(163, 206, 209, 0.5);
+  stroke-width: 1.5;
+}
+
+.tubing {
+  fill: none;
+  stroke: rgba(242, 214, 117, 0.85);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.tubing[data-lit='true'] {
+  stroke: #f2d675;
+  stroke-width: 3;
+}
+
+.stopcock line {
+  stroke: rgba(163, 206, 209, 0.8);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.vessel {
+  fill: rgba(163, 206, 209, 0.08);
+  stroke: rgba(163, 206, 209, 0.55);
+  stroke-width: 1.5;
+}
+
+.chamber {
+  fill: rgba(163, 206, 209, 0.1);
+  stroke: rgba(163, 206, 209, 0.65);
+  stroke-width: 1.5;
+}
+
+.valve line {
+  stroke: rgba(163, 206, 209, 0.8);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.routeGhost {
+  fill: none;
+  stroke: rgba(242, 214, 117, 0.25);
+  stroke-width: 2;
+  stroke-dasharray: 3 5;
+}
+
+.route {
+  fill: none;
+  stroke: #f2d675;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.balloon {
+  fill: rgba(255, 191, 98, 0.35);
+  stroke: var(--amber, #ffbf62);
+  stroke-width: 1.5;
+}
+
+.tip {
+  fill: var(--cyan-bright, #71e1e5);
+  stroke: #04211f;
+  stroke-width: 1.5;
+}
+
+.halo {
+  fill: rgba(113, 225, 229, 0.12);
+  stroke: var(--cyan-bright, #71e1e5);
+  stroke-width: 2.5;
+}
+
+.map[data-emphasis='some'] [data-map-part] {
+  opacity: 0.85;
+}
+
+/* ------------------------------------------------------------------ *
+ * Legend
+ * ------------------------------------------------------------------ */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted, #9fb4b7);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend li[data-lit='true'] {
+  color: var(--ink, #eaf4f4);
+  font-weight: 700;
+}
+
+.legend li[data-lit='true'] .number {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+/* ------------------------------------------------------------------ *
+ * Answering on the map
+ * ------------------------------------------------------------------ */
+
+.answer {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.answer legend {
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted, #9fb4b7);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.option[data-selected='true'] {
+  border-color: var(--cyan-bright, #71e1e5);
+}
+
+.option[data-outcome='correct'],
+.option[data-outcome='confirmed'] {
+  border-color: var(--green, #76d69b);
+}
+
+.option[data-outcome='chosen'] {
+  border-color: var(--amber, #ffbf62);
+}
+
+.option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.option:has(input:focus-visible) {
+  outline: 3px solid var(--cyan-bright, #71e1e5);
+  outline-offset: 2px;
+}
+
+.number {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 999px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.option[data-selected='true'] .number {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.outcome {
+  margin-left: auto;
+  color: var(--muted, #9fb4b7);
+  font-weight: 700;
+}
+
+.pin {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--cyan-bright, #71e1e5);
+  border-radius: 999px;
+  background: var(--panel, #10262b);
+  color: var(--ink, #eaf4f4);
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pin[data-selected='true'] {
+  background: var(--cyan-bright, #71e1e5);
+  color: #04211f;
+}
+
+.pin[data-disabled='true'] {
+  cursor: default;
+}
+
+.equivalent {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

@@ -1,5 +1,6 @@
 export * from './calculations'
 export * from './cardiacOutputSection'
+export * from './derivedEvaluation'
 export * from './fick'
 export * from './monitorDisplay'
 export * from './progress'

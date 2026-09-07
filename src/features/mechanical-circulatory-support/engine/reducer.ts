@@ -321,6 +321,8 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
         scenarioPhase: state.scenario ? 'observe' : state.scenarioPhase,
       })
     }
+    case 'CLEAR_ACTION_LOG':
+      return { ...state, actionIds: [], inspectedIds: [] }
     case 'ESCALATE':
       if (!isMcsActionIdPermitted(state, 'team:escalate')) return actionNotPermitted(state)
       return {

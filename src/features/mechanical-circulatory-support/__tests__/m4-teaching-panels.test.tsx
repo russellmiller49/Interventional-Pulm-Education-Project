@@ -1,67 +1,50 @@
 /**
  * M4 — the nine live teaching panels.
  *
- * Two kinds of test live here and they are deliberately different in what they drive.
+ * Every test here renders one panel against a state the *reducer* produced from the section's own
+ * authored starting actions and its own authored learner action. Nothing is hand-built: a
+ * fabricated metrics object would let a panel pass while the state a learner can actually reach
+ * makes it print something else.
  *
- * The panel tests render one panel against a state the *reducer* produced from the section's own
- * authored starting actions and its own authored learner action. Nothing is hand-built: a fabricated
- * metrics object would let a panel pass while the state a learner can actually reach makes it print
- * something else.
- *
- * The workspace tests render the whole workbench, because prediction integrity is a claim about the
- * DOM a learner is looking at, not about a component in isolation. Answer leakage is tested by
- * asserting the withheld sentences are *absent from the document*, never by asking whether they are
- * visible — content hidden with a stylesheet is still content.
+ * Answer leakage is tested by asserting the withheld sentences are *absent from the document*,
+ * never by asking whether they are visible — content hidden with a stylesheet is still content.
+ * The composed lesson stage, where the panel sits beside the prose it organizes, is scanned in its
+ * own suites; what is held here is what each panel does on its own at each reveal stage.
  */
-import { render, screen, fireEvent, within } from '@testing-library/react'
-import type { AnchorHTMLAttributes, ReactNode } from 'react'
+import { render } from '@testing-library/react'
 
-const mockRouterPush = jest.fn()
-
-jest.mock('@/i18n/navigation', () => ({
-  Link: ({
-    href,
-    children,
-    ...rest
-  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-  useRouter: () => ({ push: mockRouterPush }),
-}))
-
-jest.mock('../components/McsAnatomy3D', () => {
-  const { McsAnatomyPathwaySummary } = jest.requireActual<
-    typeof import('../components/McsAnatomyPathwaySummary')
-  >('../components/McsAnatomyPathwaySummary')
-  return {
-    McsAnatomy3D: ({
-      state,
-      highlightTarget,
-    }: {
-      state: Parameters<typeof McsAnatomyPathwaySummary>[0]['state']
-      highlightTarget?: Parameters<typeof McsAnatomyPathwaySummary>[0]['highlightTarget']
-    }) => (
-      <section aria-label="Animated mechanical-support anatomy">
-        <McsAnatomyPathwaySummary state={state} highlightTarget={highlightTarget} />
-      </section>
-    ),
-  }
-})
+/*
+ * The one test that mounts the workbench — to show Practice and Challenge never receive a panel —
+ * needs the same two boundaries every workbench suite stubs: navigation, and the WebGL canvas.
+ */
+jest.mock('@/i18n/navigation', () =>
+  jest
+    .requireActual<
+      typeof import('../test-support/mcsWorkbenchStubs')
+    >('../test-support/mcsWorkbenchStubs')
+    .navigationModule(),
+)
+jest.mock('../components/McsAnatomy3D', () =>
+  jest
+    .requireActual<
+      typeof import('../test-support/mcsWorkbenchStubs')
+    >('../test-support/mcsWorkbenchStubs')
+    .anatomyModule(),
+)
 
 import { assertTeachingPanelContract } from '@/features/critical-care/test-support/teachingPanelContract'
 
 import { McsWorkbench } from '../components/McsWorkbench'
-import { McsLearnTeachingPane } from '../components/McsLearnTeachingPane'
 import {
   McsTeachingPanel,
   mcsTeachingPanelSectionIds,
   validateMcsTeachingPanelRegistry,
 } from '../components/teaching/McsTeachingPanel'
+import { SignalToPerfusionPanel } from '../components/teaching/SignalToPerfusionPanel'
 import {
   MCS_DISPLAY_DEADBANDS,
   MCS_MEASURED_IDLE_DRIFT,
+  activeAlarms,
   deadbandFor,
 } from '../components/teaching/selectors'
 import {
@@ -72,10 +55,10 @@ import {
   type McsRevealStage,
 } from '../components/teaching/revealStage'
 import {
-  MCS_LEARN_PHASES,
   mcsCapstoneScenarios,
   mcsLessons,
   mcsPracticeScenarios,
+  mcsSectionLearningContractById,
   mcsSectionLearningContracts,
   mcsSectionPrimarySurfaces,
   type McsSectionLearningContract,
@@ -183,43 +166,15 @@ function renderPanel(
   )
 }
 
-function renderPane(
-  contract: McsSectionLearningContract,
-  state: McsSimulationState,
-  reveal: McsRevealStage,
-  beforeMetrics: McsDerivedMetrics | null = null,
-) {
-  return render(
-    <McsLearnTeachingPane
-      contract={contract}
-      state={state}
-      reveal={reveal}
-      beforeMetrics={beforeMetrics}
-    />,
-  )
+function contractById(sectionId: string): McsSectionLearningContract {
+  const contract = mcsSectionLearningContractById.get(sectionId)
+  if (!contract) throw new Error(`No learning contract for ${sectionId}`)
+  return contract
 }
 
 const contractCases = mcsSectionLearningContracts.map(
   (contract) => [contract.sectionId, contract] as const,
 )
-
-beforeEach(() => {
-  mockRouterPush.mockReset()
-  window.localStorage.clear()
-  Object.defineProperty(global, 'fetch', {
-    configurable: true,
-    writable: true,
-    value: jest.fn().mockResolvedValue({ ok: true }),
-  })
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: jest.fn().mockReturnValue({
-      matches: false,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    }),
-  })
-})
 
 // ── Registry ─────────────────────────────────────────────────────────────────
 
@@ -284,7 +239,7 @@ describe('M4 — nothing the previous package landed has moved', () => {
     expect(
       mcsSectionPrimarySurfaces.map((entry) => `${entry.primarySurface}:${entry.primaryTarget}`),
     ).toEqual([
-      'monitor:monitor:flow-account',
+      'monitor:monitor:arterial-waveform',
       'anatomy:anatomy:support-pathway-overview',
       'monitor:monitor:arterial-waveform',
       'monitor:monitor:response-trend',
@@ -296,33 +251,23 @@ describe('M4 — nothing the previous package landed has moved', () => {
     ])
   })
 
-  it('keeps the six phases in order, with commitment showing a verdict and not advancing', () => {
-    render(<McsWorkbench section="learn" />)
-    expect(MCS_LEARN_PHASES).toEqual([
-      'recognize',
-      'predict',
-      'act',
-      'observe',
-      'explain',
-      'transfer',
-    ])
-    expect(screen.getByRole('heading', { name: /^Recognize — step 1 of 6$/ })).toBeInTheDocument()
-
-    fireEvent.click(screen.getAllByRole('radio')[0])
-    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
-    fireEvent.click(screen.getAllByRole('radio')[0])
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
-
-    // The verdict is up, the phase has not moved, and Continue is still a separate control.
-    expect(document.querySelector('[data-answer-verdict]')).not.toBeNull()
-    expect(screen.getByRole('heading', { name: /^Predict — step 2 of 6$/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Continue to the task/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the task/i }))
-    expect(screen.getByRole('heading', { name: /^Act — step 3 of 6$/ })).toBeInTheDocument()
-  })
-
   it('leaves Practice and Challenge untouched by the new panels', () => {
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      writable: true,
+      value: jest.fn().mockResolvedValue({ ok: true }),
+    })
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      writable: true,
+      value: jest.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      })),
+    })
+
     const practice = render(<McsWorkbench section="practice" initialActivityId="IABP-01" />)
     expect(practice.container.querySelector('[data-teaching-panel]')).toBeNull()
     expect(document.querySelector('[data-answer-verdict]')).toBeNull()
@@ -383,7 +328,7 @@ describe('M4 — one reveal-stage mapping, centralized', () => {
 describe('M4 — nothing reveals the answer before it is committed', () => {
   it.each(contractCases)('withholds the mechanism from %s before a commitment', (_id, contract) => {
     const state = openedState(contract)
-    const view = renderPane(contract, state, 'orientation')
+    const view = renderPanel(contract, state, 'orientation')
     const text = view.container.textContent ?? ''
     const correct = contract.predictionItem.choices.find((choice) =>
       contract.predictionItem.correctChoiceIds.includes(choice.id),
@@ -410,57 +355,145 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
     view.unmount()
   })
 
-  it.each(contractCases)(
-    'reveals the authored mechanism for %s after a commitment',
-    (_id, contract) => {
-      const state = openedState(contract)
-      const view = renderPane(contract, state, 'mechanism')
-      const text = view.container.textContent ?? ''
-      expect(text).toContain(contract.teaching.howTheActionAffectsTheModel)
-      expect(text).toContain(contract.teaching.flowAccountNote)
-      expect(text).toContain(contract.whatThisDoesNotEstablish)
-      // The causal account still waits for Explain.
-      expect(text).not.toContain(contract.flowLevelExplanation)
-      view.unmount()
-    },
-  )
-
-  it.each(contractCases)('renders the whole causal ladder for %s at Explain', (_id, contract) => {
+  it('withholds the right-sided pathway and the series relationship until the commitment', () => {
+    // Where the second pump returns its blood is the section's identification, and whether the
+    // two flows add is its prediction. With both pumps running, the panel still says neither.
+    const contract = contractById('impella-suction-purge-rv')
     const state = actedState(contract)
-    const view = renderPane(contract, state, 'explanation', openedState(contract).metrics)
-    const text = view.container.textContent ?? ''
-    expect(text).toContain(contract.pressureLevelExplanation)
-    expect(text).toContain(contract.flowLevelExplanation)
-    expect(text).toContain(contract.oxygenDeliveryExplanation)
-    expect(text).toContain(contract.organResponseExplanation)
-    view.unmount()
+    expect(state.metrics.rightDeviceFlowLMin).toBeGreaterThan(0.5)
+
+    const before = renderPanel(contract, state, 'orientation')
+    const right = before.container.querySelector('[data-pump-side="right"]')
+    expect(right).toHaveAttribute('data-withheld')
+    expect(right?.querySelector('svg')).toBeNull()
+    expect(before.container.querySelector('[data-pump-side="left"] svg')).not.toBeNull()
+    expect(before.container.querySelector('[data-serial-not-additive]')).toBeNull()
+    expect(before.container.textContent ?? '').not.toMatch(/in series/i)
+    expect(before.container.textContent ?? '').not.toMatch(/never (added|summed)/i)
+    before.unmount()
+
+    const after = renderPanel(contract, state, 'mechanism')
+    expect(after.container.querySelector('[data-pump-side="right"]')).not.toHaveAttribute(
+      'data-withheld',
+    )
+    expect(after.container.querySelector('[data-pump-side="right"] svg')).not.toBeNull()
+    expect(after.container.querySelector('[data-serial-not-additive]')?.textContent).toMatch(
+      /never summed/i,
+    )
+    after.unmount()
   })
 
-  it('keeps the withheld sentences out of the live workspace DOM, not merely out of sight', () => {
-    render(<McsWorkbench section="learn" initialActivityId="iabp-timing-triggering" />)
-    const contract = mcsSectionLearningContracts.find(
-      (candidate) => candidate.sectionId === 'iabp-timing-triggering',
-    )!
-    const correct = contract.predictionItem.choices.find((choice) =>
-      contract.predictionItem.correctChoiceIds.includes(choice.id),
-    )!
-    const teaching = screen.getByRole('region', { name: /^Teaching panel$/i })
-    expect(teaching.textContent ?? '').not.toContain(correct.rationale)
-    expect(teaching.textContent ?? '').not.toContain(contract.teaching.howTheActionAffectsTheModel)
+  it('withholds what the durable flow number is made from until the commitment', () => {
+    const contract = contractById('lvad-parameters-assessment')
+    const state = openedState(contract)
 
-    fireEvent.click(screen.getAllByRole('radio')[0])
-    fireEvent.click(screen.getByRole('button', { name: 'Record what you identified' }))
-    fireEvent.click(screen.getByRole('button', { name: /Continue to the prediction/i }))
-    // Still uncommitted at the prediction itself.
-    expect(
-      screen.getByRole('region', { name: /^Teaching panel$/i }).textContent ?? '',
-    ).not.toContain(contract.teaching.howTheActionAffectsTheModel)
-
-    fireEvent.click(screen.getAllByRole('radio')[0])
-    fireEvent.click(screen.getByRole('button', { name: 'Commit this answer' }))
-    expect(screen.getByRole('region', { name: /^Teaching panel$/i }).textContent ?? '').toContain(
-      contract.teaching.howTheActionAffectsTheModel,
+    const before = renderPanel(contract, state, 'orientation')
+    expect(before.container.querySelector('[data-parameter-dependency]')).toBeNull()
+    expect(before.container.textContent ?? '').not.toMatch(/computed from power/i)
+    expect(before.container.querySelector('[data-cpo-paradox]')).toHaveAttribute(
+      'data-cpo-paradox',
+      'withheld',
     )
+    // The value is still on the screen, still labelled as an estimate; only its provenance waits.
+    expect(
+      before.container
+        .querySelector('[data-flow-line="device"]')
+        ?.getAttribute('data-flow-line-kind'),
+    ).toBe('estimated')
+    before.unmount()
+
+    const after = renderPanel(contract, state, 'mechanism')
+    expect(after.container.querySelector('[data-parameter-dependency]')).not.toBeNull()
+    expect(after.container.textContent ?? '').toMatch(/computed from power and speed/i)
+    expect(
+      after.container.querySelector('[data-cpo-paradox]')?.getAttribute('data-cpo-paradox'),
+    ).not.toBe('withheld')
+    after.unmount()
+  })
+
+  it('withholds what a high-power pattern does to the readings until the commitment', () => {
+    const contract = contractById('lvad-alarms-emergencies')
+    const state = actedState(contract)
+
+    const before = renderPanel(contract, state, 'orientation')
+    expect(before.container.querySelector('[data-high-power-claim]')).toHaveAttribute(
+      'data-high-power-claim',
+      'withheld',
+    )
+    expect(before.container.querySelector('[data-high-power-boundaries]')).toBeNull()
+    expect(before.container.querySelectorAll('[data-high-power-boundary]')).toHaveLength(0)
+    const text = before.container.textContent ?? ''
+    expect(text).not.toMatch(/raises power and leaves the delivered flow/i)
+    expect(text).not.toMatch(/does not change delivered flow/i)
+    // What the word "suspected" means is not the answer, and stays.
+    expect(text).toMatch(/suspected/)
+    before.unmount()
+
+    const after = renderPanel(contract, state, 'mechanism')
+    expect(after.container.querySelector('[data-high-power-claim]')).not.toHaveAttribute(
+      'data-high-power-claim',
+      'withheld',
+    )
+    expect(after.container.querySelectorAll('[data-high-power-boundary]')).toHaveLength(4)
+    expect(after.container.textContent ?? '').toMatch(/raises power and leaves the delivered flow/i)
+    after.unmount()
+  })
+
+  it('prints an active alarm with its priority before the commitment, and its explanation only after', () => {
+    // The timing section opens with inflation set early, so an alarm is active on entry.
+    const contract = contractById('iabp-timing-triggering')
+    const state = openedState(contract)
+    const alarms = activeAlarms(state)
+    expect(alarms.length).toBeGreaterThan(0)
+
+    const before = renderPanel(contract, state, 'orientation')
+    for (const alarm of alarms) {
+      const rows = before.container.querySelectorAll(`[data-alarm="${alarm.id}"]`)
+      expect(rows.length).toBeGreaterThan(0)
+      for (const row of rows) {
+        expect(row.querySelector('[data-alarm-priority-words]')?.textContent).toMatch(/priority/)
+        expect(row.textContent).toContain(alarm.label)
+        expect(row.textContent).not.toContain(alarm.explanation)
+      }
+      expect(before.container.textContent ?? '').not.toContain(alarm.explanation)
+    }
+    before.unmount()
+
+    const after = renderPanel(contract, state, 'mechanism')
+    for (const alarm of alarms) {
+      const row = after.container.querySelector(`[data-alarm="${alarm.id}"]`)
+      expect(row?.textContent).toContain(alarm.explanation)
+    }
+    after.unmount()
+  })
+
+  it('covers the flow account on the signals panel while the monitor is covering it', () => {
+    const contract = contractById('mcs-foundations-signals')
+    const state = openedState(contract)
+
+    const covered = render(
+      <SignalToPerfusionPanel
+        contract={contract}
+        state={state}
+        reveal="orientation"
+        beforeMetrics={null}
+        withholdFlowAccount
+      />,
+    )
+    expect(covered.container.querySelector('[data-flow-account-withheld]')).not.toBeNull()
+    expect(covered.container.querySelector('[data-flow-account]')).toBeNull()
+    expect(covered.container.querySelectorAll('[data-flow-line]')).toHaveLength(0)
+    expect(covered.container.textContent ?? '').toMatch(
+      /covered until the prediction is committed/i,
+    )
+    covered.unmount()
+
+    // Without the cover the same panel, at the same stage, shows the three lines.
+    const shown = renderPanel(contract, state, 'orientation')
+    expect(shown.container.querySelector('[data-flow-account-withheld]')).toBeNull()
+    expect(shown.container.querySelector('[data-flow-account]')).not.toBeNull()
+    expect(shown.container.querySelectorAll('[data-flow-line]').length).toBeGreaterThan(0)
+    shown.unmount()
   })
 })
 
@@ -945,65 +978,5 @@ describe('M4 — every figure is readable without the picture', () => {
       )
       view.unmount()
     }
-  })
-})
-
-// ── The pane keeps its accepted content ──────────────────────────────────────
-
-describe('M4 — the accepted M2/M3 teaching is still represented', () => {
-  it.each(contractCases)(
-    'keeps every accepted block for %s somewhere in the sequence',
-    (_id, contract) => {
-      const state = openedState(contract)
-      const seen = new Set<string>()
-      for (const reveal of MCS_REVEAL_STAGES) {
-        const view = renderPane(contract, state, reveal, state.metrics)
-        const text = view.container.textContent ?? ''
-        for (const [key, sentence] of Object.entries({
-          whatYouAreSeeing: contract.teaching.whatYouAreSeeing,
-          whatTheTargetRepresents: contract.teaching.whatTheTargetRepresents,
-          surfaceRationale: contract.primarySurfaceRationale,
-          howTheActionAffectsTheModel: contract.teaching.howTheActionAffectsTheModel,
-          flowAccountNote: contract.teaching.flowAccountNote,
-          establishes: contract.whatThisEstablishes,
-          doesNotEstablish: contract.whatThisDoesNotEstablish,
-          misinterpretation: contract.commonMisinterpretation,
-          pressure: contract.pressureLevelExplanation,
-          flow: contract.flowLevelExplanation,
-          oxygen: contract.oxygenDeliveryExplanation,
-          organ: contract.organResponseExplanation,
-        })) {
-          if (text.includes(sentence)) seen.add(key)
-        }
-        view.unmount()
-      }
-      expect([...seen].sort()).toEqual(
-        [
-          'doesNotEstablish',
-          'establishes',
-          'flow',
-          'flowAccountNote',
-          'howTheActionAffectsTheModel',
-          'misinterpretation',
-          'organ',
-          'oxygen',
-          'pressure',
-          'surfaceRationale',
-          'whatTheTargetRepresents',
-          'whatYouAreSeeing',
-        ].sort(),
-      )
-    },
-  )
-
-  it('keeps the common model and the pathway cards on the foundation sections', () => {
-    const view = render(
-      <McsWorkbench section="learn" initialActivityId="mcs-foundations-mechanisms" />,
-    )
-    const teaching = screen.getByRole('region', { name: /^Teaching panel$/i })
-    expect(within(teaching).getByText(/The common model this section builds/i)).toBeInTheDocument()
-    expect(teaching.querySelectorAll('[data-pathway-id]')).toHaveLength(8)
-    expect(teaching.querySelector('[data-mcs-common-model="root"]')).not.toBeNull()
-    view.unmount()
   })
 })

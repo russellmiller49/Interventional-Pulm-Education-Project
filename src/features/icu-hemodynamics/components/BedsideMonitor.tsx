@@ -19,7 +19,16 @@ import styles from './icu-hemodynamics.module.css'
 interface BedsideMonitorProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
-  onOpenCardiacOutput: () => void
+  onOpenCardiacOutput?: () => void
+  /**
+   * Whether the distal channel may be named by the chamber the tip sits in. While a lesson step is
+   * asking where the tip is, the label, the rail caption, the frozen landmarks and the
+   * position-specific alarm would each answer it, so the stage withholds them and the channel is
+   * called the distal lumen.
+   */
+  chamberLabel?: 'shown' | 'withheld'
+  /** The monitor's own footer controls; the lesson stage supplies its own beneath the monitor. */
+  showControls?: boolean
 }
 
 interface PacTraceConfiguration {
@@ -94,8 +103,15 @@ function lowPressureScaleMaximum(targetMmHg: number): 20 | 40 | 80 | 160 {
   return 160
 }
 
-export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: BedsideMonitorProps) {
+export function BedsideMonitor({
+  state,
+  dispatch,
+  onOpenCardiacOutput,
+  chamberLabel = 'shown',
+  showControls = true,
+}: BedsideMonitorProps) {
   const measurements = state.measurements
+  const withheld = chamberLabel === 'withheld'
   const thermodilutionAverage = thermodilutionAcceptedAverage(state.thermodilutionTrials)
   const endExpiratoryCvpCursor = useMemo(
     () =>
@@ -123,6 +139,7 @@ export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: Bedside
   const activeAlarms = state.alarms.filter(
     (alarm) =>
       alarm.active &&
+      !withheld &&
       (alarm.id !== 'low-ci' || thermodilutionAverage !== null) &&
       (alarm.id !== 'high-pap' ||
         state.catheter.position === 'pa' ||
@@ -134,7 +151,7 @@ export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: Bedside
       ? measurements.papSystolicMmHg + 5
       : (measurements.pawpMmHg ?? measurements.papDiastolicMmHg) + 8,
   )
-  const pacTrace: PacTraceConfiguration =
+  const namedPacTrace: PacTraceConfiguration =
     state.catheter.position === 'rv'
       ? {
           field: 'rvMmHg',
@@ -193,6 +210,16 @@ export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: Bedside
                 color: '#ffd166',
                 unavailableMessage: 'No chamber waveform — tip remains in the introducer',
               }
+  const pacTrace: PacTraceConfiguration = withheld
+    ? {
+        field: namedPacTrace.field,
+        label: 'PAC',
+        minimum: namedPacTrace.minimum,
+        maximum: namedPacTrace.maximum,
+        color: namedPacTrace.color,
+        unavailableMessage: namedPacTrace.unavailableMessage,
+      }
+    : namedPacTrace
   // Labels would smear across a sweeping trace, so they appear only on a frozen strip.
   const annotate = state.frozen
   const artTraceMetrics = useMemo(
@@ -222,8 +249,15 @@ export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: Bedside
     state.catheter.targetPosition === null &&
     !state.catheter.balloonInflated
 
-  const pacPressureDisplay =
-    state.catheter.position === 'introducer'
+  const pacPressureDisplay = withheld
+    ? {
+        label: 'PAC · distal',
+        value: pacTraceMetrics
+          ? `${value(pacTraceMetrics.systolic)}/${value(pacTraceMetrics.diastolic)}`
+          : value(endExpiratoryRap),
+        detail: 'chamber not named on this step · mmHg',
+      }
+    : state.catheter.position === 'introducer'
       ? {
           label: 'PAC',
           value: '—',
@@ -423,54 +457,61 @@ export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: Bedside
         </aside>
       </div>
 
-      <footer className={styles.monitorControls}>
-        <button
-          type="button"
-          aria-pressed={state.frozen}
-          onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}
-        >
-          {state.frozen ? 'Unfreeze' : 'Freeze + label waves'}
-        </button>
-        <label>
-          Sweep
-          <select
-            value={state.sweepSeconds}
-            onChange={(event) =>
-              dispatch({ type: 'SET_SWEEP', seconds: Number(event.target.value) as 4 | 6 | 8 | 12 })
-            }
+      {showControls ? (
+        <footer className={styles.monitorControls}>
+          <button
+            type="button"
+            aria-pressed={state.frozen}
+            onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}
           >
-            {sweeps.map((sweep) => (
-              <option value={sweep} key={sweep}>
-                {sweep} s
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          ART scale
-          <select
-            value={state.pressureScaleMmHg}
-            onChange={(event) =>
-              dispatch({
-                type: 'SET_PRESSURE_SCALE',
-                maximum: Number(event.target.value) as 40 | 80 | 160 | 240,
-              })
-            }
-          >
-            {pressureScales.map((scale) => (
-              <option value={scale} key={scale}>
-                0–{scale}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}>
-          Zero pressures
-        </button>
-        <button type="button" onClick={onOpenCardiacOutput}>
-          Cardiac output
-        </button>
-      </footer>
+            {state.frozen ? 'Unfreeze' : 'Freeze + label waves'}
+          </button>
+          <label>
+            Sweep
+            <select
+              value={state.sweepSeconds}
+              onChange={(event) =>
+                dispatch({
+                  type: 'SET_SWEEP',
+                  seconds: Number(event.target.value) as 4 | 6 | 8 | 12,
+                })
+              }
+            >
+              {sweeps.map((sweep) => (
+                <option value={sweep} key={sweep}>
+                  {sweep} s
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            ART scale
+            <select
+              value={state.pressureScaleMmHg}
+              onChange={(event) =>
+                dispatch({
+                  type: 'SET_PRESSURE_SCALE',
+                  maximum: Number(event.target.value) as 40 | 80 | 160 | 240,
+                })
+              }
+            >
+              {pressureScales.map((scale) => (
+                <option value={scale} key={scale}>
+                  0–{scale}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}>
+            Zero pressures
+          </button>
+          {onOpenCardiacOutput ? (
+            <button type="button" onClick={onOpenCardiacOutput}>
+              Cardiac output
+            </button>
+          ) : null}
+        </footer>
+      ) : null}
     </section>
   )
 }

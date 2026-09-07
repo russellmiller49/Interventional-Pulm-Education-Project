@@ -10,7 +10,7 @@ import type { McsRevealStage } from './revealStage'
  * pane, and a panel that could change the state it is explaining would be able to answer its own
  * section's question on the learner's behalf.
  *
- * `beforeMetrics` is the snapshot `McsLearnSection` already captures on entering the act phase,
+ * `beforeMetrics` is the snapshot the lesson stage already captures on entering the act phase,
  * passed down read-only. Panels do not capture a second baseline: two baselines taken at two moments
  * are two different stories about what the learner's action did.
  */
@@ -19,6 +19,12 @@ export interface McsTeachingPanelProps {
   readonly state: McsSimulationState
   readonly reveal: McsRevealStage
   readonly beforeMetrics: McsDerivedMetrics | null
+  /**
+   * Whether the flow account is covered on the monitor right now. A section whose prediction is
+   * what the account will show covers it until the commitment; the panel for that section must
+   * not print the lines the monitor is withholding.
+   */
+  readonly withholdFlowAccount?: boolean
 }
 
 export type McsTeachingPanelComponent = (props: McsTeachingPanelProps) => React.JSX.Element

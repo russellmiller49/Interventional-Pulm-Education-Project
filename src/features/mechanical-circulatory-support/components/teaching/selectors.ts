@@ -201,7 +201,7 @@ export interface McsBeforeAfterRequest {
 /**
  * Two readings the runtime already holds, and the direction between them.
  *
- * The baseline is the snapshot `McsLearnSection` captured on entering the act phase. It is passed in
+ * The baseline is the snapshot the lesson stage captured on entering the act phase. It is passed in
  * rather than captured here, because a second baseline taken at a second moment is a second story
  * about what the learner did.
  */

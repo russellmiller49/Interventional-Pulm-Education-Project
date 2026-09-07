@@ -131,7 +131,11 @@ export function LvadParametersAssessmentPanel({
             value={metrics.deviceFlowLMin}
             unit="L/min"
             kind="estimated"
-            note="Computed from power and speed against an assumed viscosity. It inherits every assumption in that computation."
+            note={
+              disclosed
+                ? 'Computed from power and speed against an assumed viscosity. It inherits every assumption in that computation.'
+                : 'What this number is made from is the question this section opens with.'
+            }
           />
           <LiveValue
             label="Pulsatility index"
@@ -157,27 +161,29 @@ export function LvadParametersAssessmentPanel({
           />
         </div>
 
-        <ol className="mt-3 grid gap-1 text-xs leading-5" data-parameter-dependency>
-          <li>Speed is set. It does not by itself decide how much blood crosses the pump.</li>
-          <li>
-            What crosses depends on what fills the ventricle and on the pressure at the outlet —
-            currently {reading(gradient, 0)} mm Hg across the pump.
-          </li>
-          <li>
-            Power is the electrical power needed to hold that speed against the current hydraulic
-            and mechanical load. It is related to flow, but not one-to-one, and mechanical drag can
-            disturb the relationship entirely.
-          </li>
-          <li>
-            The displayed flow is computed from power and speed, so it moves when they move — which
-            is not the same thing as measuring the blood.
-          </li>
-          <li>
-            Pulsatility index is the size of the cyclic swing in that estimate. The same value can
-            arise in different clinical states, so it is read with the whole controller trend and
-            the patient rather than on its own.
-          </li>
-        </ol>
+        {disclosed ? (
+          <ol className="mt-3 grid gap-1 text-xs leading-5" data-parameter-dependency>
+            <li>Speed is set. It does not by itself decide how much blood crosses the pump.</li>
+            <li>
+              What crosses depends on what fills the ventricle and on the pressure at the outlet —
+              currently {reading(gradient, 0)} mm Hg across the pump.
+            </li>
+            <li>
+              Power is the electrical power needed to hold that speed against the current hydraulic
+              and mechanical load. It is related to flow, but not one-to-one, and mechanical drag
+              can disturb the relationship entirely.
+            </li>
+            <li>
+              The displayed flow is computed from power and speed, so it moves when they move —
+              which is not the same thing as measuring the blood.
+            </li>
+            <li>
+              Pulsatility index is the size of the cyclic swing in that estimate. The same value can
+              arise in different clinical states, so it is read with the whole controller trend and
+              the patient rather than on its own.
+            </li>
+          </ol>
+        ) : null}
 
         <ul className="mt-3 grid gap-2 text-xs leading-5" data-controller-value-boundaries>
           <li data-controller-boundary="power">
@@ -275,7 +281,7 @@ export function LvadParametersAssessmentPanel({
           mL; the aortic valve is {metrics.aorticValveOpening ? 'opening' : 'not opening'}.{' '}
           {flowAccountSentence(account, disclosed)}
         </TextEquivalent>
-        <AlarmBand alarms={alarms} />
+        <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
 
@@ -297,13 +303,18 @@ export function LvadParametersAssessmentPanel({
             flow, and here the pressure term has moved far enough to carry the product upward while
             the flow inside it fell. A rising cardiac power is not evidence that perfusion improved.
           </p>
-        ) : (
+        ) : disclosed ? (
           <p className="mt-3 text-xs leading-5" data-cpo-paradox="not-present">
             Cardiac power multiplies a pressure by a flow, so the two can move in opposite
             directions inside it. This simulation produces exactly that under a high enough
             afterload: mean pressure rises far enough to carry the product upward while forward flow
             falls. A rising cardiac power is therefore never on its own evidence that perfusion
             improved.
+          </p>
+        ) : (
+          <p className="mt-3 text-xs leading-5" data-cpo-paradox="withheld">
+            Cardiac power multiplies a pressure by a flow. What that means when the two move
+            differently is part of what this section asks you to predict.
           </p>
         )}
         <TextEquivalent>
@@ -374,7 +385,7 @@ export function LvadParametersAssessmentPanel({
                 kind="reasoned"
               />
             </div>
-            <AlarmBand alarms={alarms} />
+            <AlarmBand alarms={alarms} disclosed={disclosed} />
             <TextEquivalent>
               In the transfer patient: speed {reading(controller ? controller.speedRpm : null, 0)}{' '}
               rpm, pump power {reading(metrics.pumpPowerW, 1)} W, displayed pump flow{' '}

@@ -171,12 +171,12 @@ export const mcsSectionPrimarySurfaces: readonly McsSectionPrimarySurface[] = Ob
   {
     sectionId: 'mcs-foundations-signals',
     primarySurface: 'monitor',
-    primaryTarget: 'monitor:flow-account',
-    primaryTargetLabel: mcsMonitorTargets['monitor:flow-account'].label,
+    primaryTarget: 'monitor:arterial-waveform',
+    primaryTargetLabel: mcsMonitorTargets['monitor:arterial-waveform'].label,
     primarySurfaceRationale:
-      'The whole section is about which question a reading answers and which flow line a number belongs to. Nothing in it turns on where a catheter is sitting, so the three flow readings — not the anatomy — are what the learner has to be looking at.',
+      'The whole section is about which question a reading answers. The pressure is read first, on its own, and the flow account stays covered until the learner has committed what it will show. Nothing in it turns on where a catheter is sitting.',
     whyThisView:
-      'The monitor leads because this section separates three flow numbers that sit next to each other on one screen and mean different things.',
+      'The monitor leads because this section separates a pressure from a flow, and the two sit next to each other on one screen.',
   },
   {
     sectionId: 'mcs-foundations-mechanisms',

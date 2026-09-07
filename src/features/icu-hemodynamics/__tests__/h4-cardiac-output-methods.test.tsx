@@ -8,10 +8,6 @@ import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity'
 import { CardiacOutputDisagreementLab } from '../components/CardiacOutputDisagreementLab'
 import { CardiacOutputMethodModel } from '../components/CardiacOutputMethodModel'
 import { FickMethodWorkbench } from '../components/FickMethodWorkbench'
-import {
-  PacGuidedSkillActivity,
-  pacGuidedObjectiveComplete,
-} from '../components/PacGuidedSkillActivity'
 import { PacSkillsLab } from '../components/PacSkillsLab'
 import { ThermodilutionTrialCard } from '../components/ThermodilutionTrialReview'
 import {
@@ -60,6 +56,7 @@ import {
   type ThermodilutionTechnique,
   type ThermodilutionTrial,
 } from '../engine'
+import { PA_RETURN_CHECK, goalsMet, sectionRuntime, stageGoalMet } from '../engine/stageRuntime'
 import { ICU_HEMODYNAMICS_CONTENT_VERSION } from '../content/release'
 
 /**
@@ -1130,26 +1127,97 @@ describe('H4 completion and non-regression', () => {
     ).toBe(false)
   })
 
-  it('keeps the hands-on objective a function of the reviewed accepted series', () => {
+  /**
+   * The hands-on half of the station, as the lesson stage judges it: two pure goals over the
+   * simulation state. `trials-reviewed` is every curve read and decided; `series` is the accepted
+   * average existing at all — and `thermodilutionAcceptedAverage` refuses an unreviewed or
+   * technically unusable trial, so neither goal can be met by generating three curves and pressing
+   * accept without reading any of them.
+   */
+  it('keeps the hands-on goals a function of the reviewed accepted series', () => {
+    const { actGoals } = sectionRuntime('thermodilution-series')
+    expect(actGoals).toEqual([{ type: 'trials-reviewed' }, { type: 'series' }])
+
     const base = thermodilutionState()
-    expect(
-      pacGuidedObjectiveComplete('thermodilution-series', {
-        ...base,
-        thermodilutionTrials: acceptedSeries(),
-      }),
-    ).toBe(true)
-    expect(
-      pacGuidedObjectiveComplete('thermodilution-series', {
-        ...base,
-        thermodilutionTrials: acceptedSeries().map((item) => ({ ...item, reviewed: false })),
-      }),
-    ).toBe(false)
+    expect(goalsMet(actGoals, { ...base, thermodilutionTrials: acceptedSeries() })).toBe(true)
+
+    const unread = {
+      ...base,
+      thermodilutionTrials: acceptedSeries().map((item) => ({ ...item, reviewed: false })),
+    }
+    expect(stageGoalMet({ type: 'trials-reviewed' }, unread)).toBe(false)
+    expect(stageGoalMet({ type: 'series' }, unread)).toBe(false)
+    expect(goalsMet(actGoals, unread)).toBe(false)
   })
 
-  it('leaves the pathway, the section identity, and the route unchanged', () => {
+  it('meets the review goal only when every curve has been read and decided', () => {
+    const base = thermodilutionState()
+    const reviewed = { type: 'trials-reviewed' } as const
+    expect(stageGoalMet(reviewed, { ...base, thermodilutionTrials: [] })).toBe(false)
+
+    // Read but not yet decided: the fourth curve holds the goal open while the series exists.
+    const undecided = [
+      ...acceptedSeries(),
+      trial({ reviewed: true, accepted: null }, STANDARD_TECHNIQUE, 4),
+    ]
+    expect(stageGoalMet(reviewed, { ...base, thermodilutionTrials: undecided })).toBe(false)
+    expect(stageGoalMet({ type: 'series' }, { ...base, thermodilutionTrials: undecided })).toBe(
+      true,
+    )
+
+    // Excluding it for a reason its curve shows is a decision, so both goals close.
+    const excluded = [
+      ...acceptedSeries(),
+      trial(
+        { reviewed: true, accepted: false, exclusionReasonId: 'respiratory-phase-inconsistent' },
+        { ...STANDARD_TECHNIQUE, respiratoryPhase: 'variable' },
+        4,
+      ),
+    ]
+    expect(
+      goalsMet(sectionRuntime('thermodilution-series').actGoals, {
+        ...base,
+        thermodilutionTrials: excluded,
+      }),
+    ).toBe(true)
+  })
+
+  it('refuses the series goal for accepted trials that were unreviewed or technically unusable', () => {
+    const base = thermodilutionState()
+    const series = { type: 'series' } as const
+
+    // One accepted trial that was never reviewed leaves only two that count.
+    const oneUnread = acceptedSeries().map((item, index) =>
+      index === 0 ? { ...item, reviewed: false } : item,
+    )
+    expect(stageGoalMet(series, { ...base, thermodilutionTrials: oneUnread })).toBe(false)
+
+    // Three curves read, accepted, and unusable. Reading is not usability: the review goal closes
+    // and the series goal does not.
+    const invalid = [1, 2, 3].map((sequence) =>
+      trial(
+        { accepted: true, reviewed: true },
+        { ...STANDARD_TECHNIQUE, injectionDurationSeconds: 7, smoothness: 0.3 },
+        sequence,
+      ),
+    )
+    for (const item of invalid) expect(item.quality).not.toBe('valid')
+    const unusable = { ...base, thermodilutionTrials: invalid }
+    expect(stageGoalMet({ type: 'trials-reviewed' }, unusable)).toBe(true)
+    expect(stageGoalMet(series, unusable)).toBe(false)
+  })
+
+  /**
+   * The flow rebuild (2026-09-05) added an orientation section ahead of the runway and split the
+   * waveform section in two, which moves this station one place later within its stage. Its own
+   * identity — id, route, completion rule, minutes, prerequisite, stage — is unchanged.
+   */
+  it('leaves the section identity and the route unchanged inside the rebuilt pathway', () => {
     const expected: readonly PacLearningPathwaySectionId[] = [
+      'why-measure',
       'pressure-system',
       'waveform-interpretation',
+      'waveform-components',
       'catheter-advancement',
       'pawp-capture',
       'thermodilution-series',
@@ -1167,7 +1235,7 @@ describe('H4 completion and non-regression', () => {
     expect(activity?.estimatedMinutes).toBe(18)
     expect(activity?.prerequisiteActivityIds).toEqual(['hemodynamics:learn:pawp-capture'])
     expect(activity?.curriculumStage).toBe('mechanism')
-    expect(activity?.stageOrder).toBe(3)
+    expect(activity?.stageOrder).toBe(4)
     // Scoring and mastery are section-level, and this station carries no mastery rule of its own.
     expect(activity?.masteryRuleId).toBeUndefined()
     expect(activity?.completionEvidenceAuthority).toBe(
@@ -1185,38 +1253,51 @@ describe('H4 completion and non-regression', () => {
   it('keeps H2/H3 wedge safety and advancement behavior out of this package’s reach', () => {
     const definition = hemodynamicCaseById.get('HD-01')!
     const state = createInitialHemodynamicState(definition, 'learn', 77)
-    // The PAWP objective still refuses a forced recovery, and still needs the learner's own
-    // assessment that the PA waveform returned.
-    expect(
-      pacGuidedObjectiveComplete('pawp-capture', {
-        ...state,
-        catheter: {
-          ...state.catheter,
-          position: 'pa',
-          storedWedgeMmHg: 11,
-          balloonInflated: false,
-          forcedSafetyRecovery: true,
-        },
-        signalValidationChecks: ['pawp-pa-waveform-returned'],
-      }),
-    ).toBe(false)
-    expect(
-      pacGuidedObjectiveComplete('catheter-advancement', {
-        ...state,
-        catheter: { ...state.catheter, position: 'pa' },
-        signalValidationChecks: ['waveform-confirmed-ra', 'waveform-confirmed-rv'],
-      }),
-    ).toBe(false)
-  })
 
-  it('does not pull derived-hemodynamic content into the cardiac-output station', () => {
-    render(<PacGuidedSkillActivity skillId="thermodilution-series" />)
+    // The wedge goals still refuse a forced recovery. The simulator's own prolonged-inflation
+    // rescue stores the wedge and deflates the balloon, and that must not read as the learner's
+    // work; and the return of the pulmonary-artery waveform still has to be assessed by the
+    // learner rather than announced by the simulation.
+    const wedge = sectionRuntime('pawp-capture')
+    const wedgeGoals = [...wedge.actGoals, ...wedge.observeGoals]
+    expect(wedgeGoals).toContainEqual({ type: 'check', id: PA_RETURN_CHECK })
+    const recovered: HemodynamicSimulationState = {
+      ...state,
+      catheter: {
+        ...state.catheter,
+        position: 'pa',
+        storedWedgeMmHg: 11,
+        storedAtEndExpiration: true,
+        balloonInflated: false,
+        forcedSafetyRecovery: true,
+      },
+      signalValidationChecks: [PA_RETURN_CHECK],
+    }
+    expect(stageGoalMet({ type: 'balloon-down' }, recovered)).toBe(false)
+    expect(goalsMet(wedgeGoals, recovered)).toBe(false)
+    const learnerDeflated: HemodynamicSimulationState = {
+      ...recovered,
+      catheter: { ...recovered.catheter, forcedSafetyRecovery: false },
+    }
+    expect(goalsMet(wedgeGoals, learnerDeflated)).toBe(true)
+    expect(goalsMet(wedgeGoals, { ...learnerDeflated, signalValidationChecks: [] })).toBe(false)
+
+    // Advancement still needs the artery confirmed from its tracing, not merely reached.
+    const advancement = sectionRuntime('catheter-advancement')
+    const reachedUnconfirmed: HemodynamicSimulationState = {
+      ...state,
+      catheter: { ...state.catheter, position: 'pa', targetPosition: null },
+      signalValidationChecks: ['waveform-confirmed-ra', 'waveform-confirmed-rv'],
+    }
+    expect(goalsMet(advancement.actGoals, reachedUnconfirmed)).toBe(false)
     expect(
-      screen.queryByRole('heading', {
-        name: 'Derived hemodynamics are equations, not new measurements',
+      goalsMet(advancement.actGoals, {
+        ...reachedUnconfirmed,
+        signalValidationChecks: [
+          ...reachedUnconfirmed.signalValidationChecks,
+          'waveform-confirmed-pa',
+        ],
       }),
-    ).toBeNull()
-    expect(screen.queryByText(/SVR = 80/)).toBeNull()
-    expect(screen.queryByText(/PVR = \(mPAP/)).toBeNull()
+    ).toBe(true)
   })
 })

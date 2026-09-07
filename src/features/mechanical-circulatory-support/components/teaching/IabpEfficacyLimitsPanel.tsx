@@ -266,7 +266,11 @@ export function IabpEfficacyLimitsPanel({
             caption="The device account and the physiologic account, before and now, side by side."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <AlarmBand alarms={alarms} emptyLabel="No modeled alarm is active in this state." />
+          <AlarmBand
+            alarms={alarms}
+            disclosed={disclosed}
+            emptyLabel="No modeled alarm is active in this state."
+          />
           <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
           <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>

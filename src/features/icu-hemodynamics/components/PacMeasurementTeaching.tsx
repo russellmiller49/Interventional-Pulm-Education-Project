@@ -1,134 +1,237 @@
-import { ArrowRight, CircleAlert, Gauge, Sigma } from 'lucide-react'
+'use client'
 
-import { HEMODYNAMIC_CLINICAL_THRESHOLDS, hemodynamicDerivedValueGuides } from '../content'
+import { useId, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
+
+import {
+  cardiacOutputInputStatusLabels,
+  derivedMetricRecords,
+  derivedMetricTextEquivalent,
+  derivedThresholdClassificationLabels,
+  DERIVED_VERIFICATION_NOTE,
+  derivedUnsupportedClaimTopics,
+  requireDerivedInputDefinition,
+  requireDerivedMetric,
+  requireDerivedThresholdContext,
+  hemodynamicsSourceById,
+  type DerivedMetricId,
+  type DerivedMetricRecord,
+} from '../content'
 import styles from './icu-hemodynamics.module.css'
 
-function TeachingSourceNote({ children }: { readonly children: string }) {
+/**
+ * The one place a learner reads what each derived value is.
+ *
+ * Every sentence on this panel is a field of a `DerivedMetricRecord` or a threshold-context record.
+ * The panel it replaces carried its own prose — formulas written a second time next to the engine
+ * that computed them, and "normal ranges" with no statement of what kind of claim each number was.
+ * Rendering the records means a formula or boundary can only be changed in the place the validator,
+ * the evaluator, and the numeric audit also read.
+ */
+
+const PIPELINE_STAGES = [
+  'Raw measurement',
+  'Validated input',
+  'Method and timing provenance',
+  'Equation',
+  'Calculated result',
+  'Validity status',
+  'Sensitivity and limitations',
+  'Interpretation boundary',
+] as const
+
+function MetricDetail({ metric }: { readonly metric: DerivedMetricRecord }) {
   return (
-    <p className={styles.measurementTeachingSource}>
-      <span>Evidence anchor</span>
-      {children}
-    </p>
+    <div className={styles.measurementTeachingCard}>
+      <h3>
+        {metric.name} ({metric.shortLabel})
+      </h3>
+      <dl className={styles.curveFeatureList}>
+        <div>
+          <dt>What it is</dt>
+          <dd>
+            A calculated value — an equation over measurements, not a new measurement.{' '}
+            {metric.interpretation}
+          </dd>
+        </div>
+        <div>
+          <dt>Formula</dt>
+          <dd>
+            <code>
+              {metric.shortLabel} = {metric.formulaText}
+            </code>{' '}
+            reported in {metric.outputUnit || 'a dimensionless ratio'}.
+          </dd>
+        </div>
+        <div>
+          <dt>Units, carried through</dt>
+          <dd>{metric.unitAccount.join(' ')}</dd>
+        </div>
+        <div>
+          <dt>What the arithmetic needs</dt>
+          <dd>{metric.mathematicalDomain}</dd>
+        </div>
+      </dl>
+
+      <h4 className={styles.thermoTrialQuality}>
+        <span>Every input, and how it must arrive</span>
+      </h4>
+      <dl className={styles.methodProvenanceTable}>
+        {metric.dependencies.map((dependency) => {
+          const definition = requireDerivedInputDefinition(dependency.inputId)
+          return (
+            <div key={dependency.inputId}>
+              <dt>
+                {definition.label} ({definition.unit}) · {dependency.role}
+              </dt>
+              <dd>
+                {dependency.acceptableProvenance.map((provenance) => (
+                  <span key={provenance} className={styles.provenanceChip} data-status={provenance}>
+                    {cardiacOutputInputStatusLabels[provenance].label}
+                  </span>
+                ))}
+              </dd>
+              <dd>
+                {definition.whatItIs}
+                {definition.requiredConvention
+                  ? ` Required convention: ${definition.requiredConvention.replaceAll('-', ' ')}.`
+                  : ''}
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+
+      <dl className={styles.curveFeatureList}>
+        <div>
+          <dt>Method dependence</dt>
+          <dd>
+            {metric.requiresFlowMethod
+              ? 'Consumes a cardiac output, so the result carries its acquisition method — bolus thermodilution, direct Fick with measured oxygen uptake, or Fick with an assumed oxygen uptake — and any assumption inside it.'
+              : 'Needs no cardiac output, so it can remain available when every flow-dependent value is withheld.'}
+          </dd>
+        </div>
+        <div>
+          <dt>Body-size dependence</dt>
+          <dd>
+            {metric.requiresBodySurfaceArea
+              ? 'Requires a body surface area whose height-and-weight provenance is known. When body size is missing, this value is withheld rather than calculated from an assumed figure.'
+              : 'Does not use body surface area.'}
+          </dd>
+        </div>
+        <div>
+          <dt>Which input moves it most</dt>
+          <dd>{metric.sensitivityAccount}</dd>
+        </div>
+        <div>
+          <dt>What it still does not establish</dt>
+          <dd>{metric.cannotEstablish}</dd>
+        </div>
+      </dl>
+
+      <h4 className={styles.thermoTrialQuality}>
+        <span>Withhold the result when</span>
+      </h4>
+      <ul className={styles.measurementTeachingAudit}>
+        {metric.invalidWhen.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+
+      <h4 className={styles.thermoTrialQuality}>
+        <span>Context-specific boundaries — each one classified</span>
+      </h4>
+      <dl className={styles.curveFeatureList}>
+        {metric.thresholdContextIds.map((contextId) => {
+          const context = requireDerivedThresholdContext(contextId)
+          return (
+            <div key={contextId}>
+              <dt>{derivedThresholdClassificationLabels[context.classification]}</dt>
+              <dd>
+                {context.statement} <strong>Applies to:</strong> {context.population}{' '}
+                {context.notUniversal}
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+
+      <h4 className={styles.thermoTrialQuality}>
+        <span>Sources and their limits</span>
+      </h4>
+      <ul className={styles.measurementTeachingAudit}>
+        {metric.evidenceIds.map((evidenceId) => {
+          const source = hemodynamicsSourceById.get(evidenceId)
+          return <li key={evidenceId}>{source ? source.citation : evidenceId}</li>
+        })}
+        {metric.sourceLimitations.map((limitation) => (
+          <li key={limitation}>{limitation}</li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
 export function DerivedHemodynamicsTeachingPanel() {
+  const headingId = useId()
+  const [selectedId, setSelectedId] = useState<DerivedMetricId>('pulmonaryVascularResistance')
+  const selected = requireDerivedMetric(selectedId)
+
   return (
-    <section
-      className={styles.measurementTeachingPanel}
-      aria-labelledby="derived-hemodynamics-teaching-heading"
-    >
+    <section className={styles.measurementTeachingPanel} aria-labelledby={headingId}>
       <header>
-        <span>Interpret the dependency chain</span>
-        <h2 id="derived-hemodynamics-teaching-heading">
-          Derived hemodynamics are equations, not new measurements
-        </h2>
+        <span>Learn before calculating</span>
+        <h2 id={headingId}>Derived hemodynamics are equations, not new measurements</h2>
         <p>
-          A calculated value inherits the timing, calibration error, artifact, sampling error, and
-          physiologic assumptions of every input. A precise display cannot rescue an invalid
-          denominator.
+          A derived value is an equation over measurements, and it cannot be more valid than its
+          inputs. For every displayed number this station asks the same questions: which equation
+          produced it, where each input came from, which method produced the flow, whether the
+          inputs belong to one measurement episode, whether the arithmetic is possible, what it is
+          sensitive to, and what it still does not establish.
         </p>
       </header>
 
-      <div className={styles.derivedDependencyFlow} aria-label="Derived value dependency chain">
-        <span>
-          <Gauge className="size-4" aria-hidden="true" />
-          Validate direct inputs
-        </span>
-        <ArrowRight className="size-4" aria-hidden="true" />
-        <span>
-          <Sigma className="size-4" aria-hidden="true" />
-          Calculate with units
-        </span>
-        <ArrowRight className="size-4" aria-hidden="true" />
-        <span>Interpret mechanism and trend</span>
+      <div
+        className={styles.derivedDependencyFlow}
+        aria-label="From raw measurement to interpretation boundary"
+      >
+        {PIPELINE_STAGES.map((stage, index) => (
+          <span key={stage}>
+            {index > 0 ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
+            {stage}
+          </span>
+        ))}
       </div>
 
-      <div className={styles.derivedTeachingGrid}>
-        <article>
-          <span>Flow and indexing</span>
-          <h3>CI = CO ÷ BSA · SV = 1000 × CO ÷ HR</h3>
-          <p>
-            Indexing helps compare flow across body size, while stroke volume converts minute flow
-            to flow per beat. Both still depend on a valid CO.
-          </p>
-        </article>
-        <article>
-          <span>Resistance</span>
-          <h3>SVR = 80 × (MAP − RAP) ÷ CO</h3>
-          <p>
-            SVR represents a systemic pressure gradient divided by flow. An artifactually low CO
-            inflates calculated resistance; an invalid RAP also changes the gradient.{' '}
-            {hemodynamicDerivedValueGuides.systemicVascularResistance.normalRange}{' '}
-            {hemodynamicDerivedValueGuides.systemicVascularResistance.caveats}
-          </p>
-        </article>
-        <article>
-          <span>Pulmonary load</span>
-          <h3>PVR = (mPAP − PAWP) ÷ CO</h3>
-          <p>
-            PVR requires a valid mean PA pressure, a correctly obtained PAWP, and a valid CO from
-            the same physiologic state. Error in any one input changes classification.{' '}
-            {hemodynamicDerivedValueGuides.pulmonaryVascularResistance.normalRange}
-          </p>
-        </article>
-        <article>
-          <span>Conditional indices</span>
-          <h3>PAPi, compliance, CPO, and PPV need context</h3>
-          <p>
-            {hemodynamicDerivedValueGuides.pulmonaryArteryPulsatilityIndex.actionableThresholds}{' '}
-            {hemodynamicDerivedValueGuides.cardiacPowerOutputW.actionableThresholds}{' '}
-            {hemodynamicDerivedValueGuides.pulmonaryArteryCompliance.normalRange}
-          </p>
-        </article>
-        <article>
-          <span>Conditional dynamic signal</span>
-          <h3>
-            PPV ≈{HEMODYNAMIC_CLINICAL_THRESHOLDS.pulsePressureVariation.responsivePercent}% is a
-            conditional boundary only during a valid maneuver
-          </h3>
-          <p>
-            PPV is withheld unless rhythm, controlled ventilation, effort, tidal volume, chest
-            condition, arterial waveform, and RV context pass the validity screen.{' '}
-            {hemodynamicDerivedValueGuides.pulsePressureVariationPercent.actionableThresholds}{' '}
-            {hemodynamicDerivedValueGuides.pulsePressureVariationPercent.caveats}
-          </p>
-        </article>
-        <article>
-          <span>Oxygen balance</span>
-          <h3>SvO₂ is usually interpreted around 65–75%, but the trend has four determinants</h3>
-          <p>
-            Cardiac output, hemoglobin, arterial oxygen saturation, and oxygen consumption all move
-            mixed-venous saturation. A normal or high value does not by itself prove adequate tissue
-            oxygen use, and a low value does not identify which determinant failed.
-          </p>
-        </article>
+      <div className={styles.methodTabs} role="tablist" aria-label="Derived metrics">
+        {derivedMetricRecords.map((metric) => (
+          <button
+            key={metric.id}
+            type="button"
+            role="tab"
+            aria-selected={metric.id === selectedId}
+            onClick={() => setSelectedId(metric.id)}
+          >
+            {metric.shortLabel}
+          </button>
+        ))}
       </div>
 
-      <article className={styles.measurementTeachingCard}>
-        <div className={styles.measurementTeachingCardHeading}>
-          <CircleAlert className="size-5" aria-hidden="true" />
-          <div>
-            <span>Four-question validity screen</span>
-            <h3>Before interpreting any calculated number</h3>
-          </div>
-        </div>
-        <ol className={styles.measurementTeachingAudit}>
-          <li>Which direct measurements feed this formula?</li>
-          <li>Were they valid, correctly timed, and obtained in the same physiologic state?</li>
-          <li>Which input is the denominator, and how would its error move the result?</li>
-          <li>Does the trend cohere with the waveform and bedside perfusion picture?</li>
-        </ol>
-        <p className={styles.measurementTeachingCallout}>
-          If one required input is stale, unzeroed, artifact-contaminated, or unavailable, label the
-          result “not interpretable” rather than substituting a normal value.
+      <p className="sr-only">{derivedMetricTextEquivalent(selected)}</p>
+      <MetricDetail metric={selected} />
+
+      <div className={styles.measurementTeachingCard}>
+        <h3>What this module does not claim</h3>
+        <p className={styles.openQuestionCard}>
+          <strong>No universal targets.</strong> No boundary on this station is a treatment target,
+          and the model refuses that classification outright. Declared source gaps:{' '}
+          {derivedUnsupportedClaimTopics().join(', ').replaceAll('-', ' ')}.
         </p>
-      </article>
-
-      <TeachingSourceNote>
-        Bootsma et al. (2021); Korabathina et al. (2012); Mendoza et al. (2007); Michard et al.
-        (2000); Mounsey et al. (2026).
-      </TeachingSourceNote>
+        <p className={styles.measurementTeachingSource}>
+          <span>Source boundary</span>
+          {DERIVED_VERIFICATION_NOTE}
+        </p>
+      </div>
     </section>
   )
 }

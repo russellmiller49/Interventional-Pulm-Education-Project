@@ -1,0 +1,576 @@
+/*
+ * What only the mechanical-circulatory-support stage has: the dark palette the shared shell reads,
+ * the simulator surfaces, the guided-action buttons, the sort, the story cards, the teaching
+ * blocks, the one table. Everything shared with the other lesson stages lives in
+ * `learning-module/stage/*.module.css`.
+ *
+ * The module's own shell is light — `--ink` there is a dark text colour on paper — while its device
+ * surfaces are dark cards. The stage runs on the dark palette those surfaces already use, so the
+ * tokens the shared shell reads are set here, on the stage root, and nowhere else.
+ */
+
+.stage {
+  --ink: #eaf4f4;
+  --muted: #9fb4b7;
+  --panel: #10262b;
+  --panel-2: #17343a;
+  --panel-3: #1f4249;
+  --line: rgba(163, 206, 209, 0.22);
+  --cyan: #36c3ca;
+  --cyan-bright: #71e1e5;
+  --navy: #07191d;
+  --navy-2: #0c3540;
+  --amber: #ffbf62;
+  --red: #ff6b73;
+  --green: #76d69b;
+  --teal: #36c3ca;
+  --teal-soft: rgba(54, 195, 202, 0.14);
+  --amber-soft: rgba(255, 191, 98, 0.14);
+  --paper: #061519;
+
+  display: contents;
+  color: var(--ink);
+  color-scheme: dark;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * Each pane's content is positioned, so an absolutely positioned descendant — a visually hidden
+ * label in a shared teaching component — is contained by the pane's scroller rather than by the
+ * page. Without this, one such label in a tall panel gave the document a scrollable overflow of
+ * several thousand pixels below a shell that was itself the right size.
+ */
+.stage [data-pane] {
+  position: relative;
+}
+
+/* ------------------------------------------------------------------ *
+ * Simulator pane
+ * ------------------------------------------------------------------ */
+
+.simulator {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.surfaces {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.surface {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+}
+
+.surfaceHeading {
+  margin: 0;
+  font-size: inherit;
+}
+
+.surfaceToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 0.9rem;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.surfaceToggle[aria-expanded='true'] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.surfaceToggle:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.surfaceToggleHint {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.surfaceBody {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.7rem;
+}
+
+.surfaceBody[hidden] {
+  display: none !important;
+}
+
+.boundaryNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * The Now card's bodies
+ * ------------------------------------------------------------------ */
+
+.stem {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.mapAnswerPrompt {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mapAnswerPrompt p {
+  margin: 0;
+}
+
+.identifyFeedback {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--cyan-bright);
+  border-radius: 0.5rem;
+  background: rgba(113, 225, 229, 0.08);
+}
+
+.identifyFeedback[data-verdict-outcome='not-correct'] {
+  border-left-color: var(--amber);
+  background: rgba(255, 191, 98, 0.1);
+}
+
+.identifyFeedback p {
+  margin: 0;
+}
+
+.reasoning {
+  margin: 0;
+  color: var(--muted);
+}
+
+.walkHint {
+  margin: 0;
+}
+
+.actionBody {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.actionBody p {
+  margin: 0;
+}
+
+.guidedActions {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.guidedAction {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel-2) 88%, black);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.guidedAction[data-mcs-control-highlighted='true'] {
+  border-color: var(--cyan-bright);
+  box-shadow: 0 0 0 2px rgba(113, 225, 229, 0.35);
+}
+
+.guidedAction[data-worked-through='true'] {
+  border-color: var(--green);
+}
+
+.guidedAction svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--green);
+}
+
+.guidedAction:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.response {
+  margin: 0;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.transferContext {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+
+.transferContext div {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+.transferContext dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.transferContext dd {
+  margin: 0.15rem 0 0;
+}
+
+.transferWork {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.7rem;
+}
+
+.transferWork[data-met='true'] {
+  border-color: var(--green);
+  border-style: solid;
+}
+
+.transferWork p {
+  margin: 0;
+}
+
+/* The control-panel sort. */
+
+.sort {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sortRow {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+}
+
+.sortRow[data-sort-outcome='correct'] {
+  border-color: var(--green);
+}
+
+.sortRow[data-sort-outcome='not-correct'] {
+  border-color: var(--amber);
+}
+
+.sortRow label {
+  font-weight: 700;
+}
+
+.sortSelect {
+  min-height: 2.25rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--panel-2) 88%, black);
+  color: var(--ink);
+  font: inherit;
+}
+
+.sortSelect:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.sortVerdict {
+  margin: 0;
+}
+
+.sortBins {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--cyan-bright);
+}
+
+.sortBins p {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Story problems
+ * ------------------------------------------------------------------ */
+
+.stories {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+}
+
+.stories h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.storyIntro {
+  margin: 0;
+  color: var(--muted);
+}
+
+.story {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+}
+
+.story h4 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.storyRun {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.storyReadings {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.3rem 0.8rem;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.storyReadings div {
+  display: contents;
+}
+
+.storyReadings dt {
+  color: var(--muted);
+}
+
+.storyReadings dd {
+  margin: 0;
+  text-align: right;
+}
+
+.storyAxis {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--cyan-bright);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ *
+ * Teaching column
+ * ------------------------------------------------------------------ */
+
+.teachingColumn {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.teachingRevealToggle {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teachingRevealToggle:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+/* Until the prediction is committed, only the first block of the teaching is shown. */
+.teachingColumn[data-teaching-preview='true'] [data-teaching-panel] > :nth-child(n + 2) {
+  display: none;
+}
+
+.block {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+}
+
+.block h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.block p,
+.block li {
+  margin: 0;
+}
+
+.block ul,
+.block ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.question {
+  font-weight: 700;
+}
+
+.analogy {
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--amber);
+  font-style: italic;
+}
+
+.ladder {
+  display: grid;
+  gap: 0.4rem;
+  padding-left: 1.2rem;
+}
+
+.ladder li {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.warning {
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--amber);
+}
+
+.grammar {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.grammar th,
+.grammar td {
+  padding: 0.4rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.grammar th {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grammar tr[data-highlighted='true'] td {
+  background: rgba(113, 225, 229, 0.12);
+  border-left: 3px solid var(--cyan-bright);
+}
+
+.grammar tr:not([data-highlighted='true']) td {
+  color: var(--muted);
+}
+
+.footnote {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.strip {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.strip li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+}
+
+.strip li span {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.strip li[data-strip-state='this-setting'] {
+  border-color: var(--green);
+}
+
+.strip li[data-strip-state='this-setting'] span {
+  color: var(--green);
+}
+
+.strip li[data-strip-state='no-setting'] span {
+  color: var(--amber);
+}
+
+.strip li small {
+  color: var(--muted);
+}

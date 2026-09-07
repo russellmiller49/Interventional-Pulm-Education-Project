@@ -1,31 +1,44 @@
-import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
-import { PathwayLanding } from '@/features/learning-module/curriculum'
-import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
+import { mcsPathwayComposition } from '../content/pathwayResolver'
+import { McsContinueCta } from './McsContinueCta'
+import { McsStoredPathwayAccordion } from './McsPathwayAccordion'
+import styles from './mechanical-circulatory-support.module.css'
 
+/**
+ * The Learn landing: the same door and the same map as the hub.
+ *
+ * It used to render the shared `PathwayLanding` — nine cards under a long intro, with its own
+ * start link. Now it is two sentences, the one Continue the hub also resolves, and the pathway
+ * accordion the hub also shows.
+ */
 export function McsLearnLanding() {
+  const composition = mcsPathwayComposition()
   return (
-    <PathwayLanding
-      pathway={criticalCareLearningPathway('mechanical-circulatory-support')}
-      sectionHref={(sectionId) =>
-        `${mechanicalCirculatorySupportNavBase}/learn?lesson=${sectionId}`
-      }
-      intro="Two shared foundations come first: validate the signal, then separate the mechanisms. Each device pair follows the same shape — isolate the mechanism the device manipulates, then work the conditions where it stops helping. The last section holds all three against one phenotype. Move in order or open any section directly; the device track follows your selection."
-      startLabel="Start with the signal"
-      sectionsNote="The device pairs are three routes through the same question: which part of the circulation is limiting?"
-      notice={
-        <aside
-          role="note"
-          className="flex max-w-3xl gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm leading-6"
-        >
-          <div>
-            <p className="font-semibold">Educational model · pending clinical review</p>
-            <p className="text-muted-foreground">
-              Device responses are bounded teaching approximations. Device selection, timing, and
-              escalation remain team decisions under current instructions and local protocol.
-            </p>
-          </div>
-        </aside>
-      }
-    />
+    <div className={styles.learnLanding} data-learn-landing>
+      <header className={styles.sectionHeading}>
+        <span className={styles.kicker}>
+          One continuous pathway · {composition.total} sections · {composition.minutes} min
+        </span>
+        <h1>Learn</h1>
+        <p>
+          Every section is read on the same simulated circulation: first the pressure apart from the
+          flow, then the loop every device is drawn on, then each device one at a time, then the
+          choice among them. Move in order, or open any section from the map below.
+        </p>
+        <div className={styles.heroActions}>
+          <McsContinueCta />
+        </div>
+      </header>
+      <section aria-labelledby="mcs-learn-landing-map-heading">
+        <h2 id="mcs-learn-landing-map-heading">The pathway</h2>
+        <McsStoredPathwayAccordion id="mcs-learn-landing-pathway" />
+      </section>
+      <aside role="note" className={styles.releaseReview}>
+        <strong>Educational model · pending clinical review</strong>
+        <p>
+          Device responses are bounded teaching approximations. Device selection, timing, and
+          escalation remain team decisions under current instructions and local protocol.
+        </p>
+      </aside>
+    </div>
   )
 }

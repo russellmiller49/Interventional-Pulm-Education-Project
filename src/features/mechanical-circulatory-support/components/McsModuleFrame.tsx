@@ -10,15 +10,22 @@ import { MCS_RELEASE_STAGE } from '../content'
 import { mcsModuleNavItems } from './McsModuleNav'
 import styles from './mechanical-circulatory-support.module.css'
 
+/**
+ * The module frame. The hub and the case surfaces keep the module's light theme; a lesson on the
+ * stage runs on the dark palette its device surfaces already use, and the frame's chrome follows
+ * it so the header and the workspace read as one surface.
+ */
 export function McsModuleFrame({
   locale,
   activeHref,
   activityMode = false,
+  theme = activityMode ? 'dark' : 'light',
   children,
 }: {
   locale: string
   activeHref: string
   activityMode?: boolean
+  theme?: 'light' | 'dark'
   children: ReactNode
 }) {
   return (
@@ -36,7 +43,7 @@ export function McsModuleFrame({
           activeHref={activeHref}
           navItems={mcsModuleNavItems}
           navAriaLabel="Mechanical circulatory support module sections"
-          theme="light"
+          theme={theme}
           activityMode={activityMode}
           safetyNotice={
             <>

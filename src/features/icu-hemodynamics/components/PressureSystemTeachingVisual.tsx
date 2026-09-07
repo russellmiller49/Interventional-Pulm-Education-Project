@@ -37,7 +37,7 @@ interface PressureSystemTeachingVisualProps {
   readonly challengeMode?: 'selectable' | 'current-state'
 }
 
-function FastFlushTrace({
+export function FastFlushTrace({
   response,
   lineType,
   revealLabel,

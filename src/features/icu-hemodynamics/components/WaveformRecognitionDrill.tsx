@@ -51,20 +51,42 @@ const QUESTIONS: readonly { readonly answerId: string; readonly optionIds: reado
   },
 ]
 
+/**
+ * The four places only, for the section that teaches naming a place from its shape. The
+ * abnormal patterns belong to the section after it, which reads the waves inside a named place.
+ */
+const PLACE_QUESTIONS: readonly {
+  readonly answerId: string
+  readonly optionIds: readonly string[]
+}[] = [
+  { answerId: 'rv-normal', optionIds: ['ra-normal', 'rv-normal', 'pa-normal', 'wedge-normal'] },
+  { answerId: 'pa-normal', optionIds: ['rv-normal', 'pa-normal', 'wedge-normal', 'ra-normal'] },
+  { answerId: 'wedge-normal', optionIds: ['wedge-normal', 'ra-normal', 'rv-normal', 'pa-normal'] },
+  { answerId: 'ra-normal', optionIds: ['pa-normal', 'wedge-normal', 'ra-normal', 'rv-normal'] },
+  { answerId: 'pa-normal', optionIds: ['pa-normal', 'rv-normal', 'ra-normal', 'wedge-normal'] },
+  { answerId: 'rv-normal', optionIds: ['wedge-normal', 'pa-normal', 'rv-normal', 'ra-normal'] },
+]
+
 const REQUIRED_CORRECT = 5
 
 interface WaveformRecognitionDrillProps {
   readonly dispatch?: Dispatch<HemodynamicAction>
+  /** `places` restricts the run to the four normal tracings; `all` is the full atlas. */
+  readonly questionSet?: 'places' | 'all'
 }
 
-export function WaveformRecognitionDrill({ dispatch }: WaveformRecognitionDrillProps) {
+export function WaveformRecognitionDrill({
+  dispatch,
+  questionSet = 'all',
+}: WaveformRecognitionDrillProps) {
+  const QUESTION_SET = questionSet === 'places' ? PLACE_QUESTIONS : QUESTIONS
   const [index, setIndex] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
   const [answered, setAnswered] = useState(0)
 
-  const question = QUESTIONS[index % QUESTIONS.length]
+  const question = QUESTION_SET[index % QUESTION_SET.length]
   const answer = waveformAtlasById.get(question.answerId)
   const options = useMemo(
     () => question.optionIds.flatMap((id) => waveformAtlasById.get(id) ?? []),
@@ -90,7 +112,7 @@ export function WaveformRecognitionDrill({ dispatch }: WaveformRecognitionDrillP
   }
 
   function nextQuestion() {
-    setIndex((current) => (current + 1) % QUESTIONS.length)
+    setIndex((current) => (current + 1) % QUESTION_SET.length)
     setSelectedId(null)
     setRevealed(false)
   }

@@ -55,8 +55,8 @@ describe('critical-care dashboard derivation', () => {
     expect(dashboard.audienceState).toBe('new')
     expect(dashboard.resume).toBeNull()
     expect(dashboard.recommendation).toMatchObject({
-      activity: { id: 'hemodynamics:learn:pressure-system' },
-      href: '/icu-hemodynamics/learn?activity=pressure-system',
+      activity: { id: 'hemodynamics:learn:why-measure' },
+      href: '/icu-hemodynamics/learn?activity=why-measure',
     })
     expect(dashboard.modules).toHaveLength(4)
     expect(dashboard.pathways).toHaveLength(5)
@@ -155,7 +155,7 @@ describe('critical-care dashboard derivation', () => {
 
     expect(dashboard.audienceState).toBe('incompatible')
     expect(dashboard.issueCount).toBe(1)
-    expect(dashboard.recommendation?.activity.id).toBe('hemodynamics:learn:pressure-system')
+    expect(dashboard.recommendation?.activity.id).toBe('hemodynamics:learn:why-measure')
   })
 
   it('calculates module states and pathway milestones only from explicit completion', () => {
