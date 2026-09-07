@@ -42,6 +42,20 @@
   color: var(--ink, #eaf4f4);
 }
 
+/* The 3D heart's card: its viewport brings a margin from the Practice layout; the card's gap is enough. */
+.surfaceCard[data-surface='heart-3d'] > div:last-child {
+  margin: 0;
+}
+
+.heartLoading {
+  display: grid;
+  min-height: 440px;
+  place-content: center;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  color: var(--stage-muted, #9fb4b7);
+}
+
 /* ------------------------------------------------------------------ *
  * Docks
  * ------------------------------------------------------------------ */
@@ -65,7 +79,7 @@
 
 .dock > legend {
   padding: 0 0.35rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -91,7 +105,7 @@
 }
 
 .dockRow small {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .dockRow select {
@@ -147,6 +161,45 @@
   cursor: not-allowed;
 }
 
+/*
+ * A control looks like one under the pointer and under the finger. The docks shipped with a rest
+ * state, a focus ring and a disabled state and nothing between: no hover, no pressed state. The
+ * same three states go on the Now card's actions and the commitment buttons below, scoped to this
+ * module because the shell's button classes are four modules' to change.
+ */
+.dockButton:hover:not(:disabled) {
+  background: rgba(113, 225, 229, 0.24);
+}
+
+.dockButton:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.36);
+}
+
+.moduleShell [data-now-primary]:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.moduleShell [data-now-primary]:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.moduleShell [data-now-secondary]:hover:not(:disabled),
+.commitment > button:hover:not(:disabled),
+.returnCheck button:hover:not(:disabled),
+.surfaceCard > button:hover:not(:disabled),
+.story > button:hover:not(:disabled) {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.moduleShell [data-now-secondary]:active:not(:disabled),
+.commitment > button:active:not(:disabled),
+.returnCheck button:active:not(:disabled),
+.surfaceCard > button:active:not(:disabled),
+.story > button:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.22);
+}
+
 .dockButton[data-holding='true'] {
   background: var(--cyan-bright, #71e1e5);
   color: #04211f;
@@ -168,7 +221,7 @@
 
 .dockNote {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .dockNote[role='alert'] {
@@ -222,7 +275,7 @@
 }
 
 .choiceGroup label small {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .trialGrid {
@@ -254,21 +307,23 @@
 }
 
 .walk dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
+/* A real list: Tailwind's preflight resets the marker, and a markerless list reads as prose. */
 .walk ul {
   margin: 0;
   padding-left: 1.1rem;
+  list-style: disc;
 }
 
 .kicker {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -331,7 +386,7 @@
 
 .sortOrigins dd {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -441,6 +496,8 @@
 }
 
 .increment {
+  display: grid;
+  gap: 0.25rem;
   padding: 0.5rem 0.75rem;
   border: 1px dashed var(--cyan-bright, #71e1e5);
   border-radius: 0.65rem;
@@ -452,6 +509,7 @@
   gap: 0.25rem;
   margin: 0;
   padding-left: 1.15rem;
+  list-style: disc;
 }
 
 .sequence {
@@ -463,7 +521,7 @@
 
 .sequence small {
   display: block;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .stopFacts {
@@ -472,7 +530,7 @@
 }
 
 .stopFacts dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -494,7 +552,7 @@
 }
 
 .grammarTable thead th {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -506,11 +564,11 @@
 }
 
 .grammarTable small {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .trendRule {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-style: italic;
 }
 
@@ -548,7 +606,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.65rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -574,9 +632,16 @@
   background: #061519;
 }
 
+/*
+ * The viewport beneath the site header, not beneath a guess at it. The header is taller than 4rem
+ * on a desktop (`--site-header-height` in globals.css), and a shell sized to the wrong number is
+ * 17px taller than the space it has, which is 17px of document overflow that any programmatic
+ * scroll — a "Show me where" `scrollIntoView`, a focus — can spend by sliding the stage's own
+ * header under the site's. Every sibling module already reads the variable.
+ */
 @media (min-width: 1024px) and (min-height: 700px) {
   .moduleShell[data-activity-mode='true'] {
-    height: calc(100dvh - 4rem);
+    height: calc(100dvh - var(--site-header-height, 4rem));
     min-height: 0;
     overflow: hidden;
     padding: 0;

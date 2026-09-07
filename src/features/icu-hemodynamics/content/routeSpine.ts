@@ -30,6 +30,14 @@ export interface RouteStop {
   readonly analogy: string
   /** The precise statement the analogy stands for. */
   readonly precise: string
+  /**
+   * The heading printed above the short list, authored per stop.
+   *
+   * One label does not fit five stops: the line's list is four things to check, the three chamber
+   * lists are what to look for in a tracing, and the wedge's is what has to be true of it. The
+   * card shipped with no label at all and the list read as four more lines of prose.
+   */
+  readonly checklistLabel: string
   /** At most four items; the thing later sections reference. */
   readonly checklist: readonly string[]
   /** One thing to try on the live monitor, and what to watch. */
@@ -47,6 +55,7 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
       'A garden hose running to a pressure gauge. Where the gauge hangs sets what it reads, what you call zero sets where the needle rests, and how stiff the hose is decides whether the gauge can follow a quick change.',
     precise:
       'Between the tip and the number sit a fluid-filled catheter and tubing, a transducer with a reference height and an atmospheric zero, and a display with a scale. Level and zero move the whole tracing up or down without changing its shape. Damping and scale change the shape or the size without moving it.',
+    checklistLabel: 'What to check on the line',
     checklist: ['Level', 'Zero', 'Scale', 'Flush response'],
     wiggle: {
       change: 'Move the transducer a few centimetres and watch the numbers.',
@@ -67,6 +76,7 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
       'A filling room with a door that shuts. The room fills quietly, the door slams once a beat, and the level rises and falls by only a few millimetres of mercury.',
     precise:
       'A low-amplitude venous tracing with three positive waves (a, c, v) and two descents (x, y). The a wave follows the P wave, the c wave the QRS, the v wave peaks at the end of the T wave. Read the mean at end expiration, at the base of the c wave.',
+    checklistLabel: 'What to look for in this tracing',
     checklist: [
       'a, c and v waves present',
       'x and y descents present',
@@ -89,6 +99,7 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
       'The pump chamber. High while it squeezes, near the floor as it relaxes, then rising slowly as it fills again — and nothing in between marks a valve closing behind the tip.',
     precise:
       'A rapid systolic rise to a pressure far above the atrium, then a fall toward a low diastolic pressure that climbs gradually through filling. No diastolic step-up, no run-off and no dicrotic notch. Systolic pressure is normally the same as the pulmonary artery; the diastolic contour is what tells them apart.',
+    checklistLabel: 'What to look for in this tracing',
     checklist: [
       'sharp systolic peak',
       'diastole dips low, then rises',
@@ -110,6 +121,7 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
       'The pipe after the pump. The pump still throws the same peak, but now a valve shuts behind the tip — the notch — and the pressure never falls to the floor because the pipe holds it up between beats.',
     precise:
       'A systolic peak matching the ventricle, a dicrotic notch as the pulmonic valve closes, and a diastolic run-off that never reaches the ventricular floor: the diastolic step-up. This is the position every measurement starts from — the wedge, the thermistor, the mixed venous sample.',
+    checklistLabel: 'What to look for in this tracing',
     checklist: [
       'systolic peak (same as RV)',
       'dicrotic notch',
@@ -131,6 +143,7 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
       'Listening through a stopped branch. Inflate the balloon and the artery in front of the tip goes quiet; what is left is the left atrium, heard from far away and a little late.',
     precise:
       'With the branch occluded, the pulmonary-artery pulsatility disappears and an atrial tracing returns — a and v waves, delayed relative to the right atrium, with a mean that sits below pulmonary-artery diastolic pressure. It is taken briefly, at end expiration, and it is over when the balloon is down and the PA waveform is back.',
+    checklistLabel: 'What has to be true of a wedge',
     checklist: [
       'atrial shape returns, notch gone',
       'mean below PA diastolic',
@@ -150,6 +163,18 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
 ])
 
 const routeStopById = new Map(routeStops.map((stop) => [stop.id, stop]))
+
+/**
+ * The number a stop carries on screen: one-based, the line first.
+ *
+ * It is the number the catheter map prints on its pins and in its legend, and it is the only
+ * number a card about a stop prints. The spine's own `ordinal` is zero-based — the line is stop 0
+ * because it comes before the heart — and stays internal: printing it beside a map that starts at
+ * one gave one place two numbers on one screen.
+ */
+export function routeStopNumber(id: RouteStopId): number {
+  return routeStop(id).ordinal + 1
+}
 
 export function routeStop(id: RouteStopId): RouteStop {
   const stop = routeStopById.get(id)
@@ -176,13 +201,20 @@ export function validateRouteSpine(stops: readonly RouteStop[] = routeStops): re
     if (stop.checklist.length === 0 || stop.checklist.length > 4) {
       errors.push(`Route stop ${stop.id} needs one to four checklist items.`)
     }
+    if (!stop.checklistLabel.trim()) {
+      errors.push(`Route stop ${stop.id} has no label for its checklist.`)
+    }
     if (stop.sourceIds.length === 0) errors.push(`Route stop ${stop.id} cites nothing.`)
     for (const sourceId of stop.sourceIds) {
       if (!hemodynamicsSourceById.has(sourceId)) {
         errors.push(`Route stop ${stop.id} cites an unregistered source: ${sourceId}.`)
       }
     }
-    if (/\d/.test(`${stop.analogy} ${stop.precise} ${stop.checklist.join(' ')}`)) {
+    if (
+      /\d/.test(
+        `${stop.analogy} ${stop.precise} ${stop.checklistLabel} ${stop.checklist.join(' ')}`,
+      )
+    ) {
       errors.push(`Route stop ${stop.id} carries a number in learner copy.`)
     }
   })

@@ -1,5 +1,7 @@
 'use client'
 
+import { useId } from 'react'
+
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { useStageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
 
@@ -14,7 +16,7 @@ import {
 } from '../../content/pacAdvancementPrebrief'
 import { pawpCaptureSteps } from '../../content/pawpCaptureSequence'
 import { pressureSystemValiditySteps } from '../../content/pressureSystemValidity'
-import { routeStop, type RouteStopId } from '../../content/routeSpine'
+import { routeStop, routeStopNumber, type RouteStopId } from '../../content/routeSpine'
 import type { ControlStripState } from '../../content/sectionSpecs'
 import {
   grammarLocusLabels,
@@ -59,6 +61,7 @@ export function HemodynamicsTeachingColumn({
   readonly provenanceResolved: boolean
 }) {
   const scope = useStageTeachingScope()
+  const listIdBase = useId()
   const committed = scope?.predictionCommitted ?? true
   const spec = lesson.spec
   void step
@@ -75,9 +78,15 @@ export function HemodynamicsTeachingColumn({
           <p>
             <strong>One new idea.</strong> {spec.newConcept}
           </p>
-          <p className={styles.increment} data-increment-sentence>
-            {spec.incrementSentence}
-          </p>
+          {/*
+            The increment sentence, under a label a step can point at. Five Recognize instructions
+            said "read the increment", which named a dashed box with no heading; the box says what
+            it is now, and the instructions say "what this section adds".
+          */}
+          <div className={styles.increment}>
+            <p className={styles.kicker}>What this section adds</p>
+            <p data-increment-sentence>{spec.incrementSentence}</p>
+          </div>
         </section>
       </StageBlock>
 
@@ -112,7 +121,7 @@ export function HemodynamicsTeachingColumn({
               aria-label={stop.title}
             >
               <p className={styles.kicker}>
-                Stop {stop.ordinal} · {stop.title}
+                Stop {routeStopNumber(stopId)} · {stop.title}
               </p>
               <p className={styles.analogy}>{stop.analogy}</p>
               <p>{stop.precise}</p>
@@ -128,7 +137,10 @@ export function HemodynamicsTeachingColumn({
                   </dd>
                 </div>
               </dl>
-              <ul className={styles.checklist}>
+              <p className={styles.kicker} id={`${listIdBase}-${stopId}`}>
+                {stop.checklistLabel}
+              </p>
+              <ul className={styles.checklist} aria-labelledby={`${listIdBase}-${stopId}`}>
                 {stop.checklist.map((line) => (
                   <li key={line}>{line}</li>
                 ))}

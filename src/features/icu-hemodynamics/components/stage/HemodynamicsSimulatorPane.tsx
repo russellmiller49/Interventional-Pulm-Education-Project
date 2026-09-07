@@ -3,7 +3,7 @@
 import type { Dispatch, ReactNode } from 'react'
 
 import type { RouteStopId } from '../../content/routeSpine'
-import type { StageSurface } from '../../content/stageLessons'
+import type { StageAnatomy, StageSurface } from '../../content/stageLessons'
 import type {
   FastFlushLineType,
   HemodynamicAction,
@@ -11,6 +11,7 @@ import type {
 } from '../../engine/types'
 import { BedsideMonitor } from '../BedsideMonitor'
 import { CatheterMap, type CatheterMapAnswer } from '../catheter-map/CatheterMap'
+import { HemodynamicHeart3DDynamic } from '../HemodynamicHeart3DDynamic'
 import { WaveformRecognitionDrill } from '../WaveformRecognitionDrill'
 import {
   FlushDock,
@@ -34,9 +35,11 @@ export function HemodynamicsSimulatorPane({
   state,
   dispatch,
   surface,
+  anatomy = 'none',
   flushLine,
   controlsEnabled,
   lockedReason,
+  pausedReason,
   chamberLabel,
   stops,
   mapCaption,
@@ -47,9 +50,14 @@ export function HemodynamicsSimulatorPane({
   readonly state: HemodynamicSimulationState
   readonly dispatch: Dispatch<HemodynamicAction>
   readonly surface: StageSurface
+  /** The anatomy surface beneath the docks; the 3D heart on the wedge section. */
+  readonly anatomy?: StageAnatomy
   readonly flushLine: FastFlushLineType
   readonly controlsEnabled: boolean
+  /** Why the docks are off while the learner decides; printed on the simulator. */
   readonly lockedReason?: string
+  /** Why the docks are off while the learner looks back; printed on the simulator. */
+  readonly pausedReason?: string
   readonly chamberLabel: 'shown' | 'withheld'
   readonly stops: readonly RouteStopId[]
   readonly mapCaption?: string
@@ -123,7 +131,27 @@ export function HemodynamicsSimulatorPane({
           {lockedReason}
         </p>
       ) : null}
+      {pausedReason ? (
+        <p className={styles.lockedNote} role="status" data-controls-paused>
+          {pausedReason}
+        </p>
+      ) : null}
       {dock ? <div className={styles.docks}>{dock}</div> : null}
+      {anatomy === 'heart' ? (
+        <section
+          className={styles.surfaceCard}
+          data-surface="heart-3d"
+          aria-label="The heart and the catheter, in three dimensions"
+        >
+          <p className={styles.kicker}>The heart and the catheter · teaching model</p>
+          <p className={styles.dockNote}>
+            The catheter&apos;s course through the right heart, its balloon and the transducer, in
+            step with the monitor above. Drag to turn it; the arrows and Reset view do the same from
+            the keyboard.
+          </p>
+          <HemodynamicHeart3DDynamic state={state} />
+        </section>
+      ) : null}
       {children}
       <CatheterMap
         emphasis={stops}

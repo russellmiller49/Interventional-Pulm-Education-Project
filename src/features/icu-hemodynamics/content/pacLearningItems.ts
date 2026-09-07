@@ -105,7 +105,7 @@ export const pacGuidedLearningItems: Readonly<
           label: 'Atmospheric zero alone will repair the height and the oscillatory response.',
           rationale:
             'Zero does not physically move the transducer or repair dynamic-response distortion.',
-          plausibility: 'reasonable-but-incomplete',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'physiology-wide-pulse',
@@ -119,7 +119,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'Level, atmospheric zero, and dynamic response are distinct checks. A plausible mean does not validate distorted systolic and diastolic morphology.',
       evidenceIds: pressureEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     transfer: item({
       id: 'pac-pressure-transfer-1',
@@ -144,13 +144,14 @@ export const pacGuidedLearningItems: Readonly<
           label: 'Re-level only; morphology is reliable once the hydrostatic offset is removed.',
           rationale:
             'Leveling corrects the pressure offset but does not restore an overdamped waveform.',
-          plausibility: 'reasonable-but-incomplete',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'accept-mean',
-          label: 'Use the mean pressure because damping cannot affect clinical interpretation.',
+          label:
+            'Re-level, then read the mean instead of the pulse pressure: a damped line spares the mean.',
           rationale:
-            'Mean pressure may be less distorted than systolic pressure, but the signal still requires validation before use.',
+            'The mean is the least distorted number on a damped line, which is why it tempts. But the question is pulse pressure, and no choice of number restores a response that cannot follow a rapid change.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
@@ -158,7 +159,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'Position changes require re-leveling, and a sluggish fast-flush release requires measurement-system troubleshooting before waveform interpretation.',
       evidenceIds: pressureEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   'catheter-advancement': {
@@ -343,8 +344,8 @@ export const pacGuidedLearningItems: Readonly<
           label:
             'Store the respiratory mean, then deflate without checking the returning waveform.',
           rationale:
-            'A respiratory mean can obscure the end-expiratory reference and omits confirmation of safe PA return.',
-          plausibility: 'reasonable-but-incomplete',
+            'A respiratory mean obscures the end-expiratory reference, and deflating without watching the pulmonary-artery tracing return leaves the one question that ends a wedge unanswered: a balloon that is down has not shown that the occlusion is over.',
+          plausibility: 'unsafe',
         },
         {
           id: 'hold-longer',
@@ -358,7 +359,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'An interpretable PAWP requires a confirmed PA start, brief occlusion, end-expiratory sampling, prompt deflation, and return of the PA waveform.',
       evidenceIds: [...placementEvidence, 'edwards-swan-ganz-ifu-2023'],
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     transfer: item({
       id: 'pac-pawp-transfer-1',
@@ -381,7 +382,7 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'highest-value',
           label:
-            'Use the highest value because positive pressure always reveals the true filling pressure.',
+            'Use the highest value of the swing, then deflate and verify return of the PA waveform.',
           rationale:
             'The inspiratory maximum includes airway-pressure transmission and can overstate the vascular pressure of interest.',
           plausibility: 'incorrect-mechanism',
@@ -397,7 +398,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'Interpret respiratory timing explicitly and close the safety loop by promptly restoring and confirming the PA waveform.',
       evidenceIds: [...placementEvidence, 'edwards-swan-ganz-ifu-2023'],
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   'thermodilution-series': {
@@ -421,7 +422,7 @@ export const pacGuidedLearningItems: Readonly<
         },
         {
           id: 'average-all',
-          label: 'Average all three because a larger sample automatically reduces technique error.',
+          label: 'Average all three; more curves in the average means less error from any one.',
           rationale:
             'Including a technically invalid curve can bias the result instead of reducing error.',
           plausibility: 'reasonable-but-incomplete',
@@ -439,7 +440,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'Standardize injection technique, inspect every temperature-time curve, and average an adequate set of technically valid accepted trials.',
       evidenceIds: measurementEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     transfer: item({
       id: 'pac-td-transfer-1',
@@ -462,7 +463,7 @@ export const pacGuidedLearningItems: Readonly<
         },
         {
           id: 'accept-because-low-flow',
-          label: 'Accept it because low flow is expected to produce any curve shape.',
+          label: 'Accept it; low flow makes every curve broader and slower, and this one is.',
           rationale:
             'Low flow changes curve area but does not make a technically poor injection acceptable.',
           plausibility: 'reasonable-but-incomplete',
@@ -479,7 +480,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'A questionable curve should be repeated with standardized technique; do not average technical error into false precision.',
       evidenceIds: measurementEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   'derived-hemodynamics': {
@@ -510,15 +511,16 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'assume-normal-flow',
           label: 'Substitute a normal cardiac output so the resistance can still be trended.',
-          rationale: 'An assumed denominator produces a precise-looking but unsupported result.',
-          plausibility: 'reasonable-but-incomplete',
+          rationale:
+            'An assumed denominator produces a precise-looking but unsupported result, and it leaves the actual fault — pressure inputs with no valid reference — untouched.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['withhold-svr'],
       explanation:
         'Derived hemodynamics are not independent measurements; stale, missing, or invalid inputs make the result non-interpretable.',
       evidenceIds: measurementEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
     transfer: item({
       id: 'pac-derived-transfer-1',
@@ -541,14 +543,15 @@ export const pacGuidedLearningItems: Readonly<
         },
         {
           id: 'ppv-controlled-ventilation',
-          label: 'Yes; controlled ventilation is the only condition that determines PPV validity.',
+          label:
+            'Yes; the patient is on controlled ventilation, the condition PPV was validated under.',
           rationale:
             'Ventilation is necessary but does not override irregular rhythm or spontaneous effort.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'ppv-number-valid',
-          label: 'Yes; a calculated number is valid whenever it is displayed.',
+          label: 'Yes; the monitor would not display a number it could not calculate.',
           rationale:
             'Availability of a calculation does not establish physiologic interpretability.',
           plausibility: 'incorrect-mechanism',
@@ -558,7 +561,7 @@ export const pacGuidedLearningItems: Readonly<
       explanation:
         'Use the explicit validity screen rather than treating a computed value as self-validating.',
       evidenceIds: measurementEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
 }

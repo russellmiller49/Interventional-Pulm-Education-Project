@@ -106,6 +106,51 @@ describe('AnswerVerdict', () => {
   })
 })
 
+describe('AnswerVerdict per-caller frames', () => {
+  /*
+   * The titles were written for signal-recognition items. A caller whose item is a decision rather
+   * than a read can say its own; a caller that passes nothing keeps every word it had, which is
+   * the contract every other consumer of this card relies on.
+   */
+  it('keeps its own titles when no frames are passed', () => {
+    const { container } = render(<AnswerVerdict item={item} choiceId="drainage-limited" />)
+    expect(container.querySelector('p')?.textContent).toBe('That read holds')
+  })
+
+  it('replaces only the titles a caller supplies, and keeps the rest', () => {
+    const frames = {
+      best: 'That is the move to make first',
+      'incorrect-mechanism': 'That move answers a different problem',
+    } as const
+    for (const [choiceId, expected] of [
+      ['drainage-limited', 'That is the move to make first'],
+      ['membrane-clotting', 'That move answers a different problem'],
+      ['watch-longer', 'Defensible, but not the whole picture'],
+      ['raise-speed', 'Stopping here — this could harm a real patient'],
+    ] as const) {
+      const { container, unmount } = render(
+        <AnswerVerdict item={item} choiceId={choiceId} frames={frames} />,
+      )
+      expect(container.querySelector('p')?.textContent).toBe(expected)
+      unmount()
+    }
+  })
+
+  it('puts the frame after the outcome label when the outcome is stated', () => {
+    const { container } = render(
+      <AnswerVerdict
+        item={item}
+        choiceId="membrane-clotting"
+        outcome="stated"
+        frames={{ 'incorrect-mechanism': 'That move answers a different problem' }}
+      />,
+    )
+    expect(container.querySelector('p')?.textContent).toBe(
+      'Not correct. That move answers a different problem',
+    )
+  })
+})
+
 describe('AnswerVerdict timing policy', () => {
   it('reveals immediately in Learn', () => {
     const { container } = render(

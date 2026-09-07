@@ -1,5 +1,22 @@
 import { hemodynamicsSourceById, pacGuidedLearningItems, pacGuidedSkillIds } from '../content'
 
+/**
+ * Items the September 2026 learner-review round edited, and so no longer carry the subject-matter
+ * review they had: a distractor regraded from partly-correct to what it is, an absolute removed,
+ * a false claim rewritten as a wrong reading of a true situation. Each is listed in the module's
+ * learner-review record for the owner's eye; until that review, they are `draft`.
+ */
+const editedInLearnerReview = new Set([
+  'pac-pressure-predict-1',
+  'pac-pressure-transfer-1',
+  'pac-pawp-predict-1',
+  'pac-pawp-transfer-1',
+  'pac-td-predict-1',
+  'pac-td-transfer-1',
+  'pac-derived-predict-1',
+  'pac-derived-transfer-1',
+])
+
 describe('PAC guided clinical-learning items', () => {
   it('provides a distinct, sourced prediction and authored transfer variant for every skill', () => {
     const predictionStems = new Set<string>()
@@ -13,8 +30,11 @@ describe('PAC guided clinical-learning items', () => {
       expect(items.transfer.itemType).toBe('transfer-case')
       expect(items.transfer.transferVariantId).toBeTruthy()
       expect(items.transfer.clinicalContextId).not.toBe(items.prediction.clinicalContextId)
-      expect(items.prediction.reviewStatus).toBe('sme-review')
-      expect(items.transfer.reviewStatus).toBe('sme-review')
+      for (const item of [items.prediction, items.transfer]) {
+        expect(`${item.id}: ${item.reviewStatus}`).toBe(
+          `${item.id}: ${editedInLearnerReview.has(item.id) ? 'draft' : 'sme-review'}`,
+        )
+      }
 
       predictionStems.add(items.prediction.stem)
       transferVariantIds.add(items.transfer.transferVariantId!)
@@ -33,6 +53,20 @@ describe('PAC guided clinical-learning items', () => {
 
     expect(predictionStems.size).toBe(pacGuidedSkillIds.length)
     expect(transferVariantIds.size).toBe(pacGuidedSkillIds.length)
+  })
+
+  it('grades no false claim and no absolute as partly correct', () => {
+    for (const skillId of pacGuidedSkillIds) {
+      const items = pacGuidedLearningItems[skillId]
+      for (const item of [items.prediction, items.transfer]) {
+        for (const choice of item.choices) {
+          if (choice.plausibility !== 'reasonable-but-incomplete') continue
+          expect(`${item.id}/${choice.id}: ${choice.label}`).not.toMatch(
+            /\b(always|never|only|cannot|automatically|whenever|any curve shape|every tracing problem)\b/i,
+          )
+        }
+      }
+    }
   })
 
   it('does not use self-attestation as a transfer choice', () => {

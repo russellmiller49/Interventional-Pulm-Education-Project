@@ -184,6 +184,8 @@ export function WaveformRecognitionDrill({
             {isCorrect ? 'Pattern identified.' : `This is ${answer.label.toLowerCase()}.`}
           </strong>
           <p>{answer.summary}</p>
+          {/* The cues are a list, and say so: the same heading the atlas panel gives them. */}
+          <h4>What identifies it</h4>
           <ul>
             {answer.recognitionCues.map((cue) => (
               <li key={cue}>{cue}</li>

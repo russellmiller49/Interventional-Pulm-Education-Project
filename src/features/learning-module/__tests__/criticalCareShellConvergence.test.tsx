@@ -48,6 +48,8 @@ describe('critical-care shared shell convergence', () => {
       'src/features/mechanical-circulatory-support/components/mechanical-circulatory-support.module.css',
       'src/features/cardiohelp-ecmo/components/cardiohelp-ecmo.module.css',
       'src/features/baxter-crrt/components/baxter-crrt.module.css',
+      'src/features/mechanical-ventilation/components/mechanical-ventilation-module.module.css',
+      'src/features/icu-hemodynamics/components/stage/hemodynamics-stage.module.css',
     ]) {
       const moduleStyles = readFileSync(join(process.cwd(), path), 'utf8')
       expect(moduleStyles).toMatch(

@@ -377,7 +377,8 @@ const capstone: HemodynamicsSectionItems = {
       },
       {
         id: 'level-and-zero',
-        label: 'Re-level and re-zero the transducer, since every tracing problem starts there.',
+        label:
+          'Re-level and re-zero the transducer first; the reference is checked before anything else on a line.',
         rationale:
           'Level and zero shift the whole tracing and change no shape. A rounded upstroke and a lost peak are a shape change, which those two checks cannot produce or repair.',
         plausibility: 'reasonable-but-incomplete',

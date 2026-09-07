@@ -3,18 +3,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
 
-import { useCriticalCareActivityAnalytics } from '@/features/learning-module/activity'
+import {
+  useCriticalCareActivityAnalytics,
+  type ClinicalLearningItem,
+} from '@/features/learning-module/activity'
 import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdict'
 import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
+import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { ContextStrip, type ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
 import { StageLayout } from '@/features/learning-module/stage/StageLayout'
-import { STAGE_PHASE_LABELS } from '@/features/learning-module/stage/stageModel'
+import {
+  STAGE_PHASE_LABELS,
+  compactPaneForLocation,
+  type StagePaneId,
+} from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
 import { StageSourcesScope } from '@/features/learning-module/stage/StageSourcesScope'
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -29,7 +37,7 @@ import {
 } from '../../content/pawpCaptureSequence'
 import { hemodynamicsPathway } from '../../content/pathwayResolver'
 import { isOffMapTarget } from '../../content/mapAnswerTargets'
-import { routeStop, type RouteStopId } from '../../content/routeSpine'
+import { routeStop, routeStopNumber, type RouteStopId } from '../../content/routeSpine'
 import { hemodynamicsPracticePairing } from '../../content/sectionSpecs'
 import { hemodynamicsStageLesson, type HemodynamicsStageStep } from '../../content/stageLessons'
 import { hemodynamicsStageSources } from '../../content/stageSources'
@@ -119,6 +127,74 @@ const STOP_FOR_POSITION: Readonly<Record<CatheterPosition, RouteStopId | null>> 
   rv: 'rv',
   pa: 'pa',
   wedge: 'wedge',
+}
+
+/*
+ * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
+ * for, and the simulator kept the widest of the three.
+ *
+ * The stage was promoted with the simulator first and the steps last, and with no visible pane
+ * names at all. A learner review of the ECMO module in September 2026 asked for the prompts and
+ * questions on the left "for a more natural read", and reported guessing which of three unnamed
+ * panes each instruction meant; the same shape was here, with one more cost: a compact viewport
+ * opens on the first pane, which was a monitor over a locked dock while the answer control sat in
+ * the pane it could not show. The monitor is never scaled, so the fractions keep the simulator the
+ * widest pane whatever end of the row it sits at, and the drag floors follow the content across the
+ * slots rather than staying with the slot numbers. Recorded in the module's learner-review record.
+ */
+const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
+const PANE_CAPTIONS = {
+  steps: 'what to do',
+  teaching: 'what to read',
+  simulator: 'the monitor, the controls and the catheter map',
+} as const
+const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
+const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
+
+/**
+ * The verdict's title, for the items that ask for a decision rather than a read.
+ *
+ * The shared card's titles were written for signal-recognition items — "That read holds", "That
+ * mechanism predicts a different pattern" — and most of this module's items are reads. Its
+ * management decisions are not: which move comes first, which sequence, whether to accept a curve.
+ * Under those, "that mechanism predicts a different pattern" heads a verdict about a move, so the
+ * decision-shaped items carry their own titles. An unsafe choice keeps the card's own words.
+ */
+const DECISION_FRAMES = {
+  best: 'That is the move to make first',
+  'reasonable-but-incomplete': 'Defensible, but it leaves a step out',
+  'incorrect-mechanism': 'That move answers a different problem',
+} as const
+
+/** Transfer items whose stem asks for a move rather than a read; the type says only "transfer". */
+const DECISION_SHAPED_TRANSFERS: ReadonlySet<string> = new Set([
+  'hd-capstone-transfer-1',
+  'hd-advance-transfer-1',
+  'pac-pawp-transfer-1',
+  'pac-td-transfer-1',
+])
+
+function verdictFrames(item: ClinicalLearningItem) {
+  return item.itemType === 'management-decision' || DECISION_SHAPED_TRANSFERS.has(item.id)
+    ? DECISION_FRAMES
+    : undefined
+}
+
+const POSITION_WORDS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'] as const
+const COUNT_WORDS = ['one', 'two', 'three', 'four', 'five', 'six'] as const
+
+/**
+ * Where a walk stands, in words rather than as a second counter.
+ *
+ * The walk card names its stop by the number the catheter map prints on it, and a "Stop 1 of 4"
+ * beside a card headed "Stop 2 · Right atrium" is two numberings for one place on one screen. So
+ * the walk's position is said in words, and the only number on the card is the map's.
+ */
+function walkPositionWords(index: number, total: number): string {
+  if (total <= 1) return 'The only stop in this walk.'
+  const position = index >= total - 1 ? 'Last' : (POSITION_WORDS[index] ?? `Stop ${index + 1}`)
+  const count = COUNT_WORDS[total - 1] ?? String(total)
+  return `${position} of ${count} stops in this walk.`
 }
 
 function HemodynamicsStageSession({
@@ -351,7 +427,7 @@ function HemodynamicsStageSession({
       : activeStep.stops
 
   const mapCaption = walkStop
-    ? `You are here: ${routeStop(walkStop).title.toLowerCase()}. Stop ${walkStopIndex + 1} of ${interaction.kind === 'walk' ? interaction.stops.length : 0}.`
+    ? `You are here: ${routeStop(walkStop).title.toLowerCase()}. ${walkPositionWords(walkStopIndex, interaction.kind === 'walk' ? interaction.stops.length : 0)}`
     : locationItem && !locationCommitted
       ? 'Where is the tip? Choose a place below.'
       : interaction.kind === 'simulator-task' &&
@@ -418,6 +494,18 @@ function HemodynamicsStageSession({
           hint: 'After each move, wait for the tracing to settle, then confirm the place it says. A place is confirmed only when the tracing matches it.',
         }
       : undefined
+
+  /*
+   * Which pane a compact viewport opens on for this step.
+   *
+   * A map-answered step's only answer control is the set of pins on the catheter map, in the
+   * simulator pane, and at a compact width exactly one pane is on screen — so that step opens
+   * there whatever its authored location says. Everything else follows the location the Now card
+   * prints, so the pane the learner is sent to is the pane they are shown.
+   */
+  const compactPane: StagePaneId = locationItem
+    ? 'simulator'
+    : compactPaneForLocation(activeStep.lookIn)
 
   /* ---------------------------------------------------------------- *
    * Goals, spotlight
@@ -488,6 +576,14 @@ function HemodynamicsStageSession({
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+  /*
+   * Where this step's work is done, said in the same words the pane caption carries.
+   *
+   * One line, under the instruction, on every step; the help dialog repeats it. The lessons
+   * registry refuses at import to author a step without a location, so the caption on the pane
+   * and the line on the card cannot drift apart.
+   */
+  const lookInLine = activeStep.lookIn ? <LookInLine location={activeStep.lookIn} /> : undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
   const showWhereAction =
@@ -509,6 +605,7 @@ function HemodynamicsStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
+      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
@@ -547,7 +644,7 @@ function HemodynamicsStageSession({
         const last = walkStopIndex >= interaction.stops.length - 1
         return {
           ...base,
-          status: `Stop ${walkStopIndex + 1} of ${interaction.stops.length}.`,
+          status: walkPositionWords(walkStopIndex, interaction.stops.length),
           primary: {
             label: last ? 'Finish the walk' : 'Next stop',
             onActivate: () => {
@@ -669,8 +766,28 @@ function HemodynamicsStageSession({
    * The Now card's body
    * ---------------------------------------------------------------- */
   const nowBody: ReactNode = (() => {
-    if (lookingBack)
+    if (lookingBack) {
+      /*
+       * Looking back at a committed prediction shows the verdict again — the rationale, the
+       * distinction and the other answers — rather than a one-line "You chose". The reasoning is
+       * what a learner goes back for.
+       */
+      const committedId =
+        interaction.kind === 'prediction' ? commitments.choices[activeStep.id] : undefined
+      if (interaction.kind === 'prediction' && committedId) {
+        return (
+          <AnswerVerdict
+            item={interaction.item}
+            choiceId={committedId}
+            outcome="stated"
+            timing="immediate-after-commit"
+            theme="dark"
+            frames={verdictFrames(interaction.item)}
+          />
+        )
+      }
       return <StepRecap step={activeStep} lesson={lesson} commitments={commitments} state={state} />
+    }
     switch (interaction.kind) {
       case 'walk': {
         if (commitments.walkDone || !walkStop) return null
@@ -678,7 +795,7 @@ function HemodynamicsStageSession({
         return (
           <section className={styles.walk} data-walk-stop={stop.id} aria-label={stop.title}>
             <p className={styles.kicker}>
-              Stop {stop.ordinal} · {stop.title}
+              Stop {routeStopNumber(stop.id)} · {stop.title}
             </p>
             <p className={styles.analogy}>{stop.analogy}</p>
             <dl>
@@ -693,7 +810,20 @@ function HemodynamicsStageSession({
                 </dd>
               </div>
             </dl>
-            <ul>
+            {/*
+              The short list, with the label that says what kind of list it is. It rendered as
+              four bare lines with the marker reset away, under a definition list, so it read as
+              more prose. The label is authored per stop, because the five lists are not all the
+              same kind of thing.
+            */}
+            <p
+              className={styles.kicker}
+              id={`${activeStep.id}-walk-checklist`}
+              data-walk-checklist-label
+            >
+              {stop.checklistLabel}
+            </p>
+            <ul aria-labelledby={`${activeStep.id}-walk-checklist`} data-walk-checklist>
               {stop.checklist.map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -711,6 +841,7 @@ function HemodynamicsStageSession({
               outcome="stated"
               timing="immediate-after-commit"
               theme="dark"
+              frames={verdictFrames(interaction.item)}
             />
           )
         }
@@ -848,8 +979,8 @@ function HemodynamicsStageSession({
             {goals.some((goal) => goal.type === 'reassessed') ? (
               <div className={styles.returnCheck} data-reassess>
                 <p>
-                  <strong>Reassess.</strong> Read the corrected pressures, the series and the
-                  bedside picture together, as one set, before anything on the screen is believed
+                  <strong>Reassess.</strong> Read the corrected pressures and the series against a
+                  patient who has not changed, as one set, before anything on the screen is believed
                   again.
                 </p>
                 <button
@@ -920,25 +1051,36 @@ function HemodynamicsStageSession({
         const predictionStep = lesson.steps.find(
           (s) => s.interaction.kind === 'prediction' && s.interaction.round === round,
         )
-        const chosen =
+        const predictionItem =
           predictionStep && predictionStep.interaction.kind === 'prediction'
-            ? predictionStep.interaction.item.choices.find(
-                (c) => c.id === commitments.choices[predictionStep.id],
-              )
+            ? predictionStep.interaction.item
             : undefined
+        const chosenId = predictionStep ? commitments.choices[predictionStep.id] : undefined
         const before = snapshots[`before:${round}`]
         const after = snapshots[`after:${round}`]
         return (
           <>
-            {chosen ? (
-              <p
-                className={stageStyles.taskInstruction}
-                data-explain-recap
-                data-verdict-outcome={chosen.plausibility === 'best' ? 'correct' : 'not-correct'}
-              >
-                <strong>{chosen.plausibility === 'best' ? 'Correct.' : 'Not correct.'}</strong> You
-                predicted: {chosen.label}
-              </p>
+            {/*
+              The prediction's verdict, again, in full.
+
+              Several Explain instructions begin "Read the reasoning" or "Read what changed and
+              why", and this step used to render one line — "Correct. You predicted: …" — with
+              the reasoning two steps back on a card the learner had left. The verdict is the
+              reasoning: the rationale, how to distinguish it, and why the other answers do not
+              fit. It comes first, so the instruction's first sentence is the first thing on the
+              card.
+            */}
+            {predictionItem && chosenId ? (
+              <div data-explain-recap>
+                <AnswerVerdict
+                  item={predictionItem}
+                  choiceId={chosenId}
+                  outcome="stated"
+                  timing="immediate-after-commit"
+                  theme="dark"
+                  frames={verdictFrames(predictionItem)}
+                />
+              </div>
             ) : null}
             {lesson.runtime.comparison === 'ventricle-artery' ? (
               <VentricleArtery state={state} />
@@ -971,12 +1113,24 @@ function HemodynamicsStageSession({
     { label: 'Balloon', value: state.catheter.balloonInflated ? 'up' : 'down' },
   ]
 
-  const controlsEnabled =
-    !(interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined) &&
-    !lookingBack
-  const lockedReason =
+  /*
+   * Whether the docks can be operated, and the line on the simulator that says why not.
+   *
+   * Both notes are derived from the same two predicates that disable the docks, so the simulator
+   * cannot go dead without saying so. It used to: the note covered the locked prediction and not
+   * the look-back, so a learner who pressed Back met greyed controls and nothing on the simulator
+   * explaining them. The monitor's own alarm acknowledgement stays live in both states, and
+   * neither note claims otherwise.
+   */
+  const deciding =
     interaction.kind === 'prediction' && commitments.choices[activeStep.id] === undefined
-      ? 'The controls are locked while you decide. Commit your answer to take them.'
+  const controlsEnabled = !deciding && !lookingBack
+  const lockedReason = deciding
+    ? 'The controls are locked while you decide. Commit your answer to take them.'
+    : undefined
+  const pausedReason =
+    !deciding && lookingBack
+      ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
       : undefined
 
   const extraSurface: ReactNode = (() => {
@@ -1046,9 +1200,11 @@ function HemodynamicsStageSession({
       state={state}
       dispatch={dispatch}
       surface={activeStep.surface}
+      anatomy={activeStep.anatomy}
       flushLine={activeStep.flushLine}
       controlsEnabled={controlsEnabled}
       lockedReason={lockedReason}
+      pausedReason={pausedReason}
       chamberLabel={activeStep.chamberLabel}
       stops={stops}
       mapCaption={mapCaption}
@@ -1182,6 +1338,7 @@ function HemodynamicsStageSession({
         <strong>{activeStep.title}</strong>
       </p>
       <p>{activeStep.instruction}</p>
+      {lookInLine ? <p>{lookInLine}</p> : null}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       {showWhereAction ? (
         <button
@@ -1209,12 +1366,17 @@ function HemodynamicsStageSession({
           stageId={activeStep.id}
           label="Guided ICU hemodynamics section"
           module="icu-hemodynamics"
-          workspaceLabel="Hemodynamics lesson workspace: monitor, teaching, and steps"
+          workspaceLabel="Hemodynamics lesson workspace: steps, teaching, and simulator"
           header={header}
           contextStrip={<ContextStrip items={contextItems} badge="Simulated values" />}
           simulator={simulator}
           teaching={teaching}
           task={task}
+          paneOrder={PANE_ORDER}
+          paneCaptions={PANE_CAPTIONS}
+          defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+          paneMinimums={PANE_MINIMUMS}
+          compactPane={compactPane}
           footer={
             <>
               <p className={shellStyles.footerLine}>
@@ -1277,6 +1439,7 @@ function CommitmentBlock({
           outcome="stated"
           timing="immediate-after-commit"
           theme="dark"
+          frames={verdictFrames(item)}
         />
       ) : (
         <>

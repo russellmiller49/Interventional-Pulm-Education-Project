@@ -8,6 +8,11 @@ Branch `claude/hemodynmaics-9-5`, cut from `origin/main` at `119a3d08` (the merg
 rebuild) with the open H5 derived-hemodynamics branch merged in first (`fc91c4c5`) so the derive
 section is built on the canonical metric model rather than forking it. Dated 2026-09-05.
 
+**Amended 2026-09-07** by [`hemodynamics-learner-review-record.md`](./hemodynamics-learner-review-record.md):
+HLR-OD-1 reorders the panes to Steps, Teaching, Simulator (§2 describes three panes without an
+order; §6 measured Simulator, Teaching, Steps as the surface stood), and HLR-OD-4 edits eight of
+the H0–H5 items §5 says are used as authored, which are `draft` until reviewed again.
+
 ---
 
 ## 1. What changed, by commit
@@ -189,7 +194,9 @@ behaviours live in `learning-module/components/__tests__/AnswerVerdict.test.tsx`
   Learn pathway teaches measurement validity; Practice applies phenotypes the Learn layer does not
   teach, which the plan records as an H6 package with its own sources.
 - The 3D heart on the stage. The catheter map is where answers go; a drawing the preview pane
-  cannot verify would be a second map.
+  cannot verify would be a second map. **Amended 2026-09-07:** the owner asked for it back on the
+  advancement and wedge sections, where it sits beneath the docks as a teaching model — not an answer surface — and
+  loads only there; see the learner-review record.
 - Re-pointing the ECMO module at `learning-module/stage/`.
 - The inline citation lists inside the folded deeper-reference panels (the method model, the
   derived records, the troubleshooting atlas) — they cite what they say when they stand alone, and

@@ -39,7 +39,7 @@
   padding: 0.1rem 0.5rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 999px;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -52,7 +52,7 @@
 }
 
 .caption[data-empty='true'] {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-weight: 500;
 }
 
@@ -71,7 +71,7 @@
 }
 
 .label {
-  fill: var(--muted, #9fb4b7);
+  fill: var(--stage-muted, #9fb4b7);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -193,7 +193,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .legend li {
@@ -233,7 +233,7 @@
 
 .hint {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .option {
@@ -275,6 +275,12 @@
   outline-offset: 2px;
 }
 
+/* Under the pointer, a row and a pin say they can be chosen; a settled answer does not. */
+.answer:not(:disabled) .option:hover {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.08);
+}
+
 .number {
   display: inline-flex;
   flex: none;
@@ -296,7 +302,7 @@
 
 .outcome {
   margin-left: auto;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-weight: 700;
 }
 
@@ -320,6 +326,10 @@
 .pin[data-selected='true'] {
   background: var(--cyan-bright, #71e1e5);
   color: #04211f;
+}
+
+.pin:hover:not([data-disabled='true']) {
+  box-shadow: 0 0 0 4px rgba(113, 225, 229, 0.3);
 }
 
 .pin[data-disabled='true'] {
