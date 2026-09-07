@@ -85,16 +85,27 @@ export function TextEquivalent({ children }: { readonly children: ReactNode }) {
   )
 }
 
-/** What this visual simplifies, stated where the learner can read it. */
+/**
+ * What this visual simplifies — reachable, and out of the default read.
+ *
+ * Every boundary in this module used to print in full beside the thing it bounds, and there are
+ * something like a dozen of them on the teaching surfaces. A learner review in September 2026:
+ * "there's a lot of references throughout the module to the 'model boundary'. I'm not exactly sure
+ * what that adds to the module for the learner, so can this be removed or made into a button that
+ * is accessible but not visible without someone clicking on it?"
+ *
+ * Made into the button, not removed. What a simulation does not represent is a claim the module is
+ * obliged to make, and `content/derivedValueGuides.ts` requires one on every guide — but a claim
+ * the learner may open is still made, and one they must read past on the way to the teaching is
+ * paid for in attention on every card. The text is unchanged and stays in the DOM whether the
+ * disclosure is open or shut, so the rendered leak scans still see it.
+ */
 export function ModelBoundary({ children }: { readonly children: ReactNode }) {
   return (
-    <p
-      className="mt-3 rounded-xl border border-dashed px-3 py-2 text-xs leading-5"
-      data-model-boundary
-    >
-      <span className="font-semibold">Model boundary. </span>
-      {children}
-    </p>
+    <details className="mt-3 rounded-xl border border-dashed px-3 py-2 text-xs" data-model-boundary>
+      <summary className="cursor-pointer font-semibold leading-5">Model boundary</summary>
+      <p className="mt-1 leading-5">{children}</p>
+    </details>
   )
 }
 

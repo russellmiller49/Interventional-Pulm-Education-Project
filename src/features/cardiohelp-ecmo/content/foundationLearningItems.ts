@@ -173,7 +173,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         itemType: 'transfer-case',
         transferVariantId: 'ecmo.foundation.path.transfer-variant',
         contextRequirement: 'context-independent',
-        stem: 'Over an hour, pInt and pArt have both risen by a similar amount while the gradient between them is little changed and blood flow has drifted down. Which part of the circuit does that pattern indicate?',
+        stem: 'Over an hour, pInt and pArt have both risen by a similar amount while the gradient between them is little changed and blood flow has drifted down. Which part of the circuit does that pattern point to as the problem?',
         choices: [
           {
             id: 'return-side',

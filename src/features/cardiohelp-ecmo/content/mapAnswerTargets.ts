@@ -54,7 +54,7 @@ const TARGETS: Readonly<Record<string, readonly EcmoMapAnswerTarget[]>> = {
     { choiceId: 'after-membrane', segmentId: 'post-membrane' },
     { choiceId: 'in-the-gas-path', segmentId: 'gas-supply' },
   ]),
-  // "Which part of the circuit does that pattern indicate?" — two pressures rising together.
+  // "Which part of the circuit does that pattern point to as the problem?" — two pressures rising.
   'ecmo.foundation.path.transfer': Object.freeze([
     { choiceId: 'drainage', segmentId: 'drainage' },
     { choiceId: 'membrane', segmentId: 'membrane' },

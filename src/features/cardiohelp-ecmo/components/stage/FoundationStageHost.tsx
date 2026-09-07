@@ -67,6 +67,7 @@ import {
 import { FoundationStoryProblems } from './FoundationStoryProblems'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
+import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
@@ -239,6 +240,7 @@ function FoundationStageSession({
 
   useEffect(() => {
     nowFocusRef.current?.focus({ preventScroll: true })
+    scrollTaskPaneToTop(nowFocusRef.current)
   }, [activeStep.id])
 
   useEffect(() => {
@@ -810,8 +812,8 @@ function FoundationStageSession({
                 {item.stem}
               </p>
               <p>
-                Choose the place on the circuit map. The four candidates are pinned on the drawing
-                and named under it.
+                Choose the place on the circuit map in the Simulator panel. Four places are numbered
+                on the drawing, and the same numbers label the choices.
               </p>
               {selectedChoiceId ? (
                 <p data-map-answer-chosen>
