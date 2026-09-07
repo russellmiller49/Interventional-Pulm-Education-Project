@@ -184,9 +184,116 @@ it stays expanded on every step.
 7. **Finish with the rubric**, section 5 in particular — instruction/surface coherence, which this
    round added.
 
+## The runnable prompt
+
+One template, four fills. It is written to be pasted whole into a fresh session in the worktree
+named at the top, and it reproduces the ECMO round's _format_, not only its fixes: confirm before
+changing, one commit per cluster with the suite green at each, decisions recorded where the module
+already records them, and an honest list of what was left.
+
+The source material is on `claude/ecmo-learner-feedback`. Every `git show` below works from any
+worktree of this repo without switching branches — worktrees share one object store, and the branch
+is pushed, so `git fetch origin` also gets it into a fresh clone. Once it merges, drop the
+`claude/ecmo-learner-feedback:` prefix and read the paths directly.
+
+```
+You are working on <MODULE PATH> in this worktree, applying the ECMO learner-review round to it.
+
+── STEP 0 · READ FIRST, EDIT NOTHING ──────────────────────────────────────────────────────────
+The source material is on a local branch that is not on main. Worktrees share refs, so read it from
+here without switching branches:
+
+  git show claude/ecmo-learner-feedback:docs/critical-care/learner-review-cross-module-brief.md
+  git show claude/ecmo-learner-feedback:docs/cardiohelp-ecmo/redesign/r5-learner-review-record.md
+  git log --oneline origin/main..claude/ecmo-learner-feedback
+  git show claude/ecmo-learner-feedback -- src/features/cardiohelp-ecmo src/features/learning-module
+
+The brief carries seventeen findings (F1–F12, X1–X5), an audit of THIS module against every one of
+them with file:line evidence and an effort estimate, and this module's own section. The five ECMO
+`feat(ecmo)`/`fix(ecmo)` commits are the worked example — read the diffs, not just the messages.
+
+Also load the `medical-education-modules` skill. Principle 13 / pattern P9 "Say where" is the rule
+these findings are instances of, and the rubric's section 5 is what you finish on.
+
+── STEP 1 · BRANCH ────────────────────────────────────────────────────────────────────────────
+  git fetch origin && git switch -c claude/<short-task> origin/main
+Run `npm ci` only if node_modules is stale. Record the test baseline before touching anything:
+  npx jest <MODULE PATH>
+  npx jest src/features/learning-module src/features/critical-care
+
+── STEP 2 · CONFIRM, DO NOT REDO ──────────────────────────────────────────────────────────────
+The audit was read on 2026-09-06 and the modules move. Confirm — with file:line — only the findings
+you are about to touch, and say where the code has drifted. Where the brief and the code disagree,
+the code wins; say so rather than quietly following the brief.
+
+The brief's own appendix names four places its authors got something wrong, including a quoted
+on-screen string that does not exist. Treat every quote as a claim to check, not a fact.
+
+Report the confirmation BEFORE editing. If a finding turns out not to apply, say so and drop it —
+a shorter honest pass beats a manufactured one.
+
+── STEP 3 · FIX, IN CHUNKS THAT PASS ──────────────────────────────────────────────────────────
+One commit per finding cluster, both suites above green at each. Order:
+  1. anything shared (`src/features/learning-module/**`) — it reaches four modules, so it lands
+     first, with every addition optional and defaulted so existing callers are byte-identical;
+  2. this module's own code;
+  3. this module's authored content.
+
+Rules the ECMO round was held to, and you are too:
+  · A fix that collides with a recorded decision AMENDS that record in the same commit — never
+    edits around it. Check `docs/critical-care/` and the module's own docs before assuming nothing
+    is recorded. Check also whether a recorded decision's guard still exists; one of them names a
+    test that a later rebuild deleted.
+  · New learner-facing copy passes this repo's copy lints. There are several, with different
+    matching rules, and some registries validate at IMPORT so a bad string throws before any
+    assertion runs. Find them before writing copy, not after.
+  · Do not renumber, rename or reorder anything a test or a record pins, without saying so.
+
+── STEP 4 · VERIFY ────────────────────────────────────────────────────────────────────────────
+Tests are necessary and not sufficient. The critical-care routes are public-unlisted, so a dev
+server reaches them: start the worktree's own entry from .claude/launch.json and walk the surface
+you changed. A client-side reload bounces to /sign-in — navigate instead.
+
+If you touched layout, re-measure at every width this module has a recorded validation for, and
+report the table: elements overflowing their pane (must be 0), document horizontal scroll (0), and
+which pane is widest. Measure the computed style rather than assuming a rule applies — one ECMO
+declaration turned out to be inert.
+
+Finish on the skill's review rubric, section 5.
+
+── STEP 5 · RECORD ────────────────────────────────────────────────────────────────────────────
+Write a record beside this module's existing docs, in the shape of
+`docs/cardiohelp-ecmo/redesign/r5-learner-review-record.md`:
+  · what was reported or found, and what shipped against each — a table, one row per finding;
+  · each decision that changed, numbered, with the quoted prior decision it amends;
+  · what you deliberately did NOT fix, with the file:line, so it is a next round's list rather
+    than a rediscovery;
+  · anything that needs the owner: content they authored verbatim, a scoring or contract change,
+    a question you could not settle from the code.
+
+── WHAT TO HAND BACK ──────────────────────────────────────────────────────────────────────────
+The commits, the before/after test counts, the width table if layout moved, and a plain list of
+what you left undone and why. If you found something worse than the findings you were sent for —
+the cross-module audit found three — lead with that.
+```
+
+### The four fills
+
+| Worktree                                          | Branch to start from                                 | `<MODULE PATH>`                                                | Read first                                                                                 |
+| ------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `…-Worktrees/codex-mechanical-ventilation-update` | `origin/main` (its current branch is already merged) | `src/features/mechanical-ventilation`                          | brief §1 + §0 — MV is the only adopter of the shared stage, so it does the shared work too |
+| `…-Worktrees/claude-mec-circ-9-5`                 | `origin/main` (37 behind)                            | `src/features/mechanical-circulatory-support`                  | brief §2 — and fix the key-position defect first, it is one import                         |
+| `…-Worktrees/claude-hemodynmaics-9-5`             | `origin/main` (1 behind)                             | `src/features/icu-hemodynamics`                                | brief §3 — decide converge-or-patch on its private workspace copy before anything else     |
+| no worktree yet                                   | `origin/main`                                        | `src/features/baxter-crrt`, then `src/features/icu-simulation` | brief §4 — create a worktree, or run it from the primary checkout                          |
+
+Two notes on sequencing. MV should do the shared `learning-module/stage` work as part of its own
+round, because it is the only adopter and nobody else can test it. And MCS, hemodynamics and CRRT
+each carry an item-quality finding that is worth its own commit ahead of any layout work — those
+are the ones that make completion data mean something.
+
 ## Per-module prompts
 
-Each is written to be pasted whole into a fresh session in the right worktree. The audit has already
+The fuller, module-specific versions the template's "Read first" column points at. Each is written to be pasted whole into a fresh session in the right worktree. The audit has already
 been done — the appendix at the end of this file carries each module's status for all seventeen, with
 file:line evidence — so a session's job is to confirm the handful it is about to touch, not to redo
 the sweep. Where the appendix and the code disagree, the code wins: these were read on
