@@ -233,12 +233,14 @@ What is already known about this module's shape:
   (recognizeInstruction, introduction, look, task) rather than authored per phase, so F2's
   "author the location as data on the step" means adding it where those steps are built, and
   auditing each generated sentence for whether it names a surface.
-- Nothing pins MV's pane order any more. The rebuild deleted the old learn-workspace test that
-  asserted "the live, teaching, action pane order", and no current test reads `data-pane` in this
-  module — the only trace of the order is the workspaceLabel string at
-  components/stage/VentilationStageHost.tsx:1115 and the shared StageLayout's own markup. So the
-  order is changeable without breaking anything, which means it is your judgement to make and to
-  record, not a test's.
+- MV's pane order is a recorded decision whose guard has been deleted. docs/critical-care/
+  mv-d2-standard-laptop-workspace.md:68 states "The conceptual order — live ventilator/waveforms →
+  teaching explanation → learner action — is unchanged", and that document's own traceability table
+  (:237) names `__tests__/learn-workspace.test.tsx` as what enforces it — a file PR #127 deleted. No
+  current MV test reads `data-pane`. So the order is now changeable without breaking anything while
+  still being a decision on the record: do not flip it because it is easy to, and if it should
+  change, amend D2 in the same commit and give it a guard again. ECMO's R5-OD-1 does NOT transfer
+  automatically.
 
 Then fix, one commit per finding cluster, MV's full suite green at each, and re-measure the widths
 D2 validated. Amend the D2 record in the same change if you move any of them.
