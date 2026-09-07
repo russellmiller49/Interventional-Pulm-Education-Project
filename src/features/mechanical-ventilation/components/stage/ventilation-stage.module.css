@@ -478,9 +478,14 @@
   list-style: none;
 }
 
+/*
+ * The text column is `minmax(0, 1fr)`, not `1fr`: a `1fr` track's floor is its content's
+ * min-content width, and with the no-wrap pill beside it the row's min-content reached 300px —
+ * which sized the whole teaching column's track, 37px wider than a 1024-wide viewport's pane.
+ */
 .strip li {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.2rem 0.6rem;
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
