@@ -22,6 +22,13 @@ export interface NowCardModel {
   readonly kicker: string
   readonly heading: string
   readonly body?: string
+  /**
+   * Where on the stage this step is worked, rendered directly under the instruction.
+   *
+   * Usually a `LookInLine` over the step's authored location: "Where to look: Teaching panel —
+   * Circuit walk." Optional so a caller that has not adopted locations renders exactly as before.
+   */
+  readonly where?: ReactNode
   readonly primary?: NowCardAction
   readonly secondary?: NowCardAction
   /** A single line of state the learner is waiting on. */
@@ -78,6 +85,11 @@ export function NowCard({
         {model.heading}
       </h2>
       {model.body ? <p className={styles.nowBody}>{model.body}</p> : null}
+      {model.where ? (
+        <p className={styles.nowWhere} data-now-where>
+          {model.where}
+        </p>
+      ) : null}
       {children}
       {model.status ? (
         <p className={styles.nowStatus} data-now-status>

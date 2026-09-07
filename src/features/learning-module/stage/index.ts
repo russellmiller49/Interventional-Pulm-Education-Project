@@ -9,7 +9,14 @@ export { StageSourcesScope, useStageSourcesCollected } from './StageSourcesScope
 export { StageSourcesFooter } from './StageSourcesFooter'
 export { SectionsDrawer } from './SectionsDrawer'
 export { StepList } from './StepList'
-export { StageLayout } from './StageLayout'
+export {
+  StageLayout,
+  DEFAULT_STAGE_PANE_ORDER,
+  stagePaneSlot,
+  type StagePaneCaptions,
+  type StagePaneOrder,
+} from './StageLayout'
+export { LookInLine } from './LookInLine'
 export {
   StageTeachingScope,
   useStageTeachingScope,

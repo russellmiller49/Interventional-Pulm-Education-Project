@@ -68,6 +68,33 @@
  * Panes
  * ------------------------------------------------------------------ */
 
+/*
+ * The pane's own name, printed on it — only when the caller passes a caption.
+ *
+ * Sticky, so the answer to "which panel is this?" is on screen wherever the pane is scrolled to,
+ * which is the state a learner is in when a step tells them to read something and they are three
+ * screens down. Quiet enough not to compete with the pane's first heading. The background is the
+ * workspace's own, so the text the pane scrolls under it does not show through.
+ */
+.paneLabel {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0;
+  padding: 0.3rem 0.1rem 0.35rem;
+  border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  background: #061519;
+  color: var(--muted, #9fb4b7);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.paneLabel span {
+  color: var(--ink, #eaf4f4);
+}
+
 .simulatorPane,
 .teachingColumn,
 .taskColumn {

@@ -415,6 +415,21 @@
   line-height: 1.55;
 }
 
+/*
+ * The step's location line: quieter than the instruction it follows, louder than a caption.
+ * The pane names inside it are the emphasised half, because the pane name is what the learner is
+ * matching against the caption printed on the pane.
+ */
+.nowWhere {
+  margin: 0;
+  color: var(--stage-muted);
+  font-size: var(--stage-type-floor);
+}
+
+.nowWhere strong {
+  color: var(--stage-ink);
+}
+
 .nowActions {
   display: flex;
   flex-wrap: wrap;
