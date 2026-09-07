@@ -363,13 +363,13 @@ Audit src/features/mechanical-circulatory-support against F1-F12 and X1-X5, repo
 file:line evidence before changing anything.
 
 What is already known:
-- components/McsLearnSection.tsx calls ResizableTeachingWorkspace directly (not the shared stage
-  package), with paneLabels { primary: 'Live anatomy' | 'Live monitor', secondary: 'Teaching',
-  tertiary: <action pane> } — the same three-pane shape ECMO had, so F1 and F2 apply as stated and
-  the panes have no visible names.
-- Its Learn was taken from the MV branch, so it is worth checking whether adopting the shared stage
-  package is cheaper than fixing McsLearnSection in place. Report which, with the reasoning; do not
-  start a migration without bringing that back first.
+- SUPERSEDED as of PR #126: MCS is now ON the shared stage. `McsLearnSection` is retired and
+  `components/stage/McsStageHost.tsx` renders `StageLayout`. So the converge-or-patch question is
+  already answered, F1/F2/F3 are shared-package work (prompt 0), and the key-position defect the
+  audit found is fixed — `McsStageHost.tsx:642` applies `orderChoices`. Re-audit the layout findings
+  against the new host before acting on the appendix's MCS rows.
+- Still live and still MCS's own: the authored key-first order in `content/sectionLearningContracts.ts`
+  (cosmetic now, but misleading to read), and F12.
 - It renders ChoiceReasoningFeedback, so F10 (does the card show the other answers' rationales when
   an instruction promises them?) and F12 (pass `frames`) are both live.
 ```
@@ -383,14 +383,14 @@ Audit src/features/icu-hemodynamics against F1-F12 and X1-X5, reporting status w
 evidence before changing anything.
 
 What is already known:
-- It does NOT use the shared workspace. components/ResizablePacWorkspace.tsx is its own copy — the
-  one the shared ResizableTeachingWorkspace was generalized FROM — with its own preferredMinimums,
-  its own COMPACT_WORKSPACE_THRESHOLD_PX, its own compactPane state defaulting to 'monitor', and
-  panes named Monitor / Anatomy / Activity. So F1 and the compact-width findings have to be fixed
-  in its copy, and the three optional props the shared component now has do not exist here.
-- The first question to answer is therefore whether to converge it onto the shared component
-  instead of fixing the copy. Weigh what its copy does that the shared one does not (read both in
-  full) and report the recommendation with evidence; do not migrate without bringing it back.
+- PARTLY SUPERSEDED as of PR #125: hemodynamics now has `components/stage/HemodynamicsStageHost.tsx`
+  rendering the shared `StageLayout` and applying `orderChoices`. But `ResizablePacWorkspace.tsx` —
+  its own copy of the workspace, with its own minimums, its own compact threshold and its own
+  compactPane defaulting to 'monitor' — SURVIVES and is still referenced by
+  `HemodynamicNativeWorkspace.tsx`. Establish which surface each finding is on before acting: the
+  layout findings are prompt 0's work on the stage side and this module's own on the legacy side.
+- The converge-or-patch question is therefore narrower than the audit framed it: what is left of
+  `ResizablePacWorkspace`, and should it go?
 - components/CaseWorkflow.tsx defines "working frame", the term F12 says leaks into other modules'
   feedback. Check whether this module's own copy is consistent with it.
 ```
@@ -414,21 +414,41 @@ applicability.
 CRRT renders ChoiceReasoningFeedback, so F10 and F12 are live regardless of its layout.
 ```
 
-## The three findings that outrank the twelve
+## What moved under this brief on 2026-09-06, after the audit ran
+
+`origin/main` advanced twenty-seven commits between the audit reading the code and this branch being
+pushed, and two of those merges change what the brief above says. Re-verified against `origin/main`
+directly:
+
+- **The shared stage has three adopters now, not one.** PR #126 put MCS's nine sections on it and
+  retired `McsLearnSection`; PR #125 did the same for hemodynamics. `learning-module/stage` is now
+  imported by mechanical-ventilation, mechanical-circulatory-support and icu-hemodynamics. That makes
+  prompt 0 strictly more valuable — one change to `StageLayout`, `NowCard` and `stageModel` now
+  reaches three modules — and it stales the layout half of the MCS and hemodynamics entries in the
+  appendix, which were read against surfaces that no longer exist.
+- **MCS's key-position defect is fixed.** The migration brought `orderChoices` with it:
+  `components/stage/McsStageHost.tsx:642` applies it in the one `choiceFieldset` helper every item
+  renders through. The authored order is still key-first in 9 of 9 and 9 of 9, which is worth
+  correcting for the next person to read the file, but it is no longer what the learner sees and the
+  first-option strategy no longer scores. **Struck from the list below.**
+- **The other two stand, checked on `origin/main` and not on this branch.** MV's `earlierCycle`
+  rationales are still swapped, verbatim. Hemodynamics still has thirteen items and twelve
+  partly-correct distractors in `content/pacLearningItems.ts`.
+
+Hemodynamics is now a hybrid: `components/stage/HemodynamicsStageHost.tsx` renders `StageLayout`,
+while `ResizablePacWorkspace.tsx` survives and is still referenced by
+`HemodynamicNativeWorkspace.tsx`. Establish which surface a finding is on before acting on it.
+
+## The two findings that outrank the twelve
 
 Auditing the five siblings against the learner's twelve turned up three defects that are worse than
 anything she reported, in modules she never opened. None is a layout problem and none would have been
 found by reading the brief above; all three were found by reading the content while looking for
 something else.
 
-**MCS: the key is the first option in every single item, and nothing rotates them.** Measured
-directly: 9 of 9 `recognizeOptions` have `correct: true` first, and 9 of 9 items with a
-`plausibility: 'best'` have it first, in `content/sectionLearningContracts.ts`. `orderChoices` — which
-exists, is pure, and is already used by ECMO and the shared stage — is not imported anywhere in the
-module (`components/McsLearnActionPane.tsx` maps `choices` directly at three call sites). "Always
-pick the first option" scores 100% across the whole MCS Learn pathway, which means its completion
-data measures nothing. This is one import and three wrapped `.map` calls to fix, and it should be
-fixed before anything else in this brief.
+**Struck: MCS's key-first defect was fixed by its stage migration** — see the note above. It is left
+recorded because the authored order is still key-first in every item, which will read as a defect to
+the next person and is worth a comment in the content file.
 
 **MV: a wrong answer is handed the right answer's reasoning, in two units.**
 `content/learningExperiments.ts:170-184`, the `earlierCycle` round, used by both
