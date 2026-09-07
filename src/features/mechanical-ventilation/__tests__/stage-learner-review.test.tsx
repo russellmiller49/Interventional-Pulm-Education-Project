@@ -342,3 +342,79 @@ describe('the short list says what kind of list it is', () => {
     expect(stageStyles).toMatch(/var\(--stage-muted, #9fb4b7\)/)
   })
 })
+
+describe('the card keeps the promise the step makes', () => {
+  const unitId = 'mechanics-load-and-pressure'
+
+  it('renders the verdict in full on the Explain step, the explanation and the other answers included', () => {
+    const lesson = mount(unitId)
+    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
+    fireEvent.click(primary()!)
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[first.correct] }))
+    fireEvent.click(primary()!)
+    fireEvent.click(primary()!)
+    fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
+      target: { value: '2' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
+    simulate(6)
+    fireEvent.click(primary()!)
+    simulate(first.seconds + 1)
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[4].id)
+    expect(lesson.steps[4].instruction).toMatch(/^Read the verdict on your prediction/)
+    const recap = document.querySelector('[data-explain-recap]')
+    expect(recap?.textContent).toMatch(/^Correct\. That prediction holds/)
+    expect(recap?.querySelector('[data-answer-verdict]')).not.toBeNull()
+    expect(recap?.querySelector('[data-how-to-distinguish] strong')?.textContent).toBe(
+      'The explanation',
+    )
+    expect(recap?.querySelector('[data-how-to-distinguish]')?.textContent).toContain(
+      first.explanation,
+    )
+    expect(recap?.querySelectorAll('[data-other-answers] li')).toHaveLength(2)
+    // Once on the card, not twice.
+    expect(screen.getAllByText(first.explanation)).toHaveLength(1)
+    expect(document.querySelector('[data-before-after]')).not.toBeNull()
+  })
+
+  it('shows the verdict again when the learner looks back at the prediction', () => {
+    const lesson = mount(unitId)
+    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
+    fireEvent.click(primary()!)
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: first.choices[0] }))
+    fireEvent.click(primary()!)
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[2].id)
+    fireEvent.click(document.querySelector('[data-now-back]')!)
+    expect(stageId()).toBe(lesson.steps[1].id)
+    const verdict = nowCard().querySelector('[data-answer-verdict]')
+    expect(verdict?.getAttribute('data-verdict-outcome')).toBe('correct')
+    expect(verdict?.querySelector('[data-other-answers]')).not.toBeNull()
+  })
+
+  it('frames a prediction as a prediction, and a location read as a read', () => {
+    const lesson = mount(unitId)
+    const first = ventilationExperimentByUnit.get(unitId)!.rounds[0]
+    fireEvent.click(primary()!)
+    const wrong = first.choices.find((_, index) => index !== first.correct)!
+    fireEvent.click(within(nowCard()).getByRole('radio', { name: wrong }))
+    fireEvent.click(primary()!)
+    expect(stageId()).toBe(lesson.steps[1].id)
+    expect(nowCard().querySelector('[data-answer-verdict] p')?.textContent).toBe(
+      'Not correct. That mechanism predicts a different response',
+    )
+    cleanup()
+
+    mount('triggering-and-cycling')
+    const answer = document.querySelector('[data-breath-map-answer]') as HTMLElement
+    fireEvent.click(within(answer).getAllByRole('radio')[0])
+    fireEvent.click(primary()!)
+    expect(nowCard().querySelector('[data-answer-verdict] p')?.textContent).toMatch(
+      /^(Correct\. That read holds|Not correct\. That mechanism predicts a different pattern)$/,
+    )
+    expect(nowCard().querySelector('[data-how-to-distinguish] strong')?.textContent).toBe(
+      'How to distinguish it',
+    )
+  })
+})

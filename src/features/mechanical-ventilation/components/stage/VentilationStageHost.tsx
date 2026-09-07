@@ -85,6 +85,18 @@ const PANE_CAPTIONS: StagePaneCaptions = {
   steps: 'what to do',
 }
 
+/*
+ * The verdict card's titles and explanation heading were written for signal reads — "That read
+ * holds", "How to distinguish it". This module's rounds ask for a prediction of what a change will
+ * do, and its Explain instruction promises "the explanation"; the card says both in those words.
+ * The three location items are reads, and keep the card's own.
+ */
+const PREDICTION_VERDICT_FRAMES = {
+  best: 'That prediction holds',
+  'incorrect-mechanism': 'That mechanism predicts a different response',
+} as const
+const PREDICTION_EXPLANATION_HEADING = 'The explanation'
+
 /**
  * One section of the ventilation pathway on the lesson stage.
  *
@@ -753,7 +765,28 @@ function VentilationStageSession({
   })()
 
   const nowBody: ReactNode = (() => {
-    if (lookingBack) return <StepRecap step={activeStep} session={session} />
+    if (lookingBack) {
+      /*
+       * Looking back at a committed prediction shows the verdict again — the rationale, the
+       * explanation and the other answers — rather than a one-line "You chose". The reasoning is
+       * what a learner goes back for.
+       */
+      const stepEvidence = evidenceFor(activeStep)
+      if (interaction.kind === 'prediction' && stepEvidence.prediction !== undefined) {
+        return (
+          <AnswerVerdict
+            item={interaction.item}
+            choiceId={CHOICE_IDS[stepEvidence.prediction]}
+            outcome="stated"
+            timing="immediate-after-commit"
+            theme="dark"
+            frames={PREDICTION_VERDICT_FRAMES}
+            explanationHeading={PREDICTION_EXPLANATION_HEADING}
+          />
+        )
+      }
+      return <StepRecap step={activeStep} session={session} />
+    }
     switch (interaction.kind) {
       case 'walk': {
         if (walkDone) return null
@@ -828,6 +861,8 @@ function VentilationStageSession({
               outcome="stated"
               timing="immediate-after-commit"
               theme="dark"
+              frames={PREDICTION_VERDICT_FRAMES}
+              explanationHeading={PREDICTION_EXPLANATION_HEADING}
             />
           )
         }
@@ -897,21 +932,30 @@ function VentilationStageSession({
         const item = lesson.steps.find(
           (s) => s.interaction.kind === 'prediction' && s.interaction.round === interaction.round,
         )?.interaction
-        const chosen =
-          committedId && item?.kind === 'prediction'
-            ? item.item.choices.find((c) => c.id === committedId)
-            : undefined
         return (
           <>
-            {chosen ? (
-              <p
-                className={stageStyles.taskInstruction}
-                data-explain-recap
-                data-verdict-outcome={chosen.plausibility === 'best' ? 'correct' : 'not-correct'}
-              >
-                <strong>{chosen.plausibility === 'best' ? 'Correct.' : 'Not correct.'}</strong> You
-                predicted: {chosen.label}.
-              </p>
+            {/*
+              The prediction's verdict, again, in full.
+
+              The instruction says "Read the verdict on your prediction … then the explanation",
+              and this step used to render one line — "Correct. You predicted: …" — with the
+              rationale, the explanation and the other answers two steps back on a card the
+              learner had left. The verdict is the reasoning, so it comes first, and the round's
+              explanation is the paragraph under "The explanation" inside it rather than a second
+              copy below.
+            */}
+            {committedId && item?.kind === 'prediction' ? (
+              <div data-explain-recap>
+                <AnswerVerdict
+                  item={item.item}
+                  choiceId={committedId}
+                  outcome="stated"
+                  timing="immediate-after-commit"
+                  theme="dark"
+                  frames={PREDICTION_VERDICT_FRAMES}
+                  explanationHeading={PREDICTION_EXPLANATION_HEADING}
+                />
+              </div>
             ) : null}
             {stepEvidence.response &&
             roundManeuver(experiment.rounds[interaction.round]) === 'pause' ? (
@@ -926,9 +970,6 @@ function VentilationStageSession({
                 metrics={experiment.rounds[interaction.round].watch}
               />
             ) : null}
-            <p className={stageStyles.taskInstruction} data-round-explanation>
-              {experiment.rounds[interaction.round].explanation}
-            </p>
           </>
         )
       }
