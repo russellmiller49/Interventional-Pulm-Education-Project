@@ -31,6 +31,7 @@ import { buildMcsStageLesson } from '../content/stageLessons'
 import { mcsMapAnswerSectionIds } from '../content/mapAnswerTargets'
 import {
   answerIdentification,
+  commitPrediction,
   continueStep,
   currentStepId,
   mountSection,
@@ -175,6 +176,31 @@ describe('the rendered pre-commitment scan', () => {
     driveToPrediction(sectionId)
     expect(stepRowStates().filter((state) => state === 'current')).toHaveLength(1)
   })
+
+  /*
+   * The controls and the three-dimensional view are not offered before the commitment.
+   *
+   * The controls' labels name what sections ask the learner to predict; that was found on the
+   * first leak pass. The three-dimensional view was found on the learner-review round: its pathway
+   * summary prints "Nothing enters it" and "bypassing the right ventricle" — the second and sixth
+   * sections' identifications, in the words of their own deny patterns — and its text equivalent
+   * prints the engine's causal explanation of the state on screen. The scan above never opened it,
+   * because the surface is unmounted while closed; this pins that there is nothing to open.
+   */
+  it.each(sections)(
+    '%s offers neither the controls nor the three-dimensional view before the commitment',
+    (sectionId) => {
+      mountSection(sectionId)
+      expect(document.querySelector('[data-surface="controls"]')).toBeNull()
+      expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
+      driveToPrediction(sectionId)
+      expect(document.querySelector('[data-surface="controls"]')).toBeNull()
+      expect(document.querySelector('[data-surface="anatomy"]')).toBeNull()
+      commitPrediction(sectionId)
+      expect(document.querySelector('[data-surface="controls"]')).not.toBeNull()
+      expect(document.querySelector('[data-surface="anatomy"]')).not.toBeNull()
+    },
+  )
 
   it('withholds the monitor causality and the target text before the commitment', () => {
     mountSection('lvad-parameters-assessment')

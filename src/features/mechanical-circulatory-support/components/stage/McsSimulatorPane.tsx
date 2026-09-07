@@ -137,7 +137,7 @@ export function McsSimulatorPane({
       {mapLeads ? null : monitor}
       <div className={styles.surfaces}>
         {surfaceOrder
-          .filter((surface) => surface !== 'controls' || predictionCommitted)
+          .filter((surface) => surface === 'map' || predictionCommitted)
           .map((surface) => {
             const open = openSurfaces.has(surface)
             const panelId = `${baseId}-${surface}`
@@ -163,9 +163,16 @@ export function McsSimulatorPane({
                 <div id={panelId} className={styles.surfaceBody} hidden={!open}>
                   {/*
                   The three-dimensional view is the one surface unmounted while closed: it is heavy
-                  and behind its own launch gate. The controls surface is absent altogether until the
-                  prediction is committed (its labels name what sections ask the learner to predict),
-                  and stays mounted after that so its ids hold while it is opened and closed.
+                  and behind its own launch gate. It and the controls surface are absent altogether
+                  until the prediction is committed, and stay mounted after that so their ids hold
+                  while they are opened and closed. The controls' labels name what sections ask the
+                  learner to predict; the three-dimensional view's pathway summary names where blood
+                  enters and returns — the second and sixth sections' identifications, in the words
+                  of their own deny patterns — and its text equivalent prints the engine's causal
+                  explanation of the state on screen, which for the third section names the
+                  impedance the learner is about to predict. The map is the one surface that may
+                  lead before the commitment, and it withholds its own answers while a place is the
+                  question.
                 */}
                   {surface === 'anatomy' && !open ? null : surfaceBody(surface)}
                 </div>
