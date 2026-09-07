@@ -51,6 +51,16 @@ export type StageSurface =
 
 export type WedgeCommitmentKind = 'plausibility' | 'return'
 
+/**
+ * An anatomy surface a step shows beneath its docks.
+ *
+ * `heart` is the 3D heart with the catheter's course, its balloon and the transducer, in step with
+ * the engine. The flow rebuild left it off the stage because the catheter map is where answers go;
+ * the owner asked for it back on the wedge section, where the thing the docks change — a balloon
+ * inflating in a distal branch — is the thing a drawing cannot show and a model can.
+ */
+export type StageAnatomy = 'none' | 'heart'
+
 export type HemodynamicsStageInteraction =
   | { readonly kind: 'read' }
   | {
@@ -89,6 +99,8 @@ export interface HemodynamicsStageStep extends StageStepBase<HemodynamicsStageIn
   readonly chamberLabel: 'shown' | 'withheld'
   /** Which line a flush check on this step runs on. */
   readonly flushLine: FastFlushLineType
+  /** The anatomy surface the simulator pane shows beneath the docks for this step. */
+  readonly anatomy: StageAnatomy
 }
 
 export interface HemodynamicsStageLesson extends StageLessonBase<HemodynamicsStageStep> {
@@ -117,6 +129,7 @@ interface StepInput {
   readonly entryState?: () => HemodynamicSimulationState
   readonly chamberLabel?: 'shown' | 'withheld'
   readonly flushLine?: FastFlushLineType
+  readonly anatomy?: StageAnatomy
   readonly expectedResponse?: readonly string[]
 }
 
@@ -144,6 +157,7 @@ function buildSteps(
     entryState: input.entryState,
     chamberLabel: input.chamberLabel ?? 'shown',
     flushLine: input.flushLine ?? 'pulmonary-artery',
+    anatomy: input.anatomy ?? 'none',
     expectedResponse: input.expectedResponse,
   }))
 }
@@ -640,6 +654,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: CONTINUE,
       interaction: { kind: 'read' },
       surface: 'wedge',
+      anatomy: 'heart',
       stops: ['pa', 'wedge'],
     },
     {
@@ -650,6 +665,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: COMMIT,
       interaction: prediction(items.prediction, 0),
       surface: 'wedge',
+      anatomy: 'heart',
     },
     {
       phase: 'act',
@@ -660,6 +676,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.actGoals, round: 0 },
       surface: 'wedge',
+      anatomy: 'heart',
     },
     {
       phase: 'observe',
@@ -680,6 +697,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
         provenance: false,
       },
       surface: 'wedge',
+      anatomy: 'heart',
     },
     {
       phase: 'explain',
@@ -695,6 +713,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: CONTINUE,
       interaction: { kind: 'explain', round: 0 },
       surface: 'wedge',
+      anatomy: 'heart',
     },
     {
       phase: 'transfer',
@@ -706,6 +725,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       interaction: prediction(items.transfer, 1),
       entryState: runtime.transferEntry ?? undefined,
       surface: 'wedge',
+      anatomy: 'heart',
     },
     {
       phase: 'transfer',
@@ -721,6 +741,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: CONTINUE,
       interaction: { kind: 'simulator-task', goals: runtime.transferGoals, round: 1 },
       surface: 'wedge',
+      anatomy: 'heart',
     },
     {
       phase: 'transfer',
@@ -731,6 +752,7 @@ function pawpCaptureSteps(runtime: SectionRuntime): readonly StepInput[] {
       actionLabel: 'Finish the section',
       interaction: { kind: 'explain', round: 1 },
       surface: 'wedge',
+      anatomy: 'heart',
     },
   ]
 }

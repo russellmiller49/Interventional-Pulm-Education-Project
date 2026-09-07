@@ -194,7 +194,9 @@ behaviours live in `learning-module/components/__tests__/AnswerVerdict.test.tsx`
   Learn pathway teaches measurement validity; Practice applies phenotypes the Learn layer does not
   teach, which the plan records as an H6 package with its own sources.
 - The 3D heart on the stage. The catheter map is where answers go; a drawing the preview pane
-  cannot verify would be a second map.
+  cannot verify would be a second map. **Amended 2026-09-07:** the owner asked for it back on the
+  wedge section, where it sits beneath the docks as a teaching model — not an answer surface — and
+  loads only there; see the learner-review record.
 - Re-pointing the ECMO module at `learning-module/stage/`.
 - The inline citation lists inside the folded deeper-reference panels (the method model, the
   derived records, the troubleshooting atlas) — they cite what they say when they stand alone, and

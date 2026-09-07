@@ -1200,6 +1200,7 @@ function HemodynamicsStageSession({
       state={state}
       dispatch={dispatch}
       surface={activeStep.surface}
+      anatomy={activeStep.anatomy}
       flushLine={activeStep.flushLine}
       controlsEnabled={controlsEnabled}
       lockedReason={lockedReason}

@@ -42,6 +42,20 @@
   color: var(--ink, #eaf4f4);
 }
 
+/* The 3D heart's card: its viewport brings a margin from the Practice layout; the card's gap is enough. */
+.surfaceCard[data-surface='heart-3d'] > div:last-child {
+  margin: 0;
+}
+
+.heartLoading {
+  display: grid;
+  min-height: 440px;
+  place-content: center;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.9rem;
+  color: var(--stage-muted, #9fb4b7);
+}
+
 /* ------------------------------------------------------------------ *
  * Docks
  * ------------------------------------------------------------------ */

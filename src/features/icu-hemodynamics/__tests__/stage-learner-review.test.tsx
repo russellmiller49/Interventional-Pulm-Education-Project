@@ -204,6 +204,29 @@ describe('the verdict is framed for the kind of item it heads', () => {
   })
 })
 
+describe('the 3D heart, on the wedge section', () => {
+  it('sits beneath the docks on every wedge step, and on no other section', () => {
+    for (const sectionId of hemodynamicsSectionIds) {
+      const lesson = hemodynamicsStageLesson(sectionId)
+      const expected = sectionId === 'pawp-capture'
+      expect(`${sectionId}: ${lesson.steps.every((step) => step.anatomy === 'heart')}`).toBe(
+        `${sectionId}: ${expected}`,
+      )
+      expect(`${sectionId}: ${lesson.steps.some((step) => step.anatomy === 'heart')}`).toBe(
+        `${sectionId}: ${expected}`,
+      )
+    }
+    mountSection('pawp-capture')
+    const card = document.querySelector('[data-surface="heart-3d"]')
+    expect(card).not.toBeNull()
+    expect(card?.previousElementSibling?.className).toMatch(/docks/)
+    expect(card?.nextElementSibling?.hasAttribute('data-catheter-map')).toBe(true)
+    cleanup()
+    mountSection('catheter-advancement')
+    expect(document.querySelector('[data-surface="heart-3d"]')).toBeNull()
+  })
+})
+
 describe('one place, one number', () => {
   it('numbers the walk card by the map, and says the walk position in words', () => {
     mountSection('pressure-system')
