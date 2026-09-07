@@ -15,8 +15,9 @@ Read this before starting on a module, then use that module's prompt below.
 
 The mechanical-ventilation flow rebuild (PR #127, merged 2026-09-06) generalized ECMO's lesson stage
 into **`src/features/learning-module/stage/`** — `StageLayout`, `NowCard`, `StepList`, `StageBlock`,
-`StageTeachingScope`, `SectionsDrawer`, `stageModel` and two stylesheets. MV is its only adopter
-today. ECMO still runs its own copy in `src/features/cardiohelp-ecmo/components/stage/`, and the
+`StageTeachingScope`, `SectionsDrawer`, `stageModel` and two stylesheets. **Three modules adopt it
+as of 2026-09-06** — mechanical-ventilation, mechanical-circulatory-support (PR #126) and
+icu-hemodynamics (PR #125), the last two migrated after the audit below was written. ECMO still runs its own copy in `src/features/cardiohelp-ecmo/components/stage/`, and the
 learner-review fixes landed **there**, so the two have diverged.
 
 Concretely, `learning-module/stage/StageLayout.tsx` is a near-verbatim copy of ECMO's _pre-fix_
@@ -26,8 +27,9 @@ line. **Every one of F1, F2, F3 and F6 is present in the shared package, unfixed
 
 That makes the ordering obvious:
 
-1. **Fix the shared stage package first.** One change fixes MV and every future adopter, and it is
-   the same change already worked out and shipped once in ECMO — port it, do not redesign it.
+1. **Fix the shared stage package first.** One change fixes three modules and every future adopter,
+   and it is the same change already worked out and shipped once in ECMO — port it, do not redesign
+   it. This is now the single highest-leverage change in this document.
 2. **Then the module-local work** each module needs on top (its own copy, its own items, its own
    device surface).
 3. **Then decide about ECMO.** Converging ECMO onto the shared package is the right end state and is
@@ -279,12 +281,12 @@ the cross-module audit found three — lead with that.
 
 ### The four fills
 
-| Worktree                                          | Branch to start from                                 | `<MODULE PATH>`                                                | Read first                                                                                 |
-| ------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `…-Worktrees/codex-mechanical-ventilation-update` | `origin/main` (its current branch is already merged) | `src/features/mechanical-ventilation`                          | brief §1 + §0 — MV is the only adopter of the shared stage, so it does the shared work too |
-| `…-Worktrees/claude-mec-circ-9-5`                 | `origin/main` (37 behind)                            | `src/features/mechanical-circulatory-support`                  | brief §2 — and fix the key-position defect first, it is one import                         |
-| `…-Worktrees/claude-hemodynmaics-9-5`             | `origin/main` (1 behind)                             | `src/features/icu-hemodynamics`                                | brief §3 — decide converge-or-patch on its private workspace copy before anything else     |
-| no worktree yet                                   | `origin/main`                                        | `src/features/baxter-crrt`, then `src/features/icu-simulation` | brief §4 — create a worktree, or run it from the primary checkout                          |
+| Worktree                                          | Branch to start from                                 | `<MODULE PATH>`                                                | Read first                                                                                                                    |
+| ------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `…-Worktrees/codex-mechanical-ventilation-update` | `origin/main` (its current branch is already merged) | `src/features/mechanical-ventilation`                          | brief §1 + §0 — the shared-stage work now reaches MV, MCS and hemodynamics, so whoever does it coordinates with the other two |
+| `…-Worktrees/claude-mec-circ-9-5`                 | `origin/main` (37 behind)                            | `src/features/mechanical-circulatory-support`                  | brief §2 — and fix the key-position defect first, it is one import                                                            |
+| `…-Worktrees/claude-hemodynmaics-9-5`             | `origin/main` (1 behind)                             | `src/features/icu-hemodynamics`                                | brief §3 — decide converge-or-patch on its private workspace copy before anything else                                        |
+| no worktree yet                                   | `origin/main`                                        | `src/features/baxter-crrt`, then `src/features/icu-simulation` | brief §4 — create a worktree, or run it from the primary checkout                                                             |
 
 Two notes on sequencing. MV should do the shared `learning-module/stage` work as part of its own
 round, because it is the only adopter and nobody else can test it. And MCS, hemodynamics and CRRT
