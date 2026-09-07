@@ -53,7 +53,13 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
       return {
         kicker,
         heading: 'Read the case',
-        body: `${input.setting ? `${input.setting}. ` : ''}Read the patient picture and the data shown; nothing needs a decision yet. The circuit is open beside it so you can see where this patient sits on it.`,
+        /*
+         * "The circuit is open beside it so you can see where this patient sits on it" — quoted back
+         * by a learner in September 2026 as the example of copy she had to read twice. Two pronouns
+         * ("it" for the panel, "it" for the circuit) and a spatial claim about a pane that may not
+         * be beside anything at a narrow width.
+         */
+        body: `${input.setting ? `${input.setting}. ` : ''}Read the patient picture and the data shown; nothing needs a decision yet. The circuit is on screen too, showing where this patient's support currently stands.`,
         primary: { label: 'Begin case', onActivate: actions.beginCase },
       }
     case 'plan':

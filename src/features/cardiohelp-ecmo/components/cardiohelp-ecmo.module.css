@@ -3939,6 +3939,17 @@
   background: #173b41;
 }
 
+/* The disclosure the live readings sit in; see `CircuitAndMonitors`. */
+.circuitReadouts > summary {
+  padding: 0.35rem 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
 .circuitReadoutGrid,
 .patientGrid,
 .deviceProfile {
