@@ -143,6 +143,20 @@ The Explain step's body opens with the prediction's verdict in full rather than 
 "Correct. You predicted: …", so "Read the reasoning" and "Read what changed and why" are true of the
 card they are printed on. `data-explain-recap` still wraps it and still starts with the outcome.
 
+## Found by the owner on the dev server, after the round
+
+The stage's header row — Sections, "What do I do now?", Restart, Save & exit — sat under the site
+header on a 1846 × 702 window. Two causes, both fixed in the same commit:
+
+- The module shell subtracted a flat 4rem from the viewport where every sibling subtracts
+  `--site-header-height` (5rem + 1px on a desktop), so the shell was 17px taller than its space —
+  the residual the flow-rebuild record §6 had noted and left. The convergence test that pins the
+  rule listed MCS, ECMO and CRRT and not this module or MV; it lists all five now.
+- Below the fixed-workspace threshold (a viewport at least 1024 × 700) the stage flows with the
+  document, and a learner who scrolls to the panes slid this row under the site's sticky header.
+  The shared shell's header is sticky beneath the site header now, in every adopter. Measured at
+  1846 × 690: scrolled 285px, the row stays at 81px, the site header's own height.
+
 ## Left for the next round
 
 Confirmed in the code or measured in the browser, and out of scope here:

@@ -618,9 +618,16 @@
   background: #061519;
 }
 
+/*
+ * The viewport beneath the site header, not beneath a guess at it. The header is taller than 4rem
+ * on a desktop (`--site-header-height` in globals.css), and a shell sized to the wrong number is
+ * 17px taller than the space it has, which is 17px of document overflow that any programmatic
+ * scroll — a "Show me where" `scrollIntoView`, a focus — can spend by sliding the stage's own
+ * header under the site's. Every sibling module already reads the variable.
+ */
 @media (min-width: 1024px) and (min-height: 700px) {
   .moduleShell[data-activity-mode='true'] {
-    height: calc(100dvh - 4rem);
+    height: calc(100dvh - var(--site-header-height, 4rem));
     min-height: 0;
     overflow: hidden;
     padding: 0;
