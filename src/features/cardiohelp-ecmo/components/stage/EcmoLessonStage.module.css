@@ -12,6 +12,17 @@
  * ------------------------------------------------------------------ */
 
 .workspaceFrame {
+  /*
+   * The module's muted colour, captured here — above `.workspace`, where `--muted` is still the
+   * shell's `#9fb4b7` — so a rule inside the workspace can read it. From `.workspace` down,
+   * `--muted` is a bare HSL triple for Tailwind's `hsl(var(--token))`, and `color: var(--muted)`
+   * there is an invalid colour: the declaration is dropped without a console error and the text
+   * silently inherits the full-brightness ink. Eleven rules in this file did exactly that until
+   * September 2026; every one of them now reads this token instead. (The shared stage publishes
+   * the same colour as `--stage-muted` from its shell; this module keeps its own shell, so it
+   * captures its own.)
+   */
+  --ecmo-stage-muted: var(--muted, #9fb4b7);
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -86,7 +97,7 @@
   padding: 0.3rem 0.1rem 0.35rem;
   border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
   background: #061519;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -245,7 +256,7 @@
 }
 
 .stepPhase {
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -258,7 +269,7 @@
 
 .stepRecap {
   padding: 0 0.7rem 0.6rem 3.05rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
 }
 
 .stepRecap ul,
@@ -304,7 +315,7 @@
 }
 
 .sectionsPosition {
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-weight: 600;
 }
 
@@ -328,7 +339,7 @@
  * ------------------------------------------------------------------ */
 
 .objectives summary {
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   cursor: pointer;
 }
 
@@ -468,47 +479,9 @@
 .boundedAction small {
   display: block;
   grid-column: 2;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: var(--ecmo-type-floor, 0.875rem);
   font-weight: 400;
-}
-
-/*
- * "Why the other answers do not fit" — folded, because the learner's own answer is what they came
- * for and the rest is the check on it. Styled as the module's other folded blocks are.
- */
-.otherAnswers > summary {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
-  border-radius: 0.75rem;
-  font-size: var(--ecmo-type-floor, 0.875rem);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.otherAnswers > summary:focus-visible {
-  outline: 3px solid var(--cyan-bright, #71e1e5);
-  outline-offset: 2px;
-}
-
-.otherAnswers[open] > summary {
-  margin-bottom: 0.5rem;
-}
-
-.otherAnswers ul {
-  display: grid;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0 0 0 1.1rem;
-}
-
-.otherAnswers li {
-  font-size: var(--ecmo-type-floor, 0.875rem);
-  line-height: 1.55;
-}
-
-.otherAnswers li span {
-  font-weight: 700;
 }
 
 .footerLine {
@@ -528,7 +501,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.75rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: var(--ecmo-type-floor, 0.875rem);
   font-weight: 700;
   cursor: pointer;
@@ -577,7 +550,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px dashed var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.75rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: var(--ecmo-type-floor, 0.875rem);
 }
 
@@ -613,7 +586,7 @@
 
 .storyIntro {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: var(--ecmo-type-floor, 0.875rem);
   line-height: 1.55;
 }
@@ -646,7 +619,7 @@
 }
 
 .storyTriad dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
   font-size: var(--ecmo-type-floor, 0.875rem);
 }
 
@@ -764,5 +737,5 @@
   margin: 0;
   font-size: var(--ecmo-type-floor, 0.875rem);
   line-height: 1.55;
-  color: var(--muted, #9fb4b7);
+  color: var(--ecmo-stage-muted, #9fb4b7);
 }

@@ -128,6 +128,24 @@ const withheldTone: Readonly<Record<'light' | 'dark', string>> = {
 }
 
 /** Whether a verdict may be shown at all yet, given the mode and what the learner has done. */
+/**
+ * This card's titles as sentences, for a `ChoiceReasoningFeedback` that wants its vocabulary.
+ *
+ * ECMO carried a hand-typed copy of these four strings — `ECMO_VERDICT_FRAMES`, added on its R5
+ * learner review so a learner meeting both cards in one pathway met one vocabulary — and a copy
+ * can drift from what it copies. Derived here from `verdictCopy`, it cannot. The full stop is the
+ * only difference: the title is a heading on this card and a sentence on that one, where it
+ * follows the stated outcome ("Not correct. That mechanism predicts a different pattern.").
+ */
+export const answerVerdictFrames: Readonly<Record<Plausibility, string>> = Object.freeze(
+  Object.fromEntries(
+    (Object.keys(verdictCopy) as Plausibility[]).map((plausibility) => [
+      plausibility,
+      `${verdictCopy[plausibility].title}.`,
+    ]),
+  ) as Record<Plausibility, string>,
+)
+
 export function shouldRevealVerdict({
   timing,
   plausibility,
