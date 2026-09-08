@@ -386,16 +386,22 @@ export function ecmoWalkStopSceneLabelIds(
 export function ecmoWalkStopTextEquivalent(
   stop: EcmoCircuitWalkStop,
   supportMode: SupportMode,
-  options: { readonly readingsVisible?: boolean } = {},
+  options: { readonly readingsVisible?: boolean; readonly position?: number } = {},
 ): string {
   const readingsVisible = options.readingsVisible ?? true
+  /*
+   * Which number this stop carries on screen. The card counts this section's stops rather than the
+   * whole walk's, so the paragraph has to say the same number or the two disagree on one card.
+   * Defaults to the authored ordinal for callers that have no section context.
+   */
+  const position = options.position ?? stop.ordinal
   const places = ecmoWalkStopSegmentIds(stop)
     .map((segmentId) => resolveEcmoModeText(ecmoCircuitSegment(segmentId).label, supportMode))
     .join(', ')
   const zones = stop.pressureZoneIds.map((zoneId) => ecmoPressureZone(zoneId).label).join(', ')
 
   const sentences = [
-    `Stop ${stop.ordinal}. ${resolveEcmoModeText(stop.title, supportMode)}.`,
+    `Stop ${position}. ${resolveEcmoModeText(stop.title, supportMode)}.`,
     `On the circuit: ${places}.`,
     `${resolveEcmoModeText(stop.analogy, supportMode)}`,
     `${resolveEcmoModeText(stop.checklistLabel, supportMode)}: ${stop.checklist

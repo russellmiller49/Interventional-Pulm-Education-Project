@@ -77,8 +77,10 @@ export function useEcmoCircuitWalkNavigation(
     stops,
     activeStopId,
     onStopChange,
-    // The whole walk, not this section's share of it, so "stop five of six" tells a learner
-    // arriving at the second section that they are near the end rather than starting again.
+    /*
+     * The whole walk's length, for deciding whether this section's stops began earlier or carry on
+     * later. It is NOT what the card counts to any more — see `EcmoCircuitWalk`.
+     */
     walkLength: ecmoCircuitWalkStops.length,
     pastPrediction: walk?.pastPrediction ?? true,
     onRunComparison: walk?.onRunComparison,
