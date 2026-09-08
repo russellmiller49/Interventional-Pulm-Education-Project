@@ -618,6 +618,11 @@ export function CriticalCareHub({
                         {module.eyebrow}
                       </p>
                       <CardTitle>{module.title}</CardTitle>
+                      {module.subtitle ? (
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {module.subtitle}
+                        </p>
+                      ) : null}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 pt-2">
