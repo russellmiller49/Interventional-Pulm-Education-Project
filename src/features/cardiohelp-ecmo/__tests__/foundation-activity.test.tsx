@@ -1134,17 +1134,38 @@ describe('the circuit walk, driven the way a learner drives it', () => {
     press('[data-walk-next]')
     const status = walkCard().querySelector('[data-walk-status]')
     expect(status?.getAttribute('role')).toBe('status')
-    expect(status?.textContent).toMatch(/^Stop 2 of 6\. The pump\./)
+    expect(status?.textContent).toMatch(/^Stop 2 of 4 in this section\. The pump\./)
     // No live value in the announcement: the clock ticks every modelled second and a screen-reader
     // user would be read a stream rather than a change they asked about.
     expect(status?.textContent).not.toMatch(/mmHg|L\/min/)
   })
 
-  it('counts the whole walk, not this section’s share of it', () => {
+  /*
+   * Reversed 2026-09-07. This used to assert the opposite, on the reasoning that "stop five of six"
+   * would tell a learner arriving at the second section that they were near the end. The only
+   * learner to walk the pathway read it the other way twice, a day apart: first as sections being
+   * out of order, then — after a sentence was added saying the walk carries on — as two stops that
+   * simply were not there ("once I went to stop 4 of 6, there were no stops 5 or 6").
+   *
+   * The authored ordinals are unchanged and still run 1..6 across both sections; only the count the
+   * card shows is this section's, so every denominator on screen is reachable from where the learner
+   * is standing.
+   */
+  it('counts this section’s stops, and says the walk is longer than the section', () => {
     mount('pump-and-pressure-zones')
-    expect(walkCard().textContent).toMatch(/stop 5 of 6/i)
+    expect(walkCard().textContent).toMatch(/stop 1 of 2/i)
+    expect(walkCard().textContent).toMatch(/began in the previous section/i)
     press('[data-walk-next]')
-    expect(walkCard().textContent).toMatch(/stop 6 of 6/i)
+    expect(walkCard().textContent).toMatch(/stop 2 of 2/i)
+  })
+
+  it('says so on the last stop of a section the walk continues past', () => {
+    mount('circuit-flow-path')
+    expect(walkCard().textContent).toMatch(/stop 1 of 4/i)
+    expect(walkCard().textContent).toMatch(/first stop in this section/i)
+    for (let step = 0; step < 3; step += 1) press('[data-walk-next]')
+    expect(walkCard().textContent).toMatch(/stop 4 of 4/i)
+    expect(walkCard().textContent).toMatch(/carries on in the next section/i)
   })
 
   it.each(['vv', 'va'] as const)(

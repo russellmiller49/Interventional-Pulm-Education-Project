@@ -43,9 +43,18 @@ export interface EcmoCaseDebriefProps {
   readonly outcome: ScenarioOutcome
   readonly supportMode: SupportMode
   readonly assumedConceptIds?: readonly string[]
+  /**
+   * Where the learner goes next, and how.
+   *
+   * `onSelect` is present when the target is another case on this same route, which has to be
+   * loaded rather than navigated to — see the comment in `EcmoPracticeActivity`. The `href` stays
+   * either way so the control is still a real link.
+   */
   readonly nextLink?: {
     readonly label: string
     readonly href: { readonly pathname: string; readonly query?: Record<string, string> }
+    /** Present when the target loads in place rather than navigating; see the doc comment above. */
+    readonly onSelect?: () => void
   } | null
   readonly onReplay: () => void
 }
@@ -413,7 +422,18 @@ export function EcmoCaseDebrief({
 
       <div className={styles.debriefActions}>
         {nextLink ? (
-          <Link href={nextLink.href} data-debrief-next>
+          <Link
+            href={nextLink.href}
+            data-debrief-next
+            onClick={
+              nextLink.onSelect
+                ? (event) => {
+                    event.preventDefault()
+                    nextLink.onSelect?.()
+                  }
+                : undefined
+            }
+          >
             <BookOpenCheck aria-hidden="true" /> Next: {nextLink.label}
           </Link>
         ) : null}

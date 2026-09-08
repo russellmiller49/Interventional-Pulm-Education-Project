@@ -42,6 +42,7 @@ import { DrillTeachingColumn } from './DrillTeachingColumn'
 import { panelControlIds, resolveGuidedSimulatorTask, targetLabels } from './drillControlResolver'
 import { SectionsDrawer } from './SectionsDrawer'
 import { StageLayout } from './StageLayout'
+import { scrollTaskPaneToTop } from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StepList } from './StepList'
 import {
@@ -361,6 +362,7 @@ export function DrillStageHost({
 
   useEffect(() => {
     nowHeadingRef.current?.focus({ preventScroll: true })
+    scrollTaskPaneToTop(nowHeadingRef.current)
   }, [activeStep.id])
 
   useEffect(() => {

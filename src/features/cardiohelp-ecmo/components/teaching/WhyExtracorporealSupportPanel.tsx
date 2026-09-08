@@ -92,7 +92,14 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
   return (
     <div className={styles.panel} data-teaching-panel="why-extracorporeal-support">
       <PhaseBlock
-        focusAt={['recognize', 'predict', 'transfer']}
+        /*
+         * Not `transfer`. This block opens on the transfer step and the others fold, which a learner
+         * reported in September 2026 as the wrong way round: "you are just answering a question in
+         * the left-most panel and are done with the middle panel." An earlier verification pass had
+         * flagged the same list for a second reason — the block's own caption is the keyed answer's
+         * justification, sitting beside the question that asks for it. Both are the same fix.
+         */
+        focusAt={['recognize', 'predict']}
         heading="Oxygen delivery, component by component"
       >
         <section className={styles.section} aria-labelledby="why-delivery-heading">
