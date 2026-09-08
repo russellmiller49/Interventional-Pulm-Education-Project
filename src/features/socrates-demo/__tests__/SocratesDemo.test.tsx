@@ -67,6 +67,10 @@ jest.mock('../components/DeepZoomViewer', () => {
 import { SocratesDemo } from '../components/SocratesDemo'
 
 describe('SOCRATES demo interface', () => {
+  it('can preview a new slide before its first teaching region is drawn', () => {
+    render(<SocratesDemo annotations={[]} />)
+    expect(screen.getByRole('heading', { name: 'No teaching regions yet' })).toBeVisible()
+  })
   beforeEach(() => {
     jest.clearAllMocks()
   })

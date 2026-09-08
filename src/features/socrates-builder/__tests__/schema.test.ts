@@ -8,6 +8,16 @@ import {
 } from '../schema'
 
 describe('SOCRATES builder document validation', () => {
+  it('round-trips a paired slide and its detailed explanations without changing region coordinates', () => {
+    const document = createStarterSocratesDocument()
+    document.slide.descriptorUrl =
+      'https://ucsd-slide-viewer-1080580899927.us-central1.run.app/generated/tiles/nio-006-series-4-barcode-ax00631/original.dzi'
+    document.annotations[0].explanation =
+      'Compare this tissue region with the corresponding color annotation.\nA second teaching paragraph.'
+    expect(parseSocratesSlideDocument(JSON.parse(JSON.stringify(document)))).toEqual(document)
+    document.annotations[0].explanation = 'a'.repeat(8001)
+    expect(validateSocratesSlideDocument(document).success).toBe(false)
+  })
   it('accepts the starter document and preserves its four-point polygons', () => {
     const document = parseSocratesSlideDocument(createStarterSocratesDocument())
 

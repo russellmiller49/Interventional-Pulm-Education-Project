@@ -14,6 +14,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { getInvenioPair } from '@/features/socrates-builder/invenio-source'
 
 import { socratesDemoAnnotations, socratesDemoSlide } from '../content/demo-slide'
 import {
@@ -29,7 +30,7 @@ import type {
   ImagePoint,
   ViewportSnapshot,
 } from '../types'
-import { DeepZoomViewer } from './DeepZoomViewer'
+import { ComparisonSlideViewer } from './ComparisonSlideViewer'
 import styles from './socrates-demo.module.css'
 
 function setsAreEqual(first: ReadonlySet<string>, second: ReadonlySet<string>) {
@@ -46,6 +47,7 @@ export function SocratesDemo({
   slide = socratesDemoSlide,
   annotations = socratesDemoAnnotations,
 }: SocratesDemoProps) {
+  const paired = Boolean(getInvenioPair(slide.descriptorUrl))
   const defaultSelectedId =
     annotations.find((annotation) => annotation.style === 'parent')?.id ?? annotations[0]?.id ?? ''
   const viewerRef = useRef<DeepZoomViewerHandle | null>(null)
@@ -66,8 +68,10 @@ export function SocratesDemo({
     [annotations],
   )
   const selectedAnnotation =
-    annotationsById.get(selectedId) ?? annotationsById.get(defaultSelectedId) ?? annotations[0]!
-  const breadcrumbs = getAnnotationAncestry(selectedAnnotation.id, annotations)
+    annotationsById.get(selectedId) ?? annotationsById.get(defaultSelectedId) ?? annotations[0]
+  const breadcrumbs = selectedAnnotation
+    ? getAnnotationAncestry(selectedAnnotation.id, annotations)
+    : []
   const currentViewAnnotations = annotationsInCurrentView(
     annotations,
     visibleIds,
@@ -155,8 +159,9 @@ export function SocratesDemo({
           </div>
           <h1 id="socrates-demo-title">SOCRATES deep-slide annotation demo</h1>
           <p>
-            Explore a live pathology pyramid with source-pixel annotations, nested regions, and
-            mouse, touch, or keyboard navigation.
+            {paired
+              ? 'Compare tissue with Invenio color annotations. Select a teaching region, then zoom in to explore its details and explanations.'
+              : 'Explore a live pathology pyramid with source-pixel annotations, nested regions, and mouse, touch, or keyboard navigation.'}
           </p>
         </div>
 
@@ -164,7 +169,11 @@ export function SocratesDemo({
           <TriangleAlert aria-hidden="true" />
           <div>
             <strong>{slide.contentStatus}</strong>
-            <span>All region names, boundaries, and descriptions are illustrative.</span>
+            <span>
+              {paired
+                ? 'Teaching regions and explanations require author review.'
+                : 'All region names, boundaries, and descriptions are illustrative.'}
+            </span>
           </div>
         </div>
       </div>
@@ -183,7 +192,7 @@ export function SocratesDemo({
             </div>
 
             <div className={styles.viewerStage}>
-              <DeepZoomViewer
+              <ComparisonSlideViewer
                 ref={viewerRef}
                 slide={slide}
                 annotations={overlayAnnotations}
@@ -339,38 +348,55 @@ export function SocratesDemo({
             ) : null}
           </section>
 
-          <section
-            className={styles.pinnedCard}
-            aria-labelledby="pinned-region-title"
-            aria-live="polite"
-          >
-            <div className={styles.cardEyebrow}>Pinned demonstration panel</div>
-            <div className={styles.pinnedTitleRow}>
-              <div>
-                <h2 id="pinned-region-title">{selectedAnnotation.label}</h2>
-                <span>
-                  {selectedAnnotation.style === 'detail' ? 'Nested detail zone' : 'Parent zone'}
-                </span>
-              </div>
-              <ScanSearch aria-hidden="true" />
-            </div>
-            <p>{selectedAnnotation.summary}</p>
-            <div className={styles.placeholderNote}>{selectedAnnotation.placeholderNote}</div>
-            <Button
-              type="button"
-              className={styles.zoomToRegionButton}
-              disabled={controlsDisabled}
-              onClick={() => fitAnnotation(selectedAnnotation, true)}
+          {selectedAnnotation ? (
+            <section
+              className={styles.pinnedCard}
+              aria-labelledby="pinned-region-title"
+              aria-live="polite"
             >
-              Zoom to {selectedAnnotation.label}
-            </Button>
-          </section>
+              <div className={styles.cardEyebrow}>Pinned demonstration panel</div>
+              <div className={styles.pinnedTitleRow}>
+                <div>
+                  <h2 id="pinned-region-title">{selectedAnnotation.label}</h2>
+                  <span>
+                    {selectedAnnotation.style === 'detail' ? 'Nested detail zone' : 'Parent zone'}
+                  </span>
+                </div>
+                <ScanSearch aria-hidden="true" />
+              </div>
+              <p>{selectedAnnotation.summary}</p>
+              {selectedAnnotation.explanation ? (
+                <div className={styles.teachingExplanation}>
+                  <h3>Detailed explanation</h3>
+                  <p>{selectedAnnotation.explanation}</p>
+                </div>
+              ) : null}
+              <div className={styles.placeholderNote}>{selectedAnnotation.placeholderNote}</div>
+              <Button
+                type="button"
+                className={styles.zoomToRegionButton}
+                disabled={controlsDisabled}
+                onClick={() => fitAnnotation(selectedAnnotation, true)}
+              >
+                Zoom to {selectedAnnotation.label}
+              </Button>
+            </section>
+          ) : (
+            <section className={styles.pinnedCard}>
+              <h2>No teaching regions yet</h2>
+              <p>
+                Explore the images, then return to the builder to draw a parent region and add an
+                explanation.
+              </p>
+            </section>
+          )}
 
           <section className={styles.sourceCard} aria-labelledby="source-title">
             <h2 id="source-title">Source &amp; scope</h2>
             <p>
-              Slide imagery streams directly from the provider&apos;s public deep-zoom service. No
-              tiles are copied or stored by this demo.
+              {paired
+                ? 'Tissue and color annotation images are provided by Invenio Imaging. Teaching regions and explanations are authored in SOCRATES.'
+                : 'Slide imagery streams directly from the provider’s public deep-zoom service. No tiles are copied or stored by this demo.'}
             </p>
             <a href={slide.attribution.href} target="_blank" rel="noreferrer">
               {slide.attribution.label}

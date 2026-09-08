@@ -22,7 +22,7 @@ jest.mock('@/app/[locale]/socrates-demo/actions', () => ({
   deleteSocratesSandboxDocument: (...args: unknown[]) => mockDeleteSandbox(...args),
 }))
 
-jest.mock('@/features/socrates-demo/components/DeepZoomViewer', () => {
+jest.mock('@/features/socrates-demo/components/ComparisonSlideViewer', () => {
   const MockDeepZoomViewer = React.forwardRef(
     (
       props: {
@@ -86,7 +86,7 @@ jest.mock('@/features/socrates-demo/components/DeepZoomViewer', () => {
     },
   )
   MockDeepZoomViewer.displayName = 'MockBuilderDeepZoomViewer'
-  return { DeepZoomViewer: MockDeepZoomViewer }
+  return { ComparisonSlideViewer: MockDeepZoomViewer }
 })
 
 jest.mock('../descriptor', () => ({
@@ -124,6 +124,45 @@ describe('SOCRATES companion builder', () => {
     expect(screen.getByText('5')).toBeVisible()
   })
 
+  it('loads both Invenio descriptors and keeps the current document on a dimension mismatch', async () => {
+    const user = userEvent.setup()
+    render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
+    const link =
+      'https://ucsd-slide-viewer-1080580899927.us-central1.run.app/slides/nio-006-series-4-barcode-ax00631'
+    await user.clear(screen.getByLabelText('Thinviewer or Invenio URL'))
+    await user.type(screen.getByLabelText('Thinviewer or Invenio URL'), link)
+    mockLoadDescriptor
+      .mockResolvedValueOnce({ width: 9000, height: 9900, tileSize: 256 })
+      .mockResolvedValueOnce({ width: 8999, height: 9900, tileSize: 256 })
+    await user.click(screen.getByRole('button', { name: 'Load' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('different dimensions')
+    expect(screen.getByTestId('builder-overlay-labels')).toHaveTextContent('Zone 1')
+    expect(screen.getByTestId('builder-descriptor-url')).toHaveTextContent('invenio-cloud.com')
+
+    mockLoadDescriptor.mockResolvedValue({ width: 9000, height: 9900, tileSize: 256 })
+    await user.click(screen.getByRole('button', { name: 'Load' }))
+    expect(mockLoadDescriptor).toHaveBeenLastCalledWith(expect.stringContaining('/analysis.dzi'))
+    expect(screen.getByTestId('builder-descriptor-url')).toHaveTextContent('/original.dzi')
+    expect(screen.getByTestId('builder-overlay-labels')).toBeEmptyDOMElement()
+  })
+
+  it('previews unsaved detailed explanations and returns to the same draft', async () => {
+    const user = userEvent.setup()
+    render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
+    await user.type(
+      screen.getByLabelText('Detailed explanation'),
+      'A closer look at this teaching region.',
+    )
+    await user.click(screen.getByRole('button', { name: 'Preview teaching view' }))
+    expect(screen.getByText('A closer look at this teaching region.')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Return to editing' }))
+    expect(screen.getByLabelText('Detailed explanation')).toHaveValue(
+      'A closer look at this teaching region.',
+    )
+    expect(screen.getByText('Unsaved changes')).toBeVisible()
+    expect(mockSave).not.toHaveBeenCalled()
+  })
+
   it('draws a source-pixel parent region and supports delete/undo', async () => {
     const user = userEvent.setup()
     render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
@@ -153,6 +192,16 @@ describe('SOCRATES companion builder', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('inside its parent')
     expect(screen.queryByRole('heading', { name: 'Detail 6' })).not.toBeInTheDocument()
+  })
+
+  it('uses the current viewer zoom to author when a detail explanation appears', async () => {
+    const user = userEvent.setup()
+    render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
+    await user.click(screen.getByRole('button', { name: 'Mock viewport' }))
+    await user.click(screen.getByRole('button', { name: /^Zone 1A/ }))
+    await user.click(screen.getByRole('button', { name: 'Reveal at current zoom' }))
+    expect(screen.getByLabelText('Enter zoom')).toHaveValue(2.1)
+    expect(screen.getByLabelText('Exit zoom')).toHaveValue(1.9)
   })
 
   it('starts a newly registered descriptor at its full-image bounds', async () => {

@@ -161,6 +161,21 @@
   position: relative;
 }
 
+.teachingExplanation {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #c9d7d8;
+}
+
+.teachingExplanation h3 {
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.teachingExplanation p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .viewerSurface {
   position: relative;
   width: 100%;
