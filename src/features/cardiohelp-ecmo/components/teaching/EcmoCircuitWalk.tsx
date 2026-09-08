@@ -137,8 +137,22 @@ export function EcmoCircuitWalk({
       data-walk-stop={stop.id}
       data-walk-stop-kind={stop.kind}
     >
+      {/*
+        The count is this section's, not the whole walk's.
+        
+        The six stops are authored 1..6 across two sections and were displayed that way, on the
+        reasoning that "stop five of six" would tell a learner arriving at the second section they
+        were near the end. The only learner to walk it read it the other way, twice, a day apart:
+        first "I now see the middle panel going to stop 5 of the circuit walk. seems like this might
+        be out of order", then — after a sentence was added saying the walk carries on — "once I went
+        to stop 4 of 6, there were no stops 5 or 6 in the circuit walk."
+        
+        A denominator you cannot reach is a broken promise however it is captioned. The card counts
+        what this section holds; the authored ordinals are untouched, and the sentence by the buttons
+        still says the walk is longer than the section.
+      */}
       <p className={styles.heading}>
-        Circuit walk · stop {stop.ordinal} of {walkLength}
+        Circuit walk · stop {index + 1} of {stops.length}
       </p>
       <h3
         id={headingId}
@@ -280,9 +294,31 @@ export function EcmoCircuitWalk({
         </p>
       ) : null}
 
-      <TextEquivalent>
-        {ecmoWalkStopTextEquivalent(stop, supportMode, { readingsVisible: pastPrediction })}
-      </TextEquivalent>
+      {/*
+        The stop as one paragraph, behind a disclosure.
+
+        This card used to draw a small map of its own, and the paragraph was the equivalent of that
+        drawing. R4-OD-10 retired the minimap and moved the marking onto the real map in the
+        simulator pane — which left a paragraph restating, in order, every line already visible on
+        this card: the analogy, the place detail, the labelled short list, the marked places and the
+        boundary. A learner review in September 2026 circled exactly that stretch and reported "a lot
+        of repeated information".
+
+        Kept rather than deleted, because it is still the one place the whole stop can be read as
+        continuous prose, which is what a learner on a pane too narrow to show the map beside this
+        card actually wants. Collapsed, so it is not the third time through the same words.
+      */}
+      <details className="mt-2" data-walk-text-equivalent>
+        <summary className="cursor-pointer text-xs leading-5 text-muted-foreground">
+          Read this stop as one paragraph
+        </summary>
+        <TextEquivalent>
+          {ecmoWalkStopTextEquivalent(stop, supportMode, {
+            readingsVisible: pastPrediction,
+            position: index + 1,
+          })}
+        </TextEquivalent>
+      </details>
 
       <ModelBoundary>{resolveEcmoModeText(stop.modelBoundary, supportMode)}</ModelBoundary>
 
@@ -328,7 +364,7 @@ export function EcmoCircuitWalk({
               ? 'This is the first stop in this section.'
               : 'This walk began in the previous section of the lesson and carries on here.'}
           {!next && stop.ordinal < walkLength
-            ? ' This is the last stop in this section; the walk carries on in the next one.'
+            ? ' This is the last stop in this section; the walk carries on in the next section of the lesson.'
             : ''}
         </span>
       </nav>
@@ -342,10 +378,11 @@ export function EcmoCircuitWalk({
         beside them.
       */}
       <p className="sr-only" role="status" data-walk-status>
-        Stop {stop.ordinal} of {walkLength}
+        Stop {index + 1} of {stops.length} in this section
         {stop.ordinal > 1 && !previous ? ', carried on from the previous section' : ''}
-        {!next && stop.ordinal < walkLength ? ', the last stop in this section' : ''}. {title}. On
-        the circuit:{' '}
+        {!next && stop.ordinal < walkLength
+          ? ', and the walk carries on in the next one'
+          : ''}. {title}. On the circuit:{' '}
         {places
           .map((segmentId) => resolveEcmoModeText(ecmoCircuitSegment(segmentId).label, supportMode))
           .join(', ')}

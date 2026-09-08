@@ -1013,32 +1013,45 @@ export function CircuitSchematic({
         </ul>
       </div>
 
-      <div className={styles.circuitReadoutGrid}>
-        <div>
-          <span>Flow</span>
-          <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
+      {/*
+        The live readings, folded away while the map is the answer surface.
+
+        On a step that asks WHERE a pattern points, the numbers are not what the question is about,
+        and they sit directly under the numbered places the learner is choosing between. A learner
+        review in September 2026 circled this row on exactly that step: "can this part be hidden
+        under a button or a drop-down since it's not necessary for answering the questions at this
+        point?" Every other step — the Observe step in particular, whose whole instruction is to read
+        these values — still opens with them showing.
+      */}
+      <details className={styles.circuitReadouts} open={!answerable} data-circuit-readouts>
+        <summary>Live readings</summary>
+        <div className={styles.circuitReadoutGrid}>
+          <div>
+            <span>Flow</span>
+            <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
+          </div>
+          <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
+          <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
+          <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
+          <CircuitChannelReadout
+            label="Δp trend"
+            readout={state.circuit.readouts.deltaP}
+            spokenLabel="Δp trend"
+          />
+          <div>
+            <span>Pre-oxygenator saturation</span>
+            <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
+          </div>
+          <div data-alert={state.circuit.drainageClampClosed}>
+            <span>Drainage clamp</span>
+            <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+          </div>
+          <div data-alert={state.circuit.returnClampClosed}>
+            <span>Return clamp</span>
+            <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+          </div>
         </div>
-        <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
-        <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
-        <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
-        <CircuitChannelReadout
-          label="Δp trend"
-          readout={state.circuit.readouts.deltaP}
-          spokenLabel="Δp trend"
-        />
-        <div>
-          <span>Pre-oxygenator saturation</span>
-          <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
-        </div>
-        <div data-alert={state.circuit.drainageClampClosed}>
-          <span>Drainage clamp</span>
-          <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
-        </div>
-        <div data-alert={state.circuit.returnClampClosed}>
-          <span>Return clamp</span>
-          <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
-        </div>
-      </div>
+      </details>
 
       {/*
         Outside both tabpanels, and outside the launch gate, on purpose.

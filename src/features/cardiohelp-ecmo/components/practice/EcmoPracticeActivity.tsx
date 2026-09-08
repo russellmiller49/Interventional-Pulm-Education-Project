@@ -338,6 +338,19 @@ export function EcmoPracticeCaseView({
         supportMode,
       )
     : null
+  /*
+   * Moving to the next case is a load, not a navigation.
+   *
+   * The next-case target is this same route with a different `case` query, and the session hydrates
+   * from `window.location.search` in an effect keyed on `section` — so it reads the URL once, on
+   * mount, and a client-side push to the same route changed the address bar and nothing else. A
+   * learner review in September 2026 reported it as "I can't advance to the next case", which is
+   * exactly what it looked like: the button worked, the URL moved, the case did not.
+   *
+   * A case therefore loads through the session's own loader, which swaps the scenario, records the
+   * progress and syncs the URL. A lesson or the capstone is a different route and still navigates.
+   * The href stays on the control either way so it is still a real link to open in a new tab.
+   */
   const nextLink: EcmoCaseDebriefProps['nextLink'] = recommendedNext
     ? recommendedNext.kind === 'lesson'
       ? {
@@ -354,6 +367,7 @@ export function EcmoPracticeCaseView({
               query: { case: recommendedNext.scenarioId, track: supportMode },
             },
             label: `Case · ${presentationLabel(recommendedNext.scenarioId)}`,
+            onSelect: () => onLoadScenario?.(recommendedNext.scenarioId),
           }
         : {
             href: { pathname: `${cardiohelpEcmoNavBase}/assess`, query: { track: supportMode } },
@@ -398,7 +412,11 @@ export function EcmoPracticeCaseView({
       reveal: onReveal,
       restart: restartCase,
       replay: onReset,
-      next: nextLink && onNavigate ? () => onNavigate(nextLink.href) : undefined,
+      next: nextLink?.onSelect
+        ? nextLink.onSelect
+        : nextLink && onNavigate
+          ? () => onNavigate(nextLink.href)
+          : undefined,
     },
   })
 

@@ -99,6 +99,10 @@ reads the authored label now, so the two surfaces cannot disagree.
 
 ## R5-OD-3 — the walk's numbering stays, and the card says it carries on
 
+> **Reversed 2026-09-07 by R6-OD-3.** The sentence was not enough: the same learner read the
+> unreachable denominator as missing stops on the very next walk. The card counts this section's
+> stops now. See [`r6-learner-review-record.md`](./r6-learner-review-record.md).
+
 The six stops run continuously across two sections. `circuitWalk.ts` and `useEcmoCircuitWalk.ts`
 both record why: "stop five of six" should tell a learner arriving at the second section that they
 are near the end rather than that a second counter has started. Kayleigh's report is the counter-

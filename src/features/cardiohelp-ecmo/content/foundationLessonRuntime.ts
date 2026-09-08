@@ -280,7 +280,7 @@ const referenceVariants = (supportMode: SupportMode): readonly EcmoFoundationSta
     setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
     label: supportMode === 'va' ? 'VA reference circuit' : 'VV reference circuit',
     modelBoundary:
-      'A teaching anchor set for this simulation: a running circuit with no problem introduced, settled before the lesson opens on it. It is not a set of bedside target values.',
+      'A teaching anchor set for this simulation: a running circuit with no problem introduced, settled before the lesson begins. It is not a set of bedside target values.',
   },
 ]
 
@@ -290,7 +290,7 @@ const vvReferenceVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
   label: 'VV reference circuit',
   modelBoundary:
-    'A teaching anchor set for this simulation: a running VV circuit with no problem introduced, settled before the lesson opens on it. It is not a set of bedside target values.',
+    'A teaching anchor set for this simulation: a running VV circuit with no problem introduced, settled before the lesson begins. It is not a set of bedside target values.',
 }
 
 const RESTORE: EcmoFoundationGuidedAction = {
@@ -426,7 +426,7 @@ const vaReferenceVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(REFERENCE_SETTLE_SECONDS),
   label: 'VA reference circuit',
   modelBoundary:
-    'A teaching anchor set for this simulation: a running VA circuit with no problem introduced, settled before the lesson opens on it. It is not a set of bedside target values.',
+    'A teaching anchor set for this simulation: a running VA circuit with no problem introduced, settled before the lesson begins. It is not a set of bedside target values.',
 }
 
 /**
@@ -484,7 +484,7 @@ const vaMixedCirculationVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(VA_PREVIEW_SECONDS.mixedCirculationSettled),
   label: 'The case as it stands — teaching preview',
   modelBoundary:
-    'The existing mixed-circulation case loaded as a preview to read, settled before the lesson opens on it. Nothing here is recorded or scored. Unlike the VV capstone this case carries its finding from the first frame, so there is no earlier state to watch it arrive from.',
+    'The existing mixed-circulation case loaded as a preview to read, settled before the lesson begins. Nothing here is recorded or scored. Unlike the VV capstone this case carries its finding from the first frame, so there is no earlier state to watch it arrive from.',
 }
 
 const vaOxygenatorResistancePreviewVariant: EcmoFoundationStateVariant = {
