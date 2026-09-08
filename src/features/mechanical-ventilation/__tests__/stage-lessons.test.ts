@@ -1,5 +1,8 @@
 import { ventilationLearningUnits } from '../content/learningCurriculum'
-import { ventilationExperimentByUnit } from '../content/learningExperiments'
+import {
+  ventilationExperimentByUnit,
+  ventilationLearningExperiments,
+} from '../content/learningExperiments'
 import { ventilationSectionSpec, ventilationSectionSpecs } from '../content/sectionSpecs'
 import { ventilationStageLesson, ventilationStageLessons } from '../content/stageLessons'
 import { ventilationLeakMatches, ventilationPrecommitDenyPatterns } from '../test-support/stageLeak'
@@ -75,6 +78,11 @@ describe('the fourteen stage lessons', () => {
         surfaces.push({ where: `${step.id} title`, text: step.title })
         surfaces.push({ where: `${step.id} instruction`, text: step.instruction })
         if (step.rationale) surfaces.push({ where: `${step.id} rationale`, text: step.rationale })
+        // The location line is printed under the instruction, so it is a pre-commit surface too.
+        surfaces.push({
+          where: `${step.id} look-in`,
+          text: `${step.lookIn.landmark} ${step.lookIn.alsoLandmark ?? ''}`,
+        })
       }
       for (const stopId of spec.stops) {
         const stop = breathStop(stopId)
@@ -116,6 +124,40 @@ describe('the fourteen stage lessons', () => {
       }
     }
     expect(findings).toEqual([])
+  })
+
+  /*
+   * The item sweep the September 2026 learner review ran on every module. Two of its rules are
+   * machine-checkable here: a stem may not contain its own key, and the key may not be the one
+   * option a learner could pick by length alone.
+   */
+  it('keeps every round item free of the two cues a learner can use without reasoning', () => {
+    const findings: string[] = []
+    for (const experiment of ventilationLearningExperiments) {
+      experiment.rounds.forEach((round, index) => {
+        const where = `${experiment.unitId} round ${index + 1}`
+        const key = round.choices[round.correct]
+        if (round.prompt.toLowerCase().includes(key.toLowerCase())) {
+          findings.push(`${where}: the stem contains its key`)
+        }
+        const lengths = round.choices.map((choice) => choice.length)
+        const longest = Math.max(...lengths)
+        const uniquelyLongest =
+          key.length === longest && lengths.filter((length) => length === longest).length === 1
+        if (uniquelyLongest) findings.push(`${where}: the key is the uniquely longest option`)
+      })
+    }
+    expect(findings).toEqual([])
+  })
+
+  it('serves the key’s mechanism to the key, not to a wrong answer, on the cycling round', () => {
+    // Found by the audit: the "Longer machine inspiration" rationale said an earlier cycle ends
+    // support sooner — the key's own reasoning — while the key got a generic next-step line.
+    const round = ventilationExperimentByUnit.get('expiration-and-air-trapping')!.rounds[1]
+    expect(round.choices[round.correct]).toBe('Shorter machine inspiration')
+    expect(round.rationales[round.correct]).toMatch(/ends earlier/)
+    expect(round.rationales[0]).toMatch(/not later/)
+    expect(round.prompt).not.toMatch(/earlier|sooner|shorter/i)
   })
 
   it('names every Practice pairing by presentation and pairs a case its unit lists', () => {

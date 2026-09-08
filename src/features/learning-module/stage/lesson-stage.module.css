@@ -100,10 +100,18 @@
   color: var(--ink, #eaf4f4);
 }
 
+/*
+ * One track, `minmax(0, 1fr)`: an implicit `auto` track's floor is the widest item's min-content,
+ * so one block with an unbreakable row widened every block in the pane past its edge (measured on
+ * the mechanical-ventilation teaching pane at 1024 × 768: a 300px track in a 263px pane). The
+ * pane hides horizontal overflow, so a column can only ever be the pane's width; a block that is
+ * genuinely wider scrolls inside its own wrapper.
+ */
 .simulatorPane,
 .teachingColumn,
 .taskColumn {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   min-width: 0;
   align-content: start;

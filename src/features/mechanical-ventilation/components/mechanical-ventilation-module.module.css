@@ -55,3 +55,26 @@
   height: 1rem;
   flex: none;
 }
+
+/*
+ * The Now card's actions and the prediction's choice rows look like controls under the pointer
+ * and under the finger. Scoped to this module's shell because the shared button classes are four
+ * modules' to change; the hemodynamics module carries the same three states the same way.
+ */
+.moduleShell [data-now-primary]:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.moduleShell [data-now-primary]:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.moduleShell [data-now-secondary]:hover:not(:disabled),
+.moduleShell [data-prediction-choices] label:hover {
+  border-color: var(--cyan-bright);
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.moduleShell [data-now-secondary]:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.22);
+}

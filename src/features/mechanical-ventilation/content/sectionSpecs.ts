@@ -1,4 +1,5 @@
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
+import type { StageStepLocation } from '@/features/learning-module/stage/stageModel'
 
 import type { BreathStopId } from './breathSpine'
 import { breathGrammarRowsFor } from './breathGrammar'
@@ -34,6 +35,13 @@ export interface VentilationSectionSpec {
   readonly recognizeTitle: string
   /** What the first step asks the learner to look at, before anything is predicted. */
   readonly recognizeInstruction: string
+  /**
+   * Where the first step is worked, when it is not the live console. The lesson builder gives a
+   * reading first step the console, a walk the stop card, and a location question the breath map;
+   * a section whose first instruction sends the learner somewhere else says where here, in the
+   * words the surface carries.
+   */
+  readonly recognizeLookIn?: StageStepLocation
   /** The stops lit on the breath map through this section; empty for the whole breath. */
   readonly stops: readonly BreathStopId[]
   readonly knobStrip: KnobStrip
@@ -77,7 +85,13 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Tell inspiration from expiration on the running traces, and say where one breath ends and the next begins.',
     recognizeTitle: 'Why a ventilator exists',
     recognizeInstruction:
-      'Read the four short paragraphs on the right, then watch the console for a few breaths. The patient is passive and the machine is doing all the work.',
+      'Read the four short paragraphs under “Why a ventilator exists”, then watch the console for a few breaths. The patient is passive and the machine is doing all the work.',
+    recognizeLookIn: {
+      pane: 'teaching',
+      landmark: 'Why a ventilator exists',
+      alsoPane: 'simulator',
+      alsoLandmark: 'the live console',
+    },
     stops: [],
     knobStrip: strip({
       mode: noKnob(
@@ -351,7 +365,11 @@ export const ventilationSectionSpecs: readonly VentilationSectionSpec[] = [
       'Decide which finding would show that an intervention helped this patient, and which findings only show that it was performed.',
     recognizeTitle: 'The person before the machine',
     recognizeInstruction:
-      'This awake patient is distressed. Open the patient and circuit findings under the console and read them before touching any setting.',
+      'This awake patient is distressed. Open the patient and circuit findings, below the breath map, and read them before touching any setting.',
+    recognizeLookIn: {
+      pane: 'simulator',
+      landmark: 'Patient and circuit findings, below the breath map',
+    },
     stops: [],
     knobStrip: strip({
       mode: noKnob('No control comes first here. The patient’s account and a reversible cause do.'),
@@ -446,6 +464,8 @@ export function ventilationSectionSpecErrors(
       ...(spec.orientation ?? []),
       ...Object.values(spec.knobStrip).map((entry) => entry.note),
       spec.shapingNote ?? '',
+      spec.recognizeLookIn?.landmark ?? '',
+      spec.recognizeLookIn?.alsoLandmark ?? '',
     ]
     for (const line of copy) {
       const flagged = flaggedLearnerCopyTerms(line)
@@ -456,6 +476,8 @@ export function ventilationSectionSpecErrors(
     for (const line of [
       spec.recognizeTitle,
       spec.recognizeInstruction,
+      spec.recognizeLookIn?.landmark ?? '',
+      spec.recognizeLookIn?.alsoLandmark ?? '',
       spec.objective,
       spec.newConcept,
       unit.title,

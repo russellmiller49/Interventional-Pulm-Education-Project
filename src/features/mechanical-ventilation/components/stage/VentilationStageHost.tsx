@@ -11,11 +11,16 @@ import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleR
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import { ContextStrip, type ContextStripItem } from '@/features/learning-module/stage/ContextStrip'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
+import { LookInLine } from '@/features/learning-module/stage/LookInLine'
 import { NowCard, type NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { SectionsDrawer } from '@/features/learning-module/stage/SectionsDrawer'
-import { StageLayout } from '@/features/learning-module/stage/StageLayout'
-import { STAGE_PHASE_LABELS } from '@/features/learning-module/stage/stageModel'
+import { StageLayout, type StagePaneCaptions } from '@/features/learning-module/stage/StageLayout'
+import {
+  STAGE_PHASE_LABELS,
+  compactPaneForLocation,
+  type StagePaneId,
+} from '@/features/learning-module/stage/stageModel'
 import { StageSourcesFooter } from '@/features/learning-module/stage/StageSourcesFooter'
 import { StageSourcesScope } from '@/features/learning-module/stage/StageSourcesScope'
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -24,7 +29,12 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
 import { useRouter } from '@/i18n/navigation'
 
-import { breathStop, breathStopIds, type BreathStopId } from '../../content/breathSpine'
+import {
+  BREATH_STOP_CHECKLIST_LABEL,
+  breathStop,
+  breathStopIds,
+  type BreathStopId,
+} from '../../content/breathSpine'
 import { getVentilatorDeviceProfile } from '../../content/deviceProfiles'
 import { ventilationExperimentByUnit, type LabGoal } from '../../content/learningExperiments'
 import { ventilationPracticePairing } from '../../content/sectionSpecs'
@@ -59,6 +69,44 @@ import { VentilationTeachingColumn } from './VentilationTeachingColumn'
 import styles from './ventilation-stage.module.css'
 
 const CHOICE_IDS = ['a', 'b', 'c'] as const
+
+/*
+ * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
+ * for, and the ventilator kept the widest of the three.
+ *
+ * A learner review of the ECMO module in September 2026 asked for the prompts and questions on the
+ * left "for a more natural read", and reported guessing which of three unnamed panes each
+ * instruction meant. ECMO took the swap, then hemodynamics, then mechanical circulatory support;
+ * this module was the last of the four adopters still leading with its device, and four sibling
+ * modules should not disagree about the first thing a learner sees. The console facsimile is never
+ * scaled, so the fractions keep the simulator the widest pane whatever end of the row it sits at,
+ * and the drag floors follow the content across the slots rather than staying with the slot
+ * numbers. Every value here is the one the other three pass, byte for byte.
+ *
+ * This amends `mv-d2-standard-laptop-workspace.md` §2 and §7, whose recorded order — live
+ * ventilator, teaching, learner action — had had no guard since PR #127 deleted the test §7 named
+ * for it. See MVLR-OD-1 in the module's learner-review record.
+ */
+const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
+const PANE_CAPTIONS: StagePaneCaptions = {
+  simulator: 'the live ventilator, the quick controls and the breath map',
+  teaching: 'what to read',
+  steps: 'what to do',
+}
+const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
+const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
+
+/*
+ * The verdict card's titles and explanation heading were written for signal reads — "That read
+ * holds", "How to distinguish it". This module's rounds ask for a prediction of what a change will
+ * do, and its Explain instruction promises "the explanation"; the card says both in those words.
+ * The three location items are reads, and keep the card's own.
+ */
+const PREDICTION_VERDICT_FRAMES = {
+  best: 'That prediction holds',
+  'incorrect-mechanism': 'That mechanism predicts a different response',
+} as const
+const PREDICTION_EXPLANATION_HEADING = 'The explanation'
 
 /**
  * One section of the ventilation pathway on the lesson stage.
@@ -356,7 +404,39 @@ function VentilationStageSession({
     (interaction.kind === 'explain' && activeManeuver !== 'pause'
       ? experiment.rounds[interaction.round].watch
       : [])
-  const controlsEnabled = session.phase !== 'predict'
+  /*
+   * Whether the console and the quick controls can be operated, and the line on the simulator that
+   * says why not. Both notes derive from the same two predicates that disable them, so the
+   * simulator cannot go dead without saying so; the transport toolbar stays live in both states
+   * and neither note claims otherwise. The note used to cover the locked prediction and not the
+   * look-back, so Back met greyed controls and a caption reading "Commit your prediction first".
+   */
+  const deciding = session.phase === 'predict'
+  const controlsEnabled = !deciding
+  const lockedReason = deciding
+    ? 'The settings are locked while you decide. Commit your prediction to take the controls.'
+    : undefined
+  const pausedReason =
+    !deciding && lookingBack
+      ? 'The console and the quick controls are paused while you look back at an earlier step. Return to the live step to take them.'
+      : undefined
+  const controlsNote = deciding
+    ? 'Commit your prediction first.'
+    : lookingBack
+      ? 'Paused while you look back.'
+      : 'The same settings as on the console.'
+  /*
+   * Reset patient rebuilds this round's patient and clears the change, the hold, the intervention
+   * and the timed observation the lab has recorded — the prediction stays. It is a control, so it
+   * is paused with the others; and while a prediction is being decided it would only send the
+   * learner back a step, so it waits.
+   */
+  const resetWouldErase = session.events.length > 0 || session.observedHolds.length > 0
+  const resetDisabledReason = deciding
+    ? 'Nothing to reset while you decide. Commit your prediction first.'
+    : lookingBack
+      ? 'Return to the live step to reset the patient.'
+      : undefined
   const mechanicsVisible =
     unitId !== 'high-peak-pressure-integration' ||
     session.phase === 'compare' ||
@@ -435,10 +515,29 @@ function VentilationStageSession({
     }))
   }
 
+  /*
+   * Which pane a one-pane compact viewport shows for this step — followed, not forced.
+   *
+   * The step's authored location, until the step's own work is done: then the next action is the
+   * Now card's primary, so the view follows to the Steps pane. Looking back is read on the card
+   * too. Without this the compact view opened on the simulator and stayed there, with the answer
+   * choices in the pane it could not show.
+   */
+  const compactPane: StagePaneId =
+    lookingBack || (stepPerformed && !finished)
+      ? 'steps'
+      : compactPaneForLocation(activeStep.lookIn, 'steps')
+
   /* ---------------------------------------------------------------- *
    * The Now card
    * ---------------------------------------------------------------- */
   const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length} · ${STAGE_PHASE_LABELS[activeStep.phase]}`
+  /*
+   * Where this step's work is done, in the words the pane captions carry. One line under the
+   * instruction on every step, and again in the help dialog; the lesson builder refuses at import
+   * to make a step without one, so the caption on the pane and the line on the card cannot drift.
+   */
+  const lookInLine = <LookInLine location={activeStep.lookIn} />
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined && performedIds.has(previousStep.id) && !finished
   const showWhereAction =
@@ -455,6 +554,7 @@ function VentilationStageSession({
       kicker: stepPosition,
       heading: activeStep.title,
       body: activeStep.instruction,
+      where: lookInLine,
       why: activeStep.rationale,
       ...(canGoBack && previousStep
         ? {
@@ -676,7 +776,28 @@ function VentilationStageSession({
   })()
 
   const nowBody: ReactNode = (() => {
-    if (lookingBack) return <StepRecap step={activeStep} session={session} />
+    if (lookingBack) {
+      /*
+       * Looking back at a committed prediction shows the verdict again — the rationale, the
+       * explanation and the other answers — rather than a one-line "You chose". The reasoning is
+       * what a learner goes back for.
+       */
+      const stepEvidence = evidenceFor(activeStep)
+      if (interaction.kind === 'prediction' && stepEvidence.prediction !== undefined) {
+        return (
+          <AnswerVerdict
+            item={interaction.item}
+            choiceId={CHOICE_IDS[stepEvidence.prediction]}
+            outcome="stated"
+            timing="immediate-after-commit"
+            theme="dark"
+            frames={PREDICTION_VERDICT_FRAMES}
+            explanationHeading={PREDICTION_EXPLANATION_HEADING}
+          />
+        )
+      }
+      return <StepRecap step={activeStep} session={session} />
+    }
     switch (interaction.kind) {
       case 'walk': {
         if (walkDone) return null
@@ -699,7 +820,19 @@ function VentilationStageSession({
                 </dd>
               </div>
             </dl>
-            <ul>
+            {/*
+              The short list, with the label that says what kind of list it is. It rendered as
+              bare lines with the marker reset away, under a definition list whose two entries are
+              labelled, so it read as more prose.
+            */}
+            <p
+              className={styles.kicker}
+              id={`${activeStep.id}-walk-checklist`}
+              data-walk-checklist-label
+            >
+              {BREATH_STOP_CHECKLIST_LABEL}
+            </p>
+            <ul aria-labelledby={`${activeStep.id}-walk-checklist`} data-walk-checklist>
               {stop.checklist.map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -739,6 +872,8 @@ function VentilationStageSession({
               outcome="stated"
               timing="immediate-after-commit"
               theme="dark"
+              frames={PREDICTION_VERDICT_FRAMES}
+              explanationHeading={PREDICTION_EXPLANATION_HEADING}
             />
           )
         }
@@ -808,21 +943,30 @@ function VentilationStageSession({
         const item = lesson.steps.find(
           (s) => s.interaction.kind === 'prediction' && s.interaction.round === interaction.round,
         )?.interaction
-        const chosen =
-          committedId && item?.kind === 'prediction'
-            ? item.item.choices.find((c) => c.id === committedId)
-            : undefined
         return (
           <>
-            {chosen ? (
-              <p
-                className={stageStyles.taskInstruction}
-                data-explain-recap
-                data-verdict-outcome={chosen.plausibility === 'best' ? 'correct' : 'not-correct'}
-              >
-                <strong>{chosen.plausibility === 'best' ? 'Correct.' : 'Not correct.'}</strong> You
-                predicted: {chosen.label}.
-              </p>
+            {/*
+              The prediction's verdict, again, in full.
+
+              The instruction says "Read the verdict on your prediction … then the explanation",
+              and this step used to render one line — "Correct. You predicted: …" — with the
+              rationale, the explanation and the other answers two steps back on a card the
+              learner had left. The verdict is the reasoning, so it comes first, and the round's
+              explanation is the paragraph under "The explanation" inside it rather than a second
+              copy below.
+            */}
+            {committedId && item?.kind === 'prediction' ? (
+              <div data-explain-recap>
+                <AnswerVerdict
+                  item={item.item}
+                  choiceId={committedId}
+                  outcome="stated"
+                  timing="immediate-after-commit"
+                  theme="dark"
+                  frames={PREDICTION_VERDICT_FRAMES}
+                  explanationHeading={PREDICTION_EXPLANATION_HEADING}
+                />
+              </div>
             ) : null}
             {stepEvidence.response &&
             roundManeuver(experiment.rounds[interaction.round]) === 'pause' ? (
@@ -837,9 +981,6 @@ function VentilationStageSession({
                 metrics={experiment.rounds[interaction.round].watch}
               />
             ) : null}
-            <p className={stageStyles.taskInstruction} data-round-explanation>
-              {experiment.rounds[interaction.round].explanation}
-            </p>
           </>
         )
       }
@@ -929,12 +1070,12 @@ function VentilationStageSession({
       session={session}
       engine={engine}
       controlsEnabled={controlsEnabled && !lookingBack}
-      lockedReason={
-        session.phase === 'predict'
-          ? 'The settings are locked while you decide. Commit your prediction to take the controls.'
-          : undefined
-      }
+      lockedReason={lockedReason}
+      pausedReason={pausedReason}
+      controlsNote={controlsNote}
       onResetPatient={() => lab({ type: 'RESET' })}
+      resetDisabledReason={resetDisabledReason}
+      resetWouldErase={resetWouldErase}
       onSelectDevice={selectDevice}
       deviceLocked={predictionCommitted}
       watch={watch}
@@ -1085,6 +1226,7 @@ function VentilationStageSession({
         <strong>{activeStep.title}</strong>
       </p>
       <p>{activeStep.instruction}</p>
+      <p>{lookInLine}</p>
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       {showWhereAction ? (
         <button
@@ -1112,7 +1254,7 @@ function VentilationStageSession({
           stageId={activeStep.id}
           label="Guided mechanical ventilation section"
           module="mechanical-ventilation"
-          workspaceLabel="Ventilation lesson workspace: simulator, teaching, and steps"
+          workspaceLabel="Ventilation lesson workspace: steps, teaching, and simulator"
           header={header}
           contextStrip={
             <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
@@ -1120,6 +1262,11 @@ function VentilationStageSession({
           simulator={simulator}
           teaching={teaching}
           task={task}
+          paneOrder={PANE_ORDER}
+          paneCaptions={PANE_CAPTIONS}
+          defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+          paneMinimums={PANE_MINIMUMS}
+          compactPane={compactPane}
           footer={
             <>
               <p className={shellStyles.footerLine}>

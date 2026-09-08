@@ -1,8 +1,13 @@
-import type { ClinicalLearningItem } from '@/features/learning-module/activity/clinicalLearningItem'
-import type {
-  StageLessonBase,
-  StagePhase,
-  StageStepBase,
+import {
+  flaggedLearnerCopyTerms,
+  type ClinicalLearningItem,
+} from '@/features/learning-module/activity/clinicalLearningItem'
+import {
+  stageStepLocationErrors,
+  type StageLessonBase,
+  type StagePhase,
+  type StageStepBase,
+  type StageStepLocation,
 } from '@/features/learning-module/stage/stageModel'
 
 import { breathStopIds, type BreathStopId } from './breathSpine'
@@ -66,12 +71,11 @@ export type VentilationStageInteraction =
       /** Whether the step also waits out the observation interval (the transfer round does). */
       readonly withObservation: boolean
     }
-  /** Let the response interval elapse while watching the named readings. */
-  | {
-      readonly kind: 'observe'
-      readonly round: VentilationRoundIndex
-      readonly watch: readonly LabMetric[]
-    }
+  /**
+   * Let the response interval elapse while watching the named readings. Which readings is the
+   * step's `guide.watch`, the one copy the host reads; a second copy here was never read.
+   */
+  | { readonly kind: 'observe'; readonly round: VentilationRoundIndex }
   /** The reveal: verdict, before-and-after, explanation. */
   | { readonly kind: 'explain'; readonly round: VentilationRoundIndex }
   /** Sort screen values into what you set and what is reported, committed as a set. */
@@ -99,6 +103,12 @@ export interface VentilationStepGuide {
 }
 
 export interface VentilationStageStep extends StageStepBase<VentilationStageInteraction> {
+  /**
+   * Which pane this step is worked in, and what to look for there — required on every step. The
+   * Now card prints it under the instruction, the help dialog repeats it, and the builder refuses
+   * at import to make a step without one or with a landmark the copy gate would not pass.
+   */
+  readonly lookIn: StageStepLocation
   /** The stops lit on the breath map while this step is current; empty lights the whole breath. */
   readonly stops: readonly BreathStopId[]
   /** Which teaching blocks are this step's focus. */
@@ -232,6 +242,107 @@ function actInstruction(round: LabRound): string {
   return `${round.task} ${maneuverNote(roundManeuver(round))}`
 }
 
+/*
+ * Where each step's work is done, in the words the surfaces carry at that step.
+ *
+ * The panes are named by the captions `StageLayout` prints; the landmarks are the headings and
+ * control groups inside them: the toolbar's Pause button, "Quick controls for this step" and
+ * "Readings to watch" under the console, the numbered stops on the breath map, the answer choices
+ * and the verdict on the Now card, and "The picture and the checklist" the teaching pane opens on
+ * at the reveal. A learner review of the ECMO module in September 2026 found that a step which
+ * says "read the explanation on the right" on a stage whose panes have no printed names is a
+ * guess; the location is authored as data so a copy edit cannot quietly drop it.
+ *
+ * Per step kind rather than per section, because the sections share one shape. A section whose
+ * first step reads somewhere else authors `recognizeLookIn` on its spec.
+ */
+const ON_SIMULATOR = {
+  console: 'the live console',
+  consoleAndMap: 'the live console, with the stop lit on the breath map',
+  pause: 'Pause, on the toolbar above the console',
+  quickControls: 'Quick controls for this step, under the console',
+  quickControlsAndReadings:
+    'Quick controls for this step and Readings to watch, both under the console',
+  readings: 'Readings to watch, under the console',
+  frozenTraces: 'the frozen traces on the console',
+  mapStops: 'the numbered stops on the breath map',
+} as const
+
+const IN_STEPS = {
+  choices: { pane: 'steps', landmark: 'the answer choices below' },
+  walkCard: { pane: 'steps', landmark: 'the stop card below, one stop at a time' },
+  verdictAndChange: { pane: 'steps', landmark: 'the verdict and what changed, below' },
+  sort: { pane: 'steps', landmark: 'the six values below' },
+} as const satisfies Record<string, StageStepLocation>
+
+const IN_TEACHING = {
+  method: 'The picture and the checklist',
+} as const
+
+function recognizeLookIn(
+  spec: VentilationSectionSpec,
+  interaction: VentilationStageInteraction,
+): StageStepLocation {
+  if (spec.recognizeLookIn) return spec.recognizeLookIn
+  if (interaction.kind === 'walk') {
+    return {
+      ...IN_STEPS.walkCard,
+      alsoPane: 'simulator',
+      alsoLandmark: ON_SIMULATOR.consoleAndMap,
+    }
+  }
+  if (interaction.kind === 'locate') {
+    return {
+      pane: 'simulator',
+      landmark: ON_SIMULATOR.mapStops,
+      alsoPane: 'steps',
+      alsoLandmark: 'Commit my answer, on this card',
+    }
+  }
+  return { pane: 'simulator', landmark: ON_SIMULATOR.console }
+}
+
+const predictLookIn: StageStepLocation = {
+  ...IN_STEPS.choices,
+  alsoPane: 'simulator',
+  alsoLandmark: ON_SIMULATOR.console,
+}
+
+function actLookIn(round: LabRound, withObservation: boolean): StageStepLocation {
+  if (roundManeuver(round) === 'pause') return { pane: 'simulator', landmark: ON_SIMULATOR.pause }
+  return {
+    pane: 'simulator',
+    landmark: withObservation ? ON_SIMULATOR.quickControlsAndReadings : ON_SIMULATOR.quickControls,
+  }
+}
+
+function observeLookIn(round: LabRound): StageStepLocation {
+  return {
+    pane: 'simulator',
+    landmark: roundManeuver(round) === 'pause' ? ON_SIMULATOR.frozenTraces : ON_SIMULATOR.readings,
+  }
+}
+
+/**
+ * What is wrong with a lesson's steps, for the import-time check below: a step without a location,
+ * a location the shared rules refuse, or a landmark the learner-copy gate would not pass.
+ */
+export function ventilationStageLessonErrors(lesson: VentilationStageLesson): readonly string[] {
+  const errors: string[] = []
+  for (const step of lesson.steps) {
+    const where = `${lesson.sectionId} step ${step.ordinal}`
+    errors.push(...stageStepLocationErrors(where, step.lookIn))
+    for (const landmark of [step.lookIn?.landmark, step.lookIn?.alsoLandmark]) {
+      if (!landmark) continue
+      const flagged = flaggedLearnerCopyTerms(landmark)
+      if (flagged.length > 0) {
+        errors.push(`${where}: banned term ${flagged.join(', ')} in look-in "${landmark}"`)
+      }
+    }
+  }
+  return errors
+}
+
 export function buildVentilationStageLesson(unitId: string): VentilationStageLesson {
   const unit = ventilationUnitById.get(unitId)
   const experiment = ventilationExperimentByUnit.get(unitId)
@@ -262,6 +373,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
             ? 'Commit my answer'
             : 'Continue',
       interaction: recognizeInteraction,
+      lookIn: recognizeLookIn(spec, recognizeInteraction),
       gate: 'open',
       stops: recognizeInteraction.kind === 'walk' ? [] : stops,
       teaching: 'framing',
@@ -274,6 +386,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         'Committing to an answer before the change is made is what turns watching into learning: the response then confirms or corrects something you actually thought.',
       actionLabel: 'Commit my prediction',
       interaction: { kind: 'prediction', round: 0, item: ventilationRoundItem(unitId, 0) },
+      lookIn: predictLookIn,
       gate: 'open',
       stops,
       teaching: 'framing',
@@ -288,6 +401,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
           : 'You are taking a measurement, not treating anything. The step is done once the maneuver has happened on the console.',
       actionLabel: 'Continue',
       interaction: { kind: 'simulator-task', round: 0, goals: first.goals, withObservation: false },
+      lookIn: actLookIn(first, false),
       gate: 'after-prediction',
       stops,
       teaching: 'task',
@@ -299,11 +413,8 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       instruction: observeInstruction(first),
       actionLabel:
         roundManeuver(first) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
-      interaction: {
-        kind: 'observe',
-        round: 0,
-        watch: roundManeuver(first) === 'pause' ? [] : first.watch,
-      },
+      interaction: { kind: 'observe', round: 0 },
+      lookIn: observeLookIn(first),
       gate: 'after-prediction',
       stops,
       teaching: 'task',
@@ -314,10 +425,15 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       title: first.title,
       instruction:
         roundManeuver(first) === 'pause'
-          ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation on the right.'
-          : 'Read the verdict on your prediction and what actually changed, then the explanation on the right.',
+          ? 'Read the verdict on your prediction and what the frozen traces showed, then the explanation under it. The Teaching panel opens on the picture and the checklist.'
+          : 'Read the verdict on your prediction and what actually changed, then the explanation under it. The Teaching panel opens on the picture and the checklist.',
       actionLabel: 'Continue to a new setup',
       interaction: { kind: 'explain', round: 0 },
+      lookIn: {
+        ...IN_STEPS.verdictAndChange,
+        alsoPane: 'teaching',
+        alsoLandmark: IN_TEACHING.method,
+      },
       gate: 'after-prediction',
       stops,
       teaching: 'reveal',
@@ -334,6 +450,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         'Two of these pairs look alike on purpose. Separating a request from a result is the whole of this section.',
       actionLabel: 'Commit the six',
       interaction: { kind: 'sort', sort: ventilationSettingSort },
+      lookIn: IN_STEPS.sort,
       gate: 'after-prediction',
       stops,
       teaching: 'reveal',
@@ -349,6 +466,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
         'The same principle in a different situation. If the first answer was memorised rather than understood, this is where it shows.',
       actionLabel: 'Commit my prediction',
       interaction: { kind: 'prediction', round: 1, item: ventilationRoundItem(unitId, 1) },
+      lookIn: predictLookIn,
       gate: 'after-prediction',
       stops,
       teaching: 'transfer',
@@ -360,6 +478,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       actionLabel:
         roundManeuver(second) === 'pause' ? 'Continue to the reading' : 'Compare before and after',
       interaction: { kind: 'simulator-task', round: 1, goals: second.goals, withObservation: true },
+      lookIn: actLookIn(second, true),
       gate: 'after-prediction',
       stops,
       teaching: 'task',
@@ -371,6 +490,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
       instruction: 'Read the verdict and the before-and-after, then finish the section.',
       actionLabel: 'Finish this section',
       interaction: { kind: 'explain', round: 1 },
+      lookIn: IN_STEPS.verdictAndChange,
       gate: 'after-prediction',
       stops,
       teaching: 'reveal',
@@ -391,7 +511,7 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     (step) => step.interaction.kind === 'prediction' && step.interaction.round === 1,
   )
 
-  return {
+  const lesson: VentilationStageLesson = {
     sectionId: unitId,
     unit,
     spec,
@@ -405,6 +525,11 @@ export function buildVentilationStageLesson(unitId: string): VentilationStageLes
     transferPredictionStepIndex,
     lifecycleActivityId: `ventilation:learn:${unitId}`,
   }
+  const errors = ventilationStageLessonErrors(lesson)
+  if (errors.length > 0) {
+    throw new Error(`Ventilation stage lesson ${unitId} is not valid:\n${errors.join('\n')}`)
+  }
+  return lesson
 }
 
 const lessons = new Map<string, VentilationStageLesson>()

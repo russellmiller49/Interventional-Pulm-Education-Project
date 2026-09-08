@@ -1548,8 +1548,15 @@ export function MechanicalVentilatorConsole({
           })
           .join('; ')}
         ; measured {pressureNames.plateau} {state.measurements.plateauPressureCmH2O.toFixed(0)}{' '}
-        {display.pressureUnit}; intrinsic PEEP {state.measurements.intrinsicPeepCmH2O.toFixed(1)}{' '}
-        {display.pressureUnit}.
+        {display.pressureUnit}
+        {/*
+         * The readout beside the trace marks an uninterpretable plateau with a bare "?" that is
+         * hidden from assistive technology, and the trace's own caption — screen-reader only —
+         * carries the clause. The visible text equivalent carries it too, so a sighted learner is
+         * told what the "?" means.
+         */}
+        {plateauUnreliable ? ` — ${plateauWithheldNote(plateauValidity)}` : ''}; intrinsic PEEP{' '}
+        {state.measurements.intrinsicPeepCmH2O.toFixed(1)} {display.pressureUnit}.
         {/*
          * While the trace is held still it carries labelled reference levels. The trace itself only
          * has room beside each line for the name and the value, so what each level *is* is stated

@@ -1,6 +1,6 @@
 'use client'
 
-import type { Dispatch } from 'react'
+import { useId, type Dispatch } from 'react'
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 
 import type { BreathStopId } from '../../content/breathSpine'
@@ -79,7 +79,11 @@ export function VentilationSimulatorPane({
   engine,
   controlsEnabled,
   lockedReason,
+  pausedReason,
+  controlsNote,
   onResetPatient,
+  resetDisabledReason,
+  resetWouldErase = false,
   onSelectDevice,
   deviceLocked,
   watch,
@@ -95,8 +99,17 @@ export function VentilationSimulatorPane({
   readonly session: LabSession
   readonly engine: Dispatch<VentilationAction>
   readonly controlsEnabled: boolean
+  /** Why the controls are locked, while a prediction is being decided. */
   readonly lockedReason?: string
+  /** Why the controls are paused, while the learner looks back at an earlier step. */
+  readonly pausedReason?: string
+  /** The line beside the quick controls' heading: what they are, or why they are off. */
+  readonly controlsNote?: string
   readonly onResetPatient: () => void
+  /** When Reset patient is unavailable, the reason — read on the button and to assistive technology. */
+  readonly resetDisabledReason?: string
+  /** Whether a reset now would clear a change, a hold or an observation the lab has recorded. */
+  readonly resetWouldErase?: boolean
   readonly onSelectDevice: (device: VentilatorDeviceId) => void
   /** Once a prediction is committed the console cannot change without restarting the section. */
   readonly deviceLocked: boolean
@@ -137,6 +150,11 @@ export function VentilationSimulatorPane({
   const round = session.round
   const caseId = state.caseId
   const definition = resolveVentilationSimulationCase(caseId)
+  const readingsId = useId()
+  const resetNoteId = useId()
+  const resetTitle =
+    resetDisabledReason ??
+    'Returns the patient to this round’s starting point. Your prediction is kept; a change, a hold, an intervention or a timed observation is not.'
 
   return (
     <>
@@ -202,6 +220,9 @@ export function VentilationSimulatorPane({
             type="button"
             className={styles.toolButton}
             onClick={onResetPatient}
+            disabled={resetDisabledReason !== undefined}
+            title={resetTitle}
+            aria-describedby={resetWouldErase && !resetDisabledReason ? resetNoteId : undefined}
             data-reset-patient
           >
             <RotateCcw aria-hidden="true" />
@@ -210,9 +231,26 @@ export function VentilationSimulatorPane({
         </div>
       </div>
 
+      {/*
+        What Reset patient would do, said on the surface once there is something it would undo.
+        The button used to be an unqualified "Reset patient" that cleared the change, the hold and
+        the observation the step had recorded, so the step list quietly went back a step.
+      */}
+      {resetWouldErase && !resetDisabledReason ? (
+        <p className={styles.quickNote} id={resetNoteId} data-reset-note>
+          Reset patient returns this round to its starting point and clears the change, hold or
+          observation you have made. Your prediction is kept.
+        </p>
+      ) : null}
+
       {!controlsEnabled && lockedReason ? (
-        <p className={styles.lockedNote} role="status">
+        <p className={styles.lockedNote} role="status" data-controls-locked-note>
           {lockedReason}
+        </p>
+      ) : null}
+      {!controlsEnabled && pausedReason ? (
+        <p className={styles.lockedNote} role="status" data-controls-paused-note>
+          {pausedReason}
         </p>
       ) : null}
 
@@ -232,22 +270,32 @@ export function VentilationSimulatorPane({
       </div>
 
       {watch.length > 0 ? (
-        <dl className={styles.readings} aria-label="Readings to watch" data-live-readings>
-          {watch.map((metric) => (
-            <div key={metric} className={styles.reading} data-metric={metric}>
-              <dt>{labMetricLabels[metric].label}</dt>
-              <dd>
-                {formatMetric(session, metric)}
-                <small>{labMetricLabels[metric].unit}</small>
-              </dd>
-            </div>
-          ))}
+        /*
+         * The readings a step asks the learner to watch, under a printed label: the steps say
+         * "Readings to watch, under the console", so the words have to be on the surface and not
+         * only in an accessible name.
+         */
+        <section className={styles.readingsBlock} aria-labelledby={readingsId} data-live-readings>
+          <p className={styles.kicker} id={readingsId}>
+            Readings to watch
+          </p>
+          <dl className={styles.readings}>
+            {watch.map((metric) => (
+              <div key={metric} className={styles.reading} data-metric={metric}>
+                <dt>{labMetricLabels[metric].label}</dt>
+                <dd>
+                  {formatMetric(session, metric)}
+                  <small>{labMetricLabels[metric].unit}</small>
+                </dd>
+              </div>
+            ))}
+          </dl>
           {watch.includes('plateau') && !labSnapshot(state).plateauValid ? (
-            <p className={styles.quickNote} style={{ gridColumn: '1 / -1' }}>
+            <p className={styles.quickNote}>
               * Recent effort keeps this plateau from standing for passive mechanics.
             </p>
           ) : null}
-        </dl>
+        </section>
       ) : null}
 
       {hasQuick ? (
@@ -258,10 +306,11 @@ export function VentilationSimulatorPane({
         >
           <div className={styles.quickHeading}>
             <h3>Quick controls for this step</h3>
-            <span>
-              {controlsEnabled
-                ? 'The same settings as on the console.'
-                : 'Commit your prediction first.'}
+            <span data-quick-controls-note>
+              {controlsNote ??
+                (controlsEnabled
+                  ? 'The same settings as on the console.'
+                  : 'Commit your prediction first.')}
             </span>
           </div>
           {controlGoals.length > 0 ? (

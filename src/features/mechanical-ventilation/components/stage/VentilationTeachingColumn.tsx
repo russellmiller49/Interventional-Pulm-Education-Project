@@ -3,7 +3,11 @@
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import type { StageBlockVisibility } from '@/features/learning-module/stage/StageTeachingScope'
 
-import { breathStop, type BreathStopId } from '../../content/breathSpine'
+import {
+  BREATH_STOP_CHECKLIST_LABEL,
+  breathStop,
+  type BreathStopId,
+} from '../../content/breathSpine'
 import { breathGrammarRows, breathGrammarRowsFor } from '../../content/breathGrammar'
 import { VENTILATION_CONTROL_PANEL } from '../../content/controlPanel'
 import { labMetricLabels } from '../../engine/learningLab'
@@ -137,7 +141,10 @@ export function VentilationTeachingColumn({
                   <dd>{stop.look.volume}</dd>
                 </div>
               </dl>
-              <ul>
+              <p className={styles.kicker} id={`teaching-stop-${stopId}-checklist`}>
+                {BREATH_STOP_CHECKLIST_LABEL}
+              </p>
+              <ul aria-labelledby={`teaching-stop-${stopId}-checklist`} data-stop-checklist>
                 {stop.checklist.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
@@ -208,6 +215,8 @@ export function VentilationTeachingColumn({
       >
         <section className={styles.block} data-teaching-block="method">
           <p className={styles.kicker}>Hold it this way</p>
+          {/* The heading the Explain step points at, printed whether the block is open or folded. */}
+          <h3>The picture and the checklist</h3>
           <p className={styles.analogy}>{unit.analogy}</p>
           <p>{unit.explanation}</p>
           <ol>

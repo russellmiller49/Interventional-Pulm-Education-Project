@@ -45,12 +45,14 @@ type Plausibility = ClinicalLearningItem['choices'][number]['plausibility']
  *    promoted from) and the PAC guided-skill copy that shadowed `ChoiceReasoningFeedback`'s name.
  *    Both gained an assertive unsafe announcement, and PAC gained an announcement at all and the
  *    comparison against the answers not taken; PAC's extra framing rides along as
- *    `branchExplanation`. Feedback timing, scoring and completion are untouched in both.
+ *    `branchExplanation`. Feedback timing, scoring and completion are untouched in both. Both
+ *    copies have since been retired: the MV flow rebuild (September 2026) and the hemodynamics
+ *    stage render this component directly, as do the ECMO and MCS stages.
  *  - Not migrated — the consumers of the shared `ChoiceReasoningFeedback`: ECMO foundation, the MCS
- *    workbench, CRRT Learn and MV's own case debrief. That component resolves and renders concept
- *    links and the citation list for the item's evidence, which this one does not; swapping it in
- *    would silently drop the sources those surfaces show. They are a separate component because
- *    they do a genuinely different job, not because nobody has got round to them.
+ *    workbench and CRRT Learn. That component resolves and renders concept links and the citation
+ *    list for the item's evidence, which this one does not; swapping it in would silently drop the
+ *    sources those surfaces show. They are a separate component because they do a genuinely
+ *    different job, not because nobody has got round to them.
  */
 export type VerdictTiming = 'immediate-after-commit' | 'after-action-response' | 'debrief-only'
 
@@ -156,6 +158,7 @@ export function AnswerVerdict({
   outcome = 'described',
   branchExplanation,
   frames,
+  explanationHeading = 'How to distinguish it',
   onContinue,
   continueLabel = 'Continue',
 }: {
@@ -173,8 +176,9 @@ export function AnswerVerdict({
    * "Partly correct." / "Not correct." in front of that sentence.
    *
    * A prop rather than a change to the card, because the finding behind it came from one owner
-   * reviewing one module. Each lab's owner can take it once they have looked at it; the ECMO stage
-   * is the only caller passing `stated` today, and nothing has moved under the other labs.
+   * reviewing one module. Each lab's owner can take it once they have looked at it. The ECMO stage
+   * took it first; the MV, MCS and hemodynamics stages pass `stated` too, and nothing has moved
+   * under the labs that do not.
    */
   readonly outcome?: 'described' | 'stated'
   /**
@@ -194,6 +198,15 @@ export function AnswerVerdict({
    * passes nothing keeps every word it had.
    */
   readonly frames?: Partial<Record<Plausibility, string>>
+  /**
+   * The heading over the item's explanation. Omitted, "How to distinguish it".
+   *
+   * That heading is signal-recognition vocabulary too: it fits an explanation that says how to
+   * tell one pattern from another, and reads oddly over a response prediction's explanation of what
+   * the change did. A caller whose instruction promises "the explanation" can say so here, so the
+   * word on the card is the word in the step. A caller that passes nothing keeps the heading it had.
+   */
+  readonly explanationHeading?: string
   /**
    * Advancing is the caller's job, and only on this control. A verdict that advanced by itself
    * would replace the question before the learner had read the answer — the defect this component
@@ -269,7 +282,7 @@ export function AnswerVerdict({
       {showFullReasoning ? (
         <>
           <div className="mt-3" data-how-to-distinguish>
-            <strong>How to distinguish it</strong>
+            <strong>{explanationHeading}</strong>
             <p className="mt-1">{item.explanation}</p>
           </div>
           {others.length > 0 ? (

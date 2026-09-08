@@ -2,6 +2,10 @@
  * What only the ventilation stage has: the transport toolbar over the console, the quick controls
  * for a step, the live readings, the walk card, the settings sort, the before-and-after table.
  * Everything shared with the other lesson stages lives in `learning-module/stage/*.module.css`.
+ *
+ * No rule here reads the `--muted` token as a colour: inside the shared workspace it is a Tailwind HSL
+ * triple, invalid as a colour, so the text silently inherited the ink. The shell publishes the
+ * palette's muted colour as `--stage-muted`; that is what the kickers and notes read.
  */
 
 .toolbar {
@@ -68,6 +72,21 @@
   cursor: not-allowed;
 }
 
+/*
+ * A control looks like one under the pointer and under the finger. The transport, hold and
+ * intervention buttons shipped with a rest state, a focus ring and a disabled state and nothing
+ * between; the accent is the one the spotlight and the focus ring already use.
+ */
+.toolButton:hover:not(:disabled),
+.select:hover:not(:disabled) {
+  border-color: var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.14);
+}
+
+.toolButton:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.26);
+}
+
 .toolButton:focus-visible,
 .select:focus-visible,
 .rangeInput:focus-visible,
@@ -82,7 +101,7 @@
 }
 
 .clock {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-variant-numeric: tabular-nums;
 }
 
@@ -109,6 +128,12 @@
  * Live readings
  * ------------------------------------------------------------------ */
 
+.readingsBlock {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
 .readings {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
@@ -126,7 +151,7 @@
 }
 
 .reading dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -142,7 +167,7 @@
 
 .reading dd small {
   margin-left: 0.25rem;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -175,7 +200,7 @@
 }
 
 .quickHeading span {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -204,7 +229,7 @@
 .slider small {
   display: flex;
   justify-content: space-between;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
 }
 
@@ -221,7 +246,7 @@
 
 .quickNote {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -291,7 +316,7 @@
 }
 
 .walk dt {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -302,13 +327,15 @@
   margin: 0;
 }
 
+/* Real markers: the base stylesheet resets every list's, and a marked list is what says "list". */
 .walk ul {
   margin: 0;
   padding-left: 1.1rem;
+  list-style: disc;
 }
 
 .walkProgress {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: var(--stage-type-floor, 0.875rem);
 }
 
@@ -389,9 +416,17 @@
   gap: 0.25rem;
 }
 
+.block ul {
+  list-style: disc;
+}
+
+.block ol {
+  list-style: decimal;
+}
+
 .kicker {
   margin: 0;
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -419,7 +454,7 @@
 }
 
 .grammar th {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -443,9 +478,14 @@
   list-style: none;
 }
 
+/*
+ * The text column is `minmax(0, 1fr)`, not `1fr`: a `1fr` track's floor is its content's
+ * min-content width, and with the no-wrap pill beside it the row's min-content reached 300px —
+ * which sized the whole teaching column's track, 37px wider than a 1024-wide viewport's pane.
+ */
 .strip li {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.2rem 0.6rem;
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
@@ -478,7 +518,7 @@
 }
 
 .strip span:last-child {
-  color: var(--muted, #9fb4b7);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .example {

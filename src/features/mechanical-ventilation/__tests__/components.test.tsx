@@ -367,8 +367,18 @@ describe('multi-device mechanical ventilation learner interface', () => {
         endInspiratoryEffortCmH2O: 8,
       },
     }
-    render(<MechanicalVentilatorConsole state={active} dispatch={jest.fn()} controlsEnabled />)
-    expect(screen.getByText(/Pplateau .* not interpretable: patient effort 8/)).toBeInTheDocument()
+    const { container } = render(
+      <MechanicalVentilatorConsole state={active} dispatch={jest.fn()} controlsEnabled />,
+    )
+    const caveats = screen.getAllByText(/Pplateau .* not interpretable: patient effort 8/)
+    expect(caveats.length).toBeGreaterThan(0)
+    // The readout beside the trace shows a bare "?" that is hidden from assistive technology, so
+    // the clause has to be somewhere a sighted learner can read it: the visible text equivalent
+    // under the console, not only the trace's screen-reader caption.
+    const visible = [...container.querySelectorAll('p')].find((node) =>
+      /^Waveform text:/.test(node.textContent ?? ''),
+    )
+    expect(visible?.textContent).toMatch(/Pplateau \d+ cmH₂O — not interpretable: patient effort 8/)
   })
 
   it('leaves the plateau unmarked once the patient is passive', () => {
