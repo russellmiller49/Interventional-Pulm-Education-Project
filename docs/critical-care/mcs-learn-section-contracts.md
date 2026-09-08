@@ -44,8 +44,11 @@ would.
 `recognize → predict → act → observe → explain → transfer`, in order, per section.
 
 - **Recognize** asks a real identification with authored options and feedback.
-- **Predict** requires a commitment. The shared `AnswerVerdict` then says whether the read holds and
-  why the alternatives do not — and does not advance. A separate Continue does.
+- **Predict** requires a commitment. The verdict then states the outcome, says in this module's
+  words what it is judging, folds why the other answers do not fit, and does not advance. A
+  separate Continue does. (Amended 2026-09-07: this bullet used to name `AnswerVerdict`; the stage
+  renders `ChoiceReasoningFeedback` with its `frames` and `alternatives` — see
+  [`mcs-learner-review-record.md`](./mcs-learner-review-record.md) MLR-OD-4 and MLR-OD-5.)
 - **Act** presents one control, highlighted, or states explicitly that no adjustment is expected.
   Whether the action has been done is a **state predicate** (`isActionSatisfied`), not a list of
   action ids: three sections build their starting state with the same control the learner is then
@@ -109,8 +112,9 @@ never appears in the systemic total.
 
 - **Below about 1024 px wide** the shared teaching workspace collapses to one full-width pane with a
   tab row, so the live surface and the task are one click apart rather than side by side. The
-  threshold and the default pane belong to `ResizableTeachingWorkspace`, which this package does not
-  modify.
+  threshold belongs to `ResizableTeachingWorkspace`; since 2026-09-07 the pane it opens on follows
+  the step's authored location (MLR-OD-1 in
+  [`mcs-learner-review-record.md`](./mcs-learner-review-record.md)).
 - **Resizing the window** keeps the pane widths the learner last dragged, so the third pane absorbs
   the change and can become narrow until the page is reloaded. Same shared component.
 - The module chrome above the activity viewport is 338 px at every window size. The workspace fits

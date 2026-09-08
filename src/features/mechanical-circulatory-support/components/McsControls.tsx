@@ -548,7 +548,17 @@ export function McsControls({
               />
               <span>
                 <strong>Authorized-personnel order</strong>
-                <small>Simulation authorization only</small>
+                {/*
+                  What this box gates, said on the box. The speed slider below is disabled until
+                  it is ticked, and nothing said so: a learner met a dead control with a labelled
+                  checkbox above it that did not say it was the key. Driven by the same flag that
+                  disables the slider, so the two cannot drift.
+                */}
+                <small data-speed-authorization-note>
+                  {state.device.speedChangeAuthorized
+                    ? 'Simulation authorization only · the pump speed below can be changed'
+                    : 'Simulation authorization only · tick it to unlock the pump speed below'}
+                </small>
               </span>
             </label>
             <RangeControl

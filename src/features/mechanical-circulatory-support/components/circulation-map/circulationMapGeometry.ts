@@ -160,13 +160,22 @@ export interface McsMapPathwayShape {
   }
 }
 
+/*
+ * Every pathway label stays on the drawing. The two on the right-hand line are anchored to their
+ * end and drawn to the left of the line, as the durable pump's always was: they used to start
+ * thirty units to the right of a line that sits near the right edge of a drawing one thousand
+ * wide, and ran off it. The right-sided pump's ran off the left edge for the mirror reason. All
+ * three were found by measuring the panes for overflow in the September 2026 learner-review
+ * round. A label with a mechanism name before a colon is drawn as two lines, so the long ones sit
+ * beside the loop rather than across it; the balloon's sits above "Descending aorta".
+ */
 export const CIRCULATION_MAP_PATHWAYS: readonly McsMapPathwayShape[] = [
   {
     id: 'iabp-balloon',
     label: 'Balloon in the descending aorta',
     d: `M ${RIGHT_X} 430 L ${RIGHT_X} 500`,
     componentAt: { x: RIGHT_X, y: 465 },
-    labelAt: { x: RIGHT_X + 30, y: 462, anchor: 'start' },
+    labelAt: { x: RIGHT_X - 30, y: 440, anchor: 'end' },
   },
   {
     id: 'left-pump',
@@ -175,7 +184,7 @@ export const CIRCULATION_MAP_PATHWAYS: readonly McsMapPathwayShape[] = [
     componentAt: { x: RIGHT_X, y: 340 },
     inletAt: { x: RIGHT_X, y: 292 },
     outletAt: { x: RIGHT_X, y: 398 },
-    labelAt: { x: RIGHT_X + 30, y: 300, anchor: 'start' },
+    labelAt: { x: RIGHT_X - 30, y: 300, anchor: 'end' },
   },
   {
     id: 'right-pump',
@@ -184,7 +193,9 @@ export const CIRCULATION_MAP_PATHWAYS: readonly McsMapPathwayShape[] = [
     componentAt: { x: 96, y: 330 },
     inletAt: { x: LEFT_X - 4, y: 496 },
     outletAt: { x: LEFT_X - 4, y: 150 },
-    labelAt: { x: 82, y: 320, anchor: 'end' },
+    // Above its own top segment, running right, in the band between the lungs and the pulmonary
+    // artery's label. Anchored to its end at the far left it ran off the drawing.
+    labelAt: { x: 96, y: 152, anchor: 'start' },
   },
   {
     id: 'durable-pump',

@@ -7,6 +7,13 @@
  * The module's own shell is light — `--ink` there is a dark text colour on paper — while its device
  * surfaces are dark cards. The stage runs on the dark palette those surfaces already use, so the
  * tokens the shared shell reads are set here, on the stage root, and nowhere else.
+ *
+ * The muted colour is read as `--stage-muted`, never as `--muted`. Inside the shared workspace
+ * `--muted` is redefined as a Tailwind HSL triple for `hsl(var(--token))`, so `var(--muted)` read
+ * as a colour there is invalid and silently inherits the ink — which is why no kicker, hint or
+ * footnote on this stage was ever the grey it declared. The shell publishes the palette's muted
+ * colour as `--stage-muted`; the hemodynamics learner-review round found this and left this
+ * module's thirteen reads to this one.
  */
 
 .stage {
@@ -111,7 +118,7 @@
 }
 
 .surfaceToggleHint {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -131,7 +138,7 @@
 
 .boundaryNote {
   margin: 0;
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.8125rem;
 }
 
@@ -174,7 +181,7 @@
 
 .reasoning {
   margin: 0;
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .walkHint {
@@ -233,7 +240,7 @@
 
 .response {
   margin: 0;
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-variant-numeric: tabular-nums;
 }
 
@@ -251,7 +258,7 @@
 }
 
 .transferContext dt {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -277,6 +284,31 @@
 }
 
 .transferWork p {
+  margin: 0;
+}
+
+/* The authored before-and-after account, above the numeric table. */
+
+.beforeAfter {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
+}
+
+.beforeAfter > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.beforeAfter ul {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+
+.beforeAfter li {
   margin: 0;
 }
 
@@ -356,7 +388,7 @@
 
 .storyIntro {
   margin: 0;
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .story {
@@ -390,7 +422,7 @@
 }
 
 .storyReadings dt {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .storyReadings dd {
@@ -465,9 +497,18 @@
   gap: 0.25rem;
 }
 
+/* A real list: the preflight resets the marker, and a markerless short list reads as prose. */
+.block ul {
+  list-style: disc;
+}
+
+.block ol {
+  list-style: decimal;
+}
+
 .kicker {
   margin: 0;
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -515,7 +556,7 @@
 }
 
 .grammar th {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -528,11 +569,11 @@
 }
 
 .grammar tr:not([data-highlighted='true']) td {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .footnote {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
   font-size: 0.8125rem;
 }
 
@@ -556,7 +597,7 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
 }
 
 .strip li[data-strip-state='this-setting'] {
@@ -572,5 +613,62 @@
 }
 
 .strip li small {
-  color: var(--muted);
+  color: var(--stage-muted, #9fb4b7);
+}
+
+/* ------------------------------------------------------------------ *
+ * A control looks like one under the pointer and under the finger
+ * ------------------------------------------------------------------ */
+
+/*
+ * The guided actions, the surface toggles, the reveal toggle, the sort's selects, the choices and
+ * the Now card's actions shipped with a rest state, a focus ring and a disabled state and nothing
+ * between: no hover, no pressed state. A learner review of the ECMO module in September 2026
+ * reported exactly that about the same kind of button — "They don't highlight or appear
+ * interactive" — and this stage had the same gap. Scoped to this module because the shell's button
+ * classes are four modules' to change.
+ */
+.guidedAction:hover:not(:disabled),
+.surfaceToggle:hover,
+.teachingRevealToggle:hover,
+.sortSelect:hover:not(:disabled) {
+  border-color: var(--cyan-bright);
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.guidedAction:active:not(:disabled),
+.surfaceToggle:active,
+.teachingRevealToggle:active {
+  background: rgba(113, 225, 229, 0.22);
+}
+
+.stage [data-prediction-choices]:not(:disabled) label:hover,
+.stage [data-story-choices]:not(:disabled) label:hover {
+  border-color: var(--cyan-bright);
+  background: rgba(113, 225, 229, 0.08);
+}
+
+.stage [data-now-primary]:hover:not(:disabled),
+.stage [data-verdict-continue]:hover:not(:disabled),
+.stage [data-story-commit]:hover:not(:disabled),
+.stage [data-stage-completion] button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.stage [data-now-primary]:active:not(:disabled),
+.stage [data-verdict-continue]:active:not(:disabled),
+.stage [data-story-commit]:active:not(:disabled),
+.stage [data-stage-completion] button:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.stage [data-now-secondary]:hover:not(:disabled),
+.stage [data-story-run-button]:hover:not(:disabled) {
+  border-color: var(--cyan-bright);
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.stage [data-now-secondary]:active:not(:disabled),
+.stage [data-story-run-button]:active:not(:disabled) {
+  background: rgba(113, 225, 229, 0.22);
 }

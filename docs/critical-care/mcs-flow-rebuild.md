@@ -5,7 +5,11 @@ and the Phase 1 plan. This file is the record: what landed, what was measured, w
 what was deliberately not done, and what waits for the owner.
 
 Branch `claude/mec-circ-9-5`, cut from `origin/main` at `119a3d08` (the merged ECMO R4 rebuild,
-PR #123). Dated 2026-09-05. The earlier MCS packages (M0–M5, `mcs-learn-section-contracts.md`,
+PR #123). Dated 2026-09-05. **Amended 2026-09-07 by
+[`mcs-learner-review-record.md`](./mcs-learner-review-record.md)**: the pane order §2 and §7
+measured is now Steps, Teaching, Simulator (MLR-OD-1); the three-dimensional view §9 describes is
+absent before the commitment (MLR-OD-2); thirteen of the items §5 records as `sme-review` are
+`draft` again (MLR-OD-3). The earlier MCS packages (M0–M5, `mcs-learn-section-contracts.md`,
 `mcs-live-teaching-panels.md`, `mcs-component-test-matrix.md`) describe the content this rebuild
 stands on; where they describe the old three-pane Learn runtime, this file supersedes them.
 

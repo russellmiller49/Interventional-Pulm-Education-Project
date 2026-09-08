@@ -192,7 +192,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'assume-ecg',
           label:
-            'Keep ECG triggering, because it is always superior to pressure triggering in any rhythm',
+            'Keep ECG triggering, because an electrical signal stays reliable when the pressure trace does not',
           rationale:
             'Signal reliability depends on rhythm and signal quality; no source is universally superior.',
           plausibility: 'incorrect-mechanism',
@@ -210,7 +210,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       explanation:
         'The transfer introduces rhythm irregularity. The learner must change the trigger and then verify the mechanical timing on the actual pressure trace.',
       evidenceIds: iabpEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   {
@@ -260,8 +260,9 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           id: 'retime-normal',
           label:
             'Continue changing inflation timing even though the waveform timing is already acceptable',
-          rationale: 'Technical timing changes do not resolve a support-mechanism mismatch.',
-          plausibility: 'reasonable-but-incomplete',
+          rationale:
+            'Technical timing changes do not resolve a support-mechanism mismatch, and adjusting a device that is already aligned is the misreading this section exists to name.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'accept-map-only',
@@ -274,7 +275,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       explanation:
         'The new condition is RV-limited rather than a timing fault. Completion requires an actual escalation action after interpreting the transfer case.',
       evidenceIds: iabpEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   {
@@ -325,7 +326,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'setting-equals-flow',
           label:
-            'The performance level guarantees the same patient flow in every loading condition',
+            'The performance level sets the patient flow, so the display should not have moved',
           rationale:
             'Performance level is a setting, not a loading-independent guarantee of effective patient flow.',
           plausibility: 'incorrect-mechanism',
@@ -343,7 +344,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       explanation:
         'The authored variant holds the performance setting while changing afterload, requiring interpretation of the resulting pressure-flow relationship.',
       evidenceIds: impellaEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   {
@@ -397,7 +398,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'purge-only',
           label:
-            'Treat every low-flow pattern on this pump as a purge-system problem until proven otherwise',
+            'Treat this low-flow pattern as a purge-system problem before looking at filling or position',
           rationale: 'Purge abnormalities are distinct from preload- or position-limited suction.',
           plausibility: 'incorrect-mechanism',
         },
@@ -406,7 +407,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       explanation:
         'The transfer deliberately creates underfilling at high support. The learner must make a real pump-level adjustment and identify the loading mechanism.',
       evidenceIds: impellaEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   {
@@ -516,15 +517,15 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           label:
             'Treat the controller display as sufficient and defer examination or imaging for now',
           rationale:
-            'The bedside patient, flow path, power sources, controller trend, and focused imaging must be reconciled.',
-          plausibility: 'reasonable-but-incomplete',
+            'The bedside patient, flow path, power sources, controller trend, and focused imaging must be reconciled, and in a time-critical pattern deferring them is the delay that does the harm.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['preserve-power-escalate'],
       explanation:
         'The transfer separates a high-power emergency from ordinary low-flow loading changes and requires a real escalation action.',
       evidenceIds: lvadEvidence,
-      reviewStatus: 'sme-review',
+      reviewStatus: 'draft',
     }),
   },
   {

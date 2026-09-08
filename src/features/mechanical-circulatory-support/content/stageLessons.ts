@@ -6,6 +6,7 @@ import {
   type StageLessonBase,
   type StagePhase,
   type StageStepBase,
+  type StageStepLocation,
 } from '@/features/learning-module/stage/stageModel'
 
 import type { McsDeviceKind, McsSimulationState } from '../engine/types'
@@ -113,6 +114,17 @@ export interface McsStageLesson extends StageLessonBase<McsStageStep> {
   }
 }
 
+/**
+ * The walk is worked from the card, one stop at a time, and read on the map where each stop lights.
+ * The section spec authors the six phases' locations; the walk is the one step outside them.
+ */
+const WALK_LOCATION: StageStepLocation = {
+  pane: 'steps',
+  landmark: 'this card, one stop at a time',
+  alsoPane: 'simulator',
+  alsoLandmark: 'the Circulation map, where each stop lights',
+}
+
 const PHASE_LABEL: Readonly<Record<StagePhase, string>> = {
   recognize: 'Recognize',
   predict: 'Predict',
@@ -135,11 +147,16 @@ function surfacesFor(
       return mapLed ? ['map'] : []
     case 'act': {
       // The controls surface opens only when the work cannot be done from the Now card's own
-      // buttons — every allowed action that is a guided button stays in the card.
+      // buttons — every allowed action that is a guided button stays in the card. The map opens
+      // where the section's spec says the step's instruction is about what the map draws, so the
+      // thing the step names is open at that step.
       const needsControls = contract.allowedActions.some(
         (id) => mcsLearnControls[id].location !== 'guided-actions',
       )
-      return needsControls ? ['controls'] : []
+      return [
+        ...(spec.actOpensMap ? (['map'] as const) : []),
+        ...(needsControls ? (['controls'] as const) : []),
+      ]
     }
     case 'observe':
       return []
@@ -175,6 +192,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     actionLabel: string,
     interaction: McsStageInteraction,
     rationale?: string,
+    lookIn: StageStepLocation = spec.stepLocations[phase],
   ) => {
     ordinal += 1
     steps.push({
@@ -184,6 +202,7 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       title,
       instruction,
       rationale,
+      lookIn,
       actionLabel,
       interaction,
       gate: phase === 'recognize' || phase === 'predict' ? 'open' : 'after-prediction',
@@ -197,10 +216,11 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
       'recognize',
       'walk',
       'Walk the loop',
-      'Follow the circulation one stop at a time. Each stop lights on the map, names what a device does there, and gives you the few things to check at that place.',
+      'Follow the circulation one stop at a time. Each stop lights on the Circulation map and names what a device does there; the few things to check at that place are in the Teaching panel, under On the loop.',
       'Next stop',
       { kind: 'walk' },
       'Every device in this module is read on the same loop, and every later section stands at one of these stops. Walking it once is what makes a later "where" question answerable.',
+      WALK_LOCATION,
     )
   }
 

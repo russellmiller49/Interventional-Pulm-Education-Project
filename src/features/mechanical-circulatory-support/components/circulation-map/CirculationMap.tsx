@@ -117,6 +117,18 @@ function segmentShape(
   )
 }
 
+/**
+ * A pathway label as the lines it is drawn on: the mechanism's name on the first, where it draws
+ * from and returns to on the second, and whether it is in place on whichever is last. The text's
+ * content is the label unchanged, with the space the colon had; only the line break is new.
+ */
+function pathwayLabelLines(label: string, inPlace: boolean): readonly string[] {
+  const suffix = inPlace ? '' : ' — not in place'
+  const colon = label.indexOf(': ')
+  if (colon < 0) return [`${label}${suffix}`]
+  return [label.slice(0, colon + 1), ` ${label.slice(colon + 2)}${suffix}`]
+}
+
 /** Options ordered along the blood path, so pin numbers read around the loop rather than about it. */
 export function orderAnswerOptionsAlongPath(
   options: readonly CirculationMapAnswerOption[],
@@ -259,7 +271,11 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
                   textAnchor={shape.labelAt.anchor}
                   className={styles.pathwayLabel}
                 >
-                  {pathway.inPlace ? shape.label : `${shape.label} — not in place`}
+                  {pathwayLabelLines(shape.label, pathway.inPlace).map((line, index) => (
+                    <tspan key={line} x={shape.labelAt.x} dy={index === 0 ? 0 : '1.15em'}>
+                      {line}
+                    </tspan>
+                  ))}
                 </text>
               </g>
             )
