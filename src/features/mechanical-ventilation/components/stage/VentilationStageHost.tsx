@@ -71,19 +71,30 @@ import styles from './ventilation-stage.module.css'
 const CHOICE_IDS = ['a', 'b', 'c'] as const
 
 /*
- * What each pane is for, printed on it after its name: "Simulator panel · the live ventilator…".
+ * Steps, Teaching, Simulator — left to right — each pane captioned with its name and what it is
+ * for, and the ventilator kept the widest of the three.
  *
- * The order stays the one D2 recorded — the ventilator first, the steps last — and is pinned again
- * by `stage-learner-review.test.tsx`, since the test D2 named for it was retired with the flow
- * rebuild. What changed is that the panes say what they are: a learner review of the ECMO module
- * in September 2026 reported guessing which of three unnamed panes each instruction meant, and
- * every step here now names the pane it is worked in, in these words.
+ * A learner review of the ECMO module in September 2026 asked for the prompts and questions on the
+ * left "for a more natural read", and reported guessing which of three unnamed panes each
+ * instruction meant. ECMO took the swap, then hemodynamics, then mechanical circulatory support;
+ * this module was the last of the four adopters still leading with its device, and four sibling
+ * modules should not disagree about the first thing a learner sees. The console facsimile is never
+ * scaled, so the fractions keep the simulator the widest pane whatever end of the row it sits at,
+ * and the drag floors follow the content across the slots rather than staying with the slot
+ * numbers. Every value here is the one the other three pass, byte for byte.
+ *
+ * This amends `mv-d2-standard-laptop-workspace.md` §2 and §7, whose recorded order — live
+ * ventilator, teaching, learner action — had had no guard since PR #127 deleted the test §7 named
+ * for it. See MVLR-OD-1 in the module's learner-review record.
  */
+const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const
 const PANE_CAPTIONS: StagePaneCaptions = {
   simulator: 'the live ventilator, the quick controls and the breath map',
   teaching: 'what to read',
   steps: 'what to do',
 }
+const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const
+const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const
 
 /*
  * The verdict card's titles and explanation heading were written for signal reads — "That read
@@ -1243,7 +1254,7 @@ function VentilationStageSession({
           stageId={activeStep.id}
           label="Guided mechanical ventilation section"
           module="mechanical-ventilation"
-          workspaceLabel="Ventilation lesson workspace: simulator, teaching, and steps"
+          workspaceLabel="Ventilation lesson workspace: steps, teaching, and simulator"
           header={header}
           contextStrip={
             <ContextStrip items={contextItems} alarm={alarm} badge="Simulated values" />
@@ -1251,7 +1262,10 @@ function VentilationStageSession({
           simulator={simulator}
           teaching={teaching}
           task={task}
+          paneOrder={PANE_ORDER}
           paneCaptions={PANE_CAPTIONS}
+          defaultWidthFractions={PANE_WIDTH_FRACTIONS}
+          paneMinimums={PANE_MINIMUMS}
           compactPane={compactPane}
           footer={
             <>

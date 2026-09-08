@@ -5,7 +5,7 @@ findings in [`learner-review-cross-module-brief.md`](./learner-review-cross-modu
 applied to this module. Companion to [`mv-flow-rebuild.md`](./mv-flow-rebuild.md), which this
 record amends in one place (MVLR-OD-3), and to
 [`mv-d2-standard-laptop-workspace.md`](./mv-d2-standard-laptop-workspace.md), whose pane-order
-decision it re-guards and whose widths it re-measures (MVLR-OD-1). Branch `claude/mv-learner-review`,
+decision it amends and whose widths it re-measures (MVLR-OD-1). Branch `claude/mv-learner-review`,
 cut from `origin/main` at `c178ee84` (the merged hemodynamics learner-review branch, PR #129).
 Eight commits; the shared package first and twice.
 
@@ -49,7 +49,7 @@ time this round started, and four of its statuses were wrong when read against t
 
 | Finding | What was there                                                                                                                                                                                                         | What shipped                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| F1      | Pane names only in `aria-label` and the compact tab row; MV passed no caption                                                                                                                                          | "Simulator panel · the live ventilator, the quick controls and the breath map", "Teaching panel · what to read", "Steps panel · what to do", sticky at the head of each pane, in the shell's muted grey (`rgb(159,180,183)`, measured). The order is unchanged — MVLR-OD-1.                                                                                                                                                                                                                             |
+| F1      | Pane names only in `aria-label` and the compact tab row; MV passed no caption                                                                                                                                          | "Steps panel · what to do", "Teaching panel · what to read", "Simulator panel · the live ventilator, the quick controls and the breath map", sticky at the head of each pane, in the shell's muted grey (`rgb(159,180,183)`, measured). Steps, Teaching, Simulator, left to right — MVLR-OD-1.                                                                                                                                                                                                          |
 | F2      | 114 steps across fourteen sections, none naming a pane; no location on the step model                                                                                                                                  | Every step authors a `lookIn`, generated per step kind in `stageLessons.ts` from what the steps already know (the toolbar's Pause, "Quick controls for this step", "Readings to watch", the numbered stops on the map, the choices and the verdict on the card, "The picture and the checklist") with a `recognizeLookIn` override on two section specs. Validated at import with the shared rules and the copy gate; scanned as pre-commit copy; printed under the instruction and in the help dialog. |
 | F3      | "Read the four short paragraphs on the right" (`sectionSpecs.ts:80`) and "then the explanation on the right" (`stageLessons.ts:317-318`) — the Teaching pane is the middle one                                         | Both name the heading and the pane: "under “Why a ventilator exists”", "the explanation under it. The Teaching panel opens on the picture and the checklist." The method block gained the `<h3>` those words point at, printed open or folded; section 12's first step names "Patient and circuit findings, below the breath map".                                                                                                                                                                      |
 | F4      | Console dead on a look-back with no note; quick-controls caption false                                                                                                                                                 | Both notes derive from the two predicates that disable the controls (`data-controls-locked-note`, `data-controls-paused-note`); the caption reads "Paused while you look back."; neither claims the transport toolbar is off, because it is not.                                                                                                                                                                                                                                                        |
@@ -73,38 +73,61 @@ right" (MVLR-OD-3); the eleven and eight reads of `--muted` in `ventilation-stag
 `breath-map.module.css` — invalid inside the shared workspace, where the token is a Tailwind HSL
 triple — read `--stage-muted` now, and the review suite refuses the old read.
 
-## MVLR-OD-1 — the order stays, and is guarded again
+## MVLR-OD-1 — the steps lead, and the ventilator keeps the width
 
-**This re-guards `mv-d2-standard-laptop-workspace.md` §2 and amends its §7.** §2 records the
-conceptual order — live ventilator → teaching → learner action — as unchanged, and §7 named
-`__tests__/learn-workspace.test.tsx` as its guard, a file the flow rebuild (PR #127) deleted. The
-order is now pinned by `__tests__/stage-learner-review.test.tsx` (`['simulator', 'teaching',
-'task']`), and §7's row says so.
+**This amends `mv-d2-standard-laptop-workspace.md` §2 and §7.** §2 recorded the conceptual order —
+live ventilator → teaching → learner action — as unchanged, and §7 named
+`__tests__/learn-workspace.test.tsx` as its guard, a file the flow rebuild (PR #127) deleted. So
+the order had been a decision with nothing holding it since. It now reads **Steps, Teaching,
+Simulator**, left to right, and `__tests__/stage-learner-review.test.tsx` pins it along with the
+fractions and floors.
 
-It is **not flipped**. ECMO (R5-OD-1) and hemodynamics (HLR-OD-1) both moved to Steps · Teaching ·
-Simulator on the learner's "more natural read" and because a compact viewport opens on the first
-pane. MCS, like MV, passes no `paneOrder`, so the four adopters of the same stage are split two and
-two. The compact-viewport half of the argument is answered here by `compactPane` regardless of
-order; the reading-order half is a preference the owner should settle across the modules rather
-than one session per module. **Owner decision requested**; if it flips, the fractions that keep the
-ventilator widest are the ones hemodynamics uses (0.26 / 0.29 / the rest, floors 300 / 280 / 340)
-and the guard is one line.
+The owner settled it: four sibling modules should not disagree about the first thing a learner
+sees. ECMO took the swap in its R5 round on the learner's own words — "could the prompts/directions
+with the guided questions show up on the left side of the screen instead of the right for a more
+natural read" — hemodynamics followed in HLR-OD-1, and mechanical circulatory support in its own
+round; this module was the last of the four still leading with its device. The session that wrote
+the first draft of this record read the split as two and two and deferred to the owner; it was
+three and one, because the MCS branch had already flipped.
+
+What D2 §2 was protecting is intact and is why the fractions are what they are: the console
+facsimile is never scaled, so the simulator stays the widest pane whatever end of the row it sits
+at, and the drag floors follow the content across the slots rather than staying with the slot
+numbers. The values are the ones hemodynamics and MCS pass, byte for byte — 0.26 / 0.29 / the
+rest, floors 300 / 280 / 340 — which is what keeps four parallel rounds on one shared package
+conflict-free. The workspace label reads "steps, teaching, and simulator" now.
+
+Two things the swap pays for beyond the reading order. A compact viewport opens on the first pane,
+which was the console — with the answer choices in the pane it could not show; it follows the
+step's location now (and the Steps pane once the step's work is done), and still opens on the
+simulator for the three map-answered steps, verified at 900 px. And the caption a learner reads
+first is "Steps panel · what to do".
 
 ### D2's widths, re-measured on the stage
 
 D2 §3 and §5 validated 1600 × 900, 1440 × 900, 1280 × 720 and 1024 × 768 on the pre-rebuild
 surface. Measured on the dev server at `mechanics-load-and-pressure`, Explain step (the widest
-teaching state), each width a fresh mount:
+teaching state), each width a fresh mount, **after the swap**:
 
-| Viewport   | Simulator | Teaching | Steps | Elements overflowing their pane | Document horizontal scroll | Header / strip top |
-| ---------- | --------- | -------- | ----- | ------------------------------- | -------------------------- | ------------------ |
-| 1600 × 900 | 660       | 445      | 430   | 0                               | 0                          | 81 / 142           |
-| 1440 × 900 | 592       | 399      | 385   | 0                               | 0                          | 81 / 142           |
-| 1280 × 720 | 523       | 353      | 341   | 0                               | 0                          | 81 / 142           |
-| 1024 × 768 | 413       | 278      | 269   | 0 (was 81 — below)              | 0                          | 81 / 142           |
+| Viewport   | Steps | Teaching | Simulator | Elements overflowing their pane | Document horizontal scroll | Header / strip top |
+| ---------- | ----- | -------- | --------- | ------------------------------- | -------------------------- | ------------------ |
+| 1600 × 900 | 399   | 445      | 691       | 0                               | 0                          | 81 / 142           |
+| 1440 × 900 | 358   | 399      | 619       | 0                               | 0                          | 81 / 142           |
+| 1280 × 720 | 316   | 353      | 547       | 0                               | 0                          | 81 / 142           |
+| 1024 × 768 | 250   | 278      | 432       | 0                               | 0                          | 81 / 142           |
 
 The simulator is the widest pane at every width, three panes at all four, the compact threshold
-unmoved. Two layout defects were found by the measurement and fixed in the same round:
+unmoved. These are the ECMO and hemodynamics tables to the pixel, which is what sharing the
+workspace's fractions should produce.
+
+For the record, the same four widths measured before the swap, when this module passed no
+fractions and ran at the workspace's own 0.43 / 0.29 defaults: simulator 660 / 592 / 523 / 413,
+teaching 445 / 399 / 353 / 278, steps 430 / 385 / 341 / 269. The teaching pane is unchanged at
+every width — its fraction is 0.29 in both — and the simulator gives up between 19 and 31 px to
+the steps pane, which is the column the learner now reads first.
+
+Two layout defects were found by the first measurement and fixed in this round, both before the
+swap and both confirmed to still hold after it:
 
 - **At 1024 the teaching column was 300 px wide in a 263 px pane.** The column's single implicit
   grid track is sized by its widest item's min-content, and the knob strip's rows — `auto 1fr` with
@@ -115,8 +138,8 @@ unmoved. Two layout defects were found by the measurement and fixed in the same 
 - The stage header, above.
 
 Not a defect: shrinking the emulated viewport in place without a `resize` event left the first two
-panes at their old pixel widths and starved the third to zero. Dispatching `resize` re-fits them
-(488 / 228 / 244 at 1024), which is what a real window resize does.
+panes at their old pixel widths and starved the third to zero. Dispatching `resize` re-fits them,
+which is what a real window resize does; every row of the table above is a fresh mount.
 
 ## MVLR-OD-2 — one label for the four stop checklists
 
@@ -197,7 +220,8 @@ Confirmed in the code or measured in the browser, and out of scope here:
 
 ## Needs the owner
 
-- MVLR-OD-1: the pane order, across the four adopters.
+- ~~MVLR-OD-1: the pane order, across the four adopters.~~ **Decided 2026-09-07: flipped to
+  steps-first before this branch was pushed.** The four adopters now agree.
 - MVLR-OD-4: the seven rewritten items, and the repeated items above.
 - MVLR-OD-5: the prediction-shaped verdict wording, together with §9's standing question.
 - The "test" round titles.
@@ -206,7 +230,7 @@ Confirmed in the code or measured in the browser, and out of scope here:
 
 ## Verification
 
-- `npx jest src/features/mechanical-ventilation` — 26 suites / 565 tests before, 27 / 580 after
+- `npx jest src/features/mechanical-ventilation` — 26 suites / 565 tests before, 27 / 581 after
   (`stage-learner-review.test.tsx` new; `stage-lessons.test.ts` and `components.test.tsx` extended).
 - `npx jest src/features/learning-module src/features/critical-care` — 37 / 328 before, 38 / 333
   after (`AnswerVerdict.test.tsx` extended; `lesson-shell-header.test.ts` new).
@@ -225,7 +249,10 @@ Confirmed in the code or measured in the browser, and out of scope here:
   block (label, `aria-labelledby`, disc markers, one map description), the first steps of
   `breathing-with-support` and `safety-reassessment-and-human-factors` (the location line naming
   what is open on the pane). The width table above. Pane captions and kickers measured in the
-  shell's muted grey.
+  shell's muted grey. After the swap: the four widths above on a fresh mount each, the pane order
+  and captions reading Steps · Teaching · Simulator, and a 900 px compact viewport opening on the
+  Simulator tab for the map-answered step of `triggering-and-cycling`, its location line naming
+  both panes.
 
 ## Rubric section 5, on the finished surface
 

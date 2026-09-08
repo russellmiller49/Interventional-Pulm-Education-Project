@@ -78,19 +78,42 @@ function mount(unitId: string) {
 }
 
 describe('the panes say what they are', () => {
-  it('keeps the recorded order — ventilator, teaching, steps — and prints a name on each', () => {
+  it('leads with the steps and prints a name on each, as the other three adopters do', () => {
     mount('mechanics-load-and-pressure')
-    // D2 §2: live ventilator → teaching → learner action. Its old guard was retired with the
-    // flow rebuild; this is the guard again.
-    expect(paneOrder()).toEqual(['simulator', 'teaching', 'task'])
+    /*
+     * MVLR-OD-1, which amends D2 §2's "live ventilator → teaching → learner action". That order
+     * had had no guard since PR #127 deleted the test §7 named for it; this is the guard, and it
+     * holds the order the owner settled across all four adopters of the shared stage.
+     */
+    expect(paneOrder()).toEqual(['task', 'teaching', 'simulator'])
     expect(captions()).toEqual([
-      'Simulator panel · the live ventilator, the quick controls and the breath map',
-      'Teaching panel · what to read',
       'Steps panel · what to do',
+      'Teaching panel · what to read',
+      'Simulator panel · the live ventilator, the quick controls and the breath map',
     ])
     for (const name of Object.values(STAGE_PANE_NAMES)) {
       expect(screen.getByRole('region', { name })).toBeInTheDocument()
     }
+  })
+
+  it('passes the fractions and floors that keep the ventilator the widest pane', () => {
+    // Byte-identical to hemodynamics and mechanical circulatory support: the simulator is the
+    // widest pane at every validated width whatever end of the row it sits at. The measured table
+    // is in the module's learner-review record.
+    const host = readFileSync(
+      join(
+        process.cwd(),
+        'src/features/mechanical-ventilation/components/stage/VentilationStageHost.tsx',
+      ),
+      'utf8',
+    )
+    expect(host).toContain("const PANE_ORDER = ['steps', 'teaching', 'simulator'] as const")
+    expect(host).toContain(
+      'const PANE_WIDTH_FRACTIONS = { primary: 0.26, secondary: 0.29 } as const',
+    )
+    expect(host).toContain(
+      'const PANE_MINIMUMS = { primary: 300, secondary: 280, tertiary: 340 } as const',
+    )
   })
 })
 
