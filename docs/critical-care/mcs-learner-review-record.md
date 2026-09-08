@@ -75,6 +75,11 @@ colour, `rgb(234, 244, 244)`; after, `rgb(159, 180, 183)`. It reads `--stage-mut
 
 ## MLR-OD-1 — the steps lead, and the simulator keeps the width
 
+**Settled by the owner on 2026-09-07**, after this round: the flip is approved and stands, and all
+four adopters of the shared stage are steps-first — ECMO already was, hemodynamics is merged, MV is
+flipping, and this is MCS. It is no longer a question for anyone; a later adopter that wants a
+different order argues against four records rather than against none.
+
 **This amends `mcs-flow-rebuild.md` §2 and §7.** Neither recorded the order as a decision: §2 says
 "three panes that scroll on their own inside a viewport-sized shell" without an order, and §7's
 table measured "Internal scrollers · Simulator 650/1101, Steps 650/903" as a fact of the surface.
@@ -172,8 +177,14 @@ component carries the disclosure or whether `ChoiceReasoningFeedback` should sim
 This round took the second, as an optional and defaulted `alternatives` prop on the shared card:
 a caller that passes the item's choices gets "Why the other answers do not fit" folded under the
 verdict; a caller that passes nothing renders byte-for-byte as before. MCS passes it on both
-verdicts and the stories. **Whether ECMO's module-local `EcmoOtherAnswers` should now retire into
-it is the owner's call**, and the contract's wording is still theirs to settle.
+verdicts and the stories.
+
+**Settled by the owner on 2026-09-07:** ECMO's module-local `EcmoOtherAnswers` does retire into
+this prop — but not in this round. It is a separate convergence PR, once this branch and the
+mechanical-ventilation round have both landed, so the retirement is one reviewable change rather
+than a side effect of two. `docs/critical-care/activity-contract.md:44-47` still describes the
+disclosure as `AnswerVerdict`'s alone; whether it should now name both cards belongs to that same
+convergence.
 
 ## MLR-OD-6 — the Act step opens the map where its instruction is about the map
 
@@ -227,14 +238,13 @@ Confirmed in the code or measured in the browser, and out of scope here:
   opens it after committing reads the mechanism there; before, it was the leak.
 - **This worktree has no Supabase env**, so the dev server's analytics and progress calls return
   500 in the console. Environment, not the page.
+- **ECMO's `EcmoOtherAnswers` retires into the shared `alternatives`** (MLR-OD-5), in a convergence
+  PR after this branch and the mechanical-ventilation round land. That change carries the
+  `activity-contract.md` wording with it.
 
 ## Needs the owner
 
 - The thirteen items in MLR-OD-3.
-- MLR-OD-1: the pane order, taken on the ECMO and hemodynamics rounds' reasoning and no record
-  against it.
-- MLR-OD-5: the shared card's `alternatives` as the answer to the brief's contract question, and
-  whether ECMO's local copy retires into it.
 - The wording of the pane captions ("the monitor, the map and the controls"), the verdict frames
   (MLR-OD-4), the checklist label ("What to check at this stop"), and the authorization box's
   clause ("tick it to unlock the pump speed below").
