@@ -203,6 +203,13 @@ Confirmed in the code or measured in the browser, and out of scope here:
 - **`layout-regression.test.ts:46,50`** still asserts the D2 viewport contract against
   `mechanical-ventilation-v2.module.css`, whose `.learnViewport` no longer has a consumer since PR
   #127 (the case activity still imports the file). The guard is real and the rule is dead.
+- **The task pane does not scroll back to the top when the step changes.** All three hosts on the
+  shared stage move focus to the Now card with `focus({ preventScroll: true })` and nothing scrolls
+  the pane, which is its own scroll container — so a learner who had scrolled to the step list stays
+  there when the step advances, with the new instruction off the top. ECMO's R6 round (PR #130,
+  merged into this branch) reported it from its own learner walk and landed a module-local
+  `scrollTaskPaneToTop.ts`; the owner scoped the shared version to a separate PR after this round,
+  so mechanical ventilation, hemodynamics and MCS still have it. Not fixed here on that instruction.
 - **The shared button classes have no hover state** (`lesson-shell.module.css:464`); this module
   scopes its own, as hemodynamics did. Four modules' to change.
 - **`mv-d2-standard-laptop-workspace.md` §7** names guards this round did not restore: pause
@@ -217,6 +224,19 @@ Confirmed in the code or measured in the browser, and out of scope here:
 - At 1024 × 768 the Teaching pane's `scrollWidth` is 274 against a `clientWidth` of 263 on the
   Explain step: the grammar table scrolls inside its own wrapper, nothing is uncontained, and the
   pane hides horizontal overflow.
+
+## What arrived from `origin/main` during this round
+
+`origin/main` moved from `c178ee84` to `d065763b` while this branch was open, and both merges are
+in it. Neither touches the shared stage package, so nothing here was re-derived:
+
+- **PR #130, the ECMO R6 learner-review round.** Entirely inside `src/features/cardiohelp-ecmo`.
+  It reports the task-pane scroll defect this module shares, above.
+- **PR #131, a hemodynamics typecheck fix.** `origin/main` did not typecheck: the shared
+  `StageStepBase.lookIn` is optional and `icu-hemodynamics/content/stageLessons.ts` dereferenced it
+  in two places. This module cannot have that defect — `VentilationStageStep` narrows `lookIn` to
+  required, and `ventilationStageLessonErrors` reads it optionally anyway, so the validator still
+  reports a missing location rather than throwing on one.
 
 ## Needs the owner
 
