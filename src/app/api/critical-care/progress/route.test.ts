@@ -167,6 +167,42 @@ describe('critical-care coarse progress API', () => {
     )
   })
 
+  it('reads a row whose timestamps carry the numeric offset PostgREST emits', async () => {
+    /*
+     * `timestamptz` is serialized as `…+00:00`, never `Z`. Every earlier fixture in this file wrote
+     * `Z`, which is why a schema that rejected the offset passed here and answered 500 in the hub.
+     */
+    const database = progressDatabase({
+      getRows: [
+        {
+          module_id: 'cardiohelp-ecmo',
+          completed_at: '2026-09-01T08:15:30.123456+00:00',
+          completed_sections: ['learn', 'practice'],
+          last_visited_at: '2026-09-07T22:41:05.98765+00:00',
+          percent_complete: 100,
+        },
+      ],
+    })
+    supabaseServerMock.mockResolvedValue(database.client)
+
+    const response = await GET()
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      schemaVersion: 1,
+      accountId: 'user-1',
+      modules: [
+        {
+          moduleId: 'cardiohelp-ecmo',
+          percentComplete: 100,
+          completedSections: ['learn', 'practice'],
+          completedAt: '2026-09-01T08:15:30.123456+00:00',
+          lastVisitedAt: '2026-09-07T22:41:05.98765+00:00',
+        },
+      ],
+    })
+  })
+
   it('returns only bounded coarse account data for authenticated reads', async () => {
     const database = progressDatabase({
       getRows: [
