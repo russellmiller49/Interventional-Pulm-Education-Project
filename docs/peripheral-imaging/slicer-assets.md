@@ -260,3 +260,14 @@ and a failed load is reported rather than presenting measured pixels as a prior.
 The console texture and its hidden 2D source share those pixels. Scene checks
 verify the color change, recovery, reduced-motion Step, locking and a single
 WebGL context. No assets or dependencies were added.
+
+## Phase 2 — sampling
+
+The authored sphere and side-window needle use the physics contract's target,
+tip and sampling-window geometry. Three thin CT quads and the MPR grid share
+the existing slice offsets; slab mode combines the same authored depth interval.
+The grid stays below the pinned displays. Target close-up framing, translucent
+context and offset labels keep the window visible. Step advances one axial
+slice. The engine computes window overlap and tip inclusion independently.
+Unit and scene checks compare those relationships, linked pixel changes, slab
+reset, reveal invalidation and the single-context limit. No assets were added.

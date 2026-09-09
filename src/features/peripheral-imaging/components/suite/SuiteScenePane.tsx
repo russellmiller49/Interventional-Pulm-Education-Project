@@ -22,6 +22,7 @@ export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>([
   'cbct',
   'dts',
   'dts-prior',
+  'sampling',
 ])
 
 export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'
