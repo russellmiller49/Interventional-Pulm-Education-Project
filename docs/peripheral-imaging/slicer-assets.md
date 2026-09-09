@@ -234,8 +234,7 @@ are retained. Control scrolling now accounts for the pinned display height, and
 overview chain labels use leader lines to avoid obscuring the equipment. Camera
 fitting still includes the physical chain and now includes the whole swept arc.
 
-The scene regression exposes an existing engine defect: labValue returns an
-action control's default, so captured remains false even after the acquisition
-session stores true. The proposed owner-boundary exception is to handle action
-booleans with toggle booleans in engine/labMetrics.ts. Until that change is
-authorized and the capture regression passes, CBCT remains an unmerged draft.
+The owner's latched-action fix in PR #148 is included from main. Its regression
+drives all three acquisition sections through every required Act goal, including
+capture. The scene test additionally checks that the rendered acquisition reports
+capture and that moving the setup invalidates it. Engine files remain owner-managed.
