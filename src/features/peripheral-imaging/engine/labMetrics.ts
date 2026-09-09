@@ -481,6 +481,11 @@ export function labValue(lab: LabId, values: LabValues, key: string, lessonId: s
       return typeof raw === 'number' && Number.isFinite(raw)
         ? clamp(raw, control.min ?? -Infinity, control.max ?? Infinity)
         : fallback
+    // An action is a momentary trigger: pressing it applies its `patch` to other keys and its own
+    // key is never stored, so `raw` is undefined and the default stands. The exception is an
+    // action whose patch latches its own key — `captured` is the one — and that stored boolean has
+    // to read back, or the flag the learner just set reads false everywhere it is used.
+    case 'action':
     case 'toggle':
       return typeof raw === 'boolean' ? raw : fallback
     case 'select':
