@@ -5,6 +5,27 @@ Written 2026-09-09, after phase 1 merged to `main`. Read alongside
 (§B5), the hard rules (§B3) and the model-boundary sentences (§B7). This document says what has
 landed, **what changed underneath you since that brief was written**, and what phase 2 is.
 
+## Start here: your worktree is behind
+
+`codex/fluoroview-suite` is fully merged into `main` and has no commits of its own left, so there
+is nothing on it to preserve and nothing to merge back. Start phase 2 from `main` instead:
+
+```sh
+cd <your worktree>
+git fetch origin
+git checkout -B codex/fluoroview-suite-phase-2 origin/main
+```
+
+This is not housekeeping. Two of your own files moved on `main` after your branch point, and they
+are the two this phase edits most: `suite-scene.module.css` gained the container query, the pinned
+displays, the shared display height and the ink fixes, and `CameraRig.tsx` gained the aspect
+fitting for every overview view. Building on the old copies would rebuild both and undo them at
+merge. You would also be working against the old `/fluoroview` route and its sign-in step, and
+would hit the Jest failure that the Playwright scene spec used to cause.
+
+No dependency changed in those commits, so no reinstall. If you have a development server running
+in that worktree, restart it: the course is at `/en/peripheral-imaging` now.
+
 ## Where this fits
 
 Phase 1 is merged. In `components/suite/` you already have: the contract (`types.ts`),
