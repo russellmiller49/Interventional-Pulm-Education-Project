@@ -333,6 +333,43 @@ test('the image a control changes stays on screen while the control is used', as
   const before = await page.locator('[data-readout="separationMm"] dd').textContent()
   await setRange(page, /obliquity/i, 60)
   await expect(page.locator('[data-readout="separationMm"] dd')).not.toHaveText(before ?? '')
+
+  // A control you cannot read is not usable. The dock is a light surface inside a dark shell,
+  // and inheriting the shell's near-white ink once left these at about 1.07:1.
+  const contrast = await page.evaluate(() => {
+    const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))
+    const luminance = (c: string) => {
+      const [r, g, b] = (c.match(/\d+(\.\d+)?/g) ?? [])
+        .slice(0, 3)
+        .map((n) => channel(Number(n) / 255))
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    const backgroundOf = (el: Element | null) => {
+      let node = el
+      while (node) {
+        const colour = getComputedStyle(node).backgroundColor
+        if (colour && colour !== 'rgba(0, 0, 0, 0)') return colour
+        node = node.parentElement
+      }
+      return 'rgb(255, 255, 255)'
+    }
+    const measure = (selector: string) => {
+      const el = document.querySelector(selector)
+      if (!el) return null
+      const a = luminance(getComputedStyle(el).color)
+      const b = luminance(backgroundOf(el))
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+    }
+    return {
+      label: measure('[data-suite-controls] [class*="controlLabel"] label'),
+      value: measure('[data-suite-controls] output'),
+      readout: measure('[data-readouts] dd'),
+    }
+  })
+  for (const [name, value] of Object.entries(contrast)) {
+    expect(value, `${name} contrast`).not.toBeNull()
+    expect(value!, `${name} contrast`).toBeGreaterThanOrEqual(4.5)
+  }
 })
 
 test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
