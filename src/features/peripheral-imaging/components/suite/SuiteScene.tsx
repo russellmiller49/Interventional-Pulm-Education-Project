@@ -403,7 +403,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       enabled={props.controlsEnabled}
                       overviewBounds={cbctBounds}
                       focus={isCbct ? cbct.setup.target : undefined}
-                      closeupDistance={view.mode === 'sampling' ? 120 : undefined}
+                      closeupDistance={
+                        view.mode === 'sampling' ? 120 : isRegistration ? 180 : undefined
+                      }
                     />
                   </Canvas>
                 </div>

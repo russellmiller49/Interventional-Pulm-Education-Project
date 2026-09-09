@@ -282,3 +282,13 @@ the current displacement without moving the sensor. The field-generator board is
 under the table. Pure and scene tests compare engine displacement, stale-state
 readouts, current/stored visibility and pixel changes. This adds no route asset,
 deformation model, tracking simulation or new dependency.
+
+## Phase 2 — augmented imaging
+
+The stored target projects along a source ray onto the live detector and monitor.
+Current CT and target positions share the rigid state used in navigation; the
+physical tool stays fixed. Capturing a contour updates its stored position, and
+the existing engine reports whether it is stale. Current and stored overlays
+can be toggled independently. Target close-ups use a closer authored distance
+and labels sit away from the target. Scene tests verify ray/overlay agreement,
+independent tool position, captures and toggles. No new assets were added.

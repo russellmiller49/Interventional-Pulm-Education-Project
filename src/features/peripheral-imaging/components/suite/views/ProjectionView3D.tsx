@@ -55,13 +55,15 @@ export function ProjectionView3D({
       </mesh>
       {ray && (
         <>
-          <Line
-            points={[frame.source, markers.targetRay.hit]}
-            color="#eac07a"
-            transparent
-            opacity={0.78}
-            lineWidth={1}
-          />
+          {inputs.showCurrent && (
+            <Line
+              points={[frame.source, markers.targetRay.hit]}
+              color="#eac07a"
+              transparent
+              opacity={0.78}
+              lineWidth={1}
+            />
+          )}
           <Line
             points={[frame.source, markers.tipRay.hit]}
             color="#85d2d2"
@@ -71,7 +73,7 @@ export function ProjectionView3D({
           />
         </>
       )}
-      <Line points={circle} color="#eec482" lineWidth={1} />
+      {inputs.showCurrent && <Line points={circle} color="#eec482" lineWidth={1} />}
       <Line
         points={[lift(markers.startRay.hit), lift(markers.tipRay.hit)]}
         color="#ffffff"
@@ -79,13 +81,15 @@ export function ProjectionView3D({
       />
       {labels && (
         <>
-          <Html
-            portal={portal}
-            position={add(markers.target, [LESION_RADIUS * 2, 0, 0])}
-            zIndexRange={[5, 1]}
-          >
-            <span className={styles.objectLabel}>Authored target</span>
-          </Html>
+          {inputs.showCurrent && (
+            <Html
+              portal={portal}
+              position={add(markers.target, [LESION_RADIUS * 2, 0, 0])}
+              zIndexRange={[5, 1]}
+            >
+              <span className={styles.objectLabel}>Authored target</span>
+            </Html>
+          )}
           <Html
             portal={portal}
             position={add(markers.tip, [0, LESION_RADIUS * 2, 0])}
