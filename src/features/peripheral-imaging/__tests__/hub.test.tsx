@@ -57,7 +57,7 @@ describe('the hub', () => {
     expect(cta).toHaveAttribute('data-next-section', peripheralImagingSectionIds[0])
     expect(cta).toHaveAttribute(
       'href',
-      `/fluoroview/learn?section=${peripheralImagingSectionIds[0]}`,
+      `/peripheral-imaging/learn?section=${peripheralImagingSectionIds[0]}`,
     )
     // Every count on the page is the registry's.
     const composition = imagingPathwayComposition()
@@ -95,7 +95,7 @@ describe('the hub', () => {
     render(<PeripheralImagingHub />)
     const cta = ctas()[0]
     expect(cta).toHaveAttribute('data-imaging-continue', 'complete')
-    expect(cta).toHaveAttribute('href', '/fluoroview/assess')
+    expect(cta).toHaveAttribute('href', '/peripheral-imaging/assess')
   })
 
   it('gives the Learn landing the same door and the same map', async () => {

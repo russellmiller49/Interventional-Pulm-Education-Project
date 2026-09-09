@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { PeripheralImagingAssessLanding } from '@/features/peripheral-imaging/components/PeripheralImagingAssessLanding'
+import { PeripheralImagingHub } from '@/features/peripheral-imaging/components/PeripheralImagingHub'
 import { PeripheralImagingModuleFrame } from '@/features/peripheral-imaging/components/PeripheralImagingModuleFrame'
-import { PERIPHERAL_IMAGING_ASSESS_HREF } from '@/features/peripheral-imaging/content/routes'
+import { PERIPHERAL_IMAGING_NAV_BASE } from '@/features/peripheral-imaging/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Assess · Peripheral Bronchoscopy Imaging',
+  title: 'Peripheral Bronchoscopy Imaging',
   description:
-    'Eight decisions in the bronch suite, made once, with every verdict opened together at the end.',
+    'A guided course on one imaging suite: 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, radial EBUS, tool confirmation and radiation protection in peripheral bronchoscopy.',
   robots: { index: false, follow: false, noarchive: true },
 }
 
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
-export default async function FluoroViewAssessPage({
+export default async function PeripheralImagingPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -26,8 +26,8 @@ export default async function FluoroViewAssessPage({
   const { locale } = await params
   setRequestLocale(locale)
   return (
-    <PeripheralImagingModuleFrame locale={locale} activeHref={PERIPHERAL_IMAGING_ASSESS_HREF}>
-      <PeripheralImagingAssessLanding />
+    <PeripheralImagingModuleFrame locale={locale} activeHref={PERIPHERAL_IMAGING_NAV_BASE}>
+      <PeripheralImagingHub />
     </PeripheralImagingModuleFrame>
   )
 }

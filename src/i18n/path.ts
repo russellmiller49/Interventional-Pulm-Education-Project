@@ -51,18 +51,7 @@ export function replaceLocaleInPath(pathname: string, locale: ActiveLocale) {
   return localizePath(strippedPathname, locale)
 }
 
-/**
- * `/fluoroview/` is also the legacy asset root (GLBs, the Draco decoder, case data), so the prefix
- * bypasses the locale redirect. The peripheral-imaging course's nested pages under it are real
- * routes and must be localized first — otherwise a typed `/fluoroview/learn` falls through to the
- * module-asset fallback rewrite and 404s.
- */
-const FLUOROVIEW_PAGE_PATTERN = /^\/fluoroview\/(learn|practice|assess)(\/|$|\?)/
-
 export function pathShouldBypassLocaleRedirect(pathname: string) {
-  if (FLUOROVIEW_PAGE_PATTERN.test(pathname)) {
-    return false
-  }
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||

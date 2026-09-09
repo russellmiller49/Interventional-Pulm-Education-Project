@@ -102,6 +102,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'Airway anatomy teaching with a synchronized dendrogram, endoscopic survey, quiz, and clickable 3D tree.',
   },
   {
+    path: '/peripheral-imaging',
+    title: 'Peripheral Bronchoscopy Imaging',
+    group: 'Bronchoscopy',
+    summary:
+      'A guided course on one imaging suite, built around the chain from the X-ray tube to the decision: 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, tool confirmation and radiation protection. Separate from the original FluoroView simulator, which keeps its own route.',
+  },
+  {
     path: '/critical-care',
     title: 'Critical Care Hub',
     group: 'Critical care',

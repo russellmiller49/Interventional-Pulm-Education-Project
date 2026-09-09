@@ -54,16 +54,23 @@ describe('i18n locale helpers', () => {
 })
 
 describe('locale redirect bypass', () => {
-  it('bypasses the legacy fluoroview asset root but not the course pages under it', () => {
+  it('bypasses the legacy fluoroview asset root, and localizes real page routes', () => {
+    // `/fluoroview/` is both the original simulator's route and its asset root (GLBs, the Draco
+    // decoder, case data), so the whole prefix skips the locale redirect.
     expect(pathShouldBypassLocaleRedirect('/fluoroview/draco/draco_decoder.js')).toBe(true)
     expect(
       pathShouldBypassLocaleRedirect('/fluoroview/cases/patient-new/carm/c_arm_animation.glb'),
     ).toBe(true)
-    expect(pathShouldBypassLocaleRedirect('/fluoroview')).toBe(false)
-    expect(pathShouldBypassLocaleRedirect('/fluoroview/learn')).toBe(false)
-    expect(pathShouldBypassLocaleRedirect('/fluoroview/learn/')).toBe(false)
-    expect(pathShouldBypassLocaleRedirect('/fluoroview/practice')).toBe(false)
-    expect(pathShouldBypassLocaleRedirect('/fluoroview/assess')).toBe(false)
-    expect(pathShouldBypassLocaleRedirect('/fluoroview/learning.glb')).toBe(true)
+
+    // The peripheral bronchoscopy imaging course has page routes under `/peripheral-imaging`,
+    // which must be localized. Its static assets live under the same prefix but always carry a
+    // file extension, which is what the trailing rule keys on — so the two never collide, and
+    // the course needs no bypass entry of its own.
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/learn')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/practice')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/assess')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/anatomy/thorax.glb')).toBe(true)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/anatomy/manifest.json')).toBe(true)
   })
 })

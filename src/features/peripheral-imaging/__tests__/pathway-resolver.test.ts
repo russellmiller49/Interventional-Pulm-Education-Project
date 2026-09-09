@@ -64,7 +64,7 @@ describe('the one door', () => {
   it('links every section through one typed target', () => {
     for (const id of peripheralImagingSectionIds) {
       expect(imagingSectionLinkTarget(id)).toEqual({
-        pathname: '/fluoroview/learn',
+        pathname: '/peripheral-imaging/learn',
         query: { section: id },
       })
     }

@@ -48,10 +48,12 @@ jest.mock('@/features/peripheral-imaging/components/PeripheralImagingAssessLandi
   PeripheralImagingAssessLanding: () => <div data-testid="imaging-assess-landing" />,
 }))
 
-import FluoroViewPage, { generateMetadata as overviewMetadata } from './page'
-import FluoroViewAssessPage, { generateMetadata as assessMetadata } from './assess/page'
-import FluoroViewLearnPage, { generateMetadata as learnMetadata } from './learn/page'
-import FluoroViewPracticePage, { generateMetadata as practiceMetadata } from './practice/page'
+import PeripheralImagingPage, { generateMetadata as overviewMetadata } from './page'
+import PeripheralImagingAssessPage, { generateMetadata as assessMetadata } from './assess/page'
+import PeripheralImagingLearnPage, { generateMetadata as learnMetadata } from './learn/page'
+import PeripheralImagingPracticePage, {
+  generateMetadata as practiceMetadata,
+} from './practice/page'
 
 const params = (locale: string) => Promise.resolve({ locale })
 
@@ -69,9 +71,12 @@ describe('peripheral imaging route family', () => {
   })
 
   it.each(['en', 'es', 'zh-CN'])('renders the hub inside the frame for %s', async (locale) => {
-    render(await FluoroViewPage({ params: params(locale) }))
+    render(await PeripheralImagingPage({ params: params(locale) }))
     expect(localeMock).toHaveBeenCalledWith(locale)
-    expect(screen.getByTestId('imaging-frame')).toHaveAttribute('data-active', '/fluoroview')
+    expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
+      'data-active',
+      '/peripheral-imaging',
+    )
     expect(screen.getByTestId('imaging-frame')).toHaveAttribute('data-locale', locale)
     expect(screen.getByTestId('imaging-hub')).toBeInTheDocument()
   })
@@ -79,7 +84,7 @@ describe('peripheral imaging route family', () => {
   it('opens a known section on the stage host and falls back to the landing for an unknown one', async () => {
     const first = peripheralImagingSectionIds[0]
     const known = render(
-      await FluoroViewLearnPage({
+      await PeripheralImagingLearnPage({
         params: params('es'),
         searchParams: Promise.resolve({ section: first }),
       }),
@@ -91,7 +96,7 @@ describe('peripheral imaging route family', () => {
     known.unmount()
 
     render(
-      await FluoroViewLearnPage({
+      await PeripheralImagingLearnPage({
         params: params('en'),
         searchParams: Promise.resolve({ section: 'not-a-section' }),
       }),
@@ -100,16 +105,19 @@ describe('peripheral imaging route family', () => {
       'data-unknown',
       'not-a-section',
     )
-    expect(screen.getByTestId('imaging-frame')).toHaveAttribute('data-active', '/fluoroview/learn')
+    expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
+      'data-active',
+      '/peripheral-imaging/learn',
+    )
   })
 
   it('renders the Learn landing with no section and takes the first of a repeated query key', async () => {
-    const landing = render(await FluoroViewLearnPage({ params: params('en') }))
+    const landing = render(await PeripheralImagingLearnPage({ params: params('en') }))
     expect(screen.getByTestId('imaging-learn-landing')).toHaveAttribute('data-unknown', '')
     landing.unmount()
 
     render(
-      await FluoroViewLearnPage({
+      await PeripheralImagingLearnPage({
         params: params('en'),
         searchParams: Promise.resolve({ section: [peripheralImagingSectionIds[1], 'other'] }),
       }),
@@ -121,17 +129,20 @@ describe('peripheral imaging route family', () => {
   })
 
   it('renders Practice and Assess landings inside the frame with their nav hrefs', async () => {
-    const practice = render(await FluoroViewPracticePage({ params: params('en') }))
+    const practice = render(await PeripheralImagingPracticePage({ params: params('en') }))
     expect(screen.getByTestId('imaging-practice-landing')).toBeInTheDocument()
     expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
       'data-active',
-      '/fluoroview/practice',
+      '/peripheral-imaging/practice',
     )
     practice.unmount()
 
-    render(await FluoroViewAssessPage({ params: params('zh-CN') }))
+    render(await PeripheralImagingAssessPage({ params: params('zh-CN') }))
     expect(screen.getByTestId('imaging-assess-landing')).toBeInTheDocument()
-    expect(screen.getByTestId('imaging-frame')).toHaveAttribute('data-active', '/fluoroview/assess')
+    expect(screen.getByTestId('imaging-frame')).toHaveAttribute(
+      'data-active',
+      '/peripheral-imaging/assess',
+    )
     expect(screen.getByTestId('imaging-frame')).toHaveAttribute('data-locale', 'zh-CN')
   })
 })

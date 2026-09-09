@@ -37,6 +37,7 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // Reachable without an account, like the fully-public paths above, but it is a module in
   // development rather than a sign-in page — so it belongs here, where it also gets
   // noindex/noarchive instead of being search-indexable.
+  '/peripheral-imaging',
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
   '/procedures',
@@ -55,6 +56,10 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   '/icu-hemodynamics',
   '/mechanical-circulatory-support',
   '/mechanical-ventilation',
+  // The peripheral bronchoscopy imaging course is in development: its hub, Learn, Practice and
+  // Assess routes are reachable by direct link and stay noindex. The original FluoroView
+  // simulator at `/fluoroview` is a separate module and keeps its own treatment.
+  '/peripheral-imaging',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
   '/preference-cards',
@@ -420,6 +425,10 @@ export function resolveSiteModuleId(pathname: string) {
   // page views and in-module analytics stay joined.
   if (first === 'cardiohelp-ecmo') {
     return 'cardiohelp-ecmo'
+  }
+
+  if (first === 'peripheral-imaging') {
+    return 'peripheral-imaging'
   }
 
   if (

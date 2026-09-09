@@ -36,14 +36,14 @@ test.beforeEach(async ({ context, page }) => {
   // Values remain in memory; do not print the auth URL or persist a browser trace.
   const auth = await context.request
     .get(base() + '/api/local-dev-auth', {
-      params: { token, next: '/en/fluoroview' },
+      params: { token, next: '/en/peripheral-imaging' },
       maxRedirects: 0,
     })
     .catch(() => {
       throw new Error('Local development auth request failed.')
     })
   expect(auth.status()).toBe(307)
-  await page.goto(base() + '/en/fluoroview')
+  await page.goto(base() + '/en/peripheral-imaging')
   await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
     'data-imaging-continue',
     'resolved',
@@ -55,7 +55,7 @@ const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]
 const status = (page: Page) => page.locator('[data-now-status]')
 
 async function openSection(page: Page, sectionId: string) {
-  await page.goto(`${base()}/en/fluoroview/learn?section=${sectionId}`)
+  await page.goto(`${base()}/en/peripheral-imaging/learn?section=${sectionId}`)
   await expect(page.locator('[data-stage]')).toHaveAttribute(
     'data-stage',
     `${sectionId}-1-recognize`,
@@ -182,7 +182,7 @@ test('the one door opens the first section, and a sorted section runs to its rec
   expect(record.completedSectionIds).toEqual([first])
 
   // Back on the hub the chip is worked through and the door moved on.
-  await page.goto(base() + '/en/fluoroview')
+  await page.goto(base() + '/en/peripheral-imaging')
   await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
     'data-next-section',
     peripheralImagingSectionIds[1],
@@ -234,7 +234,7 @@ test('a lab section: the suite is locked until the commitment, a goal flips, and
 test('the capstone: gated on the sections, decided once, one wrong critical decision fails the standard', async ({
   page,
 }) => {
-  await page.goto(base() + '/en/fluoroview/assess')
+  await page.goto(base() + '/en/peripheral-imaging/assess')
   await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'locked')
   await expect(page.locator('[data-capstone="locked"] a')).toHaveCount(
     peripheralImagingSectionIds.length,
@@ -246,7 +246,7 @@ test('the capstone: gated on the sections, decided once, one wrong critical deci
     PERIPHERAL_IMAGING_STORAGE_KEY,
     JSON.stringify(record),
   ] as const)
-  await page.goto(base() + '/en/fluoroview/assess')
+  await page.goto(base() + '/en/peripheral-imaging/assess')
   await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'deciding')
   for (const imagingCase of imagingCases) {
     await expect(page.locator('[data-capstone="deciding"]')).toHaveAttribute(
@@ -278,7 +278,7 @@ test('the capstone: gated on the sections, decided once, one wrong critical deci
 
 test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(base() + '/en/fluoroview')
+  await page.goto(base() + '/en/peripheral-imaging')
   await noHorizontalOverflow(page)
   await capture(page, testInfo, 'hub-mobile.png')
   await openSection(page, 'projection')

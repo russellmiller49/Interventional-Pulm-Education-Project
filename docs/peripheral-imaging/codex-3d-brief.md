@@ -421,7 +421,7 @@ monitor `[data-projection-state=ready]` + signal, slider → `toDataURL` change,
 → `data-suite-anim` running→idle + thumbnail count, DTS plane change, rEBUS presets → pattern text,
 staff orientation → canvas change, `page.emulateMedia({reducedMotion:'reduce'})` → idle at once).
 Browser verification: dev server from `.claude/launch.json`, sign in via
-`/api/local-dev-auth?token=$LOCAL_DEV_AUTH_TOKEN&next=/en/fluoroview` (never print the token),
+`/api/local-dev-auth?token=$LOCAL_DEV_AUTH_TOKEN&next=/en/peripheral-imaging` (never print the token),
 navigate (never `location.reload()`), keep the preview tab fronted for screenshots.
 
 Git: branch `codex/fluoroview-suite` from the contract commit on `claude/fluoroview-stage`; small

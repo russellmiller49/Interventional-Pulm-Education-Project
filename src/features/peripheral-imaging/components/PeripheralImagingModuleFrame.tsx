@@ -12,6 +12,7 @@ import {
   PERIPHERAL_IMAGING_NAV_BASE,
   PERIPHERAL_IMAGING_PRACTICE_HREF,
 } from '../content/routes'
+import { PERIPHERAL_IMAGING_RELEASE_STAGE } from '../content/release'
 import { REVIEWED_ON } from '../data/sources'
 import styles from './peripheral-imaging-module.module.css'
 
@@ -44,6 +45,16 @@ export const PERIPHERAL_IMAGING_SAFETY_NOTICE = (
 )
 
 /**
+ * What the module is right now, in the learner's words. The stage is the authority: while it is
+ * `unlisted-preview` the course is reachable by direct link only and is not part of the public
+ * site, so the label says so rather than implying an account is required.
+ */
+const releaseLabel =
+  PERIPHERAL_IMAGING_RELEASE_STAGE === 'unlisted-preview'
+    ? `In development · shared by direct link · reviewed ${REVIEWED_ON} · education only`
+    : `Reviewed ${REVIEWED_ON} · education only`
+
+/**
  * Shared shell for the hub and every section page: module identity row, section nav, and the
  * safety boundary. In activity mode the shell hands the viewport to the lesson stage inside it.
  */
@@ -64,7 +75,7 @@ export function PeripheralImagingModuleFrame({
         eyebrow="Interventional pulmonology · Peripheral bronchoscopy imaging"
         title="Peripheral Bronchoscopy Imaging"
         subtitle="See the target. Understand the image."
-        releaseLabel={`Authenticated draft · reviewed ${REVIEWED_ON} · education only`}
+        releaseLabel={releaseLabel}
         activeHref={activeHref}
         navItems={peripheralImagingModuleNavItems}
         navAriaLabel="Peripheral bronchoscopy imaging sections"

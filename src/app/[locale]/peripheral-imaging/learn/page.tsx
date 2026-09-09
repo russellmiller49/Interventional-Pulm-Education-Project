@@ -25,7 +25,7 @@ interface PageProps {
   searchParams?: Promise<{ section?: string | string[] }>
 }
 
-export default async function FluoroViewLearnPage({ params, searchParams }: PageProps) {
+export default async function PeripheralImagingLearnPage({ params, searchParams }: PageProps) {
   const { locale } = await params
   const requested = (await searchParams)?.section
   const section = Array.isArray(requested) ? requested[0] : requested

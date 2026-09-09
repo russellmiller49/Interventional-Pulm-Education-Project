@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
-export default async function FluoroViewPracticePage({
+export default async function PeripheralImagingPracticePage({
   params,
 }: {
   params: Promise<{ locale: string }>

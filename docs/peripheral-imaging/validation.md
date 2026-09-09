@@ -1,7 +1,7 @@
 # Peripheral imaging course — review and validation
 
 Review date: 2026-09-08. Review scope: the redesigned learner experience at
-`/en/fluoroview`, its 17 units, nine labs, 24 distinct questions, 15 published
+`/en/peripheral-imaging`, its 17 units, nine labs, 24 distinct questions, 15 published
 references, CT-derived images, a layered Slicer anatomy model, the original FluoroView
 C-arm animation, and two model downloads. The implementation preserves the
 existing route and site authentication. It introduces no dependencies or analytics.
@@ -123,7 +123,7 @@ draft's lab body under the chain caption) until a view lands.
 | Accessibility                 | Hub and Learn landing pass jest-axe; the stage's own audits are shared with the four adopters.                                                                                                                                                                                                                                     |
 
 Automated: **17 suites / 131 tests** across `src/features/peripheral-imaging`,
-`src/app/[locale]/fluoroview` and `src/i18n/locale.test.ts`; ESLint clean on the feature, the
+`src/app/[locale]/peripheral-imaging` and `src/i18n/locale.test.ts`; ESLint clean on the feature, the
 routes, the e2e spec and `src/i18n`; `tsc --noEmit` clean.
 
 Browser (dev server, 1440×900 and 1024×700, signed in through the local-dev-auth route): the hub

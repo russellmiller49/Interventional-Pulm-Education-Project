@@ -16,7 +16,7 @@ import type { ImagingSectionId } from '../content/pathway'
  */
 export function mountSection(sectionId: ImagingSectionId): { lesson: ImagingStageLesson } {
   const lesson = imagingStageLesson(sectionId)
-  window.history.replaceState(null, '', `/fluoroview/learn?section=${sectionId}`)
+  window.history.replaceState(null, '', `/peripheral-imaging/learn?section=${sectionId}`)
   render(<ImagingStageHost sectionId={sectionId} />)
   act(() => {
     jest.advanceTimersByTime(10)

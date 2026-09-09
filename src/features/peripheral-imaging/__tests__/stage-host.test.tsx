@@ -252,7 +252,11 @@ describe('a lab section on the stage', () => {
     const before = storedRecord()
     cleanup()
 
-    window.history.replaceState(null, '', '/fluoroview/learn?section=projection&phase=explain')
+    window.history.replaceState(
+      null,
+      '',
+      '/peripheral-imaging/learn?section=projection&phase=explain',
+    )
     mountSection('projection')
     expect(currentStepId()).toBe(lesson.steps[0].id)
     expect(verdictOutcome()).toBeNull()
