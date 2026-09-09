@@ -131,6 +131,15 @@ export interface DrrFrameMetrics {
   renderScale: number
 }
 
+/** Additive pose overrides; changing these never uploads the CT volume again. */
+export interface DrrGeometry {
+  isocenter_mm?: Vec3
+  source_to_isocenter_mm?: number
+  source_to_detector_mm?: number
+  detector_pixels?: [number, number]
+  pixel_pitch_mm?: number
+}
+
 export class VolumeDRRRenderer {
   private readonly canvas: HTMLCanvasElement
   private readonly config: FluoroConfig
@@ -149,6 +158,7 @@ export class VolumeDRRRenderer {
   private lastWidth = 0
   private lastHeight = 0
   private lastPixelRatio = 0
+  private explicitSize: { width: number; height: number; pixelRatio?: number } | undefined
   private lastMetrics: DrrFrameMetrics = {
     thicknessProxy: 1,
     renderMs: 0,
@@ -254,6 +264,7 @@ export class VolumeDRRRenderer {
     cranialCaudalDeg: number
     settings: FluoroSettings
     lowRes: boolean
+    geometry?: DrrGeometry
   }): DrrFrameMetrics {
     if (!this.ready || !this.material || !this.renderer) {
       return this.lastMetrics
@@ -263,14 +274,15 @@ export class VolumeDRRRenderer {
     const plan = resolveVolumeRenderPlan(this.asset, options.lowRes)
     this.resize(plan.renderScale)
 
+    const config = options.geometry ? { ...this.config, ...options.geometry } : this.config
     const frame = this.asset.calibrationProjection
       ? detectorFrameForSlicerProjection(
-          this.config,
+          config,
           this.asset.calibrationProjection,
           options.raoLaoDeg,
           options.cranialCaudalDeg,
         )
-      : detectorFrameForAngles(this.config, options.raoLaoDeg, options.cranialCaudalDeg)
+      : detectorFrameForAngles(config, options.raoLaoDeg, options.cranialCaudalDeg)
     this.material.uniforms.uSourceLps.value.set(
       frame.sourceLps[0],
       frame.sourceLps[1],
@@ -318,7 +330,11 @@ export class VolumeDRRRenderer {
     this.renderer.render(this.scene, this.camera)
     const finished = typeof performance !== 'undefined' ? performance.now() : Date.now()
     this.lastMetrics = {
-      thicknessProxy: this.computeThicknessProxy(options.raoLaoDeg, options.cranialCaudalDeg),
+      thicknessProxy: this.computeThicknessProxy(
+        options.raoLaoDeg,
+        options.cranialCaudalDeg,
+        config,
+      ),
       renderMs: finished - started,
       sampleSteps: plan.sampleSteps,
       renderScale: plan.renderScale,
@@ -330,14 +346,20 @@ export class VolumeDRRRenderer {
     this.roiCenterLps = lpsMm
   }
 
-  resize(renderScale?: number): void {
+  /** Explicit layout size also supports a hidden/offscreen monitor; retained for subsequent renders. */
+  resize(
+    renderScale?: number,
+    size?: { width: number; height: number; pixelRatio?: number },
+  ): void {
+    if (size) this.explicitSize = size
     if (!this.renderer) return
-    const rect = this.canvas.getBoundingClientRect()
+    const rect = this.explicitSize ?? this.canvas.getBoundingClientRect()
     const width = Math.max(1, Math.round(rect.width))
     const height = Math.max(1, Math.round(rect.height))
     const pixelRatio = Math.max(
       0.25,
-      (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1) * (renderScale ?? 1),
+      (this.explicitSize?.pixelRatio ??
+        (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1)) * (renderScale ?? 1),
     )
     if (
       width === this.lastWidth &&
@@ -383,15 +405,19 @@ export class VolumeDRRRenderer {
     return new Uint8Array(await response.arrayBuffer())
   }
 
-  private computeThicknessProxy(raoLaoDeg: number, cranialCaudalDeg: number): number {
+  private computeThicknessProxy(
+    raoLaoDeg: number,
+    cranialCaudalDeg: number,
+    config = this.config,
+  ): number {
     const frame = this.asset.calibrationProjection
       ? detectorFrameForSlicerProjection(
-          this.config,
+          config,
           this.asset.calibrationProjection,
           raoLaoDeg,
           cranialCaudalDeg,
         )
-      : detectorFrameForAngles(this.config, raoLaoDeg, cranialCaudalDeg)
+      : detectorFrameForAngles(config, raoLaoDeg, cranialCaudalDeg)
     const spacing = this.asset.spacingXyzMm
     const sizeLps: Vec3 = [
       spacing[0] * this.asset.sizeXyz[0],

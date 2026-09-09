@@ -13,6 +13,20 @@ export const LESION_CENTER: Point3 = [85, -20, -30]
 export const SOURCE_DISTANCE = 720
 export const DETECTOR_DISTANCE = 1200
 export const DETECTOR_FIELD = 640
+export interface ImagingGeometry {
+  readonly sod: number
+  readonly sid: number
+  readonly field: number
+}
+export const DEFAULT_GEOMETRY: ImagingGeometry = {
+  sod: SOURCE_DISTANCE,
+  sid: DETECTOR_DISTANCE,
+  field: DETECTOR_FIELD,
+}
+/** Signed distance from isocenter along the beam normal, in authored millimeters. */
+export function magnificationAt(depth: number, geometry: ImagingGeometry = DEFAULT_GEOMETRY) {
+  return geometry.sid / (geometry.sod + depth)
+}
 export function projectPoint([x, y, z]: Point3, orbit: number, tilt = 0): [number, number] {
   const a = radians(orbit),
     b = radians(tilt)
@@ -27,10 +41,15 @@ export function beamDirection(orbit: number, tilt = 0): Point3 {
   return [-Math.sin(a) * Math.cos(b), Math.cos(a) * Math.cos(b), Math.sin(b)]
 }
 /** Cone projection in detector-plane mm; matches the original FluoroView volume renderer. */
-export function projectToDetector(point: Point3, orbit: number, tilt = 0): [number, number] {
+export function projectToDetector(
+  point: Point3,
+  orbit: number,
+  tilt = 0,
+  geometry: ImagingGeometry = DEFAULT_GEOMETRY,
+): [number, number] {
   const normal = beamDirection(orbit, tilt)
   const depth = point.reduce((sum, n, i) => sum + n * normal[i], 0)
-  const magnification = DETECTOR_DISTANCE / (SOURCE_DISTANCE + depth)
+  const magnification = magnificationAt(depth, geometry)
   const projected = projectPoint(point, orbit, tilt)
   return [projected[0] * magnification, projected[1] * magnification]
 }

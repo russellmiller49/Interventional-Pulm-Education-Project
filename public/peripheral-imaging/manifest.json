@@ -1,0 +1,52 @@
+{
+  "schema": "peripheral-imaging-assets/v1",
+  "authoredOn": "2026-09-08",
+  "assets": [
+    {
+      "path": "anatomy/thorax.glb",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "secondarySourceSha256": "277223b59550c1e037585e09205bdd7f8dc24e8abf9b4fd5875b5cb6f369ee69",
+      "source": "Existing teaching CT and segmented airway surface; Slicer thresholding and Draco compression",
+      "sha256": "14892a6689ad0cb80854e5edaa4f2147074f6301aa910eb8adf91736dd22cc80",
+      "bytes": 467520
+    },
+    {
+      "path": "anatomy/ct-atlas.png",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "source": "Existing teaching CT, resampling and 8-bit quantization with an authored part-solid nodule",
+      "sha256": "46258feb2edd8397007697ca5ea151ec66e5acd78cf75ea9a53125b4b8fe8b7b",
+      "bytes": 4214583
+    },
+    {
+      "path": "anatomy/dts-projections.png",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "source": "Derived CT atlas with its baked nodule and an added authored tool; parallel projections and high-pass filtering",
+      "sha256": "3cfca358f00ca1c445175a2b123cfaafa1b93f9a8234b683f73463b0ff3eb1cd",
+      "bytes": 1229318
+    },
+    {
+      "path": "anatomy/fluoroview-carm.glb",
+      "sourceSha256": "c681e3f4a69aa8b412e5bd32aa7640d945d44e5e5a6b4274a1a76f2c4949d866",
+      "source": "Existing published FluoroView gantry animation, Draco-compressed; retained pending retirement decision",
+      "sha256": "77b8aa8bcfcf9b5d24883202be0052a80fc0c0fda9f6dda351cecc39ca809aa4",
+      "bytes": 978184
+    },
+    {
+      "path": "sampling-window.glb",
+      "sourceSha256": "57d6fd85701225fe67d4783c6a6121e34114109d28b5f48c9fe97b0db30a8eb6",
+      "source": "Repository-authored sphere and side-window model; source SHA identifies geometry code, not a CT",
+      "sha256": "c624cbc7e5c3910613de767508208a49803b52ce8ad28daa0c02116ba9ec232a",
+      "bytes": 77232
+    }
+  ],
+  "authoredNodule": {
+    "centerMm": [85, -20, -30],
+    "radiusMm": 9,
+    "coreRadiusMm": 4.05,
+    "coreHu": -350,
+    "profile": "part-solid core with smoothstep blend into unchanged CT lung",
+    "provenance": "Authored teaching construct, 2026-09-08; not an observed source-CT finding"
+  },
+  "noduleSourceSha256": "21ee8047711fd0eb20a677c16c41adeb1f83bebbdb97f5f14edecb49b3e34beb",
+  "limitations": "CT-derived teaching context and authored geometry. No clinical performance, exposure, reconstruction or clearance validation."
+}
