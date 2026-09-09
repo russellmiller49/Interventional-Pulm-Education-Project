@@ -54,6 +54,13 @@
       "autoPort": false
     },
     {
+      "name": "claude-imaging",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3126", "--webpack"],
+      "port": 3126,
+      "autoPort": false
+    },
+    {
       "name": "claude-b-dev",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--port", "3121", "--webpack"],
