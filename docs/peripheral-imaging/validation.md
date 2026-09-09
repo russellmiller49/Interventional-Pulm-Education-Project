@@ -219,5 +219,31 @@ Automated: the full repository run passes — **767 suites, 11,626 tests**. Brow
 scenarios**, including one that walks a case, answers it twice and confirms the first decision was
 kept as made. ESLint and `tsc --noEmit` clean.
 
+## The suite, end to end (2026-09-09)
+
+With phase 2 merged, every section was opened in the running application and driven to the step
+where its lab is live, to check the thing no unit test covers: that the scene the section declares
+actually comes up in the real page, rather than in Codex's standalone harness.
+
+| Check                             | Result                                 |
+| --------------------------------- | -------------------------------------- |
+| Sections reaching a live scene    | 19 of 19, `data-suite-state=ready`     |
+| Sections still on the 2D fallback | none                                   |
+| Scenes reporting a failure        | none                                   |
+| Page errors during the sweep      | none                                   |
+| WebGL contexts per page           | at most two, the budget the brief sets |
+
+The context count is worth recording, because a raw canvas count looks alarming and is not: the
+tomosynthesis sections open fifteen canvases, of which **one** is WebGL and fourteen are 2D
+thumbnails of the projection atlas. Cone-beam holds two WebGL contexts, the scene and the detector
+image, and nothing exceeded that.
+
+Two sections, `chain-walk` and `suite-cases`, could not be driven by the sweep script, which stalls
+on their step sequences. Both were checked directly instead and reach a ready scene with two WebGL
+contexts, so the failure was in the probe rather than the product.
+
+Automated at the same commit: the full repository run passes — **773 suites, 11,647 tests** — with
+`tsc --noEmit` and ESLint clean, and the seven application scenarios pass against a local server.
+
 Not covered in this round: the `radial-ebus` section, the Practice micro-cases, the suite's 3D
 views, localisation, learner piloting.
