@@ -122,9 +122,10 @@ draft's lab body under the chain caption) until a view lands.
 | Capstone                      | Gated on every section; decided once per case; verdicts open together after the last decision; standard ≥ 7 of 8 and every safety-critical decision.                                                                                                                                                                               |
 | Accessibility                 | Hub and Learn landing pass jest-axe; the stage's own audits are shared with the four adopters.                                                                                                                                                                                                                                     |
 
-Automated: **17 suites / 131 tests** across `src/features/peripheral-imaging`,
-`src/app/[locale]/peripheral-imaging` and `src/i18n/locale.test.ts`; ESLint clean on the feature, the
-routes, the e2e spec and `src/i18n`; `tsc --noEmit` clean.
+Automated: the **full repository run passes — 760 suites, 11,572 tests, no failures** (Node 26.5.0;
+the scanner suite that used to fail on a deprecation warning now passes). ESLint and `tsc --noEmit`
+are clean. One configuration fix was needed: Jest was collecting the imaging suite's Playwright
+scene spec and failing on Playwright's `test` export, which broke the whole-repository run.
 
 Browser (dev server, 1440×900 and 1024×700, signed in through the local-dev-auth route): the hub
 renders one door ("Start — What does this image establish? · Section 1 of 19 · 4 min") and the
@@ -141,11 +142,38 @@ the walk, so the later checks are DOM reads rather than screenshots, and the wor
 pane switcher — which follows a ResizeObserver the hidden pane does not fire — is covered by the
 Playwright spec rather than this walk.
 
-Playwright (`e2e/peripheral-imaging.spec.ts`, rewritten for the stage; run with
-`PERIPHERAL_IMAGING_BASE_URL` and `LOCAL_DEV_AUTH_TOKEN` as before): the door, a sorted section to
-its record, a lab section's lock / goal / reload, the capstone standard with one wrong critical
-decision, the compact layout. Not run in this round's session; the dev server in use belonged to
-another agent.
+Playwright (`e2e/peripheral-imaging.spec.ts`, rewritten for the stage): **four scenarios pass**
+against a local development server — the one door into the first section and a sorted section run
+to its record; a lab section's controls locked until the commitment, a goal flipping on the suite,
+and a reload restarting the section while the record keeps the first attempt; the capstone gated,
+decided once, and failing the standard on one wrong safety-critical decision; and the compact
+layout at 390 x 844 following the step from pane to pane. The suite no longer signs in: the module
+is reachable by direct link, so arriving on the hub with no account is itself the first assertion.
+
+Running that suite for the first time found three defects, since fixed:
+
+- **Layout.** The shared frame renders its release badge `white-space: nowrap`. A 76-character
+  label was 465 px wide at a 390 px viewport and widened the document to 497 px on its own,
+  taking every section with it. The badge is now four words.
+- **Layout.** The hub and the three landings laid their sections out in a single-column grid,
+  whose track sizes to the widest item's min-content — so the decision guide's table widened every
+  sibling section. The track is now `minmax(0, 1fr)`; the table scrolls inside its own container,
+  and all four pages match the viewport exactly at 390 px.
+- **Naming.** `data-stage` meant two different things on one page: the curriculum stage on the
+  hub's pathway groups and the current step on the lesson stage. The accordion's attribute is now
+  `data-pathway-stage`.
+
+Access, checked against a running server with no account and no cookie: `/en/peripheral-imaging`
+and `/en/peripheral-imaging/learn` return 200; `/en/fluoroview` still redirects to the login page
+and renders the original simulator; the un-localized `/peripheral-imaging/learn` redirects to the
+localized route while `/peripheral-imaging/anatomy/manifest.json` is served as an asset. The
+in-development boundary is also asserted in Jest (`__tests__/release-boundary.test.ts`): public by
+direct link, unlisted, absent from navigation, site search and the sitemap, one analytics id for
+the route family, and FluoroView left alone.
+
+FluoroView's full CT volume returns 404 in local development. That is pre-existing and expected:
+`ct_volume_uint8.raw` is gitignored, is not tracked in the repository, and is served in production
+from the module-asset origin.
 
 Not covered in this round: the `radial-ebus` section, the Practice micro-cases, the suite's 3D
 views, localisation, learner piloting.
