@@ -16,7 +16,7 @@ export function useSuitePlayback(
   // A reduced-motion view opens at a completed state. Step remains an explicit clock input.
   const phase = reducedMotion && !stepped ? 1 : elapsed
   const running = Boolean(
-    view.animation &&
+    view.animation?.kind === 'pulse' &&
     (playing ?? view.animation.autoplay) &&
     enabled &&
     visible &&

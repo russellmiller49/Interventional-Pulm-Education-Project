@@ -1,6 +1,6 @@
 'use client'
 import { useId } from 'react'
-import { DEFAULT_GEOMETRY, type ImagingGeometry } from '../../lib/physics'
+import { DEFAULT_GEOMETRY, type Point3, type ImagingGeometry } from '../../lib/physics'
 import { projectionMarkers, suiteFrame } from './suiteModel'
 
 /** Same projection and SVG coordinates as the existing ProjectionView overlay. */
@@ -11,6 +11,9 @@ export function ProjectionOverlays({
   geometry = DEFAULT_GEOMETRY,
   showCurrent = true,
   targetFill = true,
+  offset,
+  toolFollows = true,
+  showTool = true,
 }: {
   orbit: number
   tilt: number
@@ -18,9 +21,12 @@ export function ProjectionOverlays({
   geometry?: ImagingGeometry
   showCurrent?: boolean
   targetFill?: boolean
+  offset?: Point3
+  toolFollows?: boolean
+  showTool?: boolean
 }) {
   const id = useId().replace(/:/g, '')
-  const markers = projectionMarkers(suiteFrame(orbit, tilt, geometry), depth)
+  const markers = projectionMarkers(suiteFrame(orbit, tilt, geometry), depth, offset, toolFollows)
   const screen = ([u, v]: readonly number[]) => [
     256 + (u / geometry.field) * 512,
     256 - (v / geometry.field) * 512,
@@ -58,21 +64,25 @@ export function ProjectionOverlays({
           />
         </>
       )}
-      <line
-        x1={start[0]}
-        y1={start[1]}
-        x2={tip[0]}
-        y2={tip[1]}
-        stroke="#f5f7f1"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path
-        data-tip-overlay
-        d={`M${tip[0] - 3},${tip[1] - 3}l6,6m-6,0l6,-6`}
-        stroke="#fff"
-        strokeWidth="1.25"
-      />
+      {showTool && (
+        <g>
+          <line
+            x1={start[0]}
+            y1={start[1]}
+            x2={tip[0]}
+            y2={tip[1]}
+            stroke="#f5f7f1"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          <path
+            data-tip-overlay
+            d={`M${tip[0] - 3},${tip[1] - 3}l6,6m-6,0l6,-6`}
+            stroke="#fff"
+            strokeWidth="1.25"
+          />
+        </g>
+      )}
     </svg>
   )
 }

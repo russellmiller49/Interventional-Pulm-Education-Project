@@ -23,6 +23,7 @@ import { ChainPins } from './ChainPins'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
 import { LabDock } from './LabDock'
+import { ConeBeamView, ConeBeamPanels, useCbctAcquisition } from './views/ConeBeamView'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
@@ -33,7 +34,7 @@ import { rayProfile } from '../../lib/rayProfile'
 import { labControl, labNumber } from '../../engine/labMetrics'
 import { LESION_CENTER, clamp } from '../../lib/physics'
 import { resolveSuiteInputs } from './suiteViewSpec'
-import { rayThrough, suiteFrame, temporal } from './suiteModel'
+import { rayThrough, suiteFrame, temporal, cbctOrbitSamples } from './suiteModel'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
@@ -73,24 +74,46 @@ function FrameReady({ ready }: { ready: () => void }) {
 
 export default function SuiteScene(props: ImagingSuitePaneProps) {
   const { view } = props
+  const [source, setSource] = useState<DrrTextureSource | null>(null)
+  const [visible, setVisible] = useState(true)
+  const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
   const [steppedOrbit, setSteppedOrbit] = useState(0)
   const inputs = useMemo(() => {
     const resolved = resolveSuiteInputs(view, props.lab.values)
     return { ...resolved, orbit: resolved.orbit + steppedOrbit }
   }, [view, props.lab.values, steppedOrbit])
+  const cbct = useCbctAcquisition(props, inputs, source, reducedMotion, visible)
+  const isCbct = view.mode === 'cbct'
+  const sceneOrbit = isCbct ? cbct.angle : inputs.orbit
+  const sceneGeometry = isCbct ? cbct.setup.geometry : inputs.geometry
+  const translation = isCbct ? cbct.setup.offset : undefined
+  const cbctBounds = useMemo(
+    () =>
+      isCbct
+        ? cbctOrbitSamples(inputs.orbitSpanDeg, 25).flatMap((angle) => {
+            const f = suiteFrame(angle, 0, sceneGeometry)
+            return [f.source, ...f.corners]
+          })
+        : undefined,
+    [isCbct, inputs.orbitSpanDeg, sceneGeometry],
+  )
   const frame = useMemo(
-    () => suiteFrame(inputs.orbit, inputs.tilt, inputs.geometry),
-    [inputs.orbit, inputs.tilt, inputs.geometry],
+    () => suiteFrame(sceneOrbit, inputs.tilt, sceneGeometry),
+    [sceneOrbit, inputs.tilt, sceneGeometry],
   )
   const detectorFrame = useMemo(
     () => ({ center: frame.detectorCenter, u: frame.u, v: frame.v, field: frame.geometry.field }),
     [frame],
   )
   const pose = useMemo(
-    () => ({ orbit: inputs.orbit, tilt: inputs.tilt, geometry: inputs.geometry }),
-    [inputs.orbit, inputs.tilt, inputs.geometry],
+    () => ({
+      orbit: sceneOrbit,
+      tilt: inputs.tilt,
+      geometry: sceneGeometry,
+      anatomyTranslation: translation,
+    }),
+    [sceneOrbit, inputs.tilt, sceneGeometry, translation],
   )
-  const [source, setSource] = useState<DrrTextureSource | null>(null)
   const [volume, setVolume] = useState<Uint8Array | null>(null)
   const [profileFailed, setProfileFailed] = useState(false)
   useEffect(() => {
@@ -118,13 +141,25 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     requested: SuiteCamera
     value: SuiteCamera
   } | null>(null)
-  const [visible, setVisible] = useState(true)
   const [contextLost, setContextLost] = useState(false)
   const [epoch, setEpoch] = useState(0)
   const [ready, setReady] = useState(false)
   const viewport = useRef<HTMLDivElement>(null)
   const portal = useRef<HTMLDivElement>(null)
-  const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
+  const displays = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const node = displays.current
+    if (!node) return
+    const update = () => {
+      const offset =
+        getComputedStyle(node).position === 'sticky' ? node.getBoundingClientRect().height + 8 : 0
+      node.parentElement?.style.setProperty('--suite-sticky-offset', `${offset}px`)
+    }
+    const observer = new ResizeObserver(update)
+    observer.observe(node)
+    update()
+    return () => observer.disconnect()
+  }, [])
   const playback = useSuitePlayback(view, props.controlsEnabled, visible, reducedMotion)
   const timeModel = temporal({ ...inputs, phase: playback.phase })
   const displayCamera =
@@ -159,7 +194,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       <SuiteFallback {...props} />
     </div>
   )
-  const drrMode = ['projection', 'signal', 'field', 'time'].includes(view.mode)
+  const drrMode = ['projection', 'signal', 'field', 'time', 'cbct'].includes(view.mode)
+  const running = isCbct ? cbct.busy : playback.running
   return (
     <SceneBoundary fallback={fallback}>
       <div
@@ -169,7 +205,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         data-suite-camera={displayCamera}
         data-suite-state={contextLost ? 'failed' : ready ? 'ready' : 'fallback'}
         data-lit={view.litStop ?? ''}
-        data-suite-anim={playback.running ? 'running' : 'idle'}
+        data-suite-anim={running ? 'running' : 'idle'}
         data-reduced-motion={reducedMotion ? 'true' : 'false'}
       >
         <p className={styles.caption} data-chain-caption>
@@ -185,7 +221,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             {props.lockedReason ?? props.pausedReason ?? 'Controls unavailable'}
           </p>
         )}
-        <div className={styles.displays} data-monitor-layout={view.monitor}>
+        <div ref={displays} className={styles.displays} data-monitor-layout={view.monitor}>
           <div className={styles.scenePanel}>
             <div className={styles.sceneHeader}>
               <span>CT-derived anatomy · imaging chain</span>
@@ -213,7 +249,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 >
                   <Canvas
                     key={epoch}
-                    frameloop={visible ? (playback.running ? 'always' : 'demand') : 'never'}
+                    frameloop={visible ? (running ? 'always' : 'demand') : 'never'}
                     dpr={[1, 1.5]}
                     camera={{ fov: 42, near: 1, far: 12000 }}
                     gl={{ antialias: true, preserveDrawingBuffer: true }}
@@ -235,7 +271,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       color="#9ab9cf"
                     />
                     <Suspense fallback={null}>
-                      <Anatomy layers={view.layers} />
+                      <Anatomy layers={view.layers} offset={translation} />
                       <Room layers={view.layers} geometry={inputs.geometry} />
                       {view.layers.includes('gantry') && (
                         <ParametricCarm
@@ -260,6 +296,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         <ProjectionView3D
                           frame={frame}
                           inputs={inputs}
+                          offset={translation}
                           ray={view.layers.includes('ray')}
                           labels={view.layers.includes('labels')}
                           portal={portal as RefObject<HTMLDivElement>}
@@ -273,6 +310,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           labels={view.layers.includes('labels')}
                         />
                       )}
+                      {isCbct && <ConeBeamView acquisition={cbct} inputs={inputs} />}
                       {view.mode === 'field' && (
                         <FieldView
                           frame={frame}
@@ -284,6 +322,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         <RayTrace profile={profile} />
                       )}
                       <ChainPins
+                        spread={['suite', 'room', 'anterior', 'side', 'head'].includes(
+                          displayCamera,
+                        )}
                         frame={frame}
                         portal={portal as RefObject<HTMLDivElement>}
                         lit={view.litStop}
@@ -292,7 +333,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       />
                       <FrameReady ready={onReady} />
                     </Suspense>
-                    <CameraRig view={displayCamera} frame={frame} enabled={props.controlsEnabled} />
+                    <CameraRig
+                      view={displayCamera}
+                      frame={frame}
+                      enabled={props.controlsEnabled}
+                      overviewBounds={cbctBounds}
+                      focus={isCbct ? cbct.setup.target : undefined}
+                    />
                   </Canvas>
                 </div>
               )}
@@ -310,9 +357,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   !props.controlsEnabled ||
                   !view.lab ||
                   (!view.bindings.some((b) => b.input === 'orbit') &&
-                    !['field', 'time'].includes(view.mode))
+                    !['field', 'time', 'cbct'].includes(view.mode))
                 }
                 onClick={() => {
+                  if (isCbct) {
+                    cbct.step()
+                    return
+                  }
                   if (view.mode === 'time') {
                     playback.step(1 / inputs.pulseRate)
                     return
@@ -340,7 +391,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               >
                 Step
               </button>
-              {view.animation && (
+              {view.animation && !isCbct && (
                 <button
                   type="button"
                   disabled={!props.controlsEnabled || reducedMotion}
@@ -375,6 +426,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   view.mode === 'time' ? <TimeOverlay frame={frame} model={timeModel} /> : undefined
                 }
                 showCurrent={inputs.showCurrent}
+                offset={translation}
                 targetFill={view.mode !== 'signal'}
                 zoom={view.mode === 'field' ? inputs.zoom : 1}
                 mask={
@@ -404,13 +456,25 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             <ChainAnswerFieldset answer={props.chainAnswer} />
           </div>
         )}
+        {isCbct && (
+          <ConeBeamPanels acquisition={cbct} inputs={inputs} enabled={props.controlsEnabled} />
+        )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
         <LabDock
           {...props}
+          disabledControls={
+            isCbct && (cbct.sourceState !== 'ready' || cbct.busy)
+              ? new Set(['captured'])
+              : undefined
+          }
+          onLabChange={(patch) =>
+            isCbct && patch.captured === true ? void cbct.run(true) : props.onLabChange(patch)
+          }
           onLabReset={() => {
             setSteppedOrbit(0)
             playback.reset()
+            cbct.reset()
             props.onLabReset()
           }}
         />

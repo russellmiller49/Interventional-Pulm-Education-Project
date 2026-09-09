@@ -12,16 +12,18 @@ export function ProjectionView3D({
   ray,
   labels,
   portal,
+  offset,
 }: {
   frame: SuiteFrame
   inputs: SuiteInputs
   ray: boolean
   labels: boolean
   portal: RefObject<HTMLDivElement>
+  offset?: Point3
 }) {
   const markers = useMemo(
-    () => projectionMarkers(frame, inputs.toolDepth),
-    [frame, inputs.toolDepth],
+    () => projectionMarkers(frame, inputs.toolDepth, offset, inputs.toolFollowsAnatomy),
+    [frame, inputs.toolDepth, offset, inputs.toolFollowsAnatomy],
   )
   const circle = useMemo(
     () =>

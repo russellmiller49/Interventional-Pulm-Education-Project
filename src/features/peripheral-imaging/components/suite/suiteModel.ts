@@ -1,6 +1,7 @@
 /** Pure geometry adapter: no React, Three or alternative projection convention. */
 import {
   beamDirection,
+  centeredForTeaching,
   clamp,
   DEFAULT_GEOMETRY,
   LESION_CENTER,
@@ -121,7 +122,8 @@ export function penumbraMm(focalSpotMm: number, depth: number, geometry = DEFAUL
 }
 /** The room is schematic; relative placements are expressed through the shared beam dimensions. */
 export function chainStopAnchors(frame: SuiteFrame): Record<ChainStop, Point3> {
-  const { field, sod } = frame.geometry
+  const { sod } = frame.geometry
+  const field = DEFAULT_GEOMETRY.field
   return {
     source: frame.source,
     beam: add(frame.source, scale(frame.normal, sod * 0.45)),
@@ -190,5 +192,45 @@ export function temporal(
       Point3,
       Point3,
     ],
+  }
+}
+
+/** Authored gantry illustrations, not manufacturer dimensions or supported trajectories. */
+export const GANTRY_VARIANTS = {
+  generic: { panelMm: DEFAULT_GEOMETRY.field, mount: 'pedestal' },
+  fixed: { panelMm: DEFAULT_GEOMETRY.field, mount: 'fixed' },
+  mobile: { panelMm: 300, mount: 'cart' },
+} as const
+export function cbctOrbitSamples(span: number, count: number) {
+  const n = Math.max(2, Math.round(count))
+  return Array.from({ length: n }, (_, i) => -span / 2 + (span * i) / (n - 1))
+}
+export function fovCylinder(variant: SuiteInputs['variant'], geometry = DEFAULT_GEOMETRY) {
+  const radius = ((GANTRY_VARIANTS[variant].panelMm / 2) * geometry.sod) / geometry.sid
+  return { radius, height: radius * 2 }
+}
+export function cbctSetup(inputs: SuiteInputs) {
+  return {
+    geometry: { ...inputs.geometry, field: GANTRY_VARIANTS[inputs.variant].panelMm },
+    offset: add(scale(LESION_CENTER, -1), [inputs.offsetX, inputs.offsetDepth, 0]),
+    target: [inputs.offsetX, inputs.offsetDepth, 0] as Point3,
+    centered: centeredForTeaching(inputs.offsetX, inputs.offsetDepth),
+    fov: fovCylinder(inputs.variant, inputs.geometry),
+  }
+}
+/** Swept housing bounds sampled from the same frame used by the gantry; no collision query. */
+export function sweptEnvelope(
+  variant: SuiteInputs['variant'],
+  span: number,
+  geometry = DEFAULT_GEOMETRY,
+) {
+  const panel = GANTRY_VARIANTS[variant].panelMm
+  const frames = cbctOrbitSamples(span, 65).map((angle) =>
+    suiteFrame(angle, 0, { ...geometry, field: panel }),
+  )
+  return {
+    source: frames.map((frame) => add(frame.source, scale(frame.normal, -panel * 0.11))),
+    detector: frames.map((frame) => add(frame.detectorCenter, scale(frame.normal, panel * 0.05))),
+    halfWidth: panel * 0.52,
   }
 }

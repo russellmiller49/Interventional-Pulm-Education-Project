@@ -129,6 +129,38 @@ export class DrrTextureSource {
     return copy
   }
 
+  /** One context supplies every low-resolution projection; callbacks own their 2D copies. */
+  async renderSequence(
+    poses: readonly DrrPose[],
+    options: {
+      signal: AbortSignal
+      immediate?: boolean
+      onFrame: (canvas: HTMLCanvasElement, pose: DrrPose, index: number) => void
+    },
+  ) {
+    clearTimeout(this.timer)
+    for (let i = 0; i < poses.length; i++) {
+      if (!options.immediate)
+        await new Promise<void>((resolve, reject) => {
+          const cancel = () => {
+            cancelAnimationFrame(id)
+            reject(new DOMException('Sequence stopped', 'AbortError'))
+          }
+          const id = requestAnimationFrame(() => {
+            options.signal.removeEventListener('abort', cancel)
+            resolve()
+          })
+          options.signal.addEventListener('abort', cancel, { once: true })
+          if (options.signal.aborted) cancel()
+        })
+      if (options.signal.aborted || this.disposed)
+        throw new DOMException('Sequence stopped', 'AbortError')
+      if (this.state !== 'ready') throw new Error('Projection unavailable')
+      this.render(poses[i], true)
+      options.onFrame(this.snapshot(192), poses[i], i)
+    }
+  }
+
   /** Spike instrumentation only: queue time and completed upload are reported separately. */
   measureUpload(renderer: WebGLRenderer) {
     const sourceGl = this.canvas.getContext('webgl2')!

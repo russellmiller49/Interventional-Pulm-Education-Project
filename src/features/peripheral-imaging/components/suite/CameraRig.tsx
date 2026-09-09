@@ -12,6 +12,7 @@ import type { SuiteCamera } from './types'
  * the pane is. The rest — the beam's eye, the target close-up, the console — are deliberately
  * tight on one thing and are left where they are authored.
  */
+const NO_BOUNDS: readonly Point3[] = []
 const OVERVIEW_VIEWS: readonly SuiteCamera[] = ['suite', 'room', 'anterior', 'side', 'head']
 
 /** Which way is up on screen for a view. */
@@ -23,10 +24,16 @@ export function CameraRig({
   view,
   frame,
   enabled,
+  overviewBounds = NO_BOUNDS,
+  focus = LESION_CENTER,
+  closeupDistance,
 }: {
   view: SuiteCamera
   frame: SuiteFrame
   enabled: boolean
+  overviewBounds?: readonly Point3[]
+  focus?: Point3
+  closeupDistance?: number
 }) {
   const { camera, invalidate, size } = useThree()
   const config = useMemo(() => {
@@ -34,7 +41,7 @@ export function CameraRig({
     const anchors = chainStopAnchors(frame)
     const target: Point3 =
       view === 'target'
-        ? LESION_CENTER
+        ? focus
         : view === 'console'
           ? scale(add(anchors.reconstruction, anchors.display), 0.5)
           : frame.iso
@@ -44,13 +51,18 @@ export function CameraRig({
       anterior: [0, f * 2.5, 0.01],
       side: [f * 2.8, 0, 0.01],
       head: [0, 0.01, f * 2.8],
-      target: add(LESION_CENTER, [f * 0.45, f * 0.4, f * 0.3]),
+      target: add(
+        focus,
+        scale([0.45, 0.4, 0.3], closeupDistance ? closeupDistance / Math.hypot(0.45, 0.4, 0.3) : f),
+      ),
       console: add(target, [f * 0.6, f * 0.3, f * 1.2]),
       beam: add(frame.source, scale(frame.normal, -f * 0.55)),
     }
     if (OVERVIEW_VIEWS.includes(view) && camera instanceof PerspectiveCamera) {
       // Fit the whole chain, with room for the DOM pin labels, at the actual pane aspect ratio.
-      const points = [...frame.corners, ...Object.values(anchors)].map((p) => new Vector3(...p))
+      const points = [...frame.corners, ...Object.values(anchors), ...overviewBounds].map(
+        (p) => new Vector3(...p),
+      )
       const center = new Box3().setFromPoints(points).getCenter(new Vector3())
       const towardCamera = new Vector3(...positions[view]).normalize()
       // Build the screen axes from this view's own up. Using a fixed world up would collapse to
@@ -83,7 +95,7 @@ export function CameraRig({
       position: positions[view],
       up: (view === 'beam' ? frame.v : upFor(view)) as Point3,
     }
-  }, [view, frame, camera, size.width, size.height])
+  }, [view, frame, camera, size.width, size.height, overviewBounds, focus, closeupDistance])
   useEffect(() => {
     camera.position.set(...config.position)
     camera.up.set(...config.up)
@@ -97,8 +109,13 @@ export function CameraRig({
       enabled={enabled}
       enablePan={false}
       enableDamping={false}
-      minDistance={frame.geometry.field * 0.15}
-      maxDistance={frame.geometry.sid * 4}
+      minDistance={
+        view === 'target' && closeupDistance ? closeupDistance * 0.35 : frame.geometry.field * 0.15
+      }
+      maxDistance={Math.max(
+        frame.geometry.sid * 4,
+        Math.hypot(...config.position.map((n, i) => n - config.target[i])) * 2,
+      )}
     />
   )
 }

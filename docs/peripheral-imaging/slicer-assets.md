@@ -216,3 +216,26 @@ scenarios and six app scenarios passed. The live time section was checked throug
 Act, including halving rate, doubling width and the resulting goal completion.
 The frame caption remains readable in a narrow simulator pane. No assets or
 runtime dependencies were added.
+
+## Phase 2 — CBCT
+
+One DRR context supplies two orthogonal scout copies and 24 low-resolution orbit
+copies. Fixed and mobile teaching gantries have distinct supports, panel sizes,
+field-of-view cylinders and drawn swept envelopes. The +/-8 mm teaching-center
+predicate remains the engine's authored tolerance. Capture runs only after the
+readiness checks, records completion after the last projection, and a moved setup
+invalidates its copies. Reduced motion starts with completed illustrative copies;
+Step, Pause, Reset, locking and visibility control the sequence explicitly.
+
+After the orbit, the original CT appears as three MPR planes, explicitly labelled
+as CT standing in for the volume; it is not reconstructed from the orbit. There
+are no new assets or dependencies. The display-height and pane-container rules
+are retained. Control scrolling now accounts for the pinned display height, and
+overview chain labels use leader lines to avoid obscuring the equipment. Camera
+fitting still includes the physical chain and now includes the whole swept arc.
+
+The scene regression exposes an existing engine defect: labValue returns an
+action control's default, so captured remains false even after the acquisition
+session stores true. The proposed owner-boundary exception is to handle action
+booleans with toggle booleans in engine/labMetrics.ts. Until that change is
+authorized and the capture regression passes, CBCT remains an unmerged draft.

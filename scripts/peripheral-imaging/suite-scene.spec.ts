@@ -13,7 +13,7 @@ test.setTimeout(120_000)
 const preview = '/scripts/peripheral-imaging/suite-harness.html'
 const suiteRequire = createRequire(`${process.cwd()}/package.json`)
 async function ready(page: Page) {
-  await expect(page.locator('[data-suite-state=ready]')).toBeVisible()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
   await expect(page.locator('[data-projection-state=ready]')).toBeVisible()
   await expect(page.locator('canvas')).toHaveCount(2)
 }
@@ -138,7 +138,7 @@ test('context loss recovers the scene and a failed monitor leaves the scene usab
         .loseContext(),
     )
   await expect(page.locator('[data-projection-state=failed]')).toBeVisible()
-  await expect(page.locator('[data-suite-state=ready]')).toBeVisible()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
   await page.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(page.getByRole('slider', { name: 'C-arm obliquity', exact: true })).toHaveValue('1')
 })
@@ -225,7 +225,7 @@ test('stage camera, spotlight, pause, hidden monitor and reset props stay live',
   await expect(page.locator('[data-projection-state=ready]')).toBeHidden()
   await page.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(page.getByRole('slider', { name: 'C-arm obliquity', exact: true })).toHaveValue('1')
-  await expect(page.locator('[data-suite-state=ready]')).toBeVisible()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
   expect(await pixels(page.locator('[data-projection-state=ready] canvas'))).toBeGreaterThan(35)
 })
 
@@ -243,6 +243,7 @@ test('field shutters, display crop and monitor zoom have distinct physical effec
   await expect
     .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
     .not.toBe(original)
+  const narrowed = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   const mask = await page.locator('[data-field-mask] path').getAttribute('d')
   await page
     .getByRole('checkbox', { name: 'Use display crop instead of physical shutters' })
@@ -252,7 +253,16 @@ test('field shutters, display crop and monitor zoom have distinct physical effec
   await expect(page.locator('[data-readout=irradiatedAreaPct] dd')).toContainText('100')
   await expect
     .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
-    .not.toBe(original)
+    .not.toBe(narrowed)
+  // DOM bindings update before the demand-rendered scene. Wait for the restored
+  // cone and detector texture to settle before testing a display-only change.
+  await expect
+    .poll(async () => {
+      const before = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+      await page.waitForTimeout(200)
+      return before === (await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    })
+    .toBe(true)
   const cropped = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
   await page.getByRole('slider', { name: 'Stored-image display zoom' }).fill('2')
   await expect(page.locator('[data-monitor-zoom]')).toHaveAttribute('data-monitor-zoom', '2')
@@ -292,3 +302,123 @@ test('time holds discrete images over a static DRR; reduced motion steps one pul
   await expect(suite).toHaveAttribute('data-suite-anim', 'idle')
   await expect(page.getByRole('button', { name: 'Step', exact: true })).toBeDisabled()
 })
+
+test('CBCT shares one DRR across scouts and orbit, gates capture, and invalidates a moved setup', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=mobile-suite`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
+  await expect(
+    page.getByRole('button', { name: 'Capture teaching state', exact: true }),
+  ).toBeDisabled()
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(1)
+  await expect(page.locator('[data-cbct-frame]')).toHaveAttribute('data-cbct-frame', '-100')
+  await page.getByRole('button', { name: 'Center the teaching target', exact: true }).click()
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
+  await expect(page.locator('[data-readout=centered] dd')).toHaveText('yes')
+  await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
+  for (const scout of await page.locator('[data-scout-state=ready] [data-target-overlay]').all())
+    await expect(scout).toHaveAttribute('cx', '256')
+  for (const key of ['target', 'clearance', 'state', 'protection'])
+    await page.locator(`#peripheral-imaging-control-${key}`).check()
+  await page.getByRole('button', { name: 'Capture teaching state', exact: true }).click()
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
+  const capturedReadout = await page.locator('[data-readout=captured] dd').textContent()
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+  await expect(page.locator('[data-ct-state=ready]')).toHaveCount(3)
+  await expect(
+    page.getByText('Original CT standing in for a reconstructed volume.', { exact: false }),
+  ).toBeVisible()
+  const contexts = await page
+    .locator('canvas')
+    .evaluateAll(
+      (canvases) =>
+        canvases.filter((c) => Boolean((c as HTMLCanvasElement).getContext('webgl2'))).length,
+    )
+  expect(contexts).toBe(2)
+  await setRange(page, 'Authored orbit inspection angle', 30)
+  await expect(page.locator('[data-readout=captured] dd')).toHaveText('no')
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
+  await expect(page.locator('[data-readout=ready] dd')).toHaveText('no')
+  const scene = page.locator('canvas[data-three-state=ready]')
+  const mobile = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('combobox', { name: 'Suite workflow' }).selectOption('fixed')
+  await expect(page.locator('[data-gantry-variant]')).toHaveAttribute(
+    'data-gantry-variant',
+    'fixed',
+  )
+  await expect
+    .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(mobile)
+  expect(capturedReadout).toBe('yes')
+})
+
+test('CBCT pauses, steps one remaining projection, and clears the sequence on reset', async ({
+  page,
+}) => {
+  await page.goto(`${preview}?section=mobile-suite`)
+  await page.bringToFront()
+  await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
+  await page.getByRole('button', { name: 'Run the orbit', exact: true }).click()
+  await page.getByRole('button', { name: 'Pause orbit', exact: true }).click()
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+  const paused = await page.locator('[data-cbct-frame]').count()
+  expect(paused).toBeLessThan(24)
+  await page.waitForTimeout(200)
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(paused)
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(paused + 1)
+  await page.getByRole('button', { name: 'Reset this model', exact: true }).click()
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Run the orbit', exact: true }).click()
+  await page.getByRole('button', { name: 'Toggle control lock', exact: true }).click()
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+  const locked = await page.locator('[data-cbct-frame]').count()
+  await page.waitForTimeout(200)
+  await expect(page.locator('[data-cbct-frame]')).toHaveCount(locked)
+})
+
+for (const section of ['cbct-acquisition', 'fixed-suite', 'mobile-suite'] as const) {
+  test(`${section} frames its chain and runs a discrete orbit`, async ({ page }) => {
+    await page.goto(`${preview}?section=${section}`)
+    await page.bringToFront()
+    await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('[data-scout-state=ready]')).toHaveCount(2)
+    await expect(page.locator('[data-chain-map] [data-chain-pin]')).toHaveCount(6)
+    await page.getByRole('button', { name: 'Run the orbit', exact: true }).click()
+    await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'running')
+    await expect(page.locator('[data-cbct-frame]')).toHaveCount(24, { timeout: 20000 })
+    await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+    await expect(page.locator('[data-readout=captured] dd')).toHaveText('no')
+    await expect(page.locator('[data-ct-state=ready]')).toHaveCount(3)
+    // Camera fitting includes the whole swept arc, including at pane widths where labels compact.
+    await page.getByRole('button', { name: 'Suite', exact: true }).click()
+    const viewport = await page.locator('[role=img]').first().boundingBox()
+    for (const pin of await page.locator('[data-chain-map] [data-chain-pin]').all()) {
+      const box = await pin.boundingBox()
+      expect(box!.x).toBeGreaterThanOrEqual(viewport!.x - 1)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.x + viewport!.width + 1)
+    }
+  })
+}
+
+for (const section of ['mobile-suite']) {
+  test(`${section} has no automated accessibility violations`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto(`${preview}?section=${section}`)
+    await page.bringToFront()
+    await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+    await page.addScriptTag({ path: suiteRequire.resolve('axe-core/axe.min.js') })
+    const result = await page.evaluate(() =>
+      (window as unknown as { axe: { run: (context: string) => Promise<AxeResults> } }).axe.run(
+        '[data-suite-scene]',
+      ),
+    )
+    expect(result.violations).toEqual([])
+  })
+}

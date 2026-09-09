@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { DrrTextureSource, type ProjectionState, type DrrPose } from './drrTextureSource'
+import type { Point3 } from '../../lib/physics'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import styles from './suite-scene.module.css'
 
@@ -15,6 +16,7 @@ export function Monitor({
   zoom = 1,
   mask,
   overlay,
+  offset,
 }: {
   pose: DrrPose
   depth: number
@@ -25,6 +27,7 @@ export function Monitor({
   zoom?: number
   mask?: ReactNode
   overlay?: ReactNode
+  offset?: Point3
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -65,6 +68,7 @@ export function Monitor({
             tilt={pose.tilt}
             depth={depth}
             geometry={pose.geometry}
+            offset={offset}
             showCurrent={showCurrent}
             targetFill={targetFill}
           />
