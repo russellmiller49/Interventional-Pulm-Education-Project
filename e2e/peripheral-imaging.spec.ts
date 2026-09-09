@@ -470,6 +470,72 @@ test('every overview view frames the whole chain, whatever shape the pane is', a
   }
 })
 
+test('every section draws its suite and shows the stop its caption names', async ({ page }) => {
+  // Section 11 shipped with a layer set that omitted the table, gantry and cone, so its scene held
+  // a small anatomy and a console board in an otherwise empty room, and the camera that fits the
+  // whole chain framed almost nothing. Two measurements catch that class of defect: how much of
+  // the viewport the scene actually paints, and whether the stop the caption names is on screen.
+  await page.setViewportSize({ width: 1600, height: 950 })
+  const sparse: string[] = []
+  const hidden: string[] = []
+  for (const sectionId of peripheralImagingSectionIds) {
+    await page.goto(`${base()}/en/peripheral-imaging/learn?section=${sectionId}`)
+    await page.waitForSelector('[data-suite-scene]', { timeout: 90_000 })
+    await page.waitForTimeout(5500)
+    const seen = await page.evaluate(() => {
+      const q = (s: string) => document.querySelector(s)
+      const scene = q('[data-suite-scene]')
+      const vp = q('[data-suite-scene] [class*="viewport"]')!.getBoundingClientRect()
+      const lit = scene?.getAttribute('data-lit') ?? ''
+      const litPins = [
+        ...document.querySelectorAll(`[data-suite-scene] [data-chain-pin="${lit}"]`),
+      ].filter((p) => p.getBoundingClientRect().width > 0)
+      const litVisible =
+        litPins.length > 0 &&
+        litPins.some((p) => {
+          const b = p.getBoundingClientRect()
+          return (
+            b.left >= vp.left - 1 &&
+            b.right <= vp.right + 1 &&
+            b.top >= vp.top - 1 &&
+            b.bottom <= vp.bottom + 1
+          )
+        })
+      const canvas = q('[data-suite-scene] canvas[data-three-state]') as HTMLCanvasElement | null
+      let painted = 0
+      if (canvas) {
+        const gl = canvas.getContext('webgl2')
+        if (gl) {
+          const px = new Uint8Array(canvas.width * canvas.height * 4)
+          gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, px)
+          let busy = 0
+          for (let i = 0; i < px.length; i += 4) {
+            const d =
+              Math.abs(px[i] - 0x11) + Math.abs(px[i + 1] - 0x23) + Math.abs(px[i + 2] - 0x2d)
+            if (d > 24) busy += 1
+          }
+          painted = (100 * busy) / (canvas.width * canvas.height)
+        }
+      }
+      return { painted, litVisible, lit }
+    })
+    // Under five per cent painted is an empty room, not a scene.
+    if (seen.painted < 5) sparse.push(`${sectionId} (${seen.painted.toFixed(1)}% painted)`)
+    if (!seen.litVisible) hidden.push(`${sectionId} (${seen.lit})`)
+  }
+  expect(sparse, 'sections whose scene is nearly empty').toEqual([])
+
+  // Two sections author a close-up camera — the beam's eye and the target — and the chain pins
+  // only spread around the frame on the overview cameras, so on a close-up a stop can sit behind
+  // the viewer. Both are open against the suite: the stop a caption names should stay on screen
+  // whatever camera the section chose. Listed rather than silenced, so the other seventeen are
+  // still held to the rule and this list has to shrink to nothing.
+  const KNOWN_HIDDEN = ['tool-confirmation (display)', 'changing-anatomy (reconstruction)']
+  expect(hidden, 'sections whose own lit stop is off screen on the authored camera').toEqual(
+    KNOWN_HIDDEN,
+  )
+})
+
 test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(base() + '/en/peripheral-imaging')

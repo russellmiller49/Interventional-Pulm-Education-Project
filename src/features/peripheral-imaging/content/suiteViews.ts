@@ -198,8 +198,12 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
   'dts-interpretation': view('dts-interpretation', {
     mode: 'dts-prior',
     litStop: 'reconstruction',
-    camera: 'console',
-    layers: [...ANATOMY, 'monitor', 'labels'],
+    // The suite is drawn here, as it is in every other reconstruction section. Without it the
+    // scene held only a small anatomy and the console board, so the chain read as a handful of
+    // labels floating in an empty room — and on the suite camera, which fits the whole chain, the
+    // frame came out almost entirely empty.
+    camera: 'suite',
+    layers: [...ANATOMY, ...SUITE, 'monitor'],
   }),
   'cbct-acquisition': view('cbct-acquisition', {
     mode: 'cbct',
