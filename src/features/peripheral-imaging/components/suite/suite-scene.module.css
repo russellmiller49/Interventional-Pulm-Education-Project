@@ -371,6 +371,13 @@
 .goals li[data-met='true'] {
   color: #23674d;
 }
+/* The static room has no light control dock behind a host-supplied goal list. */
+.pane[data-suite-mode='room'] > .goals {
+  color: var(--muted, #9fb4b7);
+}
+.pane[data-suite-mode='room'] > .goals li[data-met='true'] {
+  color: #98d5b2;
+}
 .boundary {
   border-left: 2px solid #8aa8a8;
   margin: 0;

@@ -1,9 +1,16 @@
 import { createHash } from 'node:crypto'
 import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import anatomy from '../../public/peripheral-imaging/anatomy/manifest.json'
+import room from '../../public/peripheral-imaging/room-hero.json'
 const hash = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex')
 const root = 'public/peripheral-imaging/'
 const entries = [
+  {
+    path: 'room-hero.png',
+    sourceSha256: room.sourceSha256,
+    source: room.source,
+    provenance: 'room-hero.json',
+  },
   {
     path: 'anatomy/thorax.glb',
     sourceSha256: anatomy.sourceSha256,

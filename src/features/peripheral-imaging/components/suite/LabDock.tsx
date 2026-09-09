@@ -113,15 +113,19 @@ export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: Read
           </div>
         ))}
       </dl>
-      {props.goals.length > 0 && (
-        <ul className={styles.goals} data-suite-goals aria-label="What this step is waiting for">
-          {props.goals.map(({ goal, met }) => (
-            <li key={goal.label} data-met={met ? 'true' : 'false'}>
-              {goal.label}
-            </li>
-          ))}
-        </ul>
-      )}
+      <LabGoals goals={props.goals} />
     </div>
   )
+}
+
+export function LabGoals({ goals }: Pick<ImagingSuitePaneProps, 'goals'>) {
+  return goals.length > 0 ? (
+    <ul className={styles.goals} data-suite-goals aria-label="What this step is waiting for">
+      {goals.map(({ goal, met }) => (
+        <li key={goal.label} data-met={met ? 'true' : 'false'}>
+          {goal.label}
+        </li>
+      ))}
+    </ul>
+  ) : null
 }

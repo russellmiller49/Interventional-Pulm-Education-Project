@@ -13,6 +13,7 @@ It does not require Slicer, an external image service or a clinical scanner at r
 | `anatomy/fluoroview-carm.glb` | Existing `public/fluoroview/cases/patient-new/carm/c_arm_animation.glb`; Draco compression preserves its animation                                       | Original FluoroView C-arm motion reference                                   |
 | `anatomy/dts-projections.png` | Parallel projections of the derived CT with its baked part-solid target and a straight tool added to the volume; horizontal Gaussian high-pass filtering | Browser shift-and-add refocusing of 13 views at each of five authored sweeps |
 | `sampling-window.glb`         | Original procedural sphere and fictional side-window needle                                                                                              | Download of the geometry used in the sampling exercise                       |
+| `room-hero.png`               | Actual `room` mode: procedural gantry, table and monitor boom with `anatomy/thorax.glb`; software WebGL capture and lossless PNG compression             | Static 2400 × 1000 hero asset; hub integration remains with the owner        |
 
 The local source stays in the primary checkout's `fluoro_2/New_patient` directory.
 No raw NRRD, DICOM headers, local absolute path, name, or identifier is copied into
@@ -45,6 +46,7 @@ npx gltf-pipeline -i public/peripheral-imaging/anatomy/thorax.glb -o /tmp/imagin
 cp /tmp/imaging-thorax-compressed.glb public/peripheral-imaging/anatomy/thorax.glb
 npx gltf-pipeline -i public/fluoroview/cases/patient-new/carm/c_arm_animation.glb -o public/peripheral-imaging/anatomy/fluoroview-carm.glb -d
 npx tsx scripts/peripheral-imaging/export-models.ts
+npx tsx scripts/peripheral-imaging/render-room-hero.ts
 npx tsx scripts/peripheral-imaging/write-asset-manifest.ts
 npx tsx scripts/peripheral-imaging/verify-nodule-assets.ts
 ```
@@ -314,3 +316,58 @@ KAP readouts come from the existing lab engine, and field presets change both th
 aperture and the cone. Pure and scene checks cover KAP invariance, detector/plane
 footprints, presets, the surface marker and reduced-motion Step. This mode uses
 one WebGL context and reuses the existing CT asset.
+
+## Room mode and still — 2026-09-09
+
+`room` is enabled in `SUITE_MODES_READY`. It renders the suite at rest through the
+existing scene, with camera `room`, one demand-rendered canvas and no DRR, camera
+toolbar, control dock or readouts. The host's caption, boundary, lock/pause reason,
+optional chain answer, goals and child content retain their contract. Pin labels
+are absent unless the host requests labels or a chain answer. The existing pinned
+display and container sizing rules are unchanged; the room's goal text has its own
+contrast treatment because there is no light dock behind it.
+
+The delivered `public/peripheral-imaging/room-hero.png` is 2400 × 1000 RGB PNG,
+133,643 bytes (about 134 KB), with background `#061519` across every outer pixel.
+It shows the procedural gantry, table, monitor boom and the existing CT-derived
+thorax. Its fixed teaching gantry rests at orbit 30°, tilt 0° to expose the thorax;
+there is no motion, beam, authored tool, target marker, chain pin, label or baked
+text. The floor shares the clear colour. The monitor is a blank physical screen;
+no projection renderer is allocated.
+
+Regenerate from the repository root with the installed lockfile dependencies and
+Playwright Chromium (`npx playwright install chromium` if it is missing):
+
+```sh
+npx tsx scripts/peripheral-imaging/render-room-hero.ts
+```
+
+The command starts and closes its own local Vite server and headless Chromium. It
+loads the actual `ImagingSuitePane` entry point with `scripts/peripheral-imaging/room-fixture.ts`,
+waits for loaded anatomy and a stable frame, and exports only the canvas. The
+fixture is for rendering and contract checks; it is not a section or a hub view
+spec. Camera fitting includes each furniture piece, and the output needs no crop.
+No route, hub component or authored view registry is changed.
+
+Rendering uses DPR 1, antialiasing, sRGB and ANGLE SwiftShader to avoid depending on
+the workstation GPU. Sharp removes the redundant alpha channel and compresses
+losslessly at level 9 with adaptive filtering. It neither resizes nor quantizes
+the render. The command enforces dimensions, the 400,000-byte limit, one canvas,
+absence of pins/readouts/controls, and exact shell-colour edges before writing.
+It refreshes `room-hero.json` and the root asset manifest along with the PNG.
+
+`room-hero.json` records each source file's SHA-256, an aggregate source SHA, the
+original CT and airway source hashes, output hash/bytes, the fixture settings and
+Chromium/Playwright/Sharp/libvips versions. Reproduction uses those sources and the
+lockfile's browser version; a renderer upgrade can change rasterization. The
+anatomy comes from the same Slicer export documented above, and the furniture is
+repository-authored teaching geometry. No new clinical anatomy, device geometry,
+clearance claim or reconstruction is introduced.
+
+Verification: 193 peripheral-imaging Jest tests, 31 scene scenarios, seven app
+scenarios, TypeScript and ESLint passed. Room coverage checks one live WebGL
+context, no volume-atlas requests, no draw calls while idle, reduced motion,
+control locking, context recovery, native chain answers, narrow layout and axe.
+Fresh software-rendered runs produced the same PNG SHA-256 and byte count. The
+asset check verifies dimensions, byte budget, nonblank pixels, every outer pixel
+and the manifest's output/source links.

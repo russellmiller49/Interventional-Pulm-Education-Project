@@ -13,7 +13,7 @@ import {
 } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Anatomy } from './Anatomy'
-import { Room } from './Room'
+import { Room, ROOM_BACKGROUND, roomBounds } from './Room'
 import { ParametricCarm, BeamCone } from './ParametricCarm'
 import { DetectorImage } from './DetectorImage'
 import { Monitor } from './Monitor'
@@ -22,7 +22,7 @@ import { CameraRig } from './CameraRig'
 import { ChainPins } from './ChainPins'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
-import { LabDock } from './LabDock'
+import { LabDock, LabGoals } from './LabDock'
 import { ConeBeamView, ConeBeamPanels, useCbctAcquisition } from './views/ConeBeamView'
 import {
   TomosynthesisView,
@@ -88,6 +88,8 @@ function FrameReady({ ready }: { ready: () => void }) {
 
 export default function SuiteScene(props: ImagingSuitePaneProps) {
   const { view } = props
+  const isRoom = view.mode === 'room'
+  const showChain = !isRoom || view.layers.includes('labels') || Boolean(props.chainAnswer)
   const [source, setSource] = useState<DrrTextureSource | null>(null)
   const [visible, setVisible] = useState(true)
   const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
@@ -128,16 +130,19 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               const f = suiteFrame(angle, 0, sceneGeometry)
               return [f.source, ...f.corners]
             })
-          : staffModel
-            ? [
-                ...staffModel.rings.flatMap((ring) =>
-                  ring.segments.flatMap((segment) => segment.points),
-                ),
-                staffModel.position,
-              ]
-            : undefined,
+          : isRoom
+            ? roomBounds(sceneGeometry)
+            : staffModel
+              ? [
+                  ...staffModel.rings.flatMap((ring) =>
+                    ring.segments.flatMap((segment) => segment.points),
+                  ),
+                  staffModel.position,
+                ]
+              : undefined,
     [
       isCbct,
+      isRoom,
       dts.active,
       inputs.orbitSpanDeg,
       inputs.sweepDeg,
@@ -217,7 +222,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     update()
     return () => observer.disconnect()
   }, [])
-  const playback = useSuitePlayback(view, props.controlsEnabled, visible, reducedMotion)
+  const playback = useSuitePlayback(view, props.controlsEnabled && !isRoom, visible, reducedMotion)
   const timeModel = temporal({ ...inputs, phase: playback.phase })
   const displayCamera =
     cameraOverride?.requested === view.camera ? cameraOverride.value : view.camera
@@ -286,13 +291,19 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             {props.lockedReason ?? props.pausedReason ?? 'Controls unavailable'}
           </p>
         )}
-        <div ref={displays} className={styles.displays} data-monitor-layout={view.monitor}>
+        <div
+          ref={displays}
+          className={styles.displays}
+          data-monitor-layout={isRoom ? 'hidden' : view.monitor}
+        >
           <div className={styles.scenePanel}>
             <div className={styles.sceneHeader}>
-              <span>CT-derived anatomy · imaging chain</span>
+              <span>
+                {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · imaging chain'}
+              </span>
               <span>Authored teaching model</span>
             </div>
-            <div className={styles.viewport} ref={viewport}>
+            <div className={styles.viewport} ref={viewport} data-suite-viewport>
               {contextLost ? (
                 <div className={styles.contextLost} role="status">
                   The 3D view paused after a graphics interruption.
@@ -309,7 +320,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               ) : (
                 <div
                   role="img"
-                  aria-label="CT-derived thorax with a source, cone, detector and authored target and tool"
+                  aria-label={
+                    isRoom
+                      ? 'Imaging suite at rest with a gantry, table, CT-derived thorax and monitor boom'
+                      : 'CT-derived thorax with a source, cone, detector and authored target and tool'
+                  }
                   className={styles.canvasHost}
                 >
                   <Canvas
@@ -318,11 +333,12 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     dpr={[1, 1.5]}
                     camera={{ fov: 42, near: 1, far: 12000 }}
                     gl={{ antialias: true, preserveDrawingBuffer: true }}
-                    onCreated={({ gl }) => gl.setClearColor('#11232d')}
+                    onCreated={({ gl }) => gl.setClearColor(isRoom ? ROOM_BACKGROUND : '#11232d')}
                     fallback={
                       <p>
-                        The 3D canvas is unavailable. The controls and text readouts remain
-                        available.
+                        {isRoom
+                          ? 'The 3D canvas is unavailable.'
+                          : 'The 3D canvas is unavailable. The controls and text readouts remain available.'}
                       </p>
                     }
                   >
@@ -346,6 +362,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         layers={view.layers}
                         geometry={inputs.geometry}
                         floorSpan={staffModel ? 8000 : undefined}
+                        atRest={isRoom}
                       />
                       {view.layers.includes('gantry') && (
                         <ParametricCarm
@@ -427,22 +444,25 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       {view.mode === 'signal' && view.layers.includes('ray') && (
                         <RayTrace profile={profile} />
                       )}
-                      <ChainPins
-                        spread={['suite', 'room', 'anterior', 'side', 'head'].includes(
-                          displayCamera,
-                        )}
-                        frame={frame}
-                        portal={portal as RefObject<HTMLDivElement>}
-                        lit={view.litStop}
-                        answer={props.chainAnswer}
-                        onCamera={onCamera}
-                      />
+                      {showChain && (
+                        <ChainPins
+                          spread={['suite', 'room', 'anterior', 'side', 'head'].includes(
+                            displayCamera,
+                          )}
+                          frame={frame}
+                          portal={portal as RefObject<HTMLDivElement>}
+                          lit={view.litStop}
+                          answer={props.chainAnswer}
+                          onCamera={onCamera}
+                        />
+                      )}
                       <FrameReady ready={onReady} />
                     </Suspense>
                     <CameraRig
                       view={displayCamera}
                       frame={frame}
                       enabled={props.controlsEnabled}
+                      labelled={showChain}
                       overviewBounds={overviewBounds}
                       focus={isCbct ? cbct.setup.target : undefined}
                       closeupDistance={
@@ -456,99 +476,102 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 ref={portal}
                 className={styles.overlay}
                 data-chain-map
-                aria-label="The imaging chain"
+                role={showChain ? 'group' : undefined}
+                aria-label={showChain ? 'The imaging chain' : undefined}
               />
             </div>
-            <div className={styles.toolbar} aria-label="3D camera views">
-              <button
-                type="button"
-                disabled={
-                  !props.controlsEnabled ||
-                  (!view.lab && !dts.active) ||
-                  (!view.bindings.some((b) => b.input === 'orbit') &&
-                    ![
-                      'field',
-                      'time',
-                      'cbct',
-                      'dts',
-                      'dts-prior',
-                      'sampling',
-                      'navigation',
-                      'augmented',
-                      'dose',
-                    ].includes(view.mode))
-                }
-                onClick={() => {
-                  if (view.mode === 'sampling' && view.lab) {
-                    const control = labControl(view.lab, 'axial')
+            {!isRoom && (
+              <div className={styles.toolbar} aria-label="3D camera views">
+                <button
+                  type="button"
+                  disabled={
+                    !props.controlsEnabled ||
+                    (!view.lab && !dts.active) ||
+                    (!view.bindings.some((b) => b.input === 'orbit') &&
+                      ![
+                        'field',
+                        'time',
+                        'cbct',
+                        'dts',
+                        'dts-prior',
+                        'sampling',
+                        'navigation',
+                        'augmented',
+                        'dose',
+                      ].includes(view.mode))
+                  }
+                  onClick={() => {
+                    if (view.mode === 'sampling' && view.lab) {
+                      const control = labControl(view.lab, 'axial')
+                      props.onLabChange({
+                        slab: false,
+                        axial:
+                          inputs.axial >= (control?.max ?? 20)
+                            ? (control?.min ?? -20)
+                            : inputs.axial + (control?.step ?? 1),
+                      })
+                      return
+                    }
+                    if (dts.active) {
+                      dts.step()
+                      return
+                    }
+                    if (isCbct) {
+                      cbct.step()
+                      return
+                    }
+                    if (view.mode === 'time') {
+                      playback.step(1 / inputs.pulseRate)
+                      return
+                    }
+                    const binding = view.bindings.find((b) => b.input === 'orbit')
+                    if (!binding || !view.lab) {
+                      setSteppedOrbit((n) => n + 1)
+                      return
+                    }
+                    const control = labControl(view.lab, binding.control)
+                    const value = labNumber(
+                      view.lab,
+                      props.lab.values,
+                      binding.control,
+                      view.sectionId,
+                    )
                     props.onLabChange({
-                      slab: false,
-                      axial:
-                        inputs.axial >= (control?.max ?? 20)
-                          ? (control?.min ?? -20)
-                          : inputs.axial + (control?.step ?? 1),
+                      [binding.control]: clamp(
+                        value + 1,
+                        control?.min ?? -Infinity,
+                        control?.max ?? Infinity,
+                      ),
                     })
-                    return
-                  }
-                  if (dts.active) {
-                    dts.step()
-                    return
-                  }
-                  if (isCbct) {
-                    cbct.step()
-                    return
-                  }
-                  if (view.mode === 'time') {
-                    playback.step(1 / inputs.pulseRate)
-                    return
-                  }
-                  const binding = view.bindings.find((b) => b.input === 'orbit')
-                  if (!binding || !view.lab) {
-                    setSteppedOrbit((n) => n + 1)
-                    return
-                  }
-                  const control = labControl(view.lab, binding.control)
-                  const value = labNumber(
-                    view.lab,
-                    props.lab.values,
-                    binding.control,
-                    view.sectionId,
-                  )
-                  props.onLabChange({
-                    [binding.control]: clamp(
-                      value + 1,
-                      control?.min ?? -Infinity,
-                      control?.max ?? Infinity,
-                    ),
-                  })
-                }}
-              >
-                Step
-              </button>
-              {view.animation && !isCbct && (
-                <button
-                  type="button"
-                  disabled={!props.controlsEnabled || reducedMotion}
-                  onClick={dts.active ? dts.play : playback.toggle}
+                  }}
                 >
-                  {running ? 'Pause' : 'Play'}
+                  Step
                 </button>
-              )}
-              {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
-                <button
-                  type="button"
-                  key={v}
-                  aria-pressed={displayCamera === v}
-                  onClick={() => onCamera(v)}
-                >
-                  {v === 'suite'
-                    ? 'Suite'
-                    : v === 'beam'
-                      ? 'Beam view'
-                      : v.charAt(0).toUpperCase() + v.slice(1)}
-                </button>
-              ))}
-            </div>
+                {view.animation && !isCbct && (
+                  <button
+                    type="button"
+                    disabled={!props.controlsEnabled || reducedMotion}
+                    onClick={dts.active ? dts.play : playback.toggle}
+                  >
+                    {running ? 'Pause' : 'Play'}
+                  </button>
+                )}
+                {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
+                  <button
+                    type="button"
+                    key={v}
+                    aria-pressed={displayCamera === v}
+                    onClick={() => onCamera(v)}
+                  >
+                    {v === 'suite'
+                      ? 'Suite'
+                      : v === 'beam'
+                        ? 'Beam view'
+                        : v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {drrMode && (
             <section className={styles.monitorPanel} hidden={view.monitor === 'hidden'}>
@@ -634,24 +657,28 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
-        <LabDock
-          {...props}
-          disabledControls={
-            isCbct && (cbct.sourceState !== 'ready' || cbct.busy)
-              ? new Set(['captured'])
-              : undefined
-          }
-          onLabChange={(patch) =>
-            isCbct && patch.captured === true ? void cbct.run(true) : props.onLabChange(patch)
-          }
-          onLabReset={() => {
-            setSteppedOrbit(0)
-            playback.reset()
-            cbct.reset()
-            dts.reset()
-            props.onLabReset()
-          }}
-        />
+        {isRoom ? (
+          <LabGoals goals={props.goals} />
+        ) : (
+          <LabDock
+            {...props}
+            disabledControls={
+              isCbct && (cbct.sourceState !== 'ready' || cbct.busy)
+                ? new Set(['captured'])
+                : undefined
+            }
+            onLabChange={(patch) =>
+              isCbct && patch.captured === true ? void cbct.run(true) : props.onLabChange(patch)
+            }
+            onLabReset={() => {
+              setSteppedOrbit(0)
+              playback.reset()
+              cbct.reset()
+              dts.reset()
+              props.onLabReset()
+            }}
+          />
+        )}
         <p className={styles.boundary} data-model-boundary>
           {view.boundary}
         </p>

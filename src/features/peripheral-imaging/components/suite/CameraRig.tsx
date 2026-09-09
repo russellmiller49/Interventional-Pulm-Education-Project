@@ -27,6 +27,7 @@ export function CameraRig({
   overviewBounds = NO_BOUNDS,
   focus = LESION_CENTER,
   closeupDistance,
+  labelled = true,
 }: {
   view: SuiteCamera
   frame: SuiteFrame
@@ -34,6 +35,7 @@ export function CameraRig({
   overviewBounds?: readonly Point3[]
   focus?: Point3
   closeupDistance?: number
+  labelled?: boolean
 }) {
   const { camera, invalidate, size } = useThree()
   const config = useMemo(() => {
@@ -71,7 +73,7 @@ export function CameraRig({
       const right = upHint.clone().cross(towardCamera).normalize()
       const up = towardCamera.clone().cross(right).normalize()
       const tanY = Math.tan((camera.fov * Math.PI) / 360)
-      const labelMargin = size.width < 420 ? 110 : 200
+      const labelMargin = labelled ? (size.width < 420 ? 110 : 200) : 32
       const usableX = Math.max(0.35, 1 - labelMargin / size.width)
       const usableY = Math.max(0.5, 1 - 64 / size.height)
       const tanX = tanY * (size.width / size.height) * usableX
@@ -95,7 +97,17 @@ export function CameraRig({
       position: positions[view],
       up: (view === 'beam' ? frame.v : upFor(view)) as Point3,
     }
-  }, [view, frame, camera, size.width, size.height, overviewBounds, focus, closeupDistance])
+  }, [
+    view,
+    frame,
+    camera,
+    size.width,
+    size.height,
+    overviewBounds,
+    focus,
+    closeupDistance,
+    labelled,
+  ])
   useEffect(() => {
     camera.position.set(...config.position)
     camera.up.set(...config.up)
