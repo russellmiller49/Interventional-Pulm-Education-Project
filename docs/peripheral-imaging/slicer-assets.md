@@ -238,3 +238,14 @@ The owner's latched-action fix in PR #148 is included from main. Its regression
 drives all three acquisition sections through every required Act goal, including
 capture. The scene test additionally checks that the rendered acquisition reports
 capture and that moving the setup invalidates it. Engine files remain owner-managed.
+
+## Phase 2 — DTS
+
+The authored 13-projection atlas supplies the arc thumbnails and the sliding
+teaching focal plane. Smear widths reuse dtsShift; dashed sectors mark unsampled
+directions. The atlas remains a parallel-beam teaching construction. Continuous
+collection runs only while visible and enabled; reduced motion shows the completed
+sweep, and Step collects one projection. Plane controls use the existing lab
+actions and clamps. The filmstrip and explanatory text scroll below the displays.
+No DRR context, new asset or dependency is created. Unit and scene checks cover
+projection geometry, refocusing pixels, playback, actions, locks and context count.
