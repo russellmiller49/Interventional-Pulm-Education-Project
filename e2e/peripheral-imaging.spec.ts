@@ -25,25 +25,15 @@ test.setTimeout(120_000)
 
 const base = () => process.env.PERIPHERAL_IMAGING_BASE_URL!
 
-test.beforeEach(async ({ context, page }) => {
+test.beforeEach(async ({ page }) => {
   if (!['localhost', '127.0.0.1'].includes(new URL(base()).hostname))
     throw new Error('Imaging checks require localhost.')
-  const token = process.env.LOCAL_DEV_AUTH_TOKEN
-  if (!token)
-    throw new Error(
-      'Load the repository local development auth environment before running the imaging checks.',
-    )
-  // Values remain in memory; do not print the auth URL or persist a browser trace.
-  const auth = await context.request
-    .get(base() + '/api/local-dev-auth', {
-      params: { token, next: '/en/peripheral-imaging' },
-      maxRedirects: 0,
-    })
-    .catch(() => {
-      throw new Error('Local development auth request failed.')
-    })
-  expect(auth.status()).toBe(307)
-  await page.goto(base() + '/en/peripheral-imaging')
+  // No sign-in step: the module is in development and reachable by direct link, so arriving on
+  // the hub with no account and no cookie is the promise this suite is here to keep. A gate that
+  // regresses to requiring an account fails here, on the first navigation.
+  const response = await page.goto(base() + '/en/peripheral-imaging')
+  expect(response?.status()).toBe(200)
+  expect(new URL(page.url()).pathname).toBe('/en/peripheral-imaging')
   await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
     'data-imaging-continue',
     'resolved',
@@ -72,6 +62,15 @@ async function commitKeyed(page: Page, sectionId: string, stepIndex: number) {
     'data-verdict-outcome',
     'correct',
   )
+}
+
+/**
+ * Whether the suite's controls are locked. Playwright treats a `<fieldset disabled>` as enabled
+ * — the disabled state it reports belongs to form controls — so ask a control inside the dock,
+ * which is the thing the learner cannot actually move.
+ */
+function firstSuiteControl(page: Page) {
+  return page.locator('[data-suite-controls] input, [data-suite-controls] select').first()
 }
 
 async function setRange(page: Page, label: string | RegExp, value: number) {
@@ -195,12 +194,12 @@ test('a lab section: the suite is locked until the commitment, a goal flips, and
   page,
 }, testInfo) => {
   await openSection(page, 'projection')
-  await expect(page.locator('[data-suite-controls]')).toBeDisabled()
+  await expect(firstSuiteControl(page)).toBeDisabled()
   await primary(page).click()
   expect(await stageId(page)).toBe('projection-2-predict')
-  await expect(page.locator('[data-suite-controls]')).toBeDisabled()
+  await expect(firstSuiteControl(page)).toBeDisabled()
   await commitKeyed(page, 'projection', 1)
-  await expect(page.locator('[data-suite-controls]')).toBeEnabled()
+  await expect(firstSuiteControl(page)).toBeEnabled()
   await primary(page).click()
   expect(await stageId(page)).toBe('projection-3-act')
 

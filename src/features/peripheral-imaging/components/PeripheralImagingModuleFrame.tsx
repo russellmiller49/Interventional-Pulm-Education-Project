@@ -48,11 +48,15 @@ export const PERIPHERAL_IMAGING_SAFETY_NOTICE = (
  * What the module is right now, in the learner's words. The stage is the authority: while it is
  * `unlisted-preview` the course is reachable by direct link only and is not part of the public
  * site, so the label says so rather than implying an account is required.
+ *
+ * Keep it to a few words. The shared frame renders this badge `white-space: nowrap`, so a long
+ * label does not wrap — it widens the document and every section under it. The review date and
+ * the education-only boundary are already stated in the safety notice and the references.
  */
 const releaseLabel =
   PERIPHERAL_IMAGING_RELEASE_STAGE === 'unlisted-preview'
-    ? `In development · shared by direct link · reviewed ${REVIEWED_ON} · education only`
-    : `Reviewed ${REVIEWED_ON} · education only`
+    ? 'In development · direct link'
+    : `Reviewed ${REVIEWED_ON}`
 
 /**
  * Shared shell for the hub and every section page: module identity row, section nav, and the

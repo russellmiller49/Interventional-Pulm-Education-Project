@@ -36,7 +36,7 @@ export function PeripheralImagingHub() {
     peripheralImagingPathwaySections.map((section) => [section.id, section] as const),
   )
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)] gap-8 px-4 py-10 sm:px-6 lg:px-8">
       <section className="grid gap-7 rounded-3xl border bg-card p-6 shadow-sm lg:grid-cols-[1.35fr_0.65fr] lg:p-10">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">

@@ -49,7 +49,7 @@ export function ImagingPathwayAccordion({
           <details
             className={styles.groupCard}
             open={index === openIndex}
-            data-stage={group.stage}
+            data-pathway-stage={group.stage}
             data-group-index={index}
           >
             <summary className={styles.groupSummary}>

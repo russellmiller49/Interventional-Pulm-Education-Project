@@ -14,7 +14,7 @@ import { ImagingContinueCta } from './hub/ImagingPathwayAccordion'
 export function PeripheralImagingPracticeLanding() {
   return (
     <div
-      className="mx-auto grid w-full max-w-4xl gap-6 px-4 py-10 sm:px-6 lg:px-8"
+      className="mx-auto grid w-full max-w-4xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-10 sm:px-6 lg:px-8"
       data-practice-landing
     >
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Practice</p>

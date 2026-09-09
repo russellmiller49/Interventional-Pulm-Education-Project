@@ -12,7 +12,7 @@ export function PeripheralImagingLearnLanding({
   readonly unknownSection?: string
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto grid w-full max-w-5xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-10 sm:px-6 lg:px-8">
       {unknownSection ? (
         <p
           className="rounded-2xl border p-4 text-sm"
