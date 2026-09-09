@@ -200,3 +200,31 @@ it('field geometry shrinks the irradiated plane; display crop leaves a full beam
 it('every authored section resolves and validates against the scene contract', () => {
   for (const view of Object.values(SUITE_VIEWS)) expect(suiteViewErrors(view)).toEqual([])
 })
+
+import { temporal } from '../components/suite/suiteModel'
+it('temporal images land only after each pulse, then hold until the next completed pulse', () => {
+  for (const pulseRate of [3.75, 7.5, 15]) {
+    const base = { pulseRate, pulseWidthMs: 20, speedMmS: 40 }
+    expect(temporal({ ...base, phase: 0 }).sampleIndex).toBe(-1)
+    const completed = temporal({ ...base, phase: 0.02 })
+    const between = temporal({ ...base, phase: 1 / pulseRate - 0.001 })
+    expect(completed.sampleIndex).toBe(0)
+    expect(between.sampledTip).toEqual(completed.sampledTip)
+    expect(between.pulseIsOn).toBe(false)
+    const next = temporal({ ...base, phase: 1 / pulseRate + 0.02 })
+    expect(next.sampleIndex).toBe(1)
+    expect(Math.hypot(...subtract(next.sampledTip, completed.sampledTip))).toBeCloseTo(
+      next.interFrameTravel,
+      8,
+    )
+    expect(Math.hypot(...subtract(...completed.blurSegment))).toBeCloseTo(completed.inFrameBlur, 8)
+  }
+})
+it('pulse width changes within-frame blur without changing inter-frame travel', () => {
+  const inputs = { pulseRate: 7.5, pulseWidthMs: 5, speedMmS: 20, phase: 1 }
+  const short = temporal(inputs),
+    long = temporal({ ...inputs, pulseWidthMs: 20 })
+  expect(long.inFrameBlur).toBe(short.inFrameBlur * 4)
+  expect(long.interFrameTravel).toBe(short.interFrameTravel)
+  expect(temporal({ ...inputs, speedMmS: 0 }).inFrameBlur).toBe(0)
+})

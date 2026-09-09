@@ -262,3 +262,33 @@ test('field shutters, display crop and monitor zoom have distinct physical effec
   await expect(page.getByRole('button', { name: 'Step', exact: true })).toBeDisabled()
   await expect(page.locator('[data-model-boundary]')).toHaveText(SUITE_VIEWS.field.boundary)
 })
+
+test('time holds discrete images over a static DRR; reduced motion steps one pulse and locking pauses', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=time`)
+  await page.bringToFront()
+  await ready(page)
+  const suite = page.locator('[data-suite-scene]')
+  await expect(suite).toHaveAttribute('data-suite-anim', 'idle')
+  const overlay = page.locator('[data-temporal-frame]')
+  const frame = Number(await overlay.getAttribute('data-temporal-frame'))
+  const image = page.locator('[data-projection-state=ready] canvas')
+  const background = await image.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(overlay).toHaveAttribute('data-temporal-frame', String(frame + 1))
+  await expect(suite).toHaveAttribute('data-suite-anim', 'idle')
+  await setRange(page, 'Pulse width', 20)
+  await expect(page.locator('[data-readout=inFrameBlurMm] dd')).toHaveText('0.40 mm')
+  await expect(page.locator('[data-time-sample]')).toHaveCount(6)
+  await expect
+    .poll(() => image.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .toBe(background)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.getByRole('button', { name: 'Play', exact: true }).click()
+  await expect(suite).toHaveAttribute('data-suite-anim', 'running')
+  await page.getByRole('button', { name: 'Toggle control lock' }).click()
+  await expect(suite).toHaveAttribute('data-suite-anim', 'idle')
+  await expect(page.getByRole('button', { name: 'Step', exact: true })).toBeDisabled()
+})

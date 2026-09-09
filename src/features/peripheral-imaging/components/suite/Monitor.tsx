@@ -14,6 +14,7 @@ export function Monitor({
   targetFill = true,
   zoom = 1,
   mask,
+  overlay,
 }: {
   pose: DrrPose
   depth: number
@@ -23,6 +24,7 @@ export function Monitor({
   targetFill?: boolean
   zoom?: number
   mask?: ReactNode
+  overlay?: ReactNode
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -57,14 +59,16 @@ export function Monitor({
         data-monitor-zoom={zoom}
       >
         <canvas ref={canvas} aria-hidden="true" />
-        <ProjectionOverlays
-          orbit={pose.orbit}
-          tilt={pose.tilt}
-          depth={depth}
-          geometry={pose.geometry}
-          showCurrent={showCurrent}
-          targetFill={targetFill}
-        />
+        {overlay ?? (
+          <ProjectionOverlays
+            orbit={pose.orbit}
+            tilt={pose.tilt}
+            depth={depth}
+            geometry={pose.geometry}
+            showCurrent={showCurrent}
+            targetFill={targetFill}
+          />
+        )}
       </div>
       {mask}
       {state !== 'ready' && (

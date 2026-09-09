@@ -200,3 +200,19 @@ rerun after cold compilation exceeded its five-second assertion. Manual review a
 `/en/peripheral-imaging/learn?section=field` confirmed the lab goal flips at a
 60% field side and the acquired image stays visible. Tests distinguish the
 physical field, display mask and monitor-only zoom.
+
+## Phase 2 — time
+
+The focal spot pulses while an authored tool translates. The detector and monitor
+hold the most recently completed exposure; a magnified sample strip distinguishes
+movement during each pulse from travel between measurements. All timing and
+motion distances use `temporalMetrics`; tube load never changes the DRR. A shared
+clock clamps frame deltas to 1/30 second and runs authored time at one tenth speed.
+Only visible, unlocked, playing scenes request continuous rendering. Pause holds
+time, reduced motion opens a completed sample, and Step advances one pulse.
+
+Validation on 2026-09-09: 155 focused Jest tests, TypeScript, ESLint, eight scene
+scenarios and six app scenarios passed. The live time section was checked through
+Act, including halving rate, doubling width and the resulting goal completion.
+The frame caption remains readable in a narrow simulator pane. No assets or
+runtime dependencies were added.

@@ -9,6 +9,7 @@ import {
   projectPoint,
   projectToDetector,
   toolTipForDepth,
+  temporalMetrics,
   type ImagingGeometry,
   type Point3,
 } from '../../lib/physics'
@@ -162,5 +163,32 @@ export function fieldGeometry(frame: SuiteFrame, fieldPercent: number, crop: boo
         [left, top],
       ].map((uv) => add(detectorPoint(frame, uv as [number, number]), scale(frame.normal, -1))),
     ),
+  }
+}
+
+/** Clock seconds, with a held image from the most recently completed exposure. */
+export function temporal(
+  inputs: Pick<SuiteInputs, 'pulseRate' | 'pulseWidthMs' | 'speedMmS' | 'phase'>,
+) {
+  const { pulseRate, pulseWidthMs, speedMmS } = inputs
+  const phase = Math.max(0, inputs.phase)
+  const widthSeconds = pulseWidthMs / 1000
+  const pulseIndex = Math.floor(phase * pulseRate + 1e-9)
+  const sampleIndex = Math.max(-1, Math.floor((phase - widthSeconds) * pulseRate + 1e-9))
+  const sampledTipAt = (seconds: number): Point3 =>
+    add(LESION_CENTER, [-32 + speedMmS * seconds, 0, 0])
+  const sampleTime = Math.max(0, sampleIndex) / pulseRate
+  return {
+    ...temporalMetrics(pulseRate, pulseWidthMs, 20, speedMmS),
+    pulseIsOn: phase - pulseIndex / pulseRate < widthSeconds,
+    sampleIndex,
+    sampleTime,
+    sampledTipAt,
+    currentTip: sampledTipAt(phase),
+    sampledTip: sampledTipAt(sampleTime + widthSeconds),
+    blurSegment: [sampledTipAt(sampleTime), sampledTipAt(sampleTime + widthSeconds)] as [
+      Point3,
+      Point3,
+    ],
   }
 }
