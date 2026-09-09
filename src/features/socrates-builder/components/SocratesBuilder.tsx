@@ -42,7 +42,8 @@ import {
 } from '@/app/[locale]/socrates-demo/actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { DeepZoomViewer } from '@/features/socrates-demo/components/DeepZoomViewer'
+import { ComparisonSlideViewer } from '@/features/socrates-demo/components/ComparisonSlideViewer'
+import { SocratesDemo } from '@/features/socrates-demo/components/SocratesDemo'
 import {
   findDeepestAnnotationAtPoint,
   polygonBounds,
@@ -62,7 +63,12 @@ import {
   createBlankSocratesDocument,
   createStarterSocratesDocument,
 } from '../content/starter-document'
+import { createInvenioDemoDocument } from '../content/invenio-demo-document'
 import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descriptor'
+import { databaseCompatibilityError } from '../database-compatibility'
+import { getInvenioPair } from '../invenio-source'
+import type { WebOverlayWorkspace } from '../web-overlay-storage'
+import { InvenioSlidePicker } from './InvenioSlidePicker'
 import {
   createSandboxEditKey,
   forgetSandboxEditKey,
@@ -81,10 +87,13 @@ import styles from './socrates-builder.module.css'
 interface SocratesBuilderProps {
   access: SocratesBuilderAccess
   initialDocuments: SocratesSlideDocument[]
+  initialActiveDocument?: SocratesSlideDocument
+  initialStorageError?: string | null
   mode?: SocratesBuilderMode
   sandboxCleanupDocuments?: SocratesSlideDocument[]
   embedded?: boolean
   onDocumentsChange?: (documents: SocratesSlideDocument[]) => void
+  onLocalWorkspaceChange?: (workspace: WebOverlayWorkspace) => string | null
 }
 
 interface ActionNotice {
@@ -171,16 +180,24 @@ function statusVariant(status: SocratesSlideDocument['workflowStatus']) {
 export function SocratesBuilder({
   access,
   initialDocuments,
+  initialActiveDocument,
+  initialStorageError = null,
   mode = 'protected',
   sandboxCleanupDocuments = [],
   embedded = false,
   onDocumentsChange,
+  onLocalWorkspaceChange,
 }: SocratesBuilderProps) {
   const locale = useLocale()
-  const initialDocument = initialDocuments[0]
-    ? cloneDocument(initialDocuments[0])
-    : createStarterSocratesDocument()
+  const [initialDocument] = useState(() =>
+    cloneDocument(
+      initialActiveDocument ??
+        initialDocuments[0] ??
+        (mode === 'local' ? createInvenioDemoDocument() : createStarterSocratesDocument()),
+    ),
+  )
   const viewerRef = useRef<DeepZoomViewerHandle | null>(null)
+  const descriptorRequestRef = useRef(0)
   const importInputRef = useRef<HTMLInputElement | null>(null)
   const [documents, setDocuments] = useState(() => initialDocuments.map(cloneDocument))
   const [document, setDocument] = useState<SocratesSlideDocument>(initialDocument)
@@ -197,14 +214,24 @@ export function SocratesBuilder({
   const [annotationFuture, setAnnotationFuture] = useState<DemoAnnotation[][]>([])
   const [dirty, setDirty] = useState(!initialDocument.recordId)
   const [loadingDescriptor, setLoadingDescriptor] = useState(false)
+  const [previewDocument, setPreviewDocument] = useState<SocratesSlideDocument | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<ActionNotice | null>(null)
+  const [localSaveError, setLocalSaveError] = useState<string | null>(initialStorageError)
+  const [initialLocalSnapshot] = useState(() => JSON.stringify([initialDocument, initialDocuments]))
+  const localSnapshotRef = useRef(initialLocalSnapshot)
   const [ownedSandboxIds, setOwnedSandboxIds] = useState<Set<string>>(new Set())
   const [cleanupDocuments, setCleanupDocuments] = useState(() =>
     sandboxCleanupDocuments.map(cloneDocument),
   )
 
   const isSandbox = mode === 'sandbox'
+  const isLocal = mode === 'local'
+  const isPairedSlide = Boolean(getInvenioPair(document.slide.descriptorUrl))
+  const catalog = useMemo(
+    () => (isLocal ? replaceDocumentInCatalog(documents, document) : documents),
+    [document, documents, isLocal],
+  )
 
   const selectedAnnotation = document.annotations.find((annotation) => annotation.id === selectedId)
   const selectedBounds = selectedAnnotation ? polygonBounds(selectedAnnotation.polygon) : null
@@ -227,6 +254,20 @@ export function SocratesBuilder({
     )
   }, [documents, isSandbox])
 
+  useEffect(() => {
+    if (!isLocal || !onLocalWorkspaceChange) return
+    const snapshot = JSON.stringify([document, documents])
+    if (snapshot === localSnapshotRef.current) return
+    localSnapshotRef.current = snapshot
+    const error = onLocalWorkspaceChange({
+      version: 1,
+      activeDocument: document,
+      documents: catalog,
+    })
+    setLocalSaveError(error)
+    if (!error) setDirty(false)
+  }, [catalog, document, documents, isLocal, onLocalWorkspaceChange])
+
   const setDirtyDocument = useCallback((updater: SetStateAction<SocratesSlideDocument>) => {
     setDocument(updater)
     setDirty(true)
@@ -248,24 +289,37 @@ export function SocratesBuilder({
     [document.annotations, setDirtyDocument],
   )
 
-  const selectDocument = useCallback((nextDocument: SocratesSlideDocument) => {
-    const clone = cloneDocument(nextDocument)
-    setDocument(clone)
-    setDescriptorInput(clone.slide.descriptorUrl)
-    setSelectedId(clone.annotations[0]?.id ?? '')
-    setPreviewedId(null)
-    setDrawMode('navigate')
-    setAnnotationHistory([])
-    setAnnotationFuture([])
-    setDirty(false)
-    setNotice(null)
-  }, [])
+  const selectDocument = useCallback(
+    (nextDocument: SocratesSlideDocument) => {
+      descriptorRequestRef.current += 1
+      setLoadingDescriptor(false)
+      const clone = cloneDocument(nextDocument)
+      if (isLocal) {
+        clone.recordId ??= crypto.randomUUID()
+        setDocuments((current) => replaceDocumentInCatalog(current, document))
+      }
+      setDocument(clone)
+      setDescriptorInput(clone.slide.descriptorUrl)
+      setSelectedId(clone.annotations[0]?.id ?? '')
+      setPreviewedId(null)
+      setDrawMode('navigate')
+      setAnnotationHistory([])
+      setAnnotationFuture([])
+      setDirty(false)
+      setNotice(null)
+    },
+    [document, isLocal],
+  )
 
   const addNewSlide = useCallback(() => {
     const blank = createBlankSocratesDocument()
+    if (isLocal) {
+      blank.slide = createInvenioDemoDocument().slide
+      blank.slide.contentStatus = 'Teaching annotations awaiting author review.'
+    }
     selectDocument(blank)
     setDirty(true)
-  }, [selectDocument])
+  }, [isLocal, selectDocument])
 
   const undoAnnotations = useCallback(() => {
     const previous = annotationHistory.at(-1)
@@ -439,73 +493,130 @@ export function SocratesBuilder({
     [allVisibleIds, document.annotations],
   )
 
-  const loadDescriptor = useCallback(async () => {
-    setLoadingDescriptor(true)
-    setNotice(null)
-    try {
-      const source = resolveSocratesSlideSource(descriptorInput)
-      const descriptor = await loadInvenioDziDescriptor(source.descriptorUrl)
-      const slideKey = source.slideKey
-      const fullView = { x: 0, y: 0, width: descriptor.width, height: descriptor.height }
-      const currentInitialView = document.slide.initialImageRect
-      const descriptorChanged = Boolean(slideKey && slideKey !== document.slide.id)
+  const loadDescriptor = useCallback(
+    async (input = descriptorInput, asNewSlide = false) => {
+      const requestId = ++descriptorRequestRef.current
+      setDescriptorInput(input)
+      setLoadingDescriptor(true)
+      setNotice(null)
+      try {
+        const source = resolveSocratesSlideSource(input)
+        const descriptor = await loadInvenioDziDescriptor(source.descriptorUrl)
+        if (source.annotatedDescriptorUrl) {
+          const annotated = await loadInvenioDziDescriptor(source.annotatedDescriptorUrl)
+          if (annotated.width !== descriptor.width || annotated.height !== descriptor.height) {
+            throw new Error(
+              'The tissue and color annotation images have different dimensions. They cannot share teaching regions.',
+            )
+          }
+        }
+        if (requestId !== descriptorRequestRef.current) return
+        const slideKey = source.slideKey
+        const fullView = { x: 0, y: 0, width: descriptor.width, height: descriptor.height }
+        const currentInitialView = document.slide.initialImageRect
+        const descriptorChanged =
+          asNewSlide || source.descriptorUrl !== document.slide.descriptorUrl
+        if (
+          !descriptorChanged &&
+          (descriptor.width !== document.slide.expectedDimensions.width ||
+            descriptor.height !== document.slide.expectedDimensions.height)
+        ) {
+          throw new Error(
+            'The source dimensions changed. Add this as a new slide to keep existing regions aligned.',
+          )
+        }
 
-      if (source.initialImageRect && !rectContainsRect(fullView, source.initialImageRect)) {
-        throw new Error('The Thinviewer starting crop lies outside the slide dimensions.')
-      }
+        if (source.initialImageRect && !rectContainsRect(fullView, source.initialImageRect)) {
+          throw new Error('The Thinviewer starting crop lies outside the slide dimensions.')
+        }
 
-      const initialImageRect = source.initialImageRect
-        ? source.initialImageRect
-        : !descriptorChanged && rectContainsRect(fullView, currentInitialView)
-          ? currentInitialView
-          : fullView
-      setDirtyDocument((current) => ({
-        ...current,
-        slug: current.recordId ? current.slug : slugify(slideKey || current.title),
-        title:
-          current.recordId || (!descriptorChanged && current.title !== 'New Invenio slide')
-            ? current.title
-            : slideKey.replaceAll('_', ' '),
-        slide: {
-          ...current.slide,
-          id: slideKey || current.slide.id,
-          descriptorUrl: source.descriptorUrl,
-          expectedDimensions: { width: descriptor.width, height: descriptor.height },
-          initialImageRect,
-          attribution: {
-            ...current.slide.attribution,
-            href:
-              source.attributionUrl ??
-              (descriptorChanged ? source.descriptorUrl : current.slide.attribution.href),
+        const initialImageRect = source.initialImageRect
+          ? source.initialImageRect
+          : !descriptorChanged && rectContainsRect(fullView, currentInitialView)
+            ? currentInitialView
+            : fullView
+        if (isLocal && descriptorChanged) {
+          setDocuments((current) => replaceDocumentInCatalog(current, document))
+        }
+        setDirtyDocument((current) => ({
+          ...current,
+          ...(asNewSlide || (isLocal && descriptorChanged)
+            ? {
+                recordId: isLocal ? crypto.randomUUID() : undefined,
+                revision: 0,
+                publishedAt: null,
+                workflowStatus: 'draft' as const,
+              }
+            : {}),
+          slug:
+            !asNewSlide && !isLocal && current.recordId
+              ? current.slug
+              : slugify(slideKey || current.title),
+          title:
+            !asNewSlide &&
+            ((!isLocal && current.recordId) ||
+              (!descriptorChanged && current.title !== 'New Invenio slide'))
+              ? current.title
+              : (getInvenioPair(source.descriptorUrl)?.label ?? slideKey.replaceAll('_', ' ')),
+          slide: {
+            ...current.slide,
+            id: slideKey || current.slide.id,
+            descriptorUrl: source.descriptorUrl,
+            expectedDimensions: { width: descriptor.width, height: descriptor.height },
+            initialImageRect,
+            contentStatus: descriptorChanged
+              ? 'Teaching annotations awaiting author review.'
+              : current.slide.contentStatus,
+            attribution: {
+              ...current.slide.attribution,
+              label: source.annotatedDescriptorUrl
+                ? 'Invenio Imaging · UCSD Slide Viewer'
+                : descriptorChanged
+                  ? 'Invenio slide source'
+                  : current.slide.attribution.label,
+              href:
+                source.attributionUrl ??
+                (descriptorChanged ? source.descriptorUrl : current.slide.attribution.href),
+            },
           },
-        },
-        annotations: descriptorChanged ? [] : current.annotations,
-      }))
-      setDescriptorInput(source.descriptorUrl)
-      setViewport({ zoomRatio: 1, visibleImageBounds: initialImageRect })
-      setPreviewedId(null)
-      if (descriptorChanged) {
-        setSelectedId('')
-        setDrawMode('navigate')
-        setAnnotationHistory([])
-        setAnnotationFuture([])
+          annotations: descriptorChanged ? [] : current.annotations,
+        }))
+        setDescriptorInput(source.descriptorUrl)
+        setViewport({ zoomRatio: 1, visibleImageBounds: initialImageRect })
+        setPreviewedId(null)
+        if (descriptorChanged) {
+          setSelectedId('')
+          setDrawMode('navigate')
+          setAnnotationHistory([])
+          setAnnotationFuture([])
+        }
+        setNotice({
+          tone: 'success',
+          message: source.annotatedDescriptorUrl
+            ? `Paired slide ready.${descriptorChanged ? ' Draw a parent region to begin.' : ''}`
+            : `${source.attributionUrl ? 'Thinviewer link resolved. ' : ''}Loaded ${descriptor.width} × ${descriptor.height} JPEG pyramid (${descriptor.tileSize}px tiles).${descriptorChanged ? ' Regions from the previous slide were cleared.' : ''}`,
+        })
+      } catch (error) {
+        if (requestId !== descriptorRequestRef.current) return
+        setNotice({
+          tone: 'error',
+          message: error instanceof Error ? error.message : 'Unable to load the DZI descriptor.',
+        })
+      } finally {
+        if (requestId === descriptorRequestRef.current) setLoadingDescriptor(false)
       }
-      setNotice({
-        tone: 'success',
-        message: `${source.attributionUrl ? 'Thinviewer link resolved. ' : ''}Loaded ${descriptor.width} × ${descriptor.height} JPEG pyramid (${descriptor.tileSize}px tiles).${descriptorChanged ? ' Regions from the previous slide were cleared.' : ''}`,
-      })
-    } catch (error) {
-      setNotice({
-        tone: 'error',
-        message: error instanceof Error ? error.message : 'Unable to load the DZI descriptor.',
-      })
-    } finally {
-      setLoadingDescriptor(false)
-    }
-  }, [descriptorInput, document.slide.id, document.slide.initialImageRect, setDirtyDocument])
+    },
+    [descriptorInput, document, isLocal, setDirtyDocument],
+  )
 
   const saveDocument = useCallback(
     async (workflowStatus: 'draft' | 'review') => {
+      if (isLocal) return
+      const compatibilityError = databaseCompatibilityError(document)
+      if (compatibilityError) {
+        setNotice({ tone: 'error', message: compatibilityError })
+        return
+      }
       const requestedStatus = isSandbox ? 'draft' : workflowStatus
       const nextDocument = { ...document, workflowStatus: requestedStatus }
       const validation = validateSocratesSlideDocument(nextDocument)
@@ -579,7 +690,7 @@ export function SocratesBuilder({
             : `Draft revision ${saved.revision} saved.`,
       })
     },
-    [access.canPersist, document, documents, isSandbox, onDocumentsChange],
+    [access.canPersist, document, documents, isLocal, isSandbox, onDocumentsChange],
   )
 
   const deleteCurrentSandboxDocument = useCallback(async () => {
@@ -732,29 +843,52 @@ export function SocratesBuilder({
     [setDirtyDocument],
   )
 
+  if (previewDocument) {
+    return (
+      <div className={`${styles.page} ${embedded ? styles.embedded : ''}`}>
+        <div className={styles.previewToolbar}>
+          <div>
+            <strong>Learner preview · {previewDocument.title}</strong>
+            <p>Zoom into a region, then select a detail to read its explanation.</p>
+          </div>
+          <Button type="button" onClick={() => setPreviewDocument(null)}>
+            Return to editing
+          </Button>
+        </div>
+        <SocratesDemo slide={previewDocument.slide} annotations={previewDocument.annotations} />
+      </div>
+    )
+  }
+
   return (
     <div className={`${styles.page} ${embedded ? styles.embedded : ''}`}>
       <header className={styles.hero}>
         <div>
           <div className={styles.eyebrow}>
-            {isSandbox ? 'Open company sandbox' : 'Protected authoring workspace'}
+            {isLocal
+              ? 'Invenio web overlay demo'
+              : isSandbox
+                ? 'Open company sandbox'
+                : 'Protected authoring workspace'}
           </div>
-          <h1>{isSandbox ? 'Build and annotate a slide' : 'SOCRATES slide builder'}</h1>
+          <h1>{isLocal || isSandbox ? 'Build and annotate a slide' : 'SOCRATES slide builder'}</h1>
           <p>
-            {isSandbox
-              ? 'Add an Invenio slide, draw source-pixel regions, and save a disposable draft—no account required.'
-              : 'Connect an approved Invenio pyramid, draw source-pixel regions, and publish a locked snapshot to the public demo.'}
+            {isLocal || isSandbox
+              ? 'Compare tissue with Invenio color annotations. Add teaching regions and explanations that unfold as you zoom.'
+              : 'Combine Invenio tissue and color annotation images with your own zoom-based teaching regions and explanations.'}
           </p>
         </div>
         <div className={styles.heroMeta}>
           <Badge variant={access.canPersist ? 'success' : 'outline'}>
-            {isSandbox
-              ? access.canPersist
-                ? 'Anonymous sandbox saving'
-                : 'Local preview'
-              : access.canPersist
-                ? 'Database connected'
-                : 'Local preview'}
+            {isLocal
+              ? 'Browser storage'
+              : isSandbox
+                ? access.canPersist
+                  ? 'Anonymous sandbox saving'
+                  : 'Local preview'
+                : access.canPersist
+                  ? 'Database connected'
+                  : 'Local preview'}
           </Badge>
           {access.userEmail ? <span>{access.userEmail}</span> : null}
         </div>
@@ -762,16 +896,27 @@ export function SocratesBuilder({
 
       <div className={styles.safetyBanner} role="note">
         <strong>
-          {isSandbox
-            ? 'Shared sandbox: do not enter patient or confidential information.'
-            : 'Authoring content is illustrative until reviewed.'}
+          {isLocal
+            ? 'Images from Invenio · teaching overlays saved on this browser.'
+            : isSandbox
+              ? 'Shared sandbox: do not enter patient or confidential information.'
+              : 'Authoring content is illustrative until reviewed.'}
         </strong>
         <span>
-          {isSandbox
-            ? 'Anyone with this unlisted URL can view saved drafts. Sandbox drafts never publish to the production demo.'
-            : 'No annotation is clinical guidance. Publishing requires site-administrator review.'}
+          {isLocal
+            ? 'Changes save automatically. Export JSON to back up your work or move it to another browser or computer. Teaching regions require author review.'
+            : isSandbox
+              ? 'Anyone with this unlisted URL can view saved drafts. Sandbox drafts never publish to the production demo.'
+              : 'No annotation is clinical guidance. Publishing requires site-administrator review.'}
         </span>
       </div>
+
+      {!isLocal ? (
+        <p>
+          <a href={`/${locale}/socrates-demo#builder`}>Open the Invenio web overlay demo</a> to
+          auto-save paired slides and detailed explanations in your browser.
+        </p>
+      ) : null}
 
       <section className={styles.workspace} aria-label="SOCRATES annotation workspace">
         <aside className={styles.catalog} aria-label="Slide catalog">
@@ -791,8 +936,13 @@ export function SocratesBuilder({
             </Button>
           </div>
 
+          <InvenioSlidePicker
+            onLoad={(url) => void loadDescriptor(url, true)}
+            disabled={loadingDescriptor || saving}
+          />
+
           <div className={styles.catalogList}>
-            {documents.map((catalogDocument) => (
+            {catalog.map((catalogDocument) => (
               <button
                 type="button"
                 key={catalogDocument.recordId ?? catalogDocument.slug}
@@ -813,17 +963,19 @@ export function SocratesBuilder({
                     }
                     size="sm"
                   >
-                    {isSandbox
-                      ? ownedSandboxIds.has(catalogDocument.recordId ?? '')
-                        ? 'your draft'
-                        : 'shared'
-                      : catalogDocument.workflowStatus}
+                    {isLocal
+                      ? 'browser draft'
+                      : isSandbox
+                        ? ownedSandboxIds.has(catalogDocument.recordId ?? '')
+                          ? 'your draft'
+                          : 'shared'
+                        : catalogDocument.workflowStatus}
                   </Badge>
-                  <span>v{catalogDocument.revision}</span>
+                  {!isLocal ? <span>v{catalogDocument.revision}</span> : null}
                 </small>
               </button>
             ))}
-            {documents.length === 0 ? (
+            {catalog.length === 0 ? (
               <div className={styles.emptyCatalog}>
                 <FileJson aria-hidden="true" />
                 <strong>Starter draft</strong>
@@ -854,7 +1006,7 @@ export function SocratesBuilder({
             />
           </div>
 
-          {!isSandbox && access.canPublish ? (
+          {!isLocal && !isSandbox && access.canPublish ? (
             <div className={styles.cleanupPanel}>
               <div>
                 <span>Public sandbox</span>
@@ -951,7 +1103,7 @@ export function SocratesBuilder({
           </div>
 
           <div className={styles.canvasShell} data-mode={drawMode}>
-            <DeepZoomViewer
+            <ComparisonSlideViewer
               ref={viewerRef}
               slide={document.slide}
               annotations={document.annotations}
@@ -964,7 +1116,7 @@ export function SocratesBuilder({
               interactionMode={drawMode === 'navigate' ? 'navigate' : 'draw-rectangle'}
               onDrawRectangle={handleRectangleDrawn}
             />
-            <div className={styles.canvasStatus}>
+            <div className={styles.canvasStatus} data-comparison={isPairedSlide}>
               <span>{drawMode === 'navigate' ? 'Pan/select' : `Draw ${drawMode}`}</span>
               <span>{viewport.zoomRatio.toFixed(2)}×</span>
               <span>
@@ -986,8 +1138,12 @@ export function SocratesBuilder({
             </Button>
             <span>
               {drawMode === 'navigate'
-                ? 'Drag to pan; click a region to edit it.'
-                : 'Drag directly on the slide to create a rectangular annotation.'}
+                ? isPairedSlide
+                  ? 'Pan either image; click a teaching region to edit it.'
+                  : 'Drag to pan; click a region to edit it.'
+                : isPairedSlide
+                  ? 'Draw on either image. The same region appears on both.'
+                  : 'Drag directly on the slide to create a rectangular annotation.'}
             </span>
           </div>
         </section>
@@ -1021,7 +1177,7 @@ export function SocratesBuilder({
                 <Button
                   type="button"
                   size="sm"
-                  onClick={loadDescriptor}
+                  onClick={() => void loadDescriptor()}
                   disabled={loadingDescriptor}
                 >
                   {loadingDescriptor ? (
@@ -1033,8 +1189,8 @@ export function SocratesBuilder({
                 </Button>
               </div>
               <small id="socrates-descriptor-help" className={styles.fieldHint}>
-                Paste the normal NIO Thinviewer link or a raw Invenio DZI descriptor. Thinviewer
-                crop coordinates are applied automatically.
+                Paste a UCSD Slide Viewer slide link to load both images, a NIO Thinviewer link, or
+                an Invenio DZI descriptor. Thinviewer crops are applied automatically.
               </small>
             </Field>
 
@@ -1259,6 +1415,24 @@ export function SocratesBuilder({
                       }
                     />
                   </Field>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={viewerStatus.phase !== 'ready'}
+                    onClick={() =>
+                      updateAnnotation(selectedAnnotation.id, (annotation) => ({
+                        ...annotation,
+                        enterZoomRatio: Math.round(viewport.zoomRatio * 100) / 100,
+                        exitZoomRatio: Math.max(
+                          0,
+                          Math.round((viewport.zoomRatio - 0.2) * 100) / 100,
+                        ),
+                      }))
+                    }
+                  >
+                    Reveal at current zoom
+                  </Button>
                 </div>
               ) : null}
 
@@ -1266,6 +1440,7 @@ export function SocratesBuilder({
                 <textarea
                   id="region-summary"
                   rows={3}
+                  maxLength={2000}
                   value={selectedAnnotation.summary}
                   onChange={(event) =>
                     updateAnnotation(selectedAnnotation.id, (annotation) => ({
@@ -1274,6 +1449,26 @@ export function SocratesBuilder({
                     }))
                   }
                 />
+              </Field>
+              <Field label="Detailed explanation" htmlFor="region-explanation">
+                <textarea
+                  id="region-explanation"
+                  aria-label="Detailed explanation"
+                  rows={6}
+                  maxLength={8000}
+                  value={selectedAnnotation.explanation ?? ''}
+                  onChange={(event) =>
+                    updateAnnotation(selectedAnnotation.id, (annotation) => ({
+                      ...annotation,
+                      explanation: event.target.value,
+                    }))
+                  }
+                  aria-describedby="region-explanation-help"
+                />
+                <small id="region-explanation-help" className={styles.fieldHint}>
+                  Explain what to look for in the tissue, how it relates to the color annotations,
+                  and why this region matters. Include sources for clinical interpretations.
+                </small>
               </Field>
               <Field label="Placeholder/review note" htmlFor="region-note">
                 <textarea
@@ -1295,8 +1490,23 @@ export function SocratesBuilder({
 
       <footer className={styles.publishBar}>
         <div className={styles.publishState}>
-          <Badge variant={dirty ? 'info' : 'success'}>{dirty ? 'Unsaved changes' : 'Saved'}</Badge>
-          <span>Revision {document.revision}</span>
+          <Badge variant={dirty || localSaveError ? 'info' : 'success'}>
+            {isLocal
+              ? localSaveError
+                ? 'Not saved'
+                : dirty
+                  ? 'Saving in browser'
+                  : 'Browser auto-save'
+              : dirty
+                ? 'Unsaved changes'
+                : 'Saved'}
+          </Badge>
+          {!isLocal ? <span>Revision {document.revision}</span> : null}
+          {isLocal && localSaveError ? (
+            <span className={styles.error} role="alert">
+              {localSaveError}
+            </span>
+          ) : null}
           {notice ? (
             <span
               className={styles[notice.tone]}
@@ -1307,7 +1517,15 @@ export function SocratesBuilder({
           ) : null}
         </div>
         <div className={styles.publishActions}>
-          {!isSandbox && document.publishedAt ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loadingDescriptor}
+            onClick={() => setPreviewDocument(cloneDocument(document))}
+          >
+            <Eye aria-hidden="true" /> Preview teaching view
+          </Button>
+          {!isLocal && !isSandbox && document.publishedAt ? (
             <Button asChild variant="outline">
               <a
                 href={`/${locale}/socrates-demo?slide=${encodeURIComponent(document.slug)}`}
@@ -1318,7 +1536,11 @@ export function SocratesBuilder({
               </a>
             </Button>
           ) : null}
-          {isSandbox ? (
+          {isLocal ? (
+            <Button type="button" onClick={exportDocument}>
+              <Download aria-hidden="true" /> Export overlay
+            </Button>
+          ) : isSandbox ? (
             <>
               {document.recordId && ownedSandboxIds.has(document.recordId) ? (
                 <Button

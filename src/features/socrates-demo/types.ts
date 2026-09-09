@@ -34,6 +34,7 @@ export interface DemoAnnotation {
   enterZoomRatio: number
   exitZoomRatio: number
   summary: string
+  explanation?: string
   placeholderNote: string
   sortOrder?: number
 }
@@ -43,6 +44,7 @@ export interface DeepZoomViewerHandle {
   zoomBy: (factor: number) => void
   resetToInitialView: () => void
   retry: () => void
+  synchronizeViewport?: (snapshot: ViewportSnapshot) => void
 }
 
 export interface ViewportSnapshot {

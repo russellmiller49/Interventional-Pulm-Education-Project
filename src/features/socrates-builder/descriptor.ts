@@ -1,4 +1,4 @@
-import { isApprovedInvenioDziUrl } from './schema'
+import { getInvenioPair, isApprovedSocratesDziUrl, socratesTileSourceUrl } from './invenio-source'
 
 import type { ImageRect } from '@/features/socrates-demo/types'
 
@@ -15,6 +15,7 @@ export interface ResolvedSocratesSlideSource {
   slideKey: string
   initialImageRect?: ImageRect
   attributionUrl?: string
+  annotatedDescriptorUrl?: string
 }
 
 const INVENIO_DZI_ORIGIN = 'https://www.invenio-cloud.com'
@@ -59,17 +60,33 @@ export function resolveSocratesSlideSource(input: string): ResolvedSocratesSlide
     throw new Error('Paste a complete HTTPS NIO Thinviewer or Invenio DZI URL.')
   }
 
-  if (isApprovedInvenioDziUrl(value)) {
+  const pair = getInvenioPair(value)
+  if (pair) {
+    return {
+      descriptorUrl: pair.tissueUrl,
+      annotatedDescriptorUrl: pair.annotatedUrl,
+      slideKey: pair.id,
+      attributionUrl: pair.viewerUrl,
+    }
+  }
+
+  if (isApprovedSocratesDziUrl(value)) {
     const slideKey =
       url.pathname
         .split('/')
         .at(-1)
         ?.replace(/\.dzi$/i, '') ?? ''
-    return { descriptorUrl: value, slideKey }
+    return { descriptorUrl: url.toString(), slideKey }
   }
 
   const thinviewerMatch = url.pathname.match(THINVIEWER_PATH)
-  if (url.origin === NIO_THINVIEWER_ORIGIN && url.hash === '' && thinviewerMatch?.[1]) {
+  if (
+    url.origin === NIO_THINVIEWER_ORIGIN &&
+    !url.username &&
+    !url.password &&
+    url.hash === '' &&
+    thinviewerMatch?.[1]
+  ) {
     const slideKey = thinviewerMatch[1]
     return {
       descriptorUrl: `${INVENIO_DZI_ORIGIN}/api/thinslides/${slideKey}.dzi`,
@@ -79,7 +96,9 @@ export function resolveSocratesSlideSource(input: string): ResolvedSocratesSlide
     }
   }
 
-  throw new Error('Paste an HTTPS NIO Thinviewer link or an Invenio Cloud DZI descriptor URL.')
+  throw new Error(
+    'Paste an HTTPS NIO Thinviewer link, Invenio Cloud DZI descriptor, or UCSD Slide Viewer slide link.',
+  )
 }
 
 function readAttribute(source: string, name: string) {
@@ -124,11 +143,11 @@ export async function loadInvenioDziDescriptor(
   descriptorUrl: string,
   signal?: AbortSignal,
 ): Promise<DziDescriptorInfo> {
-  if (!isApprovedInvenioDziUrl(descriptorUrl)) {
+  if (!isApprovedSocratesDziUrl(descriptorUrl)) {
     throw new Error('Use an approved Invenio Cloud DZI descriptor URL.')
   }
 
-  const response = await fetch(descriptorUrl, {
+  const response = await fetch(socratesTileSourceUrl(descriptorUrl), {
     credentials: 'omit',
     headers: { Accept: 'application/xml,text/xml' },
     signal,

@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type OpenSeadragonType from 'openseadragon'
+import { socratesTileSourceUrl } from '@/features/socrates-builder/invenio-source'
 
 import type {
   DeepZoomSlide,
@@ -16,7 +17,7 @@ import type {
 import { polygonBounds, rectangleToPolygon } from '../engine/geometry'
 import styles from './socrates-demo.module.css'
 
-interface DeepZoomViewerProps {
+export interface DeepZoomViewerProps {
   slide: DeepZoomSlide
   annotations: readonly DemoAnnotation[]
   selectedAnnotationId: string
@@ -27,6 +28,7 @@ interface DeepZoomViewerProps {
   onStatusChange?: (status: DeepZoomViewerStatus) => void
   interactionMode?: 'navigate' | 'draw-rectangle'
   onDrawRectangle?: (rect: ImageRect) => void
+  ariaLabel?: string
 }
 
 interface LabelPosition {
@@ -64,6 +66,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       onStatusChange,
       interactionMode = 'navigate',
       onDrawRectangle,
+      ariaLabel = 'Interactive pathology slide. Drag to pan, scroll or pinch to zoom.',
     },
     ref,
   ) {
@@ -71,6 +74,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
     const viewerRef = useRef<OpenSeadragonType.Viewer | null>(null)
     const tiledImageRef = useRef<OpenSeadragonType.TiledImage | null>(null)
     const initialZoomRef = useRef(1)
+    const synchronizingRef = useRef(false)
     const callbacksRef = useRef({
       onImageHover,
       onImageSelect,
@@ -142,7 +146,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
     const emitViewportSnapshot = useCallback(() => {
       const viewer = viewerRef.current
       const tiledImage = tiledImageRef.current
-      if (!viewer || !tiledImage) return
+      if (!viewer || !tiledImage || synchronizingRef.current) return
 
       const visibleBounds = tiledImage.viewportToImageRectangle(
         viewer.viewport.getBounds(true),
@@ -199,8 +203,26 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         },
         resetToInitialView: () => fitImageRect(slide.initialImageRect, true),
         retry,
+        synchronizeViewport: (snapshot) => {
+          const viewer = viewerRef.current
+          const tiledImage = tiledImageRef.current
+          if (!viewer || !tiledImage) return
+          const rect = snapshot.visibleImageBounds
+          synchronizingRef.current = true
+          try {
+            viewer.viewport.fitBounds(
+              tiledImage.imageToViewportRectangle(rect.x, rect.y, rect.width, rect.height, true),
+              true,
+            )
+            // Keep zoom-triggered teaching regions consistent in either pane and after resizing.
+            initialZoomRef.current = viewer.viewport.getZoom(true) / snapshot.zoomRatio
+            updateLabelPosition()
+          } finally {
+            synchronizingRef.current = false
+          }
+        },
       }),
-      [emitViewportSnapshot, fitImageRect, retry, slide.initialImageRect],
+      [emitViewportSnapshot, fitImageRect, retry, slide.initialImageRect, updateLabelPosition],
     )
 
     useEffect(() => {
@@ -232,7 +254,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
 
           viewer = OpenSeadragon({
             element: mountElement,
-            tileSources: slide.descriptorUrl,
+            tileSources: socratesTileSourceUrl(slide.descriptorUrl),
             showNavigationControl: false,
             showNavigator: true,
             navigatorPosition: 'TOP_RIGHT',
@@ -335,6 +357,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           })
 
           viewer.addHandler('viewport-change', emitViewportSnapshot)
+          viewer.addHandler('animation', emitViewportSnapshot)
           viewer.addHandler('animation-finish', emitViewportSnapshot)
           viewer.addHandler('resize', emitViewportSnapshot)
 
@@ -470,7 +493,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           className={`${styles.viewerCanvas} ${
             interactionMode === 'draw-rectangle' ? styles.viewerCanvasDrawing : ''
           }`}
-          aria-label="Interactive pathology slide. Drag to pan, scroll or pinch to zoom."
+          aria-label={ariaLabel}
         />
 
         {overlayElement

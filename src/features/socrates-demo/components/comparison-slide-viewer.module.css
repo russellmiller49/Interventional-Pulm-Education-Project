@@ -1,0 +1,90 @@
+.comparison {
+  display: flex;
+  flex-direction: column;
+  height: clamp(31rem, 65vh, 48rem);
+  min-height: 25rem;
+  color: #e8f5f4;
+  background: #071b22;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  border-bottom: 1px solid #31505b;
+}
+
+.toolbar > span {
+  font-size: 0.7rem;
+  color: #a8c5ca;
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.modes button {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #52747e;
+  border-radius: 0.5rem;
+  color: #e5f4f3;
+  background: #18333d;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.modes button[aria-pressed='true'] {
+  color: #052a29;
+  background: #83e6d7;
+  border-color: #83e6d7;
+}
+
+.modes button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.panes {
+  flex: 1;
+  display: grid;
+  min-height: 0;
+  gap: 2px;
+  background: #31505b;
+}
+
+.panes[data-paired='true'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: #071b22;
+}
+
+.paneLabel {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.pane > div:last-child {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+@media (max-width: 38rem) {
+  .panes[data-paired='true'] {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+}

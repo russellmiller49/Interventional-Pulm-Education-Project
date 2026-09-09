@@ -2,15 +2,12 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { SocratesDemoWorkspace } from '@/features/socrates-demo/components/SocratesDemoWorkspace'
-import {
-  loadPublishedSocratesDocument,
-  loadSocratesSandboxDocuments,
-} from '@/features/socrates-builder/server/data'
+import { SocratesDemo } from '@/features/socrates-demo/components/SocratesDemo'
 
 export const metadata: Metadata = {
-  title: 'SOCRATES Deep-Slide Demo and Sandbox Builder',
+  title: 'SOCRATES + Invenio Web Overlay Demo',
   description:
-    'Unlisted functional demonstration and disposable builder for live deep-zoom pathology imagery with illustrative annotations.',
+    'Invenio tissue and color images with zoom-based teaching overlays, browser draft saving, and JSON sharing.',
   robots: {
     index: false,
     follow: false,
@@ -27,15 +24,14 @@ export default async function SocratesDemoPage({ params, searchParams }: PagePro
   const { locale } = await params
   setRequestLocale(locale)
   const query = await searchParams
-  const [publishedDocument, sandboxDocuments] = await Promise.all([
-    loadPublishedSocratesDocument(query?.slide),
-    loadSocratesSandboxDocuments(),
-  ])
-
-  return (
-    <SocratesDemoWorkspace
-      publishedDocument={publishedDocument}
-      sandboxDocuments={sandboxDocuments}
-    />
-  )
+  // Preserve explicit published-slide links. The company demo itself never reads
+  // or writes database content and cannot be replaced by an older saved draft.
+  if (query?.slide) {
+    const { loadPublishedSocratesDocument } =
+      await import('@/features/socrates-builder/server/data')
+    const published = await loadPublishedSocratesDocument(query.slide)
+    if (published)
+      return <SocratesDemo slide={published.slide} annotations={published.annotations} />
+  }
+  return <SocratesDemoWorkspace />
 }

@@ -7,6 +7,7 @@ import {
 } from '@/features/socrates-demo/engine/geometry'
 
 import type { SocratesSlideDocument } from './types'
+import { isApprovedSocratesDziUrl } from './invenio-source'
 
 const finiteNumber = z.number().finite()
 
@@ -35,6 +36,7 @@ const annotationSchema = z.object({
   enterZoomRatio: finiteNumber.nonnegative(),
   exitZoomRatio: finiteNumber.nonnegative(),
   summary: z.string().max(2000),
+  explanation: z.string().max(8000).optional(),
   placeholderNote: z.string().max(2000),
   sortOrder: z.number().int().nonnegative().optional(),
 })
@@ -44,7 +46,8 @@ const deepZoomSlideSchema = z.object({
   descriptorUrl: z
     .string()
     .url()
-    .refine(isApprovedInvenioDziUrl, 'Use an approved Invenio Cloud DZI descriptor URL.'),
+    .refine(isApprovedSocratesDziUrl, 'Use an approved Invenio slide descriptor URL.')
+    .transform((value) => new URL(value).toString()),
   expectedDimensions: z.object({
     width: z.number().int().positive(),
     height: z.number().int().positive(),
@@ -112,6 +115,8 @@ export function isApprovedInvenioDziUrl(value: string) {
     const url = new URL(value)
     return (
       url.origin === 'https://www.invenio-cloud.com' &&
+      url.username === '' &&
+      url.password === '' &&
       url.search === '' &&
       url.hash === '' &&
       /^\/api\/thinslides\/[A-Za-z0-9._-]+\.dzi$/.test(url.pathname)

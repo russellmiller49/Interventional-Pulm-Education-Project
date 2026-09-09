@@ -376,6 +376,50 @@
   backdrop-filter: blur(8px);
 }
 
+.canvasStatus[data-comparison='true'] {
+  top: auto;
+  bottom: 0.7rem;
+}
+
+.invenioPicker {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem 0.75rem;
+  margin: 0 0.7rem 0.75rem;
+  border: 1px solid #95cfc6;
+  border-radius: 0.7rem;
+  background: #edf9f6;
+}
+
+.invenioPicker strong {
+  font-size: 0.83rem;
+}
+.invenioPicker p {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--builder-muted);
+}
+.invenioPicker button {
+  white-space: normal;
+  height: auto;
+  min-height: 2.5rem;
+}
+
+.previewToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 96rem;
+  margin: 0 auto 1rem;
+}
+.previewToolbar p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--builder-muted);
+}
+
 .viewerFooter {
   display: flex;
   align-items: center;

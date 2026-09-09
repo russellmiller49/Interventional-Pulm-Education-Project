@@ -33,6 +33,6 @@ export type SocratesSandboxDeleteResult =
   | { ok: true; recordId: string }
   | { ok: false; error: string }
 
-export type SocratesBuilderMode = 'protected' | 'sandbox'
+export type SocratesBuilderMode = 'protected' | 'sandbox' | 'local'
 
 export type SocratesDrawMode = 'navigate' | 'parent' | 'detail'

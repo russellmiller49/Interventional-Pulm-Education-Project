@@ -171,6 +171,20 @@ describe('DeepZoomViewer lifecycle and recovery', () => {
     await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(2))
   })
 
+  it('applies a paired viewport immediately without echoing the synchronization', async () => {
+    const { ref, onViewportChange } = renderViewer()
+    await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(1))
+    act(() => mockHandlers.open({}))
+    onViewportChange.mockClear()
+    mockFitBounds.mockImplementationOnce(() => mockHandlers['viewport-change']({}))
+    const visibleImageBounds = { x: 300, y: 1800, width: 500, height: 400 }
+    act(() => ref.current?.synchronizeViewport?.({ zoomRatio: 3, visibleImageBounds }))
+    expect(mockFitBounds).toHaveBeenLastCalledWith(visibleImageBounds, true)
+    expect(onViewportChange).not.toHaveBeenCalled()
+    act(() => mockHandlers['viewport-change']({}))
+    expect(onViewportChange).toHaveBeenLastCalledWith(expect.objectContaining({ zoomRatio: 3 }))
+  })
+
   it('surfaces descriptor and partial-tile failures without introducing a proxy', async () => {
     const user = userEvent.setup()
     renderViewer()
