@@ -7,6 +7,18 @@ import { LESION_CENTER, type Point3 } from '../../lib/physics'
 import { add, chainStopAnchors, scale, type SuiteFrame } from './suiteModel'
 import type { SuiteCamera } from './types'
 
+/**
+ * The views that show the whole chain, and so must frame every stop and its label whatever shape
+ * the pane is. The rest — the beam's eye, the target close-up, the console — are deliberately
+ * tight on one thing and are left where they are authored.
+ */
+const OVERVIEW_VIEWS: readonly SuiteCamera[] = ['suite', 'room', 'anterior', 'side', 'head']
+
+/** Which way is up on screen for a view. */
+function upFor(view: SuiteCamera): Point3 {
+  return ['suite', 'room', 'console', 'head'].includes(view) ? [0, 1, 0] : [0, 0, 1]
+}
+
 export function CameraRig({
   view,
   frame,
@@ -36,12 +48,15 @@ export function CameraRig({
       console: add(target, [f * 0.6, f * 0.3, f * 1.2]),
       beam: add(frame.source, scale(frame.normal, -f * 0.55)),
     }
-    if ((view === 'suite' || view === 'room') && camera instanceof PerspectiveCamera) {
+    if (OVERVIEW_VIEWS.includes(view) && camera instanceof PerspectiveCamera) {
       // Fit the whole chain, with room for the DOM pin labels, at the actual pane aspect ratio.
       const points = [...frame.corners, ...Object.values(anchors)].map((p) => new Vector3(...p))
       const center = new Box3().setFromPoints(points).getCenter(new Vector3())
       const towardCamera = new Vector3(...positions[view]).normalize()
-      const right = new Vector3(0, 1, 0).cross(towardCamera).normalize()
+      // Build the screen axes from this view's own up. Using a fixed world up would collapse to
+      // zero for the views that look straight down it, which is why they were left unfitted.
+      const upHint = new Vector3(...upFor(view))
+      const right = upHint.clone().cross(towardCamera).normalize()
       const up = towardCamera.clone().cross(right).normalize()
       const tanY = Math.tan((camera.fov * Math.PI) / 360)
       const labelMargin = size.width < 420 ? 110 : 200
@@ -60,17 +75,13 @@ export function CameraRig({
       return {
         target: center.toArray() as Point3,
         position: center.clone().addScaledVector(towardCamera, distance).toArray() as Point3,
-        up: [0, 1, 0] as Point3,
+        up: upFor(view),
       }
     }
     return {
       target,
       position: positions[view],
-      up: (view === 'beam'
-        ? frame.v
-        : ['suite', 'room', 'console', 'head'].includes(view)
-          ? [0, 1, 0]
-          : [0, 0, 1]) as Point3,
+      up: (view === 'beam' ? frame.v : upFor(view)) as Point3,
     }
   }, [view, frame, camera, size.width, size.height])
   useEffect(() => {

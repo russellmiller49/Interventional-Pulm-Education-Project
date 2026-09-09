@@ -372,6 +372,45 @@ test('the image a control changes stays on screen while the control is used', as
   }
 })
 
+test('every overview view frames the whole chain, whatever shape the pane is', async ({ page }) => {
+  // The views that show the whole chain have to fit every stop and its label at the pane's actual
+  // aspect ratio. Only the suite view used to do that, so the fixed views clipped a pin as soon
+  // as the pane was narrow — at 1280x800 the display stop sat one pixel from the edge.
+  for (const [width, height] of [
+    [1280, 800],
+    [1600, 900],
+  ] as const) {
+    await page.setViewportSize({ width, height })
+    await openSection(page, 'projection')
+    await primary(page).click()
+    await commitKeyed(page, 'projection', 1)
+    await primary(page).click()
+    for (const preset of ['Suite', 'Anterior', 'Side', 'Head']) {
+      await page.getByRole('button', { name: preset, exact: true }).click()
+      await page.waitForTimeout(900)
+      const worst = await page.evaluate(() => {
+        const host = document
+          .querySelector('[data-suite-scene] [class*="viewport"]')!
+          .getBoundingClientRect()
+        let over = 0
+        for (const pin of document.querySelectorAll('[data-suite-scene] [class*="pin"]')) {
+          const b = pin.getBoundingClientRect()
+          if (b.width === 0) continue
+          over = Math.max(
+            over,
+            host.left - b.left,
+            b.right - host.right,
+            host.top - b.top,
+            b.bottom - host.bottom,
+          )
+        }
+        return Math.round(over)
+      })
+      expect(worst, `${preset} at ${width}x${height} clips a chain stop`).toBeLessThanOrEqual(0)
+    }
+  }
+})
+
 test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(base() + '/en/peripheral-imaging')

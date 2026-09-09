@@ -102,7 +102,14 @@
  */
 @container suite (min-width: 520px) {
   .displays[data-monitor-layout='beside'] {
-    --suite-display-height: clamp(190px, 26vh, 420px);
+    /*
+     * As large as the pane can afford. The dock needs roughly 200px of the pane to stay useful
+     * and the pane runs about 290px shorter than the window, so `100vh - 560px` is the height
+     * left over for the displays. `cqw` caps that against the pane's own width, since the
+     * monitor is square and its height is also its width: past about 44% of the pane the 3D
+     * view beside it starts to get squeezed.
+     */
+    --suite-display-height: clamp(190px, min(calc(100vh - 560px), 44cqw), 460px);
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .displays[data-monitor-layout='beside'] .monitorPanel {
