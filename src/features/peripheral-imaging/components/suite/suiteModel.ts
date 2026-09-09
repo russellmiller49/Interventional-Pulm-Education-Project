@@ -134,3 +134,33 @@ export function anatomyOffset(inputs: SuiteInputs, registration = false): Point3
   if (registration) return [0, 0, -inputs.displacement]
   return [inputs.offsetX, inputs.offsetDepth, 0]
 }
+
+/** Field sliders select either a physical shutter or a display crop, per the lab oracle. */
+export function fieldGeometry(frame: SuiteFrame, fieldPercent: number, crop: boolean) {
+  const aperture = collimator(frame, crop ? 100 : fieldPercent)
+  const image = collimator(frame, fieldPercent)
+  const atDistance = (point: Point3, distance: number) =>
+    add(frame.source, scale(subtract(point, frame.source), distance / frame.geometry.sid))
+  const targetDistance = dot(subtract(LESION_CENTER, frame.source), frame.normal)
+  const half = frame.geometry.field / 2
+  const rectangles = [
+    [-half, -half, image.left, half],
+    [image.left + image.side, -half, half, half],
+    [image.left, -half, image.left + image.side, image.bottom],
+    [image.left, image.bottom + image.side, image.left + image.side, half],
+  ]
+  return {
+    aperture,
+    image,
+    blades: aperture.corners.map((p) => atDistance(p, frame.geometry.sod * 0.1)),
+    irradiated: aperture.corners.map((p) => atDistance(p, targetDistance)),
+    masks: rectangles.map(([left, bottom, right, top]) =>
+      [
+        [left, bottom],
+        [right, bottom],
+        [right, top],
+        [left, top],
+      ].map((uv) => add(detectorPoint(frame, uv as [number, number]), scale(frame.normal, -1))),
+    ),
+  }
+}

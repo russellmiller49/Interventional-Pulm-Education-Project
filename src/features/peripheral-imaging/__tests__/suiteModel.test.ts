@@ -181,3 +181,22 @@ describe('quantized CT ray profile', () => {
     )
   })
 })
+
+import { fieldGeometry } from '../components/suite/suiteModel'
+import { SUITE_VIEWS } from '../content/suiteViews'
+it('field geometry shrinks the irradiated plane; display crop leaves a full beam', () => {
+  const frame = suiteFrame(25)
+  const full = fieldGeometry(frame, 100, false)
+  const narrow = fieldGeometry(frame, 45, false)
+  const crop = fieldGeometry(frame, 45, true)
+  const side = (p: readonly Point3[]) => Math.hypot(...subtract(p[1], p[0]))
+  expect(side(narrow.irradiated) / side(full.irradiated)).toBeCloseTo(0.45, 8)
+  expect(crop.irradiated).toEqual(full.irradiated)
+  expect(crop.image).toEqual(narrow.image)
+  expect(narrow.blades.map((p) => dot(subtract(p, frame.source), frame.normal))).toEqual(
+    expect.arrayContaining([expect.closeTo(frame.geometry.sod * 0.1, 8)]),
+  )
+})
+it('every authored section resolves and validates against the scene contract', () => {
+  for (const view of Object.values(SUITE_VIEWS)) expect(suiteViewErrors(view)).toEqual([])
+})

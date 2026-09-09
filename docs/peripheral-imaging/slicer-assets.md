@@ -182,3 +182,21 @@ projection/signal and mobile screenshots are local review artifacts at
 `test-results/peripheral-imaging/suite-{projection,signal,mobile}.png`. The whole
 public package is approximately 6.65 MiB by file bytes; its root manifest covers
 every binary asset with output hashes, sizes and source provenance.
+
+## Phase 2 — field
+
+The field view uses the shared target-centred shutter rectangle for the collimator
+opening, beam cross-section, detector mask and monitor mask. Physical shutters
+narrow the cone; selecting display crop restores the full cone and retains the
+image mask. Stored-image zoom transforms only the monitor image. No new assets or
+runtime dependencies are used; the pinned-display height and camera fitting are
+unchanged. The boundary is printed verbatim from the section specification.
+
+The static harness can open authored sections with `?section=field` (and other
+section ids). Its background now matches the dark lesson pane. Validation on
+2026-09-09: 153 focused Jest tests, TypeScript, ESLint, seven scene scenarios and
+six application scenarios passed. The first app navigation needed a warm-server
+rerun after cold compilation exceeded its five-second assertion. Manual review at
+`/en/peripheral-imaging/learn?section=field` confirmed the lab goal flips at a
+60% field side and the acquired image stays visible. Tests distinguish the
+physical field, display mask and monitor-only zoom.

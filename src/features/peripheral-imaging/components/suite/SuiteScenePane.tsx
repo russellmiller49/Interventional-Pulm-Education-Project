@@ -17,6 +17,7 @@ import type { ImagingSuitePaneProps, SuiteMode } from './types'
 export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>([
   'projection',
   'signal',
+  'field',
 ])
 
 export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'

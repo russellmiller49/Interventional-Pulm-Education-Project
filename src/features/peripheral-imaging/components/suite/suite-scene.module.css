@@ -462,3 +462,9 @@
   color: #526b76;
   margin: 9px 0 0;
 }
+
+.monitorImage {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+}

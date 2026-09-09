@@ -1,3 +1,4 @@
+import { SUITE_VIEWS } from '../../src/features/peripheral-imaging/content/suiteViews'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { createRequire } from 'node:module'
 import type { AxeResults } from 'axe-core'
@@ -18,8 +19,11 @@ async function ready(page: Page) {
 }
 async function setRange(page: Page, label: string, value: number) {
   const input = page.getByRole('slider', { name: label, exact: true })
-  await input.fill(String(value - 1))
-  await input.press('ArrowRight')
+  const minimum = Number(await input.getAttribute('min'))
+  const step = Number(await input.getAttribute('step')) || 1
+  const fromAbove = value - step < minimum
+  await input.fill(String(fromAbove ? value + step : value - step))
+  await input.press(fromAbove ? 'ArrowLeft' : 'ArrowRight')
   await expect(input).toHaveValue(String(value))
 }
 const pixels = (canvas: Locator) =>
@@ -223,4 +227,38 @@ test('stage camera, spotlight, pause, hidden monitor and reset props stay live',
   await expect(page.getByRole('slider', { name: 'C-arm obliquity', exact: true })).toHaveValue('1')
   await expect(page.locator('[data-suite-state=ready]')).toBeVisible()
   expect(await pixels(page.locator('[data-projection-state=ready] canvas'))).toBeGreaterThan(35)
+})
+
+test('field shutters, display crop and monitor zoom have distinct physical effects', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=field`)
+  await page.bringToFront()
+  await ready(page)
+  const scene = page.locator('canvas[data-three-state=ready]')
+  const original = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await setRange(page, 'Field side length', 45)
+  await expect(page.locator('[data-readout=irradiatedAreaPct] dd')).toHaveText('20%')
+  await expect
+    .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(original)
+  const mask = await page.locator('[data-field-mask] path').getAttribute('d')
+  await page
+    .getByRole('checkbox', { name: 'Use display crop instead of physical shutters' })
+    .check()
+  await expect(page.locator('[data-field-mask]')).toHaveAttribute('data-physical-field', '100')
+  await expect(page.locator('[data-field-mask] path')).toHaveAttribute('d', mask!)
+  await expect(page.locator('[data-readout=irradiatedAreaPct] dd')).toContainText('100')
+  await expect
+    .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(original)
+  const cropped = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('slider', { name: 'Stored-image display zoom' }).fill('2')
+  await expect(page.locator('[data-monitor-zoom]')).toHaveAttribute('data-monitor-zoom', '2')
+  await expect.poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())).toBe(cropped)
+  await page.getByRole('button', { name: 'Toggle control lock' }).click()
+  await expect(page.getByRole('slider', { name: 'Field side length' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Step', exact: true })).toBeDisabled()
+  await expect(page.locator('[data-model-boundary]')).toHaveText(SUITE_VIEWS.field.boundary)
 })

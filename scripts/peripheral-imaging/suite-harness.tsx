@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ImagingSuitePane } from '../../src/features/peripheral-imaging/components/suite/ImagingSuitePane'
+import { SUITE_VIEWS } from '../../src/features/peripheral-imaging/content/suiteViews'
+import type { ImagingSectionId } from '../../src/features/peripheral-imaging/content/pathway'
 import { chainCaption } from '../../src/features/peripheral-imaging/content/imagingChain'
 import {
   emptyLabState,
@@ -42,8 +44,12 @@ const projection: SuiteViewSpec = {
   boundary:
     'Authored cone geometry (720/1200 mm, 640 mm field) shared with the DRR and readouts; the CT supplies anatomy, the target and tool are authored. The ray colouring is a relative attenuation proxy from quantised CT, not exposure or dose.',
 }
+const section = new URLSearchParams(location.search).get('section') as ImagingSectionId | null
+const authored = section && SUITE_VIEWS[section]
+const baseView = authored || projection
+const labId = baseView.lab ?? 'geometry'
 function Harness() {
-  const [lab, setLab] = useState(() => emptyLabState('geometry', 'projection'))
+  const [lab, setLab] = useState(() => emptyLabState(labId, baseView.sectionId))
   const [answer, setAnswer] = useState(false),
     [locked, setLocked] = useState(false),
     [selected, setSelected] = useState<string | null>(null)
@@ -54,16 +60,16 @@ function Harness() {
   const [spotlight, setSpotlight] = useState(false)
   const [paused, setPaused] = useState(false)
   const view = {
-    ...projection,
-    mode,
-    camera,
-    monitor: hideMonitor ? ('hidden' as const) : ('beside' as const),
+    ...baseView,
+    mode: authored ? baseView.mode : mode,
+    camera: authored ? baseView.camera : camera,
+    monitor: hideMonitor ? ('hidden' as const) : baseView.monitor,
     chainAnswer: answer,
-    litStop: answer ? null : projection.litStop,
+    litStop: answer ? null : baseView.litStop,
   }
   return (
     <main style={{ maxWidth: 1280, margin: '24px auto', padding: '0 20px' }}>
-      <h1 style={{ fontSize: 24, color: '#234855' }}>Imaging suite · contract preview</h1>
+      <h1 style={{ fontSize: 24, color: '#e3edef' }}>Imaging suite · contract preview</h1>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <button onClick={() => setAnswer(!answer)}>Toggle chain answer</button>
         <button onClick={() => setLocked(!locked)}>Toggle control lock</button>
@@ -85,9 +91,9 @@ function Harness() {
         view={view}
         lab={lab}
         onLabChange={(patch) =>
-          setLab((current) => labStateAfterChange('geometry', current, patch, 'projection'))
+          setLab((current) => labStateAfterChange(labId, current, patch, baseView.sectionId))
         }
-        onLabReset={() => setLab(emptyLabState('geometry', 'projection'))}
+        onLabReset={() => setLab(emptyLabState(labId, baseView.sectionId))}
         controlsEnabled={!locked && !answer && !paused}
         lockedReason={paused ? undefined : 'Choose your prediction before changing the model.'}
         pausedReason="Reviewing the earlier state."
