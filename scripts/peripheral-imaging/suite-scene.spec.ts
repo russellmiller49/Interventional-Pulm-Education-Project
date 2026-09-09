@@ -407,7 +407,71 @@ for (const section of ['cbct-acquisition', 'fixed-suite', 'mobile-suite'] as con
   })
 }
 
-for (const section of ['mobile-suite']) {
+test('DTS uses its atlas without a DRR, refocuses the plane, and steps a settled sweep', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=dts-acquisition`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('[data-dts-state=ready]')).toBeVisible()
+  await expect(page.locator('[data-dts-frame]')).toHaveCount(13)
+  expect(await pixels(page.locator('canvas[data-three-state=ready]'))).toBeGreaterThan(60)
+  const contexts = await page
+    .locator('canvas')
+    .evaluateAll(
+      (canvases) =>
+        canvases.filter((c) => Boolean((c as HTMLCanvasElement).getContext('webgl2'))).length,
+    )
+  expect(contexts).toBe(1)
+  const monitor = page.locator('[data-dts-state=ready] canvas')
+  const targetPlane = await monitor.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('button', { name: 'Tool plane', exact: true }).click()
+  await expect(page.locator('[data-readout=planeMm] dd')).toHaveText('-18 mm')
+  await expect
+    .poll(() => monitor.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(targetPlane)
+  await page.getByRole('button', { name: 'Lesion plane', exact: true }).click()
+  await expect
+    .poll(() => monitor.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .toBe(targetPlane)
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-dts-frame]')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-dts-frame]')).toHaveCount(2)
+  await setRange(page, 'Authored angular sweep', 60)
+  await expect(page.locator('[data-dts-frame]')).toHaveCount(13)
+  await expect(page.locator('[data-readout=sweepDeg] dd')).toHaveText('60°')
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+  await page.getByRole('button', { name: 'Toggle control lock', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Tool plane', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Step', exact: true })).toBeDisabled()
+})
+
+test('DTS playback pauses and Step deterministically collects thirteen projections', async ({
+  page,
+}) => {
+  await page.goto(`${preview}?section=dts-acquisition`)
+  await page.bringToFront()
+  await expect(page.locator('[data-dts-state=ready]')).toBeVisible({ timeout: 15000 })
+  await page.getByRole('button', { name: 'Pause', exact: true }).click()
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+  for (let count = await page.locator('[data-dts-frame]').count(); count < 13; count++) {
+    await page.getByRole('button', { name: 'Step', exact: true }).click()
+    await expect(page.locator('[data-dts-frame]')).toHaveCount(count + 1)
+  }
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+  await page.getByRole('button', { name: 'Play', exact: true }).click()
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'running')
+  await page.getByRole('button', { name: 'Pause', exact: true }).click()
+  const count = await page.locator('[data-dts-frame]').count()
+  await page.waitForTimeout(200)
+  await expect(page.locator('[data-dts-frame]')).toHaveCount(count)
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-dts-frame]')).toHaveCount(count === 13 ? 1 : count + 1)
+})
+
+for (const section of ['mobile-suite', 'dts-acquisition']) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto(`${preview}?section=${section}`)

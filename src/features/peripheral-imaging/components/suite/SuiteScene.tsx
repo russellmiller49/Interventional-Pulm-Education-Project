@@ -24,6 +24,13 @@ import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
 import { LabDock } from './LabDock'
 import { ConeBeamView, ConeBeamPanels, useCbctAcquisition } from './views/ConeBeamView'
+import {
+  TomosynthesisView,
+  TomosynthesisMonitor,
+  TomosynthesisPanels,
+  useTomosynthesis,
+} from './views/TomosynthesisView'
+import { dtsArc } from './dtsModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
@@ -84,7 +91,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   }, [view, props.lab.values, steppedOrbit])
   const cbct = useCbctAcquisition(props, inputs, source, reducedMotion, visible)
   const isCbct = view.mode === 'cbct'
-  const sceneOrbit = isCbct ? cbct.angle : inputs.orbit
+  const dts = useTomosynthesis(view, inputs, props.controlsEnabled, visible, reducedMotion)
+  const sceneOrbit = isCbct ? cbct.angle : dts.active ? dts.angle : inputs.orbit
   const sceneGeometry = isCbct ? cbct.setup.geometry : inputs.geometry
   const translation = isCbct ? cbct.setup.offset : undefined
   const cbctBounds = useMemo(
@@ -94,8 +102,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             const f = suiteFrame(angle, 0, sceneGeometry)
             return [f.source, ...f.corners]
           })
-        : undefined,
-    [isCbct, inputs.orbitSpanDeg, sceneGeometry],
+        : dts.active
+          ? dtsArc(inputs.sweepDeg, inputs.geometry).flatMap(({ angle }) => {
+              const f = suiteFrame(angle, 0, sceneGeometry)
+              return [f.source, ...f.corners]
+            })
+          : undefined,
+    [isCbct, dts.active, inputs.orbitSpanDeg, inputs.sweepDeg, inputs.geometry, sceneGeometry],
   )
   const frame = useMemo(
     () => suiteFrame(sceneOrbit, inputs.tilt, sceneGeometry),
@@ -195,7 +208,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     </div>
   )
   const drrMode = ['projection', 'signal', 'field', 'time', 'cbct'].includes(view.mode)
-  const running = isCbct ? cbct.busy : playback.running
+  const running = isCbct ? cbct.busy : dts.active ? dts.running : playback.running
   return (
     <SceneBoundary fallback={fallback}>
       <div
@@ -262,6 +275,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     }
                   >
                     {playback.running && <SuiteClock tick={playback.tick} />}
+                    {dts.running && <SuiteClock tick={dts.tick} />}
                     <WebGLContextGuard onContextLost={onLost} />
                     <ambientLight intensity={0.8} />
                     <directionalLight position={[400, 600, 500]} intensity={2} />
@@ -311,6 +325,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         />
                       )}
                       {isCbct && <ConeBeamView acquisition={cbct} inputs={inputs} />}
+                      {dts.active && (
+                        <TomosynthesisView
+                          model={dts}
+                          inputs={inputs}
+                          prior={view.mode === 'dts-prior'}
+                        />
+                      )}
                       {view.mode === 'field' && (
                         <FieldView
                           frame={frame}
@@ -357,9 +378,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   !props.controlsEnabled ||
                   !view.lab ||
                   (!view.bindings.some((b) => b.input === 'orbit') &&
-                    !['field', 'time', 'cbct'].includes(view.mode))
+                    !['field', 'time', 'cbct', 'dts', 'dts-prior'].includes(view.mode))
                 }
                 onClick={() => {
+                  if (dts.active) {
+                    dts.step()
+                    return
+                  }
                   if (isCbct) {
                     cbct.step()
                     return
@@ -395,9 +420,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 <button
                   type="button"
                   disabled={!props.controlsEnabled || reducedMotion}
-                  onClick={playback.toggle}
+                  onClick={dts.active ? dts.play : playback.toggle}
                 >
-                  {playback.running ? 'Pause' : 'Play'}
+                  {running ? 'Pause' : 'Play'}
                 </button>
               )}
               {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
@@ -450,6 +475,20 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               </p>
             </section>
           )}
+          {dts.active && (
+            <section className={styles.monitorPanel} hidden={view.monitor === 'hidden'}>
+              <div className={styles.sceneHeader}>Limited-angle teaching plane</div>
+              <TomosynthesisMonitor model={dts} />
+              <p className={styles.monitorCaption}>
+                {dts.count} / 13 projections ·{' '}
+                {dts.selectedLayer === 'measured'
+                  ? 'Measured projections'
+                  : dts.selectedLayer === 'prior'
+                    ? 'Planning CT prior'
+                    : 'Measured projections with planning CT prior'}
+              </p>
+            </section>
+          )}
         </div>
         {props.chainAnswer && (
           <div className={styles.answer}>
@@ -458,6 +497,14 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         )}
         {isCbct && (
           <ConeBeamPanels acquisition={cbct} inputs={inputs} enabled={props.controlsEnabled} />
+        )}
+        {dts.active && (
+          <TomosynthesisPanels
+            model={dts}
+            inputs={inputs}
+            prior={view.mode === 'dts-prior'}
+            enabled={props.controlsEnabled}
+          />
         )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
@@ -475,6 +522,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             setSteppedOrbit(0)
             playback.reset()
             cbct.reset()
+            dts.reset()
             props.onLabReset()
           }}
         />
