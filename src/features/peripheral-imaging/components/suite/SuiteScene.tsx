@@ -376,7 +376,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 type="button"
                 disabled={
                   !props.controlsEnabled ||
-                  !view.lab ||
+                  (!view.lab && !dts.active) ||
                   (!view.bindings.some((b) => b.input === 'orbit') &&
                     !['field', 'time', 'cbct', 'dts', 'dts-prior'].includes(view.mode))
                 }

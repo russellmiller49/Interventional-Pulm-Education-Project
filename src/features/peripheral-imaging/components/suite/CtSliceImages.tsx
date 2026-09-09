@@ -10,21 +10,30 @@ export type SlicePlane = 'Axial' | 'Coronal' | 'Sagittal'
 export function slicePoint(plane: SlicePlane, u: number, v: number, depth: number): Point3 {
   return plane === 'Axial' ? [u, v, depth] : plane === 'Coronal' ? [u, depth, v] : [depth, -u, v]
 }
-export function useCtVolume(enabled: boolean) {
+export function useCtVolumeState(enabled: boolean) {
   const [volume, setVolume] = useState<Uint8Array | null>(null)
+  const [failed, setFailed] = useState(false)
   useEffect(() => {
     if (!enabled) return
     let active = true
     void loadAnatomyVolume()
       .then((v) => {
-        if (active) setVolume(v)
+        if (active) {
+          setVolume(v)
+          setFailed(false)
+        }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (active) setFailed(true)
+      })
     return () => {
       active = false
     }
   }, [enabled])
-  return volume
+  return { volume, failed }
+}
+export function useCtVolume(enabled: boolean) {
+  return useCtVolumeState(enabled).volume
 }
 export function CtQuad({
   volume,
