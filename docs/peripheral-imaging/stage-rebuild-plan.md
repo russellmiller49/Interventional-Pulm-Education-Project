@@ -84,9 +84,24 @@ a cueing guard of its own: the keyed choice may not run more than a quarter long
 longest distractor. See [validation.md](validation.md) for how the cases were authored and
 reviewed.
 
+## Phase 2 landed, 2026-09-09
+
+Every section now runs on the 3D imaging suite. `SUITE_MODES_READY` holds all twelve modes the
+sections use; `SuiteFallback` remains only as the no-WebGL and scene-error path, which is what it
+is for. Codex built the ten remaining views across PRs #144, #145 and #147 through #155, merged in
+that order.
+
+One engine defect surfaced on the way, in Claude's half rather than theirs: `labValue` had no case
+for an action control, so `captured` — the one action whose patch latches its own key — read back
+false. "Capture the teaching state" is the last Act goal on every section using the acquisition
+lab, so `cbct-acquisition`, `fixed-suite` and `mobile-suite` could not be completed by anyone.
+Fixed in #148 with a regression test that drives all three sections to every goal their Act step
+waits on. The ownership split did its job: Codex found it, reported it rather than editing
+`engine/**`, and it was fixed the same day.
+
 ## Still to do
 
-- Round 2: Codex's views land per `SUITE_MODES_READY`; the hub hero takes the `room` scene.
+- The hub hero still takes the draft's still image; it waits on the `room` scene.
 - Round 3: `radial-ebus` copy, items and sources — waiting on Codex's `rebus` view for the lab, and
   on the owner's metadata check of the four new sources.
 - Owner items: when to retire the original FluoroView simulator (`src/components/fluoroview/`) and
