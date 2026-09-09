@@ -32,6 +32,8 @@ import {
 } from './views/TomosynthesisView'
 import { dtsArc } from './dtsModel'
 import { SamplingView, SamplingPanels } from './views/SamplingView'
+import { RegistrationView, RegistrationOverlay, RegistrationPanels } from './views/RegistrationView'
+import { registration } from './registrationModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
@@ -40,7 +42,7 @@ import { RayTrace, SignalReadout } from './views/SignalView'
 import { loadAnatomyVolume } from '../../lib/anatomy'
 import { rayProfile } from '../../lib/rayProfile'
 import { labControl, labNumber } from '../../engine/labMetrics'
-import { LESION_CENTER, clamp } from '../../lib/physics'
+import { LESION_CENTER, clamp, type Point3 } from '../../lib/physics'
 import { resolveSuiteInputs } from './suiteViewSpec'
 import { rayThrough, suiteFrame, temporal, cbctOrbitSamples } from './suiteModel'
 import { SuiteFallback } from './SuiteFallback'
@@ -86,16 +88,26 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const [visible, setVisible] = useState(true)
   const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
   const [steppedOrbit, setSteppedOrbit] = useState(0)
+  const [registeredSensor, setRegisteredSensor] = useState<Point3 | null>(null)
+  const isRegistration = view.mode === 'navigation' || view.mode === 'augmented'
   const inputs = useMemo(() => {
     const resolved = resolveSuiteInputs(view, props.lab.values)
-    return { ...resolved, orbit: resolved.orbit + steppedOrbit }
-  }, [view, props.lab.values, steppedOrbit])
+    return {
+      ...resolved,
+      orbit: resolved.orbit + steppedOrbit,
+      toolFollowsAnatomy: isRegistration ? false : resolved.toolFollowsAnatomy,
+    }
+  }, [view, props.lab.values, steppedOrbit, isRegistration])
+  const registered = useMemo(
+    () => (isRegistration ? registration(inputs) : null),
+    [isRegistration, inputs],
+  )
   const cbct = useCbctAcquisition(props, inputs, source, reducedMotion, visible)
   const isCbct = view.mode === 'cbct'
   const dts = useTomosynthesis(view, inputs, props.controlsEnabled, visible, reducedMotion)
   const sceneOrbit = isCbct ? cbct.angle : dts.active ? dts.angle : inputs.orbit
   const sceneGeometry = isCbct ? cbct.setup.geometry : inputs.geometry
-  const translation = isCbct ? cbct.setup.offset : undefined
+  const translation = isCbct ? cbct.setup.offset : registered?.currentOffset
   const cbctBounds = useMemo(
     () =>
       isCbct
@@ -208,7 +220,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       <SuiteFallback {...props} />
     </div>
   )
-  const drrMode = ['projection', 'signal', 'field', 'time', 'cbct'].includes(view.mode)
+  const drrMode = [
+    'projection',
+    'signal',
+    'field',
+    'time',
+    'cbct',
+    'navigation',
+    'augmented',
+  ].includes(view.mode)
   const running = isCbct ? cbct.busy : dts.active ? dts.running : playback.running
   return (
     <SceneBoundary fallback={fallback}>
@@ -311,7 +331,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       {view.layers.includes('gantry') && (
                         <DetectorImage frame={detectorFrame} source={source} />
                       )}
-                      {drrMode && view.mode !== 'time' && (
+                      {drrMode && !['time', 'navigation'].includes(view.mode) && (
                         <ProjectionView3D
                           frame={frame}
                           inputs={inputs}
@@ -344,6 +364,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           planes={view.layers.includes('planes')}
                           portal={portal as RefObject<HTMLDivElement>}
                           labels={view.layers.includes('labels')}
+                        />
+                      )}
+                      {isRegistration && (
+                        <RegistrationView
+                          inputs={inputs}
+                          augmented={view.mode === 'augmented'}
+                          portal={portal as RefObject<HTMLDivElement>}
+                          labels={view.layers.includes('labels')}
+                          onSensor={setRegisteredSensor}
                         />
                       )}
                       {view.mode === 'field' && (
@@ -393,7 +422,16 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   !props.controlsEnabled ||
                   (!view.lab && !dts.active) ||
                   (!view.bindings.some((b) => b.input === 'orbit') &&
-                    !['field', 'time', 'cbct', 'dts', 'dts-prior', 'sampling'].includes(view.mode))
+                    ![
+                      'field',
+                      'time',
+                      'cbct',
+                      'dts',
+                      'dts-prior',
+                      'sampling',
+                      'navigation',
+                      'augmented',
+                    ].includes(view.mode))
                 }
                 onClick={() => {
                   if (view.mode === 'sampling' && view.lab) {
@@ -474,7 +512,14 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 pose={pose}
                 depth={inputs.toolDepth}
                 overlay={
-                  view.mode === 'time' ? <TimeOverlay frame={frame} model={timeModel} /> : undefined
+                  view.mode === 'time' ? (
+                    <TimeOverlay frame={frame} model={timeModel} />
+                  ) : isRegistration ? (
+                    <RegistrationOverlay
+                      inputs={inputs}
+                      sensor={view.mode === 'navigation' ? registeredSensor : undefined}
+                    />
+                  ) : undefined
                 }
                 showCurrent={inputs.showCurrent}
                 offset={translation}
@@ -497,7 +542,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   ? timeModel.sampleIndex < 0
                     ? 'Waiting for the first completed pulse.'
                     : `Frame ${timeModel.sampleIndex + 1} · held between pulses. Amber: pulse travel; white: sampled tool.`
-                  : 'Amber contour: authored target · white mark: tool tip'}
+                  : isRegistration
+                    ? 'Amber: current target · teal: stored contour · white: authored tool'
+                    : 'Amber contour: authored target · white mark: tool tip'}
               </p>
             </section>
           )}
@@ -535,6 +582,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         {view.mode === 'sampling' && (
           <SamplingPanels inputs={inputs} revealed={props.lab.values.revealed === true} />
         )}
+        {isRegistration && <RegistrationPanels augmented={view.mode === 'augmented'} />}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
         <LabDock

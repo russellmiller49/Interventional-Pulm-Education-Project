@@ -575,11 +575,47 @@ test('sampling links the side window, thin planes and slab without creating a DR
   await expect(page.locator('[data-readout=windowIntersects] dd')).toHaveText('no')
 })
 
+test('navigation keeps the map sensor fixed while current anatomy moves and a local update resets the contour', async ({
+  page,
+}) => {
+  await page.goto(`${preview}?section=current-anatomy`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  const sensor = page.locator('[data-sensor-overlay]')
+  await expect(sensor).toHaveCount(1)
+  const location = [await sensor.getAttribute('cx'), await sensor.getAttribute('cy')]
+  const target = page.locator('[data-target-overlay]'),
+    stored = page.locator('[data-stored-overlay]')
+  const original = await stored.getAttribute('cy')
+  const image = page.locator('[data-projection-state=ready] canvas')
+  const originalCt = await image.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await setRange(page, 'Authored anatomical displacement', 25)
+  await expect(page.locator('[data-readout=contourStale] dd')).toHaveText('yes')
+  await expect(stored).toHaveAttribute('cy', original!)
+  await expect(target).not.toHaveAttribute('cy', original!)
+  await expect(sensor).toHaveAttribute('cx', location[0]!)
+  await expect(sensor).toHaveAttribute('cy', location[1]!)
+  await expect
+    .poll(() => image.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(originalCt)
+  await page.getByRole('button', { name: 'Capture a new teaching contour', exact: true }).click()
+  await expect(page.locator('[data-readout=storedShiftMm] dd')).toHaveText('25 mm')
+  await expect(page.locator('[data-readout=contourStale] dd')).toHaveText('no')
+  await expect(stored).toHaveAttribute('cy', (await target.getAttribute('cy'))!)
+  await page.getByRole('checkbox', { name: 'Show stored augmented contour', exact: true }).uncheck()
+  await expect(stored).toHaveCount(0)
+  await page
+    .getByRole('checkbox', { name: 'Show current target ground truth', exact: true })
+    .uncheck()
+  await expect(target).toHaveCount(0)
+})
+
 for (const section of [
   'mobile-suite',
   'dts-acquisition',
   'dts-interpretation',
   'tool-confirmation',
+  'current-anatomy',
 ]) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })

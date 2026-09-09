@@ -271,3 +271,14 @@ context and offset labels keep the window visible. Step advances one axial
 slice. The engine computes window overlap and tip inclusion independently.
 Unit and scene checks compare those relationships, linked pixel changes, slab
 reset, reveal invalidation and the single-context limit. No assets were added.
+
+## Phase 2 — navigation
+
+The sensor is fixed at the nearest vertex of the existing registered airway mesh
+to the authored target. The gray map stays in its original coordinates while the
+colored current anatomy translates by the existing rigid registration state.
+The sensor's 2D projection uses that same point, and a local contour update stores
+the current displacement without moving the sensor. The field-generator board is
+under the table. Pure and scene tests compare engine displacement, stale-state
+readouts, current/stored visibility and pixel changes. This adds no route asset,
+deformation model, tracking simulation or new dependency.
