@@ -691,6 +691,39 @@ test('staff orientation moves the gantry, distance follows the lab ratio, and th
     }
 })
 
+test('dose shows equal KAP at two planes, locates the CT envelope, and never starts a DRR', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=dose-reporting`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('[data-dose-state]')).toHaveAttribute('data-dose-state', 'ready')
+  await expect(page.locator('canvas')).toHaveCount(1)
+  await expect(page.locator('[data-dose-plane]')).toHaveCount(2)
+  for (const plane of await page.locator('[data-dose-plane]').all())
+    await expect(plane).toContainText('KAP: 4.00 Gy·cm²')
+  await expect(
+    page.getByText('The skin-entry marker locates a surface; it has no skin-dose value.', {
+      exact: true,
+    }),
+  ).toBeVisible()
+  const scene = page.locator('canvas[data-three-state=ready]')
+  const wide = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('button', { name: 'Smaller field, greater kerma', exact: true }).click()
+  await expect(page.locator('[data-readout=kapGyCm2] dd')).toHaveText('1.20 Gy·cm²')
+  await expect(page.locator('[data-readout=kapMicroGyM2] dd')).toHaveText('120 µGy·m²')
+  for (const plane of await page.locator('[data-dose-plane]').all())
+    await expect(plane).toContainText('KAP: 1.20 Gy·cm²')
+  await expect
+    .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(wide)
+  await page.getByRole('button', { name: 'Initial field', exact: true }).click()
+  await expect(page.locator('[data-readout=kapGyCm2] dd')).toHaveText('4.00 Gy·cm²')
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+})
+
 for (const section of [
   'mobile-suite',
   'dts-acquisition',
@@ -699,6 +732,7 @@ for (const section of [
   'current-anatomy',
   'changing-anatomy',
   'staff-protection',
+  'dose-reporting',
 ]) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
