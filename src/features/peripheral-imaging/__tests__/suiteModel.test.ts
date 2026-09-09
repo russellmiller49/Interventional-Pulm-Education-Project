@@ -228,3 +228,41 @@ it('pulse width changes within-frame blur without changing inter-frame travel', 
   expect(long.interFrameTravel).toBe(short.interFrameTravel)
   expect(temporal({ ...inputs, speedMmS: 0 }).inFrameBlur).toBe(0)
 })
+
+import {
+  cbctOrbitSamples,
+  cbctSetup,
+  fovCylinder,
+  sweptEnvelope,
+} from '../components/suite/suiteModel'
+import { centeredForTeaching } from '../lib/physics'
+it('CBCT samples include the authored arc endpoints and panel FOV uses cone magnification', () => {
+  for (const count of [24, 36]) {
+    const samples = cbctOrbitSamples(200, count)
+    expect(samples).toHaveLength(count)
+    expect(samples[0]).toBe(-100)
+    expect(samples[count - 1]).toBe(100)
+    expect(samples[1] - samples[0]).toBeCloseTo(200 / (count - 1), 8)
+  }
+  expect(fovCylinder('fixed').radius).toBe(192)
+  expect(fovCylinder('mobile').radius).toBe(90)
+  expect(fovCylinder('mobile', { sod: 600, sid: 1200, field: 300 }).radius).toBe(75)
+})
+it('CBCT moves CT and target together; its teaching box is exactly the engine centering predicate', () => {
+  for (const offsetX of [-30, -9, -8, 0, 8, 9, 30])
+    for (const offsetDepth of [-9, -8, 0, 8, 9]) {
+      const inputs = resolveSuiteInputs(SUITE_VIEWS['mobile-suite'], { offsetX, offsetDepth })
+      const setup = cbctSetup(inputs)
+      closeVector(
+        LESION_CENTER.map((n, i) => n + setup.offset[i]),
+        [offsetX, offsetDepth, 0],
+      )
+      expect(setup.centered).toBe(centeredForTeaching(offsetX, offsetDepth))
+      expect(setup.geometry.field).toBe(300)
+    }
+  const fixed = sweptEnvelope('fixed', 200),
+    mobile = sweptEnvelope('mobile', 200)
+  expect(fixed.source).toHaveLength(65)
+  expect(mobile.halfWidth).toBeLessThan(fixed.halfWidth)
+  expect(Math.hypot(...mobile.source[0])).toBeLessThan(Math.hypot(...fixed.source[0]))
+})

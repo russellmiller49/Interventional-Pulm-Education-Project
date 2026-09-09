@@ -19,6 +19,7 @@ export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>([
   'signal',
   'field',
   'time',
+  'cbct',
 ])
 
 export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'

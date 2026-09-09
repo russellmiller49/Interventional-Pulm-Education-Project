@@ -11,7 +11,7 @@ import {
 import { controlElementId, type ImagingSuitePaneProps } from './types'
 import styles from './suite-scene.module.css'
 
-export function LabDock(props: ImagingSuitePaneProps) {
+export function LabDock(props: ImagingSuitePaneProps & { disabledControls?: ReadonlySet<string> }) {
   const { view, lab, onLabChange, controlsEnabled, spotlightKey } = props
   const readouts = view.lab ? labReadouts(view.lab, lab.values, view.sectionId) : {}
   const metricIds = view.readouts ?? (Object.keys(readouts) as LabMetricId[])
@@ -88,7 +88,10 @@ export function LabDock(props: ImagingSuitePaneProps) {
                     <button
                       id={id}
                       type="button"
-                      disabled={control.key === 'captured' && readouts.ready !== true}
+                      disabled={
+                        (control.key === 'captured' && readouts.ready !== true) ||
+                        props.disabledControls?.has(control.key)
+                      }
                       onClick={() => onLabChange({ [control.key]: true })}
                     >
                       {control.label}
