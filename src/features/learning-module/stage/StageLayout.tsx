@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 import {
   ResizableTeachingWorkspace,
@@ -8,6 +8,7 @@ import {
   type TeachingWorkspaceWidthFractions,
 } from '../curriculum/ResizableTeachingWorkspace'
 import { LessonShell, type LessonShellSection } from './LessonShell'
+import { scrollStagePaneToTop } from './scrollStagePaneToTop'
 import { type StagePaneId } from './stageModel'
 import styles from './lesson-stage.module.css'
 
@@ -77,6 +78,10 @@ export function StageLayout({
   paneMinimums,
   compactPane,
 }: {
+  /**
+   * The step on screen. Every adopter passes its active step's id, and when it changes the Steps
+   * and Teaching panes return to their tops — see the effect below.
+   */
   readonly stageId: string
   readonly label: string
   readonly module: string
@@ -103,6 +108,27 @@ export function StageLayout({
    */
   readonly compactPane?: StagePaneId
 }) {
+  const taskColumnRef = useRef<HTMLDivElement>(null)
+  const teachingColumnRef = useRef<HTMLDivElement>(null)
+
+  /*
+   * A new step starts at the top of its Steps and Teaching panes.
+   *
+   * Each pane scrolls on its own, and the hosts focus the Now card with `preventScroll` — so a
+   * learner who had scrolled the Steps pane down to the actions or the story problems, or the
+   * Teaching pane down to a later block, stayed there when the step advanced, with the new
+   * instruction (or the block the new phase foregrounds) above the fold. A learner review in
+   * September 2026 reported it for the Steps pane; ECMO's R6 round fixed it there with a
+   * module-local copy of `scrollStagePaneToTop`, MCS with a `scrollTo` on the region, and the other
+   * adopters not at all. The layout owns the panes, so it owns this: one implementation, both
+   * panes, every adopter. The Simulator pane is deliberately left where the learner put it — its
+   * scroll position is part of the state they are working in, not a reading position.
+   */
+  useEffect(() => {
+    scrollStagePaneToTop(taskColumnRef.current)
+    scrollStagePaneToTop(teachingColumnRef.current)
+  }, [stageId])
+
   const content: Readonly<Record<StagePaneId, ReactNode>> = {
     simulator: (
       <div className={styles.simulatorPane} data-pane="simulator">
@@ -110,12 +136,12 @@ export function StageLayout({
       </div>
     ),
     teaching: (
-      <div className={styles.teachingColumn} data-pane="teaching">
+      <div ref={teachingColumnRef} className={styles.teachingColumn} data-pane="teaching">
         {teaching}
       </div>
     ),
     steps: (
-      <div className={styles.taskColumn} data-pane="task">
+      <div ref={taskColumnRef} className={styles.taskColumn} data-pane="task">
         {task}
       </div>
     ),

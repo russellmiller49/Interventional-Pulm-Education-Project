@@ -3,9 +3,8 @@
 import { useState } from 'react'
 import { Play } from 'lucide-react'
 
+import { answerVerdictFrames } from '@/features/learning-module/components/AnswerVerdict'
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
-
-import { ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 
 import { orderChoices } from '../../content/choiceOrder'
 import type { EcmoStoryProblem } from '../../content/storyProblems'
@@ -120,7 +119,7 @@ export function FoundationStoryProblems({
                 <ChoiceReasoningFeedback
                   choice={committedChoice}
                   outcome="stated"
-                  frames={ECMO_VERDICT_FRAMES}
+                  frames={answerVerdictFrames}
                   explanation={story.item.explanation}
                   evidenceIds={story.item.evidenceIds}
                 />

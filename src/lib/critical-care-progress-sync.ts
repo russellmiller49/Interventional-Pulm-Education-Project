@@ -58,8 +58,15 @@ export const criticalCareCoarseAccountModuleProgressSchema = z
     moduleId: z.enum(criticalCareAccountSyncModuleIds),
     percentComplete: z.number().int().min(0).max(100),
     completedSections: z.array(z.enum(criticalCareAccountSyncSections)).max(3),
-    completedAt: z.string().datetime().nullable(),
-    lastVisitedAt: z.string().datetime(),
+    /*
+     * `timestamptz` comes back from PostgREST as ISO 8601 with a numeric offset
+     * (`2026-09-08T17:36:00.123456+00:00`), never with `Z`, and zod's plain `datetime()` accepts
+     * only `Z`. Without the offset option every authenticated read of a real row failed this parse
+     * and the route answered 500 on every page load for a signed-in learner with any saved
+     * critical-care progress. The notebook schema in this feature already reads with the offset.
+     */
+    completedAt: z.string().datetime({ offset: true }).nullable(),
+    lastVisitedAt: z.string().datetime({ offset: true }),
   })
   .strict()
   .superRefine((progress, context) => {
