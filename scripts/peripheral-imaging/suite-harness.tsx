@@ -4,6 +4,7 @@ import { ImagingSuitePane } from '../../src/features/peripheral-imaging/componen
 import { SUITE_VIEWS } from '../../src/features/peripheral-imaging/content/suiteViews'
 import type { ImagingSectionId } from '../../src/features/peripheral-imaging/content/pathway'
 import { chainCaption } from '../../src/features/peripheral-imaging/content/imagingChain'
+import { ROOM_FIXTURE } from './room-fixture'
 import {
   emptyLabState,
   labStateAfterChange,
@@ -44,8 +45,9 @@ const projection: SuiteViewSpec = {
   boundary:
     'Authored cone geometry (720/1200 mm, 640 mm field) shared with the DRR and readouts; the CT supplies anatomy, the target and tool are authored. The ray colouring is a relative attenuation proxy from quantised CT, not exposure or dose.',
 }
-const section = new URLSearchParams(location.search).get('section') as ImagingSectionId | null
-const authored = section && SUITE_VIEWS[section]
+const params = new URLSearchParams(location.search)
+const section = params.get('section') as ImagingSectionId | null
+const authored = params.get('mode') === 'room' ? ROOM_FIXTURE : section && SUITE_VIEWS[section]
 const baseView = authored || projection
 const labId = baseView.lab ?? 'geometry'
 function Harness() {

@@ -1,4 +1,5 @@
 import { SUITE_VIEWS } from '../../src/features/peripheral-imaging/content/suiteViews'
+import { ROOM_FIXTURE } from './room-fixture'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { createRequire } from 'node:module'
 import type { AxeResults } from 'axe-core'
@@ -722,6 +723,130 @@ test('dose shows equal KAP at two planes, locates the CT envelope, and never sta
   await expect(page.locator('[data-readout=kapGyCm2] dd')).toHaveText('4.00 Gy·cm²')
   await page.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-anim', 'idle')
+})
+
+test('room is a resting single canvas with no DRR, pins, control dock or readouts', async ({
+  page,
+}) => {
+  const requests: string[] = []
+  page.on('request', (request) => requests.push(request.url()))
+  await page.addInitScript(() => {
+    const contexts = new Set<WebGLRenderingContext>()
+    const original = HTMLCanvasElement.prototype.getContext
+    const observed = { maximum: 0, draws: 0 }
+    Object.assign(window, { roomRendering: observed })
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      ...args: [string, unknown?]
+    ) {
+      const result: unknown = Reflect.apply(original, this, args)
+      if (result && (args[0] === 'webgl' || args[0] === 'webgl2')) {
+        const gl = result as WebGLRenderingContext
+        if (!contexts.has(gl)) {
+          contexts.add(gl)
+          for (const method of ['drawArrays', 'drawElements'] as const) {
+            const draw = gl[method]
+            Object.defineProperty(gl, method, {
+              value: (...parameters: number[]) => {
+                observed.draws++
+                return Reflect.apply(draw, gl, parameters)
+              },
+            })
+          }
+        }
+        observed.maximum = Math.max(
+          observed.maximum,
+          [...contexts].filter((gl) => !gl.isContextLost()).length,
+        )
+      }
+      return result
+    } as typeof original
+  })
+  await page.goto(`${preview}?mode=room`)
+  await page.bringToFront()
+  const pane = page.locator('[data-suite-scene]')
+  await expect(pane).toHaveAttribute('data-suite-state', 'ready', { timeout: 15000 })
+  await expect(pane).toHaveAttribute('data-suite-mode', 'room')
+  await expect(pane).toHaveAttribute('data-suite-camera', 'room')
+  await expect(pane).toHaveAttribute('data-suite-anim', 'idle')
+  await expect(pane.locator('[data-monitor-layout]')).toHaveAttribute(
+    'data-monitor-layout',
+    'hidden',
+  )
+  await expect(page.locator('canvas')).toHaveCount(1)
+  await expect(
+    pane.locator(
+      '[data-chain-pin], [data-readouts], [data-suite-controls], [data-projection-state]',
+    ),
+  ).toHaveCount(0)
+  await expect(pane.getByRole('button')).toHaveCount(0)
+  await expect(pane.locator('[data-model-boundary]')).toHaveText(ROOM_FIXTURE.boundary)
+  await expect(pane.locator('[data-chain-caption]')).toHaveText(
+    'The chain map is not pointing anywhere on this step.',
+  )
+  await expect(pane.locator('[data-suite-goals]')).toContainText('Inspect another projection')
+  await expect(page.locator('[data-harness-child]')).toBeVisible()
+  expect(requests.some((url) => /ct-atlas\.png|dts-projections\.png/.test(url))).toBe(false)
+  expect(await pixels(page.locator('canvas'))).toBeGreaterThan(100)
+  await page.waitForTimeout(250)
+  const rendering = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { roomRendering: { maximum: number; draws: number } }).roomRendering,
+    )
+  const initial = await rendering()
+  expect(initial.maximum).toBe(1)
+  expect(initial.draws).toBeGreaterThan(0)
+  await page.waitForTimeout(500)
+  expect((await rendering()).draws).toBe(initial.draws)
+  await page.addScriptTag({ path: suiteRequire.resolve('axe-core/axe.min.js') })
+  const result = await page.evaluate(() =>
+    (window as unknown as { axe: { run: (context: string) => Promise<AxeResults> } }).axe.run(
+      '[data-suite-scene]',
+    ),
+  )
+  expect(result.violations).toEqual([])
+})
+
+test('room keeps its contract through reduced motion, locking, narrow layout and context recovery', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?mode=room`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('[data-suite-anim]')).toHaveAttribute('data-suite-anim', 'idle')
+  await page.getByRole('button', { name: 'Toggle control lock' }).click()
+  await expect(page.getByRole('status')).toHaveText(
+    'Choose your prediction before changing the model.',
+  )
+  await page.waitForTimeout(250)
+  const canvas = page.locator('canvas[data-three-state=ready]')
+  const lockedFrame = await canvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL())
+  const box = (await canvas.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2 + 30, { steps: 5 })
+  await page.mouse.up()
+  expect(await canvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL())).toBe(lockedFrame)
+  await canvas.evaluate((node) =>
+    (node as HTMLCanvasElement)
+      .getContext('webgl2')!
+      .getExtension('WEBGL_lose_context')!
+      .loseContext(),
+  )
+  await expect(page.locator('[data-suite-state=failed]')).toBeVisible()
+  await page.getByRole('button', { name: 'Restore 3D view' }).click()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('canvas')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Toggle chain answer' }).click()
+  await page.locator('[data-chain-pin=detector]').click()
+  await expect(page.locator('input[type=radio][value=detector]')).toBeChecked()
+  await page.getByRole('button', { name: 'Commit preview answer' }).click()
+  for (const radio of await page.getByRole('radio').all()) await expect(radio).toBeDisabled()
+  await page.setViewportSize({ width: 390, height: 1000 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await expect(page.locator('[data-model-boundary]')).toHaveText(ROOM_FIXTURE.boundary)
 })
 
 for (const section of [

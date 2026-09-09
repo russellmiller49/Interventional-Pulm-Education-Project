@@ -6,6 +6,7 @@ import sharp from 'sharp'
 import metadata from '../../../../public/peripheral-imaging/anatomy/manifest.json'
 import dtsMetadata from '../../../../public/peripheral-imaging/anatomy/dts.json'
 import packageManifest from '../../../../public/peripheral-imaging/manifest.json'
+import roomProvenance from '../../../../public/peripheral-imaging/room-hero.json'
 import { LESION_CENTER, LESION_RADIUS } from '../lib/physics'
 
 describe('self-contained original model downloads', () => {
@@ -31,6 +32,47 @@ describe('self-contained original model downloads', () => {
 })
 
 describe('CT-derived Slicer assets', () => {
+  it('ships a 2400 × 1000 room still under 400 KB with flush shell edges and render provenance', async () => {
+    const png = readFileSync(resolve('public/peripheral-imaging/room-hero.png'))
+    expect(png.length).toBeLessThan(400_000)
+    const { data, info } = await sharp(png)
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    expect([info.width, info.height]).toEqual([2400, 1000])
+    const background = Buffer.from([6, 21, 25])
+    let painted = 0,
+      edgeMismatches = 0
+    for (let y = 0; y < info.height; y++)
+      for (let x = 0; x < info.width; x++) {
+        const start = (y * info.width + x) * info.channels
+        const match = data.subarray(start, start + 3).equals(background)
+        if (!match) painted++
+        if ((x === 0 || y === 0 || x === info.width - 1 || y === info.height - 1) && !match)
+          edgeMismatches++
+      }
+    expect(edgeMismatches).toBe(0)
+    expect(painted).toBeGreaterThan(info.width * info.height * 0.02)
+    expect(roomProvenance.output).toEqual({
+      path: 'room-hero.png',
+      width: 2400,
+      height: 1000,
+      bytes: png.length,
+      sha256: createHash('sha256').update(png).digest('hex'),
+    })
+    expect(roomProvenance.ctSourceSha256).toBe(metadata.sourceSha256)
+    expect(roomProvenance.airwaySourceSha256).toBe(metadata.airwaySourceSha256)
+    expect(roomProvenance.sourceSha256).toBe(
+      createHash('sha256').update(JSON.stringify(roomProvenance.sources)).digest('hex'),
+    )
+    expect(
+      packageManifest.assets.find((asset) => asset.path === 'room-hero.png')?.sourceSha256,
+    ).toBe(roomProvenance.sourceSha256)
+    expect(roomProvenance.render.camera).toBe('room')
+    expect(roomProvenance.render.background).toBe('#061519')
+    expect(roomProvenance.render.layers).not.toContain('labels')
+  })
+
   it.each(['thorax', 'fluoroview-carm'])(
     '%s embeds Draco geometry within the browser asset budget',
     (name) => {

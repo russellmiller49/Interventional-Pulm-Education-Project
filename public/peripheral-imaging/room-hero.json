@@ -1,0 +1,120 @@
+{
+  "schema": "peripheral-imaging-room-render/v1",
+  "authoredOn": "2026-09-09",
+  "source": "Repository-authored room and gantry with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
+  "sourceSha256": "c9f8147dcb16a46c85ee03b65a4c3827fd2968d89025092ad3adf5403a7ce8c3",
+  "ctSourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "airwaySourceSha256": "277223b59550c1e037585e09205bdd7f8dc24e8abf9b4fd5875b5cb6f369ee69",
+  "sources": [
+    {
+      "path": "package-lock.json",
+      "sha256": "6d714c0cea8f417282d68ad44f70ef4ee8759c0ddd44447c8caf99d523aaee8b"
+    },
+    {
+      "path": "public/peripheral-imaging/anatomy/thorax.glb",
+      "sha256": "14892a6689ad0cb80854e5edaa4f2147074f6301aa910eb8adf91736dd22cc80"
+    },
+    {
+      "path": "scripts/peripheral-imaging/room-fixture.ts",
+      "sha256": "a680b64e7fe0e58b039843e4fe86875bf5d1cc0052de2d465bb60036cc31587e"
+    },
+    {
+      "path": "scripts/peripheral-imaging/render-room-hero.ts",
+      "sha256": "acc2069b0fc415d3660b4850ba9cffeb9aa20deeb85465c5140e42e174c39c1f"
+    },
+    {
+      "path": "scripts/peripheral-imaging/suite-harness.tsx",
+      "sha256": "00fd021058233c7ab124231f72cdf881523611f5532e3c425fa6299c4eefd4c3"
+    },
+    {
+      "path": "src/features/peripheral-imaging/lib/physics.ts",
+      "sha256": "df63f83ae2611c3b30c4e4d55807fff926671314604641cb1f2395111c62124a"
+    },
+    {
+      "path": "src/features/peripheral-imaging/lib/anatomy.ts",
+      "sha256": "62def1c7df44cb1bad058c438a61aa6dfeb1fde89498264dd8459b8ee9dc3649"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/Anatomy.tsx",
+      "sha256": "69c732b054ff1c06ee235ace60dc49b32dc86415e60c911312b5cd8f2abf246f"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/CameraRig.tsx",
+      "sha256": "d3fa7ce634c924d055414f7d83efa5475f5271e893f01a6c264a436a65f9082a"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/Room.tsx",
+      "sha256": "c1f06a3ecefc29abffaf8eec2603a055015c2f25d68855595dd8d84bdd0b393f"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/ParametricCarm.tsx",
+      "sha256": "c05efdec2da031819a62fc4c6bc478cecfd207c5e77d8c03d908a8149bee9438"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/DetectorImage.tsx",
+      "sha256": "d1fa4ebe6b036bdcb1a866dfcddc3d35e9c30c8ae737fc8f28a3b70e0528da28"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/SuiteScene.tsx",
+      "sha256": "04eb54c6f0bf4bd8fc6fa2c6defe58a38e0aa0560ae8d2be70057f0ce8cf428a"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/SuiteScenePane.tsx",
+      "sha256": "b55d7f9e8ab680f6e18771cecd8b62f3b87b9943f0034c28e9fc7b763b5ff00e"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/ImagingSuitePane.tsx",
+      "sha256": "900e2cad68e876aa79257ba2b56b6a1e4df381f2dcbc8a27370094927dec15d3"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/LabDock.tsx",
+      "sha256": "123830574e2b06929d98ea52af60bd4a66179f83ee903d4f58e2e939619c6894"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/suiteModel.ts",
+      "sha256": "cb67507a8f5def191944ac064b898121f4a57f332a52cf37c2ce25b0fb4439fb"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/suiteViewSpec.ts",
+      "sha256": "832ac82bb2514dcadbd4ef23e80dacf077436bd0640b0d28689e654c0c415b4c"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/types.ts",
+      "sha256": "49ade86ddfe46fd0aef1380e5f0f7c08347f55c55711b875795a249292304aab"
+    },
+    {
+      "path": "src/features/peripheral-imaging/components/suite/suite-scene.module.css",
+      "sha256": "bcdc30107cfa4a2ffbf9eef76cf8d78e05bbc3c4a3a31f883a7e096b399b1bb6"
+    }
+  ],
+  "output": {
+    "path": "room-hero.png",
+    "width": 2400,
+    "height": 1000,
+    "bytes": 133643,
+    "sha256": "73391f4b86b12757c188f5314f5f716b550ca33dba26b97a54ae9cf0b32dbcf9"
+  },
+  "render": {
+    "background": "#061519",
+    "camera": "room",
+    "variant": "fixed",
+    "defaults": {
+      "orbit": 30,
+      "tilt": 0
+    },
+    "layers": ["Airways", "Lungs", "Ribs and spine", "table", "gantry", "monitor"],
+    "deviceScaleFactor": 1,
+    "antialias": true,
+    "renderer": "ANGLE SwiftShader",
+    "dracoDecoderSha256": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac",
+    "dracoWrapperSha256": "52550bd5eda1f89d259c74bb075c4c02db0e944fa1fdd0fff899278fd740fe56",
+    "threeRevision": "180",
+    "chromium": "151.0.7922.34",
+    "playwright": "1.62.0",
+    "sharp": "0.34.5",
+    "vips": "8.17.3",
+    "png": "Lossless RGB, compression level 9, adaptive filtering; no resizing or palette quantization"
+  },
+  "command": "npx tsx scripts/peripheral-imaging/render-room-hero.ts",
+  "limitations": "CT-derived teaching context and authored geometry. No clinical performance, exposure, reconstruction or clearance validation."
+}
