@@ -5,10 +5,14 @@ import { VolumeDRRRenderer } from '@fluoroview/volume-drr'
 import { DEFAULT_FLUORO_SETTINGS } from '@fluoroview/knobology'
 import { detectorFrameForAngles } from '@fluoroview/geometry'
 import { IMAGING_CONFIG, loadAnatomyVolume, VOLUME_ASSET } from '../../lib/anatomy'
+import { type ImagingGeometry, type Point3 } from '../../lib/physics'
 
 export interface DrrPose {
   orbit: number
   tilt: number
+  geometry?: ImagingGeometry
+  /** Translating the CT by t is equivalent to translating the imaging frame by -t. */
+  anatomyTranslation?: Point3
 }
 export type ProjectionState = 'loading' | 'ready' | 'failed'
 
@@ -85,6 +89,16 @@ export class DrrTextureSource {
       lowRes,
       // Tube-load controls never modulate DRR brightness.
       settings: { ...DEFAULT_FLUORO_SETTINGS, noiseEnabled: false },
+      geometry: {
+        isocenter_mm: (pose.anatomyTranslation?.map((n) => -n) as Point3 | undefined) ?? [0, 0, 0],
+        ...(pose.geometry
+          ? {
+              source_to_isocenter_mm: pose.geometry.sod,
+              source_to_detector_mm: pose.geometry.sid,
+              pixel_pitch_mm: pose.geometry.field / IMAGING_CONFIG.detector_pixels[0],
+            }
+          : {}),
+      },
     })
     this.texture.needsUpdate = true
     this.revision++
