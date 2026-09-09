@@ -303,3 +303,14 @@ compares horizontal distance in the schematic floor plan. Overview framing inclu
 the full set of contours, and six separated chain labels retain leaders to their
 physical locations. Unit and scene tests cover orientation, distance, shielding,
 context count, label visibility and label separation. No assets were added.
+
+## Phase 2 — dose
+
+Two planes use inverse-square kerma and expanding beam area to show equal KAP.
+The first is just after the collimator; the other uses the authored input plane.
+An equipment-convention reference marker and a CT-derived surface-entry marker
+are separate from those quantities. No skin-dose value is computed. The displayed
+KAP readouts come from the existing lab engine, and field presets change both the
+aperture and the cone. Pure and scene checks cover KAP invariance, detector/plane
+footprints, presets, the surface marker and reduced-motion Step. This mode uses
+one WebGL context and reuses the existing CT asset.

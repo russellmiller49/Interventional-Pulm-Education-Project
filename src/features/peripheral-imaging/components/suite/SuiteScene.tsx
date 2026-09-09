@@ -36,6 +36,8 @@ import { RegistrationView, RegistrationOverlay, RegistrationPanels } from './vie
 import { registration } from './registrationModel'
 import { StaffView, StaffPanels } from './views/StaffView'
 import { staff } from './staffModel'
+import { DoseView, DosePanels } from './views/DoseView'
+import { dosePlanes } from './doseModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
@@ -164,7 +166,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const [volume, setVolume] = useState<Uint8Array | null>(null)
   const [profileFailed, setProfileFailed] = useState(false)
   useEffect(() => {
-    if (!['signal', 'sampling'].includes(view.mode)) return
+    if (!['signal', 'sampling', 'dose'].includes(view.mode)) return
     let active = true
     void loadAnatomyVolume()
       .then((data) => {
@@ -179,10 +181,18 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   }, [view.mode])
   const profile = useMemo(
     () =>
-      view.mode === 'signal' && volume
-        ? rayProfile(volume, frame.source, rayThrough(frame, LESION_CENTER).hit)
+      ['signal', 'dose'].includes(view.mode) && volume
+        ? rayProfile(
+            volume,
+            frame.source,
+            view.mode === 'dose' ? frame.detectorCenter : rayThrough(frame, LESION_CENTER).hit,
+          )
         : null,
     [view.mode, volume, frame],
+  )
+  const dose = useMemo(
+    () => (view.mode === 'dose' ? dosePlanes(inputs, profile) : null),
+    [view.mode, inputs, profile],
   )
   const [cameraOverride, setCameraOverride] = useState<{
     requested: SuiteCamera
@@ -344,13 +354,16 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           lit={
                             view.mode === 'time' ? timeModel.pulseIsOn : view.litStop === 'source'
                           }
-                          shutters={view.mode !== 'field'}
+                          shutters={!['field', 'dose'].includes(view.mode)}
                         />
                       )}
                       {view.layers.includes('cone') && (
                         <BeamCone
                           frame={frame}
-                          fieldPercent={inputs.crop ? 100 : inputs.fieldPercent}
+                          fieldPercent={
+                            dose ? dose.fieldPercent : inputs.crop ? 100 : inputs.fieldPercent
+                          }
+                          target={dose ? frame.iso : undefined}
                         />
                       )}
                       {view.layers.includes('gantry') && (
@@ -401,6 +414,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         />
                       )}
                       {view.mode === 'staff' && <StaffView inputs={inputs} layers={view.layers} />}
+                      {view.mode === 'dose' && view.layers.includes('planes') && (
+                        <DoseView inputs={inputs} profile={profile} />
+                      )}
                       {view.mode === 'field' && (
                         <FieldView
                           frame={frame}
@@ -459,6 +475,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       'sampling',
                       'navigation',
                       'augmented',
+                      'dose',
                     ].includes(view.mode))
                 }
                 onClick={() => {
@@ -612,6 +629,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         )}
         {isRegistration && <RegistrationPanels augmented={view.mode === 'augmented'} />}
         {view.mode === 'staff' && <StaffPanels inputs={inputs} />}
+        {view.mode === 'dose' && (
+          <DosePanels inputs={inputs} profile={profile} failed={profileFailed} />
+        )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
         <LabDock

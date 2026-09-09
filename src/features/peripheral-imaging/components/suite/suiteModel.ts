@@ -19,6 +19,7 @@ export { dtsArc, dtsPlaneQuad, smearWidth, missingWedge } from './dtsModel'
 export { samplingPlanes } from './samplingModel'
 export { registration } from './registrationModel'
 export { staff } from './staffModel'
+export { dosePlanes } from './doseModel'
 
 export const add = (a: Point3, b: Point3): Point3 => a.map((n, i) => n + b[i]) as Point3
 export const subtract = (a: Point3, b: Point3): Point3 => a.map((n, i) => n - b[i]) as Point3

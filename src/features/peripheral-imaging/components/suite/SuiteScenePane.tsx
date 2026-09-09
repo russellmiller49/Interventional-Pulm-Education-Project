@@ -26,6 +26,7 @@ export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>([
   'navigation',
   'augmented',
   'staff',
+  'dose',
 ])
 
 export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'

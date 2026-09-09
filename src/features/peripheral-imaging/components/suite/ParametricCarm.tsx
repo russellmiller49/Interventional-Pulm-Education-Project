@@ -1,13 +1,21 @@
 'use client'
 import { useEffect, useMemo } from 'react'
 import { BufferGeometry, DoubleSide, Float32BufferAttribute } from 'three'
-import { radians } from '../../lib/physics'
+import { radians, type Point3 } from '../../lib/physics'
 import { coneFrustum, type SuiteFrame } from './suiteModel'
 import type { SuiteVariant } from './types'
 
-export function BeamCone({ frame, fieldPercent }: { frame: SuiteFrame; fieldPercent: number }) {
+export function BeamCone({
+  frame,
+  fieldPercent,
+  target,
+}: {
+  frame: SuiteFrame
+  fieldPercent: number
+  target?: Point3
+}) {
   const geometry = useMemo(() => {
-    const cone = coneFrustum(frame, fieldPercent)
+    const cone = coneFrustum(frame, fieldPercent, target)
     const points = cone.corners.flatMap((corner, i) => [
       ...cone.source,
       ...corner,
@@ -17,7 +25,7 @@ export function BeamCone({ frame, fieldPercent }: { frame: SuiteFrame; fieldPerc
     g.setAttribute('position', new Float32BufferAttribute(points, 3))
     g.computeVertexNormals()
     return g
-  }, [frame, fieldPercent])
+  }, [frame, fieldPercent, target])
   useEffect(() => () => geometry.dispose(), [geometry])
   return (
     <mesh geometry={geometry}>
