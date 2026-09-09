@@ -275,6 +275,66 @@ test('the capstone: gated on the sections, decided once, one wrong critical deci
   )
 })
 
+test('the image a control changes stays on screen while the control is used', async ({ page }) => {
+  // The pane scrolls as one column, with the 3D view and the monitor above the control dock.
+  // Reaching a slider used to push the image it changes off the top, so the learner could not
+  // watch what their own change did. The displays are pinned to the top of the pane instead.
+  // Comfortably inside the side-by-side layout rather than on its boundary.
+  await page.setViewportSize({ width: 1700, height: 1000 })
+  await openSection(page, 'projection')
+  await primary(page).click()
+  await commitKeyed(page, 'projection', 1)
+  await primary(page).click()
+  expect(await stageId(page)).toBe('projection-3-act')
+
+  const geometry = await page.evaluate(() => {
+    const pane = [...document.querySelectorAll('[role="region"][aria-label$="panel"]')].find((p) =>
+      /Simulator/.test(p.getAttribute('aria-label') ?? ''),
+    ) as HTMLElement
+    const displays = document.querySelector('[data-suite-scene] [class*="displays"]') as HTMLElement
+    return {
+      pinned: getComputedStyle(displays).position,
+      displaysHeight: Math.round(displays.getBoundingClientRect().height),
+      paneHeight: Math.round(pane.getBoundingClientRect().height),
+    }
+  })
+  // Pinning only makes sense while the pinned block is shorter than the pane it sits in.
+  expect(geometry.pinned).toBe('sticky')
+  expect(geometry.displaysHeight).toBeLessThan(geometry.paneHeight)
+
+  // Scroll the pane far enough to bring every control into reach, then check that the image is
+  // still on screen and that the control is clear of it rather than hidden underneath.
+  const state = await page.evaluate(() => {
+    const pane = [...document.querySelectorAll('[role="region"][aria-label$="panel"]')].find((p) =>
+      /Simulator/.test(p.getAttribute('aria-label') ?? ''),
+    ) as HTMLElement
+    pane.scrollTop = 120
+    const top = pane.getBoundingClientRect().top
+    const box = (el: Element) => {
+      const b = el.getBoundingClientRect()
+      return { top: Math.round(b.top - top), bottom: Math.round(b.bottom - top) }
+    }
+    const displays = box(document.querySelector('[data-suite-scene] [class*="displays"]')!)
+    const monitor = box(document.querySelector('[data-suite-scene] [class*="monitorPanel"]')!)
+    const slider = box(document.getElementById('peripheral-imaging-control-orbit')!)
+    return {
+      displays,
+      monitor,
+      slider,
+      paneHeight: Math.round(pane.getBoundingClientRect().height),
+    }
+  })
+  expect(state.displays.top).toBe(0)
+  expect(state.monitor.bottom).toBeGreaterThan(0)
+  expect(state.slider.top).toBeGreaterThanOrEqual(state.displays.bottom)
+  expect(state.slider.bottom).toBeLessThanOrEqual(state.paneHeight)
+
+  // And moving it still changes the readout, with the image in view the whole time.
+  const before = await page.locator('[data-readout="separationMm"] dd').textContent()
+  await setRange(page, /obliquity/i, 60)
+  await expect(page.locator('[data-readout="separationMm"] dd')).not.toHaveText(before ?? '')
+})
+
 test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(base() + '/en/peripheral-imaging')

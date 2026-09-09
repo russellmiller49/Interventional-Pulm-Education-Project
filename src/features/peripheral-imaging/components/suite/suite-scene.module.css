@@ -1,6 +1,11 @@
 .monitor {
   position: relative;
-  width: 100%;
+  /* Sized from its height so it always matches the 3D view beside it, and so its column takes
+     only the width the square needs — the 3D view gets the rest. */
+  height: var(--suite-display-height);
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
   aspect-ratio: 1;
   background: #05070c;
   overflow: hidden;
@@ -26,6 +31,12 @@
 }
 
 .pane {
+  /*
+   * The pane is the container the suite lays itself out against. Its width comes from the
+   * workspace's three columns, not from the window, so a window-width media query is the wrong
+   * instrument here: at a 1180px window this pane is barely 320px wide.
+   */
+  container: suite / inline-size;
   display: grid;
   gap: 14px;
   min-width: 0;
@@ -69,10 +80,64 @@
   padding: 8px 12px;
 }
 .displays {
+  /* One height for the 3D view and the monitor, so they stay level and the pair stays short
+     enough to leave the control dock on screen beneath them. */
+  --suite-display-height: 300px;
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(220px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+}
+.displays .monitorPanel {
+  width: min(100%, 440px);
+  justify-self: center;
+}
+
+/*
+ * Wide enough for the two displays side by side.
+ *
+ * The monitor column is pinned to the square's own width; left to size itself it would grow to
+ * the caption's longest line and take that width from the 3D view.
+ */
+@container suite (min-width: 520px) {
+  .displays[data-monitor-layout='beside'] {
+    --suite-display-height: clamp(190px, 26vh, 420px);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .displays[data-monitor-layout='beside'] .monitorPanel {
+    width: var(--suite-display-height);
+    justify-self: stretch;
+  }
+}
+
+@container suite (max-width: 460px) {
+  .displays {
+    --suite-display-height: 260px;
+  }
+}
+
+/*
+ * Keep the image on screen while the controls are used.
+ *
+ * The pane scrolls as one column: the 3D view and the monitor sit above the control dock, so
+ * reaching a slider used to push the image it changes off the top of the pane. Pinning the two
+ * displays to the top of the pane means the dock scrolls underneath them and the learner can
+ * watch the image while dragging.
+ *
+ * Only where there is room for both. Below these sizes the displays stack into one column and
+ * become taller than the pane, and a pinned block taller than its scrollport would cover the
+ * dock instead of revealing it.
+ */
+@media (min-height: 640px) {
+  @container suite (min-width: 520px) {
+    .displays[data-monitor-layout='beside'] {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding-bottom: 10px;
+      background: var(--surface-base, #061519);
+    }
+  }
 }
 .displays[data-monitor-layout='below'],
 .displays[data-monitor-layout='hidden'] {
@@ -107,7 +172,7 @@
 .viewport {
   position: relative;
   container-type: inline-size;
-  height: 440px;
+  height: var(--suite-display-height);
   overflow: hidden;
 }
 .canvasHost,
@@ -327,25 +392,10 @@
   border-radius: 8px;
   background: #f4f8f8;
 }
-@media (max-width: 950px) {
-  .displays {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .monitorPanel {
-    width: min(100%, 420px);
-    justify-self: center;
-  }
-  .viewport {
-    height: 390px;
-  }
-}
 @media (max-width: 600px) {
   .dock {
     grid-template-columns: minmax(0, 1fr);
     padding: 12px;
-  }
-  .viewport {
-    height: 330px;
   }
   .pin,
   .pane .pin {

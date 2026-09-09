@@ -18,6 +18,9 @@
   --cyan: #36c3ca;
   --cyan-bright: #71e1e5;
   --navy: #07191d;
+  /* The shell's flat base colour. A block pinned inside a scrolling pane paints itself with this
+     so the content sliding under it does not show through the gaps. */
+  --surface-base: #061519;
   --amber: #ffbf62;
   --red: #ff6b73;
   --green: #76d69b;
@@ -26,7 +29,8 @@
   color: var(--ink);
   background:
     radial-gradient(circle at 72% 5%, rgba(43, 132, 139, 0.22), transparent 30rem),
-    radial-gradient(circle at 5% 35%, rgba(119, 57, 85, 0.14), transparent 30rem), #061519;
+    radial-gradient(circle at 5% 35%, rgba(119, 57, 85, 0.14), transparent 30rem),
+    var(--surface-base);
   font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
