@@ -5,12 +5,43 @@ import {
   kapGyCm2,
   kapMicroGyM2,
   projectPoint,
+  projectToDetector,
+  toolTipForDepth,
+  LESION_CENTER,
+  type Point3,
   sphereSliceRadius,
   temporalMetrics,
   windowRelationship,
 } from '../lib/physics'
+import { detectorFrameForAngles } from '../../../../fluoro-viewer/src/geometry'
+import { IMAGING_CONFIG } from '../lib/anatomy'
 
 describe('authored imaging geometry', () => {
+  it('keeps the frontal tip on the source-target ray while obliquity reveals its offset', () => {
+    for (const depth of [-30, 0, 22, 30]) {
+      const tip = toolTipForDepth(depth)
+      const target = projectToDetector(LESION_CENTER, 0)
+      const p = projectToDetector(tip, 0)
+      expect(p[0]).toBeCloseTo(target[0], 8)
+      expect(p[1]).toBeCloseTo(target[1], 8)
+      expect(Math.hypot(...tip.map((v, i) => v - LESION_CENTER[i]))).toBeCloseTo(Math.abs(depth))
+    }
+    const target = projectToDetector(LESION_CENTER, 30),
+      tip = projectToDetector(toolTipForDepth(22), 30)
+    expect(Math.hypot(target[0] - tip[0], target[1] - tip[1])).toBeGreaterThan(20)
+  })
+  it('projects overlays with the original FluoroView renderer cone frame at coupled angles', () => {
+    const dot = (a: Point3, b: Point3) => a.reduce((s, n, i) => s + n * b[i], 0)
+    for (const orbit of [-75, 0, 30, 90])
+      for (const tilt of [-25, 0, 25]) {
+        const frame = detectorFrameForAngles(IMAGING_CONFIG, orbit, tilt)
+        const fromSource = LESION_CENTER.map((v, i) => v - frame.sourceLps[i]) as Point3
+        const m = IMAGING_CONFIG.source_to_detector_mm / dot(fromSource, frame.detectorNormalLps)
+        const projected = projectToDetector(LESION_CENTER, orbit, tilt)
+        expect(projected[0]).toBeCloseTo(dot(fromSource, frame.detectorUAxisLps) * m, 8)
+        expect(projected[1]).toBeCloseTo(dot(fromSource, frame.detectorVAxisLps) * m, 8)
+      }
+  })
   it('hides depth frontally and reveals the expected separation with obliquity', () => {
     expect(projectPoint([0, 10, 0], 0)).toEqual([0, 0])
     expect(projectPoint([0, 10, 0], 30)[0]).toBeCloseTo(5)

@@ -1,6 +1,11 @@
-import { test, expect, type Page, type TestInfo } from '@playwright/test'
+import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test'
 import { LESSONS } from '../src/features/peripheral-imaging/data/lessons'
 import { QUESTION_BY_ID } from '../src/features/peripheral-imaging/data/questions'
+import {
+  LESION_CENTER,
+  projectToDetector,
+  toolTipForDepth,
+} from '../src/features/peripheral-imaging/lib/physics'
 
 // Explicit opt-in keeps this suite independent of the default port-3001 E2E server.
 test.skip(
@@ -57,13 +62,51 @@ async function capture(page: Page, info: TestInfo, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: info.outputPath(name), fullPage: true })
 }
+async function expectImageSignal(canvas: Locator, webgl = true) {
+  if (webgl)
+    await expect
+      .poll(() =>
+        canvas.evaluate(
+          (node) =>
+            (node as HTMLCanvasElement).dataset.threeState ??
+            node.closest('[data-projection-state]')?.getAttribute('data-projection-state'),
+        ),
+      )
+      .toBe('ready')
+  await expect
+    .poll(() =>
+      canvas.evaluate((node, useWebgl) => {
+        const c = node as HTMLCanvasElement
+        let pixels: Uint8Array | Uint8ClampedArray
+        if (useWebgl) {
+          const gl = c.getContext('webgl2')!
+          pixels = new Uint8Array(c.width * c.height * 4)
+          gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+        } else pixels = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data
+        let min = 255,
+          max = 0
+        for (let i = 0; i < pixels.length; i += 4) {
+          min = Math.min(min, pixels[i])
+          max = Math.max(max, pixels[i])
+        }
+        return max - min
+      }, webgl),
+    )
+    .toBeGreaterThan(35)
+}
 
 test('desktop pathway, all lab surfaces and persistent answer boundary', async ({
   page,
 }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => {
+    if (message.type() === 'error' && /THREE|shader|WebGL/i.test(message.text()))
+      errors.push(message.text())
+  })
   await expect(content(page).locator('canvas')).toHaveCount(1)
+  await expect(content(page).getByText('Authored target', { exact: true })).toBeVisible()
+  await expectImageSignal(content(page).locator('canvas'))
   await capture(page, testInfo, 'course-desktop.png')
   await page.getByRole('button', { name: /^Start —/ }).click()
   await content(page)
@@ -86,9 +129,33 @@ test('desktop pathway, all lab surfaces and persistent answer boundary', async (
 
   await explore(page, 'projection')
   await setRange(page, 'C-arm obliquity', 30)
-  await expect(content(page).getByText('11.0 mm', { exact: true })).toBeVisible()
-  await expect(content(page).locator('canvas')).toHaveCount(1)
+  const target = projectToDetector(LESION_CENTER, 30, 0),
+    tip = projectToDetector(toolTipForDepth(22), 30, 0)
+  const separation = Math.hypot(target[0] - tip[0], target[1] - tip[1]).toFixed(1)
+  await expect(content(page).getByText(separation + ' mm', { exact: true })).toBeVisible()
+  await expect(content(page).locator('canvas')).toHaveCount(2)
+  await expect(content(page).locator('[data-projection-state=ready]')).toBeVisible()
+  await expectImageSignal(content(page).locator('[data-projection-state=ready] canvas'))
+  await expectImageSignal(content(page).locator('canvas').first())
   await capture(page, testInfo, 'geometry-desktop.png')
+  await content(page).getByRole('button', { name: 'C-arm motion', exact: true }).click()
+  await expectImageSignal(content(page).locator('canvas').first())
+  const gantryBefore = await content(page)
+    .locator('canvas')
+    .first()
+    .evaluate((node) => (node as HTMLCanvasElement).toDataURL())
+  await setRange(page, 'C-arm obliquity', -35)
+  await expect
+    .poll(() =>
+      content(page)
+        .locator('canvas')
+        .first()
+        .evaluate((node) => (node as HTMLCanvasElement).toDataURL()),
+    )
+    .not.toBe(gantryBefore)
+  await content(page)
+    .getByRole('img', { name: 'Original FluoroView C-arm animation, a generic motion reference.' })
+    .screenshot({ path: testInfo.outputPath('original-carm.png') })
   for (const id of [
     'field',
     'time',
@@ -112,13 +179,37 @@ test('desktop pathway, all lab surfaces and persistent answer boundary', async (
       await expect(content(page).getByText(/The tip is outside/)).toBeVisible()
       await expect(content(page).getByText('Sampling window', { exact: true })).toBeVisible()
       await capture(page, testInfo, 'sampling-desktop.png')
+      await expect(content(page).locator('[data-ct-state=ready]')).toHaveCount(3)
+      await expectImageSignal(content(page).locator('[data-ct-state=ready]').first(), false)
+    }
+    if (id === 'dts-acquisition') {
+      await expect(content(page).locator('[data-dts-state=ready]')).toBeVisible()
+      const planeCanvas = content(page)
+        .getByRole('img', { name: /CT-derived shift-and-add plane/ })
+        .locator('canvas')
+      await expectImageSignal(planeCanvas, false)
+      const before = await planeCanvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL())
+      await content(page).getByRole('button', { name: 'Tool plane', exact: true }).click()
+      await expect
+        .poll(() => planeCanvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL()))
+        .not.toBe(before)
+      await content(page)
+        .locator('[data-dts-state=ready]')
+        .screenshot({ path: testInfo.outputPath('ct-tomosynthesis.png') })
+    }
+    if (id === 'mobile-suite') {
+      await expect(content(page).locator('[data-projection-state=ready]')).toHaveCount(2)
+      for (const canvas of await content(page)
+        .locator('[data-projection-state=ready] canvas')
+        .all())
+        await expectImageSignal(canvas)
     }
   }
   await page
     .getByRole('navigation', { name: 'Course resources' })
     .getByRole('button', { name: 'References' })
     .click()
-  await expect(content(page).getByRole('link', { name: /\(\.glb\)/ })).toHaveCount(4)
+  await expect(content(page).getByRole('link', { name: /\(\.glb\)/ })).toHaveCount(2)
   await expect(content(page).getByRole('link', { name: /video|youtube|webinar/i })).toHaveCount(0)
   expect(errors).toEqual([])
 })
@@ -158,6 +249,8 @@ test('acquisition invalidation and safety-critical case scoring', async ({ page 
 test('mobile, enlarged text, glossary and inside-lab resume', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(content(page).locator('canvas')).toHaveCount(1)
+  await expect(content(page).getByText('Authored target', { exact: true })).toBeVisible()
+  await expectImageSignal(content(page).locator('canvas'))
   await capture(page, testInfo, 'course-mobile.png')
   await explore(page, 'tool-confirmation')
   await setRange(page, 'Anterior / posterior offset', -10)

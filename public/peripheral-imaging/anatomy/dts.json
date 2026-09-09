@@ -1,0 +1,18 @@
+{
+  "schema": "peripheral-imaging-dts/v1",
+  "generator": "3D Slicer 5.12.3",
+  "sweeps": [20, 30, 40, 50, 60],
+  "viewsPerSweep": 13,
+  "tileSize": 192,
+  "originMm": [-176.1552734375, -176.1552734375, -158.75],
+  "spacingMm": [1.840948134816754, 1.840948134816754, 1.6596858638743455],
+  "targetCenterMm": [85, -20, -30],
+  "toolPlaneRelativeMm": -18,
+  "filter": {
+    "method": "horizontal Gaussian high-pass",
+    "sigmaVoxels": 7,
+    "zeroValue": 128,
+    "encodingGain": 1.5
+  },
+  "method": "Parallel ray sums of the derived FluoroView CT with an authored spherical target and straight instrument. A horizontal Gaussian high-pass suppresses background, then the browser refocuses by shift-and-add. No vendor algorithm, prior-CT registration, motion, scatter, or dose model."
+}

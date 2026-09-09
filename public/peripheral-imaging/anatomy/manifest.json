@@ -1,0 +1,54 @@
+{
+  "schema": "peripheral-imaging-anatomy/v1",
+  "generator": "3D Slicer 5.12.3",
+  "source": "Existing FluoroView teaching CT and Final_airway_target surface",
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "coordinateSystem": "LAS",
+  "units": "mm",
+  "sizeXyz": [192, 192, 192],
+  "originMm": [-176.1552734375, -176.1552734375, -158.75],
+  "spacingMm": [1.840948134816754, 1.840948134816754, 1.6596858638743455],
+  "huRange": [-1100, 1800],
+  "atlasColumns": 16,
+  "atlasRows": 12,
+  "layers": [
+    {
+      "name": "Thoracic envelope",
+      "triangles": 9999,
+      "boundsMm": [
+        [-174.13912963867188, -171.50172424316406, -157.29037475585938],
+        [173.44338989257812, 173.4334716796875, 156.7640838623047]
+      ]
+    },
+    {
+      "name": "Lungs",
+      "triangles": 17999,
+      "boundsMm": [
+        [-158.12611389160156, -136.9464874267578, -157.30487060546875],
+        [159.73065185546875, 97.80237579345703, 156.76123046875]
+      ]
+    },
+    {
+      "name": "Ribs and spine",
+      "triangles": 75000,
+      "boundsMm": [
+        [-173.80551147460938, -149.7788848876953, -157.55686950683594],
+        [172.33763122558594, 118.4498291015625, 156.96514892578125]
+      ]
+    },
+    {
+      "name": "Airways",
+      "triangles": 60000,
+      "boundsMm": [
+        [-119.35221099853516, -124.74080657958984, -122.69463348388672],
+        [128.94508361816406, 61.83347702026367, 157.93406677246094]
+      ]
+    }
+  ],
+  "slicerHeartPresets": [
+    "FluoroRenderingPreset_01.vp",
+    "FluoroRenderingPreset_02.vp",
+    "FluoroRenderingPreset_03.vp"
+  ],
+  "limitations": "Threshold-derived context surfaces and quantized teaching volume; not a diagnostic segmentation or CT. Target and tool are authored independently."
+}

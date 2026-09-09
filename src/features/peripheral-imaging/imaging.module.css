@@ -1809,3 +1809,174 @@
 .courseNavigation nav {
   flex-wrap: wrap;
 }
+
+.radiograph {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #04090d;
+  border: 1px solid #283b46;
+  border-radius: 10px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.radiographImage {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+}
+.radiograph canvas,
+.radiograph svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.imageHeader,
+.imageFooter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: linear-gradient(#091118e8, #09111800);
+  color: #c5d2d8;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.imageHeader {
+  top: 0;
+}
+.imageFooter {
+  bottom: 0;
+  background: linear-gradient(#09111800, #091118e8);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+.orientationL {
+  position: absolute;
+  right: 12px;
+  top: 47%;
+  color: #d9e2e6;
+  font-size: 13px;
+}
+.imageStatus {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  color: #bacbd5;
+  text-align: center;
+  padding: 25px;
+  background: #101c25;
+  font-size: 13px;
+}
+.shutterMask {
+  pointer-events: none;
+}
+.sceneHeading {
+  background: #101c25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+  color: #b1c9d2;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #243642;
+}
+.sceneHeading .buttonRow {
+  margin: 0;
+}
+.anatomyLayers {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  flex-wrap: wrap;
+  background: #101c25;
+}
+.anatomyLayers button {
+  color: #97afb9;
+  padding: 5px 9px;
+  font-size: 11px;
+  border: 1px solid #354953;
+  border-radius: 4px;
+  background: transparent;
+}
+.anatomyLayers button[aria-pressed='true'] {
+  color: #d8e8e3;
+  background: #20413f;
+  border-color: #467d70;
+}
+
+.scoutPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.scoutPair figure,
+.dtsViews figure {
+  margin: 0;
+  min-width: 0;
+}
+.scoutPair figcaption,
+.dtsViews figcaption {
+  font-size: 11px;
+  color: #637983;
+  margin-top: 7px;
+}
+.scoutPair .imageHeader {
+  font-size: 8px;
+  padding: 9px;
+}
+.scoutPair .imageFooter {
+  display: none;
+}
+.mprFrame {
+  position: relative;
+  aspect-ratio: 220 / 225;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #071118;
+}
+.mprFrame canvas,
+.mprFrame svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.dtsViews {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.dtsViews canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #283b46;
+  border-radius: 6px;
+  background: #071118;
+}
+@media (max-width: 480px) {
+  .sceneHeading {
+    padding: 12px;
+  }
+  .sceneHeading .buttonRow {
+    gap: 6px;
+  }
+  .scoutPair {
+    gap: 8px;
+  }
+}

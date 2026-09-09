@@ -2,7 +2,8 @@
 
 Review date: 2026-09-08. Review scope: the redesigned learner experience at
 `/en/fluoroview`, its 17 units, nine labs, 24 distinct questions, 15 published
-references, and four original model downloads. The implementation preserves the
+references, CT-derived images, a layered Slicer anatomy model, the original FluoroView
+C-arm animation, and two model downloads. The implementation preserves the
 existing route and site authentication. It introduces no dependencies or analytics.
 
 ## Evidence and content review
@@ -20,17 +21,17 @@ unit order, recall, worked examples, independent decisions, and named next steps
 derive from the curriculum registry. The alignment and model contracts are in
 `module-plan.md`.
 
-| Review area        | Verification and result                                                                                                                                                                                         |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Orientation        | Overview plus one unit from each stage inspected; one Start/Continue entry, visible location, current task, phase and next unit.                                                                                |
-| Answer boundary    | Pending questions have no teaching blocks, worked result, takeaway, or explanatory lab readout. Answers and option rationales appear after commitment.                                                          |
-| Retrieval          | Later retrieval has a lesson-specific attempt key; an earlier correct response cannot silently complete it. Eight independent cases use different situations.                                                   |
-| Scoring            | First attempts are immutable. Completion requires all decisions and a reviewed debrief. Passing cases requires at least 7/8 and all four critical decisions correct. No mastery or procedural-competence label. |
-| Causal consistency | Projection normal matches the C-arm rotation. Tube-load arithmetic is distinct from dose. MPR, 3D and sampling feedback share finite cylinder dimensions. Centering requires both scout dimensions.             |
-| State validity     | Equipment/position changes clear acquisition readiness and captured status. Anatomical change makes an old contour historical; refreshing a contour does not improve physiology.                                |
-| Dose boundaries    | Physical collimation and display crop differ. KAP conversion is dimensioned. No shield attenuation, safe distance, effective dose, or individual skin dose is inferred.                                         |
-| Access and resume  | Labeled controls, keyboard camera buttons, focus indicators, reduced motion, WebGL fallback, local progress, pending feedback and lab-control resume. Storage failure is disclosed.                             |
-| Media provenance   | All meshes are original procedural assets. No clinical image appearance is claimed. Four GLBs embed their resources and apply a millimeter-to-meter export scale.                                               |
+| Review area        | Verification and result                                                                                                                                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Orientation        | Overview plus one unit from each stage inspected; one Start/Continue entry, visible location, current task, phase and next unit.                                                                                                                                                                  |
+| Answer boundary    | Pending questions have no teaching blocks, worked result, takeaway, or explanatory lab readout. Answers and option rationales appear after commitment.                                                                                                                                            |
+| Retrieval          | Later retrieval has a lesson-specific attempt key; an earlier correct response cannot silently complete it. Eight independent cases use different situations.                                                                                                                                     |
+| Scoring            | First attempts are immutable. Completion requires all decisions and a reviewed debrief. Passing cases requires at least 7/8 and all four critical decisions correct. No mastery or procedural-competence label.                                                                                   |
+| Causal consistency | CT projection and target/tool overlays share the original FluoroView cone frame; the gantry is labeled as a separate single-axis reference. Tube-load arithmetic is distinct from dose. MPR, 3D and sampling feedback share finite cylinder dimensions. Centering requires both scout dimensions. |
+| State validity     | Equipment/position changes clear acquisition readiness and captured status. Anatomical change makes an old contour historical; refreshing a contour does not improve physiology.                                                                                                                  |
+| Dose boundaries    | Physical collimation and display crop differ. KAP conversion is dimensioned. No shield attenuation, safe distance, effective dose, or individual skin dose is inferred.                                                                                                                           |
+| Access and resume  | Labeled controls, keyboard camera buttons, focus indicators, reduced motion, WebGL fallback, local progress, pending feedback and lab-control resume. Storage failure is disclosed.                                                                                                               |
+| Media provenance   | CT-derived assets and original FluoroView gantry are distinguished from authored targets, instruments and cases. Raw clinical headers are excluded; provenance and coordinate contracts are in slicer-assets.md.                                                                                  |
 
 Findings corrected during review:
 
@@ -56,7 +57,7 @@ validated with learners.
 
 ## Automated and browser validation
 
-- Focused Jest: **29 checks passed in four suites**, covering geometry, unit arithmetic,
+- Focused Jest: **41 checks passed in seven suites**, covering cone geometry, CT scalar range, atlas packaging, DTS refocusing, unit arithmetic,
   curriculum closure, provenance, binary model packaging, progress integrity, UI commit
   boundaries, accessibility, and critical-error scoring.
 - Focused ESLint: no errors or warnings. Repository lint: no errors; 15 existing warnings
@@ -65,18 +66,17 @@ validated with learners.
 - Production: `npm run build` passed, including repository content and asset checks.
 - Playwright: **three browser scenarios passed**, covering the desktop path, every lab,
   saved feedback, case scoring, acquisition invalidation, mobile layout, lab resume,
-  glossary lookup and enlarged text. Screenshots inspected at 1440 px and 390 px widths.
+  glossary lookup and enlarged text. Canvas pixel checks catch blank renderers; gantry and DTS controls must change the rendered image. Screenshots inspected at 1440 px and 390 px widths.
 - Repository regression run: **744 suites / 11,437 tests passed**; one unrelated test
   expected empty stderr from `tsx` and failed on Node 26.5.0's `DEP0205` deprecation
   warning. Both scanner files match `origin/main`. The failing suite passes when only
-  that warning is suppressed. No unrelated scanner code was changed. Four new model
-  packaging tests and the final geometry refinements were subsequently covered by the
-  focused 29-check run.
+  that warning is suppressed. No unrelated scanner code was changed. The CT asset revision was subsequently covered by the focused regression suite,
+  original FluoroView geometry/renderer tests, and browser checks.
 
 Reproduce focused checks from the repository root:
 
 ```sh
-npm test -- --runInBand src/features/peripheral-imaging
+npm test -- --runInBand src/features/peripheral-imaging fluoro-viewer/src/geometry.test.ts fluoro-viewer/src/volume-drr.test.ts
 npm run type-check
 npx eslint src/features/peripheral-imaging scripts/peripheral-imaging e2e/peripheral-imaging.spec.ts playwright.peripheral-imaging.config.ts
 npx tsx scripts/peripheral-imaging/export-models.ts
@@ -95,7 +95,7 @@ config does not start or disturb another worktree's server.
 
 ## Practical limits
 
-This verifies the software and authored teaching model, not clinical performance or
+This verifies the software, CT asset pipeline and authored teaching geometry, not clinical performance or
 hands-on competence. No patient study, learner pilot, real-scanner collision test,
 room radiation survey, or independent specialist sign-off has occurred. The proposed
 learner/technologist pilot and retention review are documented in the module plan.

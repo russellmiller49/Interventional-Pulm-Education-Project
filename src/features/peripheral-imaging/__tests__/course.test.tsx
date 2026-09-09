@@ -4,6 +4,11 @@ import { PeripheralImagingCourse } from '../components/PeripheralImagingCourse'
 import { ImagingLab } from '../components/ImagingLab'
 import { emptyProgress, STORAGE_KEY } from '../lib/progress'
 
+jest.mock('../components/ProjectionView', () => ({
+  Projection: () => <div>CT projection placeholder</div>,
+}))
+jest.mock('../components/CTSlice', () => ({ CTSlice: () => <div>CT slice placeholder</div> }))
+
 jest.mock(
   'next/dynamic',
   () => () =>

@@ -484,7 +484,7 @@ export function PeripheralImagingCourse() {
                 <div className={styles.heroVisual}>
                   <div className={styles.visualEyebrow}>Explore the geometry of imaging</div>
                   <Scene3D orbit={-18} tilt={8} compact />
-                  <p>Original 3D teaching models · rotate with drag or named views</p>
+                  <p>CT-derived anatomy · original FluoroView C-arm · drag to inspect</p>
                 </div>
               </section>
               <div className={styles.audience}>
@@ -542,10 +542,11 @@ export function PeripheralImagingCourse() {
                 <div>
                   <h2>Learn the reasoning. Build the practical skill under supervision.</h2>
                   <p>
-                    For education only. Models and cases use authored anatomy and illustrative
-                    values, and do not predict patient dose, safe tool placement, diagnostic yield,
-                    or actual equipment performance. Follow current device instructions, local
-                    protocols, and operator, anesthesia and medical-physics judgment.
+                    For education only. Models combine CT-derived anatomy with authored targets and
+                    illustrative values, and do not predict patient dose, safe tool placement,
+                    diagnostic yield, or actual equipment performance. Follow current device
+                    instructions, local protocols, and operator, anesthesia and medical-physics
+                    judgment.
                   </p>
                 </div>
               </section>
@@ -659,7 +660,7 @@ export function PeripheralImagingCourse() {
                   <div className={styles.nextBar}>
                     <span>
                       {lesson.lab
-                        ? 'Try the concept in an authored model.'
+                        ? 'Explore the concept with linked images and models.'
                         : 'Apply this concept to a short case.'}
                     </span>
                     <button
@@ -964,22 +965,19 @@ export function PeripheralImagingCourse() {
                     ))}
                   </ol>
                   <section className={styles.assetDownloads}>
-                    <h2>Original 3D model files</h2>
+                    <h2>3D teaching assets</h2>
                     <p>
-                      Download the authored teaching geometry for review. These GLB files match the
-                      procedural models used in the labs; anatomy and equipment are schematic.
+                      The layered thorax was rebuilt in 3D Slicer from the existing FluoroView CT
+                      and segmented airways. The separate needle model defines the fictional
+                      sampling-window geometry used in the slice exercise.
                     </p>
                     <div className={styles.buttonRow}>
-                      {[
-                        ['thorax-airways', 'Thorax and airways'],
-                        ['fixed-cbct-suite', 'Fixed CBCT suite'],
-                        ['mobile-cbct-suite', 'Mobile CBCT suite'],
-                        ['sampling-window', 'Needle and sampling window'],
-                      ].map(([file, label]) => (
-                        <a key={file} href={'/peripheral-imaging/' + file + '.glb'} download>
-                          {label} (.glb)
-                        </a>
-                      ))}
+                      <a href="/peripheral-imaging/anatomy/thorax.glb" download>
+                        CT-derived thorax (.glb)
+                      </a>
+                      <a href="/peripheral-imaging/sampling-window.glb" download>
+                        Needle and sampling window (.glb)
+                      </a>
                     </div>
                   </section>
                   <section className={styles.boundary}>
@@ -987,10 +985,15 @@ export function PeripheralImagingCourse() {
                     <div>
                       <h2>Visual and model provenance</h2>
                       <p>
-                        All 3D meshes, schematic images, cases and numerical lab examples were
-                        authored for this course. They contain no patient imaging and are not
-                        validated clinical reconstructions or equipment presets. Clinical statements
-                        link to the published sources above.
+                        Anatomy and image backgrounds derive from the existing FluoroView teaching
+                        case. 3D Slicer generated the lung, bone and body surfaces; the original
+                        airway segmentation and SlicerHeart-based FluoroView C-arm animation are
+                        reused. The CT volume is downsampled and quantized for browser delivery.
+                        Targets, instruments, cases and numerical examples are authored for
+                        education. DRR and limited-angle images are simulations, not acquired
+                        fluoroscopy or clinical CBCT. The gantry animation is a generic motion
+                        reference, not a device-specific clearance model. Clinical statements link
+                        to the published sources above.
                       </p>
                     </div>
                   </section>

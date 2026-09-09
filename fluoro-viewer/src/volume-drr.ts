@@ -135,6 +135,7 @@ export class VolumeDRRRenderer {
   private readonly canvas: HTMLCanvasElement
   private readonly config: FluoroConfig
   private readonly asset: VolumeDrrAsset
+  private readonly preserveDrawingBuffer: boolean
   private readonly timeStart = typeof performance !== 'undefined' ? performance.now() : Date.now()
   private renderer: WebGLRenderer | null = null
   private scene: Scene = new Scene()
@@ -155,15 +156,23 @@ export class VolumeDRRRenderer {
     renderScale: 1,
   }
 
-  constructor(options: { canvas: HTMLCanvasElement; config: FluoroConfig; asset: VolumeDrrAsset }) {
+  constructor(options: {
+    canvas: HTMLCanvasElement
+    config: FluoroConfig
+    asset: VolumeDrrAsset
+    preserveDrawingBuffer?: boolean
+  }) {
     this.canvas = options.canvas
     this.config = options.config
     this.asset = options.asset
+    this.preserveDrawingBuffer = options.preserveDrawingBuffer ?? false
   }
 
-  async load(): Promise<void> {
+  async load(preloadedVolume?: Uint8Array): Promise<void> {
     if (this.destroyed) return
-    const gl = this.canvas.getContext('webgl2') as WebGL2RenderingContext | null
+    const gl = this.canvas.getContext('webgl2', {
+      preserveDrawingBuffer: this.preserveDrawingBuffer,
+    }) as WebGL2RenderingContext | null
     if (!gl) {
       throw new Error('WebGL2 is required for real-time FluoroView volume DRR rendering.')
     }
@@ -173,11 +182,11 @@ export class VolumeDRRRenderer {
       context: gl,
       antialias: false,
       alpha: false,
-      preserveDrawingBuffer: false,
+      preserveDrawingBuffer: this.preserveDrawingBuffer,
     })
     this.renderer.setClearColor(0x05070c, 1)
 
-    const data = await this.fetchVolume()
+    const data = preloadedVolume ?? (await this.fetchVolume())
     if (this.destroyed) return
 
     const [sx, sy, sz] = this.asset.sizeXyz

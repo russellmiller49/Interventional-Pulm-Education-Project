@@ -487,7 +487,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'dts',
     labTask:
-      'Move the reconstruction plane through the lesion, tool and rib, then compare the effect of a wider authored sweep.',
+      'Move the reconstruction plane through the added target and tool, then compare the surrounding anatomy with a wider authored sweep.',
     takeaway: [
       'A sweep supplies information absent from one projection.',
       'Resolution depends on direction and angular coverage.',
@@ -654,7 +654,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Select the fixed support and inspect the room from the side and head. Consider the full clearance envelope.',
+      'Select the fixed-suite workflow, inspect the original C-arm motion reference, and consider the installation-specific clearance checks.',
     takeaway: [
       'Fixed installation does not remove patient-state uncertainty.',
       'Confirm supported integration behavior.',
@@ -710,7 +710,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Select the mobile base. Inspect its relationship to the table and compare the unchanged acquisition requirements.',
+      'Select the mobile-suite workflow. Compare its room-preparation needs and center the target in both CT-derived scouts.',
     takeaway: [
       'Portability changes logistics, not core physics.',
       'Commission room, table and scanner together.',
