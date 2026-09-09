@@ -95,3 +95,34 @@ the target's location in lung, cone-frame agreement, DTS tile selection/refocusi
 and shared model feedback. Browser checks read actual canvas pixels to catch a
 loaded-but-blank renderer, exercise the gantry and depth controls, and inspect
 desktop/mobile screens. They do not validate clinical imaging performance.
+
+## Imaging-suite detector spike — 2026-09-08
+
+Checkpoint for Claude before extending the suite. `DrrTextureSource` owns one
+preserved WebGL2 canvas and one sRGB `CanvasTexture`; `DetectorImage` maps U to
+image-right and V to image-up on a source-facing quad. The monitor uses the
+existing `ProjectionView` SVG coordinates. No mode is marked ready by this spike.
+
+At obliquity 30° and tilt 15°, the target projects to `(349.31097750,
+275.79558417)` on the 512-square overlay. In the fronted Codex browser, a 128²
+normalized pixel comparison gave mean absolute gray error 0.84/255 aligned,
+23.29 horizontally mirrored and 35.17 vertically mirrored. Thirty 460² uploads
+measured 0.1 ms median / 0.1 ms p95 on this machine at the browser's timer
+resolution. This measures `initTexture` plus completed destination GPU work,
+after draining prior source/destination work; it excludes DRR generation and
+is not a cross-device performance guarantee. Mipmaps are disabled.
+
+`VolumeDRRRenderer.resize(scale, {width, height, pixelRatio})` retains an explicit
+size for later renders. With a hidden monitor whose layout rect was `[0, 0]`,
+the DRR remained 460² and continued updating (0.1 ms median/p95). The default
+layout-based path remains available to existing callers. Both views together
+use two WebGL contexts. No added dependency or public asset is needed.
+
+Reproduce with `npx tsx scripts/peripheral-imaging/serve-spike.ts`, then open
+`http://127.0.0.1:5117/scripts/peripheral-imaging/drr-spike.html`. Use **Measure
+texture upload**, then **Toggle zero-rect monitor** and measure again. The
+screenshot and JSON observations are local verification artifacts under
+`test-results/peripheral-imaging/spike/`. The application dev server uses 3117.
+
+Checkpoint validation: focused Jest 8 suites / 59 tests passed;
+`npm run type-check` passed; ESLint on the changed TS/TSX files passed.

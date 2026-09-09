@@ -149,6 +149,7 @@ export class VolumeDRRRenderer {
   private lastWidth = 0
   private lastHeight = 0
   private lastPixelRatio = 0
+  private explicitSize: { width: number; height: number; pixelRatio?: number } | undefined
   private lastMetrics: DrrFrameMetrics = {
     thicknessProxy: 1,
     renderMs: 0,
@@ -330,14 +331,20 @@ export class VolumeDRRRenderer {
     this.roiCenterLps = lpsMm
   }
 
-  resize(renderScale?: number): void {
+  /** Explicit layout size also supports a hidden/offscreen monitor; retained for subsequent renders. */
+  resize(
+    renderScale?: number,
+    size?: { width: number; height: number; pixelRatio?: number },
+  ): void {
+    if (size) this.explicitSize = size
     if (!this.renderer) return
-    const rect = this.canvas.getBoundingClientRect()
+    const rect = this.explicitSize ?? this.canvas.getBoundingClientRect()
     const width = Math.max(1, Math.round(rect.width))
     const height = Math.max(1, Math.round(rect.height))
     const pixelRatio = Math.max(
       0.25,
-      (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1) * (renderScale ?? 1),
+      (this.explicitSize?.pixelRatio ??
+        (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1)) * (renderScale ?? 1),
     )
     if (
       width === this.lastWidth &&
