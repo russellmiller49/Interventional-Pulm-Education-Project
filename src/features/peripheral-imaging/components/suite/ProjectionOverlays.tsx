@@ -10,12 +10,14 @@ export function ProjectionOverlays({
   depth,
   geometry = DEFAULT_GEOMETRY,
   showCurrent = true,
+  targetFill = true,
 }: {
   orbit: number
   tilt: number
   depth: number
   geometry?: ImagingGeometry
   showCurrent?: boolean
+  targetFill?: boolean
 }) {
   const id = useId().replace(/:/g, '')
   const markers = projectionMarkers(suiteFrame(orbit, tilt, geometry), depth)
@@ -38,7 +40,12 @@ export function ProjectionOverlays({
       </defs>
       {showCurrent && (
         <>
-          <circle cx={target[0]} cy={target[1]} r={radius} fill={`url(#${id})`} />
+          <circle
+            cx={target[0]}
+            cy={target[1]}
+            r={radius}
+            fill={targetFill ? `url(#${id})` : 'none'}
+          />
           <circle
             data-target-overlay
             cx={target[0]}

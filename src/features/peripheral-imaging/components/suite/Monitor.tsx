@@ -11,12 +11,14 @@ export function Monitor({
   onSource,
   hidden = false,
   showCurrent = true,
+  targetFill = true,
 }: {
   pose: DrrPose
   depth: number
   onSource: (source: DrrTextureSource | null) => void
   hidden?: boolean
   showCurrent?: boolean
+  targetFill?: boolean
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -52,6 +54,7 @@ export function Monitor({
         depth={depth}
         geometry={pose.geometry}
         showCurrent={showCurrent}
+        targetFill={targetFill}
       />
       {state !== 'ready' && (
         <p className={styles.imageStatus} role="status">

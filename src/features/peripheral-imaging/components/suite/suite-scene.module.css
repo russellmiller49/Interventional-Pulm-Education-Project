@@ -106,6 +106,7 @@
 }
 .viewport {
   position: relative;
+  container-type: inline-size;
   height: 440px;
   overflow: hidden;
 }
@@ -120,6 +121,21 @@
 .pinWrap {
   display: grid;
   gap: 4px;
+}
+.compactPinTitle {
+  display: none;
+}
+@container (max-width: 420px) {
+  .pinTitle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+  }
+  .compactPinTitle {
+    display: inline;
+  }
 }
 .pin,
 .pane .pin {
@@ -349,4 +365,38 @@
     transition: none;
     animation: none;
   }
+}
+
+.stopSentence {
+  margin: 0;
+  color: #526b76;
+  font-size: 13px;
+}
+.tissues {
+  display: flex;
+  gap: 10px 22px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 12px;
+}
+.tissues dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tissues dt span {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: 1px solid #536772;
+}
+.tissues dd {
+  margin: 3px 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+.signalProfile > p:last-child {
+  font-size: 12px;
+  color: #526b76;
+  margin: 9px 0 0;
 }

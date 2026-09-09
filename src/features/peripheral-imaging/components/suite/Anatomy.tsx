@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
 import { Mesh, MeshStandardMaterial } from 'three'
 import { ANATOMY_MODEL } from '../../lib/anatomy'
 import type { Point3 } from '../../lib/physics'
@@ -17,6 +18,7 @@ export function Anatomy({
   map?: boolean
 }) {
   const { scene: original } = useGLTF(ANATOMY_MODEL, '/fluoroview/draco/')
+  const invalidate = useThree((state) => state.invalidate)
   const scene = useMemo(() => {
     const clone = original.clone(true)
     clone.traverse((object) => {
@@ -51,7 +53,8 @@ export function Anatomy({
       if (object instanceof Mesh)
         object.visible = layers.includes(object.name.replaceAll('_', ' ') as SuiteLayer)
     })
-  }, [scene, layers])
+    invalidate()
+  }, [scene, layers, invalidate])
   useEffect(
     () => () =>
       scene.traverse((object) => {

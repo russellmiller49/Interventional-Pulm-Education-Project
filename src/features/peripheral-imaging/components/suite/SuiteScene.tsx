@@ -24,8 +24,13 @@ import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
 import { LabDock } from './LabDock'
 import { ProjectionView3D } from './views/ProjectionView3D'
+import { RayTrace, SignalReadout } from './views/SignalView'
+import { loadAnatomyVolume } from '../../lib/anatomy'
+import { rayProfile } from '../../lib/rayProfile'
+import { labControl, labNumber } from '../../engine/labMetrics'
+import { LESION_CENTER, clamp } from '../../lib/physics'
 import { resolveSuiteInputs } from './suiteViewSpec'
-import { suiteFrame } from './suiteModel'
+import { rayThrough, suiteFrame } from './suiteModel'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
@@ -79,8 +84,33 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     [inputs.orbit, inputs.tilt, inputs.geometry],
   )
   const [source, setSource] = useState<DrrTextureSource | null>(null)
-  const [camera, setCamera] = useState<SuiteCamera>(view.camera)
-  const [cameraOverride, setCameraOverride] = useState(false)
+  const [volume, setVolume] = useState<Uint8Array | null>(null)
+  const [profileFailed, setProfileFailed] = useState(false)
+  useEffect(() => {
+    if (view.mode !== 'signal') return
+    let active = true
+    void loadAnatomyVolume()
+      .then((data) => {
+        if (active) setVolume(data)
+      })
+      .catch(() => {
+        if (active) setProfileFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [view.mode])
+  const profile = useMemo(
+    () =>
+      view.mode === 'signal' && volume
+        ? rayProfile(volume, frame.source, rayThrough(frame, LESION_CENTER).hit)
+        : null,
+    [view.mode, volume, frame],
+  )
+  const [cameraOverride, setCameraOverride] = useState<{
+    requested: SuiteCamera
+    value: SuiteCamera
+  } | null>(null)
   const [visible, setVisible] = useState(true)
   const [contextLost, setContextLost] = useState(false)
   const [epoch, setEpoch] = useState(0)
@@ -88,11 +118,12 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const viewport = useRef<HTMLDivElement>(null)
   const portal = useRef<HTMLDivElement>(null)
   const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
-  const displayCamera = cameraOverride ? camera : view.camera
-  const onCamera = useCallback((next: SuiteCamera) => {
-    setCamera(next)
-    setCameraOverride(true)
-  }, [])
+  const displayCamera =
+    cameraOverride?.requested === view.camera ? cameraOverride.value : view.camera
+  const onCamera = useCallback(
+    (next: SuiteCamera) => setCameraOverride({ requested: view.camera, value: next }),
+    [view.camera],
+  )
   const onReady = useCallback(() => setReady(true), [])
   const onLost = useCallback(() => {
     setReady(false)
@@ -126,7 +157,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         className={styles.pane}
         data-suite-scene
         data-suite-mode={view.mode}
-        data-suite-state={contextLost ? 'failed' : ready ? 'ready' : 'loading'}
+        data-suite-camera={displayCamera}
+        data-suite-state={contextLost ? 'failed' : ready ? 'ready' : 'fallback'}
         data-lit={view.litStop ?? ''}
         data-suite-anim="idle"
         data-reduced-motion={reducedMotion ? 'true' : 'false'}
@@ -134,6 +166,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         <p className={styles.caption} data-chain-caption>
           {props.chainCaption}
         </p>
+        {view.litStop && view.stopSentence && view.stopSentence !== props.chainCaption && (
+          <p className={styles.stopSentence} data-stop-sentence>
+            {view.stopSentence}
+          </p>
+        )}
         {!props.controlsEnabled && (
           <p role="status" className={styles.reason}>
             {props.lockedReason ?? props.pausedReason ?? 'Controls unavailable'}
@@ -215,6 +252,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           portal={portal as RefObject<HTMLDivElement>}
                         />
                       )}
+                      {view.mode === 'signal' && view.layers.includes('ray') && (
+                        <RayTrace profile={profile} />
+                      )}
                       <ChainPins
                         frame={frame}
                         portal={portal as RefObject<HTMLDivElement>}
@@ -236,6 +276,34 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               />
             </div>
             <div className={styles.toolbar} aria-label="3D camera views">
+              <button
+                type="button"
+                disabled={
+                  !props.controlsEnabled ||
+                  !view.lab ||
+                  !view.bindings.some((b) => b.input === 'orbit')
+                }
+                onClick={() => {
+                  const binding = view.bindings.find((b) => b.input === 'orbit')
+                  if (!binding || !view.lab) return
+                  const control = labControl(view.lab, binding.control)
+                  const value = labNumber(
+                    view.lab,
+                    props.lab.values,
+                    binding.control,
+                    view.sectionId,
+                  )
+                  props.onLabChange({
+                    [binding.control]: clamp(
+                      value + 1,
+                      control?.min ?? -Infinity,
+                      control?.max ?? Infinity,
+                    ),
+                  })
+                }}
+              >
+                Step
+              </button>
               {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
                 <button
                   type="button"
@@ -259,6 +327,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 pose={pose}
                 depth={inputs.toolDepth}
                 showCurrent={inputs.showCurrent}
+                targetFill={view.mode !== 'signal'}
                 onSource={setSource}
                 hidden={view.monitor === 'hidden'}
               />
@@ -273,6 +342,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             <ChainAnswerFieldset answer={props.chainAnswer} />
           </div>
         )}
+        {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
         <LabDock {...props} />
         <p className={styles.boundary} data-model-boundary>
           {view.boundary}

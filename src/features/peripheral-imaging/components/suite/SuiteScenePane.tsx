@@ -14,7 +14,10 @@ import type { ImagingSuitePaneProps, SuiteMode } from './types'
  * attribute in `./types.ts`; the flow tests never mount this file (they use the test double), so
  * the scene's own tests and the e2e pixel checks are what prove it.
  */
-export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>()
+export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>([
+  'projection',
+  'signal',
+])
 
 export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'
 const SuiteScene = dynamic(() => import('./SuiteScene'), {

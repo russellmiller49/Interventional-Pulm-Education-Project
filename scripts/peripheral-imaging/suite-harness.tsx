@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import SuiteScene from '../../src/features/peripheral-imaging/components/suite/SuiteScene'
+import { ImagingSuitePane } from '../../src/features/peripheral-imaging/components/suite/ImagingSuitePane'
 import { chainCaption } from '../../src/features/peripheral-imaging/content/imagingChain'
 import {
   emptyLabState,
   labStateAfterChange,
 } from '../../src/features/peripheral-imaging/engine/labGoalEvaluation'
-import type { SuiteViewSpec } from '../../src/features/peripheral-imaging/components/suite/types'
+import type {
+  SuiteCamera,
+  SuiteViewSpec,
+} from '../../src/features/peripheral-imaging/components/suite/types'
 
 const projection: SuiteViewSpec = {
   sectionId: 'projection',
@@ -47,9 +50,13 @@ function Harness() {
   const [committed, setCommitted] = useState<string | null>(null)
   const [mode, setMode] = useState<'projection' | 'signal'>('projection')
   const [hideMonitor, setHideMonitor] = useState(false)
+  const [camera, setCamera] = useState<SuiteCamera>('suite')
+  const [spotlight, setSpotlight] = useState(false)
+  const [paused, setPaused] = useState(false)
   const view = {
     ...projection,
     mode,
+    camera,
     monitor: hideMonitor ? ('hidden' as const) : ('beside' as const),
     chainAnswer: answer,
     litStop: answer ? null : projection.litStop,
@@ -67,8 +74,13 @@ function Harness() {
         <button onClick={() => setMode(mode === 'projection' ? 'signal' : 'projection')}>
           Toggle signal mode
         </button>
+        <button onClick={() => setCamera(camera === 'suite' ? 'beam' : 'suite')}>
+          Change supplied camera
+        </button>
+        <button onClick={() => setSpotlight(!spotlight)}>Spotlight tool depth</button>
+        <button onClick={() => setPaused(!paused)}>Toggle review pause</button>
       </div>
-      <SuiteScene
+      <ImagingSuitePane
         key={mode}
         view={view}
         lab={lab}
@@ -76,9 +88,10 @@ function Harness() {
           setLab((current) => labStateAfterChange('geometry', current, patch, 'projection'))
         }
         onLabReset={() => setLab(emptyLabState('geometry', 'projection'))}
-        controlsEnabled={!locked && !answer}
-        lockedReason="Choose your prediction before changing the model."
+        controlsEnabled={!locked && !answer && !paused}
+        lockedReason={paused ? undefined : 'Choose your prediction before changing the model.'}
         pausedReason="Reviewing the earlier state."
+        spotlightKey={spotlight ? 'depth' : undefined}
         goals={[
           {
             goal: { type: 'event', id: 'separation-seen', label: 'Inspect another projection' },
@@ -109,7 +122,7 @@ function Harness() {
         <p data-harness-child style={{ fontSize: 12 }}>
           Preview content passed through the pane.
         </p>
-      </SuiteScene>
+      </ImagingSuitePane>
     </main>
   )
 }

@@ -142,3 +142,42 @@ describe('suite input resolution and contract validation', () => {
     )
   })
 })
+
+import { ANATOMY } from '../lib/anatomy'
+import { densityBand, rayProfile } from '../lib/rayProfile'
+describe('quantized CT ray profile', () => {
+  it('sums exact path lengths without overcounting the final sample', () => {
+    const profile = rayProfile(new Uint8Array(), [-700, 0, 0], [700, 0, 0], {
+      stepMm: 3,
+      sampleHu: () => 0,
+      tagAuthoredTarget: false,
+    })
+    const width = ANATOMY.spacingMm[0] * (ANATOMY.sizeXyz[0] - 1)
+    expect(profile.pathMm).toBeCloseTo(width, 8)
+    expect(profile.tissueMm.soft).toBeCloseTo(width, 8)
+    expect(profile.relativeAttenuation).toBeCloseTo(width, 8)
+    expect(profile.segments).toHaveLength(1)
+  })
+  it('classifies density bands as a teaching proxy and never calls air a proven lumen', () => {
+    expect(densityBand(-1000)).toBe('air')
+    expect(densityBand(-800)).toBe('lung')
+    expect(densityBand(0)).toBe('soft')
+    expect(densityBand(600)).toBe('bone')
+    const miss = rayProfile(new Uint8Array(), [-700, 800, 0], [700, 800, 0], { sampleHu: () => 0 })
+    expect(miss.pathMm).toBe(0)
+    expect(miss.segments).toHaveLength(0)
+  })
+  it('tags the authored target only on a ray that crosses its sphere', () => {
+    const frame = suiteFrame(30, 15),
+      hit = rayThrough(frame, LESION_CENTER).hit
+    const profile = rayProfile(new Uint8Array(), frame.source, hit, {
+      stepMm: 0.25,
+      sampleHu: () => -800,
+    })
+    expect(profile.tissueMm.target).toBeCloseTo(18, 0)
+    expect(Object.values(profile.tissueMm).reduce((a, b) => a + b, 0)).toBeCloseTo(
+      profile.pathMm,
+      8,
+    )
+  })
+})

@@ -20,6 +20,14 @@ export function ChainPins({
   onCamera: (camera: SuiteCamera) => void
 }) {
   const anchors = chainStopAnchors(frame)
+  const shortTitles: Record<ChainStop, string> = {
+    source: 'Source',
+    beam: 'Beam',
+    patient: 'Patient',
+    detector: 'Detector',
+    reconstruction: 'Reconstruction',
+    display: 'Display',
+  }
   const cameras: Record<ChainStop, SuiteCamera> = {
     source: 'beam',
     beam: 'side',
@@ -32,6 +40,14 @@ export function ChainPins({
     <>
       {CHAIN_STOPS.map((stop) => {
         const choices = answer?.choices.filter((choice) => choice.stop === stop.id)
+        const title = (
+          <>
+            <span className={styles.pinTitle}>{stop.title}</span>
+            <span className={styles.compactPinTitle} aria-hidden="true">
+              {shortTitles[stop.id]}
+            </span>
+          </>
+        )
         return (
           <Html
             key={stop.id}
@@ -54,12 +70,12 @@ export function ChainPins({
                       aria-disabled={answer.disabled}
                       title={choice.label}
                     >
-                      {stop.title}
+                      {title}
                     </label>
                   ))
                 ) : (
                   <span className={styles.pin} data-chain-pin={stop.id}>
-                    {stop.title}
+                    {title}
                   </span>
                 )
               ) : (
@@ -68,9 +84,10 @@ export function ChainPins({
                   className={styles.pin}
                   data-chain-pin={stop.id}
                   aria-current={lit === stop.id ? 'step' : undefined}
+                  aria-label={stop.title}
                   onClick={() => onCamera(cameras[stop.id])}
                 >
-                  {stop.title}
+                  {title}
                 </button>
               )}
             </div>

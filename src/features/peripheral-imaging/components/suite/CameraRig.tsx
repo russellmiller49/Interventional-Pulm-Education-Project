@@ -2,8 +2,9 @@
 import { useEffect, useMemo } from 'react'
 import { OrbitControls } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
+import { Box3, PerspectiveCamera, Vector3 } from 'three'
 import { LESION_CENTER, type Point3 } from '../../lib/physics'
-import { add, scale, type SuiteFrame } from './suiteModel'
+import { add, chainStopAnchors, scale, type SuiteFrame } from './suiteModel'
 import type { SuiteCamera } from './types'
 
 export function CameraRig({
@@ -15,20 +16,52 @@ export function CameraRig({
   frame: SuiteFrame
   enabled: boolean
 }) {
-  const { camera, invalidate } = useThree()
+  const { camera, invalidate, size } = useThree()
   const config = useMemo(() => {
     const f = frame.geometry.field
+    const anchors = chainStopAnchors(frame)
     const target: Point3 =
-      view === 'target' ? LESION_CENTER : view === 'console' ? [f * 0.85, 0, f * 0.4] : frame.iso
+      view === 'target'
+        ? LESION_CENTER
+        : view === 'console'
+          ? scale(add(anchors.reconstruction, anchors.display), 0.5)
+          : frame.iso
     const positions: Record<SuiteCamera, Point3> = {
-      suite: [f * 1.8, f * 0.4, f * 1.5],
+      suite: [f * 2.1, f * 0.3, f * 1.8],
       room: [f * 2.5, f * 1.8, f * 2.5],
       anterior: [0, f * 2.5, 0.01],
       side: [f * 2.8, 0, 0.01],
       head: [0, 0.01, f * 2.8],
       target: add(LESION_CENTER, [f * 0.45, f * 0.4, f * 0.3]),
-      console: [f * 1.4, f * 0.5, f * 1.1],
+      console: add(target, [f * 0.6, f * 0.3, f * 1.2]),
       beam: add(frame.source, scale(frame.normal, -f * 0.55)),
+    }
+    if ((view === 'suite' || view === 'room') && camera instanceof PerspectiveCamera) {
+      // Fit the whole chain, with room for the DOM pin labels, at the actual pane aspect ratio.
+      const points = [...frame.corners, ...Object.values(anchors)].map((p) => new Vector3(...p))
+      const center = new Box3().setFromPoints(points).getCenter(new Vector3())
+      const towardCamera = new Vector3(...positions[view]).normalize()
+      const right = new Vector3(0, 1, 0).cross(towardCamera).normalize()
+      const up = towardCamera.clone().cross(right).normalize()
+      const tanY = Math.tan((camera.fov * Math.PI) / 360)
+      const labelMargin = size.width < 420 ? 110 : 200
+      const usableX = Math.max(0.35, 1 - labelMargin / size.width)
+      const usableY = Math.max(0.5, 1 - 64 / size.height)
+      const tanX = tanY * (size.width / size.height) * usableX
+      let distance = frame.geometry.sid
+      for (const point of points) {
+        const delta = point.clone().sub(center)
+        distance = Math.max(
+          distance,
+          delta.dot(towardCamera) + Math.abs(delta.dot(right)) / tanX,
+          delta.dot(towardCamera) + Math.abs(delta.dot(up)) / (tanY * usableY),
+        )
+      }
+      return {
+        target: center.toArray() as Point3,
+        position: center.clone().addScaledVector(towardCamera, distance).toArray() as Point3,
+        up: [0, 1, 0] as Point3,
+      }
     }
     return {
       target,
@@ -39,7 +72,7 @@ export function CameraRig({
           ? [0, 1, 0]
           : [0, 0, 1]) as Point3,
     }
-  }, [view, frame])
+  }, [view, frame, camera, size.width, size.height])
   useEffect(() => {
     camera.position.set(...config.position)
     camera.up.set(...config.up)
