@@ -3,6 +3,16 @@
   "generator": "3D Slicer 5.12.3",
   "source": "Existing FluoroView teaching CT and Final_airway_target surface",
   "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "airwaySourceSha256": "277223b59550c1e037585e09205bdd7f8dc24e8abf9b4fd5875b5cb6f369ee69",
+  "authoredNodule": {
+    "centerMm": [85, -20, -30],
+    "radiusMm": 9.0,
+    "coreRadiusMm": 4.05,
+    "coreHu": -350.0,
+    "profile": "part-solid core with smoothstep blend into unchanged CT lung",
+    "provenance": "Authored teaching construct, 2026-09-08; not an observed source-CT finding"
+  },
+  "atlasSha256": "46258feb2edd8397007697ca5ea151ec66e5acd78cf75ea9a53125b4b8fe8b7b",
   "coordinateSystem": "LAS",
   "units": "mm",
   "sizeXyz": [192, 192, 192],
@@ -50,5 +60,5 @@
     "FluoroRenderingPreset_02.vp",
     "FluoroRenderingPreset_03.vp"
   ],
-  "limitations": "Threshold-derived context surfaces and quantized teaching volume; not a diagnostic segmentation or CT. Target and tool are authored independently."
+  "limitations": "Threshold-derived context surfaces and quantized teaching volume; not a diagnostic segmentation or CT. The part-solid target is authored and baked into the CT atlas; the tool remains an analytic overlay."
 }
