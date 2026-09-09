@@ -13,7 +13,7 @@ import { LESION_CENTER, radians, type Point3 } from '../../../lib/physics'
 import { add, chainStopAnchors, scale, suiteFrame } from '../suiteModel'
 import { dtsArc, dtsPlaneQuad, missingWedge, smearWidth } from '../dtsModel'
 import { Quad } from '../SceneGeometry'
-import { useCtVolume } from '../CtSliceImages'
+import { useCtVolumeState } from '../CtSliceImages'
 import type { SuiteInputs, SuiteViewSpec } from '../types'
 import styles from '../suite-scene.module.css'
 
@@ -37,7 +37,7 @@ export function useTomosynthesis(
     playback.key === playbackKey ? playback : { count: defaultCount, playing: null }
   const [layer, setLayer] = useState<SuiteInputs['priorLayer'] | null>(null)
   const elapsed = useRef(0)
-  const volume = useCtVolume(active && view.mode === 'dts-prior')
+  const { volume, failed: priorFailed } = useCtVolumeState(active && view.mode === 'dts-prior')
   useEffect(() => {
     if (!active) return
     let current = true
@@ -73,6 +73,7 @@ export function useTomosynthesis(
   const selectedLayer = layer ?? inputs.priorLayer
   const images = useMemo(() => {
     if (!active || !data || !DTS.sweeps.includes(inputs.sweepDeg)) return null
+    if (selectedLayer !== 'measured' && !volume) return null
     const measured = reconstructTeachingPlane(data, inputs.sweepDeg, inputs.planeDepth)
     const pixels = new Uint8ClampedArray(measured)
     if (selectedLayer !== 'measured' && volume) {
@@ -144,6 +145,8 @@ export function useTomosynthesis(
     step,
     play,
     failed,
+    priorReady: Boolean(volume),
+    priorFailed,
     reset: () => {
       elapsed.current = 0
       setPlayback({ key: playbackKey, count: defaultCount, playing: null })
@@ -249,18 +252,30 @@ function CanvasCopy({ source, label }: { source: HTMLCanvasElement; label: strin
   )
 }
 export function TomosynthesisMonitor({ model }: { model: Tomosynthesis }) {
-  const state = model.failed ? 'failed' : model.images ? 'ready' : 'loading'
+  const failed = model.failed || (model.selectedLayer !== 'measured' && model.priorFailed)
+  const state = failed ? 'failed' : model.images ? 'ready' : 'loading'
   return (
-    <div className={styles.monitor} data-dts-state={state} data-projection-state={state}>
+    <div
+      className={styles.monitor}
+      data-dts-state={state}
+      data-projection-state={state}
+      data-image-provenance={model.selectedLayer}
+    >
       {model.images ? (
         <CanvasCopy
           source={model.images.plane}
-          label="Teaching focal plane from limited-angle projections"
+          label={
+            model.selectedLayer === 'measured'
+              ? 'Teaching focal plane from limited-angle projections'
+              : model.selectedLayer === 'prior'
+                ? 'Planning CT prior, coloured teal'
+                : 'Teaching focal plane blended with a teal planning CT prior'
+          }
         />
       ) : (
         <p className={styles.imageStatus}>
           {' '}
-          {model.failed ? 'Teaching image unavailable.' : 'Preparing the teaching plane…'}{' '}
+          {failed ? 'Teaching image unavailable.' : 'Preparing the teaching plane…'}{' '}
         </p>
       )}
     </div>
@@ -285,8 +300,9 @@ export function TomosynthesisPanels({
         </p>
       )}
       <p>
-        13 parallel teaching projections · cone arc for orientation. Dashed arc: unsampled
-        directions. Bars on the focal plane: out-of-plane spreading.
+        {prior
+          ? 'The console separates image ingredients by colour. Gray comes from the thirteen teaching projections; teal comes from the planning CT.'
+          : '13 parallel teaching projections · cone arc for orientation. Dashed arc: unsampled directions. Bars on the focal plane: out-of-plane spreading.'}
       </p>
       {prior && (
         <fieldset disabled={!enabled} className={styles.controls}>
@@ -296,6 +312,7 @@ export function TomosynthesisPanels({
               type="button"
               key={layer}
               aria-pressed={model.selectedLayer === layer}
+              disabled={layer !== 'measured' && !model.priorReady}
               onClick={() => model.setLayer(layer)}
             >
               {layer === 'measured'
@@ -309,6 +326,13 @@ export function TomosynthesisPanels({
             Gray: combined measured projections · teal: planning CT contribution. A prior is not
             another current measurement.
           </p>
+          {!model.priorReady && (
+            <p role="status">
+              {model.priorFailed
+                ? 'Planning CT prior unavailable; measured projections remain available.'
+                : 'Preparing the planning CT prior…'}
+            </p>
+          )}
         </fieldset>
       )}
       <div className={styles.filmstrip}>

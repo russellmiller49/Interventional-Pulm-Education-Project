@@ -249,3 +249,14 @@ sweep, and Step collects one projection. Plane controls use the existing lab
 actions and clamps. The filmstrip and explanatory text scroll below the displays.
 No DRR context, new asset or dependency is created. Unit and scene checks cover
 projection geometry, refocusing pixels, playback, actions, locks and context count.
+
+## Phase 2 — DTS prior
+
+The authored dts-interpretation view is a sorter with no bound lab controls and a
+hidden monitor. Its console therefore uses local measured / prior / blend controls,
+without inventing lab readouts. Gray atlas-derived pixels remain recoverable;
+planning-CT pixels are separately tinted teal. Prior controls wait for the CT,
+and a failed load is reported rather than presenting measured pixels as a prior.
+The console texture and its hidden 2D source share those pixels. Scene checks
+verify the color change, recovery, reduced-motion Step, locking and a single
+WebGL context. No assets or dependencies were added.

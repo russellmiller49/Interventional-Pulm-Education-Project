@@ -471,7 +471,62 @@ test('DTS playback pauses and Step deterministically collects thirteen projectio
   await expect(page.locator('[data-dts-frame]')).toHaveCount(count === 13 ? 1 : count + 1)
 })
 
-for (const section of ['mobile-suite', 'dts-acquisition']) {
+test('DTS prior colours provenance separately and keeps the measured image recoverable', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=dts-interpretation`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  const image = page.locator('[data-dts-state=ready] canvas')
+  // The authored provenance section is a sorter with a hidden monitor and a console camera.
+  await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready')
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-suite-camera', 'console')
+  const scene = page.locator('canvas[data-three-state=ready]')
+  const consoleImage = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  const measured = await image.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('button', { name: 'Planning CT prior', exact: true }).click()
+  await expect(page.locator('[data-image-provenance]')).toHaveAttribute(
+    'data-image-provenance',
+    'prior',
+  )
+  const prior = await image.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  expect(prior).not.toBe(measured)
+  await expect
+    .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(consoleImage)
+  const colour = await image.evaluate((c) => {
+    const context = (c as HTMLCanvasElement).getContext('2d')!
+    const rgba = context.getImageData(80, 80, 80, 80).data
+    let red = 0,
+      green = 0
+    for (let i = 0; i < rgba.length; i += 4) {
+      red += rgba[i]
+      green += rgba[i + 1]
+    }
+    return green - red
+  })
+  expect(colour).toBeGreaterThan(1000)
+  await page.getByRole('button', { name: 'Blend with prior', exact: true }).click()
+  await expect
+    .poll(() => image.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(prior)
+  await page.getByRole('button', { name: 'Measured projections', exact: true }).click()
+  await expect
+    .poll(() => image.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .toBe(measured)
+  const contexts = await page
+    .locator('canvas')
+    .evaluateAll(
+      (canvases) =>
+        canvases.filter((c) => Boolean((c as HTMLCanvasElement).getContext('webgl2'))).length,
+    )
+  expect(contexts).toBe(1)
+  await page.getByRole('button', { name: 'Toggle control lock', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Planning CT prior', exact: true })).toBeDisabled()
+})
+
+for (const section of ['mobile-suite', 'dts-acquisition', 'dts-interpretation']) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto(`${preview}?section=${section}`)

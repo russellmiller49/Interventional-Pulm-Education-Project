@@ -21,6 +21,7 @@ export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>([
   'time',
   'cbct',
   'dts',
+  'dts-prior',
 ])
 
 export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'
