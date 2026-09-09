@@ -1,6 +1,7 @@
 import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test'
 
 import { imagingCases } from '../src/features/peripheral-imaging/content/cases'
+import { imagingMicroCasesInPathwayOrder } from '../src/features/peripheral-imaging/content/microCases'
 import { peripheralImagingSectionIds } from '../src/features/peripheral-imaging/content/pathway'
 import { imagingStageLesson } from '../src/features/peripheral-imaging/content/stageLessons'
 import {
@@ -369,6 +370,64 @@ test('the image a control changes stays on screen while the control is used', as
   for (const [name, value] of Object.entries(contrast)) {
     expect(value, `${name} contrast`).not.toBeNull()
     expect(value!, `${name} contrast`).toBeGreaterThanOrEqual(4.5)
+  }
+})
+
+test('a practice case is decided once, and can be answered as often as the learner likes', async ({
+  page,
+}) => {
+  const cases = imagingMicroCasesInPathwayOrder()
+  test.skip(cases.length === 0, 'No practice cases are authored yet.')
+  const first = cases[0]
+  const keyed = first.item.correctChoiceIds[0]
+  const other = first.item.choices.find((choice) => choice.id !== keyed)!.id
+
+  await page.goto(base() + '/en/peripheral-imaging/practice')
+  await expect(page.locator('[data-practice-continue]')).toHaveCount(1)
+  await expect(page.locator('[data-practice-case-link]')).toHaveCount(cases.length)
+  await expect(page.locator('[data-practice-continue]')).toHaveAttribute('data-next-case', first.id)
+  await page.locator('[data-practice-continue]').click()
+
+  // The situation is shown; the reasoning is not, until a decision is made.
+  await expect(page.locator(`[data-practice-case="${first.id}"]`)).toBeVisible()
+  await expect(page.locator('[data-case-situation]')).toBeVisible()
+  await expect(page.locator('[data-case-verdict]')).toHaveCount(0)
+
+  await page.locator(`[data-prediction-choices] input[value="${other}"]`).check()
+  await page.locator('[data-now-primary]').click()
+  await expect(page.locator('[data-case-verdict]')).toBeVisible()
+
+  // Answering again is allowed, and does not rewrite the first decision.
+  await page.locator('[data-answer-again]').click()
+  await expect(page.locator('[data-case-verdict]')).toHaveCount(0)
+  await page.locator(`[data-prediction-choices] input[value="${keyed}"]`).check()
+  await page.locator('[data-now-primary]').click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'correct',
+  )
+
+  const attempt = await page.evaluate(
+    ([key, caseId]) => {
+      const record = JSON.parse(localStorage.getItem(key) ?? 'null')
+      return record?.firstAttempts?.[`practice:${caseId}`] ?? null
+    },
+    [PERIPHERAL_IMAGING_STORAGE_KEY, first.id] as const,
+  )
+  expect(attempt?.choiceId).toBe(other)
+  expect(attempt?.correct).toBe(false)
+
+  // The list remembers, and the door moves on.
+  await page.goto(base() + '/en/peripheral-imaging/practice')
+  await expect(page.locator(`[data-practice-case-link="${first.id}"]`)).toHaveAttribute(
+    'data-decided',
+    'true',
+  )
+  if (cases.length > 1) {
+    await expect(page.locator('[data-practice-continue]')).toHaveAttribute(
+      'data-next-case',
+      cases[1].id,
+    )
   }
 })
 

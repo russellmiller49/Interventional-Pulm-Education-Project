@@ -247,3 +247,11 @@
 .worked p + p {
   margin-top: 0.35rem;
 }
+
+/* A link inside the completion card, on its own light surface. */
+.completionLink {
+  color: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

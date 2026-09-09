@@ -42,6 +42,22 @@ const PLAUSIBILITY_OVERRIDES: Readonly<Record<string, Readonly<Record<string, Pl
   'tool-1': { b: 'reasonable-but-incomplete' },
   'dose-1': { a: 'reasonable-but-incomplete' },
   'choose-1': { c: 'reasonable-but-incomplete' },
+
+  // Practice cases.
+  'signal-practice-1': { c: 'reasonable-but-incomplete' },
+  'signal-practice-2': { a: 'reasonable-but-incomplete' },
+  'field-practice-1': { c: 'unsafe' },
+  'field-practice-2': { a: 'reasonable-but-incomplete', b: 'reasonable-but-incomplete' },
+  'two-dimensional-practice-1': { a: 'unsafe', c: 'reasonable-but-incomplete' },
+  'dts-acquisition-practice-1': { a: 'reasonable-but-incomplete' },
+  'dts-interpretation-practice-1': { b: 'unsafe' },
+  'cbct-acquisition-practice-1': { c: 'reasonable-but-incomplete' },
+  'fixed-suite-practice-1': { a: 'unsafe', b: 'reasonable-but-incomplete' },
+  'mobile-suite-practice-1': { b: 'reasonable-but-incomplete' },
+  'tool-confirmation-practice-1': { b: 'reasonable-but-incomplete' },
+  'changing-anatomy-practice-1': { c: 'unsafe' },
+  'staff-protection-practice-1': { a: 'reasonable-but-incomplete' },
+  'dose-reporting-practice-1': { c: 'unsafe' },
 }
 
 /** Stems that ask for the next move, as opposed to a reading of what the image shows. */
@@ -57,6 +73,20 @@ const MANAGEMENT_DECISION_IDS: ReadonlySet<string> = new Set([
   'case-6',
   'case-7',
   'capstone-transfer-1',
+
+  // Practice cases that ask for the next move.
+  'signal-practice-2',
+  'field-practice-1',
+  'field-practice-2',
+  'two-dimensional-practice-1',
+  'dts-acquisition-practice-1',
+  'dts-acquisition-practice-2',
+  'cbct-acquisition-practice-1',
+  'fixed-suite-practice-1',
+  'mobile-suite-practice-1',
+  'changing-anatomy-practice-1',
+  'staff-protection-practice-1',
+  'dose-reporting-practice-1',
 ])
 
 export function imagingItemType(question: Question): ClinicalLearningItem['itemType'] {

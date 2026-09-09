@@ -44,6 +44,11 @@ jest.mock('@/features/peripheral-imaging/components/stage/ImagingStageHost', () 
 jest.mock('@/features/peripheral-imaging/components/PeripheralImagingPracticeLanding', () => ({
   PeripheralImagingPracticeLanding: () => <div data-testid="imaging-practice-landing" />,
 }))
+jest.mock('@/features/peripheral-imaging/components/ImagingCaseActivity', () => ({
+  ImagingCaseActivity: ({ caseId }: { caseId: string }) => (
+    <div data-testid="imaging-practice-case" data-id={caseId} />
+  ),
+}))
 jest.mock('@/features/peripheral-imaging/components/PeripheralImagingAssessLanding', () => ({
   PeripheralImagingAssessLanding: () => <div data-testid="imaging-assess-landing" />,
 }))
@@ -126,6 +131,32 @@ describe('peripheral imaging route family', () => {
       'data-id',
       peripheralImagingSectionIds[1],
     )
+  })
+
+  it('opens a known practice case and falls back to the list for an unknown one', async () => {
+    const { imagingMicroCasesInPathwayOrder } = jest.requireActual<
+      typeof import('@/features/peripheral-imaging/content/microCases')
+    >('@/features/peripheral-imaging/content/microCases')
+    const first = imagingMicroCasesInPathwayOrder()[0]
+
+    const known = render(
+      await PeripheralImagingPracticePage({
+        params: params('en'),
+        searchParams: Promise.resolve({ case: first.id }),
+      }),
+    )
+    expect(screen.getByTestId('imaging-practice-case')).toHaveAttribute('data-id', first.id)
+    expect(screen.queryByTestId('imaging-practice-landing')).not.toBeInTheDocument()
+    known.unmount()
+
+    render(
+      await PeripheralImagingPracticePage({
+        params: params('en'),
+        searchParams: Promise.resolve({ case: 'not-a-case' }),
+      }),
+    )
+    expect(screen.getByTestId('imaging-practice-landing')).toBeInTheDocument()
+    expect(screen.queryByTestId('imaging-practice-case')).not.toBeInTheDocument()
   })
 
   it('renders Practice and Assess landings inside the frame with their nav hrefs', async () => {

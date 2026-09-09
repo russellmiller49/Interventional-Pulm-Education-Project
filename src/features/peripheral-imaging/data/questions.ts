@@ -669,6 +669,363 @@ export const QUESTIONS: Question[] = [
     'Record the quantity, its units and the modes it covers.',
     ['wabip', 'aapm12'],
   ),
+
+  // --- Practice: short cases, one decision each, paired to a section by its mechanism.
+  // Authored against each section's own teaching and the module's reviewed sources, then put
+  // through three rounds of independent review for vocabulary, evidence, cueing and fit.
+  // Every one is a draft awaiting subject-matter review, like the rest of the bank.
+  item(
+    'signal-practice-1',
+    'optimize',
+    'The lesion does not separate from what surrounds it. Which limitation is this picture showing?',
+    'b',
+    [
+      [
+        'A chest this deep is stopping too much of the beam, so the picture is being built out of too little signal.',
+        'A thin supply of transmitted radiation announces itself as speckle, and here the background is smooth while the catheter edge holds its sharpness. Raising output would also drive more radiation into the same wide field, so what scatters rises in step with what transmits: the flat grey stays where it is, and the patient and the room take the added exposure for nothing.',
+      ],
+      [
+        'A chest this deep puts so much tissue in the beam that radiation scattering sideways out of it hazes the picture.',
+        'The smooth background and the crisp catheter edge put the transmitted supply outside the problem, and a grey that lies on the diaphragm and the vessels as heavily as on the lesion is the signature of radiation arriving without having carried anatomy. Bringing the shutters in shrinks the volume that scatters and can return the contrast; if it stays flat, the question moves to imaging built to answer it.',
+      ],
+      [
+        'A chest this deep stacks so much tissue along each line of the beam that one flat picture cannot pull it apart.',
+        'Stacked anatomy costs contrast where one structure lies over another and leaves the rest of the field alone; here the contrast is down everywhere at once, including where nothing lies over anything. An angle change also carries the same open shutters through the same deep chest, so the flat grey travels with the new projection rather than lifting off it.',
+      ],
+    ],
+    'A grey that lies on everything at once, the dense structures included, while the hardware stays sharp and the background stays smooth, is describing radiation that left the tissue sideways rather than too few photons crossing it or anatomy stacked along the beam. Stacked anatomy takes contrast away in one place; a scatter haze takes a share of it everywhere. Shutters, angle and output each answer a different limitation, so name the one in front of you before moving any of them.',
+    ['setser', 'wabip', 'tg272', 'tg125'],
+  ),
+  item(
+    'signal-practice-2',
+    'optimize',
+    'The lesion is clear of the mediastinum and the needle is in view. What is the most useful adjustment now?',
+    'c',
+    [
+      [
+        'Adjust the display window until the needle edges stand out again.',
+        'The window belongs on the shortlist and can help read what was already acquired, but stretching a veiled image stretches the veil with it, and whatever noise it carries. The contrast is being lost before the image reaches the display.',
+      ],
+      [
+        'Raise the output and reach for a brighter preset to get through the arm.',
+        'Too few photons show up as grain, not as an even loss of contrast. The arm scatters as well as absorbs, and more output lifts the primary beam and the scattered radiation together, so the picture stays flat while exposure rises.',
+      ],
+      [
+        'Close the shutters onto the working area and move the arm aside.',
+        'A washed-out image over a wide field and a thick path is the look of scattered radiation reaching the detector; the arm both thickens what the beam crosses and adds tissue that scatters. Restricting the irradiated area and moving the arm out of the beam with the anesthesia team, within safe positioning limits and without disturbing the scope or docked equipment, act on the source of that scatter.',
+      ],
+    ],
+    'A washed-out picture and a grainy one come from different causes, and a wide field over a thick path names this one; the thicker path also drives the automatic response harder, and a harder beam flattens contrast on its own. More output would lift the scattered radiation along with the beam, and steady monitor brightness would not reveal that anything rose.',
+    ['wabip', 'tg125'],
+  ),
+  item(
+    'field-practice-1',
+    'optimize',
+    'Which adjustment acts most directly on the cause of this flat, low-contrast picture?',
+    'b',
+    [
+      [
+        'Crop the displayed picture on the monitor to the working area.',
+        'The border on the monitor moves; the beam does not. The same tissue keeps scattering into the detector on every frame, so the flat appearance survives the crop, and so does the exposure of everything outside the visible border.',
+      ],
+      [
+        'Bring the collimator blades in to the working area.',
+        'Restricting the beam shrinks the irradiated volume, and irradiated tissue is where the scattered radiation that flattens contrast is made; scatter off a field this wide is what is flattening this picture, which is not short of photons. Leave a rim of surrounding anatomy for orientation and the planned tool excursion, and look at the output afterwards — with the shoulder and abdomen outside the field, the exposure regulation responds to the working area, and it can partly offset the smaller field.',
+      ],
+      [
+        'Step up to the next higher-output fluoroscopy setting.',
+        'More photons answer a grainy picture, not scattered radiation off a wide beam, and automatic exposure regulation may already be holding the monitor brightness where it wants it. Acting on this adds exposure for the patient and everyone at the table while the cause stays in the beam.',
+      ],
+    ],
+    'Blades at the tube and a border drawn on the monitor look alike on the screen, so name which one you are moving before you judge what it did. Haze made by a wide beam is answered by narrowing the beam; output added to the same wide beam raises the scattered signal in step with the useful one, so the haze survives while the exposure rises and the regulation can hold the displayed picture looking much the same.',
+    ['wabip', 'tg125'],
+  ),
+  item(
+    'field-practice-2',
+    'optimize',
+    'Surrounding anatomy is needed for orientation. Which action comes first?',
+    'c',
+    [
+      [
+        'Open the shutters wider and acquire a new frame of the chest.',
+        'This does restore context when the blades were the limit, and it may well be needed. Spending an exposure before looking at the frame already on the screen risks paying for anatomy that was acquired and simply not shown.',
+      ],
+      [
+        'Scroll back through the stored run and check earlier frames.',
+        'Earlier frames in the same run were most likely acquired with the same field in place, so they may hold no more of the chest than this one does. Looking back also leaves the team no way to say whether this border was set at the shutters or at the workstation.',
+      ],
+      [
+        'Restore the displayed field and read the frame you have.',
+        'The workstation can only give back what is in the frame it is holding, and it gives it back without further exposure. If the surroundings appear, the border was drawn on the monitor; if they do not, the surrounding anatomy was never in the stored frame, the field was narrowed before the exposure at the shutters or in the acquisition, and bringing it back costs a new exposure either way.',
+      ],
+    ],
+    'A border drawn on the monitor can be undone at no cost, and undoing it also says whether the surrounding anatomy was ever acquired. Reach for that operation first because it costs no exposure and because it also tells you which of the two restrictions you have been looking at.',
+    ['wabip', 'tg272'],
+  ),
+  item(
+    'time-practice-1',
+    'optimize',
+    'Reading these signals together, where does the movement that is showing up as separated positions belong?',
+    'b',
+    [
+      [
+        'The movement being seen is inside each exposure.',
+        'Movement during one exposure draws the tool out along its direction of travel and softens the edge that should be sharp. Every held image here has a clean edge and a defined tip, so nothing is moving during the moment an image is being collected. This is the commonest reach at the console: an operator taught that motion smears an image shortens the exposure, which does answer blur, and leaves the separated positions exactly where they were.',
+      ],
+      [
+        'The movement being seen is between exposures.',
+        'A clean held image places nothing inside the moment an image is collected, and a picture that settles as the hand settles places nothing after acquisition, which leaves the interval from one exposure to the next. How far the tool goes in that interval is set jointly by how fast it is advanced and how often a fresh exposure is taken, so the same appearance can be answered by advancing more slowly, by sampling more often, or by working with the picture as it is, and only one of those three adds output.',
+      ],
+      [
+        'The movement being seen is after the exposures.',
+        'Handling after acquisition is real and does put the shown picture behind the hand: averaging across frames smears moving structures, and processing and refresh add delay. It announces itself differently, though, as a picture that keeps moving for a moment once the hand has already stopped. Here the picture settles when the hand settles, which places what is being seen before the display rather than in it.',
+      ],
+    ],
+    'Three clocks act on a moving picture, and the room tells them apart. An image held still says whether anything moved while that image was being collected. Whether the picture settles when the hand settles says whether anything is being added after acquisition. What is left over is the interval from one exposure to the next, and how far the tool goes in it depends on the advance and on how often a fresh exposure is taken. Naming which clock is the limiting one, rather than which is briefest, is what decides whether a control would change what is seen or change nothing at all.',
+    ['tg272', 'wabip'],
+  ),
+  item(
+    'two-dimensional-practice-1',
+    'choose',
+    'Tissue lies to one side of the probe, and no lesion is separately visible on either projection. What is the best next move?',
+    'b',
+    [
+      [
+        'Withdraw the probe and advance the needle down the same branch to the depth where tissue appeared.',
+        'Many teams read an eccentric picture as arrival and go straight to sampling. The probe reports only what lies beside it at one spot, and once it is withdrawn the needle takes its own line down the sheath: a depth does not carry the direction the tissue lay in. A dependent lower lobe that has lost its air reads as tissue on this same picture, so what would be sampled is a region nobody has yet identified.',
+      ],
+      [
+        'Draw the probe slowly back and forth along the same branch to find where that tissue ends.',
+        'The circle already says how far round the tissue reaches at this one station; what it cannot say is how far the tissue runs along the airway, or whether it ends. Drawing the probe back and forward answers that. Tissue that gives way to snowstorm at both ends behaves unlike tissue that runs on without a margin, and dependent lung emptied of air is the usual reason for the second.',
+      ],
+      [
+        'Advance the probe deeper along the same branch and look for that tissue again from there.',
+        'Going deeper is the reflex when a picture disappoints, and distance is sometimes what is missing. Here it moves before the station in hand has been read out. A radial probe cannot be aimed — it follows whatever airway it sits in — so travelling on does not carry it toward the tissue that appeared beside it; it only reports somewhere new, and gives up the one spot that has reported tissue at all.',
+      ],
+    ],
+    'The circle around the probe says how far round tissue reaches at one station and nothing about how far it runs along the airway. Drawing the probe back and forward answers that without another exposure; if no edge comes back, the limit is what the probe itself can show, and the next question belongs to a measurement of another kind rather than to another picture of the same one.',
+    ['ilocate', 'setser', 'mobile'],
+  ),
+  item(
+    'dts-acquisition-practice-1',
+    'dts',
+    'The team still cannot say whether the tip lies in front of the nodule, behind it or against it. Which of the three on offer would speak to that here?',
+    'b',
+    [
+      [
+        'Two images, one at each end of the arc, read against each other.',
+        'Two separated directions do carry part of what one direction hides, and which way the pair shifts relative to each other is a real cue to front and behind; this is the same reflex that reaches for one steep oblique, and it is not an empty one. What each of the pair returns, though, is a shift across the image rather than a distance along the ray, and inside a short arc that shift is small, so a pair that still reads close together bounds the relationship only loosely. Neither image spreads anything either: a projection lands everything along a ray on one pixel, so a rib sharing that ray is drawn across the target at full strength.',
+      ],
+      [
+        'A short series of images taken across the arc, end to end.',
+        'A span of directions carries a separation that any one of them compresses, and combining them lets what lies at the depth in question reinforce while what lies at other depths, the rib among them, spreads instead of being redrawn. Two images from the ends of the same arc cannot do that, however far apart they are taken, because each is read as itself and neither spreads anything. What returns is partial and comes back thinnest along the beam direction, which is the direction being asked about, so read the tip and the nodule on the planes and treat the gap as narrowed rather than settled. How wide an arc is available, and how much it returns, depends on the installed platform.',
+      ],
+      [
+        'The frontal image again, in the finer detector mode.',
+        'Sampling the same direction more finely separates structures lying side by side across the image; it does nothing along the ray, which is where these two are stacked. The mode name also describes a setting rather than what the system delivers, and that is a matter for commissioning rather than for the label. Either way it is silent about the directions this acquisition never sampled.',
+      ],
+    ],
+    'Each image is one direction, and what a separated pair returns is a shift across the image rather than a distance along the ray; inside a short arc that shift is small, so a pair that still reads together bounds the relationship only loosely. A series across that same arc is combined, and that is what lets one depth reinforce while other depths, a crossing rib among them, spread instead of being redrawn. What comes back is partial, and thinnest along the beam direction itself, so the relationship is narrowed rather than settled.',
+    ['saad', 'frontier', 'tg272'],
+  ),
+  item(
+    'dts-acquisition-practice-2',
+    'dts',
+    'The nodule is the target for this biopsy. Which next move does the imaging support?',
+    'c',
+    [
+      [
+        'Hold the plane where the sweep brings tip and nodule up together, and sample from where the tip sits now.',
+        "Coming up bright on a plane says the projections reinforced there, not that the structure lies at that depth. The vessel is bright on the nodule's plane and bright on the ones either side of it, because whatever a sweep separates least firmly along the beam stays spread across the planes it builds. Sharing a plane with the nodule is a claim about the picture, not about contact with the target.",
+      ],
+      [
+        'Repeat the sweep across the same arc in finer steps, advance the tip to the nodule by what those planes show, and sample.',
+        'Finer steps deliver more planes, and more planes look like more depth information, but each of them is built from the directions the arm has already travelled. How finely two structures can be told apart along the beam was set by the span of those directions, not by how many samples were taken inside it, so the separation read off the new planes is as loose a quantity as the one read off the first set. Advancing by it drives the needle along the axis this acquisition holds most loosely, toward neighbours it holds just as loosely, the vessel among them.',
+      ],
+      [
+        'Sweep again with the arm swung around toward the side, place the tip on the nodule from those planes, and sample.',
+        'Where the tip and the nodule sit relative to each other across the image comes from the projections themselves, so that half of the reading is firm. How loosely they separate along the beam was set by the span of directions the first sweep covered, and neither stepping through the planes it built nor walking that same span more finely adds a direction it never took. A sweep from outside that span carries the component the first one holds most loosely, which is the component this placement turns on.',
+      ],
+    ],
+    'These planes place the tip and the nodule far more firmly across the image than along the beam. How loosely the two separate along the beam was set by the span of directions swept, before any plane reached the monitor, and walking that same span in finer steps leaves that separation as loose as it was, still too loose to advance a needle on. A direction outside the span is what sharpens it.',
+    ['saad'],
+  ),
+  item(
+    'dts-interpretation-practice-1',
+    'dts',
+    'Which reading of the second monitor is best supported by what is visible on the screens?',
+    'a',
+    [
+      [
+        'A sweep with the instrument standing in the field brings it onto the planes it builds, so the margin they draw came from a different acquisition than this sweep.',
+        'Each plane is assembled from rays that crossed whatever lay in the field while the sweep ran, and an instrument the live image resolves this cleanly is not something those rays could have missed. Its absence therefore says nothing about where the catheter is; it says the pixels drawn in that region were not measured while the catheter sat there. Something else supplied that margin, at some other moment, so the contour describes the lesion as it was then, and nothing on the second monitor speaks to where it sits now.',
+      ],
+      [
+        "The sweep's narrow fan of angles leaves a thin instrument too poorly sampled in depth to appear on these planes, so the margin they draw is this sweep's own measurement.",
+        "A narrow fan of angles really does leave depth poorly sampled, and an object at another depth stays bright across neighbouring planes instead of resolving onto one; that behaviour is what this reading reaches for. Poor sampling in depth is not exclusion, though. A dense instrument standing in the imaged volume brightens more planes, not none of them, and the same coverage is drawing the lesion's fine margins on the very planes it is supposed to have left the catheter off. Detail that fine surviving while a dense instrument is nowhere is not something one sweep's projections do on their own.",
+      ],
+      [
+        "A drift in the stored alignment leaves the instrument on other planes, so the margin they draw is this sweep's, addressed to a frame that has slipped from what lies beneath it.",
+        'Operators do meet stored alignments that have slipped from what lies beneath them, and asking where a display is addressed is a fair instinct. A drift moves what it addresses, though; it does not empty the planes of anything. The instrument and the airway holding it were drawn by one set of rays, so a shift in depth carries both together, and the planes still showing that airway and the lesion are the planes that would show the instrument lying in them. This reading also credits the margin to the very sweep the instrument is missing from, and the move it yields, waiting on a refreshed alignment, cannot supply an instrument these planes never held.',
+      ],
+    ],
+    "An instrument that sat in the airway for the whole sweep is the one thing an image built from that sweep's projections could not leave out. Limited angular coverage smears such an object along depth, brightening more planes rather than emptying them; a shift in how planes are addressed carries the instrument and the anatomy around it together, because one set of rays drew both, so a refreshed alignment would not place an instrument onto planes that never held one. What the absence marks is which acquisition supplied those pixels: the margin describes the lesion at whatever moment that acquisition was made. Anatomy that looks familiar is one picture resembling an older picture, not evidence about the lesion since. Finding the instrument somewhere in the volume would settle only that something on the display was measured during the sweep, because a reconstruction can carry a live instrument over a contour an older scan supplied; the two questions stay apart.",
+    ['saad', 'pritchett'],
+  ),
+  item(
+    'cbct-acquisition-practice-1',
+    'cbct',
+    'How should the team use this volume to judge the needle against the nodule?',
+    'a',
+    [
+      [
+        'Read the needle against the nodule where this spin reaches, then re-center the arc on the nodule and spin again.',
+        'The needle and the near side of the nodule both sat inside what the orbit took in, so the meeting shown there is something this spin imaged. Anatomy beyond that edge was never in the beam, and what a spin takes in is fixed by the field it sweeps and where that field is centred, so the far side comes inside only when the arc is centred on the nodule and the anatomy is imaged again. Centring the arc moves the imaging rather than the patient, so the catheter stays where it sits and the needle stays where it was placed, and the whole orbit is walked for clearance around the docked arm before the next exposure.',
+      ],
+      [
+        'Read the needle against the nodule where this spin reaches, then swing the arc through more angles and spin again.',
+        'More angles answers a different shortfall. Where directions are missing, anatomy that was inside the volume all along is smeared along depth, and a fuller turn measures those directions and firms it up. Nothing inside this volume is smeared: edges are single throughout, and the far side is not measured poorly but not measured at all. What a spin takes in is fixed by the field it sweeps and where that field is centred, so travelling further around the same centre gathers more views of the same anatomy, gives a longer swing that still has to clear the docked arm, and leaves the far side outside the volume as before.',
+      ],
+      [
+        'Read the needle against the nodule where this spin reaches, then ask for a wider rebuild of this spin, the arc left as it is.',
+        'Rebuilding before spending another exposure is a fair instinct, and it leaves a working setup alone. But a volume is built from the projections the orbit collected, and out where the beam never swept there are none to build from, so a wider rebuild enlarges the frame around the same measured anatomy and leaves the far side as unimaged as it already was.',
+      ],
+    ],
+    'A finished volume answers only for the anatomy the orbit actually took in, so find where that coverage ends before reading a needle against a target. Sharpness inside the volume says nothing about anatomy outside it, and a wider rebuild draws on the same projections, so the far side comes in only when the geometry that set the coverage is changed and the anatomy is imaged again, or when other current evidence is used instead. Which part of that geometry is changed decides whether anything is gained: how far the source travels around settles which directions are measured, while the field it sweeps and where that field is centred settle how much of the patient is measured at all.',
+    ['setser', 'mobile'],
+  ),
+  item(
+    'fixed-suite-practice-1',
+    'cbct',
+    'What should the team do next?',
+    'c',
+    [
+      [
+        'Swing the live image well away from the projection in use and read the needle against the nodule as the contour there marks it.',
+        'Changing the angle changes which direction is flattened; it does not remove the flattening. A projection compresses whatever lies along its own beam into a single plane, so metal can sit over the nodule in the image and still stop short of it in the patient. And what such an image offers as the nodule is the contour laid onto it, a boundary the room draws over live anatomy rather than one it measures there.',
+      ],
+      [
+        "Turn one of the room's chest studies and read the needle against the nodule as the contour on them marks it.",
+        'The acquisition here is the one the question needs; what gets read on it is not. A contour reports where a boundary was placed at the moment it was placed, and the room will lay it onto whatever it displays, images taken after the needle moved included. Those images carry the lesion as tissue, and tissue is what the sampling end has to sit inside.',
+      ],
+      [
+        "Turn one of the room's chest studies and read the needle against the nodule as the tissue on them shows it.",
+        'One orbit carries the metal and the lesion in the same images, so how far apart they lie along the beam is measured rather than inferred. Reading the nodule as the tissue on those images takes the boundary from the geometry the needle now sits in, instead of from the contour the room is carrying in from a spin turned before it moved.',
+      ],
+    ],
+    "A projection reports overlap, not depth, and a contour reports where a boundary was placed rather than where tissue lies now. When the question is where metal sits inside a lesion, one acquisition has to carry both of them, and the reading has to be taken from the tissue those images measured rather than from the contour laid over them. Which of a room's studies suits which question is settled locally with the technologist and the medical physicist.",
+    ['verhoeven', 'setser', 'pritchett'],
+  ),
+  item(
+    'mobile-suite-practice-1',
+    'cbct',
+    'What should the team change before spinning again?',
+    'c',
+    [
+      [
+        'Lift the monitoring lines off the chest and unhook them from the rail, then spin again.',
+        'Cable and tubing do lay their own thin bright lines through a volume, and lifting them off the chest is worth doing before a spin. What is on these slices is heavier than that. Paired dark and bright banding, and a boundary that comes apart, are what a dense, sharply bounded object throws when the beam has to get through it on some views and not others; cable and tubing attenuate too little to build that. Lifting them changes a small part of what the beam crosses and leaves the dense hardware standing where it is.',
+      ],
+      [
+        'Switch the reconstruction to metal reduction, rail and bracket in place, then spin again.',
+        'That setting exists for metal nobody can take out of the beam: an implant, a spinal rod, the instrument in the airway. Asked to stand in for hardware that unclips in a moment, it still works from views in which the margin was never cleanly sampled, and it can quiet the banding without giving the boundary back. What such a setting does, and what a given workstation calls it, differs by model and software version.',
+      ],
+      [
+        'Unclip the rail and the armboard bracket and set them both aside, then spin again.',
+        'Clearing the gantry and being out of the beam are different things. Through the lateral part of the orbit the raised rail and the bracket lie between the tube and the detector, so those views are recorded through them, and the volume is built from those views. Unclipping the two fittings is the change that alters what the next set of views has to work from; lifting light cable off the chest, or altering something downstream at the workstation, hands the reconstruction the same measurement over again.',
+      ],
+    ],
+    "What the beam crosses on its way round the table is the measurement the volume is made of. Clearing the gantry and being out of the beam are different things: hardware can stand clear of the arc's path and still lie between the tube and the detector through part of the orbit. Cable lifted off the chest, and a reconstruction setting chosen at the workstation, both leave that dense hardware in the views the volume is built from, while hardware that unclips is dealt with in the room, before the arc moves. That is why a table and its fittings belong to the acquisition and not only to patient positioning, and why a room, its table and a scanner are brought up together rather than one at a time.",
+    ['setser', 'mobile', 'tg272'],
+  ),
+  item(
+    'tool-confirmation-practice-1',
+    'verify',
+    'How should the team read the acquired volume to say where the needle now stands in relation to the target?',
+    'a',
+    [
+      [
+        "Reformat the axial images into a plane that runs along the shaft's own course, and another across it, then read the whole metal shaft and its sampling opening against the target.",
+        "A plane holds only the metal lying inside it, so a shaft running at an angle to a stack of images leaves a fragment wherever it cuts through one, and the fragments strung down a run of images are sections through the shaft rather than its length. A plane built along the shaft's own course carries the whole of it, and a plane built across the shaft gives the lateral relationship the first cannot show. Both come out of the volume already acquired, and what the pair supports is a statement about where the sampling opening stood at that moment.",
+      ],
+      [
+        'Reformat the axial images into the coronal and sagittal planes through the target, then read the metal shaft and its sampling opening against it in those two perpendicular views.',
+        'Two perpendicular planes do settle a relationship for something that lies within both of them, which is why a compact lesion reads well this way. The shaft is the difficulty. Coronal and sagittal are fixed planes just as the axial images are, so a shaft lying at an angle to them is fragmentary in each, and a pair placed through the target need not contain the sampling opening at all. Perpendicular is not the property that resolves this; a plane that follows the tool is.',
+      ],
+      [
+        'Count the axial images that carry metal and multiply by their thickness, then set the metal shaft and its sampling opening against the depth planned to the target.',
+        'The extent of an angled shaft across a stack is only the component of its length that runs along the scrolling direction, so a count of images multiplied by their thickness understates how far the shaft has travelled, by an amount set by an angle those images do not display. The metal on each image is a section through the shaft rather than a piece of it laid end to end, which is why the count answers a different question from the one the team is asking.',
+      ],
+    ],
+    "Which plane you look at decides whether an instrument's course can be followed at all. A plane holds only the metal inside it, so a tool lying at an angle to a stack leaves a fragment on each image it crosses, and neither the longest fragment nor the number of images carrying metal is the shaft. Planes built along the tool and across it come out of the volume already in hand, and what they support is a statement about where the sampling opening stood at that moment: a statement about position, not about the tissue that will enter the needle.",
+    ['setser', 'confirm'],
+  ),
+  item(
+    'changing-anatomy-practice-1',
+    'verify',
+    'What is the most useful next step?',
+    'a',
+    [
+      [
+        'Re-identify the nodule in the current volume and treat the stored contour as historical.',
+        'A region that appeared between the two acquisitions, with the rest of the volume unchanged and blood suctioned in between, is best read as a change in the patient rather than a limitation of the picture. Identifying the nodule again in current imaging is what re-establishes where it is; if it cannot be separated from the new region on thin reformats, another needle placement is not yet supported.',
+      ],
+      [
+        'Repeat the rotational acquisition at higher output and re-read the indistinct border on that volume.',
+        'This reads a change in the patient as an image-quality limitation. Noise degrades the whole reconstruction rather than one region around one nodule, and the first volume, acquired the same way, showed nothing there at all; raising output renders this region more clearly, which is the opposite of removing it.',
+      ],
+      [
+        'Shift the stored contour onto the new region and treat it as the current target.',
+        'Moving a stored outline onto a region whose identity has not been established makes the display agree with itself while the anatomy underneath stays unconfirmed. An overlay may be re-derived from a volume in which the lesion has been identified; it may not be aimed at material of unknown identity.',
+      ],
+    ],
+    'Here the new region appeared while the rest of the volume looked the same and blood had been suctioned in between, so it is best read as a change in the patient until current imaging shows otherwise; movement during the sweep, streak from indwelling hardware or limited angular coverage can also make a finding appear on one volume and not the other, so name the mechanism before acting on it. The contour drawn on the first volume records lung that has since changed, and more output would render either kind of finding more clearly rather than removing it, so the earlier picture can inform the next look but cannot stand in for it.',
+    ['setser', 'tg272', 'pritchett'],
+  ),
+  item(
+    'staff-protection-practice-1',
+    'protect',
+    'The run is about to begin. Which of the three positions leaves the fellow least exposed during this projection?',
+    'c',
+    [
+      [
+        'Step farther back along the table on the tube side.',
+        'Distance generally helps, but a step back along the same side keeps the fellow on the side where scatter is heavier, and both locations under consideration are already outside the irradiated field. Worn shielding attenuates what arrives rather than removing it, and the eyes are not covered by an apron at all, so garments do not make the two sides equivalent.',
+      ],
+      [
+        'Stay beside the tube housing where the fellow is.',
+        'This follows the primary beam downstream and expects the hazard to sit where it exits. What reaches staff is scattered off the irradiated tissue and is heavier back toward the tube, so the near side is not the sheltered one.',
+      ],
+      [
+        'Move around to the detector side of the table.',
+        'Nearly all of what reaches the room is scattered off the irradiated patient, and that scatter is more intense back toward the surface the beam enters, so the detector side is generally the lower-exposure side in this geometry. Distance from the table is comparable at all three locations, so which side of the patient the beam enters is what separates them here.',
+      ],
+    ],
+    "Two people the same distance from the table can be exposed quite differently depending on which side of the C-arm they occupy, and angulation shapes that asymmetry. Distance and worn shielding are only part of the plan, because the side the beam enters sets the pattern around the table; the room's survey and radiation safety officer set the verified locations.",
+    ['wabip', 'icrp'],
+  ),
+  item(
+    'dose-reporting-practice-1',
+    'protect',
+    'How should the team read this notification, and what does it ask of them?',
+    'a',
+    [
+      [
+        "The level marks where local policy asks for a review of this patient's dose record: log that line in mGy — the running total for this patient over the case — and the acquisitions it covers, then open that review.",
+        "The line the notification names is this patient's running total at the interventional reference point, an index that climbs across every fluoroscopic and rotational run of one case, which is why the level is set on it and why it belongs in this patient's record. What the review covers is the running total so far, the record entry, the imaging still planned and any follow-up; where the level sits is institution dependent. Logging that line, its units and the acquisitions it covers is what keeps it apart from the figures printed beside it — the kerma–area product sums a different quantity, the same line is not what one patch of skin has taken, and neither figure describes how the equipment is performing.",
+      ],
+      [
+        "The level marks where local policy asks for a review of this system's output: log that line in mGy — the running total for this system over the case — and the acquisitions it covers, then open that review.",
+        "A dose notification is set on a figure that accumulates over one patient's imaging, not on how the system is performing. Cumulative reference air kerma climbs with every angle, mode and minute the beam is used in this case, so a high running total describes how the beam was used here rather than whether the equipment meets its own specification — which acceptance and periodic evaluation settle, not one patient's total. Opening an output review of the system leaves the patient-side review, the record entry, the imaging still planned and any follow-up unopened.",
+      ],
+      [
+        "The level marks where local policy asks for a review of this patient's skin: log that line in mGy — the running total for one patch of skin over the case — and the acquisitions it covers, then open that review.",
+        'Cumulative reference air kerma is an equipment-reference index reported at the interventional reference point, not the highest dose any one patch of skin has received. It takes no account of how far the steep obliques moved the entrance beam across the back, of table height, or of backscatter, so reading the mGy line as a skin figure overstates that dose in some geometries and understates it in others — and a skin review then rests on that figure, while the review the level exists to open is still not started.',
+      ],
+    ],
+    "A notification level is set on a figure that accumulates across one patient's imaging, and what it opens is review under local policy: the running total so far, the record, the imaging still planned and any follow-up. It is not the dose reached on one patch of skin, and it is not a statement about how the equipment is performing. Naming the line the notification reports, its units and the acquisitions it covers is what keeps it apart from the other figures printed beside it.",
+    ['aapm12', 'wabip', 'skin'],
+  ),
 ]
 
 export const QUESTION_BY_ID = Object.fromEntries(
