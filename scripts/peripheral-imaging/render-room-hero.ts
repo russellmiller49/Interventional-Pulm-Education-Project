@@ -120,8 +120,6 @@ async function main() {
     const sources = [
       'package-lock.json',
       'public/peripheral-imaging/anatomy/thorax.glb',
-      'public/fluoroview/draco/draco_wasm_wrapper.js',
-      'public/fluoroview/draco/draco_decoder.wasm',
       'scripts/peripheral-imaging/room-fixture.ts',
       'scripts/peripheral-imaging/render-room-hero.ts',
       'scripts/peripheral-imaging/suite-harness.tsx',
@@ -168,6 +166,8 @@ async function main() {
         deviceScaleFactor: 1,
         antialias: true,
         renderer: 'ANGLE SwiftShader',
+        dracoDecoderSha256: sha256(readFileSync('public/fluoroview/draco/draco_decoder.wasm')),
+        dracoWrapperSha256: sha256(readFileSync('public/fluoroview/draco/draco_wasm_wrapper.js')),
         threeRevision: REVISION,
         chromium: browser.version(),
         playwright: require('@playwright/test/package.json').version,

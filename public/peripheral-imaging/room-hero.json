@@ -2,7 +2,7 @@
   "schema": "peripheral-imaging-room-render/v1",
   "authoredOn": "2026-09-09",
   "source": "Repository-authored room and gantry with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
-  "sourceSha256": "13a56198d436f85463e7fd386dfd420b7cc7fb96150a1aebfb5a198c3162abd7",
+  "sourceSha256": "c9f8147dcb16a46c85ee03b65a4c3827fd2968d89025092ad3adf5403a7ce8c3",
   "ctSourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
   "airwaySourceSha256": "277223b59550c1e037585e09205bdd7f8dc24e8abf9b4fd5875b5cb6f369ee69",
   "sources": [
@@ -15,20 +15,12 @@
       "sha256": "14892a6689ad0cb80854e5edaa4f2147074f6301aa910eb8adf91736dd22cc80"
     },
     {
-      "path": "public/fluoroview/draco/draco_wasm_wrapper.js",
-      "sha256": "52550bd5eda1f89d259c74bb075c4c02db0e944fa1fdd0fff899278fd740fe56"
-    },
-    {
-      "path": "public/fluoroview/draco/draco_decoder.wasm",
-      "sha256": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac"
-    },
-    {
       "path": "scripts/peripheral-imaging/room-fixture.ts",
       "sha256": "a680b64e7fe0e58b039843e4fe86875bf5d1cc0052de2d465bb60036cc31587e"
     },
     {
       "path": "scripts/peripheral-imaging/render-room-hero.ts",
-      "sha256": "1beee8bc1245ffa96a08c8f75e094a13157d2b67a2ef64903135fe9e456fc6a8"
+      "sha256": "acc2069b0fc415d3660b4850ba9cffeb9aa20deeb85465c5140e42e174c39c1f"
     },
     {
       "path": "scripts/peripheral-imaging/suite-harness.tsx",
@@ -114,6 +106,8 @@
     "deviceScaleFactor": 1,
     "antialias": true,
     "renderer": "ANGLE SwiftShader",
+    "dracoDecoderSha256": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac",
+    "dracoWrapperSha256": "52550bd5eda1f89d259c74bb075c4c02db0e944fa1fdd0fff899278fd740fe56",
     "threeRevision": "180",
     "chromium": "151.0.7922.34",
     "playwright": "1.62.0",

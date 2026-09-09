@@ -4,7 +4,7 @@
   "assets": [
     {
       "path": "room-hero.png",
-      "sourceSha256": "13a56198d436f85463e7fd386dfd420b7cc7fb96150a1aebfb5a198c3162abd7",
+      "sourceSha256": "c9f8147dcb16a46c85ee03b65a4c3827fd2968d89025092ad3adf5403a7ce8c3",
       "source": "Repository-authored room and gantry with the Slicer-derived thorax; actual room mode, without DOM overlays or a DRR",
       "provenance": "room-hero.json",
       "sha256": "73391f4b86b12757c188f5314f5f716b550ca33dba26b97a54ae9cf0b32dbcf9",
