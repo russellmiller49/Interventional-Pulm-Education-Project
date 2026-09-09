@@ -107,10 +107,16 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         label: 'Keep the tool fifteen millimetres or more off the target along the ray',
       },
     ],
+    // A state goal, not an event: the overlap event fires on the first tick of the orbit slider
+    // during the Act, so an event goal here would be met before this step began. The Act leaves
+    // the separation at ten millimetres or more, so this reads false on entry and flips only
+    // when the learner brings the beam back.
     observe: [
       {
-        type: 'event',
-        id: 'overlap-seen',
+        type: 'metric',
+        metric: 'separationMm',
+        op: 'lte',
+        value: 0.5,
         label: 'Return to a view where the tool and target overlap again',
       },
     ],

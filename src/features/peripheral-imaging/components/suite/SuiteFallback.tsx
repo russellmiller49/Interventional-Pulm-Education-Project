@@ -1,5 +1,6 @@
 'use client'
 
+import { formatReadout, LAB_METRICS, labReadouts, type LabMetricId } from '../../engine/labMetrics'
 import { ImagingLab } from '../ImagingLab'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { ChainCaptionStrip } from './ChainCaptionStrip'
@@ -18,6 +19,9 @@ import { SUITE_DOM, type ImagingSuitePaneProps } from './types'
  */
 export function SuiteFallback(props: ImagingSuitePaneProps) {
   const { view, lab, onLabChange, controlsEnabled, lockedReason, pausedReason, goals } = props
+  const readouts = view.lab ? labReadouts(view.lab, lab.values, view.sectionId) : {}
+  const metricIds: readonly LabMetricId[] =
+    view.readouts ?? (Object.keys(readouts) as LabMetricId[])
   return (
     <div
       className={styles.pane}
@@ -44,6 +48,16 @@ export function SuiteFallback(props: ImagingSuitePaneProps) {
             onChange={(values) => onLabChange(values)}
           />
         </fieldset>
+      ) : null}
+      {view.lab && metricIds.length > 0 ? (
+        <dl className={styles.readouts} aria-label="The readouts" {...{ [SUITE_DOM.readouts]: '' }}>
+          {metricIds.map((metric) => (
+            <div key={metric} {...{ [SUITE_DOM.readout]: metric }}>
+              <dt>{LAB_METRICS[metric].label}</dt>
+              <dd>{formatReadout(metric, readouts[metric])}</dd>
+            </div>
+          ))}
+        </dl>
       ) : null}
       {goals.length > 0 ? (
         <ul className={styles.goals} aria-label="What this step is waiting for" data-suite-goals>

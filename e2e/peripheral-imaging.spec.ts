@@ -1,11 +1,20 @@
 import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test'
-import { LESSONS } from '../src/features/peripheral-imaging/data/lessons'
-import { QUESTION_BY_ID } from '../src/features/peripheral-imaging/data/questions'
+
+import { imagingCases } from '../src/features/peripheral-imaging/content/cases'
+import { peripheralImagingSectionIds } from '../src/features/peripheral-imaging/content/pathway'
+import { imagingStageLesson } from '../src/features/peripheral-imaging/content/stageLessons'
 import {
-  LESION_CENTER,
-  projectToDetector,
-  toolTipForDepth,
-} from '../src/features/peripheral-imaging/lib/physics'
+  createEmptyImagingRecord,
+  PERIPHERAL_IMAGING_STORAGE_KEY,
+  withSectionCompleted,
+} from '../src/features/peripheral-imaging/engine/learnProgress'
+
+/*
+ * The peripheral-imaging course on the shared lesson stage: the one door, a section walked the
+ * way a learner walks it, the answer boundary on the suite, the record kept across a reload, the
+ * capstone standard, and the compact layout. The suite's own scene checks (pixels, animation,
+ * the chain pins) are Codex's and live beside these once each view lands.
+ */
 
 // Explicit opt-in keeps this suite independent of the default port-3001 E2E server.
 test.skip(
@@ -14,10 +23,11 @@ test.skip(
 )
 test.setTimeout(120_000)
 
+const base = () => process.env.PERIPHERAL_IMAGING_BASE_URL!
+
 test.beforeEach(async ({ context, page }) => {
-  const base = process.env.PERIPHERAL_IMAGING_BASE_URL!
-  if (!['localhost', '127.0.0.1'].includes(new URL(base).hostname))
-    throw new Error('Imaging smoke checks require localhost.')
+  if (!['localhost', '127.0.0.1'].includes(new URL(base()).hostname))
+    throw new Error('Imaging checks require localhost.')
   const token = process.env.LOCAL_DEV_AUTH_TOKEN
   if (!token)
     throw new Error(
@@ -25,7 +35,7 @@ test.beforeEach(async ({ context, page }) => {
     )
   // Values remain in memory; do not print the auth URL or persist a browser trace.
   const auth = await context.request
-    .get(base + '/api/local-dev-auth', {
+    .get(base() + '/api/local-dev-auth', {
       params: { token, next: '/en/fluoroview' },
       maxRedirects: 0,
     })
@@ -33,46 +43,56 @@ test.beforeEach(async ({ context, page }) => {
       throw new Error('Local development auth request failed.')
     })
   expect(auth.status()).toBe(307)
-  await page.goto(base + '/en/fluoroview')
-  await expect(page.getByRole('button', { name: /^Start —/ })).toBeEnabled()
+  await page.goto(base() + '/en/fluoroview')
+  await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
+    'data-imaging-continue',
+    'resolved',
+  )
 })
-const content = (page: Page) => page.getByRole('region', { name: 'Imaging course content' })
-async function lesson(page: Page, id: string) {
-  const title = LESSONS.find((item) => item.id === id)!.title
-  const pathToggle = page.getByRole('button', { name: /Learning pathway ·/ })
-  if ((await pathToggle.isVisible()) && (await pathToggle.getAttribute('aria-expanded')) !== 'true')
-    await pathToggle.click()
-  await page
-    .getByRole('complementary', { name: 'Learning pathway' })
-    .getByRole('button', { name: new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })
-    .click()
-  await expect(content(page).getByRole('heading', { level: 1 })).toHaveText(title)
+
+const stageId = (page: Page) => page.locator('[data-stage]').getAttribute('data-stage')
+const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]')
+const status = (page: Page) => page.locator('[data-now-status]')
+
+async function openSection(page: Page, sectionId: string) {
+  await page.goto(`${base()}/en/fluoroview/learn?section=${sectionId}`)
+  await expect(page.locator('[data-stage]')).toHaveAttribute(
+    'data-stage',
+    `${sectionId}-1-recognize`,
+  )
 }
-async function explore(page: Page, id: string) {
-  await lesson(page, id)
-  await content(page).getByRole('button', { name: 'Explore the model' }).click()
+
+async function commitKeyed(page: Page, sectionId: string, stepIndex: number) {
+  const step = imagingStageLesson(sectionId as never).steps[stepIndex]
+  if (step.interaction.kind !== 'prediction') throw new Error(`${step.id} is not a prediction`)
+  const keyed = step.interaction.item.choices.find((choice) => choice.plausibility === 'best')!
+  await page.locator(`[data-prediction-choices] input[value="${keyed.id}"]`).check()
+  await primary(page).click()
+  await expect(page.locator('[data-answer-verdict]')).toHaveAttribute(
+    'data-verdict-outcome',
+    'correct',
+  )
 }
-async function setRange(page: Page, label: string, value: number) {
-  const input = content(page).getByRole('slider', { name: label })
+
+async function setRange(page: Page, label: string | RegExp, value: number) {
+  const input = page.getByRole('slider', { name: label })
   await input.fill(String(value))
+  await input.dispatchEvent('input')
   await input.dispatchEvent('change')
 }
+
 async function capture(page: Page, info: TestInfo, name: string) {
-  // Capture fixed site navigation at the top, rather than mid-page after lesson focus.
-  await page.evaluate(() => window.scrollTo(0, 0))
-  await page.screenshot({ path: info.outputPath(name), fullPage: true })
+  await page.screenshot({ path: info.outputPath(name), fullPage: false })
 }
+
+async function noHorizontalOverflow(page: Page) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  )
+}
+
+/** A canvas that carries an image, not a blank renderer. */
 async function expectImageSignal(canvas: Locator, webgl = true) {
-  if (webgl)
-    await expect
-      .poll(() =>
-        canvas.evaluate(
-          (node) =>
-            (node as HTMLCanvasElement).dataset.threeState ??
-            node.closest('[data-projection-state]')?.getAttribute('data-projection-state'),
-        ),
-      )
-      .toBe('ready')
   await expect
     .poll(() =>
       canvas.evaluate((node, useWebgl) => {
@@ -95,189 +115,182 @@ async function expectImageSignal(canvas: Locator, webgl = true) {
     .toBeGreaterThan(35)
 }
 
-test('desktop pathway, all lab surfaces and persistent answer boundary', async ({
+test('the one door opens the first section, and a sorted section runs to its record', async ({
   page,
 }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  page.on('console', (message) => {
-    if (message.type() === 'error' && /THREE|shader|WebGL/i.test(message.text()))
-      errors.push(message.text())
-  })
-  await expect(content(page).locator('canvas')).toHaveCount(1)
-  await expect(content(page).getByText('Authored target', { exact: true })).toBeVisible()
-  await expectImageSignal(content(page).locator('canvas'))
-  await capture(page, testInfo, 'course-desktop.png')
-  await page.getByRole('button', { name: /^Start —/ }).click()
-  await content(page)
-    .getByRole('button', { name: /Check$/ })
-    .click()
-  await expect(content(page).getByRole('button', { name: /Commit response/ })).toBeDisabled()
-  await expect(content(page).getByText(/Visible hardware and a virtual destination/)).toHaveCount(0)
-  await content(page).getByRole('radio').first().check()
-  await content(page)
-    .getByRole('button', { name: /Commit response/ })
-    .click()
-  await expect(content(page).getByText('A point to revisit')).toBeVisible()
-  await page.reload()
-  await page.getByRole('button', { name: /^Continue —/ }).click()
-  await expect(content(page).getByText('A point to revisit')).toBeVisible()
-  await expect(content(page).getByRole('radio').first()).toBeChecked()
-  await content(page).getByRole('button', { name: 'Review this unit' }).click()
-  await content(page).getByRole('button', { name: 'Complete unit & continue' }).click()
-  await expect(content(page).getByRole('heading', { level: 1 })).toHaveText(LESSONS[1].title)
+  const first = peripheralImagingSectionIds[0]
+  await expect(page.locator('[data-imaging-continue]')).toHaveCount(1)
+  await expect(page.locator('[data-imaging-continue]')).toHaveAttribute('data-next-section', first)
+  await capture(page, testInfo, 'hub-desktop.png')
+  await page.locator('[data-imaging-continue]').click()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', `${first}-1-recognize`)
+  await expect(page.locator('[data-suite-scene]')).toHaveAttribute('data-lit', /./)
+  await noHorizontalOverflow(page)
 
-  await explore(page, 'projection')
-  await setRange(page, 'C-arm obliquity', 30)
-  const target = projectToDetector(LESION_CENTER, 30, 0),
-    tip = projectToDetector(toolTipForDepth(22), 30, 0)
-  const separation = Math.hypot(target[0] - tip[0], target[1] - tip[1]).toFixed(1)
-  await expect(content(page).getByText(separation + ' mm', { exact: true })).toBeVisible()
-  await expect(content(page).locator('canvas')).toHaveCount(2)
-  await expect(content(page).locator('[data-projection-state=ready]')).toBeVisible()
-  await expectImageSignal(content(page).locator('[data-projection-state=ready] canvas'))
-  await expectImageSignal(content(page).locator('canvas').first())
-  await capture(page, testInfo, 'geometry-desktop.png')
-  await content(page).getByRole('button', { name: 'C-arm motion', exact: true }).click()
-  await expectImageSignal(content(page).locator('canvas').first())
-  const gantryBefore = await content(page)
-    .locator('canvas')
-    .first()
-    .evaluate((node) => (node as HTMLCanvasElement).toDataURL())
-  await setRange(page, 'C-arm obliquity', -35)
-  await expect
-    .poll(() =>
-      content(page)
-        .locator('canvas')
-        .first()
-        .evaluate((node) => (node as HTMLCanvasElement).toDataURL()),
-    )
-    .not.toBe(gantryBefore)
-  await content(page)
-    .getByRole('img', { name: 'Original FluoroView C-arm animation, a generic motion reference.' })
-    .screenshot({ path: testInfo.outputPath('original-carm.png') })
-  for (const id of [
-    'field',
-    'time',
-    'dts-acquisition',
-    'fixed-suite',
-    'mobile-suite',
-    'tool-confirmation',
-    'changing-anatomy',
-    'staff-protection',
-    'dose-reporting',
-  ]) {
-    await explore(page, id)
-    await expect(content(page).getByText(/Authored teaching model/)).toBeVisible()
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-    ).toBe(true)
-    if (id === 'tool-confirmation') {
-      await content(page).getByRole('button', { name: 'Example B', exact: true }).click()
-      await content(page).getByRole('button', { name: 'Reveal geometric explanation' }).click()
-      await expect(content(page).getByText(/Sampling window fully within the sphere/)).toBeVisible()
-      await expect(content(page).getByText(/The tip is outside/)).toBeVisible()
-      await expect(content(page).getByText('Sampling window', { exact: true })).toBeVisible()
-      await capture(page, testInfo, 'sampling-desktop.png')
-      await expect(content(page).locator('[data-ct-state=ready]')).toHaveCount(3)
-      await expectImageSignal(content(page).locator('[data-ct-state=ready]').first(), false)
-    }
-    if (id === 'dts-acquisition') {
-      await expect(content(page).locator('[data-dts-state=ready]')).toBeVisible()
-      const planeCanvas = content(page)
-        .getByRole('img', { name: /CT-derived shift-and-add plane/ })
-        .locator('canvas')
-      await expectImageSignal(planeCanvas, false)
-      const before = await planeCanvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL())
-      await content(page).getByRole('button', { name: 'Tool plane', exact: true }).click()
-      await expect
-        .poll(() => planeCanvas.evaluate((node) => (node as HTMLCanvasElement).toDataURL()))
-        .not.toBe(before)
-      await content(page)
-        .locator('[data-dts-state=ready]')
-        .screenshot({ path: testInfo.outputPath('ct-tomosynthesis.png') })
-    }
-    if (id === 'mobile-suite') {
-      await expect(content(page).locator('[data-projection-state=ready]')).toHaveCount(2)
-      for (const canvas of await content(page)
-        .locator('[data-projection-state=ready] canvas')
-        .all())
-        await expectImageSignal(canvas)
-    }
+  // Recognize → Predict: no verdict, sources withheld, the primary waits for a choice.
+  await primary(page).click()
+  expect(await stageId(page)).toBe(`${first}-2-predict`)
+  await expect(page.locator('[data-verdict-outcome]')).toHaveCount(0)
+  await expect(page.locator('[data-stage-sources]')).toHaveAttribute(
+    'data-stage-sources-claims',
+    'false',
+  )
+  await expect(primary(page)).toBeDisabled()
+  await commitKeyed(page, first, 1)
+  await expect(page.locator('[data-stage-sources]')).toHaveAttribute(
+    'data-stage-sources-claims',
+    'true',
+  )
+  await capture(page, testInfo, 'predict-verdict.png')
+  await primary(page).click()
+
+  // Act: the sort, committed as a set, graded in words.
+  expect(await stageId(page)).toBe(`${first}-3-act`)
+  await expect(primary(page)).toBeDisabled()
+  const lesson = imagingStageLesson(first as never)
+  const sortStep = lesson.steps[2]
+  if (sortStep.interaction.kind !== 'sort') throw new Error('expected a sort')
+  for (const row of sortStep.interaction.sort.rows) {
+    await page.locator(`[data-sort-row="${row.id}"] select`).selectOption(row.origin)
   }
-  await page
-    .getByRole('navigation', { name: 'Course resources' })
-    .getByRole('button', { name: 'References' })
-    .click()
-  await expect(content(page).getByRole('link', { name: /\(\.glb\)/ })).toHaveCount(2)
-  await expect(content(page).getByRole('link', { name: /video|youtube|webinar/i })).toHaveCount(0)
+  await primary(page).click()
+  await expect(page.locator('[data-sort-verdict="held"]')).toHaveCount(
+    sortStep.interaction.sort.rows.length,
+  )
+  await primary(page).click()
+
+  // Explain → Transfer → the record.
+  expect(await stageId(page)).toBe(`${first}-4-explain`)
+  await expect(page.locator('[data-explain-recap] [data-answer-verdict]')).toBeVisible()
+  await primary(page).click()
+  expect(await stageId(page)).toBe(`${first}-5-transfer`)
+  await commitKeyed(page, first, 4)
+  await expect(primary(page)).toHaveText(/Finish the section/)
+  await primary(page).click()
+  await expect(page.locator('[data-section-completion]')).toBeVisible()
+  await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
+    'data-next-section',
+    peripheralImagingSectionIds[1],
+  )
+  const record = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+    PERIPHERAL_IMAGING_STORAGE_KEY,
+  )
+  expect(record.version).toBe(2)
+  expect(record.completedSectionIds).toEqual([first])
+
+  // Back on the hub the chip is worked through and the door moved on.
+  await page.goto(base() + '/en/fluoroview')
+  await expect(page.locator('[data-imaging-continue]')).toHaveAttribute(
+    'data-next-section',
+    peripheralImagingSectionIds[1],
+  )
+  await expect(page.locator(`[data-pathway-accordion] a[data-complete="true"]`)).toHaveCount(1)
   expect(errors).toEqual([])
 })
 
-test('acquisition invalidation and safety-critical case scoring', async ({ page }) => {
-  await explore(page, 'cbct-acquisition')
-  await expect(content(page).getByRole('button', { name: 'Capture teaching state' })).toBeDisabled()
-  await content(page).getByRole('button', { name: 'Center the teaching target' }).click()
-  for (const checkbox of await content(page).getByRole('checkbox').all()) await checkbox.check()
-  await content(page).getByRole('button', { name: 'Capture teaching state' }).click()
-  await expect(content(page).getByText('Teaching state captured.')).toBeVisible()
-  await setRange(page, 'Target depth offset', 15)
-  await expect(content(page).getByRole('button', { name: 'Capture teaching state' })).toBeDisabled()
-  await expect(content(page).getByRole('checkbox').first()).not.toBeChecked()
-  await expect(content(page).getByText('Teaching state captured.')).toHaveCount(0)
-  await lesson(page, 'suite-cases')
-  await content(page).getByRole('button', { name: 'Start the suite cases' }).click()
-  const cases = LESSONS[LESSONS.length - 1]
-  for (const id of cases.checkIds) {
-    const question = QUESTION_BY_ID[id]
-    const chosen =
-      id === 'case-6' ? 0 : question.choices.findIndex((choice) => choice.id === question.correct)
-    await content(page).getByRole('radio').nth(chosen).check()
-    await content(page).getByRole('button', { name: 'Commit response' }).click()
-    await content(page)
-      .getByRole('button', {
-        name: id === cases.checkIds.at(-1) ? 'Review this unit' : 'Continue to the next decision',
-      })
-      .click()
-  }
-  await expect(content(page).getByText(/First decisions · 7\/8 correct/)).toBeVisible()
-  await expect(
-    content(page).getByRole('heading', { name: 'Independent case check: review needed' }),
-  ).toBeVisible()
+test('a lab section: the suite is locked until the commitment, a goal flips, and a reload restarts the section', async ({
+  page,
+}, testInfo) => {
+  await openSection(page, 'projection')
+  await expect(page.locator('[data-suite-controls]')).toBeDisabled()
+  await primary(page).click()
+  expect(await stageId(page)).toBe('projection-2-predict')
+  await expect(page.locator('[data-suite-controls]')).toBeDisabled()
+  await commitKeyed(page, 'projection', 1)
+  await expect(page.locator('[data-suite-controls]')).toBeEnabled()
+  await primary(page).click()
+  expect(await stageId(page)).toBe('projection-3-act')
+
+  // The DRR behind the controls carries an image (the fallback lab until the suite lands).
+  const monitor = page.locator('[data-projection-state=ready] canvas')
+  if ((await monitor.count()) > 0) await expectImageSignal(monitor.first())
+
+  // The goal flips on the suite, and nothing continues before it does.
+  const goals = page.locator('[data-step-goals] li')
+  await expect(goals.first()).toHaveAttribute('data-met', 'false')
+  await expect(primary(page)).toHaveCount(0)
+  await setRange(page, /obliquity/i, 60)
+  await expect(goals.first()).toHaveAttribute('data-met', 'true')
+  await expect(status(page)).toHaveText(/^Done/)
+  await capture(page, testInfo, 'act-goal-met.png')
+
+  // A reload restarts the section at its first step while the record keeps the first attempt.
+  await page.reload()
+  await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage', 'projection-1-recognize')
+  await expect(page.locator('[data-verdict-outcome]')).toHaveCount(0)
+  const record = await page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+    PERIPHERAL_IMAGING_STORAGE_KEY,
+  )
+  expect(
+    Object.keys(record.firstAttempts).filter((key) => key.startsWith('projection:')),
+  ).toHaveLength(1)
+  expect(record.completedSectionIds).toEqual([])
 })
 
-test('mobile, enlarged text, glossary and inside-lab resume', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await expect(content(page).locator('canvas')).toHaveCount(1)
-  await expect(content(page).getByText('Authored target', { exact: true })).toBeVisible()
-  await expectImageSignal(content(page).locator('canvas'))
-  await capture(page, testInfo, 'course-mobile.png')
-  await explore(page, 'tool-confirmation')
-  await setRange(page, 'Anterior / posterior offset', -10)
-  await page.reload()
-  await page.getByRole('button', { name: /^Continue —/ }).click()
-  await expect(
-    content(page).getByRole('slider', { name: 'Anterior / posterior offset' }),
-  ).toHaveValue('-10')
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true,
+test('the capstone: gated on the sections, decided once, one wrong critical decision fails the standard', async ({
+  page,
+}) => {
+  await page.goto(base() + '/en/fluoroview/assess')
+  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'locked')
+  await expect(page.locator('[data-capstone="locked"] a')).toHaveCount(
+    peripheralImagingSectionIds.length,
   )
-  await expect(content(page).getByText('Sampling window', { exact: true })).toBeVisible()
-  await capture(page, testInfo, 'sampling-mobile.png')
-  await page
-    .getByRole('navigation', { name: 'Course resources' })
-    .getByRole('button', { name: 'Glossary' })
-    .click()
-  await content(page).getByRole('searchbox').fill('parallax')
-  await expect(content(page).locator('dt')).toHaveText(['Parallax'])
-  await page.evaluate(() => {
-    const region = document.getElementById('imaging-content')!
-    const sizes = Array.from(region.querySelectorAll<HTMLElement>('*')).map(
-      (el) => [el, parseFloat(getComputedStyle(el).fontSize)] as const,
+
+  let record = createEmptyImagingRecord()
+  for (const id of peripheralImagingSectionIds) record = withSectionCompleted(record, id)
+  await page.evaluate(([key, json]) => localStorage.setItem(key, json), [
+    PERIPHERAL_IMAGING_STORAGE_KEY,
+    JSON.stringify(record),
+  ] as const)
+  await page.goto(base() + '/en/fluoroview/assess')
+  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'deciding')
+  for (const imagingCase of imagingCases) {
+    await expect(page.locator('[data-capstone="deciding"]')).toHaveAttribute(
+      'data-case',
+      imagingCase.id,
     )
-    for (const [element, fontSize] of sizes) element.style.fontSize = fontSize * 2 + 'px'
-  })
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true,
+    // No verdict of any kind while the set is being decided.
+    await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+    const keyed = imagingCase.item.choices.find((choice) => choice.plausibility === 'best')!
+    const wrong = imagingCase.item.choices.find((choice) => choice.plausibility !== 'best')!
+    const chosen = imagingCase.id === 'case-6' ? wrong : keyed
+    await page.locator(`[data-prediction-choices] input[value="${chosen.id}"]`).check()
+    await page.locator('[data-now-primary]').click()
+  }
+  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'debrief')
+  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-standard-met', 'false')
+  await expect(page.locator('[data-capstone-standard]')).toContainText(
+    'Seven of eight decisions held',
   )
+  await expect(page.locator('[data-capstone-standard]')).toContainText('not yet met')
+  await expect(page.locator('[data-answer-verdict]')).toHaveCount(imagingCases.length)
+  // First decisions are immutable: the record keeps them across a reload.
+  await page.reload()
+  await expect(page.locator('[data-capstone]')).toHaveAttribute('data-capstone', 'debrief')
+  await expect(page.locator('[data-capstone-standard]')).toContainText(
+    'Seven of eight decisions held',
+  )
+})
+
+test('compact layout: one pane at a time, following the step', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(base() + '/en/fluoroview')
+  await noHorizontalOverflow(page)
+  await capture(page, testInfo, 'hub-mobile.png')
+  await openSection(page, 'projection')
+  const tabs = page.getByRole('tablist', { name: 'Workspace panel views' })
+  await expect(tabs).toBeVisible()
+  await noHorizontalOverflow(page)
+  // Recognize reads in the Teaching pane; Predict answers in the Steps pane.
+  await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Teaching/i)
+  await tabs.getByRole('tab', { name: /Steps/i }).click()
+  await primary(page).click()
+  expect(await stageId(page)).toBe('projection-2-predict')
+  await expect(tabs.getByRole('tab', { selected: true })).toHaveText(/Steps/i)
+  await capture(page, testInfo, 'predict-mobile.png')
+  await noHorizontalOverflow(page)
 })

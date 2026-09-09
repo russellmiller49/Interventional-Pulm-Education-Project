@@ -102,3 +102,50 @@ learner/technologist pilot and retention review are documented in the module pla
 The content uses the repository's existing localization handoff; a specialist language
 review of the complete clinical course has not been performed. The change is prepared
 for pull-request review and has not been deployed.
+
+## Stage rebuild — round 1 (2026-09-08)
+
+Scope: the course re-hosted on the shared lesson stage (see
+[stage-rebuild-plan.md](stage-rebuild-plan.md)); nineteen sections, the hub, Learn / Practice /
+Assess routes, the module-local record and its migration, the capstone. The imaging suite's 3D
+views are Codex's track and are not covered here; every section runs on the fallback pane (the
+draft's lab body under the chain caption) until a view lands.
+
+| Check                         | Result                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registries validate at import | Pathway, chain, control panel, grammar, section specs, lab goals, sorts, chain-answer targets, items, stage lessons, cases: every validator throws on an authoring error; the test suite loads them all.                                                                                                                           |
+| Answer boundary, authored     | The authored leak scan runs over every pre-commit surface (titles, objective, increment, why, recall prompt, pre-commit blocks and their points, stop cards, step titles/instructions/actions/look-ins, the stem) against each section's deny patterns.                                                                            |
+| Answer boundary, rendered     | The composed document is scanned on the first step and at the prediction step reached as a learner reaches it, hidden nodes and attributes included; the two answer fieldsets are the one excused surface. Two block details that named the answer inside a collapsed disclosure were found and are now withheld until commitment. |
+| Controls                      | Locked on the read before the prediction, while any prediction is open, and while looking back; the pane and the context strip say why.                                                                                                                                                                                            |
+| Goals                         | Every Act/Observe goal is evaluated by the engine from the same readout arithmetic the pane prints; a goal pre-met on entry (the projection Observe event) was replaced by a state goal.                                                                                                                                           |
+| Record                        | First decisions written once at commit and never rewritten; correctness recomputed from the item bank at parse; sections complete once at finish; nothing persisted mid-section; legacy v1 record migrated once.                                                                                                                   |
+| Capstone                      | Gated on every section; decided once per case; verdicts open together after the last decision; standard ≥ 7 of 8 and every safety-critical decision.                                                                                                                                                                               |
+| Accessibility                 | Hub and Learn landing pass jest-axe; the stage's own audits are shared with the four adopters.                                                                                                                                                                                                                                     |
+
+Automated: **17 suites / 131 tests** across `src/features/peripheral-imaging`,
+`src/app/[locale]/fluoroview` and `src/i18n/locale.test.ts`; ESLint clean on the feature, the
+routes, the e2e spec and `src/i18n`; `tsc --noEmit` clean.
+
+Browser (dev server, 1440×900 and 1024×700, signed in through the local-dev-auth route): the hub
+renders one door ("Start — What does this image establish? · Section 1 of 19 · 4 min") and the
+composition line counted at render; the first section walks Recognize → Predict (controls locked,
+verdict stated, sources released) → the four-questions sort (graded row by row) → Explain →
+Transfer → "Finish the section", the completion card links the next section, and the v2 record
+holds `completedSectionIds: ['imaging-questions']` with two first attempts; the projection section
+runs on the fallback lab with the contract's control ids — obliquity 60 flips the separation goal
+(0.0 → 37.0 mm) and the card reads Done, Observe flips back at 0.0 mm, Explain shows the recap,
+the three-column what-changed table and the control strip, and Transfer locks the controls again.
+No document horizontal overflow at either width, and none at 375×812 either; console clean apart
+from the site's `/api/analytics` 401 under local-dev auth. The Browser pane was hidden for part of
+the walk, so the later checks are DOM reads rather than screenshots, and the workspace's compact
+pane switcher — which follows a ResizeObserver the hidden pane does not fire — is covered by the
+Playwright spec rather than this walk.
+
+Playwright (`e2e/peripheral-imaging.spec.ts`, rewritten for the stage; run with
+`PERIPHERAL_IMAGING_BASE_URL` and `LOCAL_DEV_AUTH_TOKEN` as before): the door, a sorted section to
+its record, a lab section's lock / goal / reload, the capstone standard with one wrong critical
+decision, the compact layout. Not run in this round's session; the dev server in use belonged to
+another agent.
+
+Not covered in this round: the `radial-ebus` section, the Practice micro-cases, the suite's 3D
+views, localisation, learner piloting.

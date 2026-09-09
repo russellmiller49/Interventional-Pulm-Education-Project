@@ -84,10 +84,11 @@ export function stepWorkDone(
     case 'explain':
       return commitments.confirmed >= index
     case 'walk':
+      // The walk's work is the stops and the goal; moving past the step is not part of it, or
+      // the card could never say the work is done while the step is live.
       return (
         commitments.walkDone &&
-        (lab ? labGoalsMet(interaction.goals, lab, interaction.lab, lesson.sectionId) : true) &&
-        commitments.confirmed >= index
+        (lab ? labGoalsMet(interaction.goals, lab, interaction.lab, lesson.sectionId) : true)
       )
     case 'prediction':
       return commitments.choices[step.id] !== undefined

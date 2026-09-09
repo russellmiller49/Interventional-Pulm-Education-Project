@@ -10,6 +10,7 @@ export function Slider({
   step = 1,
   unit = '',
   onChange,
+  id: givenId,
 }: {
   label: string
   value: number
@@ -18,8 +19,11 @@ export function Slider({
   step?: number
   unit?: string
   onChange: (value: number) => void
+  /** The suite contract's element id for this control, so a step can point at it. */
+  id?: string
 }) {
-  const id = useId()
+  const generatedId = useId()
+  const id = givenId ?? generatedId
   return (
     <div className={styles.control}>
       <div className={styles.controlHeader}>
@@ -56,14 +60,18 @@ export function Toggle({
   label,
   checked,
   onChange,
+  id,
 }: {
   label: string
   checked: boolean
   onChange: (value: boolean) => void
+  /** The suite contract's element id for this control, so a step can point at it. */
+  id?: string
 }) {
   return (
     <label className={styles.toggle}>
       <input
+        id={id}
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}

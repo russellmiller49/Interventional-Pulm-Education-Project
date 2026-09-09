@@ -132,3 +132,27 @@
 .goals li[data-met='true'] {
   color: var(--green, #2f855a);
 }
+
+/* The readouts, beside the controls: one definition per metric the step names. */
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.5rem 0.75rem;
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, rgba(148, 163, 184, 0.35));
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+}
+.readouts div {
+  display: grid;
+  gap: 0.1rem;
+}
+.readouts dt {
+  color: var(--muted, rgba(226, 232, 240, 0.7));
+}
+.readouts dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
