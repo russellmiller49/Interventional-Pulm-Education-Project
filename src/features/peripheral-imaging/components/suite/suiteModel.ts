@@ -16,6 +16,7 @@ import {
 } from '../../lib/physics'
 import type { ChainStop, SuiteInputs } from './types'
 export { dtsArc, dtsPlaneQuad, smearWidth, missingWedge } from './dtsModel'
+export { samplingPlanes } from './samplingModel'
 
 export const add = (a: Point3, b: Point3): Point3 => a.map((n, i) => n + b[i]) as Point3
 export const subtract = (a: Point3, b: Point3): Point3 => a.map((n, i) => n - b[i]) as Point3

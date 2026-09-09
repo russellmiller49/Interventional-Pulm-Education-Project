@@ -526,7 +526,61 @@ test('DTS prior colours provenance separately and keeps the measured image recov
   await expect(page.getByRole('button', { name: 'Planning CT prior', exact: true })).toBeDisabled()
 })
 
-for (const section of ['mobile-suite', 'dts-acquisition', 'dts-interpretation']) {
+test('sampling links the side window, thin planes and slab without creating a DRR', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=tool-confirmation`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('[data-ct-state=ready]')).toHaveCount(3)
+  expect(await pixels(page.locator('canvas[data-three-state=ready]'))).toBeGreaterThan(60)
+  const contexts = await page
+    .locator('canvas')
+    .evaluateAll(
+      (canvases) =>
+        canvases.filter((c) => Boolean((c as HTMLCanvasElement).getContext('webgl2'))).length,
+    )
+  expect(contexts).toBe(1)
+  await setRange(page, 'Anterior / posterior offset', 0)
+  await expect(page.locator('[data-readout=windowLabel] dd')).toHaveText(
+    'Sampling window fully within the sphere',
+  )
+  await expect(page.locator('[data-readout=tipInside] dd')).toHaveText('no')
+  const ct = page.locator('[data-ct-state=ready]').first()
+  const thin = await ct.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await page.getByRole('button', { name: 'Step', exact: true }).click()
+  await expect(
+    page.getByRole('slider', { name: 'Axial slice (superior / inferior)', exact: true }),
+  ).toHaveValue('1')
+  await expect.poll(() => ct.evaluate((c) => (c as HTMLCanvasElement).toDataURL())).not.toBe(thin)
+  await page
+    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
+    .check()
+  await page.getByRole('button', { name: 'Slices through target center', exact: true }).click()
+  await expect(
+    page.getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true }),
+  ).not.toBeChecked()
+  await expect.poll(() => ct.evaluate((c) => (c as HTMLCanvasElement).toDataURL())).toBe(thin)
+  await page.getByRole('checkbox', { name: 'Reveal geometric explanation', exact: true }).check()
+  await expect(page.locator('[data-sampling-state]')).toHaveAttribute(
+    'data-sampling-state',
+    'revealed',
+  )
+  await setRange(page, 'Anterior / posterior offset', 12)
+  await expect(page.locator('[data-sampling-state]')).toHaveAttribute(
+    'data-sampling-state',
+    'exploring',
+  )
+  await expect(page.locator('[data-readout=windowIntersects] dd')).toHaveText('no')
+})
+
+for (const section of [
+  'mobile-suite',
+  'dts-acquisition',
+  'dts-interpretation',
+  'tool-confirmation',
+]) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto(`${preview}?section=${section}`)

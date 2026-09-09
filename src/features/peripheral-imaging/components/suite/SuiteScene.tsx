@@ -31,6 +31,7 @@ import {
   useTomosynthesis,
 } from './views/TomosynthesisView'
 import { dtsArc } from './dtsModel'
+import { SamplingView, SamplingPanels } from './views/SamplingView'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
@@ -130,7 +131,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const [volume, setVolume] = useState<Uint8Array | null>(null)
   const [profileFailed, setProfileFailed] = useState(false)
   useEffect(() => {
-    if (view.mode !== 'signal') return
+    if (!['signal', 'sampling'].includes(view.mode)) return
     let active = true
     void loadAnatomyVolume()
       .then((data) => {
@@ -285,7 +286,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       color="#9ab9cf"
                     />
                     <Suspense fallback={null}>
-                      <Anatomy layers={view.layers} offset={translation} />
+                      <Anatomy
+                        layers={view.layers}
+                        offset={translation}
+                        contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
+                      />
                       <Room layers={view.layers} geometry={inputs.geometry} />
                       {view.layers.includes('gantry') && (
                         <ParametricCarm
@@ -332,6 +337,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           prior={view.mode === 'dts-prior'}
                         />
                       )}
+                      {view.mode === 'sampling' && (
+                        <SamplingView
+                          inputs={inputs}
+                          volume={volume}
+                          planes={view.layers.includes('planes')}
+                          portal={portal as RefObject<HTMLDivElement>}
+                          labels={view.layers.includes('labels')}
+                        />
+                      )}
                       {view.mode === 'field' && (
                         <FieldView
                           frame={frame}
@@ -360,6 +374,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       enabled={props.controlsEnabled}
                       overviewBounds={cbctBounds}
                       focus={isCbct ? cbct.setup.target : undefined}
+                      closeupDistance={view.mode === 'sampling' ? 120 : undefined}
                     />
                   </Canvas>
                 </div>
@@ -378,9 +393,20 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   !props.controlsEnabled ||
                   (!view.lab && !dts.active) ||
                   (!view.bindings.some((b) => b.input === 'orbit') &&
-                    !['field', 'time', 'cbct', 'dts', 'dts-prior'].includes(view.mode))
+                    !['field', 'time', 'cbct', 'dts', 'dts-prior', 'sampling'].includes(view.mode))
                 }
                 onClick={() => {
+                  if (view.mode === 'sampling' && view.lab) {
+                    const control = labControl(view.lab, 'axial')
+                    props.onLabChange({
+                      slab: false,
+                      axial:
+                        inputs.axial >= (control?.max ?? 20)
+                          ? (control?.min ?? -20)
+                          : inputs.axial + (control?.step ?? 1),
+                    })
+                    return
+                  }
                   if (dts.active) {
                     dts.step()
                     return
@@ -505,6 +531,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             prior={view.mode === 'dts-prior'}
             enabled={props.controlsEnabled}
           />
+        )}
+        {view.mode === 'sampling' && (
+          <SamplingPanels inputs={inputs} revealed={props.lab.values.revealed === true} />
         )}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}

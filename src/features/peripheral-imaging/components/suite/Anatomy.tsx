@@ -12,10 +12,12 @@ export function Anatomy({
   layers,
   offset = [0, 0, 0],
   map = false,
+  contextOpacity = 1,
 }: {
   layers: readonly SuiteLayer[]
   offset?: Point3
   map?: boolean
+  contextOpacity?: number
 }) {
   const { scene: original } = useGLTF(ANATOMY_MODEL, '/fluoroview/draco/')
   const invalidate = useThree((state) => state.invalidate)
@@ -42,12 +44,16 @@ export function Anatomy({
           if (name === 'Lungs') material.opacity = map ? 0.06 : 0.12
           if (name === 'Ribs and spine') material.opacity = 0.23
           material.roughness = 0.8
+          if (contextOpacity < 1) {
+            material.transparent = true
+            material.opacity *= contextOpacity
+          }
           material.depthWrite = !material.transparent
         }
       }
     })
     return clone
-  }, [original, map])
+  }, [original, map, contextOpacity])
   useEffect(() => {
     scene.traverse((object) => {
       if (object instanceof Mesh)
