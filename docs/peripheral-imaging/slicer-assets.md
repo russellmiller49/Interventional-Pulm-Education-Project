@@ -292,3 +292,14 @@ the existing engine reports whether it is stale. Current and stored overlays
 can be toggled independently. Target close-ups use a closer authored distance
 and labels sit away from the target. Scene tests verify ray/overlay agreement,
 independent tool position, captures and toggles. No new assets were added.
+
+## Phase 2 — staff
+
+The orientation control rotates the actual gantry. Floor contours illustrate a
+normalized inverse-square trend with authored weighting toward the tube entrance
+side. A geometric barrier shadow changes the illustration without multiplying the
+engine's distance readout by an invented attenuation factor. The numerical ratio
+compares horizontal distance in the schematic floor plan. Overview framing includes
+the full set of contours, and six separated chain labels retain leaders to their
+physical locations. Unit and scene tests cover orientation, distance, shielding,
+context count, label visibility and label separation. No assets were added.

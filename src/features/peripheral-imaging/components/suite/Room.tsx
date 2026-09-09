@@ -6,16 +6,18 @@ import { add, chainStopAnchors, suiteFrame } from './suiteModel'
 export function Room({
   layers,
   geometry = DEFAULT_GEOMETRY,
+  floorSpan,
 }: {
   layers: readonly SuiteLayer[]
   geometry?: ImagingGeometry
+  floorSpan?: number
 }) {
   const f = geometry.field
   const anchors = chainStopAnchors(suiteFrame(0, 0, geometry))
   return (
     <group>
       <mesh position={[0, -geometry.sod - f * 0.25, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[f * 5, f * 5]} />
+        <planeGeometry args={[floorSpan ?? f * 5, floorSpan ?? f * 5]} />
         <meshStandardMaterial color="#192c36" roughness={1} />
       </mesh>
       {layers.includes('table') && (

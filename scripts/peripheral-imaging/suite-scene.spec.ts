@@ -646,6 +646,51 @@ test('augmented imaging projects the old contour over the moving CT while the ph
   expect(contexts).toBe(2)
 })
 
+test('staff orientation moves the gantry, distance follows the lab ratio, and the barrier only marks a shadow', async ({
+  page,
+}) => {
+  await page.goto(`${preview}?section=staff-protection`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('canvas')).toHaveCount(1)
+  const scene = page.locator('canvas[data-three-state=ready]')
+  const frontal = await scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL())
+  await setRange(page, 'C-arm orientation', 70)
+  await expect(page.locator('[data-staff-orbit]')).toHaveAttribute('data-staff-orbit', '70')
+  await expect
+    .poll(() => scene.evaluate((c) => (c as HTMLCanvasElement).toDataURL()))
+    .not.toBe(frontal)
+  await setRange(page, 'Illustrative distance from patient center', 2)
+  await expect(page.locator('[data-readout=inverseSquareRatio] dd')).toHaveText('0.25×')
+  await page
+    .getByRole('checkbox', {
+      name: 'Place the schematic barrier between patient and staff',
+      exact: true,
+    })
+    .check()
+  await expect(page.locator('[data-staff-barrier]')).toHaveAttribute('data-staff-barrier', 'true')
+  await expect(page.locator('[data-readout=inverseSquareRatio] dd')).toHaveText('0.25×')
+  const viewport = await page.locator('[role=img]').first().boundingBox()
+  const pinBoxes = []
+  for (const pin of await page.locator('[data-chain-map] [data-chain-pin]').all()) {
+    const box = await pin.boundingBox()
+    expect(box!.x).toBeGreaterThanOrEqual(viewport!.x - 1)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.x + viewport!.width + 1)
+    pinBoxes.push(box!)
+  }
+  for (let i = 0; i < pinBoxes.length; i++)
+    for (let j = i + 1; j < pinBoxes.length; j++) {
+      const a = pinBoxes[i],
+        b = pinBoxes[j]
+      expect(
+        a.x + a.width <= b.x ||
+          b.x + b.width <= a.x ||
+          a.y + a.height <= b.y ||
+          b.y + b.height <= a.y,
+      ).toBe(true)
+    }
+})
+
 for (const section of [
   'mobile-suite',
   'dts-acquisition',
@@ -653,6 +698,7 @@ for (const section of [
   'tool-confirmation',
   'current-anatomy',
   'changing-anatomy',
+  'staff-protection',
 ]) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
