@@ -19,7 +19,16 @@ const config = createJestConfig({
     '<rootDir>/e2e/',
     '<rootDir>/.claude/worktrees/',
   ],
-  testPathIgnorePatterns: ['<rootDir>/e2e/', '<rootDir>/.claude/worktrees/'],
+  // Playwright specs are `*.spec.ts`; Jest tests are `*.test.ts(x)`. The e2e directory is
+  // excluded wholesale above, but the peripheral-imaging suite harness keeps its scene spec
+  // beside the harness page it drives (it runs against a static file, not the dev server, under
+  // `scripts/peripheral-imaging/playwright.suite.config.ts`). Jest would otherwise collect it and
+  // fail on Playwright's `test` export.
+  testPathIgnorePatterns: [
+    '<rootDir>/e2e/',
+    '<rootDir>/.claude/worktrees/',
+    '<rootDir>/scripts/peripheral-imaging/.*\\.spec\\.ts$',
+  ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
 })

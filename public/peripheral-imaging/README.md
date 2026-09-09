@@ -1,29 +1,51 @@
-# Peripheral imaging teaching models
+# Peripheral imaging suite assets
 
-Original procedural geometry authored for this course on 2026-09-08. No patient data,
-manufacturer CAD, stock models, textures, video frames, or external media are included.
+CT-derived teaching context and authored geometry for the peripheral-imaging
+course. Source headers, identifiers and local absolute paths are excluded. The
+original clinical source files remain outside Git in the primary checkout.
 
-- `thorax-airways.glb`: schematic thorax, branching airways, ribs, lungs, and adjacent structures.
-- `fixed-cbct-suite.glb`: the thorax, table, C-arm, source, detector, and fixed support.
-- `mobile-cbct-suite.glb`: the same teaching anatomy and imaging geometry with a mobile base.
-- `sampling-window.glb`: an 18 mm spherical target and fictional needle sampling region.
+| Asset                         | What it contains                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `anatomy/thorax.glb`          | Four Slicer-derived layers: airways, lungs, ribs/spine and thoracic envelope; embedded Draco geometry      |
+| `anatomy/ct-atlas.png`        | 192³ quantized CT packed into a 16 × 12 PNG atlas, with a baked authored part-solid nodule                 |
+| `anatomy/dts-projections.png` | Thirteen parallel projections for each of five authored sweeps, using the same nodule plus a straight tool |
+| `anatomy/fluoroview-carm.glb` | Retained original FluoroView gantry animation; retirement remains an owner decision                        |
+| `sampling-window.glb`         | Repository-authored sphere and fictional needle side window                                                |
 
-These are educational abstractions. Anatomy, equipment dimensions, colors, and camera
-positions are authored examples. They do not represent a specific scanner, patient, or needle.
-They cannot determine clearance, dose, procedure safety, or diagnostic yield.
+`manifest.json` records source/output SHA-256 hashes and sizes for every binary
+asset. `anatomy/manifest.json` records CT coordinates, quantization, source SHA,
+anatomy layers and the nodule parameters. `anatomy/dts.json` records the projection
+layout, processing and matching nodule provenance.
 
-The runtime creates the meshes from `src/features/peripheral-imaging/lib/models.ts`.
-The geometry and arithmetic contract is in `lib/physics.ts` in that feature directory.
-World axes are x = patient left, y = anterior, z = superior. Runtime coordinates use mm;
-the exported root applies a 0.001 scale to conform to glTF meter units. The sampling
-region is an 8 mm cylinder, 1.3 mm in diameter, 6–14 mm behind the tip. A white sphere
-marks the tip; it is an annotation, not another sampling region.
+The nodule is centered at `[85, -20, -30]` mm in LAS coordinates, with radius 9 mm,
+a 4.05 mm core at −350 HU, and a smooth blend into the original surrounding lung.
+These are authored teaching values from the physics contract and build parameters,
+not a finding in the source CT. A voxel comparison to the contract commit found
+495 changed voxels, all inside the nodule; no outside voxel changed. CT and DTS
+use that same target density. The CT supplies context, while the analytic
+sphere/tool geometry remains the source of exercise feedback.
 
-Regenerate from the repository root:
+The suite's C-arm, room, detector and cone are procedural components. Their posed
+source/detector share `lib/physics.ts` and the original DRR renderer's geometry.
+They need no extra GLB or renderer. The live monitor canvas supplies the detector
+texture, keeping the view to two WebGL contexts. The former schematic thorax,
+fixed-suite and mobile-suite GLBs are not part of this package.
+
+Coordinates are millimeters, x left / y anterior / z superior. GLB roots convert
+millimeters to meters; the runtime restores the teaching millimeter scale. The
+package is approximately 6.65 MiB by file bytes, under the 12 MiB budget. Runtime assets are PNG,
+GLB and JSON only; the existing decoder is local at `/fluoroview/draco/`.
+
+Full provenance, interpretation limits, Slicer commands and optional nodule
+parameters are in `docs/peripheral-imaging/slicer-assets.md`. Run Slicer in a
+separate process, with `IMAGING_SOURCE_DIR` pointing at the original source.
+After all exports and Draco compression:
 
 ```sh
-npx tsx scripts/peripheral-imaging/export-models.ts
+npx tsx scripts/peripheral-imaging/write-asset-manifest.ts
+npx tsx scripts/peripheral-imaging/verify-nodule-assets.ts
+npx jest src/features/peripheral-imaging --runInBand
 ```
 
-Each binary glTF embeds its geometry and materials and needs no remote resources.
-Repository licensing applies.
+The original FluoroView/SlicerHeart gantry retains its existing licensing; this
+package does not present it as newly authored CAD or a new model download.

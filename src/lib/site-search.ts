@@ -630,21 +630,30 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['3d anatomy', 'airway', 'models', 'viewer', 'segments'],
   },
   {
-    title: 'Peripheral Bronchoscopy Imaging (FluoroView)',
+    title: 'FluoroView',
     description:
-      'Interactive course on 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, tool confirmation, and radiation protection.',
+      'Browser-based fluoroscopy simulator for airway orientation, C-arm sweeps, and segmental anatomy.',
     href: '/fluoroview',
     section: 'Simulation',
     type: 'page',
+    keywords: ['fluoroscopy', 'simulation', 'c-arm', 'airway', 'navigation'],
+  },
+  {
+    title: 'Peripheral Bronchoscopy Imaging',
+    description:
+      'Guided course on one imaging suite: 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, radial EBUS, tool confirmation, and radiation protection.',
+    href: '/peripheral-imaging',
+    section: 'Simulation',
+    type: 'page',
     keywords: [
-      'fluoroview',
-      'fluoroscopy',
+      'peripheral bronchoscopy',
       'tomosynthesis',
       'cone beam',
       'cbct',
+      'radial ebus',
       'radiation safety',
       'tool in lesion',
-      'peripheral bronchoscopy',
+      'imaging chain',
     ],
   },
   {

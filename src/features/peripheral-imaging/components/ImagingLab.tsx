@@ -18,6 +18,7 @@ import {
 import { Slider, Toggle, Readout, LabNote } from './LabControls'
 import { DTSImage, MPR, Projection } from './Diagrams'
 import styles from '../imaging.module.css'
+import { controlElementId } from './suite/types'
 
 const Scene3D = dynamic(() => import('./Scene3D'), {
   ssr: false,
@@ -81,6 +82,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           </div>
           <div className={styles.controls}>
             <Slider
+              id={controlElementId('orbit')}
               label="C-arm obliquity"
               value={orbit}
               min={-75}
@@ -89,6 +91,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(orbit) => set({ orbit })}
             />
             <Slider
+              id={controlElementId('tilt')}
               label="Cranial / caudal tilt"
               value={tilt}
               min={-25}
@@ -97,6 +100,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(tilt) => set({ tilt })}
             />
             <Slider
+              id={controlElementId('depth')}
               label="Tool depth offset"
               value={depth}
               min={-30}
@@ -154,6 +158,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           </div>
           <div className={styles.controls}>
             <Slider
+              id={controlElementId('field')}
               label="Field side length"
               value={field}
               min={45}
@@ -163,11 +168,13 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(field) => set({ field })}
             />
             <Toggle
+              id={controlElementId('crop')}
               label="Use display crop instead of physical shutters"
               checked={crop}
               onChange={(crop) => set({ crop })}
             />
             <Slider
+              id={controlElementId('zoom')}
               label="Stored-image display zoom"
               value={zoom}
               min={1}
@@ -280,7 +287,11 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           <div className={styles.controls}>
             <label className={styles.selectLabel} htmlFor={uid}>
               Acquisition pulse rate
-              <select id={uid} value={rate} onChange={(e) => set({ rate: Number(e.target.value) })}>
+              <select
+                id={controlElementId('rate')}
+                value={rate}
+                onChange={(e) => set({ rate: Number(e.target.value) })}
+              >
                 {[3.75, 7.5, 15].map((value) => (
                   <option key={value} value={value}>
                     {value} pulses/s
@@ -289,6 +300,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               </select>
             </label>
             <Slider
+              id={controlElementId('width')}
               label="Pulse width"
               value={width}
               min={5}
@@ -298,6 +310,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(width) => set({ width })}
             />
             <Slider
+              id={controlElementId('speed')}
               label="Authored object speed"
               value={speed}
               min={0}
@@ -344,6 +357,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           </div>
           <div className={styles.controls}>
             <Slider
+              id={controlElementId('sweep')}
               label="Authored angular sweep"
               value={sweep}
               min={20}
@@ -353,6 +367,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(sweep) => set({ sweep })}
             />
             <Slider
+              id={controlElementId('plane')}
               label="Reconstruction depth plane"
               value={plane}
               min={-30}
@@ -435,6 +450,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         </p>
         <Scene3D kind={kind} orbit={orbit} centerTarget offsetX={x} offsetDepth={depth} />
         <Slider
+          id={controlElementId('acquisitionOrbit')}
           label="Authored orbit inspection angle"
           value={orbit}
           min={-100}
@@ -469,6 +485,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               </figure>
             </div>
             <Slider
+              id={controlElementId('offsetX')}
               label="Target horizontal offset"
               value={x}
               min={-30}
@@ -477,6 +494,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(offsetX) => move({ offsetX })}
             />
             <Slider
+              id={controlElementId('offsetDepth')}
               label="Target depth offset"
               value={depth}
               min={-30}
@@ -499,21 +517,25 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               teaching checks; the model does not detect real collisions or physiological readiness.
             </p>
             <Toggle
+              id={controlElementId('target')}
               label="Target, tool and required anatomy covered"
               checked={flag('target')}
               onChange={(target) => set({ target, captured: false })}
             />
             <Toggle
+              id={controlElementId('clearance')}
               label="Complete supported orbit and line routing checked"
               checked={flag('clearance')}
               onChange={(clearance) => set({ clearance, captured: false })}
             />
             <Toggle
+              id={controlElementId('state')}
               label="Instrument state and anesthesia plan agreed"
               checked={flag('state')}
               onChange={(state) => set({ state, captured: false })}
             />
             <Toggle
+              id={controlElementId('protection')}
               label="Protection, monitoring and patient access confirmed"
               checked={flag('protection')}
               onChange={(protection) => set({ protection, captured: false })}
@@ -591,6 +613,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           <div className={styles.controls}>
             <h3>Move the fictional tool</h3>
             <Slider
+              id={controlElementId('tipX')}
               label="Tip along needle axis"
               value={x}
               min={-5}
@@ -599,6 +622,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(tipX) => adjust({ tipX })}
             />
             <Slider
+              id={controlElementId('tipY')}
               label="Anterior / posterior offset"
               value={y}
               min={-20}
@@ -607,6 +631,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(tipY) => adjust({ tipY })}
             />
             <Slider
+              id={controlElementId('tipZ')}
               label="Superior / inferior offset"
               value={z}
               min={-15}
@@ -629,6 +654,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           <div className={styles.controls}>
             <h3>Inspect the volume</h3>
             <Toggle
+              id={controlElementId('slab')}
               label="Combine depths into a teaching slab"
               checked={slab}
               onChange={(slab) => set({ slab })}
@@ -652,6 +678,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             {!slab && (
               <>
                 <Slider
+                  id={controlElementId('axial')}
                   label="Axial slice (superior / inferior)"
                   value={axial}
                   min={-20}
@@ -660,6 +687,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
                   onChange={(axial) => set({ axial })}
                 />
                 <Slider
+                  id={controlElementId('coronal')}
                   label="Coronal slice (anterior / posterior)"
                   value={coronal}
                   min={-20}
@@ -668,6 +696,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
                   onChange={(coronal) => set({ coronal })}
                 />
                 <Slider
+                  id={controlElementId('sagittal')}
                   label="Sagittal slice (left / right)"
                   value={sagittal}
                   min={-20}
@@ -732,6 +761,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           </div>
           <div className={styles.controls}>
             <Slider
+              id={controlElementId('shift')}
               label="Authored anatomical displacement"
               value={shift}
               min={-30}
@@ -740,11 +770,13 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(shift) => set({ shift })}
             />
             <Toggle
+              id={controlElementId('overlay')}
               label="Show stored augmented contour"
               checked={overlay}
               onChange={(overlay) => set({ overlay })}
             />
             <Toggle
+              id={controlElementId('showCurrent')}
               label="Show current target ground truth"
               checked={showCurrent}
               onChange={(showCurrent) => set({ showCurrent })}
@@ -788,6 +820,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         <div className={styles.labSplit}>
           <div className={styles.controls}>
             <Slider
+              id={controlElementId('distance')}
               label="Illustrative distance from patient center"
               value={distance}
               min={1.3}
@@ -797,6 +830,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(distance) => set({ distance })}
             />
             <Slider
+              id={controlElementId('orbit')}
               label="C-arm orientation"
               value={orbit}
               min={-90}
@@ -806,6 +840,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
               onChange={(orbit) => set({ orbit })}
             />
             <Toggle
+              id={controlElementId('shield')}
               label="Place the schematic barrier between patient and staff"
               checked={shield}
               onChange={(shield) => set({ shield })}
@@ -846,6 +881,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         <div className={styles.controls}>
           <h3>One uniform authored exposure</h3>
           <Slider
+            id={controlElementId('kerma')}
             label="Air kerma at the chosen plane"
             value={kerma}
             min={1}
@@ -854,6 +890,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             onChange={(kerma) => set({ kerma })}
           />
           <Slider
+            id={controlElementId('area')}
             label="Beam area at the same plane"
             value={area}
             min={50}

@@ -1,0 +1,249 @@
+/*
+ * The imaging stage's own surfaces: the teaching cards, the walk card, the sorts, the strip and
+ * the before/after table. Everything structural (the panes, the Now card, the step list, the
+ * footer) is the shared stage's stylesheet.
+ */
+.teaching {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.teachingCard {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel-2, rgba(255, 255, 255, 0.04));
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.teachingCard p {
+  margin: 0;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--stage-muted, var(--muted));
+}
+
+.analogy {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink);
+}
+
+.increment {
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+}
+
+.increment p:last-child {
+  margin: 0.25rem 0 0;
+}
+
+.checklist,
+.takeaways {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.stopFacts {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.stopFacts div {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 0.5rem;
+}
+
+.stopFacts dt {
+  font-weight: 600;
+  color: var(--stage-muted, var(--muted));
+}
+
+.stopFacts dd {
+  margin: 0;
+}
+
+.grammarTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.grammarTable th,
+.grammarTable td {
+  padding: 0.4rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.grammarTable thead th {
+  border-top: 0;
+  color: var(--stage-muted, var(--muted));
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trendRule {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--stage-muted, var(--muted));
+}
+
+.controlStrip {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.controlStrip li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+
+.controlStrip li[data-state='this-one'] {
+  border-color: var(--cyan-bright);
+}
+
+.controlStrip li[data-state='harmful-reflex'] {
+  border-color: var(--amber);
+}
+
+.readBefore {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+  color: var(--stage-muted, var(--muted));
+  font-size: 0.85rem;
+}
+
+.walk {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  font-size: 0.92rem;
+}
+
+.walk p {
+  margin: 0;
+}
+
+.sort {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sortOrigins {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.sortOrigins dt {
+  font-weight: 600;
+}
+
+.sortOrigins dd {
+  margin: 0 0 0.25rem;
+  color: var(--stage-muted, var(--muted));
+}
+
+.sortRow {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+.sortRow[data-outcome='held'] {
+  border-color: var(--green);
+}
+
+.sortRow[data-outcome='other'] {
+  border-color: var(--amber);
+}
+
+.sortSelect {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel, transparent);
+  color: var(--ink);
+}
+
+.sortVerdict {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.beforeAfter {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.beforeAfter th,
+.beforeAfter td {
+  padding: 0.35rem 0.5rem;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+
+.completion {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--cyan-bright);
+  border-radius: 0.75rem;
+}
+
+.completion p {
+  margin: 0;
+}
+
+.completionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.worked {
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--cyan-bright);
+}
+
+.worked p {
+  margin: 0;
+}
+
+.worked p + p {
+  margin-top: 0.35rem;
+}

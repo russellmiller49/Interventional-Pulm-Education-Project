@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import struct
+import sys
 import traceback
 
 import numpy as np
@@ -17,6 +18,9 @@ from PIL import Image
 import slicer
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from authored_nodule import parameters as nodule_parameters, bake as bake_nodule
 
 
 def surface(mask, spacing, origin, budget):
@@ -157,6 +161,9 @@ def main():
     # Lossy, quantized derived teaching volume. The source volume is never published.
     target_shape = np.array([192, 192, 192])
     resized = ndimage.zoom(hu.astype(np.float32), target_shape / np.array(hu.shape), order=1, prefilter=False)
+    new_spacing = spacing * (np.array(hu.shape[::-1])-1) / (target_shape[::-1]-1)
+    nodule = nodule_parameters()
+    resized = bake_nodule(resized, origin, new_spacing, nodule)
     hu_range = [-1100, 1800]
     encoded = np.clip(np.rint((resized - hu_range[0]) * 255 / (hu_range[1] - hu_range[0])), 0, 255).astype(np.uint8)
     atlas = np.zeros((12*192, 16*192), dtype=np.uint8)
@@ -172,10 +179,13 @@ def main():
         'schema': 'peripheral-imaging-anatomy/v1', 'generator': '3D Slicer ' + slicer.app.applicationVersion,
         'source': 'Existing FluoroView teaching CT and Final_airway_target surface',
         'sourceSha256': hashlib.sha256((source/'target_clean_ct.nrrd').read_bytes()).hexdigest(),
+        'airwaySourceSha256': hashlib.sha256((source/'Final_airway_target.vtk').read_bytes()).hexdigest(),
+        'authoredNodule': nodule,
+        'atlasSha256': hashlib.sha256((out/'ct-atlas.png').read_bytes()).hexdigest(),
         'coordinateSystem': 'LAS', 'units': 'mm', 'sizeXyz': target_shape[::-1].tolist(),
         'originMm': origin.tolist(), 'spacingMm': new_spacing.tolist(), 'huRange': hu_range,
         'atlasColumns': 16, 'atlasRows': 12, 'layers': stats, 'slicerHeartPresets': presets,
-        'limitations': 'Threshold-derived context surfaces and quantized teaching volume; not a diagnostic segmentation or CT. Target and tool are authored independently.'
+        'limitations': 'Threshold-derived context surfaces and quantized teaching volume; not a diagnostic segmentation or CT. The part-solid target is authored and baked into the CT atlas; the tool remains an analytic overlay.'
     }
     (out/'manifest.json').write_text(json.dumps(report, indent=2) + '\n')
     # Local QA axial image to select an intrapulmonary authored target in the same coordinates.

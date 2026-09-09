@@ -1,3 +1,5 @@
+import type { StageBlockKind } from '@/features/learning-module/stage/StageTeachingScope'
+
 export type LabId =
   | 'geometry'
   | 'field'
@@ -59,6 +61,8 @@ export interface Question {
 }
 export interface TeachingBlock {
   title: string
+  /** Which phase of a section may show this block; classified by teachingBlocks.ts when absent. */
+  kind?: StageBlockKind
   body: string
   points?: string[]
   sources: SourceId[]
@@ -67,6 +71,8 @@ export interface TeachingBlock {
 export interface Lesson {
   id: string
   title: string
+  /** The rail label: three words at most. */
+  shortTitle: string
   group: string
   stage: string
   minutes: number

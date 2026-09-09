@@ -1,4 +1,4 @@
-import type { Source } from '../types'
+import type { Source, SourceId } from '../types'
 
 export const REVIEWED_ON = '2026-09-08'
 export const SOURCES: Source[] = [
@@ -197,3 +197,7 @@ export const SOURCES: Source[] = [
       'Dose estimation requires geometry and corrections; this module does not estimate individual skin dose.',
   },
 ]
+
+export const SOURCE_BY_ID: ReadonlyMap<SourceId, Source> = new Map(
+  SOURCES.map((source) => [source.id, source] as const),
+)

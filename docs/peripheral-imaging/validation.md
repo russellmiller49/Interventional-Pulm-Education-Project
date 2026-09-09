@@ -1,7 +1,7 @@
 # Peripheral imaging course — review and validation
 
 Review date: 2026-09-08. Review scope: the redesigned learner experience at
-`/en/fluoroview`, its 17 units, nine labs, 24 distinct questions, 15 published
+`/en/peripheral-imaging`, its 17 units, nine labs, 24 distinct questions, 15 published
 references, CT-derived images, a layered Slicer anatomy model, the original FluoroView
 C-arm animation, and two model downloads. The implementation preserves the
 existing route and site authentication. It introduces no dependencies or analytics.
@@ -102,3 +102,78 @@ learner/technologist pilot and retention review are documented in the module pla
 The content uses the repository's existing localization handoff; a specialist language
 review of the complete clinical course has not been performed. The change is prepared
 for pull-request review and has not been deployed.
+
+## Stage rebuild — round 1 (2026-09-08)
+
+Scope: the course re-hosted on the shared lesson stage (see
+[stage-rebuild-plan.md](stage-rebuild-plan.md)); nineteen sections, the hub, Learn / Practice /
+Assess routes, the module-local record and its migration, the capstone. The imaging suite's 3D
+views are Codex's track and are not covered here; every section runs on the fallback pane (the
+draft's lab body under the chain caption) until a view lands.
+
+| Check                         | Result                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registries validate at import | Pathway, chain, control panel, grammar, section specs, lab goals, sorts, chain-answer targets, items, stage lessons, cases: every validator throws on an authoring error; the test suite loads them all.                                                                                                                           |
+| Answer boundary, authored     | The authored leak scan runs over every pre-commit surface (titles, objective, increment, why, recall prompt, pre-commit blocks and their points, stop cards, step titles/instructions/actions/look-ins, the stem) against each section's deny patterns.                                                                            |
+| Answer boundary, rendered     | The composed document is scanned on the first step and at the prediction step reached as a learner reaches it, hidden nodes and attributes included; the two answer fieldsets are the one excused surface. Two block details that named the answer inside a collapsed disclosure were found and are now withheld until commitment. |
+| Controls                      | Locked on the read before the prediction, while any prediction is open, and while looking back; the pane and the context strip say why.                                                                                                                                                                                            |
+| Goals                         | Every Act/Observe goal is evaluated by the engine from the same readout arithmetic the pane prints; a goal pre-met on entry (the projection Observe event) was replaced by a state goal.                                                                                                                                           |
+| Record                        | First decisions written once at commit and never rewritten; correctness recomputed from the item bank at parse; sections complete once at finish; nothing persisted mid-section; legacy v1 record migrated once.                                                                                                                   |
+| Capstone                      | Gated on every section; decided once per case; verdicts open together after the last decision; standard ≥ 7 of 8 and every safety-critical decision.                                                                                                                                                                               |
+| Accessibility                 | Hub and Learn landing pass jest-axe; the stage's own audits are shared with the four adopters.                                                                                                                                                                                                                                     |
+
+Automated: the **full repository run passes — 760 suites, 11,572 tests, no failures** (Node 26.5.0;
+the scanner suite that used to fail on a deprecation warning now passes). ESLint and `tsc --noEmit`
+are clean. One configuration fix was needed: Jest was collecting the imaging suite's Playwright
+scene spec and failing on Playwright's `test` export, which broke the whole-repository run.
+
+Browser (dev server, 1440×900 and 1024×700, signed in through the local-dev-auth route): the hub
+renders one door ("Start — What does this image establish? · Section 1 of 19 · 4 min") and the
+composition line counted at render; the first section walks Recognize → Predict (controls locked,
+verdict stated, sources released) → the four-questions sort (graded row by row) → Explain →
+Transfer → "Finish the section", the completion card links the next section, and the v2 record
+holds `completedSectionIds: ['imaging-questions']` with two first attempts; the projection section
+runs on the fallback lab with the contract's control ids — obliquity 60 flips the separation goal
+(0.0 → 37.0 mm) and the card reads Done, Observe flips back at 0.0 mm, Explain shows the recap,
+the three-column what-changed table and the control strip, and Transfer locks the controls again.
+No document horizontal overflow at either width, and none at 375×812 either; console clean apart
+from the site's `/api/analytics` 401 under local-dev auth. The Browser pane was hidden for part of
+the walk, so the later checks are DOM reads rather than screenshots, and the workspace's compact
+pane switcher — which follows a ResizeObserver the hidden pane does not fire — is covered by the
+Playwright spec rather than this walk.
+
+Playwright (`e2e/peripheral-imaging.spec.ts`, rewritten for the stage): **four scenarios pass**
+against a local development server — the one door into the first section and a sorted section run
+to its record; a lab section's controls locked until the commitment, a goal flipping on the suite,
+and a reload restarting the section while the record keeps the first attempt; the capstone gated,
+decided once, and failing the standard on one wrong safety-critical decision; and the compact
+layout at 390 x 844 following the step from pane to pane. The suite no longer signs in: the module
+is reachable by direct link, so arriving on the hub with no account is itself the first assertion.
+
+Running that suite for the first time found three defects, since fixed:
+
+- **Layout.** The shared frame renders its release badge `white-space: nowrap`. A 76-character
+  label was 465 px wide at a 390 px viewport and widened the document to 497 px on its own,
+  taking every section with it. The badge is now four words.
+- **Layout.** The hub and the three landings laid their sections out in a single-column grid,
+  whose track sizes to the widest item's min-content — so the decision guide's table widened every
+  sibling section. The track is now `minmax(0, 1fr)`; the table scrolls inside its own container,
+  and all four pages match the viewport exactly at 390 px.
+- **Naming.** `data-stage` meant two different things on one page: the curriculum stage on the
+  hub's pathway groups and the current step on the lesson stage. The accordion's attribute is now
+  `data-pathway-stage`.
+
+Access, checked against a running server with no account and no cookie: `/en/peripheral-imaging`
+and `/en/peripheral-imaging/learn` return 200; `/en/fluoroview` still redirects to the login page
+and renders the original simulator; the un-localized `/peripheral-imaging/learn` redirects to the
+localized route while `/peripheral-imaging/anatomy/manifest.json` is served as an asset. The
+in-development boundary is also asserted in Jest (`__tests__/release-boundary.test.ts`): public by
+direct link, unlisted, absent from navigation, site search and the sitemap, one analytics id for
+the route family, and FluoroView left alone.
+
+FluoroView's full CT volume returns 404 in local development. That is pre-existing and expected:
+`ct_volume_uint8.raw` is gitignored, is not tracked in the repository, and is served in production
+from the module-asset origin.
+
+Not covered in this round: the `radial-ebus` section, the Practice micro-cases, the suite's 3D
+views, localisation, learner piloting.
