@@ -23,6 +23,8 @@ import { ChainPins } from './ChainPins'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
 import { LabDock } from './LabDock'
+import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
+import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
 import { ProjectionView3D } from './views/ProjectionView3D'
 import { RayTrace, SignalReadout } from './views/SignalView'
@@ -31,7 +33,7 @@ import { rayProfile } from '../../lib/rayProfile'
 import { labControl, labNumber } from '../../engine/labMetrics'
 import { LESION_CENTER, clamp } from '../../lib/physics'
 import { resolveSuiteInputs } from './suiteViewSpec'
-import { rayThrough, suiteFrame } from './suiteModel'
+import { rayThrough, suiteFrame, temporal } from './suiteModel'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
@@ -123,6 +125,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
   const viewport = useRef<HTMLDivElement>(null)
   const portal = useRef<HTMLDivElement>(null)
   const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
+  const playback = useSuitePlayback(view, props.controlsEnabled, visible, reducedMotion)
+  const timeModel = temporal({ ...inputs, phase: playback.phase })
   const displayCamera =
     cameraOverride?.requested === view.camera ? cameraOverride.value : view.camera
   const onCamera = useCallback(
@@ -155,7 +159,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       <SuiteFallback {...props} />
     </div>
   )
-  const drrMode = ['projection', 'signal', 'field'].includes(view.mode)
+  const drrMode = ['projection', 'signal', 'field', 'time'].includes(view.mode)
   return (
     <SceneBoundary fallback={fallback}>
       <div
@@ -165,7 +169,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         data-suite-camera={displayCamera}
         data-suite-state={contextLost ? 'failed' : ready ? 'ready' : 'fallback'}
         data-lit={view.litStop ?? ''}
-        data-suite-anim="idle"
+        data-suite-anim={playback.running ? 'running' : 'idle'}
         data-reduced-motion={reducedMotion ? 'true' : 'false'}
       >
         <p className={styles.caption} data-chain-caption>
@@ -209,7 +213,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 >
                   <Canvas
                     key={epoch}
-                    frameloop={visible ? 'demand' : 'never'}
+                    frameloop={visible ? (playback.running ? 'always' : 'demand') : 'never'}
                     dpr={[1, 1.5]}
                     camera={{ fov: 42, near: 1, far: 12000 }}
                     gl={{ antialias: true, preserveDrawingBuffer: true }}
@@ -221,6 +225,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       </p>
                     }
                   >
+                    {playback.running && <SuiteClock tick={playback.tick} />}
                     <WebGLContextGuard onContextLost={onLost} />
                     <ambientLight intensity={0.8} />
                     <directionalLight position={[400, 600, 500]} intensity={2} />
@@ -236,7 +241,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         <ParametricCarm
                           frame={frame}
                           variant={inputs.variant}
-                          lit={view.litStop === 'source'}
+                          lit={
+                            view.mode === 'time' ? timeModel.pulseIsOn : view.litStop === 'source'
+                          }
                           shutters={view.mode !== 'field'}
                         />
                       )}
@@ -249,13 +256,21 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       {view.layers.includes('gantry') && (
                         <DetectorImage frame={detectorFrame} source={source} />
                       )}
-                      {drrMode && (
+                      {drrMode && view.mode !== 'time' && (
                         <ProjectionView3D
                           frame={frame}
                           inputs={inputs}
                           ray={view.layers.includes('ray')}
                           labels={view.layers.includes('labels')}
                           portal={portal as RefObject<HTMLDivElement>}
+                        />
+                      )}
+                      {view.mode === 'time' && (
+                        <TimeView
+                          frame={frame}
+                          model={timeModel}
+                          portal={portal as RefObject<HTMLDivElement>}
+                          labels={view.layers.includes('labels')}
                         />
                       )}
                       {view.mode === 'field' && (
@@ -294,9 +309,14 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 disabled={
                   !props.controlsEnabled ||
                   !view.lab ||
-                  (!view.bindings.some((b) => b.input === 'orbit') && view.mode !== 'field')
+                  (!view.bindings.some((b) => b.input === 'orbit') &&
+                    !['field', 'time'].includes(view.mode))
                 }
                 onClick={() => {
+                  if (view.mode === 'time') {
+                    playback.step(1 / inputs.pulseRate)
+                    return
+                  }
                   const binding = view.bindings.find((b) => b.input === 'orbit')
                   if (!binding || !view.lab) {
                     setSteppedOrbit((n) => n + 1)
@@ -320,6 +340,15 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               >
                 Step
               </button>
+              {view.animation && (
+                <button
+                  type="button"
+                  disabled={!props.controlsEnabled || reducedMotion}
+                  onClick={playback.toggle}
+                >
+                  {playback.running ? 'Pause' : 'Play'}
+                </button>
+              )}
               {(['suite', 'beam', 'anterior', 'side', 'head', 'target'] as const).map((v) => (
                 <button
                   type="button"
@@ -342,6 +371,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               <Monitor
                 pose={pose}
                 depth={inputs.toolDepth}
+                overlay={
+                  view.mode === 'time' ? <TimeOverlay frame={frame} model={timeModel} /> : undefined
+                }
                 showCurrent={inputs.showCurrent}
                 targetFill={view.mode !== 'signal'}
                 zoom={view.mode === 'field' ? inputs.zoom : 1}
@@ -358,7 +390,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 hidden={view.monitor === 'hidden'}
               />
               <p className={styles.monitorCaption}>
-                Amber contour: authored target · white mark: tool tip
+                {view.mode === 'time'
+                  ? timeModel.sampleIndex < 0
+                    ? 'Waiting for the first completed pulse.'
+                    : `Frame ${timeModel.sampleIndex + 1} · held between pulses. Amber: pulse travel; white: sampled tool.`
+                  : 'Amber contour: authored target · white mark: tool tip'}
               </p>
             </section>
           )}
@@ -368,8 +404,16 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             <ChainAnswerFieldset answer={props.chainAnswer} />
           </div>
         )}
+        {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
-        <LabDock {...props} />
+        <LabDock
+          {...props}
+          onLabReset={() => {
+            setSteppedOrbit(0)
+            playback.reset()
+            props.onLabReset()
+          }}
+        />
         <p className={styles.boundary} data-model-boundary>
           {view.boundary}
         </p>
