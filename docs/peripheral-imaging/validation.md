@@ -175,5 +175,49 @@ FluoroView's full CT volume returns 404 in local development. That is pre-existi
 `ct_volume_uint8.raw` is gitignored, is not tracked in the repository, and is served in production
 from the module-asset origin.
 
+## Practice — the micro-cases (2026-09-09)
+
+Sixteen short cases, one decision each, paired to a section by the mechanism it teaches: one for
+every mechanism and application section, and a second for the three that fill two rows of the
+diagnostic table. Static signals, one decision, a two-sentence debrief. A case may be answered as
+often as the learner likes; only the first decision is recorded, under `practice:<id>`, and it is
+never rewritten.
+
+Authored against each section's own teaching and the module's fifteen reviewed sources, then put
+through three rounds of independent adversarial review — 215 reviewer passes across four lenses,
+each instructed to reject rather than approve, and to default to rejection when unsure:
+
+| Lens                   | What it tried to reject                                                                                                                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vocabulary and leakage | Any banned word in any field; a title or stem that names the mechanism or the decision; a rationale that reveals the key; an invented threshold                                                      |
+| Evidence               | A key that is not the best move, a claim stronger than the cited source supports, reversed physics, an implied prediction of dose, yield or safe placement                                           |
+| Cueing                 | Whether the key is reachable from form alone: option class, length, hedging, absolutes, noun overlap with the stem, the drastic/dismissive/measured triad, a situation that pre-refutes a distractor |
+| Fit                    | Wrong section, duplicate of an existing item or the paired capstone case, a repeat of the section's lab exercise                                                                                     |
+
+Blocking defects fell 16 → 11 → 4 → 2 across the rounds. Nearly all were cueing: the key as the
+only unhedged option, the only one written at whole-image scope, the only one that withheld an
+action, the only one repeating a noun from the stem. One review finding was a defect in the page
+rather than the item — the case page printed the section's title above the choices, and a section
+title names the mechanism — so the pairing now appears only after the decision, with a test to
+keep it there.
+
+Two notes survive all three rounds and are recorded rather than resolved, since every item is a
+draft awaiting subject-matter review:
+
+- `dts-interpretation-practice-1`: the two distractors share a bottom line the key does not, which
+  is partly intrinsic to a three-choice item whose distractors represent one error class.
+- `dose-reporting-practice-1`: the topic word "dose" appears in the key and not in the other two.
+
+Registry checks, enforced at import so a violation fails the build: the copy gate on every title
+and situation; at least one cited source per case; no stem repeated from any of the module's other
+items; three choices with exactly one keyed; every distractor carrying its own reasoning; and the
+keyed choice no more than a quarter longer than the longest distractor. Adding sixteen questions
+took the bank from 29 to 45; the keyed position was rebalanced to 15 / 15 / 15, inside the
+curriculum check's cap of sixteen per position.
+
+Automated: the full repository run passes — **767 suites, 11,626 tests**. Browser: **seven
+scenarios**, including one that walks a case, answers it twice and confirms the first decision was
+kept as made. ESLint and `tsc --noEmit` clean.
+
 Not covered in this round: the `radial-ebus` section, the Practice micro-cases, the suite's 3D
 views, localisation, learner piloting.

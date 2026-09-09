@@ -67,10 +67,13 @@ describe('the content registries validate clean at import', () => {
 
 describe('items, chain answers and cases validate clean at import', () => {
   it('converts every lesson pair and maps every chain-answered choice', async () => {
+    const { validateImagingMicroCases, imagingMicroCases } = await import('../content/microCases')
     const { validateImagingStageItems, imagingStageItems } = await import('../content/stageItems')
     const { validateImagingChainAnswerTargets, imagingChainAnsweredItemIds } =
       await import('../content/chainAnswerTargets')
     expect(validateImagingStageItems()).toEqual([])
+    expect(validateImagingMicroCases()).toEqual([])
+    expect(imagingMicroCases.length).toBeGreaterThan(0)
     expect(validateImagingChainAnswerTargets()).toEqual([])
     expect(imagingChainAnsweredItemIds).toEqual([
       'chain-walk:walk-1',

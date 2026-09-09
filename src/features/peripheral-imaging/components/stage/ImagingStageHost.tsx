@@ -28,6 +28,7 @@ import stageStyles from '@/features/learning-module/stage/lesson-stage.module.cs
 import { Link, useRouter } from '@/i18n/navigation'
 
 import { imagingCaseById } from '../../content/cases'
+import { microCasesForSection } from '../../content/microCases'
 import { isOffChainTarget } from '../../content/chainAnswerTargets'
 import { CHAIN_STOPS, chainCaption, chainStop, type ChainStopId } from '../../content/imagingChain'
 import { peripheralImagingPathway } from '../../content/pathway'
@@ -36,6 +37,7 @@ import {
   PERIPHERAL_IMAGING_ASSESS_HREF,
   PERIPHERAL_IMAGING_LEARN_HREF,
   PERIPHERAL_IMAGING_NAV_BASE,
+  imagingCaseLinkTarget,
 } from '../../content/routes'
 import {
   imagingStageLesson,
@@ -1036,6 +1038,9 @@ function CompletionCard({
   const capstoneCase = lesson.spec.capstoneCaseId
     ? imagingCaseById.get(lesson.spec.capstoneCaseId)
     : undefined
+  // The plan's pairing rule: a section's completion card points at its own practice case, so the
+  // next thing to do after a mechanism is to use it somewhere else.
+  const practiceCase = microCasesForSection(lesson.sectionId)[0]
   return (
     <section
       className={styles.completion}
@@ -1050,6 +1055,19 @@ function CompletionCard({
       {capstoneCase ? (
         <p>
           This idea returns in the capstone as <strong>{capstoneCase.presentationTitle}</strong>.
+        </p>
+      ) : null}
+      {practiceCase ? (
+        <p>
+          A short case uses this idea somewhere else:{' '}
+          <Link
+            className={styles.completionLink}
+            href={imagingCaseLinkTarget(practiceCase.id)}
+            data-paired-practice-case={practiceCase.id}
+          >
+            {practiceCase.presentationTitle}
+          </Link>
+          .
         </p>
       ) : null}
       <div className={styles.completionActions}>

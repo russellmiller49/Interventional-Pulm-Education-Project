@@ -72,11 +72,23 @@ Claude's track depends on WebGL.
   standard with one wrong critical decision, the compact layout.
 - Browser walk on the dev server (see [validation.md](validation.md)).
 
+## Practice, added 2026-09-09
+
+Sixteen micro-cases in `content/microCases.ts`, one per mechanism and application section and a
+second for the three that fill two rows of the diagnostic table. `ImagingCaseActivity` plays one;
+the Practice landing lists them in pathway order behind one door; each section's completion card
+points at its own case. First decisions are written once under `practice:<id>` and never
+rewritten, but a case can be answered as often as the learner likes — that is the difference
+between this layer and the capstone. The registry validates at import like every other, and adds
+a cueing guard of its own: the keyed choice may not run more than a quarter longer than the
+longest distractor. See [validation.md](validation.md) for how the cases were authored and
+reviewed.
+
 ## Still to do
 
 - Round 2: Codex's views land per `SUITE_MODES_READY`; the hub hero takes the `room` scene.
-- Round 3: `radial-ebus` copy, items and sources (after Codex's view); Practice micro-cases
-  (`content/microCases.ts`, `ImagingCaseActivity`); `validation.md` rerun.
+- Round 3: `radial-ebus` copy, items and sources — waiting on Codex's `rebus` view for the lab, and
+  on the owner's metadata check of the four new sources.
 - Owner items: when to retire the original FluoroView simulator (`src/components/fluoroview/`) and
   hand `/fluoroview` to this course;
   retire `fluoroview-carm.glb`; nodule density; metadata check of the four new sources; SME
