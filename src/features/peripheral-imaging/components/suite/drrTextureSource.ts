@@ -26,11 +26,19 @@ export class DrrTextureSource {
   private pose: DrrPose = { orbit: 0, tilt: 0 }
   revision = 0
   state: ProjectionState = 'loading'
+  private readonly contextLost = (event: Event) => {
+    if (this.disposed) return
+    event.preventDefault()
+    clearTimeout(this.timer)
+    this.state = 'failed'
+    this.notify()
+  }
 
   constructor(
     readonly canvas: HTMLCanvasElement,
     size = 512,
   ) {
+    canvas.addEventListener('webglcontextlost', this.contextLost)
     this.engine = new VolumeDRRRenderer({
       canvas,
       config: IMAGING_CONFIG,
@@ -136,13 +144,15 @@ export class DrrTextureSource {
   }
 
   dispose() {
+    const context = this.engine.isReady() ? this.canvas.getContext('webgl2') : null
     this.disposed = true
     clearTimeout(this.timer)
     this.listeners.clear()
+    this.canvas.removeEventListener('webglcontextlost', this.contextLost)
     this.texture.dispose()
     this.engine.dispose()
     // A replaced mode must release its context, not wait for browser garbage collection.
-    this.canvas.getContext('webgl2')?.getExtension('WEBGL_lose_context')?.loseContext()
+    context?.getExtension('WEBGL_lose_context')?.loseContext()
   }
 }
 

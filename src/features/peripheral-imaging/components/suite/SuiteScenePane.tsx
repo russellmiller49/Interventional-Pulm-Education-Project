@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteMode } from './types'
 
@@ -15,6 +16,16 @@ import type { ImagingSuitePaneProps, SuiteMode } from './types'
  */
 export const SUITE_MODES_READY: ReadonlySet<SuiteMode> = new Set<SuiteMode>()
 
+export { resolveSuiteInputs, suiteViewErrors } from './suiteViewSpec'
+const SuiteScene = dynamic(() => import('./SuiteScene'), {
+  ssr: false,
+  loading: () => <p role="status">Preparing the imaging suite…</p>,
+})
+
 export function SuiteScenePane(props: ImagingSuitePaneProps) {
-  return <SuiteFallback {...props} />
+  return SUITE_MODES_READY.has(props.view.mode) ? (
+    <SuiteScene key={`${props.view.sectionId}:${props.view.mode}`} {...props} />
+  ) : (
+    <SuiteFallback {...props} />
+  )
 }

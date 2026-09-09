@@ -126,8 +126,8 @@ export function chainStopAnchors(frame: SuiteFrame): Record<ChainStop, Point3> {
     beam: add(frame.source, scale(frame.normal, sod * 0.45)),
     patient: frame.iso,
     detector: frame.detectorCenter,
-    reconstruction: [field * 0.85, -sod * 0.2, field * 0.4],
-    display: [field * 0.9, sod * 0.45, field * 0.3],
+    reconstruction: [field * 0.85, -sod * 0.2, -field * 0.85],
+    display: [field * 1.1, sod * 0.15, -field * 0.55],
   }
 }
 export function anatomyOffset(inputs: SuiteInputs, registration = false): Point3 {

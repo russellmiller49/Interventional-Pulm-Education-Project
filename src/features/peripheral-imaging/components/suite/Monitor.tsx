@@ -10,11 +10,13 @@ export function Monitor({
   depth,
   onSource,
   hidden = false,
+  showCurrent = true,
 }: {
   pose: DrrPose
   depth: number
   onSource: (source: DrrTextureSource | null) => void
   hidden?: boolean
+  showCurrent?: boolean
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -44,7 +46,13 @@ export function Monitor({
       aria-label="CT-derived teaching projection with authored target and tool"
     >
       <canvas ref={canvas} aria-hidden="true" />
-      <ProjectionOverlays orbit={pose.orbit} tilt={pose.tilt} depth={depth} />
+      <ProjectionOverlays
+        orbit={pose.orbit}
+        tilt={pose.tilt}
+        depth={depth}
+        geometry={pose.geometry}
+        showCurrent={showCurrent}
+      />
       {state !== 'ready' && (
         <p className={styles.imageStatus} role="status">
           {state === 'failed'

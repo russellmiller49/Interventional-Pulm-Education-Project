@@ -1,43 +1,32 @@
 'use client'
-
 import { useId } from 'react'
-import {
-  DETECTOR_FIELD,
-  DETECTOR_DISTANCE,
-  SOURCE_DISTANCE,
-  LESION_CENTER,
-  LESION_RADIUS,
-  beamDirection,
-  projectToDetector,
-  toolTipForDepth,
-  type Point3,
-} from '../../lib/physics'
+import { DEFAULT_GEOMETRY, type ImagingGeometry } from '../../lib/physics'
+import { projectionMarkers, suiteFrame } from './suiteModel'
 
 /** Same projection and SVG coordinates as the existing ProjectionView overlay. */
 export function ProjectionOverlays({
   orbit,
   tilt,
   depth,
+  geometry = DEFAULT_GEOMETRY,
+  showCurrent = true,
 }: {
   orbit: number
   tilt: number
   depth: number
+  geometry?: ImagingGeometry
+  showCurrent?: boolean
 }) {
   const id = useId().replace(/:/g, '')
-  const screen = (p: Point3) => {
-    const [u, v] = projectToDetector(p, orbit, tilt)
-    return [256 + (u / DETECTOR_FIELD) * 512, 256 - (v / DETECTOR_FIELD) * 512]
-  }
-  const target = screen(LESION_CENTER),
-    tipWorld = toolTipForDepth(depth),
-    tip = screen(tipWorld)
-  const start = screen([tipWorld[0] - 65, tipWorld[1], tipWorld[2]])
-  const normal = beamDirection(orbit, tilt)
-  const radius =
-    (((LESION_RADIUS * DETECTOR_DISTANCE) /
-      (SOURCE_DISTANCE + LESION_CENTER.reduce((sum, n, i) => sum + n * normal[i], 0))) *
-      512) /
-    DETECTOR_FIELD
+  const markers = projectionMarkers(suiteFrame(orbit, tilt, geometry), depth)
+  const screen = ([u, v]: readonly number[]) => [
+    256 + (u / geometry.field) * 512,
+    256 - (v / geometry.field) * 512,
+  ]
+  const target = screen(markers.targetRay.uv),
+    tip = screen(markers.tipRay.uv),
+    start = screen(markers.startRay.uv)
+  const radius = (markers.radius / geometry.field) * 512
   return (
     <svg viewBox="0 0 512 512" aria-hidden="true" data-projection-overlay>
       <defs>
@@ -47,17 +36,21 @@ export function ProjectionOverlays({
           <stop offset="1" stopColor="#becac4" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <circle cx={target[0]} cy={target[1]} r={radius} fill={`url(#${id})`} />
-      <circle
-        data-target-overlay
-        cx={target[0]}
-        cy={target[1]}
-        r={radius + 5}
-        fill="none"
-        stroke="#eec482"
-        strokeWidth="1"
-        strokeDasharray="3 3"
-      />
+      {showCurrent && (
+        <>
+          <circle cx={target[0]} cy={target[1]} r={radius} fill={`url(#${id})`} />
+          <circle
+            data-target-overlay
+            cx={target[0]}
+            cy={target[1]}
+            r={radius + 5}
+            fill="none"
+            stroke="#eec482"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
+        </>
+      )}
       <line
         x1={start[0]}
         y1={start[1]}

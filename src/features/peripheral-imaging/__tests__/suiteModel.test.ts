@@ -82,3 +82,63 @@ describe('suite and existing FluoroView detector agreement to eight decimals', (
     )
   })
 })
+
+import { resolveSuiteInputs, suiteViewErrors } from '../components/suite/suiteViewSpec'
+import { labReadouts } from '../engine/labMetrics'
+import type { SuiteViewSpec } from '../components/suite/types'
+const spec: SuiteViewSpec = {
+  sectionId: 'projection',
+  mode: 'projection',
+  litStop: 'beam',
+  stopSentence: 'The beam',
+  camera: 'suite',
+  layers: ['Airways', 'table', 'gantry', 'cone', 'ray', 'monitor', 'labels'],
+  variant: 'generic',
+  monitor: 'beside',
+  bindings: [
+    { input: 'orbit', control: 'orbit' },
+    { input: 'tilt', control: 'tilt' },
+    { input: 'toolDepth', control: 'depth' },
+  ],
+  defaults: {},
+  lab: 'geometry',
+  controls: ['orbit', 'tilt', 'depth'],
+  readouts: ['separationMm'],
+  boundary: 'Authored teaching geometry.',
+}
+
+describe('suite input resolution and contract validation', () => {
+  it('keeps lab clamping and numeric readouts in agreement even for invalid persisted values', () => {
+    const values = { orbit: 500, tilt: Number.NaN, depth: Infinity }
+    const inputs = resolveSuiteInputs(spec, values)
+    expect(inputs.orbit).toBe(75)
+    expect(inputs.tilt).toBe(0)
+    expect(inputs.toolDepth).toBe(22)
+    const markers = projectionMarkers(suiteFrame(inputs.orbit, inputs.tilt), inputs.toolDepth)
+    const readout = labReadouts('geometry', values, 'projection')
+    expect(Math.hypot(...subtract(markers.tipRay.hit, markers.targetRay.hit))).toBeCloseTo(
+      readout.separationMm as number,
+      8,
+    )
+  })
+  it('uses authored defaults for unbound inputs and the lab oracle for bound ones', () => {
+    const inputs = resolveSuiteInputs({ ...spec, defaults: { fieldPercent: 55, orbit: 40 } }, {})
+    expect(inputs.fieldPercent).toBe(55)
+    expect(inputs.orbit).toBe(0)
+    expect(suiteViewErrors(spec)).toEqual([])
+  })
+  it('rejects unknown keys, incompatible bindings and a lit answer', () => {
+    expect(suiteViewErrors({ ...spec, chainAnswer: true })).toContain(
+      'A chain answer must have litStop: null',
+    )
+    expect(suiteViewErrors({ ...spec, controls: ['unknown'] })).toContain(
+      'Unknown visible control: unknown',
+    )
+    expect(
+      suiteViewErrors({ ...spec, bindings: [{ input: 'orbit', control: 'missing' }] }),
+    ).toContain('Unknown binding control: missing')
+    expect(suiteViewErrors({ ...spec, bindings: [{ input: 'crop', control: 'orbit' }] })).toContain(
+      'Binding type differs: orbit → crop',
+    )
+  })
+})
