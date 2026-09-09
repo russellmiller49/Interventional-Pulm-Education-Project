@@ -34,6 +34,8 @@ import { dtsArc } from './dtsModel'
 import { SamplingView, SamplingPanels } from './views/SamplingView'
 import { RegistrationView, RegistrationOverlay, RegistrationPanels } from './views/RegistrationView'
 import { registration } from './registrationModel'
+import { StaffView, StaffPanels } from './views/StaffView'
+import { staff } from './staffModel'
 import { TimeView, TimeOverlay, TimeSamples } from './views/TimeView'
 import { useSuitePlayback, SuiteClock } from './useSuitePlayback'
 import { FieldView, FieldMask } from './views/FieldView'
@@ -102,13 +104,17 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     () => (isRegistration ? registration(inputs) : null),
     [isRegistration, inputs],
   )
+  const staffModel = useMemo(
+    () => (view.mode === 'staff' ? staff(inputs) : null),
+    [view.mode, inputs],
+  )
   const cbct = useCbctAcquisition(props, inputs, source, reducedMotion, visible)
   const isCbct = view.mode === 'cbct'
   const dts = useTomosynthesis(view, inputs, props.controlsEnabled, visible, reducedMotion)
   const sceneOrbit = isCbct ? cbct.angle : dts.active ? dts.angle : inputs.orbit
   const sceneGeometry = isCbct ? cbct.setup.geometry : inputs.geometry
   const translation = isCbct ? cbct.setup.offset : registered?.currentOffset
-  const cbctBounds = useMemo(
+  const overviewBounds = useMemo(
     () =>
       isCbct
         ? cbctOrbitSamples(inputs.orbitSpanDeg, 25).flatMap((angle) => {
@@ -120,8 +126,23 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
               const f = suiteFrame(angle, 0, sceneGeometry)
               return [f.source, ...f.corners]
             })
-          : undefined,
-    [isCbct, dts.active, inputs.orbitSpanDeg, inputs.sweepDeg, inputs.geometry, sceneGeometry],
+          : staffModel
+            ? [
+                ...staffModel.rings.flatMap((ring) =>
+                  ring.segments.flatMap((segment) => segment.points),
+                ),
+                staffModel.position,
+              ]
+            : undefined,
+    [
+      isCbct,
+      dts.active,
+      inputs.orbitSpanDeg,
+      inputs.sweepDeg,
+      inputs.geometry,
+      sceneGeometry,
+      staffModel,
+    ],
   )
   const frame = useMemo(
     () => suiteFrame(sceneOrbit, inputs.tilt, sceneGeometry),
@@ -311,7 +332,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         offset={translation}
                         contextOpacity={view.mode === 'sampling' ? 0.12 : 1}
                       />
-                      <Room layers={view.layers} geometry={inputs.geometry} />
+                      <Room
+                        layers={view.layers}
+                        geometry={inputs.geometry}
+                        floorSpan={staffModel ? 8000 : undefined}
+                      />
                       {view.layers.includes('gantry') && (
                         <ParametricCarm
                           frame={frame}
@@ -375,6 +400,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           onSensor={setRegisteredSensor}
                         />
                       )}
+                      {view.mode === 'staff' && <StaffView inputs={inputs} layers={view.layers} />}
                       {view.mode === 'field' && (
                         <FieldView
                           frame={frame}
@@ -401,7 +427,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       view={displayCamera}
                       frame={frame}
                       enabled={props.controlsEnabled}
-                      overviewBounds={cbctBounds}
+                      overviewBounds={overviewBounds}
                       focus={isCbct ? cbct.setup.target : undefined}
                       closeupDistance={
                         view.mode === 'sampling' ? 120 : isRegistration ? 180 : undefined
@@ -585,6 +611,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           <SamplingPanels inputs={inputs} revealed={props.lab.values.revealed === true} />
         )}
         {isRegistration && <RegistrationPanels augmented={view.mode === 'augmented'} />}
+        {view.mode === 'staff' && <StaffPanels inputs={inputs} />}
         {view.mode === 'time' && <TimeSamples model={timeModel} phase={playback.phase} />}
         {view.mode === 'signal' && <SignalReadout profile={profile} failed={profileFailed} />}
         <LabDock
