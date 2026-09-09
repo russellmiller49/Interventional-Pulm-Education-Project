@@ -240,9 +240,9 @@
         "description": "Capítulos interactivos de repaso para la certificación"
       },
       "fluoroview": {
-        "title": "FluoroView",
-        "shortTitle": "FluoroView",
-        "description": "Laboratorio de simulación de la vía aérea con arco en C"
+        "title": "Imagen en broncoscopia periférica",
+        "shortTitle": "Imagen",
+        "description": "Fluoroscopia 2D, tomosíntesis digital, TC de haz cónico fija y móvil y protección radiológica."
       },
       "bronchNavigation": {
         "title": "Navegación Bronquial",
@@ -397,9 +397,9 @@
       },
       "fluoro": {
         "badge": "SIMULACIÓN",
-        "title": "FluoroView",
-        "description": "Practique la orientación de TC a fluoroscopia, los ángulos del arco en C, las superposiciones de la vía aérea y los controles de imágenes no diagnósticas.",
-        "cta": "Iniciar FluoroView"
+        "title": "Imagen en broncoscopia periférica",
+        "description": "Fluoroscopia 2D, tomosíntesis digital, TC de haz cónico fija y móvil y protección radiológica.",
+        "cta": "Iniciar curso de imagen"
       },
       "nav": {
         "badge": "NAVEGACIÓN",

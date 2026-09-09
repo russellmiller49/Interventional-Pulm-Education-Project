@@ -1,0 +1,28 @@
+{
+  "schema": "peripheral-imaging-dts/v1",
+  "generator": "3D Slicer 5.12.3",
+  "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+  "sourceAtlasSha256": "46258feb2edd8397007697ca5ea151ec66e5acd78cf75ea9a53125b4b8fe8b7b",
+  "authoredNodule": {
+    "centerMm": [85, -20, -30],
+    "radiusMm": 9.0,
+    "coreRadiusMm": 4.05,
+    "coreHu": -350.0,
+    "profile": "part-solid core with smoothstep blend into unchanged CT lung",
+    "provenance": "Authored teaching construct, 2026-09-08; not an observed source-CT finding"
+  },
+  "sweeps": [20, 30, 40, 50, 60],
+  "viewsPerSweep": 13,
+  "tileSize": 192,
+  "originMm": [-176.1552734375, -176.1552734375, -158.75],
+  "spacingMm": [1.840948134816754, 1.840948134816754, 1.6596858638743455],
+  "targetCenterMm": [85, -20, -30],
+  "toolPlaneRelativeMm": -18,
+  "filter": {
+    "method": "horizontal Gaussian high-pass",
+    "sigmaVoxels": 7,
+    "zeroValue": 128,
+    "encodingGain": 1.5
+  },
+  "method": "Parallel ray sums of the derived FluoroView CT with an authored spherical target and straight instrument. A horizontal Gaussian high-pass suppresses background, then the browser refocuses by shift-and-add. No vendor algorithm, prior-CT registration, motion, scatter, or dose model."
+}

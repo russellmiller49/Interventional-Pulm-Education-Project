@@ -6,7 +6,7 @@ export type Mat3 = [Vec3, Vec3, Vec3]
 
 export interface FluoroConfig {
   units: 'mm'
-  coordinateSystem: 'LPS'
+  coordinateSystem: 'LPS' | 'LAS'
   isocenter_mm: Vec3
   source_to_isocenter_mm: number
   source_to_detector_mm: number

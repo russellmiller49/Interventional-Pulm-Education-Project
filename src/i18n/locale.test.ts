@@ -6,7 +6,12 @@ import {
   plannedLocales,
   translationStatus,
 } from './locale'
-import { localizePath, stripLocalePrefix, unlocalizedPathname } from './path'
+import {
+  localizePath,
+  pathShouldBypassLocaleRedirect,
+  stripLocalePrefix,
+  unlocalizedPathname,
+} from './path'
 import { isDraftModulePath, isVisibleModulePath } from '@/lib/draft-modules'
 
 describe('i18n locale helpers', () => {
@@ -45,5 +50,27 @@ describe('i18n locale helpers', () => {
   it('evaluates draft-module visibility after removing locale prefixes', () => {
     expect(isDraftModulePath('/es/pleural-procedures')).toBe(true)
     expect(isVisibleModulePath('/zh-CN/rapid-onsite-cytology', { isAdmin: true })).toBe(true)
+  })
+})
+
+describe('locale redirect bypass', () => {
+  it('bypasses the legacy fluoroview asset root, and localizes real page routes', () => {
+    // `/fluoroview/` is both the original simulator's route and its asset root (GLBs, the Draco
+    // decoder, case data), so the whole prefix skips the locale redirect.
+    expect(pathShouldBypassLocaleRedirect('/fluoroview/draco/draco_decoder.js')).toBe(true)
+    expect(
+      pathShouldBypassLocaleRedirect('/fluoroview/cases/patient-new/carm/c_arm_animation.glb'),
+    ).toBe(true)
+
+    // The peripheral bronchoscopy imaging course has page routes under `/peripheral-imaging`,
+    // which must be localized. Its static assets live under the same prefix but always carry a
+    // file extension, which is what the trailing rule keys on — so the two never collide, and
+    // the course needs no bypass entry of its own.
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/learn')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/practice')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/assess')).toBe(false)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/anatomy/thorax.glb')).toBe(true)
+    expect(pathShouldBypassLocaleRedirect('/peripheral-imaging/anatomy/manifest.json')).toBe(true)
   })
 })

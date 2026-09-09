@@ -240,9 +240,9 @@
         "description": "互动式专科认证复习章节"
       },
       "fluoroview": {
-        "title": "FluoroView",
-        "shortTitle": "FluoroView",
-        "description": "C 形臂气道模拟实验室"
+        "title": "外周支气管镜影像",
+        "shortTitle": "影像",
+        "description": "交互式二维透视、数字断层合成、固定与移动锥形束 CT 及辐射防护。"
       },
       "bronchNavigation": {
         "title": "支气管导航",
@@ -397,9 +397,9 @@
       },
       "fluoro": {
         "badge": "模拟",
-        "title": "FluoroView",
-        "description": "练习 CT 到透视的方位转换、C 臂角度、气道叠加显示以及非诊断性图像控制。",
-        "cta": "启动 FluoroView"
+        "title": "外周支气管镜影像",
+        "description": "交互式二维透视、数字断层合成、固定与移动锥形束 CT 及辐射防护。",
+        "cta": "开始影像课程"
       },
       "nav": {
         "badge": "导航",

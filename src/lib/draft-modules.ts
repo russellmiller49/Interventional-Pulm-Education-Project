@@ -6,6 +6,7 @@ import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ve
 import { ICU_HEMODYNAMICS_RELEASE_STAGE } from '@/features/icu-hemodynamics/content'
 import { ICU_SIMULATION_RELEASE_STAGE } from '@/features/icu-simulation/content'
 import { MCS_RELEASE_STAGE } from '@/features/mechanical-circulatory-support/content'
+import { PERIPHERAL_IMAGING_RELEASE_STAGE } from '@/features/peripheral-imaging/content/release'
 
 const airwayStentDraftPathPrefixes =
   stentExplorerPublicationStatus === 'published'
@@ -36,6 +37,11 @@ const mechanicalCirculatorySupportUnlistedPathPrefixes =
     ? (['/mechanical-circulatory-support'] as const)
     : ([] as const)
 
+const peripheralImagingUnlistedPathPrefixes =
+  PERIPHERAL_IMAGING_RELEASE_STAGE === 'unlisted-preview'
+    ? (['/peripheral-imaging'] as const)
+    : ([] as const)
+
 const icuSimulationDraftPathPrefixes =
   ICU_SIMULATION_RELEASE_STAGE === 'published' ? ([] as const) : (['/icu-simulation'] as const)
 
@@ -61,6 +67,7 @@ const unlistedModulePathPrefixes = [
   ...icuHemodynamicsUnlistedPathPrefixes,
   ...icuSimulationUnlistedPathPrefixes,
   ...mechanicalCirculatorySupportUnlistedPathPrefixes,
+  ...peripheralImagingUnlistedPathPrefixes,
   // Phase D1 device-intelligence routes stay absent from all site navigation
   // (decision D-03 as modified): reachable by direct link only.
   '/clinical-roles',

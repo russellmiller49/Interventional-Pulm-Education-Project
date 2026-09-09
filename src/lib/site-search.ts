@@ -639,6 +639,24 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['fluoroscopy', 'simulation', 'c-arm', 'airway', 'navigation'],
   },
   {
+    title: 'Peripheral Bronchoscopy Imaging',
+    description:
+      'Guided course on one imaging suite: 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, radial EBUS, tool confirmation, and radiation protection.',
+    href: '/peripheral-imaging',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'peripheral bronchoscopy',
+      'tomosynthesis',
+      'cone beam',
+      'cbct',
+      'radial ebus',
+      'radiation safety',
+      'tool in lesion',
+      'imaging chain',
+    ],
+  },
+  {
     title: 'IP Registry',
     description:
       'Procedure-suite registry concept for interventional pulmonology workflow and quality tracking.',

@@ -95,7 +95,7 @@ function fitSceneToInset(scene: THREE.Object3D) {
   }
 }
 
-function AnimatedGantryGlb({
+export function AnimatedGantryGlb({
   glbUri,
   raoLao,
   cranialCaudal,
@@ -122,8 +122,9 @@ function AnimatedGantryGlb({
     [cranialCaudal, raoLao],
   )
   const { scene, center, scale } = useMemo(() => {
-    const fit = fitSceneToInset(gltf.scene)
-    return { scene: gltf.scene, center: fit.center, scale: fit.scale }
+    const cloned = gltf.scene.clone(true)
+    const fit = fitSceneToInset(cloned)
+    return { scene: cloned, center: fit.center, scale: fit.scale }
   }, [gltf.scene])
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene])
 
@@ -164,7 +165,8 @@ function AnimatedGantryGlb({
       : CARM_SEGMENT_START_FRAME[activeSegmentRef.current]
     const currentFrame = currentFrameRef.current
     const frameDelta = targetFrame - currentFrame
-    const maxStep = Math.max(1, Math.min(deltaSeconds, 1 / 30) * 180)
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const maxStep = reduceMotion ? Infinity : Math.max(1, Math.min(deltaSeconds, 1 / 30) * 180)
     const nextFrame =
       Math.abs(frameDelta) <= maxStep ? targetFrame : currentFrame + Math.sign(frameDelta) * maxStep
 
