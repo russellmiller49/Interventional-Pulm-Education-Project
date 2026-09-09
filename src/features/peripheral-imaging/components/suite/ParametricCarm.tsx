@@ -36,10 +36,12 @@ export function ParametricCarm({
   frame,
   variant,
   lit,
+  shutters = true,
 }: {
   frame: SuiteFrame
   variant: SuiteVariant
   lit: boolean
+  shutters?: boolean
 }) {
   const { sod, sid, field } = frame.geometry
   return (
@@ -66,18 +68,19 @@ export function ParametricCarm({
             <boxGeometry args={[field * 1.035, field * 0.05, field * 1.035]} />
             <meshStandardMaterial color="#506b78" metalness={0.2} roughness={0.65} />
           </mesh>
-          {[-1, 1].map((sign) => (
-            <group key={sign}>
-              <mesh position={[sign * field * 0.065, -sod + field * 0.035, 0]}>
-                <boxGeometry args={[field * 0.035, field * 0.035, field * 0.13]} />
-                <meshStandardMaterial color="#59696c" />
-              </mesh>
-              <mesh position={[0, -sod + field * 0.035, sign * field * 0.065]}>
-                <boxGeometry args={[field * 0.1, field * 0.035, field * 0.035]} />
-                <meshStandardMaterial color="#59696c" />
-              </mesh>
-            </group>
-          ))}
+          {shutters &&
+            [-1, 1].map((sign) => (
+              <group key={sign}>
+                <mesh position={[sign * field * 0.065, -sod + field * 0.035, 0]}>
+                  <boxGeometry args={[field * 0.035, field * 0.035, field * 0.13]} />
+                  <meshStandardMaterial color="#59696c" />
+                </mesh>
+                <mesh position={[0, -sod + field * 0.035, sign * field * 0.065]}>
+                  <boxGeometry args={[field * 0.1, field * 0.035, field * 0.035]} />
+                  <meshStandardMaterial color="#59696c" />
+                </mesh>
+              </group>
+            ))}
         </group>
       </group>
       <mesh position={[-sid * 0.52, -field * 0.48, 0]}>

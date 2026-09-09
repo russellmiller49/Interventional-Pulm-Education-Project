@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { DrrTextureSource, type ProjectionState, type DrrPose } from './drrTextureSource'
 import { ProjectionOverlays } from './ProjectionOverlays'
 import styles from './suite-scene.module.css'
@@ -12,6 +12,8 @@ export function Monitor({
   hidden = false,
   showCurrent = true,
   targetFill = true,
+  zoom = 1,
+  mask,
 }: {
   pose: DrrPose
   depth: number
@@ -19,6 +21,8 @@ export function Monitor({
   hidden?: boolean
   showCurrent?: boolean
   targetFill?: boolean
+  zoom?: number
+  mask?: ReactNode
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<DrrTextureSource | null>(null)
@@ -47,15 +51,22 @@ export function Monitor({
       role="img"
       aria-label="CT-derived teaching projection with authored target and tool"
     >
-      <canvas ref={canvas} aria-hidden="true" />
-      <ProjectionOverlays
-        orbit={pose.orbit}
-        tilt={pose.tilt}
-        depth={depth}
-        geometry={pose.geometry}
-        showCurrent={showCurrent}
-        targetFill={targetFill}
-      />
+      <div
+        className={styles.monitorImage}
+        style={{ transform: `scale(${zoom})` }}
+        data-monitor-zoom={zoom}
+      >
+        <canvas ref={canvas} aria-hidden="true" />
+        <ProjectionOverlays
+          orbit={pose.orbit}
+          tilt={pose.tilt}
+          depth={depth}
+          geometry={pose.geometry}
+          showCurrent={showCurrent}
+          targetFill={targetFill}
+        />
+      </div>
+      {mask}
       {state !== 'ready' && (
         <p className={styles.imageStatus} role="status">
           {state === 'failed'

@@ -142,11 +142,12 @@ export function suiteViewErrors(spec: SuiteViewSpec): readonly string[] {
   const inputs = resolveSuiteInputs({ ...spec, bindings: [], lab: undefined }, {})
   for (const binding of spec.bindings) {
     const control = controls?.find((c) => c.key === binding.control)
-    if (!control) errors.push(`Unknown binding control: ${binding.control}`)
+    const storedRegistration = spec.lab === 'registration' && binding.control === 'previous'
+    if (!control && !storedRegistration) errors.push(`Unknown binding control: ${binding.control}`)
     if (!(binding.input in inputs)) errors.push(`Unknown suite input: ${binding.input}`)
     if (binding.scale !== undefined && !Number.isFinite(binding.scale))
       errors.push(`Invalid binding scale: ${binding.control}`)
-    if (control) {
+    if (control || storedRegistration) {
       const value = labValue(spec.lab!, {}, binding.control, spec.sectionId)
       if (typeof value !== typeof inputs[binding.input])
         errors.push(`Binding type differs: ${binding.control} → ${binding.input}`)

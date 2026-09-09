@@ -23,6 +23,7 @@ import { ChainPins } from './ChainPins'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
 import { LabDock } from './LabDock'
+import { FieldView, FieldMask } from './views/FieldView'
 import { ProjectionView3D } from './views/ProjectionView3D'
 import { RayTrace, SignalReadout } from './views/SignalView'
 import { loadAnatomyVolume } from '../../lib/anatomy'
@@ -70,7 +71,11 @@ function FrameReady({ ready }: { ready: () => void }) {
 
 export default function SuiteScene(props: ImagingSuitePaneProps) {
   const { view } = props
-  const inputs = useMemo(() => resolveSuiteInputs(view, props.lab.values), [view, props.lab.values])
+  const [steppedOrbit, setSteppedOrbit] = useState(0)
+  const inputs = useMemo(() => {
+    const resolved = resolveSuiteInputs(view, props.lab.values)
+    return { ...resolved, orbit: resolved.orbit + steppedOrbit }
+  }, [view, props.lab.values, steppedOrbit])
   const frame = useMemo(
     () => suiteFrame(inputs.orbit, inputs.tilt, inputs.geometry),
     [inputs.orbit, inputs.tilt, inputs.geometry],
@@ -150,7 +155,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
       <SuiteFallback {...props} />
     </div>
   )
-  const drrMode = view.mode === 'projection' || view.mode === 'signal'
+  const drrMode = ['projection', 'signal', 'field'].includes(view.mode)
   return (
     <SceneBoundary fallback={fallback}>
       <div
@@ -232,6 +237,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           frame={frame}
                           variant={inputs.variant}
                           lit={view.litStop === 'source'}
+                          shutters={view.mode !== 'field'}
                         />
                       )}
                       {view.layers.includes('cone') && (
@@ -250,6 +256,13 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           ray={view.layers.includes('ray')}
                           labels={view.layers.includes('labels')}
                           portal={portal as RefObject<HTMLDivElement>}
+                        />
+                      )}
+                      {view.mode === 'field' && (
+                        <FieldView
+                          frame={frame}
+                          fieldPercent={inputs.fieldPercent}
+                          crop={inputs.crop}
                         />
                       )}
                       {view.mode === 'signal' && view.layers.includes('ray') && (
@@ -281,11 +294,14 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 disabled={
                   !props.controlsEnabled ||
                   !view.lab ||
-                  !view.bindings.some((b) => b.input === 'orbit')
+                  (!view.bindings.some((b) => b.input === 'orbit') && view.mode !== 'field')
                 }
                 onClick={() => {
                   const binding = view.bindings.find((b) => b.input === 'orbit')
-                  if (!binding || !view.lab) return
+                  if (!binding || !view.lab) {
+                    setSteppedOrbit((n) => n + 1)
+                    return
+                  }
                   const control = labControl(view.lab, binding.control)
                   const value = labNumber(
                     view.lab,
@@ -328,6 +344,16 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 depth={inputs.toolDepth}
                 showCurrent={inputs.showCurrent}
                 targetFill={view.mode !== 'signal'}
+                zoom={view.mode === 'field' ? inputs.zoom : 1}
+                mask={
+                  view.mode === 'field' ? (
+                    <FieldMask
+                      frame={frame}
+                      fieldPercent={inputs.fieldPercent}
+                      crop={inputs.crop}
+                    />
+                  ) : undefined
+                }
                 onSource={setSource}
                 hidden={view.monitor === 'hidden'}
               />
