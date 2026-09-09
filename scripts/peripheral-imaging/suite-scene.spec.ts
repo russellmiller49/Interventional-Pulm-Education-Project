@@ -610,12 +610,49 @@ test('navigation keeps the map sensor fixed while current anatomy moves and a lo
   await expect(target).toHaveCount(0)
 })
 
+test('augmented imaging projects the old contour over the moving CT while the physical tool stays fixed', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`${preview}?section=changing-anatomy`)
+  await page.bringToFront()
+  await expect(page.locator('[data-suite-state=ready]')).toBeVisible({ timeout: 15000 })
+  await expect(page.locator('[data-projection-state=ready]')).toBeVisible()
+  const tip = page.locator('[data-tip-overlay]'),
+    stored = page.locator('[data-stored-overlay]'),
+    target = page.locator('[data-target-overlay]')
+  const oldTip = await tip.getAttribute('d'),
+    oldContour = await stored.getAttribute('cy')
+  await setRange(page, 'Authored anatomical displacement', -20)
+  await expect(tip).toHaveAttribute('d', oldTip!)
+  await expect(stored).toHaveAttribute('cy', oldContour!)
+  await expect(target).not.toHaveAttribute('cy', oldContour!)
+  await expect(page.locator('[data-readout=contourStale] dd')).toHaveText('yes')
+  await page.getByRole('button', { name: 'Capture a new teaching contour', exact: true }).click()
+  await expect(stored).toHaveAttribute('cy', (await target.getAttribute('cy'))!)
+  await expect(page.locator('[data-readout=contourStale] dd')).toHaveText('no')
+  await page
+    .getByRole('checkbox', { name: 'Show current target ground truth', exact: true })
+    .uncheck()
+  await expect(target).toHaveCount(0)
+  await expect(stored).toHaveCount(1)
+  await expect(page.getByText('Authored target', { exact: true })).toHaveCount(0)
+  const contexts = await page
+    .locator('canvas')
+    .evaluateAll(
+      (canvases) =>
+        canvases.filter((c) => Boolean((c as HTMLCanvasElement).getContext('webgl2'))).length,
+    )
+  expect(contexts).toBe(2)
+})
+
 for (const section of [
   'mobile-suite',
   'dts-acquisition',
   'dts-interpretation',
   'tool-confirmation',
   'current-anatomy',
+  'changing-anatomy',
 ]) {
   test(`${section} has no automated accessibility violations`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })

@@ -85,11 +85,11 @@ export function RegistrationView({
           )}
           {labels && (
             <>
-              <Html portal={portal} position={add(sensor, [0, 15, 0])}>
+              <Html portal={portal} position={add(sensor, [0, 35, 35])}>
                 <span className={styles.objectLabel}>Sensor on registered map</span>
               </Html>
               {inputs.showCurrent && (
-                <Html portal={portal} position={add(model.currentTarget, [15, 0, -10])}>
+                <Html portal={portal} position={add(model.currentTarget, [25, -20, -15])}>
                   <span className={styles.objectLabel}>Current target</span>
                 </Html>
               )}
