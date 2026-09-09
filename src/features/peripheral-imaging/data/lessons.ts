@@ -42,6 +42,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'imaging-questions',
     title: 'What does this image establish?',
+    shortTitle: 'Four questions',
     group: 'Start with the target',
     stage: 'Orientation',
     minutes: 4,
@@ -50,17 +51,17 @@ export const LESSONS: Lesson[] = [
       'Distinguish the information supplied by a navigation map, an image, and a tissue result.',
     concept: 'Separate the imaging questions',
     prerequisites: [],
-    why: 'A convincing display can lead to repeated sampling of the wrong tissue when its information source is misunderstood.',
+    why: 'A convincing display can lead to repeated sampling of tissue that was never the target when its information source is misunderstood.',
     recall: {
       prompt:
         'Before asking which technology to use, what decision is the next image meant to support?',
       answer:
-        'Name the uncertainty: route, current lesion location, actual sampling-tool position, or a complication. Then choose a measurement that addresses it.',
+        'Name the uncertainty: the airway path, current lesion location, actual sampling-tool position, or a complication. Then choose a measurement that addresses it.',
     },
     blocks: [
       {
         title: 'A map, a photograph, and a specimen',
-        body: 'A navigation display is like a route on a map. It can bring you to an address without showing what is inside the building today. Imaging adds a measurement of current anatomy; tissue acquisition adds a different kind of evidence.',
+        body: 'A navigation display is like a path drawn on a map. It can bring you to an address without showing what is inside the building today. Imaging adds a measurement of current anatomy; tissue acquisition adds a different kind of evidence.',
         points: [
           'Navigation: where is the tracked catheter relative to the map?',
           'Localization: where is the intended lesion now?',
@@ -84,18 +85,144 @@ export const LESSONS: Lesson[] = [
       scenario:
         'The navigation screen places the catheter at the virtual target. Fluoroscopy shows a needle but no convincing nodule.',
       reasoning:
-        'The route and hardware are represented. Current lesion identity and needle–lesion depth remain uncertain. Choose additional localization or confirmation evidence before attributing a nondiagnostic sample to pathology alone.',
+        'The path and the hardware are represented. Current lesion identity and needle–lesion depth remain uncertain. Choose additional localization or confirmation evidence before attributing a nondiagnostic sample to pathology alone.',
     },
     takeaway: [
       'State the question before acquiring.',
       'Name what is measured and what is a model.',
       'Keep localization and diagnosis as separate outcomes.',
     ],
-    checkIds: ['choose-1'],
+    checkIds: ['choose-1', 'choose-transfer-1'],
+  },
+  {
+    id: 'chain-walk',
+    title: 'Follow the beam: a walk through the suite',
+    shortTitle: 'The walk',
+    group: 'Start with the target',
+    stage: 'Foundation',
+    minutes: 6,
+    objective: 'optimize',
+    outcome:
+      'Name the six stops between the X-ray tube and the decision, and say which stop each imaging term belongs to.',
+    concept: 'The image is made at the end of a six-stop chain',
+    prerequisites: ['imaging-questions'],
+    why: 'Every later section lights one stop of this chain. A term met at its stop survives; a term met in a list does not.',
+    recall: {
+      prompt: 'Which four questions can an image in the suite be asked to answer?',
+      answer:
+        'Where the tracked catheter is relative to the map, where the lesion is now, where the actual sampling component is relative to it, and whether the specimen answered the clinical question.',
+    },
+    blocks: [
+      {
+        title: 'Six stops, one image',
+        kind: 'signals',
+        body: 'An X-ray image is made along a chain. A source fires photons, a cone of them crosses the patient, a detector measures what arrives, a computer may reconstruct or register what was measured, and a monitor shows the result to the person deciding. Each stop changes the image in its own way, and every technology in this course is a different way of using the same chain.',
+        points: [
+          'The source decides energy, quantity and pulses.',
+          'The beam decides aim, width and distance.',
+          'The patient decides overlap, motion and the timestamp.',
+          'The detector, the reconstruction and the display decide what is measured, what is added, and what is shown.',
+        ],
+        sources: ['tg272', 'setser'],
+      },
+      {
+        title: 'Walk it on a running suite',
+        kind: 'pattern',
+        body: 'The walk visits each stop on a normal, working suite: a centred target, an open field, a pulsed beam, a visible tool. At each stop you read its plain name, its analogy and its short checklist, and where a control lives at that stop you move it once to see what changes. Nothing is broken yet; the faults come later, one at a time.',
+        sources: ['tg272'],
+      },
+      {
+        title: 'One ray, one pixel',
+        kind: 'after-commitment',
+        body: 'The idea the whole course rests on lives at the beam. Each pixel of the image collects a single ray from the source, and everything along that ray lands on the same pixel. Depth along the ray is not measured by one image; turning the beam, sweeping it or orbiting it are the ways the later sections recover it.',
+        sources: ['tg272', 'setser'],
+        detail: {
+          title: 'Why the chain, not the device',
+          body: 'Fluoroscopy, tomosynthesis, cone-beam CT and augmented fluoroscopy share the source, the beam, the patient and the detector. They differ at the reconstruction stop: how many angles were measured, how wide the arc, and what was borrowed from a prior scan. Reading a technology as a traversal of the chain makes its limits predictable.',
+        },
+      },
+    ],
+    worked: {
+      scenario:
+        'A colleague asks why a needle that was clearly on the nodule on the monitor turned out to be a centimetre behind it.',
+      reasoning:
+        'Follow the chain. The beam made the overlap: needle and nodule sat on one ray and shared a pixel. The detector measured that faithfully and the display showed it faithfully. Nothing downstream of the beam could have separated them; a second beam direction could.',
+    },
+    lab: 'geometry',
+    labTask:
+      'Walk the six stops. At the beam stop, move the obliquity once and watch the ray, the cone and the image move together.',
+    takeaway: [
+      'Six stops make one image.',
+      'Each stop has its own short checklist.',
+      'Depth along a ray is not measured by one image.',
+    ],
+    checkIds: ['walk-1', 'choose-1'],
+  },
+  {
+    id: 'good-image',
+    title: 'A good image: the baseline you read everything against',
+    shortTitle: 'Five things',
+    group: 'Start with the target',
+    stage: 'Foundation',
+    minutes: 6,
+    objective: 'optimize',
+    outcome:
+      'Distinguish the five things you can change at the C-arm from the things the machine changes for you and the things that only change the display.',
+    concept: 'Five things you can change; the machine sets the exposure',
+    prerequisites: ['chain-walk'],
+    why: 'A console offers dozens of buttons. Knowing which five change the acquisition turns every later problem into a single question: which of the five, if any.',
+    recall: {
+      prompt:
+        'At which stop of the chain do two objects at different depths come to share a pixel?',
+      answer:
+        'At the beam. Each pixel collects one ray, and everything along that ray lands on it.',
+    },
+    blocks: [
+      {
+        title: 'What a good image looks like',
+        kind: 'signals',
+        body: 'Before any fault, see the baseline: the target centred, the field closed to the task with the whole tool excursion inside it, a pulsed beam at a rate that shows the movement you need, and a view chosen from the planning CT so nothing dense lies on the ray. Every later section starts from this image and breaks one thing.',
+        sources: ['wabip', 'setser'],
+      },
+      {
+        title: 'Five things you can change',
+        kind: 'after-commitment',
+        body: 'At the C-arm you change five things: where the beam is aimed (obliquity and cranial or caudal tilt), how wide it is (collimation), how time is sampled (pulse rate and pulse width), what acquisition you ask for (a single image, a limited sweep or a full orbit), and what the display shows (zoom, window, overlay). Everything else is monitoring.',
+        points: [
+          'Aim — the angle.',
+          'Width — the collimator.',
+          'Time — pulses per second and their length.',
+          'Acquisition — image, sweep or orbit.',
+          'Display — zoom, window, overlay.',
+        ],
+        sources: ['tg272', 'tg125', 'wabip'],
+      },
+      {
+        title: 'The machine sets the exposure',
+        kind: 'after-commitment',
+        body: 'Tube voltage, current and filtration are chosen by automatic exposure regulation to hold the detector signal. You do not turn them up by hand, and a brighter image does not mean less output. What the machine did appears on the dose readout, which is why the readout, not the monitor, is where output is judged.',
+        sources: ['tg125', 'aapm12'],
+      },
+    ],
+    worked: {
+      scenario:
+        'A target sits behind the heart. One colleague reaches for the magnification button; another asks for fifteen degrees of obliquity.',
+      reasoning:
+        'Magnification enlarges the same ray, and the heart with it. Obliquity changes which ray crosses the target, so the heart can leave it. The first changes the display or the sampling; the second changes the aim. Name the thing you are changing before you change it.',
+    },
+    labTask:
+      'Place each console control with the thing it changes: aim, width, time, acquisition or display — or monitoring, when it changes nothing about the beam.',
+    takeaway: [
+      'Five things change the acquisition.',
+      'The machine chooses the exposure and reports it.',
+      'Display changes are not acquisition changes.',
+    ],
+    checkIds: ['good-1', 'walk-1'],
   },
   {
     id: 'current-anatomy',
     title: 'The CT map and the lung today',
+    shortTitle: 'The map',
     group: 'Start with the target',
     stage: 'Foundation',
     minutes: 5,
@@ -103,7 +230,7 @@ export const LESSONS: Lesson[] = [
     outcome:
       'Distinguish a planning-map mismatch from loss of tracking or inadequate target coverage.',
     concept: 'Anatomy has an acquisition state',
-    prerequisites: ['imaging-questions'],
+    prerequisites: ['imaging-questions', 'chain-walk'],
     why: 'An anesthetized lung can differ from the inspiratory planning CT even while navigation hardware tracks accurately.',
     recall: {
       prompt: 'Does reaching the virtual target establish that the lesion has been localized now?',
@@ -112,8 +239,8 @@ export const LESSONS: Lesson[] = [
     },
     blocks: [
       {
-        title: 'Read the CT as a route and a safety map',
-        body: 'Follow the bronchus in thin multiplanar images to the lesion. Record morphology, the airway–lesion relationship, and nearby pleura, fissures, vessels and diaphragm. Anticipate which projections will pass through ribs, heart or dense chest wall.',
+        title: 'Read the CT as a path and a safety map',
+        body: 'Follow the bronchus in thin multiplanar images to the lesion. Record morphology, the airway–lesion relationship, and nearby pleura, fissures, vessels and diaphragm. Anticipate which projections will cross ribs, heart or dense chest wall.',
         points: [
           'Confirm the intended target and its relevant solid or wall component.',
           'Identify the final airway and direction of approach.',
@@ -146,7 +273,7 @@ export const LESSONS: Lesson[] = [
     labTask:
       'Change the anatomical state, then toggle the old contour. Observe which information remains current.',
     takeaway: [
-      'Read the route and nearby hazards before instrumentation.',
+      'Read the airway path and nearby hazards before instrumentation.',
       'Treat an image as a measurement of a particular state.',
       'A missing target needs an explanation.',
     ],
@@ -155,6 +282,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'projection',
     title: 'From a 3D chest to a 2D view',
+    shortTitle: 'One ray',
     group: 'Start with the target',
     stage: 'Foundation',
     minutes: 6,
@@ -162,7 +290,7 @@ export const LESSONS: Lesson[] = [
     outcome:
       'Distinguish projected overlap from a resolved three-dimensional tool–target relationship.',
     concept: 'Projection removes one dimension',
-    prerequisites: ['imaging-questions', 'current-anatomy'],
+    prerequisites: ['imaging-questions', 'current-anatomy', 'good-image'],
     why: 'A tool can overlap a nodule on the monitor while remaining anterior or posterior to it.',
     recall: {
       prompt: 'What can an old target contour establish about the lesion at this moment?',
@@ -172,6 +300,7 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Think of shadows cast from different directions',
+        kind: 'after-commitment',
         body: 'A projection combines information along each ray. Structures separated along the beam can share the same image position. Turning the beam creates parallax: their projected separation changes. Cranial/caudal tilt changes a different set of overlaps from obliquity.',
         points: [
           'Start with the planning CT to anticipate useful angles.',
@@ -214,13 +343,14 @@ export const LESSONS: Lesson[] = [
   {
     id: 'signal',
     title: 'Why a target is hard to see',
+    shortTitle: 'Hard to see',
     group: 'Optimize 2D fluoroscopy',
     stage: 'Mechanism',
     minutes: 5,
     objective: 'optimize',
     outcome: 'Distinguish quantum noise from scatter and overlapping anatomy.',
     concept: 'Image quality has a limiting mechanism',
-    prerequisites: ['projection'],
+    prerequisites: ['projection', 'good-image'],
     why: 'More exposure can make a clean image of the same unresolved overlap.',
     recall: {
       prompt:
@@ -231,6 +361,7 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Identify what is hiding the target',
+        kind: 'after-commitment',
         body: 'Quantum noise is variation from limited detected photons. Scatter adds unwanted signal that reduces contrast. Anatomical clutter is real superimposed structure. They can look similar at first glance but require different responses.',
         points: [
           'Grainy image: assess photon statistics and motion.',
@@ -261,6 +392,9 @@ export const LESSONS: Lesson[] = [
       reasoning:
         'Anatomical overlap is the leading limitation. Review the CT for a useful alternative projection, then assess its exposure implications. Increasing photon count would still image the same superimposed heart.',
     },
+    lab: 'geometry',
+    labTask:
+      'Turn the beam until the heart leaves the ray through the target, then add a tilt and read what the projection does.',
     takeaway: [
       'Name the limiting mechanism.',
       'More photons have diminishing returns.',
@@ -271,6 +405,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'field',
     title: 'Field size, geometry, and enlargement',
+    shortTitle: 'Field and zoom',
     group: 'Optimize 2D fluoroscopy',
     stage: 'Mechanism',
     minutes: 6,
@@ -331,6 +466,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'time',
     title: 'Three clocks in a moving image',
+    shortTitle: 'Three clocks',
     group: 'Optimize 2D fluoroscopy',
     stage: 'Mechanism',
     minutes: 6,
@@ -386,6 +522,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'two-dimensional',
     title: 'A deliberate 2D imaging sequence',
+    shortTitle: 'The sequence',
     group: 'Optimize 2D fluoroscopy',
     stage: 'Application',
     minutes: 5,
@@ -403,6 +540,7 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Prepare, inspect, change one limiting factor',
+        kind: 'after-commitment',
         body: 'State the question and review the CT for the intended target and beam path. Confirm current aeration, geometry and clearance. Center the region, collimate physically, and select sufficient temporal behavior. Inspect the target and actual tool before escalating image quality.',
         points: [
           'For clutter, choose a useful angle and recenter.',
@@ -439,6 +577,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'dts-acquisition',
     title: 'Building depth from a limited sweep',
+    shortTitle: 'The sweep',
     group: 'Digital tomosynthesis',
     stage: 'Mechanism',
     minutes: 6,
@@ -461,6 +600,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'The missing directions still matter',
+        kind: 'after-commitment',
         body: 'Limited angular coverage leaves incompletely measured information, often described as a missing wedge. In-plane edges may look sharp while depth remains elongated or blurred. Small displayed voxels do not repair this anisotropy. Sparse views over a broad orbit and a limited arc are different sampling problems.',
         sources: ['saad'],
         detail: {
@@ -498,6 +638,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'dts-interpretation',
     title: 'What went into this reconstruction?',
+    shortTitle: 'Provenance',
     group: 'Digital tomosynthesis',
     stage: 'Mechanism',
     minutes: 5,
@@ -554,6 +695,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'cbct-acquisition',
     title: 'Preparing a useful CBCT volume',
+    shortTitle: 'The orbit',
     group: 'Cone-beam CT in the suite',
     stage: 'Mechanism',
     minutes: 6,
@@ -577,12 +719,13 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Center the target in three dimensions',
+        kind: 'after-commitment',
         body: 'A centered frontal image can conceal an anterior/posterior offset. Use supported orthogonal localization or validated positioning aids to place the lesion, relevant tool and safety anatomy within the reconstruction volume. Respect supported collimation and table configurations.',
         sources: ['setser'],
       },
       {
         title: 'Make readiness a team check',
-        body: 'Confirm the intended target and field, the instrument configuration, mechanical clearance through the complete orbit, and the respiratory/protection plan. Perform a nonirradiating test orbit when supported. Account for the tube and detector, patient arms, table, robot, scope, lines and anesthesia equipment.',
+        body: 'Confirm the intended target and field, the instrument configuration, mechanical clearance through the complete orbit, and the respiratory/protection plan. Perform a nonirradiating rehearsal orbit when supported. Account for the tube and detector, patient arms, table, robot, scope, lines and anesthesia equipment.',
         points: [
           'Operator: target and actual sampling configuration.',
           'Technologist: protocol, coverage and full-orbit clearance.',
@@ -596,11 +739,11 @@ export const LESSONS: Lesson[] = [
       scenario:
         'The lesion is centered in the frontal scout. A lateral localization view places it near the volume edge.',
       reasoning:
-        'Frontal centering resolved only part of the positioning problem. Correct the remaining offset with the supported method and recheck coverage and clearance before exposure. A prettier reconstruction cannot recover an excluded target.',
+        'Frontal centering resolved only part of the positioning problem. Fix the remaining offset with the supported method and recheck coverage and clearance before exposure. A prettier reconstruction cannot recover an excluded target.',
     },
     lab: 'acquisition',
     labTask:
-      'Set up the authored target and complete the readiness checks. Test what happens after moving a previously checked setup.',
+      'Set up the authored target and complete the readiness checks. See what happens after moving a previously checked setup.',
     takeaway: [
       'Center the target, not simply the chest.',
       'Check the whole orbit.',
@@ -611,6 +754,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'fixed-suite',
     title: 'Working in a fixed CBCT suite',
+    shortTitle: 'Fixed suite',
     group: 'Cone-beam CT in the suite',
     stage: 'Application',
     minutes: 4,
@@ -665,6 +809,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'mobile-suite',
     title: 'Bringing CBCT into the bronch suite',
+    shortTitle: 'Mobile suite',
     group: 'Cone-beam CT in the suite',
     stage: 'Application',
     minutes: 4,
@@ -721,6 +866,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'tool-confirmation',
     title: 'Read the actual sampling component',
+    shortTitle: 'The sampler',
     group: 'Cone-beam CT in the suite',
     stage: 'Application',
     minutes: 7,
@@ -740,7 +886,7 @@ export const LESSONS: Lesson[] = [
         title: 'Target → tool → relationship → state',
         body: 'Identify the intended lesion independently, then trace the actual instrument through thin axial, coronal and sagittal planes. Use oblique reformats along the instrument when helpful. Identify the component that collects tissue and the acquisition state in which the relationship was shown.',
         points: [
-          'Target: correct lesion and intended sampling region.',
+          'Target: the intended lesion and its sampling region.',
           'Tool: distinguish catheter, shaft, tip, window or deployed jaws.',
           'Relationship: outside, margin, within, or beyond; inspect more than one plane.',
           'State: record when and under what respiratory conditions.',
@@ -754,7 +900,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'A slab helps tracing but can conceal depth',
-        body: 'Thicker slabs and maximum-intensity projections can make a long metal instrument easier to follow. They can also superimpose structures at different depths. Attractive surface renderings and overlap in a MIP should complement thin multiplanar assessment.',
+        body: 'Thicker slabs and maximum-intensity projections can make a long metal instrument easier to follow. They can also superimpose structures at different depths. Attractive surface renderings and overlap in a MIP should complement thin multiplanar review.',
         sources: ['setser'],
         detail: {
           title: 'Localize, then obtain a diagnostic specimen',
@@ -781,6 +927,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'changing-anatomy',
     title: 'When the image and procedure diverge',
+    shortTitle: 'After change',
     group: 'Cone-beam CT in the suite',
     stage: 'Application',
     minutes: 6,
@@ -798,7 +945,7 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Match the artifact to its cause',
-        body: 'Duplicated edges suggest motion. Metal-adjacent streaks need artifact-aware tracing. A cut-off target suggests coverage or centering. A new dependent tissue opacity may represent real aeration change. Correct the likely cause before repeating the same acquisition.',
+        body: 'Duplicated edges suggest motion. Metal-adjacent streaks need artifact-aware tracing. A cut-off target suggests coverage or centering. A new dependent tissue opacity may represent real aeration change. Address the likely cause before repeating the same acquisition.',
         sources: ['setser', 'tg272', 'ilocate'],
       },
       {
@@ -825,7 +972,7 @@ export const LESSONS: Lesson[] = [
     worked: {
       scenario: 'Motion degraded a scan and the patient became intolerant of the planned hold.',
       reasoning:
-        'Anesthesia restores appropriate support. Review the cause and a safer acquisition strategy before another attempt. Do not prolong an unsafe physiological state merely to finish imaging, and do not expect higher exposure to correct duplicated edges.',
+        'Anesthesia restores appropriate support. Review the cause and a safer acquisition strategy before another attempt. Do not prolong an unsafe physiological state merely to finish imaging, and do not expect higher exposure to remove duplicated edges.',
     },
     lab: 'registration',
     labTask:
@@ -840,6 +987,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'staff-protection',
     title: 'Protecting people around the beam',
+    shortTitle: 'Scatter',
     group: 'Radiation protection',
     stage: 'Mechanism',
     minutes: 5,
@@ -850,7 +998,7 @@ export const LESSONS: Lesson[] = [
     prerequisites: ['field', 'cbct-acquisition'],
     why: 'A staff member may be outside the direct beam yet receive scatter during bedside fluoroscopy.',
     recall: {
-      prompt: 'Why can a display crop fail to protect tissue outside the visible region?',
+      prompt: 'Why does a display crop not protect tissue outside the visible region?',
       answer:
         'It does not restrict the physical beam. Radiation and scatter are determined by acquisition, not the displayed border.',
     },
@@ -896,6 +1044,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'dose-reporting',
     title: 'Read the dose report correctly',
+    shortTitle: 'The dose report',
     group: 'Radiation protection',
     stage: 'Mechanism',
     minutes: 6,
@@ -918,6 +1067,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'A smaller field and a higher local index can coexist',
+        kind: 'after-commitment',
         body: 'Collimation can reduce KAP while automatic exposure regulation maintains or raises kerma in the remaining field. Equal KAP does not imply equal peak skin dose or organ exposure. Fluoroscopy minutes omit differences in output and may exclude rotational or radiographic acquisitions.',
         sources: ['tg125', 'aapm12', 'skin'],
         detail: {
@@ -932,7 +1082,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Respond to alerts through the dose-management program',
-        body: 'A dose notification prompts reassessment of necessity, optimization and the remaining plan. Follow local policy for medical-physics review, documentation and patient follow-up. Reference kerma is not a diagnosis of skin injury. Occupational limits are not patient medical-exposure limits, and no scan count is universally correct.',
+        body: 'A dose notification prompts reassessment of necessity, optimization and the remaining plan. Follow local policy for medical-physics review, documentation and patient follow-up. Reference kerma is not a diagnosis of skin injury. Occupational limits are not patient medical-exposure limits, and no scan count is universally right.',
         sources: ['aapm12', 'skin', 'icrp'],
       },
     ],
@@ -940,7 +1090,7 @@ export const LESSONS: Lesson[] = [
       scenario:
         'The field area is reduced while local air kerma rises modestly. The reported area product falls.',
       reasoning:
-        'Both readouts can be correct because KAP depends on kerma and area. Interpret each quantity and review the whole procedure. The calculation does not reveal the patient’s peak skin dose or justify ignoring an institutional alert.',
+        'Both readouts can be right because KAP depends on kerma and area. Interpret each quantity and review the whole procedure. The calculation does not reveal the patient’s peak skin dose or justify ignoring an institutional alert.',
     },
     lab: 'dose',
     labTask:
@@ -955,9 +1105,10 @@ export const LESSONS: Lesson[] = [
   {
     id: 'suite-cases',
     title: 'Decisions in the bronch suite',
+    shortTitle: 'Bring it together',
     group: 'Bring it together',
     stage: 'Independent practice',
-    minutes: 12,
+    minutes: 8,
     objective: 'verify',
     outcome: 'Apply the imaging and protection principles to new suite decisions.',
     concept: 'Integrate all previously taught decisions',
@@ -980,14 +1131,13 @@ export const LESSONS: Lesson[] = [
     blocks: [
       {
         title: 'Use the same reasoning in a new situation',
-        body: 'These eight authored cases mix the technologies and safety questions from the course. Commit each decision before seeing its explanation. The cases assess reasoning without reproducing the controls of a particular device.',
+        body: 'This section adds nothing new. It combines the technologies and safety questions of the course: each finding you meet in the suite belongs at one stop of the chain, and naming that stop is what decides the next move. The eight case decisions come afterwards, on the Assess page, once every section has been worked through.',
         points: [
+          'Name the information gap before naming a device.',
+          'Say which stop of the chain the problem lives at.',
           'Choose the single best action from the available information.',
-          'First decisions remain in your learning record after feedback.',
-          'Passing requires at least seven correct decisions and all critical safety items correct.',
-          'This is a knowledge check; supervised procedural training remains necessary.',
         ],
-        sources: [],
+        sources: ['setser', 'wabip'],
       },
     ],
     worked: {
@@ -1000,6 +1150,6 @@ export const LESSONS: Lesson[] = [
       'Reassess current anatomy and the sampling component.',
       'Protect people and record meaningful exposure quantities.',
     ],
-    checkIds: ['case-1', 'case-2', 'case-3', 'case-4', 'case-5', 'case-6', 'case-7', 'case-8'],
+    checkIds: ['capstone-1', 'capstone-transfer-1'],
   },
 ]

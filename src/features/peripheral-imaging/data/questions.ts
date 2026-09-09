@@ -65,7 +65,7 @@ export const QUESTIONS: Question[] = [
       ],
       [
         'Assess current aeration, coverage and target identity.',
-        'These observations test whether anatomy or acquisition changed. Coordinate reassessment with anesthesia and current imaging before relying on the old map.',
+        'These observations show whether anatomy or acquisition changed. Coordinate reassessment with anesthesia and current imaging before relying on the old map.',
       ],
     ],
     'A well-aligned central map can coexist with peripheral divergence.',
@@ -233,11 +233,11 @@ export const QUESTIONS: Question[] = [
     [
       [
         'Reposition using the supported centering method and recheck clearance.',
-        'Frontal centering leaves another dimension unresolved. Correct the offset and verify the new setup before exposure.',
+        'Frontal centering leaves another dimension unresolved. Fix the offset and verify the new setup before exposure.',
       ],
       [
         'Increase the reconstruction matrix and preserve the current setup.',
-        'A finer grid cannot recover an excluded target. Correct coverage rather than changing display sampling.',
+        'A finer grid cannot recover an excluded target. Fix coverage rather than changing display sampling.',
       ],
       [
         'Acquire first and use a thicker slab to recover the target.',
@@ -321,7 +321,7 @@ export const QUESTIONS: Question[] = [
     [
       [
         'Increase exposure while repeating the same unstable acquisition.',
-        'More photons do not undo motion inconsistency. Correct stability and respiratory coordination first.',
+        'More photons do not undo motion inconsistency. Restore stability and respiratory coordination first.',
       ],
       [
         'Reassess stability and a tolerable coordinated acquisition state.',
@@ -332,7 +332,7 @@ export const QUESTIONS: Question[] = [
         'Combining depths can hide artifact without restoring reliable localization. Establish an adequate acquisition.',
       ],
     ],
-    'Fix the cause of a failed acquisition before repeating it.',
+    'Fix the cause of a degraded acquisition before repeating it.',
     ['setser', 'vespa'],
   ),
   item(
@@ -436,7 +436,7 @@ export const QUESTIONS: Question[] = [
       ],
       [
         'An outcomes study with defined diagnostic and safety endpoints.',
-        'Clinical endpoints test whether the imaging method benefits the procedural question. Specify population, comparator, outcome definition and all exposures.',
+        'Clinical endpoints show whether the imaging method benefits the procedural question. Specify population, comparator, outcome definition and all exposures.',
       ],
       [
         'A demonstration that the prior contour remains visually familiar.',
@@ -540,7 +540,7 @@ export const QUESTIONS: Question[] = [
   item(
     'case-8',
     'protect',
-    'An authored dose report lists 12 Gy·cm² total KAP, comprising 8 from fluoroscopy and 4 from rotational acquisitions. What is the correct whole-procedure entry?',
+    'An authored dose report lists 12 Gy·cm² total KAP, comprising 8 from fluoroscopy and 4 from rotational acquisitions. What should the whole-procedure entry say?',
     'c',
     [
       [
@@ -557,6 +557,116 @@ export const QUESTIONS: Question[] = [
       ],
     ],
     'Count every acquisition mode once and keep units explicit.',
+    ['wabip', 'aapm12'],
+  ),
+  item(
+    'choose-transfer-1',
+    'choose',
+    'A radial ultrasound image shows tissue all the way round the probe, and the catheter icon sits on the virtual target. Which statement is best supported?',
+    'b',
+    [
+      [
+        'The lesion has been identified and the biopsy will be diagnostic.',
+        'A tissue pattern around the probe is a local acoustic finding. Lesion identity and specimen adequacy are separate outcomes that this image does not settle.',
+      ],
+      [
+        'The probe is surrounded by tissue here; what that tissue is, and where a later tool samples, remain open.',
+        'The image measures its own surroundings. Collapsed lung can look the same, and the sampling tool follows its own path once the probe is withdrawn.',
+      ],
+      [
+        'The navigation display has been confirmed, so the target can be sampled at the icon.',
+        'Two displays agreeing about position is not confirmation of tissue. A map and a local measurement answer different questions.',
+      ],
+    ],
+    'Each display answers its own question; none of them answers all four.',
+    ['ilocate', 'mobile'],
+  ),
+  item(
+    'walk-1',
+    'optimize',
+    'A nodule and the needle tip land on the same pixel of the image although they are two centimetres apart. At which stop of the chain is that overlap made?',
+    'a',
+    [
+      [
+        'The beam',
+        'Every pixel collects one ray from the source. Two objects on that ray share the pixel however far apart they are along it.',
+      ],
+      [
+        'The detector',
+        'The panel records what each ray delivered. It cannot tell where along the ray the attenuation happened; the overlap arrived already made.',
+      ],
+      [
+        'The display',
+        'Zoom and window change how a pixel is shown. The overlap was decided before the image reached the monitor.',
+      ],
+    ],
+    'Overlap is decided on the beam, not on the screen.',
+    ['tg272', 'setser'],
+  ),
+  item(
+    'good-1',
+    'optimize',
+    'On a held image the target is clear but small. Which of these changes what is measured, rather than how it is shown?',
+    'c',
+    [
+      [
+        'Zooming the stored image.',
+        'Display zoom enlarges existing pixels. Nothing new is measured and no exposure follows.',
+      ],
+      [
+        'Changing the window and level.',
+        'Windowing maps the same measured values to different greys. The information is unchanged.',
+      ],
+      [
+        'Selecting a smaller acquisition field.',
+        'An acquisition-field change alters what the panel measures on the next exposure, and may change binning and output. It is one of the things you change at the C-arm.',
+      ],
+    ],
+    'Ask whether a control changes the acquisition or only the display.',
+    ['tg272', 'tg125'],
+  ),
+  item(
+    'capstone-1',
+    'verify',
+    'After a useful oblique view, a collimated field and a paused breath, the nodule is still not distinct although the needle is crisp. Which stop of the chain holds the remaining problem?',
+    'a',
+    [
+      [
+        'The patient — what the ray crosses',
+        'Angle, field and timing have been set well. What is left is the anatomy on the ray, or the identity of the target, and more of the same exposure cannot change either.',
+      ],
+      [
+        'The source — more photons',
+        'More photons lower the grain, but the image is not grainy. The limit here is not the photon count.',
+      ],
+      [
+        'The display — a stronger window',
+        'The window changes the contrast of what was measured. It cannot separate a target from what lies on the same ray.',
+      ],
+    ],
+    'When the beam and the timing are right, the remaining limit lives in the patient or in the question.',
+    ['setser', 'tg272', 'mobile'],
+  ),
+  item(
+    'capstone-transfer-1',
+    'protect',
+    'The procedure record lists fluoroscopy time and the number of rotational acquisitions, but no area product or reference air kerma. What does the record still lack?',
+    'b',
+    [
+      [
+        'Nothing; time and spin count describe the exposure.',
+        'Time and count omit the output per second and per spin. Two procedures with the same minutes can differ several-fold in exposure.',
+      ],
+      [
+        'The measured output indices with their units and the modes they include.',
+        'The kerma–area product and the reference air kerma, with units and the acquisition modes they cover, are what a whole-procedure review needs. Time and count are incomplete on their own.',
+      ],
+      [
+        'An effective dose in millisieverts, so the exposure can be compared with a chest CT.',
+        'Effective dose is an estimate with disclosed assumptions, not a measured index. A comparison with a CT without the method behind it is not a report.',
+      ],
+    ],
+    'Record the quantity, its units and the modes it covers.',
     ['wabip', 'aapm12'],
   ),
 ]

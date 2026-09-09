@@ -28,7 +28,8 @@ export function imagingLearnerCopyErrors(
   if (flagged.length > 0) {
     errors.push(`${where} uses vocabulary the learner copy gate refuses: ${flagged.join(', ')}.`)
   }
-  if (options.allowDigits === false && /\d/.test(text)) {
+  // Dimension labels (2D, 3D) are words, not counters.
+  if (options.allowDigits === false && /\d(?!D\b)/.test(text)) {
     errors.push(`${where} carries a digit; counters belong to the chain caption, not here.`)
   }
   return errors
