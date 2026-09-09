@@ -2,16 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
 
 jest.mock('@/features/socrates-demo/components/SocratesDemoWorkspace', () => ({
-  SocratesDemoWorkspace: ({
-    publishedDocument,
-    sandboxDocuments,
-  }: {
-    publishedDocument: { slide: { id: string } } | null
-    sandboxDocuments: unknown[]
-  }) => (
-    <div data-testid="socrates-demo-workspace">
-      {publishedDocument?.slide.id ?? 'Functional demo'} · {sandboxDocuments.length} drafts
-    </div>
+  SocratesDemoWorkspace: () => <div data-testid="socrates-demo-workspace">Web overlay demo</div>,
+}))
+jest.mock('@/features/socrates-demo/components/SocratesDemo', () => ({
+  SocratesDemo: ({ slide }: { slide: { id: string } }) => (
+    <div data-testid="published-demo">{slide.id}</div>
   ),
 }))
 
@@ -33,7 +28,7 @@ describe('SOCRATES localized unlisted route', () => {
 
   it('is explicitly noindex, nofollow, and noarchive', () => {
     expect(metadata.robots).toEqual({ index: false, follow: false, noarchive: true })
-    expect(metadata.description).toMatch(/Unlisted functional demonstration/i)
+    expect(metadata.description).toMatch(/browser draft saving/i)
   })
 
   it.each(['en', 'es', 'zh-CN'])('sets the %s locale and renders the demo', async (locale) => {
@@ -57,17 +52,16 @@ describe('SOCRATES localized unlisted route', () => {
     )
 
     expect(mockLoadPublishedDocument).toHaveBeenCalledWith('published-slide')
-    expect(screen.getByTestId('socrates-demo-workspace')).toHaveTextContent(
-      'published-invenio-slide',
-    )
+    expect(screen.getByTestId('published-demo')).toHaveTextContent('published-invenio-slide')
   })
 
-  it('loads anonymous sandbox drafts into the same unlisted workspace', async () => {
+  it('never loads old database slides or sandbox drafts for the company demo', async () => {
     mockLoadSandboxDocuments.mockResolvedValue([{ recordId: 'sandbox-1' }])
 
     render(await SocratesDemoPage({ params: Promise.resolve({ locale: 'en' }) }))
 
-    expect(mockLoadSandboxDocuments).toHaveBeenCalledTimes(1)
-    expect(screen.getByTestId('socrates-demo-workspace')).toHaveTextContent('1 drafts')
+    expect(mockLoadSandboxDocuments).not.toHaveBeenCalled()
+    expect(mockLoadPublishedDocument).not.toHaveBeenCalled()
+    expect(screen.getByTestId('socrates-demo-workspace')).toHaveTextContent('Web overlay demo')
   })
 })

@@ -10,6 +10,7 @@ jest.mock('@/lib/supabase/server', () => ({
 }))
 
 import { createStarterSocratesDocument } from '@/features/socrates-builder/content/starter-document'
+import { createInvenioDemoDocument } from '@/features/socrates-builder/content/invenio-demo-document'
 
 import { deleteSocratesSandboxDocument, saveSocratesSandboxDocument } from './actions'
 
@@ -49,6 +50,16 @@ describe('SOCRATES anonymous sandbox actions', () => {
     const result = await saveSocratesSandboxDocument(createStarterSocratesDocument(), 'short')
 
     expect(result).toEqual({ ok: false, error: 'A secure browser edit key could not be created.' })
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('keeps web overlays out of the existing database format', async () => {
+    const document = createStarterSocratesDocument()
+    document.annotations[0].explanation = 'A detailed overlay explanation.'
+    for (const overlay of [document, createInvenioDemoDocument()]) {
+      const result = await saveSocratesSandboxDocument(overlay, editKey)
+      expect(result).toMatchObject({ ok: false, error: expect.stringContaining('browser storage') })
+    }
     expect(mockRpc).not.toHaveBeenCalled()
   })
 

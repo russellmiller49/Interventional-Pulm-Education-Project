@@ -63,8 +63,11 @@ import {
   createBlankSocratesDocument,
   createStarterSocratesDocument,
 } from '../content/starter-document'
+import { createInvenioDemoDocument } from '../content/invenio-demo-document'
 import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descriptor'
+import { databaseCompatibilityError } from '../database-compatibility'
 import { getInvenioPair } from '../invenio-source'
+import type { WebOverlayWorkspace } from '../web-overlay-storage'
 import { InvenioSlidePicker } from './InvenioSlidePicker'
 import {
   createSandboxEditKey,
@@ -84,10 +87,13 @@ import styles from './socrates-builder.module.css'
 interface SocratesBuilderProps {
   access: SocratesBuilderAccess
   initialDocuments: SocratesSlideDocument[]
+  initialActiveDocument?: SocratesSlideDocument
+  initialStorageError?: string | null
   mode?: SocratesBuilderMode
   sandboxCleanupDocuments?: SocratesSlideDocument[]
   embedded?: boolean
   onDocumentsChange?: (documents: SocratesSlideDocument[]) => void
+  onLocalWorkspaceChange?: (workspace: WebOverlayWorkspace) => string | null
 }
 
 interface ActionNotice {
@@ -174,15 +180,22 @@ function statusVariant(status: SocratesSlideDocument['workflowStatus']) {
 export function SocratesBuilder({
   access,
   initialDocuments,
+  initialActiveDocument,
+  initialStorageError = null,
   mode = 'protected',
   sandboxCleanupDocuments = [],
   embedded = false,
   onDocumentsChange,
+  onLocalWorkspaceChange,
 }: SocratesBuilderProps) {
   const locale = useLocale()
-  const initialDocument = initialDocuments[0]
-    ? cloneDocument(initialDocuments[0])
-    : createStarterSocratesDocument()
+  const [initialDocument] = useState(() =>
+    cloneDocument(
+      initialActiveDocument ??
+        initialDocuments[0] ??
+        (mode === 'local' ? createInvenioDemoDocument() : createStarterSocratesDocument()),
+    ),
+  )
   const viewerRef = useRef<DeepZoomViewerHandle | null>(null)
   const descriptorRequestRef = useRef(0)
   const importInputRef = useRef<HTMLInputElement | null>(null)
@@ -204,13 +217,21 @@ export function SocratesBuilder({
   const [previewDocument, setPreviewDocument] = useState<SocratesSlideDocument | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<ActionNotice | null>(null)
+  const [localSaveError, setLocalSaveError] = useState<string | null>(initialStorageError)
+  const [initialLocalSnapshot] = useState(() => JSON.stringify([initialDocument, initialDocuments]))
+  const localSnapshotRef = useRef(initialLocalSnapshot)
   const [ownedSandboxIds, setOwnedSandboxIds] = useState<Set<string>>(new Set())
   const [cleanupDocuments, setCleanupDocuments] = useState(() =>
     sandboxCleanupDocuments.map(cloneDocument),
   )
 
   const isSandbox = mode === 'sandbox'
+  const isLocal = mode === 'local'
   const isPairedSlide = Boolean(getInvenioPair(document.slide.descriptorUrl))
+  const catalog = useMemo(
+    () => (isLocal ? replaceDocumentInCatalog(documents, document) : documents),
+    [document, documents, isLocal],
+  )
 
   const selectedAnnotation = document.annotations.find((annotation) => annotation.id === selectedId)
   const selectedBounds = selectedAnnotation ? polygonBounds(selectedAnnotation.polygon) : null
@@ -233,6 +254,20 @@ export function SocratesBuilder({
     )
   }, [documents, isSandbox])
 
+  useEffect(() => {
+    if (!isLocal || !onLocalWorkspaceChange) return
+    const snapshot = JSON.stringify([document, documents])
+    if (snapshot === localSnapshotRef.current) return
+    localSnapshotRef.current = snapshot
+    const error = onLocalWorkspaceChange({
+      version: 1,
+      activeDocument: document,
+      documents: catalog,
+    })
+    setLocalSaveError(error)
+    if (!error) setDirty(false)
+  }, [catalog, document, documents, isLocal, onLocalWorkspaceChange])
+
   const setDirtyDocument = useCallback((updater: SetStateAction<SocratesSlideDocument>) => {
     setDocument(updater)
     setDirty(true)
@@ -254,26 +289,37 @@ export function SocratesBuilder({
     [document.annotations, setDirtyDocument],
   )
 
-  const selectDocument = useCallback((nextDocument: SocratesSlideDocument) => {
-    descriptorRequestRef.current += 1
-    setLoadingDescriptor(false)
-    const clone = cloneDocument(nextDocument)
-    setDocument(clone)
-    setDescriptorInput(clone.slide.descriptorUrl)
-    setSelectedId(clone.annotations[0]?.id ?? '')
-    setPreviewedId(null)
-    setDrawMode('navigate')
-    setAnnotationHistory([])
-    setAnnotationFuture([])
-    setDirty(false)
-    setNotice(null)
-  }, [])
+  const selectDocument = useCallback(
+    (nextDocument: SocratesSlideDocument) => {
+      descriptorRequestRef.current += 1
+      setLoadingDescriptor(false)
+      const clone = cloneDocument(nextDocument)
+      if (isLocal) {
+        clone.recordId ??= crypto.randomUUID()
+        setDocuments((current) => replaceDocumentInCatalog(current, document))
+      }
+      setDocument(clone)
+      setDescriptorInput(clone.slide.descriptorUrl)
+      setSelectedId(clone.annotations[0]?.id ?? '')
+      setPreviewedId(null)
+      setDrawMode('navigate')
+      setAnnotationHistory([])
+      setAnnotationFuture([])
+      setDirty(false)
+      setNotice(null)
+    },
+    [document, isLocal],
+  )
 
   const addNewSlide = useCallback(() => {
     const blank = createBlankSocratesDocument()
+    if (isLocal) {
+      blank.slide = createInvenioDemoDocument().slide
+      blank.slide.contentStatus = 'Teaching annotations awaiting author review.'
+    }
     selectDocument(blank)
     setDirty(true)
-  }, [selectDocument])
+  }, [isLocal, selectDocument])
 
   const undoAnnotations = useCallback(() => {
     const previous = annotationHistory.at(-1)
@@ -489,20 +535,27 @@ export function SocratesBuilder({
           : !descriptorChanged && rectContainsRect(fullView, currentInitialView)
             ? currentInitialView
             : fullView
+        if (isLocal && descriptorChanged) {
+          setDocuments((current) => replaceDocumentInCatalog(current, document))
+        }
         setDirtyDocument((current) => ({
           ...current,
-          ...(asNewSlide
+          ...(asNewSlide || (isLocal && descriptorChanged)
             ? {
-                recordId: undefined,
+                recordId: isLocal ? crypto.randomUUID() : undefined,
                 revision: 0,
                 publishedAt: null,
                 workflowStatus: 'draft' as const,
               }
             : {}),
-          slug: !asNewSlide && current.recordId ? current.slug : slugify(slideKey || current.title),
+          slug:
+            !asNewSlide && !isLocal && current.recordId
+              ? current.slug
+              : slugify(slideKey || current.title),
           title:
             !asNewSlide &&
-            (current.recordId || (!descriptorChanged && current.title !== 'New Invenio slide'))
+            ((!isLocal && current.recordId) ||
+              (!descriptorChanged && current.title !== 'New Invenio slide'))
               ? current.title
               : (getInvenioPair(source.descriptorUrl)?.label ?? slideKey.replaceAll('_', ' ')),
           slide: {
@@ -553,11 +606,17 @@ export function SocratesBuilder({
         if (requestId === descriptorRequestRef.current) setLoadingDescriptor(false)
       }
     },
-    [descriptorInput, document.slide, setDirtyDocument],
+    [descriptorInput, document, isLocal, setDirtyDocument],
   )
 
   const saveDocument = useCallback(
     async (workflowStatus: 'draft' | 'review') => {
+      if (isLocal) return
+      const compatibilityError = databaseCompatibilityError(document)
+      if (compatibilityError) {
+        setNotice({ tone: 'error', message: compatibilityError })
+        return
+      }
       const requestedStatus = isSandbox ? 'draft' : workflowStatus
       const nextDocument = { ...document, workflowStatus: requestedStatus }
       const validation = validateSocratesSlideDocument(nextDocument)
@@ -631,7 +690,7 @@ export function SocratesBuilder({
             : `Draft revision ${saved.revision} saved.`,
       })
     },
-    [access.canPersist, document, documents, isSandbox, onDocumentsChange],
+    [access.canPersist, document, documents, isLocal, isSandbox, onDocumentsChange],
   )
 
   const deleteCurrentSandboxDocument = useCallback(async () => {
@@ -806,24 +865,30 @@ export function SocratesBuilder({
       <header className={styles.hero}>
         <div>
           <div className={styles.eyebrow}>
-            {isSandbox ? 'Open company sandbox' : 'Protected authoring workspace'}
+            {isLocal
+              ? 'Invenio web overlay demo'
+              : isSandbox
+                ? 'Open company sandbox'
+                : 'Protected authoring workspace'}
           </div>
-          <h1>{isSandbox ? 'Build and annotate a slide' : 'SOCRATES slide builder'}</h1>
+          <h1>{isLocal || isSandbox ? 'Build and annotate a slide' : 'SOCRATES slide builder'}</h1>
           <p>
-            {isSandbox
+            {isLocal || isSandbox
               ? 'Compare tissue with Invenio color annotations. Add teaching regions and explanations that unfold as you zoom.'
               : 'Combine Invenio tissue and color annotation images with your own zoom-based teaching regions and explanations.'}
           </p>
         </div>
         <div className={styles.heroMeta}>
           <Badge variant={access.canPersist ? 'success' : 'outline'}>
-            {isSandbox
-              ? access.canPersist
-                ? 'Anonymous sandbox saving'
-                : 'Local preview'
-              : access.canPersist
-                ? 'Database connected'
-                : 'Local preview'}
+            {isLocal
+              ? 'Browser storage'
+              : isSandbox
+                ? access.canPersist
+                  ? 'Anonymous sandbox saving'
+                  : 'Local preview'
+                : access.canPersist
+                  ? 'Database connected'
+                  : 'Local preview'}
           </Badge>
           {access.userEmail ? <span>{access.userEmail}</span> : null}
         </div>
@@ -831,16 +896,27 @@ export function SocratesBuilder({
 
       <div className={styles.safetyBanner} role="note">
         <strong>
-          {isSandbox
-            ? 'Shared sandbox: do not enter patient or confidential information.'
-            : 'Authoring content is illustrative until reviewed.'}
+          {isLocal
+            ? 'Images from Invenio · teaching overlays saved on this browser.'
+            : isSandbox
+              ? 'Shared sandbox: do not enter patient or confidential information.'
+              : 'Authoring content is illustrative until reviewed.'}
         </strong>
         <span>
-          {isSandbox
-            ? 'Anyone with this unlisted URL can view saved drafts. Sandbox drafts never publish to the production demo.'
-            : 'No annotation is clinical guidance. Publishing requires site-administrator review.'}
+          {isLocal
+            ? 'Changes save automatically. Export JSON to back up your work or move it to another browser or computer. Teaching regions require author review.'
+            : isSandbox
+              ? 'Anyone with this unlisted URL can view saved drafts. Sandbox drafts never publish to the production demo.'
+              : 'No annotation is clinical guidance. Publishing requires site-administrator review.'}
         </span>
       </div>
+
+      {!isLocal ? (
+        <p>
+          <a href={`/${locale}/socrates-demo#builder`}>Open the Invenio web overlay demo</a> to
+          auto-save paired slides and detailed explanations in your browser.
+        </p>
+      ) : null}
 
       <section className={styles.workspace} aria-label="SOCRATES annotation workspace">
         <aside className={styles.catalog} aria-label="Slide catalog">
@@ -866,7 +942,7 @@ export function SocratesBuilder({
           />
 
           <div className={styles.catalogList}>
-            {documents.map((catalogDocument) => (
+            {catalog.map((catalogDocument) => (
               <button
                 type="button"
                 key={catalogDocument.recordId ?? catalogDocument.slug}
@@ -887,17 +963,19 @@ export function SocratesBuilder({
                     }
                     size="sm"
                   >
-                    {isSandbox
-                      ? ownedSandboxIds.has(catalogDocument.recordId ?? '')
-                        ? 'your draft'
-                        : 'shared'
-                      : catalogDocument.workflowStatus}
+                    {isLocal
+                      ? 'browser draft'
+                      : isSandbox
+                        ? ownedSandboxIds.has(catalogDocument.recordId ?? '')
+                          ? 'your draft'
+                          : 'shared'
+                        : catalogDocument.workflowStatus}
                   </Badge>
-                  <span>v{catalogDocument.revision}</span>
+                  {!isLocal ? <span>v{catalogDocument.revision}</span> : null}
                 </small>
               </button>
             ))}
-            {documents.length === 0 ? (
+            {catalog.length === 0 ? (
               <div className={styles.emptyCatalog}>
                 <FileJson aria-hidden="true" />
                 <strong>Starter draft</strong>
@@ -928,7 +1006,7 @@ export function SocratesBuilder({
             />
           </div>
 
-          {!isSandbox && access.canPublish ? (
+          {!isLocal && !isSandbox && access.canPublish ? (
             <div className={styles.cleanupPanel}>
               <div>
                 <span>Public sandbox</span>
@@ -1412,8 +1490,23 @@ export function SocratesBuilder({
 
       <footer className={styles.publishBar}>
         <div className={styles.publishState}>
-          <Badge variant={dirty ? 'info' : 'success'}>{dirty ? 'Unsaved changes' : 'Saved'}</Badge>
-          <span>Revision {document.revision}</span>
+          <Badge variant={dirty || localSaveError ? 'info' : 'success'}>
+            {isLocal
+              ? localSaveError
+                ? 'Not saved'
+                : dirty
+                  ? 'Saving in browser'
+                  : 'Browser auto-save'
+              : dirty
+                ? 'Unsaved changes'
+                : 'Saved'}
+          </Badge>
+          {!isLocal ? <span>Revision {document.revision}</span> : null}
+          {isLocal && localSaveError ? (
+            <span className={styles.error} role="alert">
+              {localSaveError}
+            </span>
+          ) : null}
           {notice ? (
             <span
               className={styles[notice.tone]}
@@ -1432,7 +1525,7 @@ export function SocratesBuilder({
           >
             <Eye aria-hidden="true" /> Preview teaching view
           </Button>
-          {!isSandbox && document.publishedAt ? (
+          {!isLocal && !isSandbox && document.publishedAt ? (
             <Button asChild variant="outline">
               <a
                 href={`/${locale}/socrates-demo?slide=${encodeURIComponent(document.slug)}`}
@@ -1443,7 +1536,11 @@ export function SocratesBuilder({
               </a>
             </Button>
           ) : null}
-          {isSandbox ? (
+          {isLocal ? (
+            <Button type="button" onClick={exportDocument}>
+              <Download aria-hidden="true" /> Export overlay
+            </Button>
+          ) : isSandbox ? (
             <>
               {document.recordId && ownedSandboxIds.has(document.recordId) ? (
                 <Button

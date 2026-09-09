@@ -8,9 +8,10 @@ summaries, and detailed explanations over the same image coordinates.
 
 ## Authoring a slide
 
-1. Open `/en/socrates-demo#builder` for the company sandbox, or the protected
-   `/en/socrates-builder` workspace.
-2. Choose **Browse Invenio demo slides**, select a case, and **Load paired slide**.
+1. Open `/en/socrates-demo` to explore the current teaching overlay, or
+   `/en/socrates-demo#builder` to edit it. The first visit opens Case 006 with an
+   illustrative parent region and nested detail; neither assigns clinical meaning.
+2. To use another pair, choose **Browse Invenio demo slides**, select a case, and **Load paired slide**.
    This starts a new draft. A slide link or a standalone Thinviewer comparison
    link can also be pasted into the existing source URL field.
 3. Draw a parent region on either image. Give it a label, a brief summary, and a
@@ -23,8 +24,22 @@ summaries, and detailed explanations over the same image coordinates.
    source-pixel teaching regions. Use **Tissue only**, **Color annotated**, or
    **Side by side** without losing your current region. **Return to editing**
    preserves the unsaved draft.
-6. Export/import JSON for a portable draft, or save using the workspace's existing
-   sandbox/editor workflow. Publishing still requires a site administrator.
+6. Changes save automatically in this browser. **View demo**, **Build a slide**,
+   and page reloads use the currently selected draft, including its explanations.
+   **Export overlay** or **Export JSON** downloads a portable copy. On another
+   browser or computer, use **Import copy** to load it as an editable draft.
+
+Drafts are stored under `socrates-invenio-web-overlays:v1` in localStorage for the
+current origin. They do not automatically sync between browsers, devices, or
+localhost and the deployed site. Clearing browser data removes these local copies;
+export JSON before changing computers or clearing storage. Images stay on the
+provider's host and are not embedded in the JSON file. A storage failure or
+incomplete required field shows an auto-save warning and preserves the last valid
+saved version; the current edit remains available in memory for export.
+
+The workspace restores browser data before mounting a viewer, preventing the old
+single-image sample from flashing or replacing a current pair on reload. Unreadable
+stored data is retained rather than overwritten by an untouched starter example.
 
 The catalog is fetched live; it is not copied into application data. Its 59 image
 pairs had matching descriptor dimensions when checked on September 8, 2026.
@@ -32,14 +47,18 @@ Loading a pair checks the dimensions of both images before replacing the current
 slide. A failed load leaves the current teaching regions in place. Individual
 viewer failures can be retried; the surviving image remains usable.
 
-## Deployment
+## Deployment and existing saved slides
 
-Apply `supabase/migrations/20260908233000_add_socrates_invenio_comparison.sql`
-before deploying this application version. It permits the specific company demo
-descriptor paths and adds an optional detailed explanation to saved annotations.
-It updates protected save/publish and sandbox validation while retaining their
-existing roles, policies, edit keys, and publishing rules. Existing single-image
-documents and published snapshots remain compatible.
+Deploy the application normally. **No database migration, database content copy,
+or asset upload is required.** The default company-demo route does not load or
+save SOCRATES database content.
+
+Existing protected authoring and sandbox APIs retain their original database
+format. They reject paired web overlays or nonempty detailed explanations before
+saving, so a legacy save cannot silently drop the new text. The protected builder
+links to the browser-based demo for this workflow. Explicit published-slide links
+at `/en/socrates-demo?slide=<slug>` still read their existing published snapshot.
+No schema or access-policy changes are included.
 
 The demo host has no cross-origin response headers. `/api/socrates-invenio/[...path]`
 relays only its catalog, DZI descriptors, and JPEG tiles from a fixed origin.
@@ -52,18 +71,14 @@ or uploaded to storage. Availability depends on the provider's demo service.
 Run the focused application tests with:
 
 ```sh
-npm test -- --runInBand src/features/socrates-builder src/features/socrates-demo src/app/api/socrates-invenio
+npm test -- --runInBand src/features/socrates-builder src/features/socrates-demo src/app/api/socrates-invenio 'src/app/\[locale\]/socrates-demo' 'src/app/\[locale\]/socrates-builder'
+npm run type-check
+npm run lint
+npm run build
 ```
 
-The database regression check uses an isolated in-memory Postgres instance, with
-the actual existing SOCRATES migrations and the new migration. It does not connect
-to or change local or production Supabase:
-
-```sh
-npm install --prefix /tmp/socrates-postgres-test --no-audit --no-fund @electric-sql/pglite
-node scripts/socrates-builder/verify-comparison-db.mjs /tmp/socrates-postgres-test/node_modules/@electric-sql/pglite
-```
-
-It verifies protected save/reload/publish, sandbox save/update/list, legacy
-documents, explanation length limits, approved source checks, and the existing
-role and edit-key protections.
+Coverage includes paired viewport alignment, source-dimension checks, zoom-based
+details, browser save/restore across view changes and remounts, active-draft
+selection, storage failures, JSON round-tripping, and protection against sending
+overlays to legacy database saves. The company-demo route is checked to ensure it
+does not fetch an older published or sandbox document on a normal visit.

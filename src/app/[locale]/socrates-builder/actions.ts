@@ -7,6 +7,7 @@ import {
   validateSocratesSlideDocument,
 } from '@/features/socrates-builder/schema'
 import { getSocratesEditorSession } from '@/features/socrates-builder/server/access'
+import { databaseCompatibilityError } from '@/features/socrates-builder/database-compatibility'
 import type {
   SocratesBuilderActionResult,
   SocratesSandboxDeleteResult,
@@ -24,6 +25,8 @@ export async function saveSocratesSlideDocument(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'The slide data is invalid.' }
   }
+  const compatibilityError = databaseCompatibilityError(parsed.data)
+  if (compatibilityError) return { ok: false, error: compatibilityError }
 
   if (parsed.data.workflowStatus === 'published') {
     return { ok: false, error: 'Save published slides as a draft or review submission first.' }

@@ -12,7 +12,6 @@ interface AnnotationRow {
   enter_zoom_ratio: number
   exit_zoom_ratio: number
   summary: string
-  explanation?: string
   placeholder_note: string
   sort_order: number
 }
@@ -52,7 +51,6 @@ function rowToDocument(row: SlideRow): SocratesSlideDocument {
       enterZoomRatio: annotation.enter_zoom_ratio,
       exitZoomRatio: annotation.exit_zoom_ratio,
       summary: annotation.summary,
-      explanation: annotation.explanation ?? '',
       placeholderNote: annotation.placeholder_note,
       sortOrder: annotation.sort_order,
     }))
@@ -131,7 +129,6 @@ export async function loadSocratesBuilderBootstrap(): Promise<SocratesBuilderBoo
           enter_zoom_ratio,
           exit_zoom_ratio,
           summary,
-          explanation,
           placeholder_note,
           sort_order
         )

@@ -4,6 +4,16 @@
   background: #edf5f4;
 }
 
+.storageWarning {
+  max-width: 90rem;
+  margin: 1rem auto;
+  padding: 0.8rem 1rem;
+  border: 1px solid #d99b39;
+  border-radius: 0.65rem;
+  color: #704609;
+  background: #fff3d8;
+}
+
 .launcher {
   position: relative;
   z-index: 15;

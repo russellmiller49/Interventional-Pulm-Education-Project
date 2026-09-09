@@ -12,6 +12,7 @@ import type {
   SocratesSlideDocument,
 } from '@/features/socrates-builder/types'
 import { supabaseServer } from '@/lib/supabase/server'
+import { databaseCompatibilityError } from '@/features/socrates-builder/database-compatibility'
 
 const SANDBOX_ANNOTATION_LIMIT = 200
 const SANDBOX_PAYLOAD_LIMIT = 256 * 1024
@@ -39,6 +40,8 @@ export async function saveSocratesSandboxDocument(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'The slide data is invalid.' }
   }
+  const compatibilityError = databaseCompatibilityError(parsed.data)
+  if (compatibilityError) return { ok: false, error: compatibilityError }
 
   if (!validEditKey(editKey)) {
     return { ok: false, error: 'A secure browser edit key could not be created.' }
