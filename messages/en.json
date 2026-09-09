@@ -240,9 +240,9 @@
         "description": "Interactive board review chapters"
       },
       "fluoroview": {
-        "title": "FluoroView",
-        "shortTitle": "FluoroView",
-        "description": "C-arm airway simulation lab"
+        "title": "Peripheral Bronchoscopy Imaging",
+        "shortTitle": "Imaging",
+        "description": "Interactive 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, and radiation protection."
       },
       "bronchNavigation": {
         "title": "Bronch Navigation",
@@ -397,9 +397,9 @@
       },
       "fluoro": {
         "badge": "Simulation",
-        "title": "FluoroView",
-        "description": "Practice CT-to-fluoroscopy orientation, C-arm angles, airway overlays, and non-diagnostic image controls.",
-        "cta": "Launch FluoroView"
+        "title": "Peripheral Bronchoscopy Imaging",
+        "description": "Interactive 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, and radiation protection.",
+        "cta": "Start Imaging Course"
       },
       "nav": {
         "badge": "Navigation",

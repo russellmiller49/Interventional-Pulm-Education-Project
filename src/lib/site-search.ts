@@ -630,13 +630,22 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['3d anatomy', 'airway', 'models', 'viewer', 'segments'],
   },
   {
-    title: 'FluoroView',
+    title: 'Peripheral Bronchoscopy Imaging (FluoroView)',
     description:
-      'Browser-based fluoroscopy simulator for airway orientation, C-arm sweeps, and segmental anatomy.',
+      'Interactive course on 2D fluoroscopy, digital tomosynthesis, fixed and mobile cone-beam CT, tool confirmation, and radiation protection.',
     href: '/fluoroview',
     section: 'Simulation',
     type: 'page',
-    keywords: ['fluoroscopy', 'simulation', 'c-arm', 'airway', 'navigation'],
+    keywords: [
+      'fluoroview',
+      'fluoroscopy',
+      'tomosynthesis',
+      'cone beam',
+      'cbct',
+      'radiation safety',
+      'tool in lesion',
+      'peripheral bronchoscopy',
+    ],
   },
   {
     title: 'IP Registry',
