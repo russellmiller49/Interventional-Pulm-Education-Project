@@ -18,6 +18,8 @@ export type SourceId =
   | 'tg272'
   | 'tg125'
   | 'saad'
+  | 'sumner'
+  | 'podder'
   | 'mobile'
   | 'verhoeven'
   | 'vespa'

@@ -361,7 +361,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       'These are parallel projections of the teaching CT with an added target and instrument. A horizontal filter suppresses slowly varying background, then the browser combines thirteen views by shift-and-add at the selected depth under one fixed display window. Limited-angle blur remains; this is not a clinical tomosynthesis reconstruction, a vendor algorithm or a dose comparison. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: null,
-    sourceIds: ['saad', 'frontier'],
+    sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
   },
   {
     id: 'dts-interpretation',
@@ -385,7 +385,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       'The prior layer in this section is the planning CT blended for illustration, not an iterative prior-aided algorithm; the study it refers to evaluated reconstruction, not diagnostic yield. ' +
       SHARED_BOUNDARY,
     capstoneCaseId: 'case-3',
-    sourceIds: ['saad', 'frontier', 'pritchett'],
+    sourceIds: ['saad', 'sumner', 'frontier', 'pritchett'],
   },
   {
     id: 'cbct-acquisition',

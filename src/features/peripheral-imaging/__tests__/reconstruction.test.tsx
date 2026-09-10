@@ -49,6 +49,31 @@ describe('how a reconstruction is made', () => {
     }
   })
 
+  it('draws the difference as provenance, not as the shape of the output', () => {
+    // The claim this pins down was authored wrong once and merged. A limited sweep on the
+    // platforms in use is commonly rendered as a set the operator cuts in any plane; teaching that
+    // it cannot be leaves a learner unable to interrogate the second monitor when it is. Both
+    // accounts must therefore name how much of the picture was measured, and neither may deny the
+    // other's output shape.
+    for (const account of RECONSTRUCTION_ACCOUNTS) {
+      expect(account.provenance.trim()).not.toHaveLength(0)
+      expect(account.provenance).toMatch(/measured/i)
+    }
+
+    const sweep = reconstructionAccount('tomosynthesis')
+    const said = [sweep.inShort, sweep.comesOut, sweep.provenance, ...sweep.built].join(' ')
+    // What fills the directions the arc never travelled is named, and named as inference.
+    expect(said).toMatch(/older scan|prior|planning scan/i)
+    expect(said).toMatch(/model/i)
+    expect(sweep.comesOut).not.toMatch(/\bnot a block\b|cannot be cut/i)
+
+    // And the limit survives the rendering: the learner is told the visible cue is what goes away.
+    expect(sweep.cannotAsk.join(' ')).toMatch(/16\.2 mm/)
+    expect([sweep.provenance, ...sweep.cannotAsk].join(' ')).toMatch(
+      /nothing in the picture marks|does not label|were filled in/i,
+    )
+  })
+
   it('cites only sources the module has reviewed', () => {
     for (const account of RECONSTRUCTION_ACCOUNTS) {
       expect(account.sourceIds.length).toBeGreaterThan(0)
@@ -76,6 +101,7 @@ describe('how a reconstruction is made', () => {
       const card = container.querySelector(`[data-reconstruction="${account.id}"]`)
       expect(card).not.toBeNull()
       expect(card!.textContent).toContain(account.comesOut)
+      expect(card!.textContent).toContain(account.provenance)
       expect(card!.textContent).toContain(account.boundary)
       // The drawing carries the mechanism, so it needs a description of its own.
       const picture = card!.querySelector('svg[role="img"]')
