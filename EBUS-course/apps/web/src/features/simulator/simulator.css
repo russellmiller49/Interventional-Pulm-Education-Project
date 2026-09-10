@@ -1027,6 +1027,11 @@
     display: grid;
   }
 
+  /* The legacy two-pane learner view has no tab-selected height. */
+  .simulator-workspace:not(.simulator-workspace--virtual) > .simulator-sector-pane {
+    min-height: 480px;
+  }
+
   .simulator-workspace--virtual[data-primary] > :nth-child(n) {
     grid-area: auto;
   }
@@ -1091,7 +1096,6 @@
   .simulator-drive-pad__flex > span {
     gap: 12px;
   }
-
 
   .simulator-layer-toggles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
