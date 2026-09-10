@@ -1,0 +1,23 @@
+{
+  "name": "socal-ebus-prep",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm --prefix apps/web run build",
+    "preview": "npm --prefix apps/web run preview",
+    "start:prod": "npm --prefix apps/web run preview -- --host 0.0.0.0 --port ${PORT:-4173}",
+    "typecheck": "npm --prefix apps/web run typecheck",
+    "test": "npm --prefix apps/web run test",
+    "gitingest": "npm --prefix apps/web run gitingest",
+    "gitingest:web": "npm run gitingest",
+    "generate:case-001": "tsc --pretty false --module commonjs --target es2020 --esModuleInterop --resolveJsonModule --types node --outDir .generated-scripts scripts/enrich-case-001.ts scripts/case-001-enrichment.ts features/case3d/patient-space.ts features/case3d/slice-logic.ts features/case3d/types.ts && node .generated-scripts/scripts/enrich-case-001.js && rm -rf .generated-scripts"
+  },
+  "engines": {
+    "node": ">=20.19.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "typescript": "~5.9.2"
+  }
+}

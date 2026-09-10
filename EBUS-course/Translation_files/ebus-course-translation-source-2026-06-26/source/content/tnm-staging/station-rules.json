@@ -1,0 +1,90 @@
+[
+  {
+    "stationId": "2R",
+    "label": "2R",
+    "groupId": "2R",
+    "side": "right",
+    "basin": "mediastinal",
+    "external": false
+  },
+  {
+    "stationId": "2L",
+    "label": "2L",
+    "groupId": "2L",
+    "side": "left",
+    "basin": "mediastinal",
+    "external": false
+  },
+  {
+    "stationId": "4R",
+    "label": "4R",
+    "groupId": "4R",
+    "side": "right",
+    "basin": "mediastinal",
+    "external": false
+  },
+  {
+    "stationId": "4L",
+    "label": "4L",
+    "groupId": "4L",
+    "side": "left",
+    "basin": "mediastinal",
+    "external": false
+  },
+  {
+    "stationId": "7",
+    "label": "7",
+    "groupId": "7",
+    "side": "midline",
+    "basin": "mediastinal",
+    "external": false
+  },
+  {
+    "stationId": "10R",
+    "label": "10R",
+    "groupId": "10R",
+    "side": "right",
+    "basin": "hilar",
+    "external": false
+  },
+  {
+    "stationId": "10L",
+    "label": "10L",
+    "groupId": "10L",
+    "side": "left",
+    "basin": "hilar",
+    "external": false
+  },
+  {
+    "stationId": "11Rs",
+    "label": "11Rs",
+    "groupId": "11R",
+    "side": "right",
+    "basin": "intrapulmonary",
+    "external": false
+  },
+  {
+    "stationId": "11Ri",
+    "label": "11Ri",
+    "groupId": "11R",
+    "side": "right",
+    "basin": "intrapulmonary",
+    "external": false
+  },
+  {
+    "stationId": "11L",
+    "label": "11L",
+    "groupId": "11L",
+    "side": "left",
+    "basin": "intrapulmonary",
+    "external": false
+  },
+  {
+    "stationId": "supraclavicular",
+    "label": "Scalene or supraclavicular",
+    "groupId": "supraclavicular",
+    "side": "external",
+    "basin": "supraclavicular",
+    "external": true
+  }
+]

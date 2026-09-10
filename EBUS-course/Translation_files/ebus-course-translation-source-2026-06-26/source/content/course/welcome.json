@@ -1,0 +1,14 @@
+{
+  "id": "lecture-01",
+  "title": "Welcome, acknowledgments, course intro",
+  "subtitle": "Course welcome and orientation",
+  "week": "Welcome",
+  "duration": "Video",
+  "video": "https://ebus2026.s3.us-east-1.amazonaws.com/LECTURE+WELCOME_INTRO.mp4",
+  "topics": [
+    "Course orientation",
+    "Faculty acknowledgments",
+    "How progression works"
+  ],
+  "status": "available"
+}

@@ -1,0 +1,77 @@
+{
+  "id": "sonographic-interpretation",
+  "title": "Sonographic Interpretation of Lymph Nodes",
+  "summary": "An interpretation layer for reading nodal ultrasound features without pretending that imaging alone replaces tissue.",
+  "learningObjectives": [
+    "Describe suspicious and reassuring nodal features using CHS, CNS, margin, shape, vascular pattern, and echogenicity terminology.",
+    "Recognize that no single ultrasound feature determines malignancy and that tissue remains definitive.",
+    "Use Doppler and elastography as adjuncts that refine target choice, not as stand-alone arbiters of benignity or malignancy.",
+    "Separate descriptive language from diagnostic certainty when teaching junior learners."
+  ],
+  "sections": [
+    {
+      "id": "chs-cns",
+      "title": "CHS and CNS are high-yield descriptors",
+      "kind": "sonographic-pattern",
+      "body": "A preserved central hilar structure is generally reassuring, whereas its absence raises concern. A coagulation necrosis sign is a hypoechoic avascular area within the node and, when present, increases suspicion for malignancy. These are useful features because they force the learner to inspect the internal architecture of the node rather than only the outer contour.",
+      "bullets": [
+        "Preserved CHS tends to favor benignity.",
+        "Absent CHS is concerning but not diagnostic by itself.",
+        "CNS should be checked with Doppler because a dark area without flow is more persuasive than grayscale alone."
+      ],
+      "pearl": "Describe CHS and CNS explicitly before summarizing overall suspicion.",
+      "pitfall": "Do not call every central dark focus necrosis; poor contact and artifact can mimic it."
+    },
+    {
+      "id": "margins-echogenicity",
+      "title": "Margins, heterogeneity, and nodal conglomeration",
+      "kind": "sonographic-pattern",
+      "body": "Distinct margins, heterogeneous echotexture, and nodal conglomeration can all increase concern, especially when they appear together. The learner should still remember that inflammatory nodes can violate these rules and that a bland-appearing malignant node still exists in practice.",
+      "bullets": [
+        "Heterogeneous echogenicity is more suspicious than a uniformly homogeneous node.",
+        "Distinct margins may increase concern in some series, but context matters.",
+        "Conglomerated or matted nodes should prompt careful staging thinking, not just pattern recognition."
+      ],
+      "pearl": "Teach combinations of features rather than overvaluing any single sign.",
+      "pitfall": "An apparently tidy oval node with preserved architecture can still require sampling if it would change management."
+    },
+    {
+      "id": "vascular-patterns",
+      "title": "Doppler adds pattern information",
+      "kind": "sonographic-pattern",
+      "body": "Doppler helps in two ways: it identifies vessels along the intended puncture path, and it contributes to interpretation by showing whether a suspicious-appearing area is vascular or avascular. Peripheral or chaotic vascularity may be worrisome, whereas a preserved central hilar vascular pattern is more reassuring, but Doppler findings still sit inside the larger clinical picture.",
+      "bullets": [
+        "Use Doppler before puncture for safety, not only interpretation.",
+        "Avascular central dark areas deserve a necrosis check.",
+        "Vascular pattern can change the target inside the same node."
+      ],
+      "pearl": "The best Doppler use often changes where you sample within the node, not only whether you sample it.",
+      "pitfall": "A Doppler-negative image is not automatically benign and a Doppler-positive image is not automatically malignant."
+    },
+    {
+      "id": "elastography",
+      "title": "Elastography is an adjunct, not a substitute for tissue",
+      "kind": "sonographic-pattern",
+      "body": "Elastography can help prioritize which node or which region of a node looks most abnormal by highlighting relative tissue stiffness. It improves pattern recognition when combined with conventional ultrasound features, but it does not replace histopathology and should not overrule the staging logic.",
+      "bullets": [
+        "Blue-dominant or stiff regions can increase suspicion.",
+        "Elastography performs best when interpreted alongside conventional grayscale and Doppler features.",
+        "Sampling strategy should still follow the clinical staging question."
+      ],
+      "pearl": "Use elastography to refine target selection, not to talk yourself out of sampling a clinically decisive node.",
+      "pitfall": "Presenting elastography as a near-pathology test teaches the wrong threshold for confidence."
+    },
+    {
+      "id": "interpretation-vignette",
+      "title": "Case vignette: reassuring feature, wrong conclusion",
+      "kind": "case",
+      "body": "A hilar node keeps an oval shape and some central echogenicity, so the learner wants to skip sampling and move on.",
+      "caseVignette": {
+        "title": "A reassuring image can still be the wrong management choice",
+        "scenario": "The node is in the exact station that would separate N1 from N2 or N3 disease if another suspicious node is negative.",
+        "prompt": "What matters more here: the partially reassuring appearance or the staging consequence?",
+        "takeaway": "The staging consequence matters more. Sonographic features help prioritize suspicion, but they do not replace tissue when the answer changes management."
+      }
+    }
+  ]
+}

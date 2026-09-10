@@ -1,0 +1,168 @@
+[
+  {
+    "id": "technique-order-01",
+    "moduleId": "station-explorer",
+    "prompt": "请按最合理的教学顺序排列操作步骤。",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "orientation",
+        "label": "重新建立气道标志和中性方向",
+        "rationale": "这是最安全的起点，因为它恢复空间背景。"
+      },
+      {
+        "id": "contact",
+        "label": "优化球囊接触和图像耦合",
+        "rationale": "这应在详细图像解读或出针之前完成。"
+      },
+      {
+        "id": "optimize",
+        "label": "设置深度、增益和对比度以明确目标",
+        "rationale": "接触形成真正声窗后，图像优化才有意义。"
+      },
+      {
+        "id": "doppler",
+        "label": "用多普勒检查预期穿刺路径",
+        "rationale": "这是进针前的即时安全检查。"
+      },
+      {
+        "id": "puncture",
+        "label": "出针并进行受控扇形取样",
+        "rationale": "确认路径和目标后，这是最后一步。"
+      }
+    ],
+    "correctOptionIds": [
+      "orientation",
+      "contact",
+      "optimize",
+      "doppler",
+      "puncture"
+    ],
+    "explanation": "可靠流程从空间定向开始，然后耦合，再进行灰阶优化，随后多普勒安全检查，最后才出针并进行受控取样。",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "ordering"
+    ]
+  },
+  {
+    "id": "technique-target-02",
+    "moduleId": "station-explorer",
+    "prompt": "一个不均质淋巴结中央呈坏死样无血管区，边缘为看似有活性的实性组织。最佳目标策略是什么？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "优先选择有活性的实性边缘，并在代表性区域扇形取样",
+        "rationale": "正确。该策略更可能获取有活性的诊断性组织。"
+      },
+      {
+        "id": "b",
+        "label": "反复瞄准中心，因为它最容易保持在视野内",
+        "rationale": "错误。最容易看到的目标可能是生物学产出最低的目标。"
+      },
+      {
+        "id": "c",
+        "label": "如果路径多普勒阴性，就忽略灰阶结构",
+        "rationale": "错误。多普勒有助于安全，但淋巴结内目标选择仍然重要。"
+      },
+      {
+        "id": "d",
+        "label": "只取样包膜，不穿过有意义的组织",
+        "rationale": "错误。仅取样包膜不能达到“包膜到包膜”取样的目的。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "最高产出的进针路径并不总是最容易的路径。在不均质淋巴结中，选择有活性组织和改变角度与安全路径规划同样重要。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "target-selection"
+    ]
+  },
+  {
+    "id": "technique-low-yield-03",
+    "moduleId": "station-explorer",
+    "prompt": "请选择常导致 EBUS-TBNA 标本无诊断性的因素。",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "探头接触不良会产生误导性图像",
+        "rationale": "正确。耦合不良会使图像解读和靶向都不可靠。"
+      },
+      {
+        "id": "b",
+        "label": "未扇形取样而反复通过同一狭窄路径",
+        "rationale": "正确。这限制组织多样性，并可能重复低产出路径。"
+      },
+      {
+        "id": "c",
+        "label": "取样坏死中央腔而不是有活性组织",
+        "rationale": "正确。坏死区域常降低诊断产出。"
+      },
+      {
+        "id": "d",
+        "label": "穿刺前进行多普勒血管检查",
+        "rationale": "错误。多普勒检查是安全技术的一部分，不是低产出的原因。"
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b",
+      "c"
+    ],
+    "explanation": "低产出往往在针进入淋巴结之前就已开始。接触不良、目标选择不佳和反复取样同一路径，比力量或速度不足更常见。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "pitfalls"
+    ]
+  },
+  {
+    "id": "technique-fanning-04",
+    "moduleId": "station-explorer",
+    "prompt": "哪项表述最能描述扇形取样和包膜到包膜取样？",
+    "type": "case-vignette",
+    "caseTitle": "一条路径看似很忙，但并未拓宽样本",
+    "caseSummary": "学习者沿同一条线进行多次用力抽吸/往复，并认为这自动等同于充分取样。",
+    "options": [
+      {
+        "id": "a",
+        "label": "扇形取样意味着改变角度以取样不同有活性区域；“包膜到包膜”的说法强调利用淋巴结的宽度，而不是单一通道",
+        "rationale": "正确。这是关键教学概念。"
+      },
+      {
+        "id": "b",
+        "label": "扇形取样是指进针过程中增加增益，使更多淋巴结看起来明亮",
+        "rationale": "错误。扇形取样是针路径概念，不是处理器控制。"
+      },
+      {
+        "id": "c",
+        "label": "包膜到包膜取样是指只穿刺淋巴结最外层外壳",
+        "rationale": "错误。该术语指穿过有代表性的组织宽度，而不是仅擦过边缘。"
+      },
+      {
+        "id": "d",
+        "label": "如果第一次进针很顺利，扇形取样就没有教学价值",
+        "rationale": "错误。操作顺畅并不能保证获取广泛或有代表性的组织。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "扇形取样扩大组织获取范围。“包膜到包膜”的说法提醒学习者利用淋巴结有活性的宽度，而不是反复钻同一个通道。",
+    "difficulty": "advanced",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "fanning",
+      "capsule-to-capsule"
+    ]
+  }
+]

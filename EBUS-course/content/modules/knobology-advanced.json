@@ -1,0 +1,127 @@
+{
+  "id": "knobology-advanced",
+  "title": "Ultrasound Foundations and EBUS Knobology",
+  "summary": "A concise fellowship-level review of how EBUS images are formed, how controls change what you see, and how those adjustments affect safe node targeting.",
+  "learningObjectives": [
+    "Explain why air, balloon contact, and tissue coupling change image quality before any processor control is touched.",
+    "Differentiate frequency, wavelength, resolution, and penetration in the practical context of CP-EBUS versus RP-EBUS.",
+    "Use the vocabulary of echogenicity, CHS, CNS, margins, and artifacts consistently while describing an EBUS image.",
+    "Apply depth, gain, contrast, Doppler, freeze, and calipers in a deliberate sequence instead of random trial-and-error.",
+    "Recognize common artifacts and sampling pitfalls that can make a target look more reassuring or more dangerous than it really is."
+  ],
+  "sections": [
+    {
+      "id": "image-formation",
+      "title": "Why EBUS images look the way they do",
+      "kind": "core-concept",
+      "body": "EBUS depends on acoustic coupling. Air is a major reflector, so even a technically perfect processor setting cannot rescue an image if the balloon is not making stable contact or if the probe is partly facing air-filled airway. Start by improving contact, orientation, and target centering before assuming the machine settings are wrong.",
+      "bullets": [
+        "Acoustic impedance mismatch at an air-tissue interface causes major signal loss.",
+        "Small changes in balloon contact can improve the image more than large gain changes.",
+        "A readable image begins with probe position, not the control panel."
+      ],
+      "pearl": "If the frame suddenly improves with a tiny contact change, keep the machine steady and learn that acoustic window before adjusting the processor.",
+      "pitfall": "Overgaining a poorly coupled image can create bright haze that hides the real border even more effectively."
+    },
+    {
+      "id": "frequency-penetration",
+      "title": "Frequency, wavelength, and the CP-EBUS versus RP-EBUS tradeoff",
+      "kind": "core-concept",
+      "body": "Higher-frequency ultrasound gives better spatial resolution but loses depth penetration more quickly. In practical teaching terms, RP-EBUS is a high-frequency, peripheral localization tool, whereas CP-EBUS trades some resolution for deeper penetration and real-time needle guidance around mediastinal and hilar structures.",
+      "bullets": [
+        "Shorter wavelength improves detail but attenuates sooner.",
+        "RP-EBUS is typically high-frequency and optimized for peripheral lesion localization.",
+        "CP-EBUS supports deeper imaging, Doppler, and real-time sampling."
+      ],
+      "pearl": "When a deep target looks soft or poorly defined, remember that the limitation may be depth and coupling, not learner skill alone.",
+      "pitfall": "Do not promise learners that a better setting can fully overcome the physics tradeoff between penetration and resolution."
+    },
+    {
+      "id": "echogenicity-language",
+      "title": "Echogenicity language matters",
+      "kind": "core-concept",
+      "body": "Anechoic structures are nearly black, hypoechoic areas are darker than the background, isoechoic tissue blends with its surroundings, and hyperechoic structures are bright. This vocabulary becomes important when deciding whether a finding looks cystic, vascular, necrotic, calcified, or simply undergained.",
+      "bullets": [
+        "CHS is a central linear or flat hyperechoic structure that tends to favor benignity when preserved.",
+        "CNS refers to a hypoechoic necrotic-appearing area without flow and can increase concern for malignancy.",
+        "Describing echogenicity first keeps later interpretation more objective."
+      ],
+      "pearl": "Teach the learner to describe what is visible before inferring what it means.",
+      "pitfall": "Calling a dark region necrosis before checking Doppler, contact, and artifact can lead to overconfidence."
+    },
+    {
+      "id": "control-sequence",
+      "title": "Control sequence before you sample",
+      "kind": "technique",
+      "body": "Use a predictable sequence: center the target, set depth, tune gain, refine contrast, check vessels with Doppler, freeze when the frame is trustworthy, measure only if it changes management, then save. A stable sequence reduces cognitive load and makes teaching reproducible across stations.",
+      "bullets": [
+        "Depth answers the framing question first.",
+        "Gain fixes global brightness; contrast helps edge separation after framing is reasonable.",
+        "Doppler is a safety step before puncture, not a substitute for grayscale interpretation.",
+        "Freeze and calipers matter only after the image is worth preserving."
+      ],
+      "checklist": [
+        "Target centered and fully visible",
+        "Margins readable without excessive haze",
+        "Vascular structures checked with Doppler",
+        "Measurement done only if clinically useful",
+        "Teaching frame saved after optimization"
+      ],
+      "pearl": "A consistent sequence lets the learner explain each adjustment instead of randomly hunting for a prettier image.",
+      "pitfall": "Measuring or saving too early locks in a poor frame and teaches the wrong visual standard."
+    },
+    {
+      "id": "artifacts",
+      "title": "Artifact patterns that matter in EBUS",
+      "kind": "artifact",
+      "body": "Artifacts are not just exam trivia. Reverberation, comet-tail and tadpole-tail patterns often appear when strong reflectors or air interfaces create repeated echoes; acoustic shadowing can hide tissue behind calcified or highly reflective structures; mirror-image effects can create false symmetry. Learners need to recognize that an artifact may explain a pattern more convincingly than pathology does.",
+      "bullets": [
+        "Reverberation repeats a reflector and is common near air and cartilage interfaces.",
+        "Comet-tail and tadpole-tail artifacts are tapering reverberation variants that can exaggerate bright interfaces.",
+        "Acoustic shadowing hides information behind a strong reflector.",
+        "Mirror-image artifact can make anatomy appear duplicated across a reflective boundary."
+      ],
+      "pearl": "If a surprising finding stays perfectly tied to a bright interface while the probe moves, think artifact before anatomy.",
+      "pitfall": "A learner who mistakes shadow or reverberation for a true border may place calipers or plan a needle path against a false target."
+    },
+    {
+      "id": "doppler-sampling",
+      "title": "Doppler and node-targeting pearls",
+      "kind": "clinical-pearl",
+      "body": "Color or power Doppler helps separate vessels from avascular tissue, but grayscale interpretation still comes first. The safest puncture is rarely the shortest line on screen; it is the line that preserves scope stability, confirms a vessel-free path, and samples viable tissue rather than obvious necrosis.",
+      "bullets": [
+        "Identify vessels before puncture, especially when the path seems deceptively direct.",
+        "Avoid obvious necrotic-appearing avascular areas when a better solid target is available.",
+        "When needed, puncture between cartilage rings with deliberate scope control rather than force.",
+        "Use fanning and capsule-to-capsule sampling to traverse more than one part of a node."
+      ],
+      "pearl": "A slightly less direct path with better control is often the safer educational choice than a dramatic straight-line puncture.",
+      "pitfall": "A Doppler-negative region is not automatically safe if the grayscale target is mostly necrotic or poorly coupled."
+    },
+    {
+      "id": "non-diagnostic-frames",
+      "title": "When images are misleading",
+      "kind": "pitfall",
+      "body": "A crisp-looking image can still mislead if the target is only partially included, if the apparent border is artifact, or if the image was frozen during motion. Non-diagnostic specimens often begin with non-diagnostic images: poor contact, poor target selection, repeated sampling of the same tract, or sampling an avascular necrotic cavity instead of viable tissue.",
+      "bullets": [
+        "Do not confuse a still frame with a trustworthy frame.",
+        "Repeated passes along the same track can create false confidence without broadening the sample.",
+        "A technically neat puncture can still be biologically low-yield if the target selection is poor."
+      ],
+      "pearl": "When yield is low, revisit target choice and image quality before blaming the needle or pathology workflow.",
+      "pitfall": "Learners often focus on needle choreography and miss that the underlying image never justified the pass."
+    },
+    {
+      "id": "sampling-vignette",
+      "title": "Case vignette: bright image, poor target",
+      "kind": "case",
+      "body": "A learner obtains a bright, centered frame of a large node but the middle is avascular and nearly anechoic while the capsule remains solid. Doppler excludes a nearby vessel, and the first instinct is to puncture the center because it is easiest to see.",
+      "caseVignette": {
+        "title": "Sample the viable rim, not the dramatic center",
+        "scenario": "The safest-looking path crosses no Doppler signal, but the most conspicuous part of the node appears necrotic.",
+        "prompt": "What should change first: the puncture path, the image settings, or the target inside the node?",
+        "takeaway": "The target inside the node should change first. After vessel check and image optimization, aim for viable tissue and use fanning rather than repeatedly sampling an obvious necrotic cavity."
+      }
+    }
+  ]
+}

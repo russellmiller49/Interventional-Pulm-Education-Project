@@ -1,0 +1,156 @@
+[
+  {
+    "id": "knobology-depth-01",
+    "moduleId": "knobology",
+    "prompt": "A target structure appears too shallow on the screen. Which control should the learner adjust first?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Depth"
+      },
+      {
+        "id": "b",
+        "label": "Freeze"
+      },
+      {
+        "id": "c",
+        "label": "Save"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "Depth is the first control to adjust when the target anatomy is not framed correctly."
+  },
+  {
+    "id": "knobology-gain-02",
+    "moduleId": "knobology",
+    "prompt": "The image is globally too dark and the target border is hard to see. What should the learner change next?",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "Increase gain"
+      },
+      {
+        "id": "b",
+        "label": "Freeze the frame"
+      },
+      {
+        "id": "c",
+        "label": "Save the image"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "Gain is the brightness control. It should be adjusted before freezing or saving a poor frame."
+  },
+  {
+    "id": "knobology-contrast-03",
+    "moduleId": "knobology",
+    "prompt": "The frame is bright but flat, so the border blends into background haze. Which control best restores separation?",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "Contrast"
+      },
+      {
+        "id": "b",
+        "label": "Save"
+      },
+      {
+        "id": "c",
+        "label": "Calipers"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "Contrast helps separate subtle shades once framing and brightness are already close."
+  },
+  {
+    "id": "knobology-doppler-04",
+    "moduleId": "knobology",
+    "prompt": "Which control should the learner use to check whether a suspicious structure is vascular before planning a path?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Color Doppler"
+      },
+      {
+        "id": "b",
+        "label": "Freeze"
+      },
+      {
+        "id": "c",
+        "label": "Depth"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "Color Doppler adds flow information that can reveal a vessel hidden on grayscale imaging."
+  },
+  {
+    "id": "knobology-freeze-save-05",
+    "moduleId": "knobology",
+    "prompt": "Which sequence makes the most sense after the image is framed well and the target border is clear?",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "Freeze, measure with calipers if needed, then save"
+      },
+      {
+        "id": "b",
+        "label": "Save first, then fix depth and gain later"
+      },
+      {
+        "id": "c",
+        "label": "Turn Doppler off, then ignore the border"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "Freeze is useful once the frame is good, calipers come after the border is clear, and save should happen last."
+  },
+  {
+    "id": "station-map-7-01",
+    "moduleId": "station-map",
+    "prompt": "Which station is commonly centered below the carina and is a core staging station?",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "4R"
+      },
+      {
+        "id": "b",
+        "label": "7"
+      },
+      {
+        "id": "c",
+        "label": "11L"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "Station 7 is the subcarinal station and remains a high-yield core landmark."
+  },
+  {
+    "id": "explorer-confusion-01",
+    "moduleId": "station-explorer",
+    "prompt": "A learner confuses 10R with 11R while reviewing airway landmarks. What should the explorer emphasize next?",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "Highlight the confusion pair and adjacent airway landmark"
+      },
+      {
+        "id": "b",
+        "label": "Hide the landmark checklist"
+      },
+      {
+        "id": "c",
+        "label": "Skip directly to the summary screen"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "The explorer contract keeps confusion pairs and landmark cues local so the recognition challenge can reinforce them."
+  }
+]

@@ -1,0 +1,747 @@
+[
+  {
+    "id": "2R",
+    "displayName": "Estación 2R",
+    "shortLabel": "Paratraqueal superior",
+    "iaslcName": "Paratraqueal superior derecha",
+    "zone": "Mediastínica superior",
+    "laterality": "Derecha",
+    "description": "Estación paratraqueal superior derecha en el mediastino superior, por encima del nivel 4R.",
+    "accessNotes": "Se revisa mejor desde la tráquea superior, con contacto estable del balón y confirmación deliberada de las relaciones con los grandes vasos antes de planificar la aguja.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Barrido traqueal lateral derecho superior por encima de la ventana 4R y de la transición ácigos.",
+    "landmarkVessels": [
+      "Vena cava superior",
+      "Vena innominada",
+      "Transición ácigos"
+    ],
+    "boundaryDefinition": {
+      "superior": "Ápice pulmonar / cúpula pleural",
+      "inferior": "Intersección del margen caudal de la vena innominada con la tráquea",
+      "medial": "Borde lateral izquierdo de la tráquea",
+      "lateral": "Pleura mediastínica derecha y pared lateral de grandes vasos"
+    },
+    "boundaryNotes": [
+      "Use el borde lateral izquierdo de la tráquea, no la línea media traqueal, para separar 2R de 2L.",
+      "Piense en 2R como la mitad superior de la pila paratraqueal derecha, con 4R directamente debajo."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad mediastínica (N2) para un primario derecho.",
+      "contralateral": "Enfermedad mediastínica contralateral (N3) para un primario izquierdo.",
+      "note": "La lateralidad importa porque 2R es una estación mediastínica derecha definida en relación con el borde lateral izquierdo de la tráquea."
+    },
+    "clinicalImportance": "2R no siempre es la primera estación positiva, pero un ganglio 2R maligno puede subir la etapa rápidamente y es fácil de etiquetar mal si se pierde la pila paratraqueal derecha superior-inferior.",
+    "memoryCues": [
+      "Corredor paratraqueal derecho alto.",
+      "2R se ubica por encima de 4R en la misma pila derecha."
+    ],
+    "confusionPairs": [
+      "2L",
+      "4R"
+    ],
+    "commonConfusionPair": "4R",
+    "relatedStationIds": [
+      "2L",
+      "4R"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Un ganglio paratraqueal superior derecho por encima del nivel 4R.",
+        "La relación con la tráquea importa más que la simetría aproximada.",
+        "Verifique si el ganglio aún se encuentra a la derecha del borde lateral izquierdo de la tráquea."
+      ],
+      "bronchoscopy": [
+        "La exploración se mantiene alta en la pared traqueal lateral derecha.",
+        "Esta es una ventana traqueal, no hiliar.",
+        "Aún no debería sentirse como si estuviera descendiendo hacia la carina o el bronquio principal."
+      ],
+      "ultrasound": [
+        "El objetivo se ubica en el campo paratraqueal superior derecho por encima de 4R.",
+        "La orientación de los grandes vasos ayuda a confirmar la lateralidad.",
+        "El contacto y la profundidad importan porque la ventana es relativamente superior y estrecha."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Confirme el trayecto en relación con los grandes vasos adyacentes antes de comprometerse con una pasada.",
+      "No permita que un objetivo aparentemente de línea media derive en una designación errónea como 2L o 4R."
+    ],
+    "stagingChangeFinding": "Un ganglio 2R maligno es N2 para un primario pulmonar derecho y N3 para un primario pulmonar izquierdo.",
+    "assetKeys": {
+      "map": "station-map-2r",
+      "ct": "ct-2r",
+      "bronchoscopy": "bronchoscopy-2r",
+      "ultrasound": "ultrasound-2r"
+    }
+  },
+  {
+    "id": "2L",
+    "displayName": "Estación 2L",
+    "shortLabel": "Paratraqueal superior",
+    "iaslcName": "Paratraqueal superior izquierda",
+    "zone": "Mediastínica superior",
+    "laterality": "Izquierda",
+    "description": "Estación paratraqueal superior izquierda por encima de 4L en el mediastino superior.",
+    "accessNotes": "Mantenga el objetivo claramente izquierdo y superior antes de asumir que ha llegado a 4L o a una estructura hiliar.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Exploración traqueal superior izquierda antes de descender a la ventana 4L.",
+    "landmarkVessels": [
+      "Arco aórtico",
+      "Región de la carótida común izquierda y subclavia",
+      "Contorno vascular mediastínico superior izquierdo"
+    ],
+    "boundaryDefinition": {
+      "superior": "Ápice pulmonar / cúpula pleural",
+      "inferior": "Borde superior del arco aórtico",
+      "medial": "Borde lateral izquierdo de la tráquea",
+      "lateral": "Pleura mediastínica izquierda"
+    },
+    "boundaryNotes": [
+      "2L comienza a la izquierda del borde lateral izquierdo de la tráquea y sigue siendo la mitad superior de la pila paratraqueal izquierda.",
+      "Si el ganglio ya está bajo y estrechamente relacionado con la región aórtica/arteria pulmonar, reconsidere 4L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad mediastínica (N2) para un primario izquierdo.",
+      "contralateral": "Enfermedad mediastínica contralateral (N3) para un primario derecho.",
+      "note": "Al igual que 2R, esta es una estación mediastínica sensible a la lateralidad."
+    },
+    "clinicalImportance": "2L es una estación de alto valor porque un resultado positivo puede definir de inmediato enfermedad mediastínica contralateral para un primario derecho.",
+    "memoryCues": [
+      "Corredor paratraqueal izquierdo alto.",
+      "Permanezca por encima de la ventana 4L."
+    ],
+    "confusionPairs": [
+      "2R",
+      "4L"
+    ],
+    "commonConfusionPair": "4L",
+    "relatedStationIds": [
+      "2R",
+      "4L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Objetivo paratraqueal superior izquierdo por encima del nivel 4L.",
+        "El ganglio se ubica a la izquierda del borde lateral izquierdo de la tráquea.",
+        "El arco aórtico ayuda a confirmar que aún está en el mediastino superior izquierdo."
+      ],
+      "bronchoscopy": [
+        "Exploración alta de la pared traqueal izquierda, no una vista hiliar ni subcarinal.",
+        "La orientación aún debe sentirse proximal y traqueal.",
+        "El alumno aún no debería sentir la transición al bronquio principal izquierdo."
+      ],
+      "ultrasound": [
+        "Objetivo paratraqueal superior izquierdo por encima de la ventana 4L.",
+        "Las relaciones con los grandes vasos confirman que el objetivo sigue siendo izquierdo.",
+        "Los ajustes de profundidad y contacto importan porque el espacio es compacto."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Reconfirme la lateralidad antes del muestreo porque un ganglio 2L mal etiquetado puede crear un error mayor de estadificación.",
+      "Use Doppler para aclarar estructuras vasculares cercanas cuando la ventana esté congestionada."
+    ],
+    "stagingChangeFinding": "Un ganglio 2L maligno es N2 para un primario pulmonar izquierdo y N3 para un primario pulmonar derecho.",
+    "assetKeys": {
+      "map": "station-map-2l",
+      "ct": "ct-2l",
+      "bronchoscopy": "bronchoscopy-2l",
+      "ultrasound": "ultrasound-2l"
+    }
+  },
+  {
+    "id": "4R",
+    "displayName": "Estación 4R",
+    "shortLabel": "Paratraqueal inferior",
+    "iaslcName": "Paratraqueal inferior derecha",
+    "zone": "Mediastínica superior",
+    "laterality": "Derecha",
+    "description": "Estación paratraqueal inferior derecha de uso frecuente, debajo de 2R y por encima de la transición hiliar derecha.",
+    "accessNotes": "Este es un objetivo común de estadificación, por lo que los alumnos deben poder identificarlo de manera confiable antes de compararlo con 10R.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Exploración traqueal lateral derecha cerca del descenso carinal, por encima del margen inferior de la ácigos.",
+    "landmarkVessels": [
+      "Vena ácigos",
+      "Vena cava superior",
+      "Región de la arteria pulmonar derecha"
+    ],
+    "boundaryDefinition": {
+      "superior": "Intersección del margen caudal de la vena innominada con la tráquea",
+      "inferior": "Borde inferior de la vena ácigos",
+      "medial": "Borde lateral izquierdo de la tráquea",
+      "lateral": "Pleura mediastínica derecha y tejido blando paratraqueal con vasos"
+    },
+    "boundaryNotes": [
+      "4R sigue siendo derecho en relación con el borde lateral izquierdo de la tráquea.",
+      "Por debajo del margen inferior de la ácigos, la estación se convierte en 10R en lugar de 4R."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad mediastínica (N2) para un primario derecho.",
+      "contralateral": "Enfermedad mediastínica contralateral (N3) para un primario izquierdo.",
+      "note": "4R a menudo tiene gran peso en la estadificación porque es accesible y clínicamente relevante."
+    },
+    "clinicalImportance": "4R es una estación clásica de estadificación por EBUS y con frecuencia determina decisiones en las vías de estadificación mediastínica.",
+    "memoryCues": [
+      "Estación de trabajo paratraqueal inferior derecha.",
+      "2R arriba, 10R abajo."
+    ],
+    "confusionPairs": [
+      "2R",
+      "10R"
+    ],
+    "commonConfusionPair": "10R",
+    "relatedStationIds": [
+      "2R",
+      "10R"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Ganglio paratraqueal inferior derecho por encima de la transición hiliar.",
+        "La vena ácigos ayuda a definir el borde inferior.",
+        "Verifique si el ganglio sigue siendo paratraqueal en lugar de hiliar."
+      ],
+      "bronchoscopy": [
+        "Pared traqueal lateral derecha cerca del descenso carinal.",
+        "Aún lo suficientemente proximal para sentirse paratraqueal y no bronquial principal derecho.",
+        "La orientación debe seguir siendo central, no a nivel de ramas."
+      ],
+      "ultrasound": [
+        "Ventana clásica de estadificación paratraqueal derecha.",
+        "El objetivo se encuentra por debajo de 2R pero por encima de la zona 10R.",
+        "La anatomía de la ácigos ayuda a evitar una etiqueta errónea de 10R."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Use Doppler alrededor del campo paratraqueal derecho con vasos antes de pasar la aguja.",
+      "No llame 4R a un ganglio si ya se ha desplazado por debajo del margen inferior de la ácigos hacia la zona hiliar."
+    ],
+    "stagingChangeFinding": "Un ganglio 4R maligno es N2 para un primario pulmonar derecho y N3 para un primario pulmonar izquierdo.",
+    "assetKeys": {
+      "map": "station-map-4r",
+      "ct": "ct-4r",
+      "bronchoscopy": "bronchoscopy-4r",
+      "ultrasound": "ultrasound-4r"
+    }
+  },
+  {
+    "id": "4L",
+    "displayName": "Estación 4L",
+    "shortLabel": "Paratraqueal inferior",
+    "iaslcName": "Paratraqueal inferior izquierda",
+    "zone": "Mediastínica superior",
+    "laterality": "Izquierda",
+    "description": "Estación paratraqueal inferior izquierda debajo de 2L y por encima de la transición hiliar izquierda.",
+    "accessNotes": "Mantenga 4L conceptualmente separado tanto de 10L como de las estaciones de la ventana AP; sigue siendo un objetivo mediastínico paratraqueal.",
+    "accessProfile": "Both",
+    "bestEbusWindow": "Ventana paratraqueal izquierda por encima del borde superior de la arteria pulmonar principal izquierda y medial al ligamento arterioso.",
+    "landmarkVessels": [
+      "Arco aórtico",
+      "Arteria pulmonar principal izquierda",
+      "Estructuras de la ventana aortopulmonar"
+    ],
+    "boundaryDefinition": {
+      "superior": "Borde superior del arco aórtico",
+      "inferior": "Borde superior de la arteria pulmonar principal izquierda",
+      "medial": "Borde lateral izquierdo de la tráquea",
+      "lateral": "Ligamento arterioso / lado de la ventana AP"
+    },
+    "boundaryNotes": [
+      "4L es medial al ligamento arterioso; las estaciones 5 y 6 son laterales o anterolaterales.",
+      "Por debajo del borde superior de la arteria pulmonar principal izquierda, la estación se convierte en 10L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad mediastínica (N2) para un primario izquierdo.",
+      "contralateral": "Enfermedad mediastínica contralateral (N3) para un primario derecho.",
+      "note": "4L es con frecuencia la estación izquierda donde más importan la lateralidad y la precisión de límites."
+    },
+    "clinicalImportance": "4L es una estación mediastínica izquierda fundamental porque puede separar enfermedad mediastínica ipsilateral de diseminación mediastínica contralateral según el lado tumoral.",
+    "memoryCues": [
+      "Paratraqueal inferior izquierda antes de la transición hiliar.",
+      "Medial al ligamento arterioso."
+    ],
+    "confusionPairs": [
+      "2L",
+      "10L",
+      "5"
+    ],
+    "commonConfusionPair": "10L",
+    "relatedStationIds": [
+      "2L",
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "Ganglio paratraqueal inferior izquierdo por encima del límite hiliar izquierdo.",
+        "Verifique el borde superior de la arteria pulmonar principal izquierda para la transición 4L a 10L.",
+        "Permanezca medial al ligamento arterioso al distinguir 4L de la estación 5."
+      ],
+      "bronchoscopy": [
+        "Vista paratraqueal izquierda antes de que el bronquio principal izquierdo domine la escena.",
+        "La orientación aún debe sentirse mediastínica y no a nivel de ramas.",
+        "Esto aún no es la referencia hiliar izquierda."
+      ],
+      "ultrasound": [
+        "Objetivo paratraqueal izquierdo por debajo de 2L y por encima de 10L.",
+        "La posición de la arteria pulmonar ayuda a definir el límite inferior.",
+        "La relación con la ventana AP importa al distinguirlo de estaciones laterales."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Reconfirme que el ganglio aún está por encima del margen superior de la arteria pulmonar principal izquierda antes de llamarlo 4L.",
+      "Un campo vascular congestionado hace esencial la revisión con Doppler antes de la punción."
+    ],
+    "stagingChangeFinding": "Un ganglio 4L maligno es N2 para un primario pulmonar izquierdo y N3 para un primario pulmonar derecho.",
+    "assetKeys": {
+      "map": "station-map-4l",
+      "ct": "ct-4l",
+      "bronchoscopy": "bronchoscopy-4l",
+      "ultrasound": "ultrasound-4l"
+    }
+  },
+  {
+    "id": "7",
+    "displayName": "Estación 7",
+    "shortLabel": "Subcarinal",
+    "iaslcName": "Subcarinal",
+    "zone": "Subcarinal",
+    "laterality": "Línea media",
+    "description": "Estación subcarinal de línea media bajo la carina, entre los bronquios principales.",
+    "accessNotes": "Use la estación 7 como punto de reinicio cuando el alumno pierde orientación, porque conecta las vías hiliares derecha e izquierda.",
+    "accessProfile": "Both",
+    "bestEbusWindow": "Vista subcarinal por debajo de la carina y entre los márgenes mediales de los bronquios principales.",
+    "landmarkVessels": [
+      "Bronquios principales",
+      "Región de la aurícula izquierda",
+      "Vasos mediastínicos subcarinales"
+    ],
+    "boundaryDefinition": {
+      "superior": "Carina",
+      "inferior": "Borde inferior del bronquio intermedio a la derecha y borde superior del bronquio del lóbulo inferior izquierdo a la izquierda",
+      "anterior": "Espacio subcarinal entre los bronquios principales",
+      "posterior": "Se extiende posteriormente alrededor del esófago dentro de la zona subcarinal"
+    },
+    "boundaryNotes": [
+      "La estación 7 se ubica entre los márgenes mediales de los bronquios principales; los ganglios fuera de ese espacio son estación 10.",
+      "La estación 7 no se lateraliza de la misma manera que las estaciones 2, 4, 10 u 11."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad mediastínica (N2) independientemente del lado del primario.",
+      "contralateral": "La distinción de lateralidad no se aplica de la misma forma porque la estación 7 es de línea media.",
+      "note": "La estación 7 sigue siendo una estación mediastínica ipsilateral independientemente de si el primario es derecho o izquierdo."
+    },
+    "clinicalImportance": "La estación 7 es un ancla central de estadificación y uno de los objetivos mediastínicos de mayor rendimiento tanto en la enseñanza como en la práctica.",
+    "memoryCues": [
+      "Línea media bajo la carina.",
+      "Puente entre las vías hiliares derecha e izquierda."
+    ],
+    "confusionPairs": [
+      "10R",
+      "10L"
+    ],
+    "commonConfusionPair": "10R/10L",
+    "relatedStationIds": [
+      "10R",
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "El ganglio se ubica bajo la carina y entre los bronquios principales.",
+        "Fuera de los márgenes bronquiales mediales ya no es estación 7.",
+        "La orientación coronal es especialmente útil para sus límites cráneo-caudales."
+      ],
+      "bronchoscopy": [
+        "La bifurcación carinal es el ancla central.",
+        "Este es un objetivo de línea media, no un objetivo hiliar lateralizado.",
+        "La orientación debe sentirse centrada bajo la bifurcación principal."
+      ],
+      "ultrasound": [
+        "Objetivo subcarinal de línea central bajo la bifurcación.",
+        "Un lugar clásico para restablecer la orientación cuando el mapa resulta confuso.",
+        "No se desplace fuera de los márgenes bronquiales mediales y siga llamándolo estación 7."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Mantenga el objetivo claramente subcarinal y no hiliar antes del muestreo.",
+      "Como la estación 7 suele ser amplia, dirija el muestreo al tejido viable más representativo en lugar del primer borde visible."
+    ],
+    "stagingChangeFinding": "Un ganglio maligno de estación 7 es enfermedad mediastínica (N2) independientemente de si el primario está en el pulmón derecho o izquierdo.",
+    "assetKeys": {
+      "map": "station-map-7",
+      "ct": "ct-7",
+      "bronchoscopy": "bronchoscopy-7",
+      "ultrasound": "ultrasound-7"
+    }
+  },
+  {
+    "id": "10R",
+    "displayName": "Estación 10R",
+    "shortLabel": "Hiliar",
+    "iaslcName": "Hiliar derecha",
+    "zone": "Hiliar",
+    "laterality": "Derecha",
+    "description": "Estación hiliar derecha adyacente al bronquio principal y a los vasos hiliares, por debajo del límite 4R.",
+    "accessNotes": "Enseñe 10R como la referencia hiliar que sigue a 4R y precede a las subestaciones 11R.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Vista hiliar derecha por debajo del margen inferior de la ácigos y adyacente al bronquio principal derecho.",
+    "landmarkVessels": [
+      "Arteria pulmonar principal derecha",
+      "Venas pulmonares proximales",
+      "Límite superior de la vena ácigos"
+    ],
+    "boundaryDefinition": {
+      "superior": "Borde inferior de la vena ácigos",
+      "inferior": "Región proximal de ramificación interlobar que conduce a la estación 11",
+      "medial": "Línea vertical desde el margen medial del bronquio principal derecho / bifurcación traqueal",
+      "lateral": "Tejido blando y vasos hiliares derechos"
+    },
+    "boundaryNotes": [
+      "10R comienza por debajo del margen inferior de la ácigos, donde termina 4R.",
+      "Los ganglios entre los márgenes mediales de los bronquios principales pertenecen a la estación 7; fuera de ese espacio es estación 10."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad hiliar (N1) para un primario derecho.",
+      "contralateral": "Enfermedad hiliar contralateral (N3) para un primario izquierdo.",
+      "note": "Esta es la transición derecha clave de estadificación mediastínica a hiliar."
+    },
+    "clinicalImportance": "10R importa porque la transición 4R a 10R puede cambiar un caso de enfermedad mediastínica a hiliar o viceversa.",
+    "memoryCues": [
+      "Referencia hiliar derecha.",
+      "4R arriba, 11R más allá."
+    ],
+    "confusionPairs": [
+      "4R",
+      "11Rs",
+      "11Ri",
+      "7"
+    ],
+    "commonConfusionPair": "4R",
+    "relatedStationIds": [
+      "4R",
+      "11Rs",
+      "11Ri",
+      "7"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "El ganglio se ubica en la transición hiliar derecha por debajo del límite de la ácigos.",
+        "Verifique si el objetivo permanece adyacente al bronquio principal en lugar de una rama interlobar.",
+        "Si aún está entre los márgenes mediales de los bronquios principales, reconsidere la estación 7."
+      ],
+      "bronchoscopy": [
+        "Referencia del bronquio principal derecho antes de la ramificación más distal.",
+        "Esto está más allá del territorio paratraqueal, pero aún no es interlobar profundo.",
+        "La orientación se siente hiliar más que traqueal."
+      ],
+      "ultrasound": [
+        "Objetivo hiliar derecho cerca de la zona de entrada del bronquio principal.",
+        "Demasiado distal suele significar que se ha desplazado hacia 11R.",
+        "Demasiado proximal o por encima del margen de la ácigos significa que quizá aún esté en 4R."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Use Doppler porque los vasos hiliares pueden hacer inseguro el trayecto más corto.",
+      "Confirme que el objetivo es hiliar y no subcarinal ni paratraqueal inferior antes del muestreo."
+    ],
+    "stagingChangeFinding": "Un ganglio 10R maligno es N1 para un primario pulmonar derecho y N3 para un primario pulmonar izquierdo.",
+    "assetKeys": {
+      "map": "station-map-10r",
+      "ct": "ct-10r",
+      "bronchoscopy": "bronchoscopy-10r",
+      "ultrasound": "ultrasound-10r"
+    }
+  },
+  {
+    "id": "10L",
+    "displayName": "Estación 10L",
+    "shortLabel": "Hiliar",
+    "iaslcName": "Hiliar izquierda",
+    "zone": "Hiliar",
+    "laterality": "Izquierda",
+    "description": "Estación hiliar izquierda por debajo del límite 4L y proximal a la estación interlobar izquierda.",
+    "accessNotes": "Refuerce la idea de que 10L es distal a 4L, pero aún no tan distal como 11L.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Vista hiliar izquierda por debajo del borde superior de la arteria pulmonar principal izquierda y adyacente al bronquio principal izquierdo.",
+    "landmarkVessels": [
+      "Arteria pulmonar principal izquierda",
+      "Vasos hiliares izquierdos",
+      "Bronquio principal izquierdo"
+    ],
+    "boundaryDefinition": {
+      "superior": "Borde superior de la arteria pulmonar principal izquierda",
+      "inferior": "Transición interlobar proximal hacia la estación 11L",
+      "medial": "Línea vertical desde el margen medial del bronquio principal izquierdo / bifurcación traqueal",
+      "lateral": "Vasos y tejido blando hiliares izquierdos"
+    },
+    "boundaryNotes": [
+      "10L comienza por debajo del margen superior de la arteria pulmonar principal izquierda, donde termina 4L.",
+      "Un objetivo que aún es claramente paratraqueal y está por encima de ese límite vascular no debe etiquetarse como 10L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad hiliar (N1) para un primario izquierdo.",
+      "contralateral": "Enfermedad hiliar contralateral (N3) para un primario derecho.",
+      "note": "10L es la contraparte hiliar izquierda de 10R y a menudo el principal par de confusión para 4L."
+    },
+    "clinicalImportance": "10L es un pivote frecuente de estadificación porque distinguirlo de 4L puede cambiar un hallazgo de N1 a N2 o N3 según el lado del primario.",
+    "memoryCues": [
+      "Referencia hiliar izquierda.",
+      "Debajo de 4L, antes de 11L."
+    ],
+    "confusionPairs": [
+      "4L",
+      "11L",
+      "7"
+    ],
+    "commonConfusionPair": "4L",
+    "relatedStationIds": [
+      "4L",
+      "11L",
+      "7"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "El ganglio se encuentra por debajo del margen superior de la arteria pulmonar principal izquierda.",
+        "El objetivo se comporta como una estructura hiliar, no paratraqueal.",
+        "Si está demasiado distal, reconsidere 11L."
+      ],
+      "bronchoscopy": [
+        "Referencia del bronquio principal izquierdo antes de la división interlobar.",
+        "Esto es más distal que 4L, pero aún no es una estación a nivel de ramas.",
+        "La perspectiva debe sentirse hiliar más que mediastínica superior."
+      ],
+      "ultrasound": [
+        "Objetivo hiliar izquierdo cerca de la zona de entrada del bronquio principal izquierdo.",
+        "Tenga presente el límite de la arteria pulmonar al separarlo de 4L.",
+        "Pistas de ramificación más distal sugieren 11L en su lugar."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "No llame la estación 10L a menos que esté realmente por debajo del margen superior de la arteria pulmonar principal izquierda.",
+      "La congestión vascular a la izquierda hace importante la revisión con Doppler antes de la punción."
+    ],
+    "stagingChangeFinding": "Un ganglio 10L maligno es N1 para un primario pulmonar izquierdo y N3 para un primario pulmonar derecho.",
+    "assetKeys": {
+      "map": "station-map-10l",
+      "ct": "ct-10l",
+      "bronchoscopy": "bronchoscopy-10l",
+      "ultrasound": "ultrasound-10l"
+    }
+  },
+  {
+    "id": "11Rs",
+    "displayName": "Estación 11Rs",
+    "shortLabel": "Interlobar",
+    "iaslcName": "Interlobar superior derecha",
+    "zone": "Hiliar",
+    "laterality": "Derecha",
+    "description": "Subestación interlobar superior derecha ubicada entre el bronquio del lóbulo superior derecho y el bronquio intermedio.",
+    "accessNotes": "Trate 11Rs como una continuación a nivel de ramas más allá de 10R, no como una segunda versión de la referencia hiliar.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Vista interlobar derecha alrededor del origen del bronquio del lóbulo superior derecho y el bronquio intermedio.",
+    "landmarkVessels": [
+      "Vasos hiliares derechos",
+      "Origen del bronquio del lóbulo superior derecho",
+      "Bronquio intermedio"
+    ],
+    "boundaryDefinition": {
+      "superior": "Continuación distal más allá del nivel hiliar 10R",
+      "inferior": "Bronquio del lóbulo superior derecho / región interlobar del bronquio intermedio",
+      "medial": "Tejido blando interlobar peribronquial",
+      "lateral": "Vasos hiliares a nivel de ramas"
+    },
+    "boundaryNotes": [
+      "11Rs se refiere específicamente a la subestación interlobar superior derecha entre el bronquio del lóbulo superior derecho y el bronquio intermedio.",
+      "Si el objetivo aún se siente como una referencia de bronquio principal y no como un objetivo a nivel de ramas, reconsidere 10R."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad interlobar (N1) para un primario derecho.",
+      "contralateral": "Enfermedad hiliar/interlobar contralateral (N3) para un primario izquierdo.",
+      "note": "Las subestaciones 11R siguen siendo N1 cuando son ipsilaterales porque son ganglios hiliares/interlobares a nivel de ramas."
+    },
+    "clinicalImportance": "Dividir 11R en 11Rs y 11Ri mejora la precisión docente y ayuda al alumno a vincular cada punto de ramificación con una referencia específica de la vía aérea.",
+    "memoryCues": [
+      "Punto de ramificación interlobar superior derecho.",
+      "Entre el bronquio del lóbulo superior derecho y el bronquio intermedio."
+    ],
+    "confusionPairs": [
+      "10R",
+      "11Ri"
+    ],
+    "commonConfusionPair": "10R",
+    "relatedStationIds": [
+      "10R",
+      "11Ri"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "El ganglio se ubica más allá de la referencia hiliar derecha, en el nivel de ramificación interlobar superior.",
+        "El detalle de ventana pulmonar puede ayudar a confirmar la anatomía de ramificación bronquial.",
+        "Esto es más distal que 10R."
+      ],
+      "bronchoscopy": [
+        "La vista está anclada por el bronquio del lóbulo superior derecho y el bronquio intermedio.",
+        "Esta es una pista a nivel de ramas, no una pista de bronquio principal.",
+        "Si el alumno aún siente que está en el bronquio principal derecho, probablemente está demasiado proximal."
+      ],
+      "ultrasound": [
+        "Objetivo hiliar derecho más distal en comparación con 10R.",
+        "La anatomía a nivel de ramas debe estar clara antes de asignar 11Rs.",
+        "Mantenga la subestación superior separada de 11Ri por debajo."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Confirme la relación de vía aérea a nivel de ramas porque la distinción con 10R cambia el punto docente y la etapa.",
+      "Los vasos hiliares permanecen cercanos, por lo que la revisión con Doppler sigue importando incluso en objetivos pequeños a nivel de ramas."
+    ],
+    "stagingChangeFinding": "Un ganglio 11Rs maligno es N1 para un primario pulmonar derecho y N3 para un primario pulmonar izquierdo.",
+    "assetKeys": {
+      "map": "station-map-11rs",
+      "ct": "ct-11rs",
+      "bronchoscopy": "bronchoscopy-11rs",
+      "ultrasound": "ultrasound-11rs"
+    }
+  },
+  {
+    "id": "11Ri",
+    "displayName": "Estación 11Ri",
+    "shortLabel": "Interlobar",
+    "iaslcName": "Interlobar inferior derecha",
+    "zone": "Hiliar",
+    "laterality": "Derecha",
+    "description": "Subestación interlobar inferior derecha entre los bronquios de los lóbulos medio e inferior derechos.",
+    "accessNotes": "Enseñe 11Ri como el objetivo interlobar derecho más inferior a nivel de ramas, distinto tanto de 10R como de 11Rs.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Vista interlobar derecha alrededor de la región de ramificación bronquial de los lóbulos medio e inferior.",
+    "landmarkVessels": [
+      "Vasos hiliares derechos",
+      "Bronquio del lóbulo medio derecho",
+      "Bronquio del lóbulo inferior derecho"
+    ],
+    "boundaryDefinition": {
+      "superior": "Continuación distal más allá del nivel hiliar 10R",
+      "inferior": "Espacio interlobar entre los bronquios de los lóbulos medio e inferior derechos",
+      "medial": "Tejido blando interlobar peribronquial",
+      "lateral": "Vasos hiliares a nivel de ramas"
+    },
+    "boundaryNotes": [
+      "11Ri es específicamente la subestación interlobar inferior derecha entre los bronquios de los lóbulos medio e inferior.",
+      "El detalle de ramas importa; esto no es solo una etiqueta genérica de '11R'."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad interlobar (N1) para un primario derecho.",
+      "contralateral": "Enfermedad hiliar/interlobar contralateral (N3) para un primario izquierdo.",
+      "note": "Al igual que 11Rs, esta sigue siendo una estación N1 cuando es ipsilateral."
+    },
+    "clinicalImportance": "Separar 11Ri de 11Rs enseña al alumno a usar la anatomía de vía aérea a nivel de ramas, en lugar de tratar todos los ganglios interlobares derechos como un grupo indiferenciado.",
+    "memoryCues": [
+      "Punto de ramificación interlobar inferior derecho.",
+      "Entre los bronquios de los lóbulos medio e inferior."
+    ],
+    "confusionPairs": [
+      "10R",
+      "11Rs"
+    ],
+    "commonConfusionPair": "11Rs",
+    "relatedStationIds": [
+      "10R",
+      "11Rs"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "El ganglio se ubica en el nivel de ramificación interlobar inferior derecha.",
+        "El patrón de ramificación bronquial es más importante que una silueta hiliar genérica.",
+        "Esto está más avanzado en la vía de ramificación que 10R."
+      ],
+      "bronchoscopy": [
+        "El objetivo está asociado con la división bronquial de los lóbulos medio e inferior.",
+        "La vista debe sentirse claramente más distal que la referencia 10R.",
+        "Este es el punto de ramificación interlobar inferior derecho, no el superior."
+      ],
+      "ultrasound": [
+        "Vista EBUS interlobar inferior derecha.",
+        "El alumno debe nombrar la referencia a nivel de ramas antes de nombrar la estación.",
+        "La confusión con 11Rs suele significar que la anatomía de ramas no se ha reconstruido claramente."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "Como el campo es más pequeño y distal, mantenga la estabilidad del endoscopio y la revisión con Doppler de forma deliberada, no apresurada.",
+      "Etiquetar erróneamente 11Ri como 10R o 11Rs cambia el mensaje docente aunque el resultado citológico sea la misma categoría N."
+    ],
+    "stagingChangeFinding": "Un ganglio 11Ri maligno es N1 para un primario pulmonar derecho y N3 para un primario pulmonar izquierdo.",
+    "assetKeys": {
+      "map": "station-map-11ri",
+      "ct": "ct-11ri",
+      "bronchoscopy": "bronchoscopy-11ri",
+      "ultrasound": "ultrasound-11ri"
+    }
+  },
+  {
+    "id": "11L",
+    "displayName": "Estación 11L",
+    "shortLabel": "Interlobar",
+    "iaslcName": "Interlobar izquierda",
+    "zone": "Hiliar",
+    "laterality": "Izquierda",
+    "description": "Estación interlobar izquierda más allá de la referencia hiliar izquierda.",
+    "accessNotes": "Use 11L como la continuación izquierda a nivel de ramas más allá de 10L y manténgala separada de la referencia hiliar izquierda.",
+    "accessProfile": "EBUS",
+    "bestEbusWindow": "Vista interlobar izquierda distal a la referencia hiliar izquierda y a lo largo de la referencia de vía aérea a nivel de ramas.",
+    "landmarkVessels": [
+      "Vasos hiliares izquierdos",
+      "Anatomía bronquial izquierda a nivel de ramas",
+      "Ramas de la arteria pulmonar izquierda"
+    ],
+    "boundaryDefinition": {
+      "superior": "Continuación distal más allá del nivel hiliar 10L",
+      "inferior": "Región de ramificación bronquial interlobar izquierda",
+      "medial": "Tejido blando interlobar peribronquial",
+      "lateral": "Vasos hiliares izquierdos a nivel de ramas"
+    },
+    "boundaryNotes": [
+      "11L es la continuación a nivel de ramas más allá de 10L, no una segunda referencia hiliar.",
+      "Si el objetivo aún se siente proximal y de bronquio principal, reconsidere 10L."
+    ],
+    "nStageImplication": {
+      "ipsilateral": "Enfermedad interlobar (N1) para un primario izquierdo.",
+      "contralateral": "Enfermedad hiliar/interlobar contralateral (N3) para un primario derecho.",
+      "note": "Esta es la contraparte interlobar izquierda de las subestaciones derechas 11R."
+    },
+    "clinicalImportance": "11L refuerza la comprensión del alumno de que no todo ganglio central izquierdo es paratraqueal o hiliar; algunos son claramente objetivos interlobares a nivel de ramas.",
+    "memoryCues": [
+      "Interlobar izquierda después de la referencia hiliar.",
+      "Pista de vía aérea izquierda a nivel de ramas, no pista paratraqueal."
+    ],
+    "confusionPairs": [
+      "10L"
+    ],
+    "commonConfusionPair": "10L",
+    "relatedStationIds": [
+      "10L"
+    ],
+    "whatYouSee": {
+      "ct": [
+        "El ganglio se ubica más allá de la referencia hiliar izquierda, a nivel interlobar.",
+        "La relación bronquial a nivel de ramas es más distal que 10L.",
+        "Mantenga la anatomía de ramificación a la vista al nombrar la estación."
+      ],
+      "bronchoscopy": [
+        "La vista está ligada a la vía aérea izquierda a nivel de ramas más allá del bronquio principal.",
+        "Esto debe sentirse más distal que 10L.",
+        "El alumno debe estar pensando en anatomía de vía aérea izquierda a nivel de ramas."
+      ],
+      "ultrasound": [
+        "Objetivo interlobar izquierdo más allá de la referencia hiliar izquierda.",
+        "La pista a nivel de ramas es el discriminador clave frente a 10L.",
+        "La imagen EBUS puede ser menos familiar que 10L y se beneficia de una orientación deliberada."
+      ]
+    },
+    "safePunctureConsiderations": [
+      "No fuerce una etiqueta 10L a un objetivo que claramente es a nivel de ramas y más distal.",
+      "Si no hay una imagen fija EBUS aprobada disponible, enseñe de todos modos la anatomía y la lógica de estadificación en lugar de inventar certeza de imagen."
+    ],
+    "stagingChangeFinding": "Un ganglio 11L maligno es N1 para un primario pulmonar izquierdo y N3 para un primario pulmonar derecho.",
+    "assetKeys": {
+      "map": "station-map-11l",
+      "ct": "ct-11l",
+      "bronchoscopy": "bronchoscopy-11l",
+      "ultrasound": "ultrasound-11l"
+    }
+  }
+]

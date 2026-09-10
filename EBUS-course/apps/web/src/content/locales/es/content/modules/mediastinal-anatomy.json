@@ -1,0 +1,88 @@
+{
+  "id": "mediastinal-anatomy",
+  "title": "Anatomía mediastínica y estaciones IASLC",
+  "summary": "Revisión centrada en límites de las estaciones EBUS principales, con énfasis en las reglas IASLC que más a menudo cambian la estadificación y confunden a los alumnos.",
+  "learningObjectives": [
+    "Usar las reglas de límites IASLC, no la intuición aproximada, al separar estaciones paratraqueales, hiliares e interlobares adyacentes.",
+    "Explicar por qué el borde lateral izquierdo de la tráquea importa para las estaciones 2 y 4 de ambos lados.",
+    "Diferenciar la transición de 4 a 10 usando el margen inferior de la ácigos a la derecha y el margen superior de la arteria pulmonar principal izquierda a la izquierda.",
+    "Reconocer cuándo 4L es medial al ligamento arterioso y por qué las estaciones 5 y 6 se ubican laterales o anterolaterales a esa relación.",
+    "Conectar la identidad de la estación con su significado de estadificación, vía de acceso y relevancia clínica."
+  ],
+  "sections": [
+    {
+      "id": "tracheal-border-rule",
+      "title": "El borde lateral izquierdo de la tráquea divide las estaciones 2 y 4",
+      "kind": "landmarks",
+      "body": "Uno de los cambios IASLC más importantes es que el límite entre 2R y 2L, y también entre 4R y 4L, sigue el borde lateral izquierdo de la tráquea y no la línea media traqueal. Si el alumno sigue usando la línea media, puede etiquetar mal tanto la lateralidad como el estadio.",
+      "bullets": [
+        "2R y 4R pueden extenderse más hacia la izquierda de lo que muchos principiantes esperan.",
+        "La misma regla se aplica en los niveles paratraqueales superior e inferior.",
+        "Este límite importa porque la enfermedad mediastínica contralateral se convierte en N3."
+      ],
+      "imageIds": [
+        "station:2R:ct",
+        "station:2L:ct"
+      ],
+      "pearl": "Cuando un ganglio parece casi medial, pregunte dónde se ubica respecto a la pared traqueal lateral izquierda en lugar de adivinar solo por simetría.",
+      "pitfall": "El antiguo modelo mental de la línea media traqueal es una de las formas más rápidas de estadificar mal la enfermedad paratraqueal."
+    },
+    {
+      "id": "four-vs-ten",
+      "title": "La transición de 4 a 10 se basa en vasos, pero aún necesita contexto de vía aérea",
+      "kind": "landmarks",
+      "body": "A la derecha, 4R termina en el borde inferior de la vena ácigos y 10R comienza por debajo. A la izquierda, 4L termina en el borde superior de la arteria pulmonar principal izquierda y 10L comienza por debajo. Esas referencias son de alto rendimiento, pero el contexto de la vía aérea sigue importando porque una sola imagen vascular puede ser engañosa cuando la orientación es deficiente.",
+      "bullets": [
+        "4R por encima del margen inferior de la ácigos; 10R por debajo.",
+        "4L por encima del margen superior de la arteria pulmonar principal izquierda; 10L por debajo.",
+        "La estación 7 se ubica entre los márgenes mediales de los bronquios principales; fuera de ese espacio es estación 10."
+      ],
+      "imageIds": [
+        "station:4R:ct",
+        "station:10R:ct",
+        "station:4L:ct",
+        "station:10L:ct"
+      ],
+      "pearl": "Si la imagen muestra el vaso pero no el contexto bronquial, recupere la orientación antes de asignar la estación.",
+      "pitfall": "Una sola referencia vascular sin contexto de vía aérea puede subestadificar o sobreestadificar el caso de forma incorrecta."
+    },
+    {
+      "id": "ap-window-rule",
+      "title": "4L permanece medial al ligamento arterioso",
+      "kind": "landmarks",
+      "body": "4L permanece medial al ligamento arterioso; las estaciones 5 y 6 son laterales o anterolaterales en la región aortopulmonar. Esto importa porque 4L pertenece al grupo mediastínico paratraqueal, mientras que 5 y 6 son estaciones de la ventana aortopulmonar y no se muestrean con el mismo enfoque mental.",
+      "bullets": [
+        "4L es una estación paratraqueal incluso cuando parece cercana a la ventana AP.",
+        "La estación 5 es lateral al ligamento arterioso.",
+        "La estación 6 se ubica anterior y lateral a la aorta ascendente y al arco aórtico."
+      ],
+      "pearl": "A la izquierda, piense primero en medial-paratraqueal antes de pensar en lateral-ventana AP.",
+      "pitfall": "Llamar 4L a un objetivo lateral de la ventana AP puede hacer que la estación suene más apta para EBUS y más rutinaria de lo que realmente es."
+    },
+    {
+      "id": "access-and-staging",
+      "title": "La vía de acceso y el estadio son parte de la identidad de la estación",
+      "kind": "staging",
+      "body": "Una etiqueta de estación debe implicar de inmediato cómo espera abordarla y qué significa el resultado para el estadio ganglionar. Las estaciones hiliares/interlobares derechas e izquierdas se comportan como N1 cuando son ipsilaterales, mientras que las paratraqueales y otras mediastínicas son N2 si son ipsilaterales y N3 si son contralaterales. La estación 7 es la excepción importante: es de línea media y se trata como enfermedad mediastínica ipsilateral independientemente del lado del primario.",
+      "bullets": [
+        "Las estaciones 2 y 4 son mediastínicas, por lo que la lateralidad puede convertir N2 en N3.",
+        "Las estaciones 10 y 11 son hiliares/interlobares, por lo que la enfermedad ipsilateral suele ser N1.",
+        "La estación 7 es un ancla de estadificación porque es de línea media y sigue siendo N2 independientemente del lado."
+      ],
+      "pearl": "No memorice los nombres de estación separados de sus consecuencias de estadificación.",
+      "pitfall": "Los alumnos a menudo conocen el número, pero no si el hallazgo cambia al paciente de N1 a N2 o N3."
+    },
+    {
+      "id": "boundary-vignette",
+      "title": "Viñeta clínica: ¿4L o 10L?",
+      "kind": "case",
+      "body": "Un tumor primario izquierdo tiene un ganglio aumentado adyacente al bronquio principal izquierdo. El alumno ve la arteria pulmonar izquierda e inmediatamente llama al ganglio 10L.",
+      "caseVignette": {
+        "title": "No se detenga en el nombre del vaso",
+        "scenario": "Al reconstruir la anatomía de la vía aérea, el ganglio sigue siendo proximal, medial y por encima del borde superior de la arteria pulmonar principal izquierda.",
+        "prompt": "¿Cuál es la maniobra docente más segura antes de asignar el estadio?",
+        "takeaway": "Reconstruya primero la relación entre vía aérea y vasos. Si el ganglio sigue por encima del borde superior de la arteria pulmonar principal izquierda y permanece paratraqueal, es 4L y no 10L."
+      }
+    }
+  ]
+}

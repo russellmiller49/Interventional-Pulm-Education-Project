@@ -1,0 +1,283 @@
+[
+  {
+    "id": "pretest",
+    "slug": "pretest",
+    "shortTitle": "Pre-course test",
+    "title": "Pre-course Survey and Test",
+    "summary": "Pre-course survey plus the 25-question baseline assessment with hidden answers and local course progression logging.",
+    "overview": "This module captures account readiness, a pre-course survey, and a baseline score before Lecture 1 and downstream practice modules unlock.",
+    "estimatedMinutes": 25,
+    "featureFolder": "features/pretest",
+    "route": "/modules/pretest",
+    "goals": [
+      "Collect a pre-course baseline without revealing correct answers.",
+      "Persist in-progress responses and the latest saved score locally.",
+      "Unlock the next course step after completion."
+    ],
+    "plannedExperiences": [
+      "Briefing",
+      "25-question assessment",
+      "Demo submission summary"
+    ],
+    "assetPlaceholders": [
+      {
+        "key": "pretest-q2-figure",
+        "label": "Question 2 figure",
+        "folder": "assets/pretest",
+        "note": "Extracted from the provided pretest document for the demo assessment flow."
+      },
+      {
+        "key": "pretest-q8-figure",
+        "label": "Question 8 figure",
+        "folder": "assets/pretest",
+        "note": "Extracted from the provided pretest document for the demo assessment flow."
+      },
+      {
+        "key": "pretest-q22-figure",
+        "label": "Question 22 figure",
+        "folder": "assets/pretest",
+        "note": "Extracted from the provided pretest document for the demo assessment flow."
+      }
+    ],
+    "relatedStationIds": []
+  },
+  {
+    "id": "knobology",
+    "slug": "knobology",
+    "shortTitle": "Knobology",
+    "title": "Ultrasound Foundations + EBUS Knobology",
+    "summary": "Teach the core ultrasound controls with a fast, touch-friendly module and placeholder simulator entry points.",
+    "overview": "This scaffold establishes the routes, content contract, and persistence hooks for the primer, control lab, Doppler mini-lab, quick-reference cards, quiz, and summary.",
+    "estimatedMinutes": 20,
+    "featureFolder": "features/knobology",
+    "route": "/modules/knobology",
+    "goals": [
+      "Explain depth, gain, contrast, color Doppler, calipers, freeze, and save.",
+      "Prepare the control lab shell for future fix-the-image exercises.",
+      "Persist learner completion and quiz score locally."
+    ],
+    "plannedExperiences": [
+      "Primer",
+      "Control lab",
+      "Doppler mini-lab",
+      "Quick-reference cards",
+      "Five-question quiz",
+      "Completion summary"
+    ],
+    "assetPlaceholders": [
+      {
+        "key": "us-primer-hero",
+        "label": "Primer hero frame",
+        "folder": "assets/ultrasound",
+        "note": "Replace with an app-owned de-identified teaching frame or illustration."
+      },
+      {
+        "key": "us-control-lab-bad-image-01",
+        "label": "Bad image preset 01",
+        "folder": "assets/ultrasound",
+        "note": "Reserve for future fix-the-image exercises."
+      }
+    ],
+    "relatedStationIds": []
+  },
+  {
+    "id": "station-map",
+    "slug": "station-map",
+    "shortTitle": "Station Map",
+    "title": "Mediastinal Station Map",
+    "summary": "Provide a clean module entry point for IASLC station recognition, map exploration, and quiz work.",
+    "overview": "The scaffold shares a typed station schema with the explorer module and leaves stable asset keys for a future vector map implementation.",
+    "estimatedMinutes": 18,
+    "featureFolder": "features/stations",
+    "route": "/modules/station-map",
+    "goals": [
+      "Support the core v1 stations in a structured local schema.",
+      "Keep map drawing data and text content separable.",
+      "Wire bookmarks and completion state into persisted learner progress."
+    ],
+    "plannedExperiences": [
+      "Overview",
+      "Zoomable tappable map",
+      "Station detail sheet",
+      "Flashcards",
+      "Pin-the-station quiz",
+      "Review summary"
+    ],
+    "assetPlaceholders": [
+      {
+        "key": "station-map-core-illustration",
+        "label": "Core station map illustration",
+        "folder": "assets/illustrations",
+        "note": "Replace with an app-owned vector map. Existing external screenshots are intentionally not bundled."
+      }
+    ],
+    "relatedStationIds": [
+      "2R",
+      "2L",
+      "4R",
+      "4L",
+      "7",
+      "10R",
+      "10L",
+      "11Rs",
+      "11Ri",
+      "11L"
+    ]
+  },
+  {
+    "id": "station-explorer",
+    "slug": "station-explorer",
+    "shortTitle": "Explorer",
+    "title": "CT ↔ Bronchoscopic ↔ Ultrasound Station Explorer",
+    "summary": "Set up synchronized placeholder views so the correlated tri-view experience can ship without changing the data model.",
+    "overview": "This scaffold focuses on local structured station data, synchronized route-level state, and a future-ready asset contract for CT, bronchoscopy, and ultrasound views.",
+    "estimatedMinutes": 22,
+    "featureFolder": "features/explorer",
+    "route": "/modules/station-explorer",
+    "goals": [
+      "Use the same station content schema as the station map module.",
+      "Prepare synchronized CT, bronchoscopic, and ultrasound placeholder panels.",
+      "Track last-viewed station and recognition accuracy locally."
+    ],
+    "plannedExperiences": [
+      "Station selector",
+      "Correlated tri-view explorer",
+      "Landmark checklist",
+      "Recognition challenge",
+      "Review summary"
+    ],
+    "assetPlaceholders": [
+      {
+        "key": "explorer-ct-placeholder",
+        "label": "CT placeholder panel",
+        "folder": "assets/ct",
+        "note": "Swap in approved de-identified teaching art later without UI changes."
+      },
+      {
+        "key": "explorer-bronchoscopy-placeholder",
+        "label": "Bronchoscopy placeholder panel",
+        "folder": "assets/bronchoscopy",
+        "note": "Reserve for future airway landmark assets."
+      },
+      {
+        "key": "explorer-ultrasound-placeholder",
+        "label": "Ultrasound placeholder panel",
+        "folder": "assets/ultrasound",
+        "note": "Reserve for future EBUS view assets."
+      }
+    ],
+    "relatedStationIds": [
+      "2R",
+      "2L",
+      "4R",
+      "4L",
+      "7",
+      "10R",
+      "10L",
+      "11Rs",
+      "11Ri",
+      "11L"
+    ]
+  },
+  {
+    "id": "tnm-staging",
+    "slug": "tnm-staging",
+    "shortTitle": "TNM-9",
+    "title": "IASLC 9th Edition TNM Staging",
+    "summary": "Teach T, N, M descriptors and stage grouping through a searchable reference, interactive stager, visual builders, station-map integration, and cases.",
+    "overview": "This module translates IASLC 9th-edition lung cancer TNM staging into a touch-friendly educational workflow for EBUS learners. It is not a diagnostic device.",
+    "estimatedMinutes": 30,
+    "featureFolder": "features/tnm-staging",
+    "route": "/tnm-staging",
+    "goals": [
+      "Apply T, N, and M descriptors with a consistent 9th-edition stage matrix.",
+      "Distinguish N2a from N2b and M1c1 from M1c2.",
+      "Connect positive EBUS/PET stations to cN while preserving laterality and systematic staging context."
+    ],
+    "plannedExperiences": [
+      "Searchable reference cards",
+      "Interactive TNM stager",
+      "Visual T-descriptor builder",
+      "N descriptor map",
+      "Case-based staging scenarios"
+    ],
+    "assetPlaceholders": [
+      {
+        "key": "tnm-lung-schematic",
+        "label": "App-owned lung schematic",
+        "folder": "features/tnm-staging",
+        "note": "Rendered as local SVG/CSS for educational staging practice."
+      }
+    ],
+    "relatedStationIds": [
+      "2R",
+      "2L",
+      "4R",
+      "4L",
+      "7",
+      "10R",
+      "10L",
+      "11Rs",
+      "11Ri",
+      "11L"
+    ]
+  },
+  {
+    "id": "case-3d-explorer",
+    "slug": "case-3d-explorer",
+    "shortTitle": "3D Explorer",
+    "title": "3D Anatomy + Slice Explorer",
+    "summary": "Explore one curated EBUS case with linked station selection, derived CT slice jumps, and structure filters.",
+    "overview": "This module enriches a local case manifest at build time from markup control points, CT geometry, GLB mesh names, and exported slice stacks so the learner can move between stations and landmarks without hardcoded frame indices.",
+    "estimatedMinutes": 16,
+    "category": "anatomy",
+    "status": "available",
+    "featureFolder": "features/case3d",
+    "route": "/modules/case-3d-explorer",
+    "goals": [
+      "Link station and target selection to derived axial, coronal, and sagittal slice indices.",
+      "Let the learner filter the case by lymph nodes, airway, vessels, cardiac, and GI structures.",
+      "Persist resume state, visited targets, and lightweight review scoring locally."
+    ],
+    "plannedExperiences": [
+      "Intro panel",
+      "Station and target selector",
+      "Derived 3D target navigator",
+      "Single-plane slice viewer",
+      "Teaching card",
+      "Five-prompt review",
+      "Summary"
+    ],
+    "assetPlaceholders": [
+      {
+        "key": "case-001-glb",
+        "label": "Case 001 segmented GLB",
+        "folder": "model",
+        "note": "Bundled locally and verified against expected mesh names at build time."
+      },
+      {
+        "key": "case-001-slices",
+        "label": "Case 001 CT slice series",
+        "folder": "model/sliceSeries",
+        "note": "Frame indices are derived from the CT volume geometry and markup control points."
+      }
+    ],
+    "relatedStationIds": [
+      "1R",
+      "1L",
+      "2R",
+      "2L",
+      "3A",
+      "4R",
+      "4L",
+      "5",
+      "6",
+      "7",
+      "10R",
+      "10L",
+      "11L",
+      "11Ri",
+      "11Rs"
+    ]
+  }
+]

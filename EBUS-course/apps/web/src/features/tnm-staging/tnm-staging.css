@@ -1,0 +1,392 @@
+.tnm-page {
+  --tnm-cyan: #7fbdf2;
+  --tnm-green: #8fe0c0;
+  --tnm-gold: #e6bd79;
+  --tnm-rose: #e1a1a8;
+}
+
+.tnm-hero .sub-tab-row {
+  margin-top: 18px;
+}
+
+.tnm-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.tnm-search {
+  max-width: 540px;
+}
+
+.tnm-reference-grid,
+.tnm-control-stack,
+.tnm-stager-selectors,
+.tnm-selector-group,
+.tnm-adjacent-list,
+.tnm-case-workspace {
+  display: grid;
+  gap: 14px;
+}
+
+.tnm-reference-card {
+  display: grid;
+  gap: 14px;
+}
+
+.tnm-change-callout {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(230, 189, 121, 0.28);
+  background: rgba(71, 49, 21, 0.28);
+}
+
+.tnm-change-callout--warning {
+  border-color: rgba(225, 161, 168, 0.34);
+  background: rgba(76, 32, 41, 0.3);
+}
+
+.tnm-change-callout p {
+  margin-bottom: 0;
+}
+
+.tnm-stage-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 112px;
+  min-height: 74px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(127, 189, 242, 0.24);
+  background: rgba(45, 108, 163, 0.18);
+  color: var(--text);
+}
+
+.tnm-stage-badge span {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.tnm-stage-badge strong {
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(1.35rem, 1.1rem + 0.9vw, 2rem);
+}
+
+.tnm-stage-badge--t {
+  border-color: rgba(143, 224, 192, 0.28);
+  background: rgba(39, 111, 83, 0.18);
+}
+
+.tnm-stage-badge--n {
+  border-color: rgba(230, 189, 121, 0.28);
+  background: rgba(96, 66, 27, 0.2);
+}
+
+.tnm-stager-layout,
+.tnm-builder-layout,
+.tnm-nmap-layout,
+.tnm-case-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.tnm-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.tnm-option,
+.tnm-case-list-item,
+.tnm-status-button,
+.tnm-check-card,
+.tnm-result-panel,
+.tnm-control-panel,
+.tnm-case-stem,
+.tnm-case-feedback,
+.tnm-tag-performance {
+  border: 1px solid rgba(123, 163, 200, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+}
+
+.tnm-option,
+.tnm-case-list-item,
+.tnm-status-button {
+  text-align: left;
+}
+
+.tnm-option {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+}
+
+.tnm-option strong,
+.tnm-case-list-item strong {
+  font-family: 'Space Mono', monospace;
+}
+
+.tnm-option span,
+.tnm-case-list-item span,
+.tnm-case-list-item small {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.tnm-option--active,
+.tnm-case-list-item--active {
+  border-color: rgba(127, 189, 242, 0.42);
+  background: rgba(45, 108, 163, 0.24);
+}
+
+.tnm-result-panel,
+.tnm-control-panel,
+.tnm-case-stem,
+.tnm-case-feedback,
+.tnm-tag-performance {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+}
+
+.tnm-result-panel h3,
+.tnm-case-stem h3,
+.tnm-case-feedback h3 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.tnm-result-panel p,
+.tnm-case-stem p,
+.tnm-case-feedback p,
+.tnm-tag-performance p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.tnm-adjacent-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(7, 17, 29, 0.38);
+  border: 1px solid rgba(123, 163, 200, 0.1);
+}
+
+.tnm-adjacent-card p {
+  grid-column: 1 / -1;
+  font-size: 0.86rem;
+}
+
+.tnm-builder-visual,
+.tnm-map-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.tnm-lung-schematic {
+  width: 100%;
+  min-height: 420px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(123, 163, 200, 0.14);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(127, 189, 242, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(10, 20, 32, 0.94), rgba(6, 13, 23, 0.98));
+}
+
+.tnm-lung-schematic__lung {
+  fill: rgba(127, 189, 242, 0.12);
+  stroke: rgba(127, 189, 242, 0.32);
+  stroke-width: 1.5;
+}
+
+.tnm-lung-schematic__lung--active {
+  fill: rgba(143, 224, 192, 0.14);
+  stroke: rgba(143, 224, 192, 0.5);
+}
+
+.tnm-lung-schematic__airway {
+  fill: none;
+  stroke: rgba(235, 241, 245, 0.52);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.tnm-lung-schematic__tumor {
+  fill: rgba(225, 161, 168, 0.76);
+  stroke: rgba(255, 230, 232, 0.96);
+  stroke-width: 1.5;
+}
+
+.tnm-lung-schematic__tumor--t3,
+.tnm-lung-schematic__tumor--t4 {
+  fill: rgba(230, 189, 121, 0.8);
+}
+
+.tnm-lung-schematic__nodule {
+  fill: rgba(127, 189, 242, 0.75);
+  stroke: rgba(231, 245, 255, 0.95);
+  stroke-width: 1.2;
+}
+
+.tnm-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.tnm-check-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.tnm-check-card input {
+  width: 20px;
+  height: 20px;
+}
+
+.tnm-check-card span {
+  display: grid;
+  gap: 2px;
+}
+
+.tnm-check-card small {
+  color: var(--text-muted);
+  font-family: 'Space Mono', monospace;
+}
+
+.station-node--sampled-negative {
+  background: rgba(18, 52, 41, 0.9);
+  border-color: rgba(143, 224, 192, 0.78);
+  color: #d8ffee;
+}
+
+.station-node--positive {
+  background: rgba(96, 43, 47, 0.94);
+  border-color: rgba(225, 161, 168, 0.86);
+  color: #ffe5e8;
+}
+
+.tnm-status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tnm-status-pill,
+.tnm-status-button {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+}
+
+.tnm-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(123, 163, 200, 0.14);
+}
+
+.tnm-status-pill--sampled-negative,
+.tnm-status-button--sampled-negative {
+  border-color: rgba(143, 224, 192, 0.34);
+  background: rgba(18, 52, 41, 0.38);
+}
+
+.tnm-status-pill--positive,
+.tnm-status-button--positive {
+  border-color: rgba(225, 161, 168, 0.38);
+  background: rgba(76, 32, 41, 0.4);
+}
+
+.tnm-external-nodes,
+.tnm-station-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.tnm-status-button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.tnm-case-layout {
+  grid-template-columns: minmax(220px, 0.38fr) minmax(0, 1fr);
+}
+
+.tnm-case-list {
+  display: grid;
+  gap: 10px;
+  max-height: 780px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.tnm-case-list-item {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+}
+
+.tnm-case-findings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tnm-case-findings > div {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(7, 17, 29, 0.34);
+}
+
+.tnm-case-answer {
+  display: grid;
+  gap: 16px;
+}
+
+.tnm-case-feedback {
+  border-color: rgba(225, 161, 168, 0.3);
+  background: rgba(76, 32, 41, 0.22);
+}
+
+.tnm-case-feedback--correct {
+  border-color: rgba(143, 224, 192, 0.34);
+  background: rgba(18, 52, 41, 0.32);
+}
+
+@media (max-width: 920px) {
+  .tnm-stager-layout,
+  .tnm-builder-layout,
+  .tnm-nmap-layout,
+  .tnm-case-layout,
+  .tnm-case-findings {
+    grid-template-columns: 1fr;
+  }
+
+  .tnm-lung-schematic {
+    min-height: 320px;
+  }
+}

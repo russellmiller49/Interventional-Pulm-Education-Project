@@ -1,0 +1,206 @@
+[
+  {
+    "id": "mediastinum-boundary-01",
+    "moduleId": "station-map",
+    "prompt": "¿Qué referencia divide 2R de 2L y también 4R de 4L en el mapa IASLC?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "La línea media traqueal",
+        "rationale": "Incorrecto. Usar la línea media traqueal es el atajo antiguo que etiqueta mal la lateralidad."
+      },
+      {
+        "id": "b",
+        "label": "El borde lateral izquierdo de la tráquea",
+        "rationale": "Correcto. IASLC usa el borde lateral izquierdo de la tráquea para los pares de estaciones 2 y 4."
+      },
+      {
+        "id": "c",
+        "label": "La carina",
+        "rationale": "Incorrecto. La carina ancla la estación 7, pero no divide los pares paratraqueales derecho e izquierdo."
+      },
+      {
+        "id": "d",
+        "label": "La reflexión pleural",
+        "rationale": "Incorrecto. La reflexión pleural no es el divisor clave para estos pares de estaciones."
+      }
+    ],
+    "correctOptionIds": [
+      "b"
+    ],
+    "explanation": "El borde lateral izquierdo de la tráquea es el divisor crítico entre 2R y 2L, y entre 4R y 4L. Esta regla importa porque un error de lateralidad puede convertirse en un error de estadificación.",
+    "difficulty": "basic",
+    "tags": [
+      "station-map",
+      "boundaries",
+      "2R",
+      "2L",
+      "4R",
+      "4L"
+    ]
+  },
+  {
+    "id": "mediastinum-4r-10r-02",
+    "moduleId": "station-map",
+    "prompt": "¿Qué límite separa mejor 4R de 10R?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "El margen inferior de la vena ácigos",
+        "rationale": "Correcto. 4R está por encima del borde inferior de la vena ácigos y 10R está por debajo."
+      },
+      {
+        "id": "b",
+        "label": "El borde superior del arco aórtico",
+        "rationale": "Incorrecto. Esa referencia es más relevante para las estaciones mediastínicas izquierdas superiores."
+      },
+      {
+        "id": "c",
+        "label": "El borde lateral izquierdo de la tráquea",
+        "rationale": "Incorrecto. Eso divide las estaciones paratraqueales derecha e izquierda, no 4R de 10R."
+      },
+      {
+        "id": "d",
+        "label": "El borde inferior del bronquio intermedio",
+        "rationale": "Incorrecto. Eso se relaciona con la extensión inferior de la estación 7, no con la transición de 4R a 10R."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "A la derecha, el borde inferior de la vena ácigos es el divisor clave entre 4R y 10R. En el lado izquierdo se usa el borde superior de la arteria pulmonar principal izquierda para la distinción análoga entre 4L y 10L.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-map",
+      "4R",
+      "10R",
+      "boundaries"
+    ]
+  },
+  {
+    "id": "mediastinum-station7-03",
+    "moduleId": "station-map",
+    "prompt": "Un primario pulmonar izquierdo tiene compromiso maligno de la estación 7. ¿Cuál es el punto docente de estadificación más preciso?",
+    "type": "case-vignette",
+    "caseTitle": "Estación de línea media, no una trampa de lateralidad",
+    "caseSummary": "El alumno teme que un ganglio subcarinal de línea media pueda contarse como enfermedad contralateral.",
+    "options": [
+      {
+        "id": "a",
+        "label": "La estación 7 se considera enfermedad mediastínica ipsilateral (N2), independientemente del lado del primario",
+        "rationale": "Correcto. La estación 7 es una estación mediastínica de línea media y sigue siendo N2 independientemente de la lateralidad tumoral."
+      },
+      {
+        "id": "b",
+        "label": "Siempre que el primario esté en el lado opuesto del mediastino, la estación 7 se convierte en N3",
+        "rationale": "Incorrecto. Esa lógica de lateralidad se aplica a estaciones mediastínicas lateralizadas, no a la estación 7."
+      },
+      {
+        "id": "c",
+        "label": "La estación 7 es hiliar, por lo que la enfermedad ipsilateral es N1",
+        "rationale": "Incorrecto. La estación 7 es enfermedad mediastínica subcarinal, no enfermedad hiliar."
+      },
+      {
+        "id": "d",
+        "label": "La estación 7 no tiene importancia de estadificación porque es de línea media",
+        "rationale": "Incorrecto. Es una de las estaciones mediastínicas más importantes para la estadificación."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "La estación 7 es la excepción importante a los atajos basados en lateralidad. Es de línea media y se trata como enfermedad mediastínica ipsilateral sin importar en qué pulmón esté el tumor primario.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-map",
+      "station-7",
+      "staging"
+    ]
+  },
+  {
+    "id": "mediastinum-left-handoff-04",
+    "moduleId": "station-map",
+    "prompt": "Seleccione las características que apoyan llamar 10L, en lugar de 4L, a un ganglio del lado izquierdo.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "El ganglio se encuentra por debajo del borde superior de la arteria pulmonar principal izquierda",
+        "rationale": "Correcto. Eso apoya 10L en lugar de 4L."
+      },
+      {
+        "id": "b",
+        "label": "El ganglio se comporta como un objetivo hiliar adyacente al bronquio principal izquierdo, no como uno paratraqueal",
+        "rationale": "Correcto. La relación hiliar apoya 10L."
+      },
+      {
+        "id": "c",
+        "label": "El ganglio está claramente por encima del margen de la arteria pulmonar principal izquierda y sigue siendo paratraqueal",
+        "rationale": "Incorrecto. Esa descripción apoya 4L, no 10L."
+      },
+      {
+        "id": "d",
+        "label": "El ganglio es medial al ligamento arterioso en la región paratraqueal",
+        "rationale": "Incorrecto. Eso nuevamente suena más a 4L que a 10L."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b"
+    ],
+    "explanation": "La transición hiliar izquierda combina una regla vascular y una regla regional. 10L comienza por debajo del borde superior de la arteria pulmonar principal izquierda y se comporta como una estación hiliar, no paratraqueal.",
+    "difficulty": "advanced",
+    "tags": [
+      "station-map",
+      "4L",
+      "10L",
+      "boundaries"
+    ]
+  },
+  {
+    "id": "mediastinum-right-stack-05",
+    "moduleId": "station-map",
+    "prompt": "Ordene estas estaciones derechas desde la más superior hasta la más distal a lo largo de la vía aérea central.",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "2R",
+        "label": "2R",
+        "rationale": "Esta es la estación paratraqueal superior derecha."
+      },
+      {
+        "id": "4R",
+        "label": "4R",
+        "rationale": "Esta se ubica por debajo de 2R y por encima de la transición hiliar derecha."
+      },
+      {
+        "id": "10R",
+        "label": "10R",
+        "rationale": "Esta es la referencia hiliar derecha por debajo de 4R."
+      },
+      {
+        "id": "11Rs",
+        "label": "11Rs",
+        "rationale": "Esta es más distal en la región interlobar/del origen del lóbulo superior derecho."
+      }
+    ],
+    "correctOptionIds": [
+      "2R",
+      "4R",
+      "10R",
+      "11Rs"
+    ],
+    "explanation": "La secuencia de aprendizaje del lado derecho es 2R por encima de 4R, luego 10R en la transición hiliar y después las subestaciones 11R más distales a lo largo de la vía de ramificación.",
+    "difficulty": "basic",
+    "tags": [
+      "station-map",
+      "ordering",
+      "2R",
+      "4R",
+      "10R",
+      "11Rs"
+    ]
+  }
+]

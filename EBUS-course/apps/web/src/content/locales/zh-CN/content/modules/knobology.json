@@ -1,0 +1,203 @@
+{
+  "primerSections": [
+    {
+      "id": "depth",
+      "title": "深度",
+      "summary": "深度会改变屏幕中能容纳多少组织。目标被截断时应增加深度；目标很小并埋在未利用空间中时应降低深度。",
+      "bestMove": "将目标取景在图像中间三分之一处，使其位置合适。",
+      "pitfall": "目标过浅或过深都会使其他每个控制项更难判断。"
+    },
+    {
+      "id": "gain",
+      "title": "增益",
+      "summary": "增益会使整幅图像变亮或变暗。边界消失在暗背景中时提高增益；图像变得发白且噪声增多时降低增益。",
+      "bestMove": "调节到目标可见，但不要让整幅图像充满雾状伪影。",
+      "pitfall": "初学者常常矫枉过正，使边缘被洗掉。"
+    },
+    {
+      "id": "contrast",
+      "title": "对比度",
+      "summary": "对比度可以区分细微灰阶，帮助学习者看清边界在哪里结束、背景杂讯从哪里开始。",
+      "bestMove": "在深度和增益已经合理后再使用对比度。",
+      "pitfall": "高增益加低对比度会产生平坦图像，边缘定义差。"
+    },
+    {
+      "id": "color-doppler",
+      "title": "彩色多普勒",
+      "summary": "彩色多普勒可增加血流信息，使学习者在规划路径前识别血管。",
+      "bestMove": "需要判断某结构是否可能为血管时开启它。",
+      "pitfall": "把它作为第一个调节步骤，而不是先修正取景和亮度。"
+    },
+    {
+      "id": "calipers",
+      "title": "测量卡尺",
+      "summary": "目标边缘可见后，测量卡尺可提供快速测量参考。",
+      "bestMove": "只有在图像稳定且边缘清楚后再放置卡尺。",
+      "pitfall": "在边界尚未清晰定义前测量。"
+    },
+    {
+      "id": "freeze",
+      "title": "冻结",
+      "summary": "冻结会锁定当前画面，便于学习者检查、测量或保存。",
+      "bestMove": "图像取景正确且准备检查细节时再冻结。",
+      "pitfall": "在图像冻结时还试图继续调节控制项。"
+    },
+    {
+      "id": "save",
+      "title": "保存",
+      "summary": "保存会在图像完成取景、检查并可选测量后捕获教学画面。",
+      "bestMove": "确认该图像值得保留后再使用。",
+      "pitfall": "未经确认就保存质量差的画面。"
+    }
+  ],
+  "controlLabExercises": [
+    {
+      "id": "depth-rescue",
+      "title": "补救 1：让淋巴结进入视野",
+      "symptom": "目标淋巴结挤在画面顶部，学习者看不到其下方组织。",
+      "instructions": "增加深度，直到淋巴结更接近画面中央。",
+      "focusControl": "depth",
+      "start": {
+        "depth": 28,
+        "gain": 29,
+        "contrast": 43
+      },
+      "target": {
+        "depth": 60,
+        "gain": 29,
+        "contrast": 43
+      },
+      "successMessage": "现在深度使目标取景更清楚。这是继续扫描的更好起点。"
+    },
+    {
+      "id": "gain-rescue",
+      "title": "补救 2：把图像从黑暗中提亮",
+      "symptom": "画面增益不足，目标边界混入暗背景中。",
+      "instructions": "适当提高增益以显示目标，但不要让图像变得粉白。",
+      "focusControl": "gain",
+      "start": {
+        "depth": 40,
+        "gain": 0,
+        "contrast": 43
+      },
+      "target": {
+        "depth": 40,
+        "gain": 43,
+        "contrast": 43
+      },
+      "successMessage": "现在增益显示出边界，但没有让屏幕过亮。"
+    },
+    {
+      "id": "contrast-rescue",
+      "title": "补救 3：将边界与雾状背景分开",
+      "symptom": "图像虽亮但平坦，目标边缘难以与周围组织区分。",
+      "instructions": "增加对比度并适当降低增益，以恢复边缘清晰度。",
+      "focusControl": "contrast",
+      "start": {
+        "depth": 60,
+        "gain": 57,
+        "contrast": 0
+      },
+      "target": {
+        "depth": 60,
+        "gain": 29,
+        "contrast": 43
+      },
+      "successMessage": "对比度再次把目标与背景分开，画面更易读。"
+    }
+  ],
+  "dopplerLab": {
+    "title": "彩色多普勒血管检查",
+    "brief": "这只是教学近似演示。开启多普勒后，判断哪条路径能避开被颜色填充的血管。",
+    "prompt": "多普勒显示血管后，哪条穿刺路径最安全？",
+    "safePathId": "posterior-lateral",
+    "paths": [
+      {
+        "id": "anterior",
+        "label": "前方路径",
+        "description": "多普勒开启后会横穿血管。"
+      },
+      {
+        "id": "central",
+        "label": "中央路径",
+        "description": "直接穿过最亮的血流信号。"
+      },
+      {
+        "id": "posterior-lateral",
+        "label": "后外侧路径",
+        "description": "绕过血管成角进入，而不是穿过血管。"
+      }
+    ]
+  },
+  "quickReferenceCards": [
+    {
+      "id": "depth",
+      "title": "深度",
+      "whenToUse": "目标被截断或漂在过多空白空间中时。",
+      "whatChanges": "垂直视野中容纳多少解剖结构。",
+      "noviceTrap": "试图用增益修正取景问题。"
+    },
+    {
+      "id": "gain",
+      "title": "增益",
+      "whenToUse": "整幅图像过暗或过亮时。",
+      "whatChanges": "整体图像亮度。",
+      "noviceTrap": "过度增益使目标边界消失在雾状亮度中。"
+    },
+    {
+      "id": "contrast",
+      "title": "对比度",
+      "whenToUse": "取景和亮度接近合适，但边界仍然模糊时。",
+      "whatChanges": "细微灰阶之间的区分。",
+      "noviceTrap": "图像看起来明亮但平坦时忽略对比度。"
+    },
+    {
+      "id": "color-doppler",
+      "title": "彩色多普勒",
+      "whenToUse": "某结构可能为血管且学习者需要确认血流时。",
+      "whatChanges": "在灰阶图像上叠加彩色血流信息。",
+      "noviceTrap": "在基本取景未修正前就开启多普勒。"
+    },
+    {
+      "id": "calipers",
+      "title": "测量卡尺",
+      "whenToUse": "目标边缘清楚且画面稳定后。",
+      "whatChanges": "添加测量叠加层。",
+      "noviceTrap": "测量尚未优化的边界。"
+    },
+    {
+      "id": "freeze",
+      "title": "冻结",
+      "whenToUse": "学习者想检查或测量一张好图像时。",
+      "whatChanges": "锁定当前图像。",
+      "noviceTrap": "试图在冻结画面上继续调节控制项。"
+    },
+    {
+      "id": "save",
+      "title": "保存",
+      "whenToUse": "当画面值得保留用于教学复习时。",
+      "whatChanges": "捕获当前教学画面。",
+      "noviceTrap": "在检查取景、多普勒或测量前就保存。"
+    }
+  ],
+  "quizQuestionIds": [
+    "knobology-sequence-01",
+    "knobology-cp-vs-rp-02",
+    "knobology-artifact-03",
+    "knobology-order-04",
+    "knobology-necrosis-05",
+    "knobology-doppler-06"
+  ],
+  "assetPlaceholders": [
+    {
+      "key": "knobology-frame-placeholder",
+      "label": "模拟灰阶教学图像",
+      "note": "当前模块使用渲染的占位形状，不是真实的超声静态图。"
+    },
+    {
+      "key": "knobology-doppler-placeholder",
+      "label": "模拟多普勒叠加层",
+      "note": "当前血管信号仅为示意，后续应替换为获批教学图像。"
+    }
+  ]
+}

@@ -13,6 +13,8 @@ const config = [
       '**/fluoro-viewer/public/**',
       '**/fluoro-viewer/dist/**',
       'in-development/**',
+      'navigation_module/**',
+      'EBUS-course/**',
       '**/.deploy_push/**',
     ],
   },

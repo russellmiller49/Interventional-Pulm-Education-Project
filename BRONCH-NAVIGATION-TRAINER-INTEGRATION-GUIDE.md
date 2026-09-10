@@ -1,52 +1,27 @@
 # Bronch Navigation Trainer Integration Guide
 
-The Bronch Navigation Trainer is authored outside this repository and served by
-the main website as a built static app, matching the SoCal EBUS course pattern.
+The trainer source lives in `navigation_module/` inside this repository. Its Vite
+app is `navigation_module/web`; the Python preparation tools remain beside it.
 
-## Quick Summary
+- Edit UI and controller behavior in `navigation_module/web/src`.
+- Edit cases and calibration in `navigation_module/web/public/cases`.
+- Run `npm run dev:navigation` for the Vite authoring app with scope debug enabled.
+- Run `npm run dev` for the main site. It builds both embedded apps on startup and
+  automatically rebuilds changed source; reload the iframe after a rebuild.
+- Run `npm run build` to build both apps and the main site for deployment.
 
-- Source app: `/Users/russellmiller/Projects/navigation_module/web`
-- Main-site wrapper: `src/app/bronch-navigation-trainer/page.tsx`
-- Generated static app: `public/bronch-navigation-trainer/app`
-- Sync command: `npm run sync:bronch-navigation-trainer`
+The wrapper and URLs remain `/bronch-navigation-trainer` and
+`/bronch-navigation-trainer/app/index.html`. Embedded builds set
+`VITE_ENABLE_SCOPE_DEBUG=false` and the appropriate subpath, and prune candidate
+sidecars. The existing loopback-only authoring behavior is preserved.
 
-Do not hand-edit files under `public/bronch-navigation-trainer/app`; they are
-replaced each time the sync command runs.
+`public/bronch-navigation-trainer/app` is ignored generated output. Never edit or
+commit it. An individual rebuild is available as
+`npm run build:bronch-navigation-trainer`; repository syncing is no longer needed.
 
-## External Build Behavior
+Both apps import the shared controller source at `src/lib/scope-input/core`.
+Runtime cases are committed under the source app and ship with the standalone
+site. Offline source scans under `navigation_module/data`, annotations, and
+pipeline outputs stay local under the existing raw-data policy.
 
-The sync command builds the trainer with:
-
-```bash
-VITE_ENABLE_SCOPE_DEBUG=false
-VITE_BASE_PATH=/bronch-navigation-trainer/app/
-vite build
-```
-
-That keeps the public embedded version free of authoring-only tools: Scope
-debug controls, candidate-label loading and overlays, and the central airway
-review panel. The sync script also prunes generated candidate sidecar JSON from
-the public app folder. The source repo keeps the default debug-enabled,
-root-hosted workflow for calibration and local development.
-
-## Standard Update Workflow
-
-1. Edit trainer code in:
-
-```bash
-cd /Users/russellmiller/Projects/navigation_module/web
-```
-
-2. Rebuild and copy it into the main site:
-
-```bash
-cd /Users/russellmiller/Projects/Interventional-Pulm-Education-Project
-npm run sync:bronch-navigation-trainer
-```
-
-3. Verify the main site:
-
-```bash
-npm run build
-npm run type-check
-```
+See [migration notes](docs/training-project-migration.md) for provenance and checks.

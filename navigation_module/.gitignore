@@ -1,0 +1,19 @@
+.venv/
+outputs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.DS_Store
+web/node_modules/
+web/dist/
+web/public/cases/*/*.raw
+external_repos/
+annotations/
+
+# Offline source scans remain local; runtime cases are versioned.
+/data/
+/Airway.seg.nrrd
+*.zip
+!web/public/cases/**/*.stl
+!web/public/cases/**/*.raw

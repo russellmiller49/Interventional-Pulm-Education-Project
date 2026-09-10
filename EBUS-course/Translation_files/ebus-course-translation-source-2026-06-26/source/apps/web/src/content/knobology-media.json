@@ -1,0 +1,35 @@
+{
+  "depth": {
+    "clips": [
+      "/media/knobology/Depth_segments/Depth4.mp4"
+    ],
+    "caption": "The control lab now seeks into depth-specific local EBUS clips instead of a single combined video."
+  },
+  "gain": {
+    "clips": [
+      "/media/knobology/Depth_segments/Depth4.mp4"
+    ],
+    "caption": "Gain controls select one of eight real EBUS gain clips at the current depth."
+  },
+  "contrast": {
+    "clips": [
+      "/media/knobology/Depth_segments/Depth4.mp4"
+    ],
+    "caption": "Contrast controls select one of eight real EBUS contrast clips at the current depth."
+  },
+  "color-doppler": {
+    "clips": [
+      "/media/knobology/Depth_segments/Depth4.mp4"
+    ],
+    "caption": "Flow preview uses the timestamped Color Flow, Power Flow, and H-flow clips at the active depth."
+  },
+  "calipers": {
+    "caption": "Add a measured still frame to demonstrate correct caliper placement."
+  },
+  "freeze": {
+    "caption": "Add a frozen teaching frame that highlights the inspection step before measurement."
+  },
+  "save": {
+    "caption": "Add a final saved-frame example once a canonical teaching capture is available."
+  }
+}

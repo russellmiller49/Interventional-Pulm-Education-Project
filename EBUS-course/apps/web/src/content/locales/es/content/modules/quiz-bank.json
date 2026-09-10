@@ -1,0 +1,156 @@
+[
+  {
+    "id": "knobology-depth-01",
+    "moduleId": "knobology",
+    "prompt": "Una estructura objetivo aparece demasiado superficial en la pantalla. ¿Qué control debe ajustar primero el alumno?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Profundidad"
+      },
+      {
+        "id": "b",
+        "label": "Congelar"
+      },
+      {
+        "id": "c",
+        "label": "Guardar"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "La profundidad es el primer control que debe ajustarse cuando la anatomía objetivo no está correctamente encuadrada."
+  },
+  {
+    "id": "knobology-gain-02",
+    "moduleId": "knobology",
+    "prompt": "La imagen está globalmente demasiado oscura y el borde del objetivo es difícil de ver. ¿Qué debe cambiar luego el alumno?",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "Aumentar la ganancia"
+      },
+      {
+        "id": "b",
+        "label": "Congelar la imagen"
+      },
+      {
+        "id": "c",
+        "label": "Guardar la imagen"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "La ganancia es el control de brillo. Debe ajustarse antes de congelar o guardar una imagen deficiente."
+  },
+  {
+    "id": "knobology-contrast-03",
+    "moduleId": "knobology",
+    "prompt": "La imagen es brillante pero plana, por lo que el borde se mezcla con la neblina de fondo. ¿Qué control restaura mejor la separación?",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "Contraste"
+      },
+      {
+        "id": "b",
+        "label": "Guardar"
+      },
+      {
+        "id": "c",
+        "label": "Calibradores"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "El contraste ayuda a separar tonos sutiles una vez que el encuadre y el brillo ya están cerca de lo adecuado."
+  },
+  {
+    "id": "knobology-doppler-04",
+    "moduleId": "knobology",
+    "prompt": "¿Qué control debe usar el alumno para verificar si una estructura sospechosa es vascular antes de planificar un trayecto?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Doppler color"
+      },
+      {
+        "id": "b",
+        "label": "Congelar"
+      },
+      {
+        "id": "c",
+        "label": "Profundidad"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "El Doppler color añade información de flujo que puede revelar un vaso oculto en la imagen en escala de grises."
+  },
+  {
+    "id": "knobology-freeze-save-05",
+    "moduleId": "knobology",
+    "prompt": "¿Qué secuencia tiene más sentido después de que la imagen está bien encuadrada y el borde del objetivo es claro?",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "Congelar, medir con calibradores si es necesario y luego guardar"
+      },
+      {
+        "id": "b",
+        "label": "Guardar primero y luego corregir profundidad y ganancia"
+      },
+      {
+        "id": "c",
+        "label": "Apagar Doppler y luego ignorar el borde"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "Congelar es útil una vez que la imagen es buena, los calibradores vienen después de que el borde está claro y guardar debe ocurrir al final."
+  },
+  {
+    "id": "station-map-7-01",
+    "moduleId": "station-map",
+    "prompt": "¿Qué estación suele estar centrada debajo de la carina y es una estación central de estadificación?",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "4R"
+      },
+      {
+        "id": "b",
+        "label": "7"
+      },
+      {
+        "id": "c",
+        "label": "11L"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "La estación 7 es la estación subcarinal y sigue siendo una referencia central de alto rendimiento."
+  },
+  {
+    "id": "explorer-confusion-01",
+    "moduleId": "station-explorer",
+    "prompt": "Un alumno confunde 10R con 11R al revisar referencias de vía aérea. ¿Qué debe enfatizar luego el explorador?",
+    "type": "scenario",
+    "options": [
+      {
+        "id": "a",
+        "label": "Resaltar el par de confusión y la referencia de vía aérea adyacente"
+      },
+      {
+        "id": "b",
+        "label": "Ocultar la lista de verificación de referencias"
+      },
+      {
+        "id": "c",
+        "label": "Saltar directamente a la pantalla de resumen"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "El contrato del explorador mantiene locales los pares de confusión y las pistas de referencia para que el desafío de reconocimiento pueda reforzarlos."
+  }
+]

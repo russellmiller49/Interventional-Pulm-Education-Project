@@ -1,0 +1,224 @@
+{
+  "courseTitle": "10th Annual Southwest Regional Pulmonary/PCCM Fellow EBUS Course",
+  "hostLine": "Hosted by Loma Linda University Health",
+  "hostDepartment": "Division of Pulmonary, Critical Care, Hyperbaric and Sleep Medicine",
+  "dateLabel": "Sunday, May 31, 2026",
+  "timeLabel": "7:30 am to 5:00 pm",
+  "venueName": "Loma Linda Centennial Complex",
+  "venueDetail": "Loma Linda University School of Medicine",
+  "audience": "Designed to set expectations early for first-year pulmonary and pulmonary-critical care fellows who are building the cognitive and technical foundations of EBUS.",
+  "overview": "A flipped, simulation-first regional EBUS course that helps fellows arrive with the staging logic, anatomy framework, and procedural muscle memory needed for a more standardized mediastinal evaluation.",
+  "quickFacts": [
+    {
+      "value": "10th",
+      "label": "annual regional course",
+      "detail": "A longstanding Southwest fellowship training experience."
+    },
+    {
+      "value": ">15 hrs",
+      "label": "pre-course video prep",
+      "detail": "High-yield lectures are distributed 3 to 4 weeks before the live day."
+    },
+    {
+      "value": "~2.5:1",
+      "label": "fellow-to-faculty ratio",
+      "detail": "Small groups keep feedback direct and hands-on."
+    },
+    {
+      "value": "24+",
+      "label": "regional faculty",
+      "detail": "Faculty span LLU, Stanford, Cedars-Sinai, USC, UCSD, UCLA, UCI, and more."
+    }
+  ],
+  "positioningHighlights": [
+    "Built specifically for first-year pulmonary and PCCM fellows.",
+    "The only Southwest course of its kind pairing comprehensive didactics with live EBUS simulation.",
+    "Focused on standardizing both cognitive staging strategy and technical execution early in fellowship."
+  ],
+  "courseDirectors": [
+    "Ara A. Chrissian, MD",
+    "Lamia Aljundi, MD"
+  ],
+  "facultySummary": "Faculty listed on the flyer span LLU, Stanford, Cedars-Sinai, USC, UCSD, City of Hope, UCLA, UCI, Harbor-UCLA, Scripps, Eisenhower, UNLV, UT Southwestern, Navy, and the University at Buffalo.",
+  "facultyInstitutions": [
+    "Loma Linda University Health",
+    "Stanford",
+    "Cedars-Sinai",
+    "USC",
+    "UC San Diego",
+    "City of Hope",
+    "UCLA",
+    "UC Irvine",
+    "Harbor-UCLA",
+    "Scripps",
+    "Eisenhower",
+    "UNLV",
+    "UT Southwestern",
+    "Navy",
+    "University at Buffalo"
+  ],
+  "formatHighlights": [
+    "Flipped model with more than 15 hours of high-yield pre-course lectures prepared by faculty.",
+    "Live day is almost entirely simulation-based instead of lecture-heavy.",
+    "Small-group teaching model with a low fellow-to-faculty ratio.",
+    "Dedicated time for technology exposure, networking, and direct faculty interaction.",
+    "App-based pre- and post-testing with feedback is new for the 2026 course."
+  ],
+  "experienceHighlights": [
+    {
+      "title": "Flipped preparation",
+      "detail": "Faculty-created video lectures cover the core knowledge base before fellows step into the simulation center."
+    },
+    {
+      "title": "Simulation-first live day",
+      "detail": "The in-person session is built around stations, coached repetition, and deliberate practice rather than a lecture-heavy agenda."
+    },
+    {
+      "title": "Gamified anatomy and review",
+      "detail": "The flyer highlights a mediastinal anatomy game up front and a Final Jeopardy-style close to reinforce retention."
+    },
+    {
+      "title": "Low learner-to-faculty ratio",
+      "detail": "Small rotating teams create room for real-time correction, questions, and technique coaching."
+    },
+    {
+      "title": "Technology and networking time",
+      "detail": "Protected breaks are built into the day for hands-on technology exposure and fellow-faculty interaction."
+    },
+    {
+      "title": "App-based testing",
+      "detail": "The 2026 course introduces pre- and post-testing with feedback to tighten the learning loop."
+    }
+  ],
+  "prepWindow": "Preparatory materials are distributed 3 to 4 weeks before the live event and should be completed between May 1 and May 30, 2026.",
+  "prepTopics": [
+    "Welcome, introduction to the course, and fellow recognition.",
+    "Introduction to endobronchial ultrasound and the procedure nuts and bolts.",
+    "Mediastinal anatomy plus systematic lung cancer staging using TNM 9.",
+    "Approach to lymphoma and non-malignant thoracic disease.",
+    "Histology, molecular testing, and tissue adequacy.",
+    "Liquid biopsy, advanced EBUS techniques, and the 2026 evidence update.",
+    "Guideline-based planning, case synthesis, and the pre-course test."
+  ],
+  "liveSessionTracks": [
+    {
+      "title": "AM tools and techniques",
+      "detail": "Teams rotate through the mediastinal anatomy game, scope anatomy and assembly, the EBUS exam, standard needles and TBNA technique, plus advanced tools."
+    },
+    {
+      "title": "Technology and networking break",
+      "detail": "The morning schedule protects dedicated time in the main conference area for industry exposure and conversations across programs."
+    },
+    {
+      "title": "Midday honorary lecture",
+      "detail": "Lunch includes the AABIP guidelines session with Dr. Russell Miller before the afternoon synthesis block."
+    },
+    {
+      "title": "PM synthesis and execution",
+      "detail": "The afternoon shifts into case-based planning, advanced cases and techniques, and technical execution before the Final Jeopardy close."
+    }
+  ],
+  "liveDayAgenda": [
+    {
+      "time": "7:30-7:50",
+      "title": "Registration and breakfast",
+      "detail": "First floor of the Centennial Complex before team rotations begin."
+    },
+    {
+      "time": "8:00-8:20",
+      "title": "Welcome and course overview",
+      "detail": "All fellows meet in Damazo Auditorium."
+    },
+    {
+      "time": "8:35-12:00",
+      "title": "AM tools and techniques rotations",
+      "detail": "Mediastinal anatomy game, scope anatomy and assembly, EBUS exam, standard needles and TBNA technique, plus advanced tools."
+    },
+    {
+      "time": "10:20-10:50",
+      "title": "Technology and networking break",
+      "detail": "Protected time in the main conference area."
+    },
+    {
+      "time": "12:10-12:55",
+      "title": "Lunch and honorary lecture",
+      "detail": "AABIP guidelines session with Dr. Russell Miller."
+    },
+    {
+      "time": "13:10-16:00",
+      "title": "PM synthesis and execution rotations",
+      "detail": "Case-based planning, advanced cases and techniques, then technical execution."
+    },
+    {
+      "time": "16:15-17:00",
+      "title": "Final Jeopardy and farewell",
+      "detail": "All fellows reconvene in Damazo Auditorium to close the day."
+    }
+  ],
+  "addressLines": [
+    "24760 Stewart Street",
+    "Centennial Complex, 4th Floor",
+    "Loma Linda, CA 92354"
+  ],
+  "parkingNote": "Parking is directed to lot X off Campus Street.",
+  "travelNote": "The flyer includes separate driving directions for attendees coming from Los Angeles, Palm Springs, San Diego, and Las Vegas.",
+  "travelDirections": [
+    {
+      "origin": "From Los Angeles",
+      "detail": "Take I-10 East to the Tippecanoe/Anderson exit, continue to Stewart Street, then turn onto Campus Street and park in lot X."
+    },
+    {
+      "origin": "From Palm Springs",
+      "detail": "Take I-10 West to Tippecanoe/Anderson, head to Stewart Street, then Campus Street, and use lot X."
+    },
+    {
+      "origin": "From San Diego",
+      "detail": "Take I-15 North to I-215 North, exit Mt Vernon, continue on Washington/Barton to Campus Street, and park in lot X."
+    },
+    {
+      "origin": "From Las Vegas",
+      "detail": "Take I-15 South to I-10 East, exit at Tippecanoe/Anderson, then follow Stewart Street to Campus Street and lot X."
+    }
+  ],
+  "facilityUrl": "https://medicine.llu.edu/about/medical-simulation-center",
+  "endorsement": {
+    "text": "This educational activity is endorsed by the American Association for Bronchology and Interventional Pulmonology (AABIP).",
+    "image": {
+      "src": "/media/course/aabip-endorsement.png",
+      "alt": "American Association for Bronchology and Interventional Pulmonology logo"
+    }
+  },
+  "visuals": {
+    "logo": {
+      "src": "/media/course/loma-linda-school-of-medicine.png",
+      "alt": "Loma Linda University School of Medicine Department of Medicine logo"
+    },
+    "hero": {
+      "src": "/media/course/hands-on-sim-lab.jpg",
+      "alt": "Faculty coaching fellows during a hands-on bronchoscopy and ultrasound simulation station.",
+      "caption": "Hands-on coaching is a central part of the live day."
+    },
+    "inset": {
+      "src": "/media/course/fellows-and-faculty-group.jpg",
+      "alt": "Regional fellows and faculty gathered outside the course venue.",
+      "caption": "Regional fellows and faculty come together across programs."
+    },
+    "gallery": [
+      {
+        "src": "/media/course/simulation-bay-panorama.jpg",
+        "alt": "Multiple fellow groups rotating through a large simulation bay filled with bronchoscopy equipment.",
+        "caption": "Small rotating teams keep the live day active, social, and skills-focused."
+      },
+      {
+        "src": "/media/course/course-recognition-moment.jpg",
+        "alt": "Fellows and faculty gathered during an end-of-day recognition moment inside the classroom space.",
+        "caption": "The course is designed to feel coached and collegial from first welcome to final debrief."
+      },
+      {
+        "src": "/media/course/outdoor-group-portrait.jpg",
+        "alt": "A large outdoor group portrait of fellows and faculty from prior EBUS courses.",
+        "caption": "Regional faculty help fellows compare technique, workflow, and staging habits across programs."
+      }
+    ]
+  }
+}

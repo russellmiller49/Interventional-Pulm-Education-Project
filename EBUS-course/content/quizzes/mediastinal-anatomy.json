@@ -1,0 +1,206 @@
+[
+  {
+    "id": "mediastinum-boundary-01",
+    "moduleId": "station-map",
+    "prompt": "Which landmark divides 2R from 2L and also 4R from 4L in the IASLC map?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "The tracheal midline",
+        "rationale": "Incorrect. Using the tracheal midline is the old shortcut that mislabels laterality."
+      },
+      {
+        "id": "b",
+        "label": "The left lateral border of the trachea",
+        "rationale": "Correct. IASLC uses the left lateral tracheal border for both the 2 and 4 station pairs."
+      },
+      {
+        "id": "c",
+        "label": "The carina",
+        "rationale": "Incorrect. The carina anchors station 7 but does not divide the right and left paratracheal pairs."
+      },
+      {
+        "id": "d",
+        "label": "The pleural reflection",
+        "rationale": "Incorrect. Pleural reflection is not the key divider for these station pairs."
+      }
+    ],
+    "correctOptionIds": [
+      "b"
+    ],
+    "explanation": "The left lateral tracheal border is the critical divider for 2R versus 2L and 4R versus 4L. That rule matters because a laterality error can become a staging error.",
+    "difficulty": "basic",
+    "tags": [
+      "station-map",
+      "boundaries",
+      "2R",
+      "2L",
+      "4R",
+      "4L"
+    ]
+  },
+  {
+    "id": "mediastinum-4r-10r-02",
+    "moduleId": "station-map",
+    "prompt": "Which boundary best separates 4R from 10R?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "The inferior margin of the azygos vein",
+        "rationale": "Correct. 4R is above the lower rim of the azygos vein and 10R is below it."
+      },
+      {
+        "id": "b",
+        "label": "The superior border of the aortic arch",
+        "rationale": "Incorrect. That landmark is more relevant to the superior left mediastinal stations."
+      },
+      {
+        "id": "c",
+        "label": "The left lateral tracheal border",
+        "rationale": "Incorrect. That divides right from left paratracheal stations, not 4R from 10R."
+      },
+      {
+        "id": "d",
+        "label": "The lower border of bronchus intermedius",
+        "rationale": "Incorrect. That is related to the inferior extent of station 7 rather than the 4R-to-10R handoff."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "On the right, the lower rim of the azygos vein is the key 4R versus 10R divider. The left side uses the upper rim of the left main pulmonary artery for the analogous 4L versus 10L distinction.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-map",
+      "4R",
+      "10R",
+      "boundaries"
+    ]
+  },
+  {
+    "id": "mediastinum-station7-03",
+    "moduleId": "station-map",
+    "prompt": "A left lung primary has malignant involvement of station 7. What is the most accurate staging teaching point?",
+    "type": "case-vignette",
+    "caseTitle": "Midline station, not a laterality trap",
+    "caseSummary": "The learner worries that a midline subcarinal node might count as contralateral disease.",
+    "options": [
+      {
+        "id": "a",
+        "label": "Station 7 is considered ipsilateral mediastinal disease (N2) irrespective of primary side",
+        "rationale": "Correct. Station 7 is a midline mediastinal station and remains N2 regardless of tumor laterality."
+      },
+      {
+        "id": "b",
+        "label": "Station 7 becomes N3 whenever the primary is on the opposite side of the mediastinum",
+        "rationale": "Incorrect. That laterality logic applies to lateralized mediastinal stations, not station 7."
+      },
+      {
+        "id": "c",
+        "label": "Station 7 is hilar, so ipsilateral disease is N1",
+        "rationale": "Incorrect. Station 7 is subcarinal mediastinal disease, not hilar disease."
+      },
+      {
+        "id": "d",
+        "label": "Station 7 has no staging significance because it is midline",
+        "rationale": "Incorrect. It is one of the most important mediastinal staging stations."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Station 7 is the important exception to laterality-based shortcuts. It is midline and is treated as ipsilateral mediastinal disease regardless of which lung contains the primary tumor.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-map",
+      "station-7",
+      "staging"
+    ]
+  },
+  {
+    "id": "mediastinum-left-handoff-04",
+    "moduleId": "station-map",
+    "prompt": "Select the features that support calling a left-sided node 10L rather than 4L.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "The node lies below the upper rim of the left main pulmonary artery",
+        "rationale": "Correct. That supports 10L rather than 4L."
+      },
+      {
+        "id": "b",
+        "label": "The node behaves like a hilar target adjacent to the left main bronchus rather than a paratracheal one",
+        "rationale": "Correct. Hilar relationship supports 10L."
+      },
+      {
+        "id": "c",
+        "label": "The node is clearly above the left main pulmonary artery margin and still paratracheal",
+        "rationale": "Incorrect. That description supports 4L, not 10L."
+      },
+      {
+        "id": "d",
+        "label": "The node is medial to the ligamentum arteriosum in the paratracheal region",
+        "rationale": "Incorrect. That again sounds more like 4L than 10L."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b"
+    ],
+    "explanation": "The left hilar handoff combines a vessel rule and a regional rule. 10L begins below the upper rim of the left main pulmonary artery and behaves like a hilar station rather than a paratracheal one.",
+    "difficulty": "advanced",
+    "tags": [
+      "station-map",
+      "4L",
+      "10L",
+      "boundaries"
+    ]
+  },
+  {
+    "id": "mediastinum-right-stack-05",
+    "moduleId": "station-map",
+    "prompt": "Order these right-sided stations from most superior to most distal along the central airway pathway.",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "2R",
+        "label": "2R",
+        "rationale": "This is the superior right paratracheal station."
+      },
+      {
+        "id": "4R",
+        "label": "4R",
+        "rationale": "This sits below 2R and above the right hilar handoff."
+      },
+      {
+        "id": "10R",
+        "label": "10R",
+        "rationale": "This is the right hilar checkpoint below 4R."
+      },
+      {
+        "id": "11Rs",
+        "label": "11Rs",
+        "rationale": "This is more distal in the interlobar/right upper lobe takeoff region."
+      }
+    ],
+    "correctOptionIds": [
+      "2R",
+      "4R",
+      "10R",
+      "11Rs"
+    ],
+    "explanation": "The right-side learning stack is 2R above 4R, then 10R at the hilar handoff, then 11R substation targets farther along the branching pathway.",
+    "difficulty": "basic",
+    "tags": [
+      "station-map",
+      "ordering",
+      "2R",
+      "4R",
+      "10R",
+      "11Rs"
+    ]
+  }
+]

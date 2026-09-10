@@ -1,0 +1,79 @@
+{
+  "introSections": [
+    {
+      "id": "stack-patterns",
+      "title": "Lea el mapa como pilas guiadas por límites",
+      "summary": "Las estaciones paratraqueales derecha e izquierda son más fáciles de memorizar como pilas de superior a inferior: 2R sobre 4R y 2L sobre 4L. El divisor clave es el borde lateral izquierdo de la tráquea, no la línea media traqueal.",
+      "takeaway": "Comience con lateralidad, aplique la regla del borde traqueal y luego avance de arriba abajo antes de ramificarse hacia afuera."
+    },
+    {
+      "id": "carina-anchor",
+      "title": "Use la carina como ancla central",
+      "summary": "La estación 7 se ubica por debajo de la carina y entre los márgenes mediales de los bronquios principales. Es el ancla central para distinguir enfermedad subcarinal de enfermedad hiliar.",
+      "takeaway": "Si pierde la orientación, encuentre la estación 7 y luego pregunte si el ganglio sigue entre los márgenes mediales de los bronquios principales."
+    },
+    {
+      "id": "hilar-handoff",
+      "title": "Trate las estaciones hiliares como una transición de vaso y rama",
+      "summary": "10R y 10L marcan los puntos de control hiliares, mientras que 11Rs, 11Ri y 11L se extienden más hacia la vía interlobar a nivel de ramas.",
+      "takeaway": "Piense primero en bronquio principal y luego en referencias interlobares a nivel de ramas."
+    }
+  ],
+  "mapTips": [
+    "Toque cualquier estación para abrir la hoja de detalles.",
+    "Use la tarjeta de detalles para revisar la regla exacta de límite antes de memorizar el número.",
+    "Use los botones de zoom si las etiquetas se ven apretadas en un teléfono pequeño.",
+    "La selección usa grosor de borde, iconografía y texto de ayuda para que el estado no dependa solo del color."
+  ],
+  "flashcardPrompt": "Use las tarjetas para practicar nombre, agrupación y pistas de memoria antes de pasar al cuestionario.",
+  "quizRounds": [
+    {
+      "id": "q-2r",
+      "stationId": "2R",
+      "prompt": "Fije la estación paratraqueal superior derecha por encima de la pila 4R.",
+      "hint": "Permanezca alto en el lado derecho de la columna traqueal.",
+      "explanation": "2R es la estación paratraqueal superior derecha. Permanece a la derecha del borde lateral izquierdo de la tráquea y por encima de 4R."
+    },
+    {
+      "id": "q-4l",
+      "stationId": "4L",
+      "prompt": "Toque la estación paratraqueal inferior izquierda que permanece por encima de la transición hiliar izquierda.",
+      "hint": "Mire a la izquierda de la tráquea y permanezca por encima del borde superior de la arteria pulmonar principal izquierda.",
+      "explanation": "4L es la estación paratraqueal inferior izquierda. Permanece por encima de 10L y medial al ligamento arterioso."
+    },
+    {
+      "id": "q-7",
+      "stationId": "7",
+      "prompt": "Seleccione la estación subcarinal centrada debajo de la carina.",
+      "hint": "Encuentre el ancla de línea media entre las vías hiliares derecha e izquierda.",
+      "explanation": "La estación 7 está debajo de la carina y entre los márgenes mediales de los bronquios principales. Es una estación mediastínica de línea media."
+    },
+    {
+      "id": "q-10r",
+      "stationId": "10R",
+      "prompt": "Fije el punto de control hiliar derecho cerca de la zona de entrada del bronquio principal derecho.",
+      "hint": "Se ubica distal a 4R y proximal a las subestaciones 11R.",
+      "explanation": "10R comienza por debajo del margen inferior de la ácigos. Es hiliar, no paratraqueal, y aún más proximal que 11Rs o 11Ri."
+    },
+    {
+      "id": "q-11rs",
+      "stationId": "11Rs",
+      "prompt": "Toque la estación interlobar superior derecha más allá de la puerta hiliar derecha.",
+      "hint": "Piense en anatomía a nivel de ramas entre el bronquio del lóbulo superior derecho y el bronquio intermedio.",
+      "explanation": "11Rs es el objetivo interlobar superior derecho a nivel de ramas. Está más distal que 10R y es distinto de 11Ri."
+    },
+    {
+      "id": "q-11L",
+      "stationId": "11L",
+      "prompt": "Toque la estación interlobar izquierda más allá de la puerta hiliar izquierda.",
+      "hint": "Piense en la vía hiliar izquierda a nivel de ramas, no paratraqueal.",
+      "explanation": "11L es la estación interlobar izquierda más allá del punto de control 10L. La pista es la anatomía distal de vía aérea a nivel de ramas."
+    }
+  ],
+  "reviewChecklist": [
+    "¿Puede separar las pilas paratraqueales derecha e izquierda usando el borde lateral izquierdo de la tráquea en lugar de la línea media traqueal?",
+    "¿Puede usar la estación 7 como punto de reinicio de línea media y mantenerla entre los márgenes mediales de los bronquios principales?",
+    "¿Puede distinguir 10R y 10L de las estaciones interlobares más distales 11Rs, 11Ri y 11L?"
+  ],
+  "extensionNote": "Agregue más estaciones extendiendo el archivo compartido de contenido de estaciones y este archivo de diseño con nuevas coordenadas. La interfaz lee definiciones de estación, indicaciones de cuestionario y datos de dibujo por separado, por lo que el módulo no necesita reescrituras de componentes cuando crece el conjunto de estaciones."
+}

@@ -1,0 +1,239 @@
+[
+  {
+    "id": "knobology-sequence-01",
+    "moduleId": "knobology",
+    "prompt": "Un ganglio linfático está parcialmente cortado en la parte superior de la imagen. ¿Qué control debe ajustarse primero?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "depth",
+        "label": "Aumentar la profundidad para que el objetivo quede completamente encuadrado",
+        "rationale": "Correcto. El encuadre debe preceder a los ajustes finos de brillo o a las decisiones de medición."
+      },
+      {
+        "id": "gain",
+        "label": "Aumentar la ganancia para que el ganglio cortado se vea más brillante",
+        "rationale": "Incorrecto. El brillo no puede corregir una anatomía que no está completamente dentro del campo."
+      },
+      {
+        "id": "freeze",
+        "label": "Congelar la imagen para inspeccionar el borde",
+        "rationale": "Incorrecto. Congelar demasiado pronto solo conserva una imagen mal encuadrada."
+      },
+      {
+        "id": "calipers",
+        "label": "Colocar calibradores antes de cambiar la vista",
+        "rationale": "Incorrecto. La medición no es confiable cuando el objetivo ni siquiera se visualiza por completo."
+      }
+    ],
+    "correctOptionIds": [
+      "depth"
+    ],
+    "explanation": "El rescate de una imagen de EBUS comienza con el encuadre. Una vez que el objetivo es completamente visible, los cambios de ganancia y contraste adquieren mucho más sentido.",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "depth",
+      "control-sequence"
+    ]
+  },
+  {
+    "id": "knobology-cp-vs-rp-02",
+    "moduleId": "knobology",
+    "prompt": "¿Cuál enunciado resume mejor la compensación práctica entre RP-EBUS y CP-EBUS?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "RP-EBUS suele favorecer una localización periférica de mayor resolución, mientras que CP-EBUS proporciona imagen más profunda y guía de aguja en tiempo real",
+        "rationale": "Correcto. Esa es la forma clínicamente útil de recordar la compensación entre resolución, penetración y guía."
+      },
+      {
+        "id": "b",
+        "label": "CP-EBUS siempre ofrece tanto mejor penetración como mejor resolución que RP-EBUS",
+        "rationale": "Incorrecto. Las modalidades hacen compensaciones diferentes; no es que una sea universalmente superior."
+      },
+      {
+        "id": "c",
+        "label": "RP-EBUS se prefiere principalmente porque tiene Doppler y puede guiar la aspiración transbronquial con aguja en tiempo real",
+        "rationale": "Incorrecto. El Doppler y la TBNA en tiempo real son fortalezas clave de CP-EBUS, no de RP-EBUS."
+      },
+      {
+        "id": "d",
+        "label": "Los dos sistemas difieren solo en el diseño de pantalla y no en el comportamiento del ultrasonido",
+        "rationale": "Incorrecto. Su frecuencia, geometría, penetración y funciones procedimentales difieren de manera sustancial."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Una abreviatura docente útil es que RP-EBUS es una herramienta de localización de mayor resolución para trabajo periférico, mientras que CP-EBUS ofrece imagen más profunda, Doppler y muestreo en tiempo real para objetivos mediastínicos e hiliares.",
+    "difficulty": "intermediate",
+    "tags": [
+      "knobology",
+      "ultrasound-physics",
+      "cp-ebus",
+      "rp-ebus"
+    ]
+  },
+  {
+    "id": "knobology-artifact-03",
+    "moduleId": "knobology",
+    "prompt": "Seleccione los hallazgos que deberían orientar al alumno hacia artefacto en lugar de anatomía verdadera.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "Una interfaz brillante produce ecos repetidos, equidistantes, que se mueven con el reflector",
+        "rationale": "Correcto. Ese patrón corresponde a reverberación más que a una verdadera estructura en capas."
+      },
+      {
+        "id": "b",
+        "label": "Una región oscura desaparece después de mejorar el contacto de la sonda y cambiar el ángulo",
+        "rationale": "Correcto. Un hallazgo que desaparece al mejorar el acoplamiento y cambiar el ángulo debe despertar sospecha de artefacto."
+      },
+      {
+        "id": "c",
+        "label": "Una estructura vascular se ilumina en Doppler exactamente donde la escala de grises sugería un vaso",
+        "rationale": "Incorrecto. Eso hace más probable un vaso real, no un artefacto."
+      },
+      {
+        "id": "d",
+        "label": "Un borde sospechado permanece estable pese a los cambios de contacto y se confirma en múltiples vistas",
+        "rationale": "Incorrecto. La estabilidad entre vistas favorece más anatomía verdadera que artefacto."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b"
+    ],
+    "explanation": "Los artefactos a menudo se comportan como reflejos: siguen una interfaz, cambian con el ángulo y desaparecen cuando mejora el acoplamiento. La anatomía verdadera suele ser más estable ante pequeños ajustes técnicos.",
+    "difficulty": "intermediate",
+    "tags": [
+      "knobology",
+      "artifact",
+      "image-interpretation"
+    ]
+  },
+  {
+    "id": "knobology-order-04",
+    "moduleId": "knobology",
+    "prompt": "Ordene el flujo de trabajo en la secuencia más defendible para un objetivo que podría requerir muestreo.",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "frame",
+        "label": "Ajustar profundidad y encuadre",
+        "rationale": "Esto va primero porque se necesita ver el objetivo y la anatomía circundante."
+      },
+      {
+        "id": "brightness",
+        "label": "Ajustar ganancia y contraste",
+        "rationale": "Esto viene después del encuadre porque la calidad del borde se juzga mejor cuando la geometría de la imagen tiene sentido."
+      },
+      {
+        "id": "doppler",
+        "label": "Verificar el trayecto previsto con Doppler",
+        "rationale": "Esto precede a la punción y a la medición porque es un paso de seguridad."
+      },
+      {
+        "id": "freeze",
+        "label": "Congelar y medir solo si es útil",
+        "rationale": "Esto debe ocurrir después de que la imagen sea confiable y después de la verificación vascular."
+      }
+    ],
+    "correctOptionIds": [
+      "frame",
+      "brightness",
+      "doppler",
+      "freeze"
+    ],
+    "explanation": "Una secuencia reproducible reduce los ajustes aleatorios: primero encuadrar, segundo optimizar la imagen en escala de grises, tercero realizar la revisión de seguridad con Doppler, y congelar o medir solo cuando la imagen realmente merece conservarse.",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "ordering",
+      "safe-sampling"
+    ]
+  },
+  {
+    "id": "knobology-necrosis-05",
+    "moduleId": "knobology",
+    "prompt": "Un ganglio grande tiene un centro oscuro avascular y un borde periférico más sólido. Después de que el Doppler confirma un trayecto libre de vasos, ¿cuál es el mejor siguiente punto docente?",
+    "type": "case-vignette",
+    "caseTitle": "Imagen brillante, centro de bajo rendimiento",
+    "caseSummary": "La línea más fácil no cruza flujo, pero apunta directamente a la parte más oscura del ganglio.",
+    "options": [
+      {
+        "id": "a",
+        "label": "Apuntar al borde sólido viable y abanicar por más de un área representativa",
+        "rationale": "Correcto. Un centro necrótico evidente puede tener bajo rendimiento; el tejido viable es un mejor objetivo."
+      },
+      {
+        "id": "b",
+        "label": "Repetir el muestreo del centro porque es lo más fácil de visualizar",
+        "rationale": "Incorrecto. La facilidad de visualización no convierte a un centro necrótico avascular en el mejor objetivo."
+      },
+      {
+        "id": "c",
+        "label": "Ignorar el objetivo en escala de grises porque el Doppler es negativo",
+        "rationale": "Incorrecto. El Doppler ayuda con la seguridad, pero la escala de grises aún guía qué parte del ganglio vale la pena muestrear."
+      },
+      {
+        "id": "d",
+        "label": "Aumentar la ganancia hasta que el centro oscuro parezca más sólido antes de puncionar",
+        "rationale": "Incorrecto. Aclarar artificialmente la imagen no convierte tejido necrótico en un objetivo de mayor rendimiento."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "El Doppler ayuda a excluir vasos, pero la selección del objetivo dentro del ganglio sigue siendo importante. Cuando un ganglio es heterogéneo, muestree tejido viable y use abaniqueo en lugar de atravesar repetidamente una cavidad necrótica evidente.",
+    "difficulty": "advanced",
+    "tags": [
+      "knobology",
+      "case",
+      "doppler",
+      "necrosis",
+      "target-selection"
+    ]
+  },
+  {
+    "id": "knobology-doppler-06",
+    "moduleId": "knobology",
+    "prompt": "¿Cuál es la mejor razón para activar el Doppler antes de una pasada de EBUS-TBNA?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Identificar flujo en vasos adyacentes y refinar un trayecto de punción seguro",
+        "rationale": "Correcto. Ese es el uso práctico de mayor rendimiento antes del muestreo."
+      },
+      {
+        "id": "b",
+        "label": "Reemplazar la interpretación en escala de grises de la arquitectura ganglionar",
+        "rationale": "Incorrecto. El Doppler complementa la escala de grises; no la reemplaza."
+      },
+      {
+        "id": "c",
+        "label": "Mejorar el borde del ganglio del mismo modo que lo hace el contraste",
+        "rationale": "Incorrecto. El Doppler proporciona información de flujo, no separación de bordes en escala de grises."
+      },
+      {
+        "id": "d",
+        "label": "Determinar el diagnóstico final sin tejido",
+        "rationale": "Incorrecto. El Doppler puede refinar la sospecha y la seguridad, pero el tejido sigue siendo definitivo."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "En este contexto, el Doppler es principalmente una herramienta de seguridad y selección de objetivo. Ayuda a confirmar si el trayecto previsto cruza estructuras vasculares y si un área sospechosa es avascular o vascular.",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "doppler",
+      "safety"
+    ]
+  }
+]

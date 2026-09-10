@@ -1,0 +1,159 @@
+[
+  {
+    "id": "sono-chs-01",
+    "moduleId": "station-explorer",
+    "prompt": "Which statement about the central hilar structure (CHS) is most accurate?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "A preserved CHS tends to be a reassuring feature, although it does not rule out malignancy by itself",
+        "rationale": "Correct. CHS is a useful reassuring sign, but tissue still decides the diagnosis."
+      },
+      {
+        "id": "b",
+        "label": "A preserved CHS proves the node is benign and does not require sampling",
+        "rationale": "Incorrect. No single sonographic sign replaces the staging question or the need for tissue."
+      },
+      {
+        "id": "c",
+        "label": "CHS is mainly a Doppler artifact and is not useful in interpretation",
+        "rationale": "Incorrect. CHS is a meaningful grayscale descriptor."
+      },
+      {
+        "id": "d",
+        "label": "CHS should only be assessed after elastography",
+        "rationale": "Incorrect. CHS is part of conventional grayscale assessment."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Preserved CHS tends to favor benignity, but it should never be used as a stand-alone reason to ignore a node that would change management if positive.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "CHS"
+    ]
+  },
+  {
+    "id": "sono-suspicion-02",
+    "moduleId": "station-explorer",
+    "prompt": "Select the sonographic features that generally increase concern for malignancy when they appear together.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "Heterogeneous echogenicity",
+        "rationale": "Correct. Heterogeneity often increases concern."
+      },
+      {
+        "id": "b",
+        "label": "Avascular central necrotic-appearing region (CNS)",
+        "rationale": "Correct. CNS is a concerning feature, especially when Doppler supports avascularity."
+      },
+      {
+        "id": "c",
+        "label": "Preserved central hilar structure",
+        "rationale": "Incorrect. Preserved CHS is relatively reassuring rather than suspicious."
+      },
+      {
+        "id": "d",
+        "label": "Peripheral or chaotic vascular pattern",
+        "rationale": "Correct. Abnormal vascular pattern can add concern."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b",
+      "d"
+    ],
+    "explanation": "Suspicion usually comes from the pattern combination rather than one sign alone. Heterogeneity, CNS, and abnormal vascularity together are more concerning than any single feature in isolation.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "CNS",
+      "vascular-pattern"
+    ]
+  },
+  {
+    "id": "sono-elastography-03",
+    "moduleId": "station-explorer",
+    "prompt": "How should elastography be taught in relation to EBUS nodal staging?",
+    "type": "case-vignette",
+    "caseTitle": "Helpful color map, wrong conclusion",
+    "caseSummary": "A learner wants to skip biopsy because the elastography pattern appears reassuring.",
+    "options": [
+      {
+        "id": "a",
+        "label": "As an adjunct that may help prioritize targets, but not as a substitute for tissue",
+        "rationale": "Correct. Elastography refines suspicion and target choice; it does not replace pathology."
+      },
+      {
+        "id": "b",
+        "label": "As the most reliable single test for deciding whether a node is malignant",
+        "rationale": "Incorrect. Elastography performs best when combined with conventional EBUS features, not as a stand-alone verdict."
+      },
+      {
+        "id": "c",
+        "label": "As a reason to ignore the staging consequence of the node",
+        "rationale": "Incorrect. The staging consequence still determines whether tissue is required."
+      },
+      {
+        "id": "d",
+        "label": "As a replacement for Doppler in planning the puncture path",
+        "rationale": "Incorrect. Elastography does not replace Doppler safety review."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Elastography is best taught as an adjunct. It may help decide which node or which part of a node looks most suspicious, but tissue remains definitive and Doppler remains necessary for safety.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "elastography"
+    ]
+  },
+  {
+    "id": "sono-cns-04",
+    "moduleId": "station-explorer",
+    "prompt": "A node contains a dark central region with no Doppler flow and irregular surrounding echotexture. Which interpretation is most defensible?",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "The finding is compatible with a coagulation necrosis sign and raises suspicion, but still does not replace tissue",
+        "rationale": "Correct. This combines descriptive accuracy with the right level of diagnostic humility."
+      },
+      {
+        "id": "b",
+        "label": "The node must be benign because flow is absent centrally",
+        "rationale": "Incorrect. Avascular central dark areas can increase suspicion rather than reassure."
+      },
+      {
+        "id": "c",
+        "label": "The image proves the lesion is malignant, so biopsy is unnecessary",
+        "rationale": "Incorrect. Even highly suspicious imaging does not eliminate the role of tissue."
+      },
+      {
+        "id": "d",
+        "label": "The finding is meaningless unless the node is larger than 2 cm",
+        "rationale": "Incorrect. Internal architecture matters at multiple node sizes."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "The appropriate teaching move is to name the sonographic pattern accurately, incorporate it into the overall suspicion estimate, and then return to the clinical staging question and need for tissue.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "image-interpretation",
+      "CNS"
+    ]
+  }
+]

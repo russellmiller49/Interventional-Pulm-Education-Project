@@ -1,0 +1,301 @@
+[
+  {
+    "id": "tnm-case-01-small-peripheral",
+    "title": "Small peripheral RUL tumor",
+    "difficulty": "basic",
+    "focusTags": ["T1c", "N0", "M0", "stage-matrix"],
+    "ctFindings": [
+      "Right upper lobe peripheral solid tumor measuring 2.4 cm.",
+      "No visceral pleural, chest wall, mediastinal, or diaphragmatic invasion.",
+      "No separate pulmonary nodules."
+    ],
+    "petFindings": [
+      "FDG uptake limited to the primary tumor.",
+      "No suspicious nodal or distant uptake."
+    ],
+    "ebusFindings": [
+      "Stations 4R, 4L, and 7 sampled negative.",
+      "No positive hilar or mediastinal nodes."
+    ],
+    "expected": {
+      "t": "T1c",
+      "n": "N0",
+      "m": "M0",
+      "stage": "IA3"
+    },
+    "feedback": "The primary tumor is greater than 2 cm and 3 cm or smaller, with no positive nodes or distant disease, so the stage group is IA3."
+  },
+  {
+    "id": "tnm-case-02-reactive-effusion-n1",
+    "title": "Reactive effusion with ipsilateral hilar disease",
+    "difficulty": "intermediate",
+    "focusTags": ["T2a", "N1", "reactive-effusion", "M0"],
+    "ctFindings": [
+      "Left lower lobe tumor measuring 3.6 cm with visceral pleural contact.",
+      "Small pleural effusion is repeatedly cytology negative, non-bloody, and clinically favored reactive.",
+      "No pleural nodules."
+    ],
+    "petFindings": [
+      "FDG-avid left hilar node.",
+      "No distant metastatic uptake."
+    ],
+    "ebusFindings": [
+      "10L is positive.",
+      "4L and 7 are sampled negative."
+    ],
+    "expected": {
+      "t": "T2a",
+      "n": "N1",
+      "m": "M0",
+      "stage": "IIB"
+    },
+    "feedback": "The 3.6 cm tumor is T2a by size, 10L is ipsilateral hilar N1 disease, and the clinically reactive effusion is not counted as M1a."
+  },
+  {
+    "id": "tnm-case-03-single-n2",
+    "title": "Single-station N2",
+    "difficulty": "intermediate",
+    "focusTags": ["N2a", "T1c", "stage-group-change"],
+    "ctFindings": [
+      "Right upper lobe tumor measuring 2.8 cm.",
+      "Single enlarged right lower paratracheal node."
+    ],
+    "petFindings": [
+      "FDG uptake in the primary tumor and station 4R.",
+      "No distant metastatic uptake."
+    ],
+    "ebusFindings": [
+      "4R is positive.",
+      "7 and 4L are sampled negative."
+    ],
+    "expected": {
+      "t": "T1c",
+      "n": "N2a",
+      "m": "M0",
+      "stage": "IIB"
+    },
+    "feedback": "A right-sided tumor with one positive ipsilateral mediastinal station is N2a; T1cN2aM0 maps to stage IIB in the 9th edition."
+  },
+  {
+    "id": "tnm-case-04-multistation-n2",
+    "title": "Multi-station N2",
+    "difficulty": "advanced",
+    "focusTags": ["N2b", "T2b", "stage-group-change"],
+    "ctFindings": [
+      "Right lower lobe tumor measuring 4.2 cm.",
+      "Enlarged 4R and subcarinal lymph nodes."
+    ],
+    "petFindings": [
+      "FDG uptake in the primary tumor, 4R, and station 7.",
+      "No distant metastatic uptake."
+    ],
+    "ebusFindings": [
+      "4R is positive.",
+      "7 is positive.",
+      "4L is sampled negative."
+    ],
+    "expected": {
+      "t": "T2b",
+      "n": "N2b",
+      "m": "M0",
+      "stage": "IIIB"
+    },
+    "feedback": "The 4.2 cm size is T2b and two N2 stations make this N2b; T2bN2bM0 maps to stage IIIB."
+  },
+  {
+    "id": "tnm-case-05-t3-n2a",
+    "title": "Chest wall invasion with one N2 station",
+    "difficulty": "advanced",
+    "focusTags": ["T3", "N2a", "stage-group-change"],
+    "ctFindings": [
+      "Left upper lobe tumor measuring 6.2 cm with focal chest wall invasion.",
+      "Single suspicious 4L node."
+    ],
+    "petFindings": [
+      "FDG uptake in the primary tumor and 4L.",
+      "No distant metastatic uptake."
+    ],
+    "ebusFindings": [
+      "4L is positive.",
+      "7 and 4R are sampled negative."
+    ],
+    "expected": {
+      "t": "T3",
+      "n": "N2a",
+      "m": "M0",
+      "stage": "IIIA"
+    },
+    "feedback": "Chest wall invasion and size both support T3, and a single ipsilateral mediastinal station is N2a; this combination maps to IIIA."
+  },
+  {
+    "id": "tnm-case-06-contralateral-mediastinal",
+    "title": "Small tumor, contralateral mediastinal node",
+    "difficulty": "advanced",
+    "focusTags": ["N3", "laterality", "4L"],
+    "ctFindings": [
+      "Right upper lobe tumor measuring 2.1 cm.",
+      "Small but suspicious 4L node across the left lateral tracheal border."
+    ],
+    "petFindings": [
+      "FDG uptake in the primary tumor and station 4L.",
+      "No distant metastatic uptake."
+    ],
+    "ebusFindings": [
+      "4L is positive.",
+      "4R and 7 are sampled negative."
+    ],
+    "expected": {
+      "t": "T1c",
+      "n": "N3",
+      "m": "M0",
+      "stage": "IIIB"
+    },
+    "feedback": "For a right-sided primary, 4L is contralateral mediastinal disease and therefore N3, even though the primary tumor itself is small."
+  },
+  {
+    "id": "tnm-case-07-same-lobe-nodule",
+    "title": "Separate nodule in the same lobe",
+    "difficulty": "intermediate",
+    "focusTags": ["separate-nodule", "T3", "N0"],
+    "ctFindings": [
+      "Right upper lobe primary tumor measuring 2.9 cm.",
+      "Second suspicious solid tumor nodule in the same right upper lobe.",
+      "No chest wall or mediastinal invasion."
+    ],
+    "petFindings": [
+      "FDG uptake in both right upper lobe nodules.",
+      "No nodal or distant uptake."
+    ],
+    "ebusFindings": [
+      "4R, 4L, and 7 are sampled negative."
+    ],
+    "expected": {
+      "t": "T3",
+      "n": "N0",
+      "m": "M0",
+      "stage": "IIB"
+    },
+    "feedback": "A separate tumor nodule in the same lobe makes the tumor T3, even though the primary size alone would be T1c."
+  },
+  {
+    "id": "tnm-case-08-different-ipsilateral-lobe",
+    "title": "Separate nodule in another ipsilateral lobe",
+    "difficulty": "advanced",
+    "focusTags": ["separate-nodule", "T4", "ipsilateral-lobe"],
+    "ctFindings": [
+      "Left upper lobe tumor measuring 3.3 cm.",
+      "Separate suspicious nodule in the left lower lobe.",
+      "No pleural nodules or distant disease."
+    ],
+    "petFindings": [
+      "FDG uptake in both left lung lesions.",
+      "No nodal or extrathoracic uptake."
+    ],
+    "ebusFindings": [
+      "4L, 7, and 4R are sampled negative."
+    ],
+    "expected": {
+      "t": "T4",
+      "n": "N0",
+      "m": "M0",
+      "stage": "IIIA"
+    },
+    "feedback": "A separate tumor nodule in a different ipsilateral lobe is T4, not M1a."
+  },
+  {
+    "id": "tnm-case-09-malignant-effusion",
+    "title": "Malignant pleural effusion",
+    "difficulty": "intermediate",
+    "focusTags": ["M1a", "effusion", "stage-IVA"],
+    "ctFindings": [
+      "Right upper lobe tumor measuring 1.8 cm.",
+      "Right pleural effusion with pleural nodularity."
+    ],
+    "petFindings": [
+      "FDG uptake in the primary tumor and pleural nodules.",
+      "No extrathoracic metastatic uptake."
+    ],
+    "ebusFindings": [
+      "4R, 4L, and 7 are sampled negative."
+    ],
+    "expected": {
+      "t": "T1b",
+      "n": "N0",
+      "m": "M1a",
+      "stage": "IVA"
+    },
+    "feedback": "Malignant pleural effusion or pleural nodules are M1a, which makes the stage group IVA regardless of the small primary tumor."
+  },
+  {
+    "id": "tnm-case-10-single-adrenal",
+    "title": "Single adrenal metastasis",
+    "difficulty": "intermediate",
+    "focusTags": ["M1b", "oligometastatic", "stage-IVA"],
+    "ctFindings": [
+      "Left lower lobe tumor measuring 4.6 cm.",
+      "No separate lung nodules or pleural disease."
+    ],
+    "petFindings": [
+      "FDG uptake in the primary tumor.",
+      "Single FDG-avid right adrenal lesion."
+    ],
+    "ebusFindings": [
+      "4L, 7, and 4R are sampled negative."
+    ],
+    "expected": {
+      "t": "T2b",
+      "n": "N0",
+      "m": "M1b",
+      "stage": "IVA"
+    },
+    "feedback": "A single extrathoracic metastasis in one organ system is M1b and maps to stage IVA."
+  },
+  {
+    "id": "tnm-case-11-multiple-bone",
+    "title": "Multiple bone metastases",
+    "difficulty": "advanced",
+    "focusTags": ["M1c1", "one-organ-system", "stage-IVB"],
+    "ctFindings": [
+      "Right upper lobe tumor measuring 3.1 cm.",
+      "No pleural or pericardial nodularity."
+    ],
+    "petFindings": [
+      "Multiple FDG-avid osseous lesions in the spine and pelvis.",
+      "No liver, adrenal, brain, or extrathoracic nodal metastasis."
+    ],
+    "ebusFindings": [
+      "4R, 7, and 4L are sampled negative."
+    ],
+    "expected": {
+      "t": "T2a",
+      "n": "N0",
+      "m": "M1c1",
+      "stage": "IVB"
+    },
+    "feedback": "Multiple bone metastases are multiple extrathoracic lesions in one organ system, so they are M1c1 and stage IVB."
+  },
+  {
+    "id": "tnm-case-12-liver-bone",
+    "title": "Bone plus liver metastases",
+    "difficulty": "advanced",
+    "focusTags": ["M1c2", "multiple-organ-systems", "stage-IVB"],
+    "ctFindings": [
+      "Left upper lobe tumor measuring 2.2 cm.",
+      "No pleural or pericardial disease."
+    ],
+    "petFindings": [
+      "FDG-avid liver lesion and multiple FDG-avid osseous lesions.",
+      "No suspicious thoracic nodes."
+    ],
+    "ebusFindings": [
+      "4L, 7, and 4R are sampled negative."
+    ],
+    "expected": {
+      "t": "T1c",
+      "n": "N0",
+      "m": "M1c2",
+      "stage": "IVB"
+    },
+    "feedback": "Metastases across liver and bone involve multiple organ systems, so the M category is M1c2."
+  }
+]

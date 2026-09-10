@@ -1,0 +1,85 @@
+{
+  "id": "procedural-technique",
+  "title": "Linear EBUS Procedural Technique",
+  "summary": "A stepwise technique review focused on orientation, contact, safe needle handling, and the common reasons specimens become non-diagnostic.",
+  "learningObjectives": [
+    "Describe a reproducible sequence from neutral scope orientation to image optimization and safe needle deployment.",
+    "Explain how balloon contact, vessel check, and airway landmarks interact before puncture.",
+    "Use fanning and capsule-to-capsule sampling language correctly when teaching aspiration technique.",
+    "Recognize common causes of low-yield or misleading passes."
+  ],
+  "sections": [
+    {
+      "id": "neutral-orientation",
+      "title": "Start from neutral scope orientation",
+      "kind": "technique",
+      "body": "A calm neutral starting position helps the learner understand where the airway wall, ultrasound plane, and needle path live relative to one another. Once the station is localized, small controlled adjustments are safer than repeated large torque movements.",
+      "bullets": [
+        "Re-establish the airway landmark before you refine the ultrasound image.",
+        "Use deliberate small movements after the target appears.",
+        "Scope stability usually matters more than speed."
+      ],
+      "pearl": "If the learner becomes disoriented, reset to a known airway landmark rather than improvising from a bad frame.",
+      "pitfall": "Chasing the image with repeated large motions often worsens contact and confuses station identity."
+    },
+    {
+      "id": "balloon-contact",
+      "title": "Balloon inflation and contact create the acoustic window",
+      "kind": "technique",
+      "body": "The balloon exists to improve apposition between the ultrasound probe and the airway wall. Good contact makes the subsequent image adjustments meaningful; poor contact forces the learner to compensate with gain and still leaves the frame unreliable.",
+      "bullets": [
+        "Inflate enough to improve contact without destabilizing orientation.",
+        "Use the best contact point you can hold, not the most dramatic contact you can briefly create.",
+        "A stable acoustic window should precede needle deployment."
+      ],
+      "pearl": "Contact is part of image optimization, not a separate preliminary chore.",
+      "pitfall": "A temporarily striking image that cannot be maintained is a poor sampling platform."
+    },
+    {
+      "id": "vessel-check-and-puncture",
+      "title": "Identify the target, check vessels, then puncture",
+      "kind": "technique",
+      "body": "Before needle advancement, identify the target, confirm the station, and inspect the intended path with Doppler. Needle deployment should protect the scope, preserve the chosen angle, and favor the path that best balances control, safety, and access to viable tissue.",
+      "bullets": [
+        "Confirm target identity before opening the needle, not after.",
+        "Check the tract with Doppler before each pass if the angle or target has changed.",
+        "A safe path around a vessel is more important than the shortest geometric path."
+      ],
+      "checklist": [
+        "Station confirmed",
+        "Balloon contact stable",
+        "Doppler path checked",
+        "Needle/sheath position controlled",
+        "Target inside the node chosen"
+      ],
+      "pearl": "The safest pass is the one you can repeat accurately if more tissue is needed.",
+      "pitfall": "Do not let a compelling grayscale target erase the vessel-check step."
+    },
+    {
+      "id": "fanning-capsule",
+      "title": "Fanning and capsule-to-capsule sampling",
+      "kind": "technique",
+      "body": "Fanning means changing the needle angle during a pass so multiple areas of a node are sampled instead of repeatedly traversing the same tract. Capsule-to-capsule language reminds the learner to use the full viable breadth of the node when appropriate, especially when architecture is heterogeneous.",
+      "bullets": [
+        "Change angle within the node to broaden tissue capture.",
+        "Sample more than one viable region if the node looks heterogeneous.",
+        "Repeated passes through a single tract can feel productive while adding little new tissue."
+      ],
+      "pearl": "Fanning is especially valuable when one region looks necrotic, calcified, or otherwise low-yield.",
+      "pitfall": "A pass count alone does not guarantee adequate sampling if every pass follows the same route."
+    },
+    {
+      "id": "non-diagnostic-specimens",
+      "title": "Common causes of non-diagnostic specimens",
+      "kind": "pitfall",
+      "body": "Low-yield procedures usually reflect a chain of small errors: poor contact, uncertain station identity, vessel avoidance that leaves only necrotic tissue, inadequate angle change, or premature confidence after one visually satisfying pass. The solution is usually a better target strategy rather than more force.",
+      "bullets": [
+        "Poor acoustic coupling can create false confidence in the chosen tract.",
+        "Sampling necrotic or acellular regions lowers yield even when the pass itself is smooth.",
+        "Failure to fan can produce repeated low-information samples."
+      ],
+      "pearl": "When the sample is low-yield, review image quality and target selection before escalating equipment.",
+      "pitfall": "More passes into the same poor target often multiply trauma without multiplying useful tissue."
+    }
+  ]
+}

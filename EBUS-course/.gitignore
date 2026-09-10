@@ -1,0 +1,61 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# Large local media (GitHub blob limit 100MB); keep file on disk for dev
+apps/web/public/media/knobology/Knobology_Clean.mp4
+
+# Supabase CLI local cache
+supabase/.temp/
+
+# Local reports, source scans, assistant state, and scratch exports.
+/outputs/
+/tmp/
+/.agents/
+/.claude/
+/.idea/
+/Codex_handoff_items/
+/tools/ebus-simulator/3D_slicer_files/
+*.pdf
+# Runtime assets are source inputs to the embedded build.
+!model/*.nrrd
+!model/*.gltf
+!apps/web/public/**/*.mp4
+!apps/web/public/**/*.stl
+!apps/web/public/**/*.raw
+!apps/web/public/**/*.gz
+!apps/web/public/**/*.gltf
+apps/web/public/media/knobology/Knobology_Clean.mp4

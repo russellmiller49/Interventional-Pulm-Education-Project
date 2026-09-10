@@ -1,0 +1,88 @@
+.knobology-lab-notes {
+  align-self: stretch;
+  display: grid;
+  gap: 16px;
+  max-height: clamp(250px, 36svh, 400px);
+  min-height: 250px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(123, 163, 200, 0.18);
+  background: rgba(7, 17, 29, 0.58);
+}
+
+.knobology-lab-notes:focus-visible {
+  outline: 2px solid rgba(127, 189, 242, 0.72);
+  outline-offset: 3px;
+}
+
+.knobology-lab-notes__section {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(123, 163, 200, 0.14);
+}
+
+.knobology-lab-notes__section:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.knobology-lab-notes__heading {
+  display: grid;
+  gap: 6px;
+}
+
+.knobology-lab-notes__heading h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+
+.knobology-lab-notes__heading p,
+.knobology-rescue-panel p,
+.knobology-lab-notes .learn-more-drawer__header p {
+  margin: 0;
+}
+
+.knobology-lab-notes .knobology-keyboard-feedback,
+.knobology-lab-notes .learn-more-drawer {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.knobology-lab-notes .learn-more-drawer__header {
+  align-items: flex-start;
+}
+
+.knobology-lab-notes .learn-more-drawer__content {
+  gap: 10px;
+}
+
+.knobology-lab-notes .education-card {
+  padding: 14px;
+}
+
+.knobology-rescue-panel .button-row {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 760px) {
+  .knobology-frame > .knobology-lab-notes {
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .knobology-lab-notes {
+    max-height: 360px;
+    min-height: 230px;
+    padding: 14px;
+  }
+}

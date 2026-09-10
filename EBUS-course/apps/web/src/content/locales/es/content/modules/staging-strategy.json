@@ -1,0 +1,64 @@
+{
+  "id": "staging-strategy",
+  "title": "Estrategia de estadificación y muestreo",
+  "summary": "Marco práctico para decidir qué ganglio muestrear primero, cómo la lateralidad cambia el estadio N y por qué siguen ocurriendo falsos negativos.",
+  "learningObjectives": [
+    "Conectar la lateralidad y zona de la estación con la diferencia entre enfermedad N1, N2 y N3.",
+    "Explicar por qué la estación 7 se comporta de manera diferente a las estaciones paratraqueales e hiliares lateralizadas.",
+    "Elegir un orden de muestreo que responda la pregunta de estadificación, no simplemente la pregunta de punción más fácil.",
+    "Reconocer las principales razones por las que EBUS puede ser falsamente negativo incluso cuando técnicamente es exitoso."
+  ],
+  "sections": [
+    {
+      "id": "sample-order",
+      "title": "Muestree para responder la pregunta de estadificación",
+      "kind": "staging",
+      "body": "El ganglio de mayor rendimiento para muestrear no siempre es el más grande ni el más fácil. La estrategia de muestreo debe organizarse alrededor de lo que cambia el manejo: demostrar o excluir enfermedad mediastínica contralateral, aclarar si la enfermedad es hiliar o mediastínica, y priorizar el ganglio que más cambiaría el estadio si fuera positivo.",
+      "bullets": [
+        "Pregunte qué ganglio cambiaría más el estadio antes de preguntar qué ganglio es más fácil.",
+        "Un ganglio más pequeño pero estratégicamente ubicado puede importar más que un ganglio hiliar llamativo.",
+        "La identidad de la estación es parte del valor de la muestra."
+      ],
+      "pearl": "Haga explícita la pregunta de estadificación antes de la primera punción para que el resto del procedimiento permanezca coherente.",
+      "pitfall": "Comenzar con el ganglio visualmente más obvio puede consumir tiempo y dejar sin responder la estación decisiva."
+    },
+    {
+      "id": "laterality",
+      "title": "La lateralidad no es una nota al pie",
+      "kind": "staging",
+      "body": "Las estaciones hiliares e interlobares ipsilaterales suelen ser N1, las mediastínicas ipsilaterales son N2 y la enfermedad mediastínica o hiliar contralateral se convierte en N3. La excepción que los alumnos deben interiorizar es la estación 7: es una estación de línea media y se considera enfermedad mediastínica ipsilateral independientemente del lado del tumor primario.",
+      "bullets": [
+        "Estaciones 2 y 4: ipsilateral N2, contralateral N3.",
+        "Estaciones 10 y 11: ipsilateral N1, contralateral N3.",
+        "7 permanece N2 independientemente del lado del tumor."
+      ],
+      "pearl": "Un error de lateralidad puede ser un error de estadificación incluso cuando la interpretación de la imagen en sí es correcta.",
+      "pitfall": "No importe la lógica de lateralidad de 2, 4, 10 u 11 a la estación 7."
+    },
+    {
+      "id": "false-negatives",
+      "title": "Por qué ocurren falsos negativos",
+      "kind": "pitfall",
+      "body": "Los falsos negativos dependen tanto de la biología como de la técnica. Contribuyen la enfermedad de pequeño volumen, ganglios heterogéneos, muestreo de áreas necróticas o no representativas y asignación incorrecta de estación. Un resultado EBUS negativo es más sólido cuando se dirigió a las estaciones correctas para la pregunta de estadificación correcta y se muestrearon bien.",
+      "bullets": [
+        "Estación incorrecta equivale a respuesta incorrecta aunque la citología sea técnicamente adecuada.",
+        "Los centros necróticos o avasculares pueden no representar carga tumoral viable.",
+        "Los ganglios heterogéneos exigen una selección cuidadosa del objetivo dentro del ganglio."
+      ],
+      "pearl": "Un resultado negativo solo tiene valor en el contexto de las estaciones que usted excluyó o incluyó intencionalmente.",
+      "pitfall": "Llamar negativo al procedimiento sin revisar si la estación decisiva fue realmente muestreada puede crear falsa tranquilidad."
+    },
+    {
+      "id": "staging-vignette",
+      "title": "Viñeta clínica: ganglio hiliar grande, ganglio contralateral pequeño",
+      "kind": "case",
+      "body": "Un primario pulmonar derecho tiene un ganglio 10R grande y un ganglio paratraqueal izquierdo más pequeño apenas al otro lado del borde lateral izquierdo de la tráquea.",
+      "caseVignette": {
+        "title": "El ganglio pequeño puede importar más",
+        "scenario": "El ganglio 10R es más fácil de alcanzar y visualmente más impresionante, pero el ganglio paratraqueal izquierdo cambiaría la enfermedad a afectación mediastínica contralateral si fuera maligno.",
+        "prompt": "¿Qué estación merece primero atención explícita de estadificación en la discusión docente?",
+        "takeaway": "El ganglio paratraqueal contralateral merece prioridad en la discusión de estadificación porque puede establecer enfermedad N3, mientras que 10R solo seguiría siendo afectación hiliar ipsilateral."
+      }
+    }
+  ]
+}

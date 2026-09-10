@@ -1,0 +1,122 @@
+[
+  {
+    "id": "staging-priority-01",
+    "moduleId": "station-explorer",
+    "prompt": "A right lung primary has a large 10R node and a smaller 2L node across the left lateral tracheal border. Which station carries the greater immediate staging consequence if positive?",
+    "type": "case-vignette",
+    "caseTitle": "Big ipsilateral node, smaller contralateral node",
+    "caseSummary": "The easier node to reach is not necessarily the one that changes the stage the most.",
+    "options": [
+      {
+        "id": "a",
+        "label": "The 2L node, because a contralateral mediastinal station can establish N3 disease",
+        "rationale": "Correct. Contralateral mediastinal disease carries a larger staging consequence than ipsilateral hilar disease."
+      },
+      {
+        "id": "b",
+        "label": "The 10R node, because the largest node always determines the highest stage",
+        "rationale": "Incorrect. Size alone does not determine the most consequential station."
+      },
+      {
+        "id": "c",
+        "label": "Neither matters because both are central thoracic nodes",
+        "rationale": "Incorrect. Their laterality and zone create very different stage implications."
+      },
+      {
+        "id": "d",
+        "label": "Only station 7 would change staging in this scenario",
+        "rationale": "Incorrect. Either node could matter, but the contralateral mediastinal node carries the bigger immediate staging consequence."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "A staging-first mindset asks which node most changes management. Here, a contralateral mediastinal node has greater immediate consequence than an ipsilateral hilar node, even if the hilar node is larger.",
+    "difficulty": "advanced",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "N3",
+      "2L",
+      "10R"
+    ]
+  },
+  {
+    "id": "staging-11ri-02",
+    "moduleId": "station-explorer",
+    "prompt": "For a right lung primary, malignant involvement of 11Ri is best taught as which nodal category?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Ipsilateral interlobar disease (N1)",
+        "rationale": "Correct. Ipsilateral 11R substations are hilar/interlobar disease and count as N1."
+      },
+      {
+        "id": "b",
+        "label": "Ipsilateral mediastinal disease (N2)",
+        "rationale": "Incorrect. 11Ri is interlobar rather than mediastinal."
+      },
+      {
+        "id": "c",
+        "label": "Contralateral mediastinal disease (N3)",
+        "rationale": "Incorrect. That would require contralateral or supraclavicular involvement, not ipsilateral 11Ri."
+      },
+      {
+        "id": "d",
+        "label": "It has no formal effect on nodal stage",
+        "rationale": "Incorrect. Station 11 disease is part of nodal staging."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Station 11Ri is an ipsilateral interlobar station for a right-sided primary and is categorized as N1 when involved.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "11Ri",
+      "N1"
+    ]
+  },
+  {
+    "id": "staging-contralateral-03",
+    "moduleId": "station-explorer",
+    "prompt": "A right-sided primary tumor has malignant involvement of 4L. What is the key teaching point?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "4L is contralateral mediastinal disease and therefore N3",
+        "rationale": "Correct. Contralateral mediastinal involvement upgrades staging to N3."
+      },
+      {
+        "id": "b",
+        "label": "4L is always N2 because all station 4 nodes are mediastinal",
+        "rationale": "Incorrect. Laterality still matters for station 4."
+      },
+      {
+        "id": "c",
+        "label": "4L is hilar disease if the node is close to the left main bronchus",
+        "rationale": "Incorrect. Station 4L remains mediastinal; the 10L handoff is below the left main pulmonary artery."
+      },
+      {
+        "id": "d",
+        "label": "The stage cannot be assigned until the node size is known",
+        "rationale": "Incorrect. Size does not define the N category here."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Station 4L is a left mediastinal station. For a right-sided primary, malignant involvement is contralateral mediastinal disease and is taught as N3.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "4L",
+      "N3"
+    ]
+  }
+]

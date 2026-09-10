@@ -2,7 +2,7 @@
 
 **Status:** Authoritative interface contract for the hardware described in
 `bronch_sim/Gen 2/universal_scope_tracker_plan_v4.md`.
-The web side (this repo + the two embedded simulator repos) is implemented against this
+The web side (this repo and its two embedded apps) is implemented against this
 contract **before** the firmware exists. When the RP2040 firmware is written, it must
 implement exactly what is specified here (or this document must be revised first, then
 both sides updated together).
@@ -12,13 +12,12 @@ both sides updated together).
 | Consumer                         | Repo                                                              | Uses                                             |
 | -------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------ |
 | `/[locale]/hardware` setup route | this repo (`src/lib/scope-input`, `src/components/scope-tracker`) | HID runtime + Web Serial diagnostics/calibration |
-| Bronch Navigation Trainer        | `../navigation_module/web` (vendored `src/scope-input/`)          | HID runtime only                                 |
-| SoCal EBUS simulator             | `../EBUS-course/apps/web` (vendored `src/lib/scope-input/`)       | HID runtime only                                 |
+| Bronch Navigation Trainer        | `navigation_module/web` (shared source import)                    | HID runtime only                                 |
+| SoCal EBUS simulator             | `EBUS-course/apps/web` (shared source import)                     | HID runtime only                                 |
 
 The canonical TypeScript implementation of this contract lives in
-`src/lib/scope-input/core/` in this repo and is copied into the two Vite repos by
-`npm run sync:scope-input` (also invoked automatically by both embed sync scripts).
-**Never edit the vendored copies.**
+`src/lib/scope-input/core/`. Both app adapters re-export this source directly;
+there is no sync step.
 
 ---
 

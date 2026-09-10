@@ -1,0 +1,203 @@
+{
+  "primerSections": [
+    {
+      "id": "depth",
+      "title": "Profundidad",
+      "summary": "La profundidad cambia cuánto tejido cabe en la pantalla. Auméntela cuando el objetivo quede cortado; redúzcala cuando el objetivo se vea diminuto y perdido en espacio no utilizado.",
+      "bestMove": "Encuadre el objetivo para que quede cómodamente en el tercio medio de la imagen.",
+      "pitfall": "Dejar el objetivo demasiado superficial o demasiado profundo dificulta juzgar todos los demás controles."
+    },
+    {
+      "id": "gain",
+      "title": "Ganancia",
+      "summary": "La ganancia aclara u oscurece toda la imagen. Auméntela cuando los bordes se pierdan en la oscuridad; redúzcala cuando todo se vuelva lechoso y ruidoso.",
+      "bestMove": "Ajuste hasta que el objetivo sea visible sin llenar la imagen de neblina.",
+      "pitfall": "Los principiantes a menudo sobrecorrigen y borran los márgenes."
+    },
+    {
+      "id": "contrast",
+      "title": "Contraste",
+      "summary": "El contraste separa tonos sutiles. Ayuda al alumno a ver dónde termina el borde y dónde comienza el ruido de fondo.",
+      "bestMove": "Use el contraste después de que la profundidad y la ganancia sean razonables.",
+      "pitfall": "Una ganancia alta con contraste bajo produce una imagen plana con mala definición de bordes."
+    },
+    {
+      "id": "color-doppler",
+      "title": "Doppler color",
+      "summary": "El Doppler color añade información de flujo para que el alumno pueda identificar un vaso antes de planificar un trayecto.",
+      "bestMove": "Actívelo cuando necesite decidir si una estructura podría ser vascular.",
+      "pitfall": "Usarlo como primer ajuste en lugar de corregir el encuadre y el brillo."
+    },
+    {
+      "id": "calipers",
+      "title": "Calibradores",
+      "summary": "Los calibradores proporcionan una referencia rápida de medición una vez visibles los bordes del objetivo.",
+      "bestMove": "Colóquelos solo después de que la imagen esté estable y los márgenes sean claros.",
+      "pitfall": "Medir antes de que el borde esté bien definido."
+    },
+    {
+      "id": "freeze",
+      "title": "Congelar",
+      "summary": "Congelar bloquea el cuadro actual para que el alumno pueda inspeccionarlo, medirlo o guardarlo.",
+      "bestMove": "Congele cuando la imagen esté bien encuadrada y esté listo para inspeccionar detalles.",
+      "pitfall": "Intentar seguir ajustando controles mientras la imagen está congelada."
+    },
+    {
+      "id": "save",
+      "title": "Guardar",
+      "summary": "Guardar captura la imagen docente después de encuadrarla, verificarla y, si corresponde, medirla.",
+      "bestMove": "Úselo después de confirmar que vale la pena conservar la imagen.",
+      "pitfall": "Guardar una imagen deficiente antes de verificarla."
+    }
+  ],
+  "controlLabExercises": [
+    {
+      "id": "depth-rescue",
+      "title": "Rescate 1: Traer el ganglio a la vista",
+      "symptom": "El ganglio objetivo está apretado contra la parte superior de la imagen y el alumno no puede ver el tejido por debajo.",
+      "instructions": "Aumente la profundidad hasta que el ganglio quede más cerca del centro de la imagen.",
+      "focusControl": "depth",
+      "start": {
+        "depth": 28,
+        "gain": 29,
+        "contrast": 43
+      },
+      "target": {
+        "depth": 60,
+        "gain": 29,
+        "contrast": 43
+      },
+      "successMessage": "La profundidad ahora encuadra el objetivo con más claridad. Es un mejor punto de partida para el resto del estudio."
+    },
+    {
+      "id": "gain-rescue",
+      "title": "Rescate 2: Sacar la imagen de la oscuridad",
+      "symptom": "La imagen tiene ganancia insuficiente y el borde del objetivo se mezcla con el fondo oscuro.",
+      "instructions": "Aumente la ganancia lo suficiente para revelar el objetivo sin volver la imagen blanquecina.",
+      "focusControl": "gain",
+      "start": {
+        "depth": 40,
+        "gain": 0,
+        "contrast": 43
+      },
+      "target": {
+        "depth": 40,
+        "gain": 43,
+        "contrast": 43
+      },
+      "successMessage": "La ganancia ahora revela el borde sin inundar la pantalla de brillo."
+    },
+    {
+      "id": "contrast-rescue",
+      "title": "Rescate 3: Separar el borde de la neblina",
+      "symptom": "La imagen es brillante pero plana, por lo que el borde del objetivo es difícil de distinguir del tejido circundante.",
+      "instructions": "Aumente el contraste y reduzca la ganancia lo suficiente para recuperar la definición del borde.",
+      "focusControl": "contrast",
+      "start": {
+        "depth": 60,
+        "gain": 57,
+        "contrast": 0
+      },
+      "target": {
+        "depth": 60,
+        "gain": 29,
+        "contrast": 43
+      },
+      "successMessage": "El contraste vuelve a separar el objetivo del fondo. La imagen se ve más legible."
+    }
+  ],
+  "dopplerLab": {
+    "title": "Verificación vascular con Doppler color",
+    "brief": "Esto es solo una aproximación educativa. Active el Doppler y luego decida qué trayecto evita el vaso lleno de color.",
+    "prompt": "¿Qué trayecto de punción es más seguro después de que el Doppler revela el vaso?",
+    "safePathId": "posterior-lateral",
+    "paths": [
+      {
+        "id": "anterior",
+        "label": "Trayecto anterior",
+        "description": "Cruza el vaso una vez activado el Doppler."
+      },
+      {
+        "id": "central",
+        "label": "Trayecto central",
+        "description": "Pasa directamente por la señal de flujo más brillante."
+      },
+      {
+        "id": "posterior-lateral",
+        "label": "Trayecto posterolateral",
+        "description": "Se angula alrededor del vaso en lugar de cruzarlo."
+      }
+    ]
+  },
+  "quickReferenceCards": [
+    {
+      "id": "depth",
+      "title": "Profundidad",
+      "whenToUse": "Cuando el objetivo está cortado o flotando en demasiado espacio vacío.",
+      "whatChanges": "Cuánta anatomía cabe en el campo vertical.",
+      "noviceTrap": "Intentar corregir un problema de encuadre con ganancia."
+    },
+    {
+      "id": "gain",
+      "title": "Ganancia",
+      "whenToUse": "Cuando toda la imagen está demasiado oscura o demasiado brillante.",
+      "whatChanges": "Brillo global de la imagen.",
+      "noviceTrap": "Aumentar demasiado la ganancia hasta que el borde del objetivo desaparezca en la neblina."
+    },
+    {
+      "id": "contrast",
+      "title": "Contraste",
+      "whenToUse": "Después de que el encuadre y el brillo sean aceptables pero los bordes sigan poco definidos.",
+      "whatChanges": "Separación entre tonos grises sutiles.",
+      "noviceTrap": "Ignorar el contraste cuando la imagen se ve brillante pero plana."
+    },
+    {
+      "id": "color-doppler",
+      "title": "Doppler color",
+      "whenToUse": "Cuando una estructura podría ser vascular y el alumno necesita confirmar flujo.",
+      "whatChanges": "Añade información de flujo en color sobre la imagen en escala de grises.",
+      "noviceTrap": "Activar Doppler antes de corregir el encuadre básico."
+    },
+    {
+      "id": "calipers",
+      "title": "Calibradores",
+      "whenToUse": "Después de que el borde del objetivo esté claro y la imagen estable.",
+      "whatChanges": "Añade una superposición de medición.",
+      "noviceTrap": "Medir un borde que aún no ha sido optimizado."
+    },
+    {
+      "id": "freeze",
+      "title": "Congelar",
+      "whenToUse": "Cuando el alumno quiere inspeccionar o medir una buena imagen.",
+      "whatChanges": "Bloquea la imagen actual.",
+      "noviceTrap": "Intentar seguir ajustando controles en una imagen congelada."
+    },
+    {
+      "id": "save",
+      "title": "Guardar",
+      "whenToUse": "Una vez que la imagen vale la pena conservarse para revisión docente.",
+      "whatChanges": "Captura la imagen docente actual.",
+      "noviceTrap": "Guardar antes de comprobar el encuadre, Doppler o medición."
+    }
+  ],
+  "quizQuestionIds": [
+    "knobology-sequence-01",
+    "knobology-cp-vs-rp-02",
+    "knobology-artifact-03",
+    "knobology-order-04",
+    "knobology-necrosis-05",
+    "knobology-doppler-06"
+  ],
+  "assetPlaceholders": [
+    {
+      "key": "knobology-frame-placeholder",
+      "label": "Imagen docente simulada en escala de grises",
+      "note": "El módulo actual usa formas renderizadas de marcador de posición, no una imagen real fija de ultrasonido."
+    },
+    {
+      "key": "knobology-doppler-placeholder",
+      "label": "Superposición Doppler simulada",
+      "note": "La señal vascular actual es solo ilustrativa y debe sustituirse más adelante por material docente aprobado."
+    }
+  ]
+}

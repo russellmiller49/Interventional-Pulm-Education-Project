@@ -1,0 +1,77 @@
+{
+  "designWidth": 649,
+  "designHeight": 791,
+  "landmarks": [],
+  "nodes": [
+    {
+      "stationId": "2R",
+      "x": 201,
+      "y": 112,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "2L",
+      "x": 343,
+      "y": 94,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "4R",
+      "x": 223,
+      "y": 295,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "4L",
+      "x": 315,
+      "y": 310,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "7",
+      "x": 271,
+      "y": 461,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "10R",
+      "x": 153,
+      "y": 402,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "10L",
+      "x": 409,
+      "y": 492,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "11Rs",
+      "x": 73,
+      "y": 474,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "11Ri",
+      "x": 83,
+      "y": 571,
+      "width": 48,
+      "height": 48
+    },
+    {
+      "stationId": "11L",
+      "x": 517,
+      "y": 578,
+      "width": 48,
+      "height": 48
+    }
+  ]
+}

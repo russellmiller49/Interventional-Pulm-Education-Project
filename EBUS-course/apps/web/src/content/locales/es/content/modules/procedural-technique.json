@@ -1,0 +1,85 @@
+{
+  "id": "procedural-technique",
+  "title": "Técnica procedural de EBUS lineal",
+  "summary": "Revisión técnica paso a paso centrada en orientación, contacto, manejo seguro de la aguja y razones comunes por las que las muestras se vuelven no diagnósticas.",
+  "learningObjectives": [
+    "Describir una secuencia reproducible desde la orientación neutral del broncoscopio hasta la optimización de imagen y el despliegue seguro de la aguja.",
+    "Explicar cómo interactúan el contacto del balón, la revisión vascular y las referencias de la vía aérea antes de la punción.",
+    "Usar correctamente el lenguaje de abaniqueo y muestreo de cápsula a cápsula al enseñar técnica de aspiración.",
+    "Reconocer causas comunes de pases de bajo rendimiento o engañosos."
+  ],
+  "sections": [
+    {
+      "id": "neutral-orientation",
+      "title": "Comience desde una orientación neutral del broncoscopio",
+      "kind": "technique",
+      "body": "Una posición inicial neutral y calmada ayuda al alumno a comprender dónde se ubican la pared de la vía aérea, el plano de ultrasonido y el trayecto de la aguja en relación entre sí. Una vez localizada la estación, los ajustes pequeños y controlados son más seguros que los grandes movimientos repetidos de torque.",
+      "bullets": [
+        "Restablezca la referencia de la vía aérea antes de refinar la imagen de ultrasonido.",
+        "Use movimientos pequeños y deliberados después de que aparezca el objetivo.",
+        "La estabilidad del broncoscopio suele importar más que la velocidad."
+      ],
+      "pearl": "Si el alumno se desorienta, reinicie en una referencia conocida de vía aérea en lugar de improvisar desde una mala imagen.",
+      "pitfall": "Perseguir la imagen con movimientos grandes repetidos a menudo empeora el contacto y confunde la identidad de la estación."
+    },
+    {
+      "id": "balloon-contact",
+      "title": "La insuflación del balón y el contacto crean la ventana acústica",
+      "kind": "technique",
+      "body": "El balón existe para mejorar la aposición entre la sonda de ultrasonido y la pared de la vía aérea. Un buen contacto hace que los ajustes posteriores de imagen sean significativos; un mal contacto obliga al alumno a compensar con ganancia y aun así deja la imagen poco confiable.",
+      "bullets": [
+        "Infle lo suficiente para mejorar el contacto sin desestabilizar la orientación.",
+        "Use el mejor punto de contacto que pueda mantener, no el contacto más llamativo que pueda crear brevemente.",
+        "Una ventana acústica estable debe preceder al despliegue de la aguja."
+      ],
+      "pearl": "El contacto es parte de la optimización de imagen, no una tarea preliminar separada.",
+      "pitfall": "Una imagen temporalmente llamativa que no puede mantenerse es una mala plataforma de muestreo."
+    },
+    {
+      "id": "vessel-check-and-puncture",
+      "title": "Identifique el objetivo, revise vasos y luego puncione",
+      "kind": "technique",
+      "body": "Antes de avanzar la aguja, identifique el objetivo, confirme la estación e inspeccione el trayecto previsto con Doppler. El despliegue de la aguja debe proteger el broncoscopio, preservar el ángulo elegido y favorecer el trayecto que mejor equilibre control, seguridad y acceso a tejido viable.",
+      "bullets": [
+        "Confirme la identidad del objetivo antes de abrir la aguja, no después.",
+        "Si el ángulo o el objetivo cambió, revise el trayecto con Doppler antes de cada pase.",
+        "Un trayecto seguro alrededor de un vaso es más importante que el trayecto geométrico más corto."
+      ],
+      "checklist": [
+        "Estación confirmada",
+        "Contacto del balón estable",
+        "Trayecto revisado con Doppler",
+        "Posición de aguja/vaina controlada",
+        "Objetivo dentro del ganglio elegido"
+      ],
+      "pearl": "El pase más seguro es el que puede repetir con precisión si se necesita más tejido.",
+      "pitfall": "No permita que un objetivo convincente en escala de grises elimine el paso de revisión vascular."
+    },
+    {
+      "id": "fanning-capsule",
+      "title": "Abaniqueo y muestreo de cápsula a cápsula",
+      "kind": "technique",
+      "body": "Abaniqueo significa cambiar el ángulo de la aguja durante un pase para muestrear múltiples áreas del ganglio en lugar de atravesar repetidamente el mismo trayecto. El lenguaje de cápsula a cápsula recuerda al alumno usar toda la amplitud viable del ganglio cuando corresponda, especialmente cuando la arquitectura es heterogénea.",
+      "bullets": [
+        "Cambie el ángulo dentro del ganglio para ampliar la captura de tejido.",
+        "Muestree más de una región viable si el ganglio parece heterogéneo.",
+        "Pases repetidos por un solo trayecto pueden parecer productivos aunque agreguen poco tejido nuevo."
+      ],
+      "pearl": "El abaniqueo es especialmente valioso cuando una región parece necrótica, calcificada o de bajo rendimiento.",
+      "pitfall": "El número de pases por sí solo no garantiza muestreo adecuado si cada pase sigue la misma ruta."
+    },
+    {
+      "id": "non-diagnostic-specimens",
+      "title": "Causas comunes de muestras no diagnósticas",
+      "kind": "pitfall",
+      "body": "Los procedimientos de bajo rendimiento suelen reflejar una cadena de errores pequeños: mal contacto, identidad de estación incierta, evitar vasos dejando solo tejido necrótico, cambio de ángulo insuficiente o confianza prematura tras un pase visualmente satisfactorio. La solución suele ser una mejor estrategia de objetivo, no más fuerza.",
+      "bullets": [
+        "Un mal acoplamiento acústico puede crear falsa confianza en el trayecto elegido.",
+        "Muestrear regiones necróticas o acelulares reduce el rendimiento aunque el pase sea técnicamente suave.",
+        "No abanicar puede producir muestras repetidas de baja información."
+      ],
+      "pearl": "Cuando la muestra es de bajo rendimiento, revise calidad de imagen y selección de objetivo antes de escalar el equipo.",
+      "pitfall": "Más pases hacia el mismo mal objetivo a menudo multiplican el trauma sin multiplicar el tejido útil."
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "id": "aabip-ebus-procedural-videos",
+  "title": "AABIP EBUS Procedural Videos",
+  "summary": "Optional supplemental viewing from the AABIP EBUS YouTube playlist. These videos are available inside the app for quick reference, but they do not count toward course lecture completion.",
+  "playlistTitle": "EBUS",
+  "playlistUrl": "https://www.youtube.com/playlist?list=PLz2NeO-gj6IW70aQwTFdU1IwU_b17639q",
+  "videos": [
+    {
+      "id": "aabip-ebus-01",
+      "playlistIndex": 1,
+      "title": "EBUS Lymph Node Station 11R(s)",
+      "youtubeId": "f0ndPonTZ78"
+    },
+    {
+      "id": "aabip-ebus-02",
+      "playlistIndex": 2,
+      "title": "EBUS Lymph Node Station 10R",
+      "youtubeId": "CJP_FY9pWG8"
+    },
+    {
+      "id": "aabip-ebus-03",
+      "playlistIndex": 3,
+      "title": "EBUS Lymph Node Station 11R(i)",
+      "youtubeId": "wcA1Zvu8WZw"
+    },
+    {
+      "id": "aabip-ebus-04",
+      "playlistIndex": 4,
+      "title": "EBUS Lymph Node Station 11L",
+      "youtubeId": "fmg0YB6Bkx0"
+    },
+    {
+      "id": "aabip-ebus-05",
+      "playlistIndex": 5,
+      "title": "EBUS Lymph Node Station 10L",
+      "youtubeId": "2B-qOH1hpmc"
+    },
+    {
+      "id": "aabip-ebus-06",
+      "playlistIndex": 6,
+      "title": "EBUS Sonographic Features Of Lymph Nodes",
+      "youtubeId": "rGhiZ8pF35A"
+    },
+    {
+      "id": "aabip-ebus-07",
+      "playlistIndex": 7,
+      "title": "EBUS Lymph Node Station 2L",
+      "youtubeId": "niRYsSCajZs"
+    },
+    {
+      "id": "aabip-ebus-08",
+      "playlistIndex": 8,
+      "title": "EBUS Lymph Node Station 2R",
+      "youtubeId": "cZYIxRG1kRM"
+    },
+    {
+      "id": "aabip-ebus-09",
+      "playlistIndex": 9,
+      "title": "EBUS Lymph Node Station 4L",
+      "youtubeId": "JcqOVzL8GoY"
+    },
+    {
+      "id": "aabip-ebus-10",
+      "playlistIndex": 10,
+      "title": "EBUS Lymph Node Station 4R",
+      "youtubeId": "K8aH1Ov1vbQ"
+    },
+    {
+      "id": "aabip-ebus-11",
+      "playlistIndex": 11,
+      "title": "EBUS Lymph Node Station 7",
+      "youtubeId": "rIIzAap3spo"
+    },
+    {
+      "id": "aabip-ebus-12",
+      "playlistIndex": 12,
+      "title": "EBUS-TBNA \"Anchor\" Sampling Technique",
+      "youtubeId": "OLuyX64ZeqE"
+    },
+    {
+      "id": "aabip-ebus-13",
+      "playlistIndex": 13,
+      "title": "EBUS-TBNA \"Jab\" Sampling Technique",
+      "youtubeId": "A_7HHDiG9wU"
+    },
+    {
+      "id": "aabip-ebus-14",
+      "playlistIndex": 14,
+      "title": "EBUS-TBNA Intubation Techniques - LMA",
+      "youtubeId": "ibldQpNNCM8"
+    },
+    {
+      "id": "aabip-ebus-15",
+      "playlistIndex": 15,
+      "title": "EBUS-TBNA Intubation Techniques - Nasal Approach",
+      "youtubeId": "q-npJ88354Y"
+    },
+    {
+      "id": "aabip-ebus-16",
+      "playlistIndex": 16,
+      "title": "EBUS Specimen Collection",
+      "youtubeId": "Zwp6xLt0uW0"
+    },
+    {
+      "id": "aabip-ebus-17",
+      "playlistIndex": 17,
+      "title": "EBUS Specimen Processing",
+      "youtubeId": "Fs_hVbrg_y4"
+    },
+    {
+      "id": "aabip-ebus-18",
+      "playlistIndex": 18,
+      "title": "EBUS Rapid Onsite Evaluation (ROSE)",
+      "youtubeId": "9gQXjSBF5kg"
+    },
+    {
+      "id": "aabip-ebus-19",
+      "playlistIndex": 19,
+      "title": "EBUS Bronchoscope Assembly and Processors",
+      "youtubeId": "TjWIXifYVr0"
+    },
+    {
+      "id": "aabip-ebus-20",
+      "playlistIndex": 20,
+      "title": "EBUS Equipment Overview: Similarities and Differences",
+      "youtubeId": "1wxhIqgWyGI"
+    },
+    {
+      "id": "aabip-ebus-21",
+      "playlistIndex": 21,
+      "title": "EBUS Biopsy Tools",
+      "youtubeId": "Lwv4g4v9TNQ"
+    }
+  ]
+}

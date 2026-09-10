@@ -1,0 +1,203 @@
+{
+  "primerSections": [
+    {
+      "id": "depth",
+      "title": "Depth",
+      "summary": "Depth changes how much tissue fits on the screen. Increase it when the target is cut off; decrease it when the target is tiny and buried in unused space.",
+      "bestMove": "Frame the target so it sits comfortably in the middle third of the image.",
+      "pitfall": "Leaving the target too shallow or too deep makes every other control harder to judge."
+    },
+    {
+      "id": "gain",
+      "title": "Gain",
+      "summary": "Gain brightens or darkens the whole image. Raise it when borders disappear into darkness; lower it when everything turns milky and noisy.",
+      "bestMove": "Adjust until the target is visible without filling the frame with haze.",
+      "pitfall": "Beginners often overcorrect and wash out the margins."
+    },
+    {
+      "id": "contrast",
+      "title": "Contrast",
+      "summary": "Contrast separates subtle shades. It helps the learner see where the border ends and background clutter begins.",
+      "bestMove": "Use contrast after depth and gain are reasonable.",
+      "pitfall": "High gain with low contrast produces a flat image with poor edge definition."
+    },
+    {
+      "id": "color-doppler",
+      "title": "Color Doppler",
+      "summary": "Color Doppler adds flow information so the learner can flag a vessel before planning a path.",
+      "bestMove": "Turn it on when you need to decide whether a structure might be vascular.",
+      "pitfall": "Using it as the first adjustment instead of fixing framing and brightness."
+    },
+    {
+      "id": "calipers",
+      "title": "Calipers",
+      "summary": "Calipers give a quick measurement reference once the target edges are visible.",
+      "bestMove": "Place them only after the image is stable and the margins are clear.",
+      "pitfall": "Measuring before the border is well defined."
+    },
+    {
+      "id": "freeze",
+      "title": "Freeze",
+      "summary": "Freeze locks the current frame so the learner can inspect, measure, or save it.",
+      "bestMove": "Freeze once the image is framed correctly and you are ready to inspect details.",
+      "pitfall": "Trying to keep adjusting controls while the image is frozen."
+    },
+    {
+      "id": "save",
+      "title": "Save",
+      "summary": "Save captures the teaching frame after it is framed, checked, and optionally measured.",
+      "bestMove": "Use it after you confirm the image is worth keeping.",
+      "pitfall": "Saving a poor frame before verifying it."
+    }
+  ],
+  "controlLabExercises": [
+    {
+      "id": "depth-rescue",
+      "title": "Rescue 1: Bring the node into view",
+      "symptom": "The target node is crowded against the top of the frame and the learner cannot see the tissue below it.",
+      "instructions": "Increase depth until the node sits closer to the middle of the frame.",
+      "focusControl": "depth",
+      "start": {
+        "depth": 28,
+        "gain": 29,
+        "contrast": 43
+      },
+      "target": {
+        "depth": 60,
+        "gain": 29,
+        "contrast": 43
+      },
+      "successMessage": "Depth is now framing the target more cleanly. This is a better starting point for the rest of the scan."
+    },
+    {
+      "id": "gain-rescue",
+      "title": "Rescue 2: Lift the image out of the dark",
+      "symptom": "The frame is undergained and the target border blends into the dark background.",
+      "instructions": "Raise gain enough to reveal the target without turning the image chalky.",
+      "focusControl": "gain",
+      "start": {
+        "depth": 40,
+        "gain": 0,
+        "contrast": 43
+      },
+      "target": {
+        "depth": 40,
+        "gain": 43,
+        "contrast": 43
+      },
+      "successMessage": "Gain now reveals the border without flooding the screen with brightness."
+    },
+    {
+      "id": "contrast-rescue",
+      "title": "Rescue 3: Separate the border from the haze",
+      "symptom": "The image is bright but flat, so the target edge is difficult to distinguish from the surrounding tissue.",
+      "instructions": "Increase contrast and trim gain enough to recover edge definition.",
+      "focusControl": "contrast",
+      "start": {
+        "depth": 60,
+        "gain": 57,
+        "contrast": 0
+      },
+      "target": {
+        "depth": 60,
+        "gain": 29,
+        "contrast": 43
+      },
+      "successMessage": "Contrast is separating the target from the background again. The frame looks more readable."
+    }
+  ],
+  "dopplerLab": {
+    "title": "Color Doppler vessel check",
+    "brief": "This is an educational approximation only. Turn Doppler on, then decide which path avoids the color-filled vessel.",
+    "prompt": "Which puncture path is safest after Doppler reveals the vessel?",
+    "safePathId": "posterior-lateral",
+    "paths": [
+      {
+        "id": "anterior",
+        "label": "Anterior path",
+        "description": "Cuts across the vessel once Doppler is on."
+      },
+      {
+        "id": "central",
+        "label": "Central path",
+        "description": "Passes straight through the brightest flow signal."
+      },
+      {
+        "id": "posterior-lateral",
+        "label": "Posterior-lateral path",
+        "description": "Angles around the vessel instead of crossing it."
+      }
+    ]
+  },
+  "quickReferenceCards": [
+    {
+      "id": "depth",
+      "title": "Depth",
+      "whenToUse": "When the target is cut off or floating in too much empty space.",
+      "whatChanges": "How much anatomy fits in the vertical field.",
+      "noviceTrap": "Trying to fix a framing problem with gain."
+    },
+    {
+      "id": "gain",
+      "title": "Gain",
+      "whenToUse": "When the whole image is too dark or too bright.",
+      "whatChanges": "Overall image brightness.",
+      "noviceTrap": "Overgaining until the target border disappears in haze."
+    },
+    {
+      "id": "contrast",
+      "title": "Contrast",
+      "whenToUse": "After framing and brightness are close but borders are still muddy.",
+      "whatChanges": "Separation between subtle gray tones.",
+      "noviceTrap": "Ignoring contrast when the image looks bright but flat."
+    },
+    {
+      "id": "color-doppler",
+      "title": "Color Doppler",
+      "whenToUse": "When a structure could be vascular and the learner needs flow confirmation.",
+      "whatChanges": "Adds color flow information on top of the grayscale image.",
+      "noviceTrap": "Turning Doppler on before basic framing is fixed."
+    },
+    {
+      "id": "calipers",
+      "title": "Calipers",
+      "whenToUse": "After the target edge is clear and the frame is stable.",
+      "whatChanges": "Adds a measurement overlay.",
+      "noviceTrap": "Measuring a border that has not been optimized yet."
+    },
+    {
+      "id": "freeze",
+      "title": "Freeze",
+      "whenToUse": "When the learner wants to inspect or measure a good frame.",
+      "whatChanges": "Locks the current image.",
+      "noviceTrap": "Trying to keep adjusting controls on a frozen frame."
+    },
+    {
+      "id": "save",
+      "title": "Save",
+      "whenToUse": "Once the frame is worth keeping for teaching review.",
+      "whatChanges": "Captures the current teaching frame.",
+      "noviceTrap": "Saving before checking framing, Doppler, or measurement."
+    }
+  ],
+  "quizQuestionIds": [
+    "knobology-sequence-01",
+    "knobology-cp-vs-rp-02",
+    "knobology-artifact-03",
+    "knobology-order-04",
+    "knobology-necrosis-05",
+    "knobology-doppler-06"
+  ],
+  "assetPlaceholders": [
+    {
+      "key": "knobology-frame-placeholder",
+      "label": "Mock grayscale teaching frame",
+      "note": "Current module uses rendered placeholder shapes, not a real ultrasound still."
+    },
+    {
+      "key": "knobology-doppler-placeholder",
+      "label": "Mock Doppler overlay",
+      "note": "Current vessel signal is illustrative only and should be swapped with approved teaching art later."
+    }
+  ]
+}

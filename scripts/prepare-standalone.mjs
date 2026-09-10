@@ -33,12 +33,8 @@ const bundledAssetPrefixes = ['models/cardiohelp-ecmo', 'models/cardiac', 'model
 const remoteAssetPrefixes = [
   'airway-anatomy',
   'airway-stent-mechanics',
-  'bronch-navigation-trainer/app/cases',
   'fluoroview/cases',
   'models',
-  'socal-ebus-course/app/media',
-  'socal-ebus-course/app/pipelines',
-  'socal-ebus-course/app/simulator',
 ]
 
 const remoteAssetFiles = new Set([
@@ -48,7 +44,6 @@ const remoteAssetFiles = new Set([
   'fluoroview/bronch_animation.glb',
 ])
 
-const embeddedShellAssetExtensions = new Set(['.css', '.html', '.js'])
 const openFdaReviewFiles = new Set([
   'enrichment-proposals.json',
   'high-confidence-candidates.csv',
@@ -104,13 +99,6 @@ function shouldCopyPublicAsset(source) {
     )
   ) {
     return false
-  }
-
-  if (
-    relativePath.startsWith('socal-ebus-course/app/assets/') ||
-    relativePath.startsWith('bronch-navigation-trainer/app/assets/')
-  ) {
-    return embeddedShellAssetExtensions.has(path.extname(relativePath))
   }
 
   return true

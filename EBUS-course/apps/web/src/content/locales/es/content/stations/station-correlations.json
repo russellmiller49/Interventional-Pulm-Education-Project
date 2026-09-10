@@ -1,0 +1,502 @@
+[
+  {
+    "stationId": "2R",
+    "aliases": [
+      "Paratraqueal superior derecha",
+      "Paratraqueal superior derecha alta"
+    ],
+    "landmarkChecklist": [
+      "Manténgase alto en el lado derecho de la tráquea.",
+      "Mantenga el objetivo por encima de 4R y por encima de la transición ácigos.",
+      "Use la regla del borde lateral izquierdo de la tráquea para lateralidad, en lugar de la línea media traqueal.",
+      "Piense en corredor paratraqueal superior derecho, no en entrada hiliar."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Corredor paratraqueal derecho alto por encima de 4R.",
+        "focusLabel": "Derecha de la tráquea, banda paratraqueal superior",
+        "caption": "Comience con la relación de la pila superior derecha y luego confirme que el ganglio permanezca a la derecha del borde lateral izquierdo de la tráquea.",
+        "visualAnchor": "upper-right"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Exploración traqueal superior derecha.",
+        "focusLabel": "Objetivo alto en la pared traqueal derecha",
+        "caption": "Esta aún es una vista traqueal; si se siente hiliar, probablemente se ha desplazado demasiado distal.",
+        "visualAnchor": "upper-right"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS paratraqueal superior derecha.",
+        "focusLabel": "Objetivo ganglionar paratraqueal superior derecho",
+        "caption": "Apílelo por encima de 4R y verifique la lateralidad con la regla del borde traqueal antes de asignar etapa.",
+        "visualAnchor": "upper-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "2r-ct",
+        "viewId": "ct",
+        "prompt": "¿Qué estación está resaltada en esta vista de CT paratraqueal derecha alta?",
+        "optionIds": [
+          "2R",
+          "4R",
+          "2L",
+          "10R"
+        ],
+        "explanation": "La respuesta correcta es 2R porque el objetivo permanece alto, derecho y superior al nivel 4R."
+      }
+    ]
+  },
+  {
+    "stationId": "2L",
+    "aliases": [
+      "Paratraqueal superior izquierda",
+      "Paratraqueal superior izquierda alta"
+    ],
+    "landmarkChecklist": [
+      "Manténgase alto en el lado izquierdo de la tráquea.",
+      "Mantenga el objetivo por encima del límite 4L.",
+      "Use la regla del borde lateral izquierdo de la tráquea antes de asignar lateralidad.",
+      "Esta sigue siendo una estación traqueal, no hiliar."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Corredor paratraqueal izquierdo alto por encima de 4L.",
+        "focusLabel": "Izquierda de la tráquea, banda paratraqueal superior",
+        "caption": "Lea 2L como el objetivo paratraqueal superior izquierdo antes de las transiciones 4L y 10L.",
+        "visualAnchor": "upper-left"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Exploración traqueal superior izquierda.",
+        "focusLabel": "Objetivo alto en la pared traqueal izquierda",
+        "caption": "Si la vista se siente distal o a nivel de ramas, probablemente ya no está en 2L.",
+        "visualAnchor": "upper-left"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS paratraqueal superior izquierda.",
+        "focusLabel": "Objetivo ganglionar paratraqueal superior izquierdo",
+        "caption": "Confirme la posición izquierda y mantenga el objetivo por encima de la transición 4L.",
+        "visualAnchor": "upper-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "2l-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "¿Qué estación está resaltada desde la perspectiva de la pared traqueal superior izquierda?",
+        "optionIds": [
+          "2L",
+          "4L",
+          "2R",
+          "10L"
+        ],
+        "explanation": "La respuesta correcta es 2L porque el objetivo permanece superior y paratraqueal izquierdo, no inferior ni hiliar."
+      }
+    ]
+  },
+  {
+    "stationId": "4R",
+    "aliases": [
+      "Paratraqueal inferior derecha",
+      "Estación 4R de uso frecuente"
+    ],
+    "landmarkChecklist": [
+      "Coloque 4R por debajo de 2R y por encima de 10R.",
+      "Use el margen inferior de la ácigos como límite inferior.",
+      "Mantenga el objetivo paratraqueal en lugar de hiliar.",
+      "Recuerde que el borde lateral izquierdo de la tráquea sigue dividiendo derecha de izquierda."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Corredor paratraqueal inferior derecho por encima de 10R.",
+        "focusLabel": "Objetivo paratraqueal inferior derecho",
+        "caption": "Ancle 4R debajo de 2R y por encima de la transición hiliar definida por la ácigos.",
+        "visualAnchor": "middle-right"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Pared traqueal lateral derecha cerca del descenso carinal.",
+        "focusLabel": "Ventana de exploración paratraqueal derecha",
+        "caption": "Esto sigue siendo traqueal y paratraqueal; una sensación de bronquio principal sugiere 10R.",
+        "visualAnchor": "middle-right"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS paratraqueal inferior derecha.",
+        "focusLabel": "Ventana clásica de estadificación 4R",
+        "caption": "Verifique el límite de la ácigos antes de llamar hiliar al ganglio en lugar de paratraqueal.",
+        "visualAnchor": "middle-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "4r-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "¿Qué estación está resaltada en esta vista EBUS paratraqueal inferior derecha?",
+        "optionIds": [
+          "4R",
+          "2R",
+          "10R",
+          "7"
+        ],
+        "explanation": "La respuesta correcta es 4R porque el objetivo sigue siendo paratraqueal inferior y no ha pasado por debajo del margen inferior de la ácigos hacia 10R."
+      }
+    ]
+  },
+  {
+    "stationId": "4L",
+    "aliases": [
+      "Paratraqueal inferior izquierda",
+      "4L del lado aórtico"
+    ],
+    "landmarkChecklist": [
+      "Coloque 4L por debajo de 2L y por encima de 10L.",
+      "Use el borde superior de la arteria pulmonar principal izquierda como límite inferior.",
+      "Mantenga 4L medial al ligamento arterioso.",
+      "No confunda un objetivo paratraqueal con un objetivo de ventana AP o hiliar."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Corredor paratraqueal inferior izquierdo por encima de 10L.",
+        "focusLabel": "Objetivo paratraqueal inferior izquierdo",
+        "caption": "Use el límite de la arteria pulmonar y la relación medial con el ligamento para separar 4L de las estaciones vecinas.",
+        "visualAnchor": "middle-left"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Exploración paratraqueal izquierda cerca de la carina.",
+        "focusLabel": "Ventana de exploración paratraqueal izquierda",
+        "caption": "La vista aún debe sentirse mediastínica, no hiliar izquierda.",
+        "visualAnchor": "middle-left"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS paratraqueal inferior izquierda.",
+        "focusLabel": "Objetivo paratraqueal izquierdo debajo de 2L",
+        "caption": "El mayor par de confusión es 10L, así que confirme que el ganglio permanezca por encima del margen superior de la arteria pulmonar principal izquierda.",
+        "visualAnchor": "middle-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "4l-ct",
+        "viewId": "ct",
+        "prompt": "¿Qué estación está resaltada en este panel de CT paratraqueal inferior izquierdo?",
+        "optionIds": [
+          "4L",
+          "2L",
+          "10L",
+          "7"
+        ],
+        "explanation": "La respuesta correcta es 4L porque el ganglio permanece paratraqueal izquierdo y por encima del límite 10L."
+      }
+    ]
+  },
+  {
+    "stationId": "7",
+    "aliases": [
+      "Subcarinal",
+      "Ancla subcarinal de línea media"
+    ],
+    "landmarkChecklist": [
+      "Encuentre primero la carina.",
+      "Mantenga el objetivo entre los márgenes mediales de los bronquios principales.",
+      "Recuerde que la estación 7 es de línea media, no lateralizada derecha o izquierda.",
+      "Use esta estación como punto de reinicio de orientación."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Estación de línea media debajo de la carina.",
+        "focusLabel": "Objetivo puente subcarinal",
+        "caption": "Si pierde la orientación, la estación 7 es el reinicio de línea media y ancla de estadificación más rápido.",
+        "visualAnchor": "center"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Bifurcación carinal con un objetivo justo debajo.",
+        "focusLabel": "Referencia subcarinal",
+        "caption": "Manténgase centrado debajo de la bifurcación; desplazarse lateralmente a menudo significa que entra en territorio de estación 10.",
+        "visualAnchor": "center"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Vista EBUS subcarinal de línea media.",
+        "focusLabel": "Ganglio de línea central bajo la carina",
+        "caption": "Piense entre los márgenes bronquiales mediales y no simplemente 'en algún lugar central'.",
+        "visualAnchor": "center"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "7-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "¿Qué estación está resaltada directamente debajo de la bifurcación carinal?",
+        "optionIds": [
+          "7",
+          "10R",
+          "10L",
+          "4R"
+        ],
+        "explanation": "La respuesta correcta es la estación 7 porque el objetivo está centrado debajo de la carina y entre los márgenes mediales de los bronquios principales."
+      }
+    ]
+  },
+  {
+    "stationId": "10R",
+    "aliases": [
+      "Hiliar derecha",
+      "Punto de control hiliar derecho"
+    ],
+    "landmarkChecklist": [
+      "Coloque 10R por debajo de 4R y antes de los objetivos 11R a nivel de ramas.",
+      "Use el margen inferior de la ácigos como límite superior.",
+      "Verifique si el ganglio está fuera de los márgenes mediales de los bronquios principales y no en la estación 7.",
+      "Esta es una pista hiliar de bronquio principal, no todavía una pista a nivel de ramas."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Zona de entrada hiliar derecha más allá de 4R.",
+        "focusLabel": "Punto de control hiliar derecho",
+        "caption": "La distinción clave es la transición hiliar, no la ramificación interlobar.",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Bronquio principal derecho antes de puntos de ramificación más profundos.",
+        "focusLabel": "Referencia de vía aérea hiliar derecha",
+        "caption": "Permanezca en la entrada hiliar del bronquio principal antes de avanzar hacia 11Rs o 11Ri.",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS hiliar derecha.",
+        "focusLabel": "Objetivo hiliar derecho cerca de la entrada del bronquio principal",
+        "caption": "Si la pista se siente demasiado distal o demasiado específica de rama, quizá ya esté en territorio 11R.",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "10r-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "¿Qué estación está resaltada en la referencia hiliar derecha y no en el nivel de rama interlobar?",
+        "optionIds": [
+          "10R",
+          "4R",
+          "11Rs",
+          "7"
+        ],
+        "explanation": "La respuesta correcta es 10R porque el objetivo se ubica en la referencia del bronquio principal hiliar derecho, no en los puntos de ramificación interlobares distales."
+      }
+    ]
+  },
+  {
+    "stationId": "10L",
+    "aliases": [
+      "Hiliar izquierda",
+      "Punto de control hiliar izquierdo"
+    ],
+    "landmarkChecklist": [
+      "Coloque 10L por debajo de 4L y antes de 11L.",
+      "Use el margen superior de la arteria pulmonar principal izquierda como límite superior.",
+      "Asegúrese de que el objetivo se sienta hiliar y no paratraqueal.",
+      "Esta es una pista hiliar izquierda de bronquio principal, no todavía el objetivo interlobar a nivel de ramas."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT axial",
+        "orientation": "Zona de entrada hiliar izquierda más allá de 4L.",
+        "focusLabel": "Punto de control hiliar izquierdo",
+        "caption": "Mantenga el objetivo distal a la pila paratraqueal pero proximal al punto de rama interlobar izquierda.",
+        "visualAnchor": "lower-left"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Bronquio principal izquierdo antes de ramificaciones más distales.",
+        "focusLabel": "Referencia de vía aérea hiliar izquierda",
+        "caption": "Esta es la entrada entre la lógica paratraqueal 4L y la lógica a nivel de ramas 11L.",
+        "visualAnchor": "lower-left"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS hiliar izquierda.",
+        "focusLabel": "Objetivo hiliar izquierdo cerca de la entrada del bronquio principal",
+        "caption": "Use la proximidad al bronquio principal y el límite de la arteria pulmonar para separar 10L de 4L y 11L.",
+        "visualAnchor": "lower-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "10l-ct",
+        "viewId": "ct",
+        "prompt": "¿Qué estación está resaltada en la referencia hiliar izquierda en CT?",
+        "optionIds": [
+          "10L",
+          "4L",
+          "11L",
+          "7"
+        ],
+        "explanation": "La respuesta correcta es 10L porque el objetivo se ubica por debajo del límite 4L pero proximal al punto de rama interlobar izquierda."
+      }
+    ]
+  },
+  {
+    "stationId": "11Rs",
+    "aliases": [
+      "Interlobar superior derecha",
+      "Estación interlobar del origen del lóbulo superior derecho"
+    ],
+    "landmarkChecklist": [
+      "Localice el bronquio del lóbulo superior derecho y el bronquio intermedio.",
+      "Confirme que está más allá de la referencia hiliar 10R.",
+      "Piense en anatomía a nivel de ramas, no en anatomía de bronquio principal.",
+      "Mantenga 11Rs separado de 11Ri por debajo."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT",
+        "orientation": "Nivel de rama interlobar superior derecha.",
+        "focusLabel": "11Rs entre el bronquio del LSD y el bronquio intermedio",
+        "caption": "El detalle de ramas en ventana pulmonar ayuda a confirmar que esta es la subestación interlobar superior derecha.",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Origen del lóbulo superior derecho y bronquio intermedio.",
+        "focusLabel": "Pista de vía aérea interlobar superior derecha",
+        "caption": "Esta es una vista a nivel de ramas más allá de 10R y por encima de 11Ri.",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS interlobar superior derecha.",
+        "focusLabel": "Objetivo 11Rs a nivel de ramas",
+        "caption": "Si el objetivo aún se siente como una referencia de bronquio principal, reconsidere 10R en lugar de 11Rs.",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11rs-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "¿Qué estación está resaltada entre el bronquio del lóbulo superior derecho y el bronquio intermedio?",
+        "optionIds": [
+          "11Rs",
+          "10R",
+          "11Ri",
+          "4R"
+        ],
+        "explanation": "La respuesta correcta es 11Rs porque la referencia de vía aérea es el punto de rama interlobar superior derecho entre el bronquio del lóbulo superior derecho y el bronquio intermedio."
+      }
+    ]
+  },
+  {
+    "stationId": "11Ri",
+    "aliases": [
+      "Interlobar inferior derecha",
+      "Estación interlobar de lóbulos medio/inferior derechos"
+    ],
+    "landmarkChecklist": [
+      "Encuentre la división bronquial de los lóbulos medio e inferior.",
+      "Confirme que está más distal que 10R y más inferior que 11Rs.",
+      "Use la anatomía de ramas en lugar de la intuición hiliar general.",
+      "Esta es la subestación interlobar inferior derecha."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT",
+        "orientation": "Nivel de rama interlobar inferior derecha.",
+        "focusLabel": "11Ri entre los bronquios de los lóbulos medio e inferior",
+        "caption": "Este es el objetivo interlobar derecho más inferior y no debe reducirse a una etiqueta genérica 11R.",
+        "visualAnchor": "lower-right"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Ramificación bronquial de los lóbulos medio e inferior derechos.",
+        "focusLabel": "Pista de vía aérea interlobar inferior derecha",
+        "caption": "El detalle de ramas es lo que distingue 11Ri tanto de 10R como de 11Rs.",
+        "visualAnchor": "lower-right"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS interlobar inferior derecha.",
+        "focusLabel": "Objetivo 11Ri a nivel de ramas",
+        "caption": "Nombre primero la relación de ramas; la etiqueta de estación se deriva de la anatomía de la vía aérea.",
+        "visualAnchor": "lower-right"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11ri-ultrasound",
+        "viewId": "ultrasound",
+        "prompt": "¿Qué estación está resaltada en el nivel de rama interlobar inferior derecha?",
+        "optionIds": [
+          "11Ri",
+          "11Rs",
+          "10R",
+          "7"
+        ],
+        "explanation": "La respuesta correcta es 11Ri porque el objetivo está en el punto de rama interlobar inferior derecha, no en la referencia interlobar superior o hiliar."
+      }
+    ]
+  },
+  {
+    "stationId": "11L",
+    "aliases": [
+      "Interlobar izquierda",
+      "Continuación hiliar izquierda a nivel de ramas"
+    ],
+    "landmarkChecklist": [
+      "Confirme que está más allá de la referencia hiliar 10L.",
+      "Busque anatomía de vía aérea izquierda a nivel de ramas en lugar de una vista de bronquio principal.",
+      "Este es un objetivo interlobar izquierdo, no paratraqueal.",
+      "Use 10L como el principal par de confusión."
+    ],
+    "views": {
+      "ct": {
+        "title": "Correlato de CT",
+        "orientation": "Nivel de rama interlobar izquierda más allá de 10L.",
+        "focusLabel": "Objetivo interlobar izquierdo",
+        "caption": "La pista es anatomía de vía aérea izquierda a nivel de ramas más allá de la referencia hiliar.",
+        "visualAnchor": "lower-left"
+      },
+      "bronchoscopy": {
+        "title": "Correlato broncoscópico",
+        "orientation": "Vía aérea izquierda a nivel de ramas más allá del bronquio principal.",
+        "focusLabel": "Pista de vía aérea interlobar izquierda",
+        "caption": "Esto es más distal que 10L y debe sentirse a nivel de ramas, no hiliar.",
+        "visualAnchor": "lower-left"
+      },
+      "ultrasound": {
+        "title": "Correlato EBUS",
+        "orientation": "Ventana EBUS interlobar izquierda.",
+        "focusLabel": "Objetivo 11L a nivel de ramas",
+        "caption": "Una relación de vía aérea izquierda más distal y a nivel de ramas apoya 11L en lugar de 10L.",
+        "visualAnchor": "lower-left"
+      }
+    },
+    "quizItems": [
+      {
+        "id": "11l-bronchoscopy",
+        "viewId": "bronchoscopy",
+        "prompt": "¿Qué estación está resaltada más allá de la referencia hiliar izquierda a nivel de ramas?",
+        "optionIds": [
+          "11L",
+          "10L",
+          "4L",
+          "7"
+        ],
+        "explanation": "La respuesta correcta es 11L porque la pista de vía aérea es a nivel de ramas y distal a la referencia hiliar 10L."
+      }
+    ]
+  }
+]

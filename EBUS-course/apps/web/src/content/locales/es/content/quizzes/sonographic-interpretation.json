@@ -1,0 +1,159 @@
+[
+  {
+    "id": "sono-chs-01",
+    "moduleId": "station-explorer",
+    "prompt": "¿Cuál enunciado sobre la estructura hiliar central (CHS) es más preciso?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Una CHS preservada tiende a ser un rasgo tranquilizador, aunque por sí sola no descarta malignidad",
+        "rationale": "Correcto. La CHS es un signo tranquilizador útil, pero el tejido sigue determinando el diagnóstico."
+      },
+      {
+        "id": "b",
+        "label": "Una CHS preservada prueba que el ganglio es benigno y no requiere muestreo",
+        "rationale": "Incorrecto. Ningún signo sonográfico aislado reemplaza la pregunta de estadificación ni la necesidad de tejido."
+      },
+      {
+        "id": "c",
+        "label": "La CHS es principalmente un artefacto Doppler y no es útil en la interpretación",
+        "rationale": "Incorrecto. La CHS es un descriptor significativo en escala de grises."
+      },
+      {
+        "id": "d",
+        "label": "La CHS solo debe evaluarse después de la elastografía",
+        "rationale": "Incorrecto. La CHS forma parte de la evaluación convencional en escala de grises."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "La CHS preservada tiende a favorecer benignidad, pero nunca debe usarse como razón independiente para ignorar un ganglio que cambiaría el manejo si fuera positivo.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "CHS"
+    ]
+  },
+  {
+    "id": "sono-suspicion-02",
+    "moduleId": "station-explorer",
+    "prompt": "Seleccione las características sonográficas que generalmente aumentan la preocupación por malignidad cuando aparecen juntas.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "Ecogenicidad heterogénea",
+        "rationale": "Correcto. La heterogeneidad a menudo aumenta la preocupación."
+      },
+      {
+        "id": "b",
+        "label": "Región central avascular de aspecto necrótico (CNS)",
+        "rationale": "Correcto. El CNS es una característica preocupante, especialmente cuando el Doppler apoya avascularidad."
+      },
+      {
+        "id": "c",
+        "label": "Estructura hiliar central preservada",
+        "rationale": "Incorrecto. Una CHS preservada es relativamente tranquilizadora más que sospechosa."
+      },
+      {
+        "id": "d",
+        "label": "Patrón vascular periférico o caótico",
+        "rationale": "Correcto. Un patrón vascular anormal puede aumentar la preocupación."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b",
+      "d"
+    ],
+    "explanation": "La sospecha suele surgir de la combinación de patrones más que de un signo aislado. La heterogeneidad, el CNS y la vascularidad anormal juntos son más preocupantes que cualquier característica aislada.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "CNS",
+      "vascular-pattern"
+    ]
+  },
+  {
+    "id": "sono-elastography-03",
+    "moduleId": "station-explorer",
+    "prompt": "¿Cómo debe enseñarse la elastografía en relación con la estadificación ganglionar por EBUS?",
+    "type": "case-vignette",
+    "caseTitle": "Mapa de color útil, conclusión incorrecta",
+    "caseSummary": "Un alumno quiere omitir la biopsia porque el patrón de elastografía parece tranquilizador.",
+    "options": [
+      {
+        "id": "a",
+        "label": "Como complemento que puede ayudar a priorizar objetivos, pero no como sustituto del tejido",
+        "rationale": "Correcto. La elastografía refina la sospecha y la selección del objetivo; no reemplaza la patología."
+      },
+      {
+        "id": "b",
+        "label": "Como la prueba aislada más confiable para decidir si un ganglio es maligno",
+        "rationale": "Incorrecto. La elastografía funciona mejor cuando se combina con características convencionales de EBUS, no como dictamen independiente."
+      },
+      {
+        "id": "c",
+        "label": "Como razón para ignorar la consecuencia de estadificación del ganglio",
+        "rationale": "Incorrecto. La consecuencia de estadificación aún determina si se requiere tejido."
+      },
+      {
+        "id": "d",
+        "label": "Como reemplazo del Doppler para planificar el trayecto de punción",
+        "rationale": "Incorrecto. La elastografía no reemplaza la revisión de seguridad con Doppler."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "La elastografía se enseña mejor como complemento. Puede ayudar a decidir qué ganglio o qué parte de un ganglio parece más sospechosa, pero el tejido sigue siendo definitivo y el Doppler sigue siendo necesario para la seguridad.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "sonographic-interpretation",
+      "elastography"
+    ]
+  },
+  {
+    "id": "sono-cns-04",
+    "moduleId": "station-explorer",
+    "prompt": "Un ganglio contiene una región central oscura sin flujo Doppler y una ecotextura circundante irregular. ¿Qué interpretación es más defendible?",
+    "type": "image-interpretation",
+    "options": [
+      {
+        "id": "a",
+        "label": "El hallazgo es compatible con un signo de necrosis coagulativa y aumenta la sospecha, pero aun así no reemplaza el tejido",
+        "rationale": "Correcto. Esto combina precisión descriptiva con el nivel correcto de humildad diagnóstica."
+      },
+      {
+        "id": "b",
+        "label": "El ganglio debe ser benigno porque no hay flujo central",
+        "rationale": "Incorrecto. Las áreas oscuras centrales avasculares pueden aumentar la sospecha en lugar de tranquilizar."
+      },
+      {
+        "id": "c",
+        "label": "La imagen prueba que la lesión es maligna, por lo que la biopsia es innecesaria",
+        "rationale": "Incorrecto. Incluso una imagen muy sospechosa no elimina el papel del tejido."
+      },
+      {
+        "id": "d",
+        "label": "El hallazgo no tiene significado a menos que el ganglio mida más de 2 cm",
+        "rationale": "Incorrecto. La arquitectura interna importa en múltiples tamaños ganglionares."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "El paso docente adecuado es nombrar con precisión el patrón sonográfico, incorporarlo a la estimación global de sospecha y luego volver a la pregunta de estadificación clínica y a la necesidad de tejido.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "image-interpretation",
+      "CNS"
+    ]
+  }
+]

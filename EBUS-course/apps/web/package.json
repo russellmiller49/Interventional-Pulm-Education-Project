@@ -1,0 +1,35 @@
+{
+  "name": "socal-ebus-prep-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:embed": "VITE_BASE_URL=/socal-ebus-course/app/ vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "gitingest": "node scripts/generate-gitingest.mjs",
+    "invite:learners": "node scripts/invite-learners.mjs"
+  },
+  "dependencies": {
+    "@itk-wasm/image-io": "^1.6.1",
+    "@kitware/vtk.js": "^35.5.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "itk-wasm": "^1.0.0-b.196",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^6.30.1",
+    "three": "^0.179.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@types/three": "^0.179.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.2",
+    "vite": "^5.4.19",
+    "vitest": "^1.6.1"
+  }
+}

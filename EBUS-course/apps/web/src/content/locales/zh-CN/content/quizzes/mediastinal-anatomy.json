@@ -1,0 +1,206 @@
+[
+  {
+    "id": "mediastinum-boundary-01",
+    "moduleId": "station-map",
+    "prompt": "在 IASLC 图谱中，哪个标志同时划分 2R 与 2L、以及 4R 与 4L？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "气管中线",
+        "rationale": "错误。使用气管中线是旧的捷径，会错误标记左右侧。"
+      },
+      {
+        "id": "b",
+        "label": "气管左外侧缘",
+        "rationale": "正确。IASLC 对 2 组和 4 组站点均使用气管左外侧缘。"
+      },
+      {
+        "id": "c",
+        "label": "隆突",
+        "rationale": "错误。隆突定位 7 站，但不划分左右气管旁站点。"
+      },
+      {
+        "id": "d",
+        "label": "胸膜反折",
+        "rationale": "错误。胸膜反折不是这些站点对的关键分界。"
+      }
+    ],
+    "correctOptionIds": [
+      "b"
+    ],
+    "explanation": "气管左外侧缘是区分 2R 与 2L、4R 与 4L 的关键分界。这个规则很重要，因为左右侧错误会变成分期错误。",
+    "difficulty": "basic",
+    "tags": [
+      "station-map",
+      "boundaries",
+      "2R",
+      "2L",
+      "4R",
+      "4L"
+    ]
+  },
+  {
+    "id": "mediastinum-4r-10r-02",
+    "moduleId": "station-map",
+    "prompt": "哪个边界最能区分 4R 与 10R？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "奇静脉下缘",
+        "rationale": "正确。4R 位于奇静脉下缘以上，10R 位于其以下。"
+      },
+      {
+        "id": "b",
+        "label": "主动脉弓上缘",
+        "rationale": "错误。该标志更适用于左上纵隔站点。"
+      },
+      {
+        "id": "c",
+        "label": "气管左外侧缘",
+        "rationale": "错误。它划分左右气管旁站点，而不是 4R 与 10R。"
+      },
+      {
+        "id": "d",
+        "label": "中间支气管下缘",
+        "rationale": "错误。这与 7 站的下界有关，而不是 4R 到 10R 的交界。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "在右侧，奇静脉下缘是区分 4R 与 10R 的关键。左侧则使用左主肺动脉上缘来区分相应的 4L 与 10L。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-map",
+      "4R",
+      "10R",
+      "boundaries"
+    ]
+  },
+  {
+    "id": "mediastinum-station7-03",
+    "moduleId": "station-map",
+    "prompt": "左肺原发肿瘤累及 7 站恶性病变。最准确的分期教学要点是什么？",
+    "type": "case-vignette",
+    "caseTitle": "中线站点，不是左右侧陷阱",
+    "caseSummary": "学习者担心中线隆突下淋巴结可能算作对侧病变。",
+    "options": [
+      {
+        "id": "a",
+        "label": "无论原发灶位于哪侧，7 站均视为同侧纵隔病变（N2）",
+        "rationale": "正确。7 站是中线纵隔站点，无论肿瘤左右侧如何均为 N2。"
+      },
+      {
+        "id": "b",
+        "label": "只要原发灶位于纵隔对侧，7 站就变成 N3",
+        "rationale": "错误。这种左右侧逻辑适用于有侧别的纵隔站点，不适用于 7 站。"
+      },
+      {
+        "id": "c",
+        "label": "7 站属于肺门，因此同侧病变为 N1",
+        "rationale": "错误。7 站是隆突下纵隔病变，不是肺门病变。"
+      },
+      {
+        "id": "d",
+        "label": "7 站因为位于中线而没有分期意义",
+        "rationale": "错误。它是最重要的纵隔分期站点之一。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "7 站是基于左右侧捷径的重要例外。它位于中线，无论原发肿瘤在哪一侧肺，均按同侧纵隔病变处理。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-map",
+      "station-7",
+      "staging"
+    ]
+  },
+  {
+    "id": "mediastinum-left-handoff-04",
+    "moduleId": "station-map",
+    "prompt": "请选择支持将左侧淋巴结称为 10L 而非 4L 的特征。",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "淋巴结位于左主肺动脉上缘以下",
+        "rationale": "正确。这支持 10L 而不是 4L。"
+      },
+      {
+        "id": "b",
+        "label": "淋巴结表现为邻近左主支气管的肺门目标，而不是气管旁目标",
+        "rationale": "正确。肺门关系支持 10L。"
+      },
+      {
+        "id": "c",
+        "label": "淋巴结明显位于左主肺动脉边缘以上，并且仍为气管旁",
+        "rationale": "错误。该描述支持 4L，而不是 10L。"
+      },
+      {
+        "id": "d",
+        "label": "淋巴结位于气管旁区域动脉韧带内侧",
+        "rationale": "错误。这同样更像 4L，而不是 10L。"
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b"
+    ],
+    "explanation": "左肺门交界结合了血管规则和区域规则。10L 始于左主肺动脉上缘以下，表现为肺门站点而不是气管旁站点。",
+    "difficulty": "advanced",
+    "tags": [
+      "station-map",
+      "4L",
+      "10L",
+      "boundaries"
+    ]
+  },
+  {
+    "id": "mediastinum-right-stack-05",
+    "moduleId": "station-map",
+    "prompt": "请将这些右侧站点沿中央气道路径从最上方到最远端排序。",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "2R",
+        "label": "2R",
+        "rationale": "这是右上气管旁站点。"
+      },
+      {
+        "id": "4R",
+        "label": "4R",
+        "rationale": "它位于 2R 下方、右肺门交界上方。"
+      },
+      {
+        "id": "10R",
+        "label": "10R",
+        "rationale": "这是 4R 下方的右肺门检查点。"
+      },
+      {
+        "id": "11Rs",
+        "label": "11Rs",
+        "rationale": "它位于更远端的叶间/右上叶开口区域。"
+      }
+    ],
+    "correctOptionIds": [
+      "2R",
+      "4R",
+      "10R",
+      "11Rs"
+    ],
+    "explanation": "右侧学习序列为：2R 在 4R 上方，然后是肺门交界处的 10R，再往分支路径远端是 11R 亚站目标。",
+    "difficulty": "basic",
+    "tags": [
+      "station-map",
+      "ordering",
+      "2R",
+      "4R",
+      "10R",
+      "11Rs"
+    ]
+  }
+]

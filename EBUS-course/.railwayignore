@@ -1,0 +1,17 @@
+.git
+.DS_Store
+node_modules
+apps/web/node_modules
+apps/web/dist
+dist
+tmp
+tools
+.expo
+.idea
+.claude
+Codex_handoff_items
+Pre-course tests
+surveys
+docs
+nano.*.save
+*.log

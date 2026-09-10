@@ -1,0 +1,122 @@
+[
+  {
+    "id": "staging-priority-01",
+    "moduleId": "station-explorer",
+    "prompt": "右肺原发肿瘤有一个较大的 10R 淋巴结，以及一个跨过气管左外侧缘的较小 2L 淋巴结。如果阳性，哪个站点具有更大的即时分期后果？",
+    "type": "case-vignette",
+    "caseTitle": "大的同侧淋巴结，较小的对侧淋巴结",
+    "caseSummary": "最容易到达的淋巴结不一定是最改变分期的淋巴结。",
+    "options": [
+      {
+        "id": "a",
+        "label": "2L 淋巴结，因为对侧纵隔站点可确定为 N3 病变",
+        "rationale": "正确。对侧纵隔病变的分期后果大于同侧肺门病变。"
+      },
+      {
+        "id": "b",
+        "label": "10R 淋巴结，因为最大的淋巴结总是决定最高分期",
+        "rationale": "错误。大小本身并不决定最重要的站点。"
+      },
+      {
+        "id": "c",
+        "label": "两者都不重要，因为它们都是胸腔中央淋巴结",
+        "rationale": "错误。它们的左右侧和区域会产生非常不同的分期含义。"
+      },
+      {
+        "id": "d",
+        "label": "在这种情境中，只有 7 站会改变分期",
+        "rationale": "错误。两个淋巴结都可能重要，但对侧纵隔淋巴结具有更大的即时分期后果。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "以分期优先的思维会问哪个淋巴结最改变处理。这里，对侧纵隔淋巴结比同侧肺门淋巴结具有更大的即时后果，即使肺门淋巴结更大。",
+    "difficulty": "advanced",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "N3",
+      "2L",
+      "10R"
+    ]
+  },
+  {
+    "id": "staging-11ri-02",
+    "moduleId": "station-explorer",
+    "prompt": "对于右肺原发肿瘤，11Ri 恶性累及最好归为哪一类淋巴结分期？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "同侧叶间病变（N1）",
+        "rationale": "正确。同侧 11R 亚站属于肺门/叶间病变，计为 N1。"
+      },
+      {
+        "id": "b",
+        "label": "同侧纵隔病变（N2）",
+        "rationale": "错误。11Ri 是叶间站点，而不是纵隔站点。"
+      },
+      {
+        "id": "c",
+        "label": "对侧纵隔病变（N3）",
+        "rationale": "错误。那需要对侧或锁骨上累及，而不是同侧 11Ri。"
+      },
+      {
+        "id": "d",
+        "label": "它对淋巴结分期没有正式影响",
+        "rationale": "错误。11 站病变是淋巴结分期的一部分。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "对于右侧原发灶，11Ri 是同侧叶间站点，受累时归为 N1。",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "11Ri",
+      "N1"
+    ]
+  },
+  {
+    "id": "staging-contralateral-03",
+    "moduleId": "station-explorer",
+    "prompt": "右侧原发肿瘤恶性累及 4L。关键教学要点是什么？",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "4L 是对侧纵隔病变，因此为 N3",
+        "rationale": "正确。对侧纵隔累及将分期提高到 N3。"
+      },
+      {
+        "id": "b",
+        "label": "4L 总是 N2，因为所有 4 站淋巴结都是纵隔站点",
+        "rationale": "错误。对于 4 站，左右侧仍然重要。"
+      },
+      {
+        "id": "c",
+        "label": "如果淋巴结靠近左主支气管，4L 就是肺门病变",
+        "rationale": "错误。4L 站仍为纵隔站点；10L 的交界在左主肺动脉以下。"
+      },
+      {
+        "id": "d",
+        "label": "在知道淋巴结大小前无法分期",
+        "rationale": "错误。此处大小并不定义 N 分类。"
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "4L 是左侧纵隔站点。对于右侧原发灶，恶性累及属于对侧纵隔病变，教学上归为 N3。",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "staging-strategy",
+      "4L",
+      "N3"
+    ]
+  }
+]

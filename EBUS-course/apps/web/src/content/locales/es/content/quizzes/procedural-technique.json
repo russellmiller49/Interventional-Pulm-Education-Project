@@ -1,0 +1,168 @@
+[
+  {
+    "id": "technique-order-01",
+    "moduleId": "station-explorer",
+    "prompt": "Ordene los pasos procedimentales en la secuencia docente más defendible.",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "orientation",
+        "label": "Restablecer la referencia de vía aérea y la orientación neutral",
+        "rationale": "Este es el punto de partida más seguro porque restaura el contexto espacial."
+      },
+      {
+        "id": "contact",
+        "label": "Optimizar el contacto del balón y el acoplamiento de imagen",
+        "rationale": "Esto debe ocurrir antes de la interpretación detallada de la imagen o del despliegue de la aguja."
+      },
+      {
+        "id": "optimize",
+        "label": "Ajustar profundidad, ganancia y contraste para definir el objetivo",
+        "rationale": "La optimización de la imagen importa después de que el contacto crea una ventana acústica real."
+      },
+      {
+        "id": "doppler",
+        "label": "Verificar el trayecto de punción previsto con Doppler",
+        "rationale": "Esta es la revisión de seguridad inmediatamente antes de la pasada."
+      },
+      {
+        "id": "puncture",
+        "label": "Desplegar la aguja y muestrear con abaniqueo controlado",
+        "rationale": "Este es el paso final una vez confirmados el trayecto y el objetivo."
+      }
+    ],
+    "correctOptionIds": [
+      "orientation",
+      "contact",
+      "optimize",
+      "doppler",
+      "puncture"
+    ],
+    "explanation": "Una secuencia confiable comienza con orientación espacial, luego acoplamiento, después optimización en escala de grises, luego revisión de seguridad con Doppler y solo entonces despliegue de la aguja con muestreo controlado.",
+    "difficulty": "basic",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "ordering"
+    ]
+  },
+  {
+    "id": "technique-target-02",
+    "moduleId": "station-explorer",
+    "prompt": "Un ganglio heterogéneo tiene un centro avascular de aspecto necrótico y un borde sólido de aspecto viable. ¿Cuál estrategia de objetivo es mejor?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "Priorizar el borde sólido viable y abanicar por áreas representativas",
+        "rationale": "Correcto. Esta estrategia tiene más probabilidad de capturar tejido diagnóstico viable."
+      },
+      {
+        "id": "b",
+        "label": "Apuntar repetidamente al centro porque es lo más fácil de mantener a la vista",
+        "rationale": "Incorrecto. El objetivo visual más fácil puede ser el objetivo biológico de menor rendimiento."
+      },
+      {
+        "id": "c",
+        "label": "Ignorar la arquitectura en escala de grises si el trayecto es Doppler negativo",
+        "rationale": "Incorrecto. El Doppler ayuda con la seguridad, pero la selección del objetivo dentro del ganglio sigue siendo importante."
+      },
+      {
+        "id": "d",
+        "label": "Muestrear solo la cápsula sin atravesar tejido significativo",
+        "rationale": "Incorrecto. Las pasadas solo por la cápsula no cumplen el propósito del muestreo de cápsula a cápsula."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "La pasada de mayor rendimiento no siempre es el trayecto más fácil. En un ganglio heterogéneo, la selección de tejido viable y la variación del ángulo importan tanto como la planificación segura del trayecto.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "target-selection"
+    ]
+  },
+  {
+    "id": "technique-low-yield-03",
+    "moduleId": "station-explorer",
+    "prompt": "Seleccione los factores que comúnmente contribuyen a muestras de EBUS-TBNA no diagnósticas.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "Mal contacto de la sonda que crea una imagen engañosa",
+        "rationale": "Correcto. Un mal acoplamiento puede hacer poco confiables tanto la interpretación como la selección del objetivo."
+      },
+      {
+        "id": "b",
+        "label": "Pasadas repetidas por el mismo trayecto estrecho sin abaniqueo",
+        "rationale": "Correcto. Eso limita la diversidad tisular y puede repetir un trayecto de bajo rendimiento."
+      },
+      {
+        "id": "c",
+        "label": "Muestrear una cavidad central necrótica en lugar de tejido viable",
+        "rationale": "Correcto. Las regiones necróticas a menudo reducen el rendimiento diagnóstico."
+      },
+      {
+        "id": "d",
+        "label": "Realizar una verificación vascular con Doppler antes de la punción",
+        "rationale": "Incorrecto. La revisión con Doppler es parte de una técnica segura, no una causa de bajo rendimiento."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b",
+      "c"
+    ],
+    "explanation": "El bajo rendimiento a menudo comienza antes de que la aguja entre en el ganglio. El mal contacto, la mala selección del objetivo y el muestreo repetitivo del mismo trayecto son causas más comunes que una fuerza o velocidad insuficiente.",
+    "difficulty": "intermediate",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "pitfalls"
+    ]
+  },
+  {
+    "id": "technique-fanning-04",
+    "moduleId": "station-explorer",
+    "prompt": "¿Qué enunciado describe mejor el abaniqueo y el muestreo de cápsula a cápsula?",
+    "type": "case-vignette",
+    "caseTitle": "Un trayecto parece muy activo, pero no amplía la muestra",
+    "caseSummary": "Un alumno realiza múltiples movimientos vigorosos por la misma línea y asume que eso equivale automáticamente a un muestreo adecuado.",
+    "options": [
+      {
+        "id": "a",
+        "label": "El abaniqueo significa cambiar el ángulo para muestrear distintas regiones viables, y el lenguaje de cápsula a cápsula enfatiza usar la amplitud del ganglio en lugar de un solo túnel",
+        "rationale": "Correcto. Ese es el concepto educativo clave."
+      },
+      {
+        "id": "b",
+        "label": "El abaniqueo significa aumentar la ganancia durante la pasada para que una mayor parte del ganglio se vea brillante",
+        "rationale": "Incorrecto. El abaniqueo es un concepto de trayecto de aguja, no un control del procesador."
+      },
+      {
+        "id": "c",
+        "label": "El muestreo de cápsula a cápsula significa puncionar solo la capa más externa del ganglio",
+        "rationale": "Incorrecto. La frase se refiere a atravesar la amplitud representativa del tejido, no a rozar solo el borde."
+      },
+      {
+        "id": "d",
+        "label": "Si la primera pasada es fluida, el abaniqueo no añade valor educativo",
+        "rationale": "Incorrecto. Una mecánica fluida no garantiza una captura amplia o representativa de tejido."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "El abaniqueo amplía la captura de tejido. El lenguaje de cápsula a cápsula recuerda al alumno usar la amplitud viable del ganglio en lugar de perforar repetidamente el mismo túnel.",
+    "difficulty": "advanced",
+    "tags": [
+      "station-explorer",
+      "procedural-technique",
+      "fanning",
+      "capsule-to-capsule"
+    ]
+  }
+]

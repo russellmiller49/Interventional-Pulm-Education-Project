@@ -1,0 +1,239 @@
+[
+  {
+    "id": "knobology-sequence-01",
+    "moduleId": "knobology",
+    "prompt": "A lymph node is partly cut off at the top of the image. Which control should be addressed first?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "depth",
+        "label": "Increase depth so the target is fully framed",
+        "rationale": "Correct. Framing comes before fine brightness or measurement decisions."
+      },
+      {
+        "id": "gain",
+        "label": "Increase gain so the clipped node looks brighter",
+        "rationale": "Incorrect. Brightness cannot fix anatomy that is not fully in the field."
+      },
+      {
+        "id": "freeze",
+        "label": "Freeze the frame to inspect the border",
+        "rationale": "Incorrect. Freezing too early only preserves a poorly framed image."
+      },
+      {
+        "id": "calipers",
+        "label": "Place calipers before changing the view",
+        "rationale": "Incorrect. Measurement is unreliable when the target is not even fully visualized."
+      }
+    ],
+    "correctOptionIds": [
+      "depth"
+    ],
+    "explanation": "EBUS image rescue begins with framing. Once the target is entirely visible, gain and contrast changes become much more meaningful.",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "depth",
+      "control-sequence"
+    ]
+  },
+  {
+    "id": "knobology-cp-vs-rp-02",
+    "moduleId": "knobology",
+    "prompt": "Which statement best captures the practical tradeoff between RP-EBUS and CP-EBUS?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "RP-EBUS usually favors higher-resolution peripheral localization, while CP-EBUS provides deeper imaging and real-time needle guidance",
+        "rationale": "Correct. That is the clinically useful way to remember the resolution-versus-penetration and guidance tradeoff."
+      },
+      {
+        "id": "b",
+        "label": "CP-EBUS always gives both better penetration and better resolution than RP-EBUS",
+        "rationale": "Incorrect. The modalities make different tradeoffs rather than one being universally superior."
+      },
+      {
+        "id": "c",
+        "label": "RP-EBUS is mainly preferred because it has Doppler and can guide transbronchial needle aspiration in real time",
+        "rationale": "Incorrect. Doppler and real-time TBNA are key strengths of CP-EBUS, not RP-EBUS."
+      },
+      {
+        "id": "d",
+        "label": "The two systems differ only in screen layout and not in ultrasound behavior",
+        "rationale": "Incorrect. Their frequency, geometry, penetration, and procedural roles differ substantially."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "A useful teaching shorthand is that RP-EBUS is a higher-resolution localization tool for peripheral work, while CP-EBUS gives deeper imaging, Doppler, and real-time sampling for mediastinal and hilar targets.",
+    "difficulty": "intermediate",
+    "tags": [
+      "knobology",
+      "ultrasound-physics",
+      "cp-ebus",
+      "rp-ebus"
+    ]
+  },
+  {
+    "id": "knobology-artifact-03",
+    "moduleId": "knobology",
+    "prompt": "Select the findings that should push the learner toward artifact rather than true anatomy.",
+    "type": "multi-select",
+    "options": [
+      {
+        "id": "a",
+        "label": "A bright interface produces repeated equally spaced echoes that move with the reflector",
+        "rationale": "Correct. That pattern fits reverberation rather than a true layered structure."
+      },
+      {
+        "id": "b",
+        "label": "A dark region disappears after the probe contact improves and the angle changes",
+        "rationale": "Correct. A finding that vanishes with coupling and angle change should raise artifact suspicion."
+      },
+      {
+        "id": "c",
+        "label": "A vascular structure lights up on Doppler exactly where grayscale suggested a vessel",
+        "rationale": "Incorrect. That makes a real vessel more likely, not an artifact."
+      },
+      {
+        "id": "d",
+        "label": "A suspected border remains stable despite contact changes and is supported across multiple views",
+        "rationale": "Incorrect. Stability across views argues more for true anatomy than for artifact."
+      }
+    ],
+    "correctOptionIds": [
+      "a",
+      "b"
+    ],
+    "explanation": "Artifacts often behave like reflections: they track with an interface, change with angle, and disappear when coupling improves. True anatomy is usually more stable across small technique adjustments.",
+    "difficulty": "intermediate",
+    "tags": [
+      "knobology",
+      "artifact",
+      "image-interpretation"
+    ]
+  },
+  {
+    "id": "knobology-order-04",
+    "moduleId": "knobology",
+    "prompt": "Put the workflow in the most defensible order for a target that may need sampling.",
+    "type": "ordering",
+    "options": [
+      {
+        "id": "frame",
+        "label": "Set depth and framing",
+        "rationale": "This belongs first because you need the target and surrounding anatomy in view."
+      },
+      {
+        "id": "brightness",
+        "label": "Tune gain and contrast",
+        "rationale": "This comes after framing because edge quality is easier to judge once the image geometry makes sense."
+      },
+      {
+        "id": "doppler",
+        "label": "Check the intended tract with Doppler",
+        "rationale": "This precedes puncture and measurement because it is a safety step."
+      },
+      {
+        "id": "freeze",
+        "label": "Freeze and measure only if useful",
+        "rationale": "This should happen after the image is trustworthy and after the vessel check."
+      }
+    ],
+    "correctOptionIds": [
+      "frame",
+      "brightness",
+      "doppler",
+      "freeze"
+    ],
+    "explanation": "A reproducible sequence reduces random button-pushing: frame first, optimize the grayscale image second, perform Doppler safety review third, and freeze or measure only when the image is truly worth preserving.",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "ordering",
+      "safe-sampling"
+    ]
+  },
+  {
+    "id": "knobology-necrosis-05",
+    "moduleId": "knobology",
+    "prompt": "A large node has a dark avascular center and a more solid peripheral rim. After Doppler confirms a vessel-free tract, what is the best next teaching move?",
+    "type": "case-vignette",
+    "caseTitle": "Bright image, low-yield center",
+    "caseSummary": "The easiest line crosses no flow but points directly into the darkest part of the node.",
+    "options": [
+      {
+        "id": "a",
+        "label": "Aim for the viable solid rim and fan through more than one representative area",
+        "rationale": "Correct. A conspicuous necrotic center may be low-yield; viable tissue is a better target."
+      },
+      {
+        "id": "b",
+        "label": "Sample the center repeatedly because it is easiest to visualize",
+        "rationale": "Incorrect. Ease of visualization does not make an avascular necrotic center the best target."
+      },
+      {
+        "id": "c",
+        "label": "Ignore the grayscale target because Doppler is negative",
+        "rationale": "Incorrect. Doppler helps with safety, but grayscale still guides what part of the node is worth sampling."
+      },
+      {
+        "id": "d",
+        "label": "Increase gain until the dark center looks more solid before puncturing",
+        "rationale": "Incorrect. Artificially brightening the frame does not convert necrotic tissue into a higher-yield target."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Doppler helps exclude vessels, but target selection inside the node still matters. When a node is heterogeneous, sample viable tissue and use fanning rather than repeatedly traversing an obvious necrotic cavity.",
+    "difficulty": "advanced",
+    "tags": [
+      "knobology",
+      "case",
+      "doppler",
+      "necrosis",
+      "target-selection"
+    ]
+  },
+  {
+    "id": "knobology-doppler-06",
+    "moduleId": "knobology",
+    "prompt": "What is the best reason to turn Doppler on before an EBUS-TBNA pass?",
+    "type": "single-best-answer",
+    "options": [
+      {
+        "id": "a",
+        "label": "To identify flow in adjacent vessels and refine a safe puncture path",
+        "rationale": "Correct. That is the highest-yield practical use before sampling."
+      },
+      {
+        "id": "b",
+        "label": "To replace grayscale interpretation of the node architecture",
+        "rationale": "Incorrect. Doppler complements grayscale; it does not replace it."
+      },
+      {
+        "id": "c",
+        "label": "To improve the node border the same way contrast does",
+        "rationale": "Incorrect. Doppler provides flow information, not grayscale edge separation."
+      },
+      {
+        "id": "d",
+        "label": "To determine the final diagnosis without tissue",
+        "rationale": "Incorrect. Doppler can refine suspicion and safety, but tissue remains definitive."
+      }
+    ],
+    "correctOptionIds": [
+      "a"
+    ],
+    "explanation": "Doppler is mainly a safety and target-selection tool in this context. It helps confirm whether the intended tract crosses vascular structures and whether a suspicious area is avascular or vascular.",
+    "difficulty": "basic",
+    "tags": [
+      "knobology",
+      "doppler",
+      "safety"
+    ]
+  }
+]

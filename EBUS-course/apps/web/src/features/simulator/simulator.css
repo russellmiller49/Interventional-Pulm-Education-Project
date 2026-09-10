@@ -1,0 +1,1436 @@
+.simulator-page {
+  display: grid;
+  gap: 14px;
+}
+
+.simulator-intro,
+.simulator-topbar,
+.simulator-control-rail,
+.simulator-scene-pane,
+.simulator-sector-pane,
+.simulator-load-panel {
+  border: 1px solid rgba(222, 232, 226, 0.14);
+  background: rgba(23, 29, 31, 0.92);
+  border-radius: 8px;
+}
+
+.simulator-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.36fr);
+  gap: 18px;
+  padding: 18px;
+}
+
+.simulator-intro h1,
+.simulator-topbar h2,
+.simulator-pane-header h2 {
+  margin: 0;
+}
+
+.simulator-intro p,
+.simulator-intro aside {
+  margin: 8px 0 0;
+  color: #b8c7c4;
+}
+
+.simulator-intro aside {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  padding: 14px;
+  border: 1px solid rgba(245, 225, 102, 0.22);
+  background: rgba(245, 225, 102, 0.07);
+  color: #f0e7ad;
+  border-radius: 8px;
+}
+
+.simulator-load-shell {
+  min-height: 55vh;
+  display: grid;
+  place-items: center;
+}
+
+.simulator-load-panel {
+  width: min(560px, 100%);
+  padding: 24px;
+}
+
+.simulator-topbar {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.simulator-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.simulator-status-strip span,
+.simulator-chip {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #222a2c;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #d9e5e1;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.simulator-sector-style-switch {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.simulator-sector-style-toggle {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #222a2c;
+  color: #d9e5e1;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.simulator-sector-style-toggle[aria-pressed='true'] {
+  border-color: rgba(139, 212, 255, 0.55);
+  background: rgba(139, 212, 255, 0.12);
+  color: #d9f0ee;
+}
+
+.simulator-sector-style-badge {
+  font-size: 0.72rem;
+  color: #b8c4c9;
+}
+
+.simulator-control-rail {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(180px, 240px) minmax(240px, 1fr);
+  gap: 12px;
+  align-items: end;
+  padding: 12px;
+}
+
+.simulator-control-rail label {
+  display: grid;
+  gap: 6px;
+  color: #9aa7a7;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.simulator-control-rail select,
+.simulator-control-rail input[type='range'] {
+  width: 100%;
+}
+
+.simulator-control-rail select {
+  min-height: 38px;
+  color: #eef4f2;
+  background: #101416;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  padding: 0 10px;
+}
+
+.simulator-control-rail input[type='range'] {
+  accent-color: #8bd4ff;
+}
+
+.simulator-layer-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(74px, 1fr));
+  gap: 8px 10px;
+}
+
+.simulator-layer-toggles label {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111719;
+  border-radius: 6px;
+  color: #d8e0dd;
+  font-size: 0.77rem;
+  font-weight: 650;
+}
+
+.simulator-layer-toggles input {
+  accent-color: #93c56f;
+}
+
+/* On wide screens the rail stays short — selects and sliders share one row and the layer
+   toggles flow in a single wrapped row below — so the workspace keeps the viewport height. */
+@media (min-width: 1081px) {
+  .simulator-control-rail {
+    grid-template-columns: minmax(220px, 360px) minmax(180px, 240px) minmax(240px, 1fr);
+  }
+
+  .simulator-layer-toggles {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .simulator-layer-toggles label {
+    padding: 0 10px;
+  }
+}
+
+.simulator-workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(330px, 0.72fr);
+  gap: 12px;
+  /* Anchor for the floating drive pad. */
+  position: relative;
+}
+
+/* One learner-facing navigation panel replaces the former split branch dropdown, raw roll rail,
+   and screen-relative arrow pad. It stays draggable on wide screens and sticky on narrow ones. */
+.simulator-drive-pad {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 6;
+  display: grid;
+  gap: 10px;
+  width: min(330px, calc(100% - 36px));
+  padding: 12px;
+  border: 1px solid rgba(222, 232, 226, 0.18);
+  border-radius: 14px;
+  background: rgba(7, 10, 12, 0.92);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.42);
+}
+
+/* The pad is draggable anywhere over the workspace (wide layouts): grab affordance on the pad
+   surface; its buttons and slider keep their own cursors and never start a drag. */
+.simulator-drive-pad {
+  cursor: grab;
+  touch-action: none;
+}
+
+.simulator-drive-pad--dragging {
+  cursor: grabbing;
+}
+
+.simulator-drive-pad__readout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  color: rgba(222, 232, 226, 0.78);
+  user-select: none;
+}
+
+.simulator-drive-pad__grip {
+  color: rgba(222, 232, 226, 0.45);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.simulator-drive-pad__status {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.simulator-drive-pad__status strong {
+  color: #eef4f2;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.simulator-drive-pad__status span {
+  overflow: hidden;
+  color: #abc0bc;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simulator-drive-pad__airways,
+.simulator-drive-pad__motion {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.simulator-drive-pad__airway {
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid rgba(222, 232, 226, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(238, 244, 242, 0.92);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.simulator-drive-pad__airway > span {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(139, 212, 255, 0.34);
+  border-radius: 50%;
+  color: #bce8ff;
+  font-size: 0.72rem;
+}
+
+.simulator-drive-pad__airway[aria-pressed='true'] {
+  border-color: rgba(139, 212, 255, 0.68);
+  background: rgba(139, 212, 255, 0.15);
+}
+
+.simulator-drive-pad__airway:hover {
+  background: rgba(139, 212, 255, 0.2);
+}
+
+.simulator-drive-pad__key {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(222, 232, 226, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(238, 244, 242, 0.92);
+  font-size: 0.8rem;
+  font-weight: 760;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.simulator-drive-pad__key--primary {
+  border-color: rgba(147, 197, 111, 0.52);
+  background: rgba(147, 197, 111, 0.14);
+  color: #e7f8da;
+}
+
+.simulator-drive-pad__key:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.simulator-drive-pad__key:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.simulator-drive-pad__key:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.simulator-drive-pad__flex {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(222, 232, 226, 0.78);
+}
+
+.simulator-drive-pad__flex input {
+  width: 100%;
+  accent-color: #8bd4ff;
+}
+
+.simulator-drive-pad__roll {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgba(222, 232, 226, 0.12);
+  padding-top: 8px;
+}
+
+.simulator-drive-pad__roll-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.simulator-drive-pad__roll-heading > span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.simulator-drive-pad__roll-heading strong {
+  color: #d6e2df;
+  font-size: 0.74rem;
+  font-weight: 740;
+}
+
+.simulator-drive-pad__roll-heading small {
+  overflow: hidden;
+  color: #8fa6a1;
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simulator-drive-pad__roll-heading output {
+  flex: 0 0 auto;
+  color: #8bd4ff;
+  font-size: 0.68rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.simulator-drive-pad__roll-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.simulator-drive-pad__roll-controls input {
+  width: 100%;
+  accent-color: #8bd4ff;
+}
+
+.simulator-drive-pad__roll-step {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid rgba(139, 212, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(139, 212, 255, 0.07);
+  color: #ccebf8;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.simulator-drive-pad__roll-step:hover {
+  background: rgba(139, 212, 255, 0.16);
+}
+
+.simulator-drive-pad__reset {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid rgba(139, 212, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(139, 212, 255, 0.08);
+  color: #d9eff8;
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 720;
+}
+
+.simulator-drive-pad__reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.simulator-drive-pad button:focus-visible,
+.simulator-drive-pad input:focus-visible {
+  outline: 2px solid #8bd4ff;
+  outline-offset: 2px;
+}
+
+/* Focus layout: one large slot on the left, the other two panes stacked beside it. The
+   data-primary attribute picks which pane (in fixed DOM order: anatomy, endoluminal, sector)
+   takes the large slot. */
+.simulator-workspace--virtual {
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    'main sideA'
+    'main sideB';
+  /* Explicit height so the two rows split it; otherwise 1fr rows grow to their content. */
+  height: clamp(640px, calc(100vh - 240px), 960px);
+}
+
+.simulator-workspace--virtual[data-primary='anatomy'] > :nth-child(1),
+.simulator-workspace--virtual[data-primary='bronch'] > :nth-child(2),
+.simulator-workspace--virtual[data-primary='sector'] > :nth-child(3) {
+  grid-area: main;
+}
+
+.simulator-workspace--virtual[data-primary='anatomy'] > :nth-child(2),
+.simulator-workspace--virtual[data-primary='bronch'] > :nth-child(1),
+.simulator-workspace--virtual[data-primary='sector'] > :nth-child(1) {
+  grid-area: sideA;
+}
+
+.simulator-workspace--virtual[data-primary='anatomy'] > :nth-child(3),
+.simulator-workspace--virtual[data-primary='bronch'] > :nth-child(3),
+.simulator-workspace--virtual[data-primary='sector'] > :nth-child(2) {
+  grid-area: sideB;
+}
+
+/* Tri-view layout (default): all three panes share one row at equal width, sized to fit the
+   viewport with the control rail, so the full frame of every rendition is visible at once.
+   Enlarge switches into the focus layout above; All views returns here. */
+.simulator-workspace--virtual[data-layout='grid'] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: none;
+  /* Offset = topbar + compact control rail + grid gaps, so topbar, rail, all three panes, and
+     the floating drive pad share one viewport once the intro scrolls off. */
+  height: clamp(520px, calc(100vh - 260px), 900px);
+}
+
+/* Auto placement in DOM order (anatomy, endoluminal, sector) overrides the focus-layout
+   grid-area assignments above. */
+.simulator-workspace--virtual[data-layout='grid'][data-primary] > :nth-child(n) {
+  grid-area: auto;
+}
+
+/* Pane heights come from the workspace rows in the focus layout, so the side slots can shrink. */
+.simulator-workspace--virtual .simulator-scene-canvas,
+.simulator-workspace--virtual .simulator-bronch-canvas {
+  min-height: 0;
+}
+
+.simulator-workspace--virtual .simulator-sector-viewport {
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+/* The aperture circle spans the frame height, so a portrait tri-view column would crop it at
+   the sides; keeping the optical canvas square-ish (centered in the slot) shows the full circle. */
+.simulator-workspace--virtual[data-layout='grid'] .simulator-bronch-canvas {
+  align-self: center;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  max-height: 100%;
+}
+
+/* Letterbox above/below the square optical canvas reads as part of the optical field. */
+.simulator-bronch-pane {
+  background: #070303;
+}
+
+/* Compact pane chrome in the multi-pane workspace so the renditions keep the vertical space. */
+.simulator-workspace--virtual .simulator-pane-header {
+  min-height: 46px;
+  padding: 8px 12px;
+}
+
+.simulator-workspace--virtual .simulator-pane-header > div:first-child {
+  min-width: 0;
+}
+
+.simulator-workspace--virtual .simulator-pane-header h2 {
+  font-size: 0.92rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The anatomy and endoluminal subtitles are static descriptions; in the multi-pane workspace
+   the eyebrow already names the pane, so the subtitle row goes to the rendition instead. The
+   sector pane keeps its heading — it carries the live station and node. */
+.simulator-workspace--virtual .simulator-scene-pane .simulator-pane-header h2 {
+  display: none;
+}
+
+/* The sector pane's structure list scrolls past a cap instead of squeezing the sector image. */
+.simulator-workspace--virtual .simulator-sector-pane {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.simulator-workspace--virtual .simulator-structure-list {
+  max-height: 136px;
+  overflow-y: auto;
+}
+
+/* Side-slot sector pane: the image is the point, so the structure list and the render-style
+   switch stay hidden until the pane is enlarged (they return with the focus/grid promotion). */
+.simulator-sector-pane--compact .simulator-structure-list,
+.simulator-sector-pane--compact .simulator-sector-style-switch,
+.simulator-sector-pane--compact .simulator-sector-header-actions .simulator-chip {
+  display: none;
+}
+
+.simulator-sector-pane--compact .simulator-pane-header,
+.simulator-pane--compact .simulator-pane-header {
+  min-height: 40px;
+  padding: 6px 10px;
+}
+
+/* Side-slot info chips (e.g. the insertion-depth readout) duplicate the drive pad; drop them so
+   the header stays one row. Buttons stay. */
+.simulator-pane--compact .simulator-status-strip > span {
+  display: none;
+}
+
+/* Compact headers keep a single row: the pane label truncates before the buttons wrap. */
+.simulator-pane--compact .simulator-pane-header .eyebrow,
+.simulator-sector-pane--compact .simulator-pane-header .eyebrow {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.simulator-pane--compact .simulator-scene-actions,
+.simulator-pane--compact .simulator-status-strip,
+.simulator-sector-pane--compact .simulator-sector-header-actions {
+  flex-shrink: 0;
+}
+
+.simulator-scene-pane,
+.simulator-sector-pane {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  /* Pin the single column to the pane width; an auto column would get propped open by the
+     header's min-content in narrow slots and clip the header actions. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.simulator-pane-header {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(222, 232, 226, 0.14);
+}
+
+.simulator-sector-header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.simulator-scene-actions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.simulator-button {
+  min-width: 64px;
+  min-height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #233035;
+  border-radius: 6px;
+  color: #eef4f2;
+  cursor: pointer;
+}
+
+.simulator-structure-dropdown {
+  position: relative;
+}
+
+.simulator-structure-dropdown summary {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #182327;
+  border-radius: 6px;
+  color: #eef4f2;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 750;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.simulator-structure-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.simulator-structure-dropdown summary span:last-child {
+  min-width: 44px;
+  color: #9fcfe8;
+  text-align: right;
+}
+
+.simulator-structure-dropdown[open] summary,
+.simulator-button:hover,
+.simulator-structure-row:hover,
+.simulator-structure-row--active {
+  border-color: rgba(139, 212, 255, 0.72);
+  background: #21333b;
+}
+
+.simulator-structure-dropdown__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: min(330px, calc(100vw - 32px));
+  max-height: min(460px, 62vh);
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid rgba(139, 212, 255, 0.28);
+  background: #0e1517;
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.38);
+}
+
+.simulator-structure-dropdown__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 10px;
+  color: #aab8b7;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.simulator-structure-dropdown__actions button {
+  min-height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #172226;
+  border-radius: 6px;
+  color: #eef4f2;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.simulator-structure-dropdown__group {
+  display: grid;
+  gap: 6px;
+}
+
+.simulator-structure-dropdown__group + .simulator-structure-dropdown__group {
+  margin-top: 12px;
+}
+
+.simulator-structure-dropdown__group-label {
+  color: #8fb4c4;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.simulator-structure-dropdown__row {
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #121a1d;
+  border-radius: 6px;
+  color: #e7efed;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.simulator-structure-dropdown__row input {
+  accent-color: #93c56f;
+}
+
+.simulator-scene-canvas {
+  min-height: 560px;
+  height: 100%;
+  background: #101416;
+  /* Never let the canvas's inline pixel size prop this container open — the renderers read the
+     container size to fit the canvas, so a propped container locks both at a stale size. */
+  min-width: 0;
+  overflow: hidden;
+}
+
+.simulator-scene-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.simulator-bronch-canvas {
+  min-height: 560px;
+  height: 100%;
+  background: #070303;
+  /* See .simulator-scene-canvas: the container must not be propped open by the canvas itself. */
+  min-width: 0;
+  overflow: hidden;
+}
+
+.simulator-bronch-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.simulator-sector-pane {
+  background: #121719;
+}
+
+.simulator-sector-viewport {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  max-height: calc(100vh - 360px);
+  height: min(760px, calc(100vh - 360px));
+  display: block;
+  background: #070809;
+  overflow: hidden;
+}
+
+.simulator-sector-raster-canvas,
+.simulator-sector-svg {
+  position: absolute;
+  inset: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  display: block;
+}
+
+.simulator-sector-raster-canvas {
+  z-index: 0;
+}
+
+/* Acoustic-coupling veil: covers the sector image when the transducer face has no wall contact.
+   Opacity is driven inline from the live contact quality. */
+.simulator-sector-contact-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 8, 0.88);
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.simulator-sector-contact-noise {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+
+.simulator-sector-contact-veil span {
+  position: relative;
+  z-index: 1;
+  padding: 6px 12px;
+  border: 1px solid rgba(222, 232, 226, 0.22);
+  border-radius: 999px;
+  background: rgba(10, 14, 16, 0.78);
+  color: rgba(222, 232, 226, 0.85);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.simulator-steer-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.simulator-sector-svg {
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.simulator-sector-hotspot {
+  outline: none;
+}
+
+.simulator-sector-label-leader path {
+  fill: none;
+  stroke: rgba(217, 240, 238, 0.7);
+  stroke-dasharray: 1.2 1.2;
+  stroke-linecap: round;
+  stroke-width: 0.35;
+}
+
+.simulator-sector-label-leader circle {
+  fill: #d9f0ee;
+  opacity: 0.86;
+}
+
+.simulator-sector-callout {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  max-width: min(210px, 42%);
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(139, 212, 255, 0.44);
+  background: rgba(15, 23, 25, 0.94);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.34);
+  color: #ecf6f2;
+  font-size: 0.78rem;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
+.simulator-sector-callout--left {
+  transform: translate(0, -50%);
+}
+
+.simulator-sector-callout--right {
+  transform: translate(-100%, -50%);
+}
+
+.simulator-sector-callout__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  flex: 0 0 auto;
+}
+
+.simulator-sector-callout__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.simulator-sector-callout__text span:first-child {
+  overflow-wrap: anywhere;
+  font-weight: 750;
+}
+
+.simulator-sector-callout__text span:last-child {
+  color: #8fb4c4;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.simulator-structure-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(222, 232, 226, 0.14);
+  background: #1e2527;
+}
+
+.simulator-structure-row {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #151b1d;
+  border-radius: 6px;
+  color: #e8f1ee;
+  cursor: pointer;
+  text-align: left;
+}
+
+.simulator-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 1080px) {
+  .simulator-intro,
+  .simulator-control-rail,
+  .simulator-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  /* Both multi-pane layouts stack into a single column on narrow screens. */
+  .simulator-workspace--virtual,
+  .simulator-workspace--virtual[data-layout='grid'] {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-template-areas: none;
+    height: auto;
+  }
+
+  .simulator-workspace--virtual[data-primary] > :nth-child(n) {
+    grid-area: auto;
+  }
+
+  /* Stacked panes size themselves once the workspace stops defining rows. */
+  .simulator-workspace--virtual .simulator-scene-canvas,
+  .simulator-workspace--virtual .simulator-bronch-canvas {
+    min-height: 380px;
+  }
+
+  .simulator-workspace--virtual[data-layout='grid'] .simulator-bronch-canvas {
+    align-self: auto;
+    aspect-ratio: auto;
+    height: 100%;
+    max-height: none;
+  }
+
+  .simulator-workspace--virtual .simulator-sector-viewport {
+    min-height: 380px;
+    height: auto;
+  }
+
+  /* On narrow screens the pad becomes a normal row that sticks to the viewport bottom.
+     !important so a dragged position (inline style from wide layouts) can never detach it. */
+  .simulator-drive-pad {
+    position: sticky !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: 10px !important;
+    justify-self: center;
+  }
+
+  .simulator-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .simulator-status-strip {
+    justify-content: flex-start;
+  }
+
+  .simulator-scene-canvas,
+  .simulator-bronch-canvas {
+    min-height: 420px;
+  }
+
+  .simulator-sector-viewport {
+    max-height: none;
+    height: 520px;
+  }
+}
+
+@media (max-width: 560px) {
+  .simulator-layer-toggles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .simulator-pane-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .simulator-scene-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .simulator-structure-dropdown__menu {
+    left: 0;
+    right: auto;
+  }
+}
+
+/* Hardware scope tracker control */
+.simulator-hardware-control__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.simulator-hardware-control__row input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0ea5e9;
+}
+
+.simulator-hardware-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(100, 116, 139, 0.5);
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.simulator-hardware-chip--connected {
+  border-color: rgba(16, 185, 129, 0.6);
+  color: #059669;
+}
+
+.simulator-hardware-chip--connected.simulator-hardware-chip--warning {
+  border-color: rgba(217, 119, 6, 0.65);
+  color: #b45309;
+}
+
+/* --- Station Quest (optional gamified drill) --- */
+
+.simulator-quest-launch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-color: rgba(255, 209, 102, 0.5);
+  white-space: nowrap;
+}
+
+.simulator-quest-launch:hover {
+  border-color: rgba(255, 209, 102, 0.85);
+  background: rgba(255, 209, 102, 0.12);
+}
+
+/* In-run status bar floated over the top center of the workspace. */
+.simulator-quest-hud {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(92%, 760px);
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  border-radius: 12px;
+  background: rgba(7, 10, 12, 0.88);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+  animation: quest-hud-in 260ms ease-out;
+}
+
+@keyframes quest-hud-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.simulator-quest-hud__target {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.simulator-quest-hud__eyebrow {
+  color: #ffd166;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.simulator-quest-hud__target strong {
+  color: #f4f9f7;
+  font-size: 1.02rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.simulator-quest-hud__branch {
+  color: #8fb4c4;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  animation: quest-fade-in 300ms ease-out;
+}
+
+.simulator-quest-hud__stats {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.simulator-quest-hud__streak {
+  border-color: rgba(255, 138, 76, 0.6);
+  color: #ffb27a;
+  animation: quest-streak-pop 360ms ease-out;
+}
+
+@keyframes quest-streak-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.simulator-quest-hud__actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+@keyframes quest-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Pre-run countdown numerals. */
+.simulator-quest-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.simulator-quest-countdown span {
+  color: #ffd166;
+  font-size: clamp(64px, 12vw, 128px);
+  font-weight: 800;
+  text-shadow: 0 6px 40px rgba(0, 0, 0, 0.65);
+  animation: quest-countdown-pop 800ms ease-out;
+}
+
+@keyframes quest-countdown-pop {
+  0% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+    transform: scale(0.92);
+  }
+}
+
+/* Capture hold: a filling ring centered over the workspace while the target stays imaged. */
+.simulator-quest-lock {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.simulator-quest-lock svg {
+  width: 76px;
+  height: 76px;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 12px rgba(255, 209, 102, 0.45));
+}
+
+.simulator-quest-lock__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 5;
+}
+
+.simulator-quest-lock__fill {
+  fill: none;
+  stroke: #ffd166;
+  stroke-linecap: round;
+  stroke-width: 5;
+  transition: stroke-dashoffset 90ms linear;
+}
+
+.simulator-quest-lock span {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(7, 10, 12, 0.82);
+  color: #ffe9b3;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+}
+
+/* End-of-run scorecard. */
+.simulator-quest-summary-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 6, 8, 0.62);
+  backdrop-filter: blur(3px);
+  overflow: hidden;
+}
+
+.simulator-quest-summary {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(440px, calc(100% - 40px));
+  max-height: calc(100% - 40px);
+  overflow-y: auto;
+  padding: 22px 26px;
+  border: 1px solid rgba(255, 209, 102, 0.42);
+  border-radius: 14px;
+  background: rgba(14, 21, 23, 0.97);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  animation: quest-summary-in 380ms cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+@keyframes quest-summary-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.simulator-quest-summary__stars {
+  display: inline-flex;
+  gap: 10px;
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.simulator-quest-star {
+  color: rgba(255, 255, 255, 0.16);
+}
+
+.simulator-quest-star--lit {
+  color: #ffd166;
+  text-shadow: 0 0 18px rgba(255, 209, 102, 0.65);
+  animation: quest-star-pop 460ms cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+
+@keyframes quest-star-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-40deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.simulator-quest-summary__score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  color: #f4f9f7;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.simulator-quest-newbest {
+  color: #93c56f;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: quest-streak-pop 500ms ease-out;
+}
+
+.simulator-quest-summary__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  color: #9db3b0;
+  font-size: 0.8rem;
+}
+
+.simulator-quest-summary__list {
+  width: 100%;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  list-style: none;
+}
+
+.simulator-quest-summary__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #dbe7e3;
+  font-size: 0.82rem;
+}
+
+.simulator-quest-summary__actions {
+  display: inline-flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Confetti behind the scorecard: fixed per-piece offsets/delays from the component. */
+.simulator-quest-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.simulator-quest-confetti span {
+  position: absolute;
+  top: -14px;
+  width: 8px;
+  height: 13px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: quest-confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.simulator-quest-confetti span:nth-child(3n) {
+  background: #ffd166;
+}
+
+.simulator-quest-confetti span:nth-child(3n + 1) {
+  background: #8bd4ff;
+}
+
+.simulator-quest-confetti span:nth-child(3n + 2) {
+  background: #93c56f;
+}
+
+@keyframes quest-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.75;
+    transform: translate(var(--quest-confetti-drift, 0px), 105vh) rotate(560deg);
+  }
+}

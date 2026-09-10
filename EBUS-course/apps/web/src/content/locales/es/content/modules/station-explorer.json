@@ -1,0 +1,28 @@
+{
+  "introSections": [
+    {
+      "id": "triangulate",
+      "title": "Triangular una estación en tres vistas",
+      "summary": "Mantenga seleccionada la misma estación mientras compara cómo se presenta en CT, en la vía aérea y en la pantalla de ultrasonido. El objetivo es trasladar una identidad de estación entre tres representaciones sin perder las implicaciones de estadificación.",
+      "takeaway": "Un objetivo mental, tres representaciones, una consecuencia de estadificación."
+    },
+    {
+      "id": "selector",
+      "title": "Use el selector como ancla",
+      "summary": "Cambie de estación rápidamente y luego lea la misma lateralidad, pista de límite y pista de memoria en las tarjetas de triple vista y la lista de verificación.",
+      "takeaway": "Si la orientación se pierde, reinicie con la ficha de estación seleccionada, su par de confusión y su regla de límite."
+    },
+    {
+      "id": "challenge",
+      "title": "Pruebe el reconocimiento por representación",
+      "summary": "El desafío rota indicaciones de CT, broncoscopia y ultrasonido para que el recuerdo no dependa de una sola vista. La retroalimentación debe enseñar por qué la respuesta es correcta, no solo si el alumno hizo clic correctamente.",
+      "takeaway": "La explicación inmediata más el seguimiento local de precisión muestran qué estaciones aún se confunden."
+    }
+  ],
+  "reviewPrompts": [
+    "¿Puede pasar de CT a vía aérea y a ultrasonido sin cambiar la estación objetivo ni su significado de estadificación?",
+    "¿Qué par de confusión todavía le ralentiza cuando cambia la representación?",
+    "¿Puede nombrar una referencia de vía aérea y una pista ecográfica para cada estación hiliar o interlobar?"
+  ],
+  "extensionNote": ""
+}

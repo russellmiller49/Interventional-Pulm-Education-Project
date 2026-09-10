@@ -1,0 +1,79 @@
+{
+  "introSections": [
+    {
+      "id": "stack-patterns",
+      "title": "Read the map as boundary-driven stacks",
+      "summary": "The right and left paratracheal stations are easiest to memorize as superior-to-inferior stacks: 2R over 4R and 2L over 4L. The key divider is the left lateral tracheal border, not the tracheal midline.",
+      "takeaway": "Start with laterality, apply the tracheal-border rule, then move top to bottom before branching outward."
+    },
+    {
+      "id": "carina-anchor",
+      "title": "Use the carina as the center anchor",
+      "summary": "Station 7 sits below the carina and between the medial margins of the main bronchi. It is the center anchor for distinguishing subcarinal disease from hilar disease.",
+      "takeaway": "If you lose orientation, find station 7 and then ask whether the node is still between the medial main bronchial margins."
+    },
+    {
+      "id": "hilar-handoff",
+      "title": "Treat hilar stations as a vessel-and-branch handoff",
+      "summary": "10R and 10L mark the hilar checkpoints, while 11Rs, 11Ri, and 11L extend farther into the branch-level interlobar pathway.",
+      "takeaway": "Think main bronchus first, then branch-level interlobar landmarks."
+    }
+  ],
+  "mapTips": [
+    "Tap any station to open the detail sheet.",
+    "Use the detail card to review the exact boundary rule before you memorize the number.",
+    "Use the zoom buttons if labels feel crowded on a smaller phone.",
+    "Selection uses border weight, iconography, and helper text so the state is not color-only."
+  ],
+  "flashcardPrompt": "Use the cards to rehearse name, grouping, and memory cues before moving into the quiz.",
+  "quizRounds": [
+    {
+      "id": "q-2r",
+      "stationId": "2R",
+      "prompt": "Pin the upper right paratracheal station above the 4R stack.",
+      "hint": "Stay high on the right side of the tracheal column.",
+      "explanation": "2R is the superior right paratracheal station. It remains right of the left lateral tracheal border and above 4R."
+    },
+    {
+      "id": "q-4l",
+      "stationId": "4L",
+      "prompt": "Tap the lower left paratracheal station that remains above the left hilar handoff.",
+      "hint": "Look left of the trachea and stay above the superior rim of the left main pulmonary artery.",
+      "explanation": "4L is the left lower paratracheal station. It stays above 10L and remains medial to the ligamentum arteriosum."
+    },
+    {
+      "id": "q-7",
+      "stationId": "7",
+      "prompt": "Select the subcarinal station centered below the carina.",
+      "hint": "Find the midline anchor between the right and left hilar pathways.",
+      "explanation": "Station 7 lies beneath the carina and between the medial margins of the main bronchi. It is a midline mediastinal station."
+    },
+    {
+      "id": "q-10r",
+      "stationId": "10R",
+      "prompt": "Pin the right hilar checkpoint near the right main bronchus entry zone.",
+      "hint": "It sits distal to 4R and proximal to the 11R substations.",
+      "explanation": "10R begins below the inferior azygos margin. It is hilar, not paratracheal, and still more proximal than 11Rs or 11Ri."
+    },
+    {
+      "id": "q-11rs",
+      "stationId": "11Rs",
+      "prompt": "Tap the superior right interlobar station beyond the right hilar gate.",
+      "hint": "Think branch-level anatomy between the right upper lobe bronchus and bronchus intermedius.",
+      "explanation": "11Rs is the superior right interlobar branch-level target. It is farther distal than 10R and distinct from 11Ri."
+    },
+    {
+      "id": "q-11L",
+      "stationId": "11L",
+      "prompt": "Tap the left interlobar station beyond the left hilar gate.",
+      "hint": "Think branch-level left hilar pathway, not paratracheal.",
+      "explanation": "11L is the left interlobar station beyond the 10L checkpoint. The cue is distal branch-level airway anatomy."
+    }
+  ],
+  "reviewChecklist": [
+    "Can you separate the right and left paratracheal stacks using the left lateral tracheal border rather than the tracheal midline?",
+    "Can you use station 7 as the centerline reset point and keep it between the medial margins of the main bronchi?",
+    "Can you distinguish 10R and 10L from the more distal interlobar stations 11Rs, 11Ri, and 11L?"
+  ],
+  "extensionNote": "Add more stations by extending the shared station content file and this layout file with new coordinates. The UI reads station definitions, quiz prompts, and drawing data separately, so the module does not need component rewrites when the station set grows."
+}
