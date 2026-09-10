@@ -80,6 +80,32 @@ export const SOURCES: Source[] = [
       'Phantom and six patient datasets; image-similarity improvement does not establish improved diagnostic yield.',
   },
   {
+    id: 'sumner',
+    authors: 'Sumner ET, Chang J, Patel PR, Bedi H, Shaller BD.',
+    title: 'State of the art: peripheral diagnostic bronchoscopy.',
+    publication: 'J Thorac Dis. 16:5409–5421.',
+    year: 2024,
+    url: 'https://doi.org/10.21037/jtd-24-346',
+    kind: 'Technical review',
+    supports:
+      'What the platforms in use build from a limited sweep: the arc of rotation, the systems that render images resembling CT from it, the systems that do not, and the reported separation between a target drawn that way and the same target on a full orbit.',
+    limitation:
+      'Narrative review of platforms available at the time of writing. The separation figure is the widest value from two cited comparisons, not a distribution; behaviour differs by vendor, version and case.',
+  },
+  {
+    id: 'podder',
+    authors: 'Podder S, Wagh A, Hogarth DK.',
+    title: 'Digital tomosynthesis for navigational bronchoscopy: a clinical practice review.',
+    publication: 'J Thorac Dis. 17:7379–7389.',
+    year: 2025,
+    url: 'https://doi.org/10.21037/jtd-2024-2063',
+    kind: 'Technical review',
+    supports:
+      'The angular span of a bronchoscopy sweep against that of a scanner, the blurring of planes away from the chosen one, and the dose-for-information trade a narrower span makes.',
+    limitation:
+      'Narrative practice review. Its section-thickness figure is more favourable than the limited-angle depth resolution reported in the reconstruction literature, so the span is cited here and that figure is not.',
+  },
+  {
     id: 'mobile',
     authors: 'Salahuddin M, Bashour SI, Khan A, et al.',
     title: 'Mobile Cone-Beam CT-Assisted Bronchoscopy for Peripheral Lung Lesions.',

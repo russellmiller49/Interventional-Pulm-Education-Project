@@ -601,8 +601,8 @@ export const LESSONS: Lesson[] = [
       {
         title: 'The missing directions still matter',
         kind: 'after-commitment',
-        body: 'Limited angular coverage leaves incompletely measured information, often described as a missing wedge. In-plane edges may look sharp while depth remains elongated or blurred. Small displayed voxels do not repair this anisotropy. Sparse views over a broad orbit and a limited arc are different sampling problems.',
-        sources: ['saad'],
+        body: 'Limited angular coverage leaves incompletely measured information, often described as a missing wedge. In-plane edges may look sharp while depth remains elongated or blurred. Small displayed voxels do not repair this anisotropy. Sparse views over a broad orbit and a limited arc are different sampling problems. Because the collected images do not single out one volume, a system may settle the unmeasured directions from a registered prior scan or a learned model and render a set that resembles a scan — which removes the visible sign of the limit without removing the limit.',
+        sources: ['saad', 'sumner', 'podder'],
         detail: {
           title: 'More projections: state the constraint',
           body: 'More projections at fixed exposure per projection increase total exposure. Dividing a fixed total exposure among more projections changes sampling and noise differently. Frame count alone does not specify image quality, acquisition time or dose.',
@@ -623,7 +623,7 @@ export const LESSONS: Lesson[] = [
       scenario:
         'A limited-angle reconstruction separates a lesion from a rib, but the lesion and needle are elongated in the depth direction.',
       reasoning:
-        'The acquisition added useful parallax information while retaining direction-dependent uncertainty. Assess the actual tool and target in supported views; do not interpret a fine voxel grid as equivalent to isotropic CT measurement.',
+        'The acquisition added useful parallax information while retaining direction-dependent uncertainty. Assess the actual tool and target in supported views; do not interpret a fine voxel grid, or a rendering that resembles a scan, as equivalent to isotropic CT measurement.',
     },
     lab: 'dts',
     labTask:
@@ -676,7 +676,11 @@ export const LESSONS: Lesson[] = [
       {
         title: 'Interrogate the claim, not the brand name',
         body: 'For “AI tomography” or “real-time 3D,” ask about angular coverage, the measured data, prior CT contribution, motion correction and the independently validated endpoint. A limited sweep may suit the question well without being interchangeable with every CBCT protocol.',
-        sources: ['saad', 'frontier'],
+        sources: ['saad', 'frontier', 'sumner'],
+        detail: {
+          title: 'What “CT-like” names, and what it does not',
+          body: 'Modern platforms differ in what they build from a sweep of roughly 50–70 degrees. Several use artificial intelligence and machine learning to generate CT-like multi-axial reconstructions from those limited images; at least one uses the sweep only to update its virtual navigation data and renders no such reconstruction at all. Where they are produced, these images are described as not fully accurate representations of what actual CT would show, because part of them is extrapolated: comparisons of target location on tomosynthesis against cone-beam CT report the distance between target centers deviating by as much as 16.2 mm. The name on the screen does not settle which of these you are looking at.',
+        },
       },
     ],
     worked: {
